@@ -3445,8 +3445,8 @@ function drawDoorBubble(t) {
 //     a little bed for every rescued Fluffkin).
 // The insides live in their own space past the end of the world
 // (x ≥ 20000), so outside things never mix with inside things.
-// Stairs: tap the staircase, the arrow bubble, or press PAW at the bottom
-// or top; the creature walks up or down by itself, one musical step at a time.
+// Stairs: tap the arrow bubble or press PAW at the bottom or top to step on,
+// then walk them with the arrow buttons (one musical note per step).
 // ===================================================================
 const HOUSES = {
   peek: {
@@ -3517,36 +3517,31 @@ function leaveHouse() {
 
 // ---------- stairs: the creature walks up / down by itself ----------
 function stairEnds(s, H) { return { bot: [s.x0, H.floors[s.f0]], top: [s.x1, H.floors[s.f1]] }; }
+// Build 12: the child walks the stairs herself. The arrow bubble (or PAW) puts the
+// creature on the bottom (or top) step; then the arrow buttons walk along the stairs,
+// she can stop or turn round, and stepping off either end puts her on that floor.
 function startStairs(s, up) {
   const P = player, H = houseOf(); if (!H || P.ride || P.stair) return;
-  const { bot, top } = stairEnds(s, H), from = up ? bot : top, to = up ? top : bot;
+  const { bot, top } = stairEnds(s, H), from = up ? bot : top;
   if (Math.abs(P.y - from[1]) > 4 || !P.grounded) { burst(from[0], from[1] - 40, 6); Sound.click(); return; }
-  P.stair = { pts: [[P.x, P.y], from, to], d: 0, up, step: -1 }; P.vy = 0; P.vx = 0;
-  discover(up ? 'stairs-up' : 'stairs-down', up ? 'Up the stairs!' : 'Down the stairs!', from[0], from[1] - 200);
-}
-function tapStairs(s) {
-  const P = player, H = houseOf(); if (!H) return;
-  const { bot, top } = stairEnds(s, H);
-  if (Math.abs(P.y - bot[1]) < 4) startStairs(s, true); else if (Math.abs(P.y - top[1]) < 4) startStairs(s, false);
-  else { burst(bot[0], bot[1] - 40, 6); Sound.click(); }
+  P.stair = { s, k: up ? 0 : 1, step: -1, len: Math.hypot(top[0] - bot[0], top[1] - bot[1]) }; P.vy = 0; P.vx = 0;
+  P.x = from[0]; P.y = from[1];
+  burst(P.x, P.y - 20, 8, ['#fff', '#ffe36e']); Sound.tone(up ? 520 : 440, .15, 'triangle', .04, 1.2);
+  discover(up ? 'stairs-up' : 'stairs-down', up ? 'Walk up the stairs with the arrow buttons!' : 'Walk down the stairs with the arrow buttons!', from[0], from[1] - 200);
 }
 function updateStairs(dt) {
-  const P = player, S = P.stair; S.d += 300 * dt;
-  let d = S.d;
-  for (let i = 1; i < S.pts.length; i++) {
-    const a = S.pts[i - 1], b = S.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]), last = i === S.pts.length - 1;
-    if (d <= L || last) {
-      const k = L ? Math.min(1, d / L) : 1, dx = b[0] - a[0];
-      P.x = lerp(a[0], b[0], k); P.y = lerp(a[1], b[1], k);
-      if (Math.abs(dx) > 1) { P.facing = Math.sign(dx); P.vx = Math.sign(dx) * 260; }
-      if (last && Math.abs(b[1] - a[1]) > 1) { // musical steps: going up plays up the scale, down plays down
-        const n = Math.floor(k * 14); if (n !== S.step) { S.step = n; const note = S.up ? n : 14 - n; Sound.bell(NOTES[note % 8] * (note >= 8 ? 2 : 1), .025); }
-      }
-      if (last && d >= L) { P.stair = null; P.vx = 0; P.x = b[0]; P.y = b[1]; burst(P.x, P.y, 6, ['#fff', '#ffe36e']); }
-      break;
-    }
-    d -= L;
+  const P = player, S = P.stair, H = houseOf(); if (!H) { P.stair = null; return; }
+  const { bot, top } = stairEnds(S.s, H), upDir = Math.sign(top[0] - bot[0]);
+  const h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  if (h) P.facing = h;
+  S.k += h * upDir * 250 / S.len * dt;
+  if (S.k < 0 || S.k > 1) { // stepped off an end: back to normal walking on that floor
+    const end = S.k > 1 ? top : bot; P.stair = null; P.x = end[0] + h * 4; P.y = end[1]; P.vx = h * 250; P.vy = 0; P.grounded = true; P.jumps = 0;
+    burst(end[0], end[1], 5, ['#fff', '#ffe36e']); return;
   }
+  P.x = lerp(bot[0], top[0], S.k); P.y = lerp(bot[1], top[1], S.k); P.vx = h * 250;
+  const n = Math.round(S.k * 14); // musical steps: up the scale going up, down the scale going down
+  if (n !== S.step) { if (S.step >= 0) Sound.bell(NOTES[n % 8] * (n >= 8 ? 2 : 1), .025); S.step = n; }
   P.grounded = true; P.vy = 0; P.jumps = 0;
 }
 // door + stair bubbles used by nearDoor()
@@ -3596,7 +3591,6 @@ INTERACT.unshift(
     const H = HOUSES[id], lk = 'in:' + id;
     return [
       { box: [H.exit - 56, GROUND - 236, H.exit + 56, GROUND], priority: true, layer: lk, tap: () => toggleDoor(id) },
-      ...H.stairs.map(s => { const { bot, top } = stairEnds(s, H); return { box: [Math.min(bot[0], top[0]) - 40, top[1] - 40, Math.max(bot[0], top[0]) + 40, bot[1]], priority: true, layer: lk, hint: [bot[0], bot[1] - 60], disc: 'stairs-up', tap: () => tapStairs(s) }; }),
       // light switches by each room's doorway
       ...H.rooms.map((r, i) => ({ box: [r[0] + 22, H.floors[r[2]] - 170, r[0] + 62, H.floors[r[2]] - 120], priority: true, layer: lk, tap: () => toggleRoomLight(id, i) })),
     ];
@@ -3619,6 +3613,8 @@ INTERACT.unshift(
   ...[0, 1, 2, 3, 4, 5].map(j => ({ box: [bedX(j) - 48, 40, bedX(j) + 48, 116], priority: true, layer: 'in:fluff', hint: j ? null : [bedX(0), 70], disc: 'fluffbed', tap: () => tapBed(j) })),
 );
 
+// stairs start only from the arrow bubble or PAW: tapping the staircase itself does nothing (build 12)
+EXTRA_HINTS.push(...Object.keys(HOUSES).flatMap(id => HOUSES[id].stairs.map(s => ({ get hint() { return [s.x0, HOUSES[id].floors[s.f0] - 238]; }, disc: 'stairs-up', layer: 'in:' + id }))));
 function updateHouses(dt, t) {
   for (const k of ['chand', 'fire', 'cup', 'horse', 'clock', 'teddy', 'duck', 'scope', 'chest', 'music', 'fdrum', 'mobile']) HS[k] = Math.max(0, HS[k] - dt);
   if (HS.tower > 0) HS.tower = Math.max(0, HS.tower - dt);
