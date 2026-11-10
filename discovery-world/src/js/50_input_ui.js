@@ -73,6 +73,7 @@ function initInput() {
     Sound.tone(500, .12, 'sine', .04, .6); save();
   });
   $('soundBtn').addEventListener('click', () => setSound(!Sound.on));
+  $('bitsPill').addEventListener('click', () => { toast(`⭐ ${world.bits} star bits · ${Math.floor(world.bits / 30)} star jars · 🐣 ${FLUFFS.filter(f => f.state === 'home').length}/6 Fluffkins home`); Sound.click(); });
   $('discoveries').addEventListener('click', () => { toast(`⭐ ${world.discoveries.size} discoveries · 🌟 ${world.stars.size}/${SECRET_STARS.length} secret stars`); Sound.click(); });
   $('playBtn').addEventListener('click', () => {
     $('overlay').style.display = 'none'; started = true; Sound.ensure(); Sound.chime();

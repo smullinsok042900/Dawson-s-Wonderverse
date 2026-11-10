@@ -11,7 +11,7 @@ const PALETTES = [
 // ONE world: the colours drift and repeat every ~3200 units across the whole length,
 // so no part of the world has "its own" colour scheme — the themes are mixed together.
 const ZONES = [];
-for (let i = 0; i <= 9; i++) ZONES.push({ x: i * 800 - 200, ...PALETTES[i % 4] });
+for (let i = 0; i <= 19; i++) ZONES.push({ x: i * 800 - 200, ...PALETTES[i % 4] });
 let palette = null;
 function blendPalette(x) {
   let i = 0; while (i < ZONES.length - 2 && x > ZONES[i + 1].x) i++;
@@ -60,14 +60,14 @@ function hills(k, base, amp, col, freq, seed) {
 function farProps(t) {
   const k = .34;
   const tower = (X, h, c, roof) => { const x = px(X, k); if (x < -120 || x > vw + 120) return; rounded(x - 26, 330 - h, 52, h, 10, c); ctx.beginPath(); ctx.moveTo(x - 36, 334 - h); ctx.lineTo(x, 286 - h); ctx.lineTo(x + 36, 334 - h); ctx.closePath(); ctx.fillStyle = roof; ctx.fill(); ellipse(x, 300 - h + 8, 10, 12, '#fff8', null); star(x, 280 - h, 8, '#fff3b0'); };
-  [[150, 120, '#f6b2e6', '#b98af7'], [1750, 160, '#b9a2ff', '#ff9cc9'], [3350, 110, '#9de4ef', '#ffb7d9'], [4950, 140, '#ffc9e8', '#a98af7']].forEach(a => tower(...a));
+  [[150, 120, '#f6b2e6', '#b98af7'], [1750, 160, '#b9a2ff', '#ff9cc9'], [3350, 110, '#9de4ef', '#ffb7d9'], [4950, 140, '#ffc9e8', '#a98af7'], [7600, 170, '#b9a2ff', '#ff9cc9'], [10400, 130, '#f6b2e6', '#b98af7'], [12900, 150, '#9de4ef', '#ffb7d9']].forEach(a => tower(...a));
   const pencil = (X, h, c) => { const x = px(X, k); if (x < -60 || x > vw + 60) return; rounded(x - 14, 330 - h, 28, h, 4, c); ctx.beginPath(); ctx.moveTo(x - 14, 332 - h); ctx.lineTo(x, 300 - h); ctx.lineTo(x + 14, 332 - h); ctx.closePath(); ctx.fillStyle = '#ffe2b8'; ctx.fill(); ellipse(x, 304 - h, 4, 5, c); };
-  [[620, 150, '#ff86b9'], [670, 120, '#ffd25a'], [2250, 170, '#5ccff2'], [2300, 135, '#9b7cf5'], [3880, 140, '#6ee0a2'], [3930, 115, '#ff86b9'], [5600, 160, '#ffd25a'], [5650, 125, '#5ccff2']].forEach(a => pencil(...a));
+  [[620, 150, '#ff86b9'], [670, 120, '#ffd25a'], [2250, 170, '#5ccff2'], [2300, 135, '#9b7cf5'], [3880, 140, '#6ee0a2'], [3930, 115, '#ff86b9'], [5600, 160, '#ffd25a'], [5650, 125, '#5ccff2'], [8400, 150, '#ff86b9'], [8450, 120, '#9b7cf5'], [11200, 160, '#36c96b'], [11250, 130, '#ffd25a'], [13600, 140, '#5ccff2']].forEach(a => pencil(...a));
   const flask = (X, s, c) => { const x = px(X, k); if (x < -80 || x > vw + 80) return; ctx.beginPath(); ctx.moveTo(x - 12 * s, 200); ctx.lineTo(x - 12 * s, 240); ctx.lineTo(x - 44 * s, 322); ctx.quadraticCurveTo(x, 340, x + 44 * s, 322); ctx.lineTo(x + 12 * s, 240); ctx.lineTo(x + 12 * s, 200); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fill(); ctx.beginPath(); ctx.moveTo(x - 30 * s, 290); ctx.lineTo(x + 30 * s, 290); ctx.lineTo(x + 44 * s, 322); ctx.quadraticCurveTo(x, 340, x - 44 * s, 322); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); for (let i = 0; i < 3; i++) ellipse(x + Math.sin(t + i * 2) * 8, 190 - ((t * 30 + i * 30) % 90), 5 + i, 5 + i, 'rgba(255,255,255,.6)'); };
-  flask(1100, 1, '#7fe3d5'); flask(2700, 1.3, '#d48cf5'); flask(4300, .9, '#ffb36b'); flask(6000, 1.1, '#7fe3d5');
+  flask(1100, 1, '#7fe3d5'); flask(2700, 1.3, '#d48cf5'); flask(4300, .9, '#ffb36b'); flask(6000, 1.1, '#7fe3d5'); flask(9100, 1, '#ff9fd8'); flask(11800, 1.2, '#7fe3d5');
   const tent = (X, c1, c2) => { const x = px(X, k); if (x < -130 || x > vw + 130) return; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(x, 210); ctx.lineTo(x - 90 + i * 30, 330); ctx.lineTo(x - 60 + i * 30, 330); ctx.closePath(); ctx.fillStyle = i % 2 ? c1 : c2; ctx.fill(); } star(x, 204, 10, '#fff2a8'); };
-  tent(400, '#ff8db8', '#fff1f6'); tent(2050, '#8fd5ff', '#fff6e0'); tent(3650, '#ff8db8', '#fff1f6'); tent(5300, '#8fd5ff', '#fff6e0');
-  for (const WX of [1350, 4500]) { const xw = px(WX, k); if (xw > -150 && xw < vw + 150) { ctx.save(); ctx.translate(xw, 230); ctx.rotate(t * .12); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 80, 0, TAU); ctx.stroke(); for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(i * TAU / 8) * 80, Math.sin(i * TAU / 8) * 80); ctx.stroke(); } ctx.restore(); } }
+  tent(400, '#ff8db8', '#fff1f6'); tent(2050, '#8fd5ff', '#fff6e0'); tent(3650, '#ff8db8', '#fff1f6'); tent(5300, '#8fd5ff', '#fff6e0'); tent(9900, '#ff8db8', '#fff1f6'); tent(12500, '#c79bff', '#fff6e0');
+  for (const WX of [1350, 4500, 8800, 12000]) { const xw = px(WX, k); if (xw > -150 && xw < vw + 150) { ctx.save(); ctx.translate(xw, 230); ctx.rotate(t * .12); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 80, 0, TAU); ctx.stroke(); for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(i * TAU / 8) * 80, Math.sin(i * TAU / 8) * 80); ctx.stroke(); } ctx.restore(); } }
   [[900, 110, '#ff9ccd'], [2600, 90, '#ffd36b'], [4200, 120, '#9fe6ff'], [5800, 80, '#ff9ccd']].forEach(([X, y, c], i) => { const x = px(X, .3) + Math.sin(t * .4 + i) * 8, yy = y + Math.sin(t * .6 + i) * 6; if (x < -50 || x > vw + 50) return; ellipse(x, yy, 22, 26, c); ctx.strokeStyle = '#fff9'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 8, yy + 22); ctx.lineTo(x - 5, yy + 38); ctx.moveTo(x + 8, yy + 22); ctx.lineTo(x + 5, yy + 38); ctx.stroke(); rounded(x - 7, yy + 37, 14, 9, 3, '#c68b5e'); });
 }
 // Mid layer: the giant indoor/outdoor play-center frame (arches, beams, colored windows)
@@ -75,7 +75,7 @@ function farProps(t) {
 // a pink balcony walkway with railings, and hanging ivy.
 function midArchitecture(t) {
   const k = .5;
-  for (let i = -1; i < 20; i++) {
+  for (let i = -1; i < 42; i++) {
     const X = i * 360 + 120, x = px(X, k); if (x < -220 || x > vw + 220) continue;
     // window frame + lattice panes (sky shows through)
     ctx.save(); ctx.beginPath(); ctx.moveTo(x - 140, 380); ctx.lineTo(x - 140, 170); ctx.quadraticCurveTo(x, 20, x + 140, 170); ctx.lineTo(x + 140, 380); ctx.closePath();
@@ -107,7 +107,7 @@ function midArchitecture(t) {
   ctx.beginPath(); ctx.moveTo(-60, y0 - 30); ctx.lineTo(vw + 100, y0 - 30); ctx.stroke();
   for (let x = -48; x < vw + 100; x += 48) { ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y0 - 30); ctx.lineTo(x, y0); ctx.stroke(); }
   ctx.restore();
-  for (let i = -1; i < 40; i++) {
+  for (let i = -1; i < 66; i++) {
     const X = i * 230 + 60, x = px(X, kb); if (x < -40 || x > vw + 40) continue;
     vine(x, y0 + 16, 50 + (i * 37) % 60, t, i);
     if (i % 2 === 0) { glow(x + 60, y0 - 36, 18, '#fff3a6', .7); star(x + 60, y0 - 36, 9, '#ffe27a'); }
@@ -136,7 +136,7 @@ function ground(t) {
 }
 function foreground(t) {
   const k = 1.35;
-  for (let i = -1; i < 40; i++) {
+  for (let i = -1; i < 46; i++) {
     const X = i * 330 + 140, x = vw / 2 + (X - (camera + vw / 2)) * k; if (x < -120 || x > vw + 120) continue;
     ctx.translate(0, -camY * 1.35 + 45);
     const kind = i % 4, c = ['#ff7fc0', '#7fd8f5', '#ffd15e', '#a98af7'][((i % 4) + 4) % 4];
@@ -176,8 +176,8 @@ function platform(x, y, w) {
 }
 function bez(p0, p1, p2, p3, u) { const v = 1 - u; return v * v * v * p0 + 3 * v * v * u * p1 + 3 * v * u * u * p2 + u * u * u * p3; }
 const SLIDE = [[902, 297], [942, 310], [966, 370], [1040, 392], [1070, 404], [1130, 433], [1170, 447]];
-function slidePos(s) {
-  const P = SLIDE, seg = s < .5 ? 0 : 3, u = s < .5 ? s * 2 : (s - .5) * 2;
+function slidePos(s, path) {
+  const P = path || SLIDE, seg = s < .5 ? 0 : 3, u = s < .5 ? s * 2 : (s - .5) * 2;
   return [bez(P[seg][0], P[seg + 1][0], P[seg + 2][0], P[seg + 3][0], u), bez(P[seg][1], P[seg + 1][1], P[seg + 2][1], P[seg + 3][1], u)];
 }
 
@@ -548,7 +548,7 @@ function decorLights(t) {
   if (cull(3310, 160)) bulbString(3186, 142, 3346, 142, 5, 5, t, world.magnetOn);
   if (cull(4060, 200)) bulbString(3925, 400, 4195, 400, 4, 8, t, P);
   for (const sx of [LAYOUT.coaster.a - 40, LAYOUT.coaster.b + 40]) if (cull(sx, 80)) bulbString(sx - 62, 332, sx + 62, 332, 3, 5, t, P);
-  if (cull(6845, 120)) bulbString(6792, 330, 6898, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
+  if (cull(13905, 120)) bulbString(13852, 330, 13958, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
   for (const x of [700, 1000, 3200, 3600]) if (cull(x, 30)) vine(x + 10, x < 2000 ? 214 : 150, 60, t, x);
 }
 
@@ -572,13 +572,13 @@ function drawEasel(i, t) {
 }
 // Paint splats on the floor, party bunting, and a rope bridge from the Wonder Engine
 // to the magnet: Playhouse / Studio / Park bits woven all along the world.
-const SPLATS = [[260, '#ff4f9a'], [880, '#3d9bff'], [1500, '#ffd23f'], [2360, '#36c96b'], [2690, '#ff9a2e'], [3500, '#a15cff'], [4260, '#ff4f9a'], [4900, '#3d9bff'], [5480, '#ffd23f'], [6060, '#36c96b']];
+const SPLATS = [[260, '#ff4f9a'], [880, '#3d9bff'], [1500, '#ffd23f'], [2360, '#36c96b'], [2690, '#ff9a2e'], [3500, '#a15cff'], [4260, '#ff4f9a'], [4900, '#3d9bff'], [5480, '#ffd23f'], [6060, '#36c96b'], [7600, '#ff4f9a'], [8600, '#3d9bff'], [9600, '#ffd23f'], [10500, '#a15cff'], [11300, '#36c96b'], [12300, '#ff9a2e'], [13200, '#ff4f9a']];
 function weaveDecor(t) {
   for (const [x, c] of SPLATS) {
     if (!cull(x, 60)) continue;
     ctx.globalAlpha = .85; ellipse(x, GROUND + 9, 36, 7, c); ellipse(x - 30, GROUND + 7, 9, 3, c); ellipse(x + 34, GROUND + 10, 7, 2.6, c); ellipse(x + 8, GROUND + 6, 10, 3, 'rgba(255,255,255,.45)'); ctx.globalAlpha = 1;
   }
-  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200], [6250, 6440, 120]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
+  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200], [6250, 6440, 120], [8660, 8960, 120], [10560, 10920, 165], [12950, 13400, 70]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
   if (cull(3125, 80)) {
     const B = ROPE_BRIDGE;
     ctx.strokeStyle = '#a8662c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(B.a, B.y - 30); ctx.quadraticCurveTo((B.a + B.b) / 2, B.y - 18, B.b, B.y - 30); ctx.stroke();

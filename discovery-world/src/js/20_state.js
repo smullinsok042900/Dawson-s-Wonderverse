@@ -21,7 +21,7 @@ const LAYOUT = {
   wheel: { cx: 4060, cy: 262, r: 137 },
   coaster: { a: 4440, b: 5300 },
   carousel: { cx: 5700, r: 165 },
-  tube: { y: 92, door: [6800, 6890], drop: 300, x: 6845 },
+  tube: { y: 92, door: [13860, 13950], drop: 300, x: 13905 },
 };
 // Everything you can finger-paint on (the big wall + easels out in the park)
 const PAINT_SURFACES = [
@@ -74,6 +74,7 @@ function snapshot() {
     strokes: world.strokes.slice(-140).map(({ born, ...s }) => s), stickers: world.stickers, discoveries: [...world.discoveries], stars: [...world.stars],
     portions: world.portions, lastMix: world.lastMix, tank: world.tank, battery: world.battery,
     labOn: world.labOn, magnetOn: world.magnetOn, powered: world.powered,
+    bits: world.bits, hoops: world.hoops, fluffs: FLUFFS.map(f => [f.id, f.state === 'enter' ? 'home' : f.state]),
   };
 }
 let saveFailed = false;
@@ -119,6 +120,9 @@ function restore() {
     world.labOn = !!d.labOn; world.magnetOn = !!d.magnetOn;
     world.powered = !!d.powered && world.labOn && world.battery.length >= 6;
     if (typeof d.soundOn === 'boolean') Sound.on = d.soundOn;
+    world.bits = Number.isFinite(d.bits) ? clamp(Math.floor(d.bits), 0, 1e6) : 0;
+    world.hoops = Number.isFinite(d.hoops) ? clamp(Math.floor(d.hoops), 0, 1e6) : 0;
+    if (Array.isArray(d.fluffs)) d.fluffs.forEach(e => { const f = Array.isArray(e) && FLUFFS.find(z => z.id === e[0]); if (f && ['wait', 'follow', 'home'].includes(e[1])) { f.state = e[1]; f.px = player.x - 60; f.py = player.y; } });
   } catch (e) { /* corrupt fields fall back to defaults above */ }
   return { restored: true, migrated };
 }

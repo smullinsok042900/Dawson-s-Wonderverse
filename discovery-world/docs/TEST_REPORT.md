@@ -1,11 +1,29 @@
-# Test report — Milestone 2, build 6
+# Test report — Milestone 2, build 7
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 75 / 75 checks passed, no console errors
+## Result: 90 / 90 checks passed, no console errors
+
+Build 7 added 15 checks:
+- music drums, and star bits collected while playing
+- climb all 5 Sky Tower levels with repeated JUMP
+- find a Fluffkin, giant slide entry and landing
+- swing ride, then fling off with JUMP
+- seesaw shoots its ball through the hoop
+- peekaboo window
+- bring a Fluffkin home
+- train ride across to the far station
+- confetti cannon launch
+- dance floor
+
+Bugs the new tests caught (all fixed):
+- jumping off a swing instantly re-boarded it
+- the creature kicked the seesaw ball backwards as it launched
+- air drag made the seesaw shot fall short
+- from the lift, the dispenser button was off-screen
 
 Build 6 added five checks:
 - dispenser balls roll down the ramps into the paddle wheel

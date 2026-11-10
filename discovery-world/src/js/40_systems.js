@@ -124,7 +124,7 @@ function launch() {
   discover('launch', '3, 2, 1… BLAST OFF across the park!', P.x, P.y - 120);
 }
 // ---------------- rides ----------------
-function startSlide() { const P = player; P.ride = { type: 'slide', s: .02 }; P.vy = 0; P.facing = 1; discover('slide', 'Wheee! Ride the giant rainbow slide.', 1010, 300); }
+function startSlide(path, k) { const P = player; P.ride = { type: 'slide', s: .02, path, k: k || 1 }; P.vy = 0; P.facing = 1; discover(path ? 'bigslide' : 'slide', path ? 'The GIANT slide! Wheee!' : 'Wheee! Ride the giant rainbow slide.', P.x, P.y - 100); }
 function startSlideTap() { const P = player; P.x = SLIDE[0][0]; P.y = SLIDE[0][1]; startSlide(); }
 function rideWheel() {
   const P = player; if (P.ride) return;
@@ -176,6 +176,7 @@ function jump() {
   const P = player;
   if (!started || paused) return;
   if (P.ride) {
+    if (jumpOffBigRide()) return;
     if (P.ride.type === 'tube' || P.ride.type === 'slide') return;
     if (P.ride.type === 'bubble') { popBubble(P.ride.b); return; }
     P.ride = null; P.vy = -560; P.jumps = 1; P.grounded = false; animJump(P.anim, P.creature, 1); Sound.jump(1); return;
@@ -214,6 +215,7 @@ const INTERACT = [
   { box: [6166, 362, 6214, 402], hint: [6190, 382], disc: 'dispenser', priority: true, tap: dispense },
   { box: [6672, 150, 6790, 232], hint: [6730, 200], disc: 'xylophone', priority: true, tap: tapXylo },
   { box: [6150, 100, 6232, 450], tap: dispense },
+  { box: [6520, 330, 6558, 400], priority: true, tap: dispense },
   { box: [6775, 270, 6915, 452], hint: [6845, 390], disc: 'tube', tap: rideTube },
   { box: [688, 236, 784, 360], hint: [737, 300], disc: 'climbnet', tap: () => tapClimb(CLIMBS[0]) },
   { box: [2682, 296, 2728, 452], hint: [2705, 380], disc: 'ladder', tap: () => tapClimb(CLIMBS[1]) },
@@ -263,13 +265,16 @@ function updatePlayer(dt) {
       for (const z of PLATFORMS) {
         if (P.x < z.a || P.x > z.b) continue;
         const stepUp = z.step && wasGrounded && P.y >= z.y && P.y - z.y <= 58;
-        if ((oldY <= z.y + 2 && P.y >= z.y) || stepUp) { P.y = z.y; P.vy = 0; P.grounded = true; break; }
+        if ((oldY <= z.y + 2 && P.y >= z.y) || stepUp) { const impact = P.vy; P.y = z.y; P.vy = 0; P.grounded = true; if (z.onLand) z.onLand(z, impact); break; }
       }
     }
     if (P.y >= GROUND) { P.y = GROUND; P.vy = 0; P.grounded = true; }
     const T = LAYOUT.tramp;
     if (P.x > T.a && P.x < T.b && P.y >= T.y - 2 && P.vy >= 0 && P.y <= GROUND) bounce(clamp(Math.max(930, (P.vy || 0) * 1.02), 930, 1040));
     if (P.grounded) { P.jumps = 0; P.launched = false; }
+    // walking off the top of the Sky Tower / slide tower 2 onto the giant slides
+    if (P.grounded && P.y === -60 && P.x > 8058 && P.vx > 30) startBigSlide(0);
+    if (P.grounded && P.y === 150 && P.x > 12318 && P.x < 12340 && P.vx > 30) startBigSlide(1);
     // walking off the top of the tower onto the slide
     if (P.grounded && P.y === 319 && P.x > 962 && P.vx > 30) startSlide();
     // walking off the lookout onto the zipline
@@ -299,11 +304,11 @@ function updatePlayer(dt) {
   });
 }
 function updateRide(dt) {
-  if (updateClimbZip(dt)) return;
+  if (updateClimbZip(dt) || updateBigRide(dt)) return;
   const P = player, R = P.ride;
   if (R.type === 'slide') {
-    R.s += dt * (.42 + R.s * 1.15);
-    const p = slidePos(Math.min(1, R.s)); P.x = p[0]; P.y = p[1] - 8; P.vx = 320; P.vy = 0;
+    R.s += dt * (.42 + R.s * 1.15) * R.k;
+    const p = slidePos(Math.min(1, R.s), R.path); P.x = p[0]; P.y = p[1] - 8; P.vx = 320; P.vy = 0;
     if (Math.random() < .3) burst(P.x - 20, P.y, 1, ['#fff', '#ffe36e'], 'star', .3);
     if (R.s >= 1) { P.ride = null; P.y = GROUND; P.vx = 330; P.grounded = true; burst(P.x, GROUND - 10, 18); Sound.land(); }
   } else if (R.type === 'wheel') {
@@ -402,18 +407,20 @@ function updateWorld(dt, t) {
   world.stickerJig = Math.max(0, world.stickerJig - dt * 1.4); world.zipWiggle = Math.max(0, world.zipWiggle - dt * 1.5);
   updateBalls(dt);
   updateMarble(dt, t);
+  updateBig(dt, t);
   updateParticles(dt);
 }
 function updateBalls(dt) {
   const P = player, T = LAYOUT.tramp, [mx, my] = LAYOUT.magnet.c;
   for (const b of balls) {
     if (b.dragged) continue;
-    b.vy += GRAV * .7 * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.vx *= Math.pow(.985, dt * 60);
+    b.vy += GRAV * .7 * dt; b.x += b.vx * dt; b.y += b.vy * dt; if (!(b.kickCD > 0)) b.vx *= Math.pow(.985, dt * 60); // a launched seesaw ball flies true
     if (b.y > GROUND - b.r) { b.y = GROUND - b.r; b.vy = -Math.abs(b.vy) * .62; if (Math.abs(b.vy) < 40) b.vy = 0; b.vx *= .92; }
     if (b.x > T.a && b.x < T.b && b.y + b.r > T.y && b.vy > 0) { b.vy = -760; world.tramp.v += 160; Sound.tone(300, .12, 'sine', .03, 2); }
     if (b.x < b.r + 20 || b.x > WORLD_W - b.r - 20) { b.x = clamp(b.x, b.r + 20, WORLD_W - b.r - 20); b.vx *= -.7; }
     // players kick balls (collision with the creature's body circle)
-    if (!P.ride) {
+    if (b.kickCD > 0) b.kickCD -= dt;
+    if (!P.ride && !(b.kickCD > 0)) {
       const cx = P.x, cy = P.y - 64, dx = b.x - cx, dy = b.y - cy, d = Math.hypot(dx, dy), min = b.r + 46;
       if (d < min && d > .01) {
         const nx = dx / d, ny = dy / d; b.x = cx + nx * min; b.y = cy + ny * min;
@@ -440,7 +447,7 @@ function updateBalls(dt) {
 function updateCamera(dt) {
   const P = player, fast = P.ride && (P.ride.type === 'tube') ? 14 : 5.3;
   const focusY = P.ride && P.ride.type === 'carousel' ? GROUND : P.y;
-  camY += (clamp(focusY - 390, -80, 540 - VH) - camY) * Math.min(1, dt * 5);
+  camY += (clamp(focusY - 390, -470, 540 - VH) - camY) * Math.min(1, dt * 5);
   world.lookAhead += ((P.ride ? 0 : P.facing * vw * .1) - world.lookAhead) * Math.min(1, dt * 1.6);
   const target = clamp(P.x - vw / 2 + world.lookAhead, 0, Math.max(0, WORLD_W - vw));
   camera += (target - camera) * Math.min(1, dt * fast);

@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T11:37:15.864Z",
+  "date": "2026-11-10T12:01:09.525Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 75,
-  "total": 75,
+  "passed": 90,
+  "total": 90,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 287 units"
+      "detail": "moved 290 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=334 jumps=1"
+      "detail": "y=339 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=141 v=452"
+      "detail": "dx=136 v=468"
     },
     {
       "name": "paint palette appears near the wall",
@@ -132,7 +132,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1175"
+      "detail": "x=1179"
     },
     {
       "name": "JUMP while touching the climbing net climbs it",
@@ -147,7 +147,7 @@
     {
       "name": "walk the sky bridge to the lookout and find secret star 7",
       "ok": true,
-      "detail": "stars 1→2, x=1323"
+      "detail": "stars 1→2, x=1334"
     },
     {
       "name": "walking off the lookout grabs the zipline",
@@ -157,7 +157,7 @@
     {
       "name": "zipline drops you by the paint mixer",
       "ok": true,
-      "detail": "x=2023"
+      "detail": "x=2022"
     },
     {
       "name": "tap the engine ladder to climb it",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "42,24,36"
+      "detail": "39,26,35"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -217,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4253"
+      "detail": "landed at x=4252"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -267,7 +267,7 @@
     {
       "name": "the lift carries the creature up",
       "ok": true,
-      "detail": "y=236"
+      "detail": "y=234"
     },
     {
       "name": "walk onto the balcony and find secret star 8",
@@ -276,6 +276,81 @@
     },
     {
       "name": "tap the balcony xylophone to play it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hop across the music drums",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "star bits get collected while playing",
+      "ok": true,
+      "detail": "96 → 105"
+    },
+    {
+      "name": "JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower",
+      "ok": true,
+      "detail": "y=-60"
+    },
+    {
+      "name": "find a lost baby Fluffkin at the top (it follows you)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk off the top onto the GIANT slide",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "giant slide lands you by the swings",
+      "ok": true,
+      "detail": "x=8635"
+    },
+    {
+      "name": "tap the swing to ride it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP flings you off the swing",
+      "ok": true,
+      "detail": "vx=-254 vy=-45"
+    },
+    {
+      "name": "the seesaw shoots its ball through the hoop",
+      "ok": true,
+      "detail": "baskets 0 → 1"
+    },
+    {
+      "name": "tap a peekaboo window to meet who lives there",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bring the Fluffkin home to the Fluffkin House",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap the train to ride it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the train carries you to the far station",
+      "ok": true,
+      "detail": "x=13690"
+    },
+    {
+      "name": "the confetti cannon blasts you sky-high",
+      "ok": true,
+      "detail": "y=26"
+    },
+    {
+      "name": "walk on the dance floor to light it up",
       "ok": true,
       "detail": ""
     },
@@ -342,7 +417,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "38 discoveries"
+      "detail": "56 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -352,7 +427,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2695 → 2695"
+      "detail": "x 2705 → 2705"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -362,12 +437,12 @@
     {
       "name": "old Prototype 01 save migrates (creature, painting, discoveries)",
       "ok": true,
-      "detail": ""
+      "detail": "{\"cr\":\"zuzu\",\"st\":1,\"sl\":true,\"x\":2000,\"y\":450}"
     },
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.3ms, quality 0.70"
+      "detail": "median 16.7ms, p95 33.4ms, quality 0.70"
     },
     {
       "name": "portrait shows the turn-sideways tip",

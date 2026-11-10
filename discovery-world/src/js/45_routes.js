@@ -18,7 +18,7 @@ function climbZoneAt(x, y) { return CLIMBS.find(c => x > c.x1 && x < c.x2 && y >
 function startClimb(c) {
   const P = player; P.ride = { type: 'climb', c }; P.vx = 0; P.vy = 0; P.jumps = 0;
   Sound.tone(520, .12, 'triangle', .04, 1.3);
-  discover(c.id === 'net' ? 'climbnet' : 'ladder', c.id === 'net' ? 'Climb the net up to the high beam!' : 'Climb the ladder to the Wonder Engine walkway!', c.land, c.top - 60);
+  discover(c.id === 'net' ? 'climbnet' : c.id === 'ladder' ? 'ladder' : 'towerclimb', c.id === 'net' ? 'Climb the net up to the high beam!' : c.id === 'ladder' ? 'Climb the ladder to the Wonder Engine walkway!' : 'Climb up, up, up the tower!', c.land, c.top - 60);
 }
 function tapClimb(c) {
   const P = player; if (P.ride) return;

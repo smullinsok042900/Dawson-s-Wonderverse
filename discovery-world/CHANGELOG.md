@@ -1,5 +1,28 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 2 · build 7 — "way bigger, lots more to do" (after Dawson's first playtest: she got bored fast)
+Previous build backed up as `backups/M2_build6_index.html`.
+- **The world is twice as long (7000 → 14100), plus a vertical Sky Tower.** It's still one continuous world, with the whoosh tube looping from the new far end back to the ball pit.
+- **Things to do everywhere:**
+  - **⭐ ~330 star bits** along every path, jump arc, ride and tower. Each one plays a rising note in a combo. Every 30 fills a **star jar** with a confetti party, and they reappear after 45 s. The pink HUD pill shows the total, which is saved.
+  - **🐣 6 lost baby Fluffkins** hidden around the WHOLE world (the tower top, the high cloud, the crawl tunnel, behind the DJ booth, the marble balcony, the bubble-machine roof). A pointing hand shows them, and a heart bubble says "find me". Touch one and it follows you in a parade. Take them to the **Fluffkin House**; when all 6 are home there's a party. Saved.
+- **New stretch:**
+  - **Music drums**: a staircase of bounce pads, each a note, with **bells** to bump with your head.
+  - **Sky Tower**: 5 levels. Press JUMP repeatedly to climb the ladder. Secret star 9 is at the top, then walk off onto a **giant swoopy slide**.
+  - **Swings**: swing higher by holding a direction; JUMP to fly off.
+  - **Seesaw**: stomp it or tap it to shoot the ball through a **basketball hoop**, with a confetti "Swish!". You can also throw balls at the hoops yourself.
+  - **Little train** with a face: rides between two stations, carrying you across the new stretch.
+  - **Peekaboo house**: 5 shuttered windows; tap one to meet the critter living there (+3 star bits the first time).
+  - **Fluffkin House**: lights a window for each baby brought home.
+  - **Cloud hop**: moving clouds over a **bouncy-castle floor**, with bells to ring.
+  - **Slide tower 2**: a second wavy slide and a crawl tunnel to walk through.
+  - **Party plaza**: a dance floor whose tiles light up and play notes (light all 7 for a dance party), a disco ball, a DJ booth, and a **confetti cannon** that blasts you sky-high through a column of star bits.
+- **Other fixes:**
+  - a second "drop a ball" button beside the Marble Machine lift
+  - the camera now follows you much higher
+  - the trampoline can now land you on the high beam (a shortcut)
+  - a ball launched from the seesaw ignores the creature briefly so you don't kick it back
+
 ## Milestone 2 · build 6 — the Marble Machine (second cause-and-effect chain) + musical sounds
 Previous build backed up as `backups/M2_build5_index.html`. The world is extended to 7000 and the whoosh-tube door moved to the new far end.
 - **Marble Machine** (after the carousel):
