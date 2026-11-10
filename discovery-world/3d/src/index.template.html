@@ -10,6 +10,14 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="loading"><div class="spin">★</div><b>Loading the 3D world…</b></div>
+<div id="oops" hidden><b>Oops!</b><p>The 3D world couldn't start on this device.</p><pre id="oopsMsg"></pre><button id="oopsBtn" onclick="location.reload()">Try again</button></div>
+<script>
+// Shows a friendly box (with the exact error, so it can be fixed) if anything goes wrong while starting.
+window.__oops = function (m) { var o = document.getElementById('oops'); if (!o) return; o.hidden = false; document.getElementById('oopsMsg').textContent = String(m || 'unknown error').slice(0, 400); var l = document.getElementById('loading'); if (l) l.style.display = 'none'; };
+addEventListener('error', function (e) { __oops((e.message || 'error') + (e.lineno ? ' (line ' + e.lineno + ':' + e.colno + ')' : '')); });
+addEventListener('unhandledrejection', function (e) { __oops(e.reason && e.reason.message || e.reason); });
+</script>
 <div id="flash"></div>
 <div id="top">
   <div id="brand"><svg class="brandStar" viewBox="0 0 24 24"><path d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg><span><small>Dawson's</small><b>Discovery World 3D</b></span></div>

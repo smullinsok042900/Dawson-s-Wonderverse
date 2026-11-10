@@ -47,7 +47,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await holdBtn('#leftBtn', 500); check('hold ◀ to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); await touch('touchStart', [j]); await touch('touchEnd', []); c = await S(); check('JUMP jumps', c.y > .1 || c.jumps === 1, `y=${c.y.toFixed(2)}`);
     // (the slow software renderer here can't keep up with two real taps inside one jump, so the 2nd tap is sent on the very next frame)
-    await page.evaluate(() => new Promise(r => requestAnimationFrame(() => { document.getElementById('jumpBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); r(); })));
+    await waitFor(s => s.grounded, 3000);
+    await page.evaluate(() => new Promise(r => { const b = document.getElementById('jumpBtn'); b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); requestAnimationFrame(() => requestAnimationFrame(() => { b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); r(); })); }));
     await sleep(300); check('double jump (tap JUMP again in the air)', (await S()).disc.includes('doublejump')); }
   c = await waitFor(s => s.grounded, 4000); check('lands back on the floor', c.grounded && c.y === 0);
   // multi-touch: hold ▶ with one finger and tap JUMP with another
@@ -57,7 +58,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await waitFor(s => s.grounded, 3000);
   // ---------- creatures ----------
   for (const k of ['zuzu', 'jelly', 'pip']) { await page.locator(`.creatureChoice[data-c="${k}"]`).tap(); await sleep(500); c = await S(); check(`switch to ${k}`, c.creature === k); if (k !== 'pip') await shot(`03_${k}.jpg`); }
-  await sleep(1500); c = await S(); await tapWorld(c.x, c.y + .9, c.z); await sleep(200); check('tap your creature to tickle it', (await S()).disc.includes('tickle'));
+  await sleep(3500); c = await S();
+  { const p = await scr(c.x, c.y + .75, c.z), el = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e && (e.id || e.className); }, [p.x, p.y]); const pk = await page.evaluate(([x, y]) => JSON.stringify(__DDW3.pick(x, y)), [p.x, p.y]);
+    await tapWorld(c.x, c.y + .75, c.z); await sleep(200); check('tap your creature to tickle it', (await S()).disc.includes('tickle'), `tap at ${Math.round(p.x)},${Math.round(p.y)} lands on: ${el} ${pk} P=${c.x.toFixed(2)},${c.y.toFixed(2)},${c.z.toFixed(2)}`); }
+  if (process.env.QUICK) { console.log(results.filter(r => !r.ok)); await browser.close(); return; }
   // ---------- playhouse ----------
   await teleport(10); await tapWorld(12, .6); check('tap the ball pit: splash', (await S()).disc.includes('ballpit'));
   await shot('04_ball_pit.jpg');
@@ -82,7 +86,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await teleport(110); await holdBtn('#rightBtn', 500); c = await waitFor(s => s.y > 3, 3000); check('spring pad bounces you up high', c.y > 3, `y=${c.y.toFixed(2)}`);
   await waitFor(s => s.grounded, 4000);
   // ---------- park rides ----------
-  await teleport(139); await tapWorld(146.6, 1.4, -1.6); c = await waitFor(s => s.ride === 'carousel', 2000); check('tap the carousel to ride', c.ride === 'carousel');
+  await teleport(139); { const p = await scr(144, 2.6, -1.6), pk = await page.evaluate(([x, y]) => JSON.stringify(__DDW3.pick(x, y)), [p.x, p.y]); await tapWorld(144, 2.6, -1.6); c = await waitFor(s => s.ride === 'carousel', 4000); check('tap the carousel to ride', c.ride === 'carousel', c.ride === 'carousel' ? '' : `hits ${pk} P.x=${c.x.toFixed(1)} ride=${c.ride}`); } // the carousel's centre pole (the animals move, so aim at the pole)
   await sleep(800); await shot('10_carousel.jpg');
   await press('#jumpBtn'); await sleep(300); check('JUMP gets off the carousel', !(await S()).ride);
   await waitFor(s => s.grounded, 3000);

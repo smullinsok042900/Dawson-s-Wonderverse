@@ -20,7 +20,10 @@ const TEST = /[?&]test/.test(location.search);
 
 // ---------------- renderer, scene, camera, light ----------------
 const canvas = $('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+// phones: start lighter (no MSAA at high pixel density, smaller shadow map, 1.5x resolution)
+const MOBILE = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/.test(navigator.userAgent);
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !MOBILE, powerPreference: 'default' });
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); window.__oops && window.__oops('The device reset the 3D graphics (it may be low on memory). Tap Try again.'); });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -31,7 +34,7 @@ scene.fog = new THREE.Fog('#f3c9ff', 60, 170);
 const camera = new THREE.PerspectiveCamera(38, 2, .1, 600);
 const hemi = new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .85); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1dc', 2.1); sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
+sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 // gradient sky dome + puffy clouds
 const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), new THREE.ShaderMaterial({
@@ -333,6 +336,8 @@ canvas.addEventListener('pointerdown', e => {
   const targets = [creature.root, ...G.taps, ...bubbles.map(b => b.m), ...DOORS.filter(d => d.sprite.visible).map(d => d.sprite)];
   if (nearPaint()) { const h = ray.intersectObject(G.paint.mesh)[0]; if (h && !ray.intersectObjects(DOORS.map(d => d.sprite).filter(s => s.visible)).length) { painting = { id: e.pointerId, last: h.uv.clone() }; paintAt(h.uv, h.uv); canvas.setPointerCapture(e.pointerId); discover('paint', 'Paint with your finger! Pick a colour below.'); return; } }
   const hits = ray.intersectObjects(targets, true);
+  // tapping your creature always tickles it, even when it stands behind balls or bubbles
+  if (hits.some(h => h.object.userData.creature) && !hits.some(h => h.object.isSprite)) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return; }
   for (const h of hits) {
     let o = h.object; while (o && !o.userData.tap && !o.userData.creature) o = o.parent;
     if (!o) continue;
@@ -457,21 +462,26 @@ $('soundBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.u
 
 // ---------------- creature portraits (rendered once, in 3D) ----------------
 function renderPortraits() {
-  const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(160, 160); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.NeutralToneMapping;
-  const s = new THREE.Scene(); s.environment = scene.environment; s.environmentIntensity = .7; s.add(new THREE.HemisphereLight('#ffffff', '#c9a6ff', 1.4)); const l = new THREE.DirectionalLight('#fff', 2); l.position.set(2, 4, 5); s.add(l);
+  // drawn with the main renderer into a corner of the canvas, then copied (no second WebGL context)
+  const s = new THREE.Scene(); s.environment = scene.environment; s.environmentIntensity = .7; s.background = new THREE.Color('#fff6ee');
+  s.add(new THREE.HemisphereLight('#ffffff', '#c9a6ff', 1.4)); const l = new THREE.DirectionalLight('#fff', 2); l.position.set(2, 4, 5); s.add(l);
   const cam = new THREE.PerspectiveCamera(30, 1, .1, 50); cam.position.set(0, 1.3, 4.6); cam.lookAt(0, .95, 0);
-  const out = {};
-  for (const k of Object.keys(CREATURES)) { const c = makeCreature(k); c.root.rotation.y = .35; s.add(c.root); c.update(.016, { grounded: true, facing: 1, vx: 0, vy: 0 }); c.root.rotation.y = .35; r.render(s, cam); out[k] = r.domElement.toDataURL(); s.remove(c.root); }
-  r.dispose(); r.forceContextLoss(); return out;
+  const pr = renderer.getPixelRatio(), css = 128 / pr, px = Math.round(css * pr), out = {};
+  const c2 = document.createElement('canvas'); c2.width = c2.height = 128; const g2 = c2.getContext('2d');
+  renderer.setScissorTest(true); renderer.setViewport(0, 0, css, css); renderer.setScissor(0, 0, css, css);
+  const was = renderer.shadowMap.enabled; renderer.shadowMap.enabled = false;
+  for (const k of Object.keys(CREATURES)) {
+    const c = makeCreature(k); s.add(c.root); c.update(.016, { grounded: true, facing: 1, vx: 0, vy: 0 }); c.root.rotation.y = .35;
+    renderer.render(s, cam); g2.clearRect(0, 0, 128, 128); g2.drawImage(canvas, 0, canvas.height - px, px, px, 0, 0, 128, 128); out[k] = c2.toDataURL(); s.remove(c.root);
+  }
+  renderer.shadowMap.enabled = was; renderer.setScissorTest(false); renderer.setViewport(0, 0, canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight);
+  return out;
 }
-let portraits = {};
-try { portraits = renderPortraits(); } catch (e) { }
-document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
 document.querySelectorAll('.creatureChoice').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; setCreature(b.dataset.c); Sound.giggle(); save(); }));
 document.querySelectorAll('.introPick').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x === b)); setCreature(b.dataset.c); }));
 
 // ---------------- resize + adaptive quality ----------------
-let quality = TEST ? .4 : 1, slow = 0, ema = 1 / 60;
+let quality = TEST ? .4 : MOBILE ? .75 : 1, slow = 0, ema = 1 / 60;
 if (TEST) renderer.shadowMap.enabled = false;
 function resize() {
   const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2) * quality;
@@ -479,6 +489,9 @@ function resize() {
   camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize); resize();
+let portraits = {};
+try { portraits = renderPortraits(); } catch (e) { }
+document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
 function adapt(dt) {
   ema += (dt - ema) * .05;
   if (ema > 1 / 45 && quality > .55) { slow += dt; if (slow > 1.5) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } } }
@@ -522,12 +535,17 @@ updateCounters(); snapCamera(); updateBits(0);
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
 addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-requestAnimationFrame(frame);
+// compile all the shaders first (in the background where the browser allows it), then start
+let begun = false;
+const begin = () => { if (begun) return; begun = true; requestAnimationFrame(frame); setTimeout(() => $('loading').classList.add('done'), 250); };
+try { if (renderer.extensions.has('KHR_parallel_shader_compile')) renderer.compileAsync(scene, camera).then(begin, begin); else begin(); } catch (e) { begin(); }
+setTimeout(begin, 8000);
 
 // debug/test hook (used by the automated tests only)
 window.__DDW3 = {
   player, world, keys, fluffs, G, camera, Sound, save, IN,
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
+  pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };

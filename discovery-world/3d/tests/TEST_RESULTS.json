@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-10T18:37:24.358Z",
+  "date": "2026-11-10T19:15:01.302Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
   "passed": 48,
   "total": 48,
@@ -22,7 +22,7 @@
     {
       "name": "hold ▶ to walk right",
       "ok": true,
-      "detail": "x 5.0 → 11.3"
+      "detail": "x 5.0 → 10.2"
     },
     {
       "name": "let go and the creature stops",
@@ -37,7 +37,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.68"
+      "detail": "y=1.55"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -52,7 +52,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 7.5→8.6, y 0.00"
+      "detail": "x 6.9→11.4, y 1.76"
     },
     {
       "name": "switch to zuzu",
@@ -72,7 +72,7 @@
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": ""
+      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"8.46\",\"tap\",\"0.0\"],[\"Mesh\",\"8.87\",\"creature\",\"0.0\"],[\"Mesh\",\"8.97\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"]] P=13.48,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -92,7 +92,7 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "y=4.13"
+      "detail": "y=4.00"
     },
     {
       "name": "paint palette appears by the paint wall",
@@ -122,7 +122,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=4.38"
+      "detail": "y=5.08"
     },
     {
       "name": "tap the carousel to ride",
@@ -142,7 +142,7 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=2.8"
+      "detail": "y=2.7"
     },
     {
       "name": "walk through star bits to collect them",
@@ -192,7 +192,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=5.08"
     },
     {
       "name": "stair bubble at the top of the stairs",
