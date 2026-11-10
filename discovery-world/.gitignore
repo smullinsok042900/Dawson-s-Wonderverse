@@ -1,0 +1,2 @@
+# Backup zips are sent in chat, not stored in git (keeps the GitHub Pages site small)
+releases/

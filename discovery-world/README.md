@@ -32,7 +32,8 @@ Pour two paints into the bowl → SPIN → the new colour flows down the pipe �
 | `src/style.css`, `src/index.template.html` | page layout and HUD |
 | `build.mjs` | joins `src/` into `index.html` (Node.js, no packages) |
 | `tests/smoke.cjs` | automated browser test (Playwright) → `tests/TEST_RESULTS.json`, `screenshots/` |
-| `backups/Prototype01_ORIGINAL_untouched.html` | the original game, unchanged |
+| `backups/` | the original game (unchanged) and the playable file of every earlier build |
+| `releases/` | (not stored in git) full backup zips are sent in the chat with each build, to keep the website small |
 | `docs/` | audit, test report, the original design brief |
 | `CHANGELOG.md` | what changed in each milestone |
 
