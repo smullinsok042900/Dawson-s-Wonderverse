@@ -2,12 +2,16 @@
 // 30_scenery.js — layered parallax backdrop + all world props.
 // The palette blends continuously across the world (no hard zone edges).
 // ===================================================================
-const ZONES = [
-  { x: 300, sky: ['#7fd3ff', '#c4eeff', '#ffd6ef', '#ffe6c9'], hillA: '#ffc2e2', hillB: '#d0b1ff', floor: ['#ef87d9', '#8c55c4', '#5f3796'], light: '#ffe3f4' },
-  { x: 1750, sky: ['#86d8ff', '#dcf6ff', '#fff1c8', '#ffe0b0'], hillA: '#ffe199', hillB: '#a6ead8', floor: ['#ffad6e', '#c25f95', '#753a8a'], light: '#fff6d8' },
-  { x: 2950, sky: ['#5fbaf2', '#b6e3ff', '#d9d0ff', '#c6ecff'], hillA: '#a8def7', hillB: '#bba1f7', floor: ['#6ad3e2', '#5d60c4', '#3b388e'], light: '#e2f7ff' },
-  { x: 4500, sky: ['#6aa9ff', '#ffc6e6', '#ffbd9c', '#ffdfa8'], hillA: '#ffa6c4', hillB: '#ffd27e', floor: ['#ff8fb1', '#a24f9e', '#682e7e'], light: '#fff0dc' },
+const PALETTES = [
+  { sky: ['#7fd3ff', '#c4eeff', '#ffd6ef', '#ffe6c9'], hillA: '#ffc2e2', hillB: '#d0b1ff', floor: ['#ef87d9', '#8c55c4', '#5f3796'], light: '#ffe3f4' },
+  { sky: ['#5fbaf2', '#b6e3ff', '#d9d0ff', '#c6ecff'], hillA: '#a8def7', hillB: '#bba1f7', floor: ['#c58cf0', '#7a55c4', '#4b358f'], light: '#e2f7ff' },
+  { sky: ['#86d8ff', '#dcf6ff', '#fff1c8', '#ffe0b0'], hillA: '#ffe199', hillB: '#a6ead8', floor: ['#ff9fc8', '#b35aa8', '#6d3a8a'], light: '#fff6d8' },
+  { sky: ['#6aa9ff', '#ffc6e6', '#ffbd9c', '#ffdfa8'], hillA: '#ffa6c4', hillB: '#ffd27e', floor: ['#ff8fb1', '#a24f9e', '#682e7e'], light: '#fff0dc' },
 ];
+// ONE world: the colours drift and repeat every ~3200 units across the whole length,
+// so no part of the world has "its own" colour scheme — the themes are mixed together.
+const ZONES = [];
+for (let i = 0; i <= 9; i++) ZONES.push({ x: i * 800 - 200, ...PALETTES[i % 4] });
 let palette = null;
 function blendPalette(x) {
   let i = 0; while (i < ZONES.length - 2 && x > ZONES[i + 1].x) i++;
@@ -56,15 +60,15 @@ function hills(k, base, amp, col, freq, seed) {
 function farProps(t) {
   const k = .34;
   const tower = (X, h, c, roof) => { const x = px(X, k); if (x < -120 || x > vw + 120) return; rounded(x - 26, 330 - h, 52, h, 10, c); ctx.beginPath(); ctx.moveTo(x - 36, 334 - h); ctx.lineTo(x, 286 - h); ctx.lineTo(x + 36, 334 - h); ctx.closePath(); ctx.fillStyle = roof; ctx.fill(); ellipse(x, 300 - h + 8, 10, 12, '#fff8', null); star(x, 280 - h, 8, '#fff3b0'); };
-  tower(150, 120, '#f6b2e6', '#b98af7'); tower(560, 160, '#b9a2ff', '#ff9cc9'); tower(1020, 110, '#9de4ef', '#ffb7d9');
+  [[150, 120, '#f6b2e6', '#b98af7'], [1750, 160, '#b9a2ff', '#ff9cc9'], [3350, 110, '#9de4ef', '#ffb7d9'], [4950, 140, '#ffc9e8', '#a98af7']].forEach(a => tower(...a));
   const pencil = (X, h, c) => { const x = px(X, k); if (x < -60 || x > vw + 60) return; rounded(x - 14, 330 - h, 28, h, 4, c); ctx.beginPath(); ctx.moveTo(x - 14, 332 - h); ctx.lineTo(x, 300 - h); ctx.lineTo(x + 14, 332 - h); ctx.closePath(); ctx.fillStyle = '#ffe2b8'; ctx.fill(); ellipse(x, 304 - h, 4, 5, c); };
-  [[1480, 150, '#ff86b9'], [1530, 120, '#ffd25a'], [1580, 170, '#5ccff2'], [1950, 135, '#9b7cf5'], [2000, 110, '#6ee0a2']].forEach(a => pencil(...a));
+  [[620, 150, '#ff86b9'], [670, 120, '#ffd25a'], [2250, 170, '#5ccff2'], [2300, 135, '#9b7cf5'], [3880, 140, '#6ee0a2'], [3930, 115, '#ff86b9'], [5600, 160, '#ffd25a'], [5650, 125, '#5ccff2']].forEach(a => pencil(...a));
   const flask = (X, s, c) => { const x = px(X, k); if (x < -80 || x > vw + 80) return; ctx.beginPath(); ctx.moveTo(x - 12 * s, 200); ctx.lineTo(x - 12 * s, 240); ctx.lineTo(x - 44 * s, 322); ctx.quadraticCurveTo(x, 340, x + 44 * s, 322); ctx.lineTo(x + 12 * s, 240); ctx.lineTo(x + 12 * s, 200); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fill(); ctx.beginPath(); ctx.moveTo(x - 30 * s, 290); ctx.lineTo(x + 30 * s, 290); ctx.lineTo(x + 44 * s, 322); ctx.quadraticCurveTo(x, 340, x - 44 * s, 322); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); for (let i = 0; i < 3; i++) ellipse(x + Math.sin(t + i * 2) * 8, 190 - ((t * 30 + i * 30) % 90), 5 + i, 5 + i, 'rgba(255,255,255,.6)'); };
-  flask(2650, 1, '#7fe3d5'); flask(3000, 1.3, '#d48cf5'); flask(3380, .9, '#ffb36b');
+  flask(1100, 1, '#7fe3d5'); flask(2700, 1.3, '#d48cf5'); flask(4300, .9, '#ffb36b'); flask(6000, 1.1, '#7fe3d5');
   const tent = (X, c1, c2) => { const x = px(X, k); if (x < -130 || x > vw + 130) return; for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(x, 210); ctx.lineTo(x - 90 + i * 30, 330); ctx.lineTo(x - 60 + i * 30, 330); ctx.closePath(); ctx.fillStyle = i % 2 ? c1 : c2; ctx.fill(); } star(x, 204, 10, '#fff2a8'); };
-  tent(3700, '#ff8db8', '#fff1f6'); tent(4950, '#8fd5ff', '#fff6e0');
-  const xw = px(4500, k); if (xw > -150 && xw < vw + 150) { ctx.save(); ctx.translate(xw, 230); ctx.rotate(t * .12); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 80, 0, TAU); ctx.stroke(); for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(i * TAU / 8) * 80, Math.sin(i * TAU / 8) * 80); ctx.stroke(); } ctx.restore(); }
-  [[4200, 120, '#ff9ccd'], [5350, 90, '#ffd36b'], [3900, 70, '#9fe6ff']].forEach(([X, y, c], i) => { const x = px(X, .3) + Math.sin(t * .4 + i) * 8, yy = y + Math.sin(t * .6 + i) * 6; if (x < -50 || x > vw + 50) return; ellipse(x, yy, 22, 26, c); ctx.strokeStyle = '#fff9'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 8, yy + 22); ctx.lineTo(x - 5, yy + 38); ctx.moveTo(x + 8, yy + 22); ctx.lineTo(x + 5, yy + 38); ctx.stroke(); rounded(x - 7, yy + 37, 14, 9, 3, '#c68b5e'); });
+  tent(400, '#ff8db8', '#fff1f6'); tent(2050, '#8fd5ff', '#fff6e0'); tent(3650, '#ff8db8', '#fff1f6'); tent(5300, '#8fd5ff', '#fff6e0');
+  for (const WX of [1350, 4500]) { const xw = px(WX, k); if (xw > -150 && xw < vw + 150) { ctx.save(); ctx.translate(xw, 230); ctx.rotate(t * .12); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, 0, 80, 0, TAU); ctx.stroke(); for (let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(i * TAU / 8) * 80, Math.sin(i * TAU / 8) * 80); ctx.stroke(); } ctx.restore(); } }
+  [[900, 110, '#ff9ccd'], [2600, 90, '#ffd36b'], [4200, 120, '#9fe6ff'], [5800, 80, '#ff9ccd']].forEach(([X, y, c], i) => { const x = px(X, .3) + Math.sin(t * .4 + i) * 8, yy = y + Math.sin(t * .6 + i) * 6; if (x < -50 || x > vw + 50) return; ellipse(x, yy, 22, 26, c); ctx.strokeStyle = '#fff9'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 8, yy + 22); ctx.lineTo(x - 5, yy + 38); ctx.moveTo(x + 8, yy + 22); ctx.lineTo(x + 5, yy + 38); ctx.stroke(); rounded(x - 7, yy + 37, 14, 9, 3, '#c68b5e'); });
 }
 // Mid layer: the giant indoor/outdoor play-center frame (arches, beams, colored windows)
 // Mid layer: a giant glass conservatory play-centre — arched windows, gold columns,
@@ -86,6 +90,7 @@ function midArchitecture(t) {
     // gold-capped column between windows
     rounded(x + 160, 120, 26, 270, 10, grad(x + 160, 0, 26, 0, [[0, '#d7a8f5'], [.5, '#f6dcff'], [1, '#b98ae6']]));
     ellipse(x + 173, 122, 18, 8, '#f2c35a'); star(x + 173, 104, 9, '#ffe27a');
+    gear(x + 173, 240, 20, 8, t * (world.powered ? 1.2 : .25) * (i % 2 ? 1 : -1), i % 2 ? '#ffd16b' : '#9fe6ff');
     for (let j = 0; j < 5; j++) bulb(x - 110 + j * 55, 132 - Math.sin((j + .5) / 5 * Math.PI) * 70, Math.sin(t * 2 + i + j) > -.5, '#ffe3a0', .7);
   }
   // rich interior wall below the windows (zone tinted)
@@ -224,7 +229,7 @@ function paintWall(t) {
   ctx.save(); ctx.beginPath(); ctx.roundRect(1418, 137, 527, 226, 12); ctx.clip();
   ctx.fillStyle = '#fffdf6'; ctx.fillRect(1418, 137, 527, 226);
   ctx.globalAlpha = .15; star(1600, 221, 55, '#dca4ff'); star(1840, 292, 36, '#ffbd79'); ellipse(1500, 284, 42, 29, '#88dbe8'); ctx.globalAlpha = 1;
-  for (const s of world.strokes) drawStroke(s);
+  for (const s of world.strokes) if (!s.s) drawStroke(s);
   ctx.restore();
   // easel legs + title banner
   rounded(1520, 98, 300, 42, 20, grad(1520, 98, 300, 0, [[0, '#ff89cb'], [1, '#a36df1']]), '#fff', 4);
@@ -543,4 +548,37 @@ function decorLights(t) {
   for (const sx of [LAYOUT.coaster.a - 40, LAYOUT.coaster.b + 40]) if (cull(sx, 80)) bulbString(sx - 62, 332, sx + 62, 332, 3, 5, t, P);
   if (cull(6145, 120)) bulbString(6092, 330, 6198, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
   for (const x of [700, 1000, 3200, 3600]) if (cull(x, 30)) vine(x + 10, x < 2000 ? 214 : 150, 60, t, x);
+}
+
+// ---------- weaving every theme through the whole world ----------
+// Extra paintable easels out in the park (Studio theme everywhere).
+function drawEasel(i, t) {
+  const S = PAINT_SURFACES[i], w = S.x2 - S.x1, h = S.y2 - S.y1, cx = (S.x1 + S.x2) / 2;
+  if (!cull(cx, w)) return;
+  ctx.strokeStyle = '#a8662c'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(S.x1 + 12, S.y2); ctx.lineTo(S.x1 - 4, GROUND); ctx.moveTo(S.x2 - 12, S.y2); ctx.lineTo(S.x2 + 4, GROUND); ctx.moveTo(cx, S.y1 - 10); ctx.lineTo(cx, GROUND - 10); ctx.stroke();
+  rounded(S.x1 - 10, S.y1 - 10, w + 20, h + 20, 10, grad(0, S.y1, 0, h, [[0, '#ffd36b'], [1, '#e2a23a']]), '#fff3c4', 3);
+  ctx.save(); ctx.beginPath(); ctx.rect(S.x1, S.y1, w, h); ctx.clip();
+  ctx.fillStyle = '#fffdf6'; ctx.fillRect(S.x1, S.y1, w, h);
+  ctx.globalAlpha = .14; star(cx, (S.y1 + S.y2) / 2, h * .32, '#dca4ff'); ctx.globalAlpha = 1;
+  for (const s of world.strokes) if (s.s === i) drawStroke(s);
+  ctx.restore();
+  rounded(S.x1 - 14, S.y2 + 8, w + 28, 12, 6, '#c47a35', '#fff3c4', 2);
+  ['#ff4f9a', '#ffd23f', '#3d9bff'].forEach((c, k) => { rounded(S.x1 + 6 + k * 24, S.y2 - 4, 16, 14, 4, c, '#fff', 2); });
+  bulbString(S.x1 - 10, S.y1 - 12, S.x2 + 10, S.y1 - 12, 6, 5, t, true, ['#ff9fd8', '#ffd76a', '#9fe6ff']);
+}
+// Paint splats on the floor, party bunting, and a rope bridge from the Wonder Engine
+// to the magnet: Playhouse / Studio / Park bits woven all along the world.
+const SPLATS = [[260, '#ff4f9a'], [880, '#3d9bff'], [1500, '#ffd23f'], [2360, '#36c96b'], [2690, '#ff9a2e'], [3500, '#a15cff'], [4260, '#ff4f9a'], [4900, '#3d9bff'], [5480, '#ffd23f'], [6060, '#36c96b']];
+function weaveDecor(t) {
+  for (const [x, c] of SPLATS) {
+    if (!cull(x, 60)) continue;
+    ctx.globalAlpha = .85; ellipse(x, GROUND + 9, 36, 7, c); ellipse(x - 30, GROUND + 7, 9, 3, c); ellipse(x + 34, GROUND + 10, 7, 2.6, c); ellipse(x + 8, GROUND + 6, 10, 3, 'rgba(255,255,255,.45)'); ctx.globalAlpha = 1;
+  }
+  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
+  if (cull(3125, 80)) {
+    const B = ROPE_BRIDGE;
+    ctx.strokeStyle = '#a8662c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(B.a, B.y - 30); ctx.quadraticCurveTo((B.a + B.b) / 2, B.y - 18, B.b, B.y - 30); ctx.stroke();
+    for (let x = B.a; x <= B.b; x += 15) { rounded(x - 6, B.y - 2, 13, 10, 3, x % 30 ? '#ffb35c' : '#ff8fc5', '#fff3c4', 1.5); ctx.beginPath(); ctx.moveTo(x, B.y); ctx.lineTo(x, B.y - 26); ctx.stroke(); }
+  }
 }

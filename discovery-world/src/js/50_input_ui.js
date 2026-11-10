@@ -82,7 +82,7 @@ function initInput() {
 // --- direct touch in the world: drag balls & bubbles, paint the wall, tap machines ---
 let grab = null; // {kind:'ball'|'bubble'|'paint', obj, id, lastX, lastY, moved, t0}
 const getPos = e => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.height * VH + camera, y: (e.clientY - r.top) / r.height * VH + camY }; };
-const inWall = p => p.x > LAYOUT.wall.x1 - 10 && p.x < LAYOUT.wall.x2 + 10 && p.y > LAYOUT.wall.y1 - 6 && p.y < LAYOUT.wall.y2 + 6;
+const surfaceAt = p => PAINT_SURFACES.findIndex(R => p.x > R.x1 - 10 && p.x < R.x2 + 10 && p.y > R.y1 - 6 && p.y < R.y2 + 6);
 function onDown(e) {
   if (!started || grab) return;
   e.preventDefault(); Sound.ensure();
@@ -102,7 +102,8 @@ function onDown(e) {
   const bub = world.bubbles.slice().reverse().find(b => Math.hypot(p.x - b.x, p.y - b.y) < b.r + 14);
   if (bub) { grab = { kind: 'bubble', obj: bub, id: e.pointerId, lastX: p.x, lastY: p.y, moved: 0, t0: performance.now() }; bub.dragged = true; canvas.setPointerCapture?.(e.pointerId); return; }
   // 4. paint wall
-  if (inWall(p)) { grab = { kind: 'paint', id: e.pointerId }; world.strokes.push({ color: paintColor, points: [], w: 16 }); if (world.strokes.length > 140) world.strokes.shift(); addPaint(p); canvas.setPointerCapture?.(e.pointerId); discover('paint', 'Your painting stays on the giant wall!', p.x, p.y); return; }
+  const si = surfaceAt(p);
+  if (si >= 0) { grab = { kind: 'paint', id: e.pointerId }; world.strokes.push({ color: paintColor, points: [], w: si ? 11 : 16, s: si }); if (world.strokes.length > 140) world.strokes.shift(); addPaint(p); canvas.setPointerCapture?.(e.pointerId); discover(si ? 'easel' : 'paint', si ? 'Paint here too — art is everywhere!' : 'Your painting stays on the giant wall!', p.x, p.y); return; }
   // 5. machines, rides, play equipment
   if (activate(p)) return;
   // 6. anything else: a little twinkle where you touched
@@ -132,22 +133,9 @@ function endPointer(e) {
 }
 function addPaint(p) {
   const s = world.strokes[world.strokes.length - 1]; if (!s) return;
-  const q = [Math.round(clamp(p.x, LAYOUT.wall.x1, LAYOUT.wall.x2)), Math.round(clamp(p.y, LAYOUT.wall.y1, LAYOUT.wall.y2))];
+  const R = PAINT_SURFACES[s.s || 0], q = [Math.round(clamp(p.x, R.x1, R.x2)), Math.round(clamp(p.y, R.y1, R.y2))];
   const last = s.points[s.points.length - 1];
   if (!last || Math.hypot(q[0] - last[0], q[1] - last[1]) > 3) { s.points.push(q); if (s.points.length > 400) s.points.shift(); }
   if (Math.random() < .3) burst(q[0], q[1], 1, [s.color], 'dot', .25);
 }
 
-// Area name banner (slides in when you walk into a new part of the ONE world)
-const ZONE_INFO = [
-  { until: 1350, name: 'Mega Playhouse', icon: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9H3z" fill="#ff7ac6"/><path d="M9 20v-6h6v6" fill="#ffd45e"/><path d="M12 4l1.2 2.4 2.6.3-1.9 1.8.5 2.6L12 9.9l-2.4 1.2.5-2.6-1.9-1.8 2.6-.3z" fill="#fff6b0"/></svg>' },
-  { until: 2380, name: 'Imagination Studio', icon: '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18c1.5 0 2-1 1.6-2-.5-1.3.3-2.5 1.7-2.5H18a3 3 0 003-3c0-5-4-10.5-9-10.5z" fill="#ffd45e"/><circle cx="7.5" cy="11" r="1.7" fill="#ff4fa8"/><circle cx="10" cy="7" r="1.7" fill="#2fa8ff"/><circle cx="14.5" cy="7" r="1.7" fill="#36c96b"/><circle cx="17" cy="10.5" r="1.7" fill="#a15cff"/></svg>' },
-  { until: 3520, name: 'Wonder Lab', icon: '<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 002 3h10a2 2 0 002-3l-5-9V3" fill="#e7d4ff" stroke="#8a4ee0" stroke-width="1.6"/><path d="M7 15h10l2 3.5a1.5 1.5 0 01-1.4 2.2H6.4A1.5 1.5 0 015 18.5z" fill="#ff7ac6"/><circle cx="11" cy="12" r="1" fill="#fff"/></svg>' },
-  { until: 1e9, name: 'Adventure Park', icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="7.5" fill="none" stroke="#ff7ac6" stroke-width="2.2"/><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7L6.7 15.3" stroke="#8a4ee0" stroke-width="1.2"/><path d="M8 21l4-11 4 11" fill="none" stroke="#ffb02e" stroke-width="2"/><circle cx="12" cy="10" r="2" fill="#ffd45e"/></svg>' },
-];
-let zoneNow = -1, zoneTimer = 0;
-function updateZoneBanner(dt) {
-  const z = ZONE_INFO.findIndex(z => player.x < z.until);
-  if (z !== zoneNow) { zoneNow = z; $('zoneName').textContent = ZONE_INFO[z].name; $('zoneIcon').innerHTML = ZONE_INFO[z].icon; $('zoneBanner').classList.add('show'); zoneTimer = 3.2; }
-  if (zoneTimer > 0) { zoneTimer -= dt; if (zoneTimer <= 0) $('zoneBanner').classList.remove('show'); }
-}

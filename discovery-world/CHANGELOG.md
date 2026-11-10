@@ -1,5 +1,18 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 1 · build 4 — "all one world, merged together"
+Previous build backed up as `backups/M1_build3_index.html`.
+- **Removed the area-name banner** that labelled "Mega Playhouse / Imagination Studio / Wonder Lab / Adventure Park". It made the one world feel like four places.
+- **No area owns a colour scheme any more.** The backdrop colours drift and repeat every ~3200 units along the whole world.
+- **Distant landmarks of every theme are mixed along the whole length** (play towers, giant pencils, lab flasks, circus tents, wheels, balloons) instead of being grouped by theme.
+- **Every theme appears everywhere:**
+  - paint splats on the floor all along the world
+  - party bunting across the Studio, Lab and Park
+  - turning gears on every background column (they spin faster when powered)
+  - bubble tubes in the Playhouse, Lab and Park
+  - a new **rope bridge** joining the Wonder Engine walkway to the magnet deck
+- **Painting is no longer only "the Studio":** two new paintable easels out in the park (by the Ferris wheel and by the carousel). Every painting is saved on its own surface.
+
 ## Milestone 1 · build 3 — art-direction pass to match the target screenshots
 Target images saved in `docs/art_reference/`. Previous build backed up as `backups/M1_build2_index.html`.
 - **Pip redesigned as the fairy-kit hero:** big pointed ears with rainbow inner fluff; gold goggles; glitter fairy wings (two pairs, veins, sparkles); a big rainbow fox-tail plume; speckled fur; cream chest fluff; white paws with toe beans; cheek tufts; a heart cheek mark; a rainbow forelock. It's the same attached rig and animations as before.

@@ -100,7 +100,8 @@ function render(t) {
   ceilingTube(t, false); hangingStars(t);
   glassTube(1318, 150, 446, '#7fd8ff', t); glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
-  playStructure(t); paintWall(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  weaveDecor(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
@@ -130,10 +131,10 @@ function paintDropIcon(x, y) {
 }
 function update(dt, t) {
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $('toast').classList.remove('shown'); }
-  const nearWall = started && camera + vw > LAYOUT.wall.x1 + 120 && camera < LAYOUT.wall.x2 - 120;
+  const nearWall = started && PAINT_SURFACES.some(R => camera + vw > R.x1 + Math.min(120, (R.x2 - R.x1) / 2) && camera < R.x2 - Math.min(120, (R.x2 - R.x1) / 2));
   const pt = $('paintTools'); if (pt.classList.contains('show') !== nearWall) pt.classList.toggle('show', nearWall);
   if (!started) { updateParticles(dt); return; }
-  updatePlayer(dt); updateWorld(dt, t); updateCamera(dt); updateZoneBanner(dt);
+  updatePlayer(dt); updateWorld(dt, t); updateCamera(dt);
   if (t - lastSave > 10) { lastSave = t; save(); }
 }
 let lastSave = 0, portraitClock = 0;

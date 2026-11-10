@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T05:32:31.293Z",
+  "date": "2026-11-10T05:52:35.689Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 57,
-  "total": 57,
+  "passed": 60,
+  "total": 60,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 383 units"
+      "detail": "moved 378 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 285 units"
+      "detail": "moved 296 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=326 jumps=1"
+      "detail": "y=334 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=140 v=453"
+      "detail": "dx=137 v=469"
     },
     {
       "name": "paint palette appears near the wall",
@@ -98,6 +98,16 @@
       "name": "painting adds strokes on the wall",
       "ok": true,
       "detail": "3 new strokes"
+    },
+    {
+      "name": "paint palette also appears at the park easel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finger-painting on the park easel",
+      "ok": true,
+      "detail": "1 stroke(s) on easel"
     },
     {
       "name": "walking onto the trampoline bounces you up",
@@ -112,7 +122,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1186"
+      "detail": "x=1170"
     },
     {
       "name": "tapping buckets pours paint into the bowl",
@@ -152,7 +162,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "40,24,35"
+      "detail": "40,27,36"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -162,7 +172,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4222"
+      "detail": "landed at x=4252"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -247,12 +257,17 @@
     {
       "name": "reload keeps paintings",
       "ok": true,
-      "detail": "3 strokes"
+      "detail": "4 strokes"
+    },
+    {
+      "name": "reload keeps the easel painting on the easel",
+      "ok": true,
+      "detail": ""
     },
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "26 discoveries"
+      "detail": "27 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -277,7 +292,7 @@
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.3ms, quality 0.70"
+      "detail": "median 16.7ms, p95 33.4ms, quality 0.85"
     },
     {
       "name": "portrait shows the turn-sideways tip",

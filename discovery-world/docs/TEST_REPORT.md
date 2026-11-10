@@ -1,11 +1,13 @@
-# Test report — Milestone 1, build 3
+# Test report — Milestone 1, build 4
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 57 / 57 checks passed, no console errors
+## Result: 60 / 60 checks passed, no console errors
+
+Build 4 added three checks: the paint palette appears at the park easel, finger-painting on that easel works, and the easel painting survives a reload on the right surface.
 
 Build 3 added three checks: tap the carousel to ride, JUMP off the carousel, and the PAW button boards the nearest ride. The move/jump/paw buttons now measure ≥ 60 px.
 

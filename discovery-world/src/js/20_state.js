@@ -23,12 +23,20 @@ const LAYOUT = {
   carousel: { cx: 5700, r: 165 },
   tube: { y: 92, door: [6100, 6190], drop: 300, x: 6145 },
 };
+// Everything you can finger-paint on (the big wall + easels out in the park)
+const PAINT_SURFACES = [
+  { x1: 1415, x2: 1944, y1: 135, y2: 367 },   // the giant paint wall
+  { x1: 4214, x2: 4322, y1: 230, y2: 334 },   // easel beside the Ferris wheel
+  { x1: 5906, x2: 6056, y1: 214, y2: 336 },   // easel beside the carousel
+];
+const ROPE_BRIDGE = { a: 3080, b: 3172, y: 302 }; // Wonder Engine walkway → magnet deck
 const PIPE = [[2340, 410], [2368, 410], [2368, 232], [2440, 232], [2440, 300]]; // mixer → bubble tank
 const PLATFORMS = [
   { a: 675, b: 865, y: 355 }, { a: 870, b: 975, y: 319 }, { a: 1140, b: 1270, y: 376 },
   { a: 1760, b: 1900, y: 344 },
   { a: 2400, b: 2640, y: 290 },             // bubble machine roof
   { a: 2720, b: 3080, y: 300 },             // Wonder Engine walkway (secret star)
+  { a: 3080, b: 3172, y: 302 },             // rope bridge
   { a: 3170, b: 3460, y: 332 },             // magnet base
   { a: 3570, b: 3680, y: 420, step: true }, // launch pad
   { a: 3925, b: 4195, y: 410, step: true }, // Ferris wheel boarding deck
@@ -77,9 +85,10 @@ function cleanStrokes(arr) {
   for (const s of arr.slice(-140)) {
     if (!s || !Array.isArray(s.points) || typeof s.color !== 'string') continue;
     const color = isHex(s.color) ? s.color : '#fb5aaf';
+    const si = Number.isInteger(s.s) && s.s >= 0 && s.s < PAINT_SURFACES.length ? s.s : 0, R = PAINT_SURFACES[si];
     const pts = s.points.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))
-      .map(p => [clamp(Math.round(p[0]), LAYOUT.wall.x1, LAYOUT.wall.x2), clamp(Math.round(p[1]), LAYOUT.wall.y1, LAYOUT.wall.y2)]).slice(0, 500);
-    if (pts.length) out.push({ color, points: pts, w: Number.isFinite(s.w) ? clamp(s.w, 8, 30) : 16 });
+      .map(p => [clamp(Math.round(p[0]), R.x1, R.x2), clamp(Math.round(p[1]), R.y1, R.y2)]).slice(0, 500);
+    if (pts.length) out.push({ color, points: pts, w: Number.isFinite(s.w) ? clamp(s.w, 8, 30) : 16, s: si });
   }
   return out;
 }

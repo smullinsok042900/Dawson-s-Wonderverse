@@ -110,6 +110,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const sPaint = await S();
   check('painting adds strokes on the wall', sPaint.strokes - strokesBefore === 3, `${sPaint.strokes - strokesBefore} new strokes`);
   await page.screenshot({ path: path.join(SHOTS, '05_painting_wall.jpg'), type: 'jpeg', quality: 82 });
+  // painting is woven through the whole world: the easel out by the carousel works too
+  await teleport(5900); await sleep(300);
+  check('paint palette also appears at the park easel', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
+  { const a = await scr(5925, 250); await touch('touchStart', [{ ...a, id: 7 }]); for (let i = 1; i <= 10; i++) { const q = await scr(5925 + i * 11, 250 + Math.sin(i) * 30); await touch('touchMove', [{ ...q, id: 7 }]); } await touch('touchEnd', []); }
+  const easelStrokes = await page.evaluate(() => __DDW.world.strokes.filter(s => s.s === 2).length);
+  check('finger-painting on the park easel', easelStrokes === 1, `${easelStrokes} stroke(s) on easel`);
+  await page.screenshot({ path: path.join(SHOTS, '05b_painting_park_easel.jpg'), type: 'jpeg', quality: 82 });
   // ---------- 10. trampoline ----------
   await teleport(560);
   await holdBtn('#rightBtn', 550);
@@ -213,6 +220,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const after = await S();
   check('reload keeps creature', after.creature === 'jelly');
   check('reload keeps paintings', after.strokes === before.strokes, `${after.strokes} strokes`);
+  check('reload keeps the easel painting on the easel', await page.evaluate(() => __DDW.world.strokes.filter(s => s.s === 2).length) === 1);
   check('reload keeps discoveries', after.disc.length === before.disc.length, `${after.disc.length} discoveries`);
   check('reload keeps machine/power state', after.powered && after.labOn && after.battery === 6 && after.lastMix === before.lastMix);
   check('reload keeps position (approx.)', Math.abs(after.x - before.x) < 2, `x ${Math.round(before.x)} → ${Math.round(after.x)}`);
