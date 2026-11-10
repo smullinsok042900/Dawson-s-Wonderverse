@@ -230,6 +230,7 @@ function paintWall(t) {
   ctx.fillStyle = '#fffdf6'; ctx.fillRect(1418, 137, 527, 226);
   ctx.globalAlpha = .15; star(1600, 221, 55, '#dca4ff'); star(1840, 292, 36, '#ffbd79'); ellipse(1500, 284, 42, 29, '#88dbe8'); ctx.globalAlpha = 1;
   for (const s of world.strokes) if (!s.s) drawStroke(s);
+  drawStickersOn(0);
   ctx.restore();
   // easel legs + title banner
   rounded(1520, 98, 300, 42, 20, grad(1520, 98, 300, 0, [[0, '#ff89cb'], [1, '#a36df1']]), '#fff', 4);
@@ -248,6 +249,7 @@ function drawStroke(s) {
   path(0, 1.5); ctx.strokeStyle = shade(s.color, -.25); ctx.lineWidth = w + 2; ctx.stroke();
   path(0, 0); ctx.strokeStyle = s.color; ctx.lineWidth = w; ctx.stroke();
   path(-w * .15, -w * .18); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = w * .28; ctx.stroke();
+  drawDripsAndShine(s);
 }
 // Color Mixer: 3 hanging buckets pour real paint into a glass bowl; the spinner stirs it
 // and pumps the new color down the pipe into the bubble machine.
@@ -562,6 +564,7 @@ function drawEasel(i, t) {
   ctx.fillStyle = '#fffdf6'; ctx.fillRect(S.x1, S.y1, w, h);
   ctx.globalAlpha = .14; star(cx, (S.y1 + S.y2) / 2, h * .32, '#dca4ff'); ctx.globalAlpha = 1;
   for (const s of world.strokes) if (s.s === i) drawStroke(s);
+  drawStickersOn(i);
   ctx.restore();
   rounded(S.x1 - 14, S.y2 + 8, w + 28, 12, 6, '#c47a35', '#fff3c4', 2);
   ['#ff4f9a', '#ffd23f', '#3d9bff'].forEach((c, k) => { rounded(S.x1 + 6 + k * 24, S.y2 - 4, 16, 14, 4, c, '#fff', 2); });

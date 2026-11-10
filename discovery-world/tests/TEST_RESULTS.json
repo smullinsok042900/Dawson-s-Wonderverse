@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T05:52:35.689Z",
+  "date": "2026-11-10T11:20:46.433Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 60,
-  "total": 60,
+  "passed": 70,
+  "total": 70,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 378 units"
+      "detail": "moved 370 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,7 +42,7 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 296 units"
+      "detail": "moved 288 units"
     },
     {
       "name": "JUMP leaves the ground",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=137 v=469"
+      "detail": "dx=140 v=452"
     },
     {
       "name": "paint palette appears near the wall",
@@ -103,6 +103,16 @@
       "name": "paint palette also appears at the park easel",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "stamp heart + star stickers on the easel",
+      "ok": true,
+      "detail": "heart,star"
+    },
+    {
+      "name": "undo removes the most recent thing (the star sticker)",
+      "ok": true,
+      "detail": "heart"
     },
     {
       "name": "finger-painting on the park easel",
@@ -122,7 +132,42 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1170"
+      "detail": "x=1185"
+    },
+    {
+      "name": "JUMP while touching the climbing net climbs it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "climbing ends standing on the high beam",
+      "ok": true,
+      "detail": "y=213"
+    },
+    {
+      "name": "walk the sky bridge to the lookout and find secret star 7",
+      "ok": true,
+      "detail": "stars 1→2, x=1323"
+    },
+    {
+      "name": "walking off the lookout grabs the zipline",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "zipline drops you by the paint mixer",
+      "ok": true,
+      "detail": "x=2023"
+    },
+    {
+      "name": "tap the engine ladder to climb it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ladder ends on the Wonder Engine walkway",
+      "ok": true,
+      "detail": "y=300"
     },
     {
       "name": "tapping buckets pours paint into the bowl",
@@ -147,7 +192,7 @@
     {
       "name": "colored bubbles float into the funnel and charge the battery",
       "ok": true,
-      "detail": "battery 4/6"
+      "detail": "battery 5/6"
     },
     {
       "name": "battery fills to 6",
@@ -162,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "40,27,36"
+      "detail": "41,22,37"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -172,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4252"
+      "detail": "landed at x=4253"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -260,6 +305,11 @@
       "detail": "4 strokes"
     },
     {
+      "name": "reload keeps stickers",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "reload keeps the easel painting on the easel",
       "ok": true,
       "detail": ""
@@ -267,7 +317,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "27 discoveries"
+      "detail": "32 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -277,7 +327,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2705 → 2705"
+      "detail": "x 2696 → 2696"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -292,7 +342,7 @@
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.4ms, quality 0.85"
+      "detail": "median 16.7ms, p95 33.3ms, quality 0.85"
     },
     {
       "name": "portrait shows the turn-sideways tip",

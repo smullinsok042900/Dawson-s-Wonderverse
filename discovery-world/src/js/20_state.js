@@ -33,6 +33,7 @@ const ROPE_BRIDGE = { a: 3080, b: 3172, y: 302 }; // Wonder Engine walkway → m
 const PIPE = [[2340, 410], [2368, 410], [2368, 232], [2440, 232], [2440, 300]]; // mixer → bubble tank
 const PLATFORMS = [
   { a: 675, b: 865, y: 355 }, { a: 870, b: 975, y: 319 }, { a: 1140, b: 1270, y: 376 },
+  { a: 690, b: 1396, y: 213 },              // high route: tower beam → sky bridge → lookout
   { a: 1760, b: 1900, y: 344 },
   { a: 2400, b: 2640, y: 290 },             // bubble machine roof
   { a: 2720, b: 3080, y: 300 },             // Wonder Engine walkway (secret star)
@@ -45,6 +46,7 @@ const PLATFORMS = [
 const SECRET_STARS = [
   { id: 'star1', x: 930, y: 250 }, { id: 'star2', x: 2560, y: 196 }, { id: 'star3', x: 3052, y: 246 },
   { id: 'star4', x: 4060, y: 92 }, { id: 'star5', x: 3000, y: 92 }, { id: 'star6', x: 4870, y: 138 },
+  { id: 'star7', x: 1352, y: 142 },          // on the lookout at the end of the sky bridge
 ];
 
 const world = {
@@ -55,7 +57,7 @@ const world = {
   labOn: false, magnetOn: false, powered: false, powerT: 0,
   gearAngle: 0, gearSpeed: 0, wheelAngle: 0, coasterU: 0, coasterDir: 1,
   tramp: { x: 0, v: 0 }, pitJiggle: 0, funnelWiggle: 0, leverWiggle: 0, spinnerWiggle: 0, sleepyT: 0,
-  wheelSpin: 0, mixSpin: 0, carRot: 0, musicT: 0,
+  wheelSpin: 0, mixSpin: 0, carRot: 0, musicT: 0, stickers: [], paintN: 0, stickerJig: 0, zipWiggle: 0,
 };
 const BALL_DEFAULTS = [
   [270, 375, 23, '#ff68bd'], [350, 400, 26, '#6bdcff'], [407, 375, 20, '#ffcf52'], [505, 406, 29, '#b17aff'],
@@ -69,7 +71,7 @@ const STORE = 'dawsons-discovery-world-v2', STORE_V1 = 'dawsons-discovery-world-
 function snapshot() {
   return {
     v: 2, x: Math.round(player.x), creature: player.creature, soundOn: Sound.on,
-    strokes: world.strokes.slice(-140), discoveries: [...world.discoveries], stars: [...world.stars],
+    strokes: world.strokes.slice(-140).map(({ born, ...s }) => s), stickers: world.stickers, discoveries: [...world.discoveries], stars: [...world.stars],
     portions: world.portions, lastMix: world.lastMix, tank: world.tank, battery: world.battery,
     labOn: world.labOn, magnetOn: world.magnetOn, powered: world.powered,
   };
@@ -88,7 +90,8 @@ function cleanStrokes(arr) {
     const si = Number.isInteger(s.s) && s.s >= 0 && s.s < PAINT_SURFACES.length ? s.s : 0, R = PAINT_SURFACES[si];
     const pts = s.points.filter(p => Array.isArray(p) && Number.isFinite(p[0]) && Number.isFinite(p[1]))
       .map(p => [clamp(Math.round(p[0]), R.x1, R.x2), clamp(Math.round(p[1]), R.y1, R.y2)]).slice(0, 500);
-    if (pts.length) out.push({ color, points: pts, w: Number.isFinite(s.w) ? clamp(s.w, 8, 30) : 16, s: si });
+    const drips = Array.isArray(s.drips) ? s.drips.filter(d => Array.isArray(d) && d.length === 3 && d.every(Number.isFinite)).slice(0, 4).map(([x, y, l]) => [clamp(x, R.x1, R.x2), clamp(y, R.y1, R.y2), clamp(l, 0, 30)]) : undefined;
+    if (pts.length) out.push({ color, points: pts, w: Number.isFinite(s.w) ? clamp(s.w, 8, 30) : 16, s: si, n: Number.isFinite(s.n) ? s.n : 0, drips });
   }
   return out;
 }
@@ -107,6 +110,9 @@ function restore() {
     if (Array.isArray(d.stars)) d.stars.forEach(v => { if (SECRET_STARS.some(s => s.id === v)) world.stars.add(v); });
     if (Array.isArray(d.portions)) world.portions = d.portions.filter(p => p === 'r' || p === 'y' || p === 'b').slice(0, 4);
     world.lastMix = isHex(d.lastMix) ? d.lastMix : null;
+    if (Array.isArray(d.stickers)) world.stickers = d.stickers.filter(k => k && STICKERS.includes(k.k) && Number.isInteger(k.s) && PAINT_SURFACES[k.s] && Number.isFinite(k.x) && Number.isFinite(k.y))
+      .slice(-80).map(k => { const R = PAINT_SURFACES[k.s]; return { s: k.s, k: k.k, x: clamp(k.x, R.x1, R.x2), y: clamp(k.y, R.y1, R.y2), r: Number.isFinite(k.r) ? clamp(k.r, -1, 1) : 0, n: Number.isFinite(k.n) ? k.n : 0 }; });
+    world.paintN = Math.max(0, ...world.strokes.map(s => s.n || 0), ...world.stickers.map(k => k.n || 0));
     if (d.tank && typeof d.tank === 'object') world.tank = { amount: clamp(Math.round(Number(d.tank.amount) || 0), 0, 8), color: isHex(d.tank.color) ? d.tank.color : null };
     if (!world.tank.color) world.tank.amount = 0;
     if (Array.isArray(d.battery)) world.battery = d.battery.filter(isHex).slice(0, 6);

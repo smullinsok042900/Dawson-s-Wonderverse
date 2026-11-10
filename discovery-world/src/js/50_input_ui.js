@@ -2,7 +2,7 @@
 // 50_input_ui.js — touch/mouse/keyboard input + DOM HUD
 // ===================================================================
 const $ = id => document.getElementById(id);
-let toastTimer = 0, paintColor = '#fb5aaf';
+let toastTimer = 0, paintColor = '#fb5aaf', stickerMode = null;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('shown'); toastTimer = 3.2; }
 function updateCounter() { $('discCount').textContent = world.discoveries.size; }
 function selectCreature(kind, quiet) {
@@ -63,8 +63,15 @@ function initInput() {
 
   document.querySelectorAll('.creatureChoice').forEach(b => b.addEventListener('click', () => selectCreature(b.dataset.creature)));
   document.querySelectorAll('.introPick').forEach(b => b.addEventListener('click', () => { selectCreature(b.dataset.creature); document.querySelectorAll('.introPick').forEach(z => z.classList.toggle('chosen', z === b)); }));
-  document.querySelectorAll('.swatch').forEach(b => b.addEventListener('click', () => { paintColor = b.dataset.color; document.querySelectorAll('.swatch').forEach(z => z.classList.toggle('selected', z === b)); Sound.click(); }));
-  $('undoBtn').addEventListener('click', () => { if (world.strokes.length) { world.strokes.pop(); Sound.tone(500, .12, 'sine', .04, .6); save(); } });
+  const pickTool = b => { document.querySelectorAll('.swatch,.stk').forEach(z => z.classList.toggle('selected', z === b)); Sound.click(); };
+  document.querySelectorAll('.swatch').forEach(b => b.addEventListener('click', () => { paintColor = b.dataset.color; stickerMode = null; pickTool(b); }));
+  document.querySelectorAll('.stk').forEach(b => b.addEventListener('click', () => { stickerMode = b.dataset.sticker; pickTool(b); }));
+  $('undoBtn').addEventListener('click', () => {
+    const s = world.strokes[world.strokes.length - 1], k = world.stickers[world.stickers.length - 1];
+    if (!s && !k) return;
+    if (k && (!s || (k.n || 0) > (s.n || 0))) world.stickers.pop(); else world.strokes.pop();
+    Sound.tone(500, .12, 'sine', .04, .6); save();
+  });
   $('soundBtn').addEventListener('click', () => setSound(!Sound.on));
   $('discoveries').addEventListener('click', () => { toast(`⭐ ${world.discoveries.size} discoveries · 🌟 ${world.stars.size}/${SECRET_STARS.length} secret stars`); Sound.click(); });
   $('playBtn').addEventListener('click', () => {
@@ -103,7 +110,8 @@ function onDown(e) {
   if (bub) { grab = { kind: 'bubble', obj: bub, id: e.pointerId, lastX: p.x, lastY: p.y, moved: 0, t0: performance.now() }; bub.dragged = true; canvas.setPointerCapture?.(e.pointerId); return; }
   // 4. paint wall
   const si = surfaceAt(p);
-  if (si >= 0) { grab = { kind: 'paint', id: e.pointerId }; world.strokes.push({ color: paintColor, points: [], w: si ? 11 : 16, s: si }); if (world.strokes.length > 140) world.strokes.shift(); addPaint(p); canvas.setPointerCapture?.(e.pointerId); discover(si ? 'easel' : 'paint', si ? 'Paint here too — art is everywhere!' : 'Your painting stays on the giant wall!', p.x, p.y); return; }
+  if (si >= 0 && stickerMode) { addSticker(si, p, stickerMode); return; }
+  if (si >= 0) { grab = { kind: 'paint', id: e.pointerId }; world.strokes.push({ color: paintColor, points: [], w: si ? 11 : 16, s: si, n: ++world.paintN }); if (world.strokes.length > 140) world.strokes.shift(); addPaint(p); canvas.setPointerCapture?.(e.pointerId); discover(si ? 'easel' : 'paint', si ? 'Paint here too — art is everywhere!' : 'Your painting stays on the giant wall!', p.x, p.y); return; }
   // 5. machines, rides, play equipment
   if (activate(p)) return;
   // 6. anything else: a little twinkle where you touched
@@ -123,7 +131,7 @@ function onMove(e) {
 function endPointer(e) {
   if (!grab || (e && e.pointerId !== undefined && e.pointerId !== grab.id)) return;
   const g = grab; grab = null;
-  if (g.kind === 'paint') { save(); return; }
+  if (g.kind === 'paint') { const s = world.strokes[world.strokes.length - 1]; if (s) addDrips(s); save(); return; }
   g.obj.dragged = false;
   if (g.kind === 'ball') { g.obj.vx = clamp(g.obj.vx, -620, 620); g.obj.vy = clamp(g.obj.vy, -700, 560); if (Math.hypot(g.obj.vx, g.obj.vy) > 300) Sound.whoosh(); }
   if (g.kind === 'bubble') {

@@ -115,6 +115,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('paint palette also appears at the park easel', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
   { const a = await scr(5925, 250); await touch('touchStart', [{ ...a, id: 7 }]); for (let i = 1; i <= 10; i++) { const q = await scr(5925 + i * 11, 250 + Math.sin(i) * 30); await touch('touchMove', [{ ...q, id: 7 }]); } await touch('touchEnd', []); }
   const easelStrokes = await page.evaluate(() => __DDW.world.strokes.filter(s => s.s === 2).length);
+  // stickers
+  await page.locator('.stk[data-sticker="heart"]').tap(); await tapWorld(6010, 240);
+  await page.locator('.stk[data-sticker="star"]').tap(); await tapWorld(5960, 300);
+  let stk = await page.evaluate(() => __DDW.world.stickers.map(k => k.k).join(','));
+  check('stamp heart + star stickers on the easel', stk === 'heart,star', stk);
+  await page.locator('#undoBtn').tap(); await sleep(50);
+  stk = await page.evaluate(() => __DDW.world.stickers.map(k => k.k).join(','));
+  check('undo removes the most recent thing (the star sticker)', stk === 'heart', stk);
+  await page.locator('.swatch[data-color="#fb5aaf"]').tap();
   check('finger-painting on the park easel', easelStrokes === 1, `${easelStrokes} stroke(s) on easel`);
   await page.screenshot({ path: path.join(SHOTS, '05b_painting_park_easel.jpg'), type: 'jpeg', quality: 82 });
   // ---------- 10. trampoline ----------
@@ -130,11 +139,30 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(500); await page.screenshot({ path: path.join(SHOTS, '07_slide_ride.jpg'), type: 'jpeg', quality: 82 });
   sl = await waitFor(s => !s.ride, 4000); check('slide ends and you can move again', !sl.ride && sl.x > 1150, `x=${Math.round(sl.x)}`);
 
+  let c;
+  // ---------- 11b. Milestone 2: climbing net → beam → sky bridge → lookout star → zipline ----------
+  await teleport(760); await page.evaluate(() => { const P = __DDW.player; P.y = 355; P.vy = 0; }); await sleep(250);
+  await touch('touchStart', [{ ...jb, id: 3 }]); await touch('touchEnd', []); await sleep(120);
+  c = await S(); check('JUMP while touching the climbing net climbs it', c.ride === 'climb');
+  await sleep(500); await page.screenshot({ path: path.join(SHOTS, '07b_climbing_net.jpg'), type: 'jpeg', quality: 82 });
+  c = await waitFor(s => !s.ride && s.grounded, 3000); check('climbing ends standing on the high beam', Math.abs(c.y - 213) < 1, `y=${Math.round(c.y)}`);
+  await page.evaluate(() => __DDW.world.stars.delete('star7')); // the double-jump test (x≈1300) can already grab it
+  const starsBefore = (await S()).stars;
+  await holdBtn('#rightBtn', 1900);
+  c = await S(); check('walk the sky bridge to the lookout and find secret star 7', c.stars === starsBefore + 1 && Math.abs(c.y - 213) < 1, `stars ${starsBefore}→${c.stars}, x=${Math.round(c.x)}`);
+  await holdBtn('#rightBtn', 300);
+  c = await waitFor(s => s.ride === 'zip', 1500); check('walking off the lookout grabs the zipline', c.ride === 'zip');
+  await sleep(500); await page.screenshot({ path: path.join(SHOTS, '07c_zipline.jpg'), type: 'jpeg', quality: 82 });
+  c = await waitFor(s => !s.ride && s.grounded, 4000); check('zipline drops you by the paint mixer', c.x > 1980 && c.x < 2120, `x=${Math.round(c.x)}`);
+  await teleport(2650); await tapWorld(2705, 380); await sleep(100);
+  c = await S(); check('tap the engine ladder to climb it', c.ride === 'climb');
+  c = await waitFor(s => !s.ride && s.grounded, 3000); check('ladder ends on the Wonder Engine walkway', Math.abs(c.y - 300) < 1, `y=${Math.round(c.y)}`);
+
   // ---------- 12. THE CHAIN: mix paint → pipe → colored bubbles → engine → power ----------
   await teleport(2190); await sleep(300);
   await tapWorld(2268, 196); await sleep(800);   // blue
   await tapWorld(2190, 188); await sleep(800);   // yellow
-  let c = await S(); check('tapping buckets pours paint into the bowl', c.portions.join('') === 'by', c.portions.join(','));
+  c = await S(); check('tapping buckets pours paint into the bowl', c.portions.join('') === 'by', c.portions.join(','));
   await page.screenshot({ path: path.join(SHOTS, '08_mixing_paint.jpg'), type: 'jpeg', quality: 82 });
   await tapWorld(2190, 395); await sleep(1300);
   c = await S(); check('SPIN mixes a real new color (blue + yellow → green)', c.lastMix && /^#/.test(c.lastMix) && (() => { const n = parseInt(c.lastMix.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255; return g > r && g > b; })(), c.lastMix);
@@ -220,6 +248,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const after = await S();
   check('reload keeps creature', after.creature === 'jelly');
   check('reload keeps paintings', after.strokes === before.strokes, `${after.strokes} strokes`);
+  check('reload keeps stickers', await page.evaluate(() => __DDW.world.stickers.length) === 1);
   check('reload keeps the easel painting on the easel', await page.evaluate(() => __DDW.world.strokes.filter(s => s.s === 2).length) === 1);
   check('reload keeps discoveries', after.disc.length === before.disc.length, `${after.disc.length} discoveries`);
   check('reload keeps machine/power state', after.powered && after.labOn && after.battery === 6 && after.lastMix === before.lastMix);

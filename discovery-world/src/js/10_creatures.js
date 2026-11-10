@@ -325,8 +325,17 @@ function drawZuzu(A) {
   ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 4.5; ctx.stroke();
   star(24, -10, 9 + Math.sin(t * 6) * 1.5, '#fff6c2'); ctx.restore();
 
+  // two baby stars orbit Zuzu (her signature): the ones behind are drawn first
+  const orbit = k => { const a = t * 1.7 + k * Math.PI; return { x: Math.cos(a) * 74, y: Math.sin(a) * 20 - 6, front: Math.sin(a) > 0, s: 7 + Math.sin(a) * 2 }; };
+  const babyStar = o => { ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(t * 3); ctx.beginPath(); starPath(0, 0, o.s, 5, -Math.PI / 2, .5); ctx.fillStyle = '#fff3a0'; ctx.fill(); ctx.strokeStyle = '#ff9f2e'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.restore(); glow(o.x, o.y, 16, '#fff3a6', .6); };
+  [0, 1].map(orbit).filter(o => !o.front).forEach(babyStar);
   const body = grad(-40, -60, 60, 120, [[0, '#fff7a8'], [.45, '#ffc65a'], [.85, '#ff7fb8'], [1, '#ff6fa8']]);
   inked([{ path: () => roundedPoly(v), fill: body }], OUT, 6.5);
+  ctx.save(); ctx.beginPath(); roundedPoly(v); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,214,107,.85)'; ctx.lineWidth = 7; ctx.beginPath(); roundedPoly(v); ctx.stroke();   // inner gold rim light
+  for (let i = 0; i < 16; i++) { const gx = ((i * 37) % 90) - 45, gy = ((i * 53) % 90) - 45, tw = Math.sin(t * 5 + i * 1.9); if (tw > -.2) sparkle(gx, gy, 1.6 + tw * 2.2, i % 3 ? '#ffffff' : '#fff3b0'); }
+  ctx.restore();
+  ellipse(-24, -30, 13, 7, 'rgba(255,255,255,.75)', null, 0, -.7); ellipse(-12, -40, 4, 3, '#ffffff');
   // inner shine + tummy shimmer (same shape, smaller)
   ctx.save(); ctx.translate(-5, -7); ctx.scale(.72, .72); ctx.beginPath(); roundedPoly(v); ctx.fillStyle = 'rgba(255,255,230,.45)'; ctx.fill(); ctx.restore();
   // soft pads on the foot tips & mitten tips on the arm tips
@@ -341,6 +350,7 @@ function drawZuzu(A) {
   // freckle stars
   sparkle(-30, -24, 4, '#fffef0'); sparkle(28, 24, 3.5, '#fffef0');
   ctx.restore();
+  ctx.save(); ctx.translate(0, cy); [0, 1].map(orbit).filter(o => o.front).forEach(babyStar); ctx.restore();
 }
 
 // ---------------- JELLY: translucent soft-body blob with tentacle feet ----------------
@@ -393,7 +403,7 @@ function drawJelly(A, ox, oy) {
     for (const [w, c] of [[13, OUT], [8.5, ['#6fead8', '#ff7cc4', '#ffcf5e', '#a48cff', '#7fe0ff'][k]]]) {
       ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(p[0], p[1] - 6); ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY); ctx.stroke();
     }
-    ellipse(tipX, tipY, 3, 3, '#ffffffaa');
+    ellipse(tipX, tipY + 1, 5, 5, ['#ff9fe0', '#ffe48a', '#9ff7e0', '#d6a6ff', '#9fd0ff'][k], OUT, 2); ellipse(tipX - 1.5, tipY - .5, 1.8, 1.8, '#ffffff');
   });
   // antennae rooted on the two upper body points
   [[1, 1], [JN - 1, -1]].forEach(([idx, side], k) => {
@@ -422,7 +432,17 @@ function drawJelly(A, ox, oy) {
   const beat = 1 + Math.max(0, Math.sin(t * 5)) * .12 + (A.react > 0 ? .25 : 0);
   ctx.globalAlpha = .55; ctx.beginPath(); heartPath(cx + 2, cy + 18, 10 * beat); ctx.fillStyle = '#ff6fb0'; ctx.fill(); ctx.globalAlpha = 1;
   ellipse(cx + 18, cy + 30, 30, 12, 'rgba(90,60,190,.18)');
+  // iridescent rim: a rainbow sheen hugging the inside of the edge
+  const iri = ctx.createLinearGradient(cx - 60, cy - 60, cx + 60, cy + 40);
+  ['#ff9fe0', '#ffe48a', '#9ff7e0', '#9fd0ff', '#d6a6ff'].forEach((c, i) => iri.addColorStop(i / 4, c));
+  ctx.globalAlpha = .55 + Math.sin(t * 2) * .1; ctx.strokeStyle = iri; ctx.lineWidth = 9; ctx.beginPath(); bodyPath(); ctx.stroke(); ctx.globalAlpha = 1;
   ctx.restore();
+  // frilly bell edge along the bottom of the deforming body
+  for (let i = 6; i <= 12; i++) {
+    const a = P[i], b = P[i + 1], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, r = Math.hypot(b[0] - a[0], b[1] - a[1]) / 2;
+    ctx.beginPath(); ctx.arc(mx, my, r + 1, 0, Math.PI); ctx.fillStyle = i % 2 ? 'rgba(255,170,230,.85)' : 'rgba(170,220,255,.85)'; ctx.fill();
+    ctx.strokeStyle = OUT; ctx.lineWidth = 2.5; ctx.stroke();
+  }
   // glossy highlight follows the top of the body
   const top = P[0], tl = P[JN - 3];
   ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.beginPath();

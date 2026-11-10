@@ -79,7 +79,7 @@ function drawPlayer(t) {
   }
   ctx.save();
   // riders shrink to fit their seat (bubble / gondola / coaster car), scaled about the feet
-  const rs = P.ride ? { bubble: .78, wheel: .5, coaster: .58, carousel: .62 }[P.ride.type] : 0;
+  const rs = P.ride ? ({ bubble: .78, wheel: .5, coaster: .58, carousel: .62 }[P.ride.type] || 0) : 0;
   if (rs) { ctx.translate(P.x, P.y); ctx.scale(rs, rs); ctx.translate(-P.x, -P.y); }
   drawCreature(P.creature, A, P.x, P.y, { noShadow: !!P.ride, drop: P.grounded ? 0 : floorBelow(P.x, P.y) - P.y });
   ctx.restore();
@@ -98,10 +98,10 @@ function render(t) {
   ctx.save(); ctx.translate(-camera, -camY);
   floorReflection(t);
   ceilingTube(t, false); hangingStars(t);
-  glassTube(1318, 150, 446, '#7fd8ff', t); glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
+  glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
