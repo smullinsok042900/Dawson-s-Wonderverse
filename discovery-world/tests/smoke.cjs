@@ -21,7 +21,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
   const cdp = await ctx.newCDPSession(page);
-  const S = () => page.evaluate(() => { const D = __DDW, P = D.player; return { x: P.x, y: P.y, vx: P.vx, vy: P.vy, grounded: P.grounded, jumps: P.jumps, creature: P.creature, ride: P.ride ? P.ride.type : null, launched: P.launched, disc: [...D.world.discoveries], strokes: D.world.strokes.length, portions: D.world.portions.slice(), lastMix: D.world.lastMix, tank: { ...D.world.tank }, battery: D.world.battery.length, labOn: D.world.labOn, powered: D.world.powered, bubbles: D.world.bubbles.length, colored: D.world.bubbles.filter(b => b.color).length, keys: { ...D.keys }, sound: D.Sound.on, stars: D.world.stars.size }; });
+  const S = () => page.evaluate(() => { const D = __DDW, P = D.player; return { x: P.x, y: P.y, vx: P.vx, vy: P.vy, grounded: P.grounded, jumps: P.jumps, creature: P.creature, ride: P.ride ? P.ride.type : null, launched: P.launched, disc: [...D.world.discoveries], strokes: D.world.strokes.length, portions: D.world.portions.slice(), lastMix: D.world.lastMix, tank: { ...D.world.tank }, battery: D.world.battery.length, labOn: D.world.labOn, powered: D.world.powered, bubbles: D.world.bubbles.length, colored: D.world.bubbles.filter(b => b.color).length, keys: { ...D.keys }, sound: D.Sound.on, stars: D.world.stars.size, bits: D.world.bits, hoops: D.world.hoops, fl: D.world.discoveries.has('fluffkin') ? 1 : 0 }; });
   const scr = (x, y) => page.evaluate(([x, y]) => __DDW.toScreen(x, y), [x, y]);
   const center = async sel => { const b = await page.locator(sel).boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
   const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map((p, i) => ({ x: p.x, y: p.y, id: p.id ?? i + 1, radiusX: 8, radiusY: 8, force: 1 })) });
@@ -134,6 +134,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await sleep(250); await page.screenshot({ path: path.join(SHOTS, '06_trampoline_bounce.jpg'), type: 'jpeg', quality: 82 });
   // ---------- 11. slide ----------
   await waitFor(s => s.grounded, 3000);
+  await teleport(860); // (the trampoline can now land you on the high beam)
   await tapWorld(1000, 360); await sleep(150);
   let sl = await S(); check('tapping the slide starts a slide ride', sl.ride === 'slide');
   await sleep(500); await page.screenshot({ path: path.join(SHOTS, '07_slide_ride.jpg'), type: 'jpeg', quality: 82 });
@@ -225,7 +226,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await page.screenshot({ path: path.join(SHOTS, '15c_marble_machine.jpg'), type: 'jpeg', quality: 82 });
   await page.evaluate(() => { __DDW.world.liftLevel = 0; __DDW.world.liftY = 450; }); await sleep(200);
   await page.evaluate(() => __DDW.teleport(6610)); await sleep(300);
-  for (let i = 0; i < 5; i++) { await tapWorld(6190, 382); await sleep(700); }
+  for (let i = 0; i < 5; i++) { await tapWorld(6539, 352); await sleep(700); }  // the button beside the lift
   c = await waitFor(s => s.y < 240, 12000); check('the lift carries the creature up', c.y < 240 && c.grounded, `y=${Math.round(c.y)}`);
   const sb = (await S()).stars;
   await holdBtn('#rightBtn', 380);
@@ -233,7 +234,46 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await tapWorld(6700, 200); await sleep(80);
   check('tap the balcony xylophone to play it', (await S()).disc.includes('xylophone'));
   await page.screenshot({ path: path.join(SHOTS, '15d_balcony_xylophone.jpg'), type: 'jpeg', quality: 82 });
-  await teleport(6660); await holdBtn('#rightBtn', 1100);
+  // ---------- build 7: the big new stretch ----------
+  await teleport(6950); const b0 = (await S()).bits; await holdBtn('#rightBtn', 1700);
+  c = await S(); check('hop across the music drums', c.disc.includes('drums'));
+  check('star bits get collected while playing', c.bits > b0, `${b0} → ${c.bits}`);
+  await page.screenshot({ path: path.join(SHOTS, '19_music_drums.jpg'), type: 'jpeg', quality: 82 });
+  await teleport(7880); await sleep(200);
+  for (let i = 0; i < 5; i++) { await touch('touchStart', [{ ...jb, id: 3 }]); await touch('touchEnd', []); await sleep(100); await waitFor(s => !s.ride && s.grounded, 2500); }
+  c = await S(); check('JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower', Math.abs(c.y + 60) < 1, `y=${Math.round(c.y)}`);
+  await page.screenshot({ path: path.join(SHOTS, '20_sky_tower_top.jpg'), type: 'jpeg', quality: 82 });
+  await holdBtn('#rightBtn', 900);
+  c = await S(); check('find a lost baby Fluffkin at the top (it follows you)', c.disc.includes('fluff-f1'));
+  c = await waitFor(s => s.ride === 'slide', 1500); check('walk off the top onto the GIANT slide', c.ride === 'slide');
+  await sleep(700); await page.screenshot({ path: path.join(SHOTS, '21_giant_slide.jpg'), type: 'jpeg', quality: 82 });
+  c = await waitFor(s => !s.ride && s.grounded, 5000); check('giant slide lands you by the swings', c.x > 8500, `x=${Math.round(c.x)}`);
+  await teleport(8740); await tapWorld(8740, 300); await sleep(1600);
+  c = await S(); check('tap the swing to ride it', c.ride === 'swing');
+  await page.screenshot({ path: path.join(SHOTS, '22_swing.jpg'), type: 'jpeg', quality: 82 });
+  await touch('touchStart', [{ ...jb, id: 3 }]); await touch('touchEnd', []); await sleep(60);
+  c = await S(); check('JUMP flings you off the swing', !c.ride && c.launched, `vx=${Math.round(c.vx)} vy=${Math.round(c.vy)}`);
+  await waitFor(s => s.grounded, 3000);
+  await teleport(9300); const h0 = (await S()).hoops; await tapWorld(9150, 410);
+  c = await waitFor(s => s.hoops > h0, 3500); check('the seesaw shoots its ball through the hoop', c.hoops > h0, `baskets ${h0} → ${c.hoops}`);
+  await page.screenshot({ path: path.join(SHOTS, '23_seesaw_hoop.jpg'), type: 'jpeg', quality: 82 });
+  await teleport(10600); await tapWorld(10620, 232); await sleep(500);
+  check('tap a peekaboo window to meet who lives there', (await S()).disc.includes('peek'));
+  await page.screenshot({ path: path.join(SHOTS, '24_peekaboo.jpg'), type: 'jpeg', quality: 82 });
+  await teleport(10950); await holdBtn('#rightBtn', 1000); await sleep(1200);
+  c = await S(); check('bring the Fluffkin home to the Fluffkin House', c.disc.includes('fluffhome'));
+  await page.screenshot({ path: path.join(SHOTS, '25_fluffkin_home.jpg'), type: 'jpeg', quality: 82 });
+  await page.evaluate(() => { const T = __DDW.train; T.x = 10010; T.dir = 1; T.wait = 1; }); await teleport(10050); await tapWorld(10010, 410); await sleep(150);
+  c = await S(); check('tap the train to ride it', c.ride === 'train');
+  await sleep(3000); await page.screenshot({ path: path.join(SHOTS, '26_train_ride.jpg'), type: 'jpeg', quality: 82 });
+  c = await waitFor(s => !s.ride, 20000); check('the train carries you to the far station', c.x > 13000, `x=${Math.round(c.x)}`);
+  await teleport(13480); await tapWorld(13480, 380); await sleep(450);
+  c = await S(); check('the confetti cannon blasts you sky-high', c.y < 150, `y=${Math.round(c.y)}`);
+  await page.screenshot({ path: path.join(SHOTS, '27_confetti_cannon.jpg'), type: 'jpeg', quality: 82 });
+  await waitFor(s => s.grounded, 4000);
+  await teleport(12960); await sleep(300); await holdBtn('#rightBtn', 1300);
+  check('walk on the dance floor to light it up', (await S()).disc.includes('dance'));
+  await teleport(13700); await holdBtn('#rightBtn', 1100);
   c = await waitFor(s => s.ride === 'tube', 1500); check('walking into the rainbow door enters the whoosh tube', c.ride === 'tube');
   await sleep(1200); await page.screenshot({ path: path.join(SHOTS, '15_whoosh_tube.jpg'), type: 'jpeg', quality: 82 });
   c = await waitFor(s => !s.ride && s.grounded, 6000); check('tube carries you all the way back to the ball pit', c.x < 640, `x=${Math.round(c.x)}`);
@@ -279,7 +319,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   c = await S(); check('corrupt save data is ignored safely', c.creature === 'pip' && c.strokes === 0);
   await page.evaluate(() => sessionStorage.setItem('__inject', JSON.stringify({ 'dawsons-discovery-world-v2': null, 'dawsons-discovery-world-v1': JSON.stringify({ x: 2000, creature: 'zuzu', strokes: [{ color: '#fb5aaf', points: [[1500, 200], [1600, 250]] }, { color: 'bad', points: 'x' }], discoveries: ['slide'], labOn: true, magnetOn: true, colorMix: 2 }) })));
   await page.reload(); await sleep(500); await page.locator('#playBtn').tap(); await sleep(300);
-  c = await S(); check('old Prototype 01 save migrates (creature, painting, discoveries)', c.creature === 'zuzu' && c.strokes === 1 && c.disc.includes('slide') && Math.abs(c.x - 2000) < 2);
+  c = await S(); check('old Prototype 01 save migrates (creature, painting, discoveries)', c.creature === 'zuzu' && c.strokes === 1 && c.disc.includes('slide') && Math.abs(c.x - 2000) < 2, JSON.stringify({ cr: c.creature, st: c.strokes, sl: c.disc.includes('slide'), x: Math.round(c.x), y: Math.round(c.y) }));
   // ---------- 18. frame timing (headless desktop Chromium — NOT an iPhone measurement) ----------
   await sleep(4000); // let adaptive resolution settle
   const q = await page.evaluate(() => __DDW.quality);

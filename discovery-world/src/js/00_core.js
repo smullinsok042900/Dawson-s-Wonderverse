@@ -6,7 +6,7 @@ let ctx = canvas.getContext('2d', { alpha: false });
 
 const VH = 480;          // world units visible vertically (closer camera = bigger creatures)
 const GROUND = 450;      // floor line in world units
-const WORLD_W = 7000;    // ONE continuous world, left to right
+const WORLD_W = 14100;    // ONE continuous world, left to right
 const GRAV = 1450;
 const TAU = Math.PI * 2;
 
@@ -186,7 +186,7 @@ const particles = [];
 const PCOLORS = ['#fff', '#ffc84b', '#ff6ec2', '#59dff1', '#a587ff'];
 function burst(x, y, n = 18, colors = PCOLORS, kind = 'star', spread = 1) {
   for (let i = 0; i < n; i++) {
-    if (particles.length > 260) particles.shift();
+    if (particles.length > 420) particles.shift();
     particles.push({ x, y, vx: rand(-190, 190) * spread, vy: rand(-260, -60) * spread, life: rand(.45, 1), max: 1, c: colors[i % colors.length], r: rand(3, 8), kind, g: kind === 'drop' ? 900 : 500, rot: rand(0, TAU) });
   }
 }
@@ -195,6 +195,7 @@ function drawParticles() {
     ctx.globalAlpha = clamp(p.life / .6, 0, 1);
     if (p.kind === 'heart') { ctx.beginPath(); heartPath(p.x, p.y, p.r * 1.3); ctx.fillStyle = p.c; ctx.fill(); }
     else if (p.kind === 'drop' || p.kind === 'dot') ellipse(p.x, p.y, p.r * .8, p.r, p.c);
+    else if (p.kind === 'conf') { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot * 2); ctx.fillStyle = p.c; ctx.fillRect(-p.r, -p.r * .45, p.r * 2, p.r * .9); ctx.restore(); }
     else star(p.x, p.y, p.r, p.c, 4, p.rot);
   }
   ctx.globalAlpha = 1;
@@ -202,6 +203,7 @@ function drawParticles() {
 function updateParticles(dt) {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += p.g * dt; p.rot += dt * 3;
+    if (p.kind === 'conf') { p.vx *= Math.exp(-dt * 1.5); p.vy = Math.min(p.vy, 160); }
     if (p.life < 0) particles.splice(i, 1);
   }
 }

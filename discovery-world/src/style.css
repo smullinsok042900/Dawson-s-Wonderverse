@@ -142,3 +142,7 @@ body.playing #toast{top:calc(max(8px,env(safe-area-inset-top)) + 64px)}
 .stk.selected{box-shadow:0 0 0 3px #ffc531,0 0 12px 3px #ffe58a,inset 0 -6px 0 rgba(120,60,180,.12);transform:translateY(-3px)}
 @media (max-height:430px){.stk{width:40px;height:40px}.stk svg{width:34px;height:34px}}
 @media (max-width:760px){#paintTools{gap:4px;padding:5px 6px}.swatch,.toolBtn,.stk{width:36px;height:36px;border-radius:11px}.stk svg{width:30px;height:30px}}
+
+.pill.bits{background:linear-gradient(180deg,#ff7ab8,#d43f8f);box-shadow:0 4px 0 #8f1f5c,0 8px 16px #2b105566}
+.pill.bits svg{width:24px;height:24px;fill:#fff3a6;stroke:#ffb01f}
+@media (max-width:760px){.pill{padding:3px 9px 3px 6px;font-size:15px}}

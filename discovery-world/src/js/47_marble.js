@@ -106,6 +106,10 @@ function drawMarble(t) {
   ellipse(D.globe[0], D.globe[1] + 6, 44, 44, null, '#ffffff', 4); ellipse(D.x - 16, D.globe[1] - 14, 12, 7, 'rgba(255,255,255,.8)', null, 0, -.6);
   rounded(D.x - 10, D.top - 34, 20, 10, 4, '#ffd36b', '#fff', 2);
   rounded(D.x + 26, D.top + 34, 26, 10, 4, '#ffd36b', '#fff', 2); // chute onto the first ramp
+  // a second "drop a ball" button right beside the lift, so you can call balls while riding it
+  rounded(6524, 330, 30, 120, 8, grad(6524, 0, 30, 0, [[0, '#ff7ab8'], [1, '#e2459f']]), '#e9a93a', 3);
+  ellipse(6539, 352 + (world.dispT > 0 ? 2 : 0), 12, 7, grad(0, 345, 0, 14, [[0, '#ffe57a'], [1, '#ffb01f']]), '#fff', 2.5);
+  ellipse(6539, 385, 7, 7, BAR_COLS[Math.floor(t * 2) % 8], '#fff', 2);
   const [bx, by] = D.button, press = world.dispT > 0 ? 3 : 0;
   ellipse(bx, by + 6, 22, 9, '#8a1f52'); ellipse(bx, by + press, 20, 9, grad(0, by - 9, 0, 18, [[0, '#ffe57a'], [1, '#ffb01f']]), '#fff', 3);
   // xylophone ramps (rainbow bars that light up when they play)
