@@ -12,7 +12,7 @@ Build 3 added three checks: tap the carousel to ride, JUMP off the carousel, and
 | # | What was tested | Result |
 |---|---|---|
 | 1 | Title screen shows; LET'S PLAY hides it | PASS |
-| 2 | HUD buttons fully on screen and not overlapping at 844×390; move/jump buttons ≥ 64 px | PASS (70×64, 70×64, 90×74) |
+| 2 | HUD buttons fully on screen and not overlapping at 844×390; move/jump/paw buttons ≥ 60 px | PASS (w×h: [[76,62],[76,62],[82,82],[62,62]]) |
 | 3 | Hold ▶ moves continuously; releasing stops; hold ◀ moves | PASS |
 | 4 | Jump, double jump in mid-air, landing | PASS |
 | 5 | **Multi-touch:** hold ▶ with one finger while tapping the world with another | PASS |
