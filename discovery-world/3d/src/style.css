@@ -49,3 +49,11 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #rotate{display:none;position:fixed;inset:0;z-index:60;background:#3a2270;place-items:center;font-size:90px}
 @media (orientation:portrait) and (max-width:700px){#rotate{display:grid}}
 @media (max-height:420px){#brand{display:none}.pill{min-height:44px;font-size:15px}.creatureChoice{width:46px;height:46px}.creatureChoice img{width:44px;height:44px}}
+#loading{position:fixed;inset:0;z-index:70;display:grid;place-content:center;justify-items:center;gap:10px;background:linear-gradient(145deg,#6b3fc4,#b04fb8);font-size:20px}
+#loading.done{opacity:0;pointer-events:none;transition:opacity .4s}
+#loading .spin{font-size:64px;color:#ffd84a;animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#oops{position:fixed;inset:0;z-index:80;display:grid;place-content:center;justify-items:center;gap:8px;padding:20px;background:#4b2a8a;text-align:center}
+#oops[hidden]{display:none}
+#oops b{font-size:34px}#oops pre{white-space:pre-wrap;max-width:90vw;font-size:12px;background:rgba(0,0,0,.25);padding:8px;border-radius:8px}
+#oopsBtn{border:3px solid #fff;border-radius:999px;padding:10px 26px;font-size:18px;font-weight:900;color:#fff;background:#ff6fae}

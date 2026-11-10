@@ -37,6 +37,13 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 1b: loading fixes (after "the 3D won't load")
+- **Lighter start on phones:** 1.5× resolution instead of 2×, no extra anti-aliasing, and a smaller shadow map. The game still lowers its resolution further by itself if it runs slowly.
+- **One 3D drawing surface only:** the character pictures on the title screen used to be drawn with a second, temporary 3D surface. iPhones handle that badly. They are now drawn with the game's own.
+- **Loading screen:** a "Loading the 3D world…" screen shows while the 3D shapes get ready.
+- **Error box:** if the 3D world still can't start, a box appears saying "Oops!" with the exact error message and a **Try again** button. Please send a photo of that message so it can be fixed. The same box appears if the phone resets the 3D graphics, for example when it's low on memory.
+- **Tickle fix:** tapping your creature now always tickles it, even when it stands in the ball pit behind the balls.
+
 ## Free tools
 - [Three.js](https://threejs.org) (MIT licence) for the 3D.
 - [esbuild](https://esbuild.github.io) (MIT licence) to bundle everything into one file.
@@ -53,7 +60,7 @@ npm test             # 48 automated checks in headless Chromium
 `?test` runs a light mode (lower resolution, no shadows) that is used only by the automated tests, because the test browser has no graphics card. `?hq` turns off the automatic quality lowering, for screenshots.
 
 ## Test report (3D build 1)
-**Result:** 48/48 checks passed, with no console errors or warnings.
+**Result:** 48/48 checks passed (3D build 1b), with no console errors or warnings.
 
 **Setup:** Playwright headless Chromium at 844×390 with touch input. WebGL ran in software (SwiftShader), so it was very slow (about 2–3 frames per second). That speed says nothing about a real iPhone.
 
