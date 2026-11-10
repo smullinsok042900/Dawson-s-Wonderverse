@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T19:15:01.302Z",
+  "date": "2026-11-10T20:01:23.675Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 48,
-  "total": 48,
+  "passed": 51,
+  "total": 51,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -22,7 +22,7 @@
     {
       "name": "hold ▶ to walk right",
       "ok": true,
-      "detail": "x 5.0 → 10.2"
+      "detail": "x 5.0 → 9.7"
     },
     {
       "name": "let go and the creature stops",
@@ -37,7 +37,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.55"
+      "detail": "y=1.76"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -52,7 +52,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 6.9→11.4, y 1.76"
+      "detail": "x 6.6→10.9, y 2.27"
     },
     {
       "name": "switch to zuzu",
@@ -72,7 +72,7 @@
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"8.46\",\"tap\",\"0.0\"],[\"Mesh\",\"8.87\",\"creature\",\"0.0\"],[\"Mesh\",\"8.97\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"]] P=13.48,0.00,0.00"
+      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"8.21\",\"tap\",\"0.0\"],[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"creature\",\"0.0\"]] P=12.54,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -92,7 +92,22 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "y=4.00"
+      "detail": "y=4.10"
+    },
+    {
+      "name": "walk into the climbing blocks: you hop up onto them (not through them)",
+      "ok": true,
+      "detail": "x=42.8 y=2.46"
+    },
+    {
+      "name": "can't walk through the tall paint-jar tower",
+      "ok": true,
+      "detail": "x=88.10 y=0.00"
+    },
+    {
+      "name": "walk into the ball pit: hop over its edge into the balls",
+      "ok": true,
+      "detail": "x=9.9"
     },
     {
       "name": "paint palette appears by the paint wall",
@@ -122,7 +137,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.08"
+      "detail": "y=4.97"
     },
     {
       "name": "tap the carousel to ride",
@@ -142,12 +157,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=2.7"
+      "detail": "y=8.1"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "19 → 23"
+      "detail": "22 → 26"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -167,7 +182,7 @@
     {
       "name": "the Fluffkins you brought are home (counter goes up)",
       "ok": true,
-      "detail": "2 home"
+      "detail": "3 home"
     },
     {
       "name": "stair bubble at the bottom of the stairs",
@@ -182,7 +197,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.5148512932765844"
+      "detail": "k=0.49612942806652677"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -192,7 +207,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=5.08"
+      "detail": "y=4.98"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -227,7 +242,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":23,\"fl\":2,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":26,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",

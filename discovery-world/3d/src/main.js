@@ -48,8 +48,8 @@ const cloudMat = toy('#ffffff', { r: .9, cc: 0, em: '#fff4fb', ei: .35 });
 for (let i = 0; i < 16; i++) { const c = new THREE.Group(); for (let k = 0; k < 5; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), cloudMat); s.scale.setScalar(2 + (k % 3) * .8); s.position.set((k - 2) * 2.2, (k % 2) * 1.1, 0); c.add(s); } c.position.set(-20 + i * 16, 18 + (i % 3) * 4, -55 - (i % 2) * 15); scene.add(c); }
 
 // ---------------- game state ----------------
-const G = { scene, platforms: [], taps: [], interact: [], camera };
-const player = { x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
+const G = { scene, platforms: [], solids: [], taps: [], interact: [], camera };
+const player = { groundZ: 0, x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
 const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#bfe8ff', lastBuckets: [], paintColor: '#ff4f9a', rainbowHue: 0, trail: [], flash: 0, drumT: 0, mobileT: 0, wake: [0, 0, 0, 0, 0, 0] };
 let started = false;
 buildWorld(G);
@@ -117,15 +117,15 @@ bigStar.position.set(G.secretStar[0], G.secretStar[1], 0); bigStar.castShadow = 
 
 // ---------------- the six baby Fluffkins ----------------
 const FLUFF_COLS = ['#ff8fd0', '#8fd8ff', '#ffd45e', '#a98cff', '#7be08a', '#ffa36b'];
-const fluffs = G.fluffSpots.map(([x, y], i) => { const m = makeFluff(FLUFF_COLS[i]); scene.add(m.root); return { i, hx: x, hy: y, state: 'wait', m, px: x, py: y, pz: 0 }; });
+const fluffs = G.fluffSpots.map(([x, y, z = 0], i) => { const m = makeFluff(FLUFF_COLS[i]); scene.add(m.root); return { i, hx: x, hy: y, hz: z, state: 'wait', m, px: x, py: y, pz: z }; });
 function updateFluffs(dt, t) {
   const P = player; world.trail.unshift([P.x, P.y, P.z]); if (world.trail.length > 200) world.trail.length = 200;
   let k = 0;
   for (const f of fluffs) {
     const m = f.m.root;
     if (f.state === 'wait') {
-      m.position.set(f.hx, f.hy, 0); m.visible = Math.abs(f.hx - P.x) < 30; f.m.update(dt, 'wait');
-      if (m.visible && t % 1 < dt * 2) burst(f.hx, f.hy + .9, 0, ['#fff', '#ffe36e'], 3, 1);
+      m.position.set(f.hx, f.hy, f.hz); m.visible = Math.abs(f.hx - P.x) < 30; f.m.update(dt, 'wait');
+      if (m.visible && t % 1 < dt * 2) burst(f.hx, f.hy + .9, f.hz, ['#fff', '#ffe36e'], 3, 1);
       if (P.layer === '' && Math.abs(P.x - f.hx) < 1 && Math.abs(P.y - f.hy) < 1.2) {
         f.state = 'follow'; f.px = f.hx; f.py = f.hy; Sound.giggle(); burst(f.hx, f.hy + .6, 0, RAINBOW, 24, 3);
         const n = fluffs.filter(z => z.state !== 'wait').length;
@@ -369,14 +369,26 @@ function updatePlayer(dt) {
   if (P.ride) { updateRide(dt); return; }
   const h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0); if (h) P.facing = h;
   const accel = P.grounded ? 40 : 22; P.vx += clamp(h * 5.2 - P.vx, -accel * dt, accel * dt);
-  const [x1, x2] = bounds(); P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
-  P.z += (0 - P.z) * Math.min(1, dt * 6);
+  const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
+  // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
+  for (const s of G.solids) {
+    if (s.layer !== P.layer || P.y >= s.top - .02) continue;
+    const L = s.a - .35, Rr = s.b + .35;
+    if (P.x > L && P.x < Rr) {
+      const fromLeft = ox <= L + .001, fromRight = ox >= Rr - .001;
+      if (!fromLeft && !fromRight) continue; // already inside (e.g. just landed): don't trap
+      P.x = fromLeft ? L : Rr;
+      if (P.grounded && s.top - P.y <= 1.25 && Math.sign(P.vx) === (fromLeft ? 1 : -1)) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = fromLeft ? 1 : -1; }
+      else P.vx = 0;
+    }
+  }
+  P.z += (P.groundZ - P.z) * Math.min(1, dt * 6);
   const oldY = P.y, wasG = P.grounded; P.vy -= GRAV * dt; P.y += P.vy * dt; P.grounded = false;
   if (P.vy <= 0) for (const z of G.platforms) {
     if (z.layer !== P.layer || P.x < z.a || P.x > z.b) continue;
     const stepUp = z.step && wasG && z.y > oldY - .01 && z.y - oldY < .5;
     if ((oldY >= z.y - .02 && P.y <= z.y) || stepUp) {
-      const impact = -P.vy; P.y = z.y; P.vy = 0; P.grounded = true;
+      const impact = -P.vy; P.y = z.y; P.vy = 0; P.grounded = true; P.groundZ = z.z || 0;
       if (z.onLand && (!wasG || stepUp)) z.onLand(z);
       if (z.tramp) { P.vy = 13.5; P.grounded = false; P.jumps = 1; world.trampT = 1; Sound.boing(); discover('trampoline', 'Boing! Super bounce!'); }
       else if (z.pad) { P.vy = z.bounce || 15.5; P.grounded = false; P.jumps = 1; Sound.boing(); burst(P.x, z.y + .2, 0, ['#9ff7c8', '#fff'], 10, 2); if (z.top) z.top.scale.y *= .7; discover('springpad', 'Boing! Spring pads bounce you up high!'); }
@@ -385,7 +397,8 @@ function updatePlayer(dt) {
       break;
     }
   }
-  if (P.y <= 0) { if (!P.grounded && P.vy < -6) Sound.land(); P.y = 0; P.vy = 0; P.grounded = true; }
+  if (P.y <= 0) { if (!P.grounded && P.vy < -6) Sound.land(); P.y = 0; P.vy = 0; P.grounded = true; P.groundZ = 0; }
+  if (P.hopX && !P.grounded) { P.vx = Math.max(P.vx * P.hopX, 3.2) * P.hopX; } else P.hopX = 0;
   if (P.layer === 'in') { const c = P.y < IN.f2 - .05 ? IN.ceil1 : IN.ceil2; if (P.y + 1.5 > c) { P.y = c - 1.5; P.vy = Math.min(P.vy, 0); } }
   if (P.grounded) P.jumps = 0;
   // walk off the top of the slide tower onto the slide

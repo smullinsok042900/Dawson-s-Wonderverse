@@ -70,6 +70,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   c = await waitFor(s => !s.ride, 9000); check('slide ends on the floor and you can move again', !c.ride && c.x > 30 && c.y === 0, `x=${c.x.toFixed(1)}`);
   await teleport(31.5); await holdBtn('#rightBtn', 500); c = await waitFor(s => s.y > 2, 2500); check('walk onto the trampoline: big bounce', c.y > 2, `y=${c.y.toFixed(2)}`);
   await shot('06_trampoline.jpg'); await waitFor(s => s.grounded && s.x > 36 || s.grounded && s.y === 0, 4000);
+  // ---------- solid things ----------
+  await teleport(35.8); await holdBtn('#rightBtn', 1600); c = await S(); check('walk into the climbing blocks: you hop up onto them (not through them)', c.y >= 1.15, `x=${c.x.toFixed(1)} y=${c.y.toFixed(2)}`);
+  await teleport(89); await holdBtn('#leftBtn', 1200); c = await S(); check("can't walk through the tall paint-jar tower", c.x >= 88 && c.y < .1, `x=${c.x.toFixed(2)} y=${c.y.toFixed(2)}`);
+  await teleport(6); await holdBtn('#rightBtn', 900); c = await waitFor(s => s.grounded, 3000); check('walk into the ball pit: hop over its edge into the balls', c.x > 8.3 && c.x < 15.7 && c.y < .1, `x=${c.x.toFixed(1)}`);
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
@@ -80,13 +84,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await teleport(71); await holdBtn('#rightBtn', 1200); c = await S(); check('walk along the giant xylophone and it plays', c.disc.includes('xylophone'));
   await shot('08_xylophone.jpg');
   // ---------- lab ----------
-  await teleport(103); await tapWorld(104, .9, .2); await tapWorld(107.2, .9, .2); c = await S(); check('tap two paint buckets to mix a colour', c.disc.includes('mix'));
-  await teleport(97); await tapWorld(99, 1.4, -.1); await sleep(300); c = await S(); check('tap the bubble machine: bubbles float out', c.bubbles > 0, `${c.bubbles} bubbles`);
+  await teleport(103); await tapWorld(104, .9, -1.8); await tapWorld(107.2, .9, -1.8); c = await S(); check('tap two paint buckets to mix a colour', c.disc.includes('mix'));
+  await teleport(97); await tapWorld(99, 1.4, -1.3); await sleep(300); c = await S(); check('tap the bubble machine: bubbles float out', c.bubbles > 0, `${c.bubbles} bubbles`);
   await shot('09_bubbles.jpg');
   await teleport(110); await holdBtn('#rightBtn', 500); c = await waitFor(s => s.y > 3, 3000); check('spring pad bounces you up high', c.y > 3, `y=${c.y.toFixed(2)}`);
   await waitFor(s => s.grounded, 4000);
   // ---------- park rides ----------
-  await teleport(139); { const p = await scr(144, 2.6, -1.6), pk = await page.evaluate(([x, y]) => JSON.stringify(__DDW3.pick(x, y)), [p.x, p.y]); await tapWorld(144, 2.6, -1.6); c = await waitFor(s => s.ride === 'carousel', 4000); check('tap the carousel to ride', c.ride === 'carousel', c.ride === 'carousel' ? '' : `hits ${pk} P.x=${c.x.toFixed(1)} ride=${c.ride}`); } // the carousel's centre pole (the animals move, so aim at the pole)
+  await teleport(139); { const p = await scr(144, 2.6, -5.4), pk = await page.evaluate(([x, y]) => JSON.stringify(__DDW3.pick(x, y)), [p.x, p.y]); await tapWorld(144, 2.6, -5.4); c = await waitFor(s => s.ride === 'carousel', 4000); check('tap the carousel to ride', c.ride === 'carousel', c.ride === 'carousel' ? '' : `hits ${pk} P.x=${c.x.toFixed(1)} ride=${c.ride}`); } // the carousel's centre pole (the animals move, so aim at the pole)
   await sleep(800); await shot('10_carousel.jpg');
   await press('#jumpBtn'); await sleep(300); check('JUMP gets off the carousel', !(await S()).ride);
   await waitFor(s => s.grounded, 3000);
