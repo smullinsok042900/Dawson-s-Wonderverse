@@ -180,6 +180,8 @@ function jump() {
     if (P.ride.type === 'bubble') { popBubble(P.ride.b); return; }
     P.ride = null; P.vy = -560; P.jumps = 1; P.grounded = false; animJump(P.anim, P.creature, 1); Sound.jump(1); return;
   }
+  const climb = climbZoneAt(P.x, P.y); // touching the net or a ladder: JUMP climbs it
+  if (climb) { startClimb(climb); return; }
   if (P.jumps < 2) {
     const n = P.jumps + 1, J = CREATURES[P.creature].jump;
     P.vy = -J[n - 1]; P.jumps = n; P.grounded = false;
@@ -210,6 +212,9 @@ const INTERACT = [
   { box: [4380, 200, 5360, 452], hint: [4440, 360], disc: 'coaster', tap: rideCoaster },
   { box: [5520, 40, 5880, 452], hint: [5700, 300], disc: 'carousel', tap: rideCarousel },
   { box: [6075, 270, 6215, 452], hint: [6145, 390], disc: 'tube', tap: rideTube },
+  { box: [688, 236, 784, 360], hint: [737, 300], disc: 'climbnet', tap: () => tapClimb(CLIMBS[0]) },
+  { box: [2682, 296, 2728, 452], hint: [2705, 380], disc: 'ladder', tap: () => tapClimb(CLIMBS[1]) },
+  { box: [1378, 136, 1446, 204], hint: [1416, 176], disc: 'zipline', tap: tapZip },
   { box: [880, 280, 1180, 452], hint: [990, 345], disc: 'slide', tap: startSlideTap },
   { box: [630, 380, 835, 452], hint: [735, 428], disc: 'trampoline', tap: tapTramp },
   { box: [110, 380, 615, 472], hint: [365, 425], disc: 'ballpit', tap: tapPit },
@@ -264,6 +269,8 @@ function updatePlayer(dt) {
     if (P.grounded) { P.jumps = 0; P.launched = false; }
     // walking off the top of the tower onto the slide
     if (P.grounded && P.y === 319 && P.x > 962 && P.vx > 30) startSlide();
+    // walking off the lookout onto the zipline
+    if (P.grounded && P.y === 213 && P.x > 1386 && P.vx > 30) startZip();
     // walking into the tube door
     const [d1, d2] = LAYOUT.tube.door;
     if (P.grounded && P.y === GROUND && P.x > d1 + 12 && P.x < d2) rideTube();
@@ -281,13 +288,15 @@ function updatePlayer(dt) {
       toast(`🌟 Secret star ${world.stars.size} of ${SECRET_STARS.length}!`); world.discoveries.add('secret-' + s.id); updateCounter(); P.anim.happy = 1.5; save();
     }
   }
-  const seated = !!P.ride && P.ride.type !== 'bubble';
+  const hanging = !!P.ride && (P.ride.type === 'climb' || P.ride.type === 'zip');
+  const seated = !!P.ride && P.ride.type !== 'bubble' && !hanging;
   updateAnim(P.anim, P.creature, dt, {
-    vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated, facing: P.facing, x: P.x, y: P.y,
-    onLand: v => { Sound.land(); burst(P.x, P.y - 4, Math.min(12, v / 70), ['#ffffff', '#ffe9f6'], 'dot', .5); },
+    vx: P.vx, vy: P.vy, grounded: P.grounded || (!!P.ride && !hanging), seated, facing: P.facing, x: P.x, y: P.y,
+    onLand: v => { Sound.land(); world.stickerJig = 1; burst(P.x, P.y - 4, Math.min(12, v / 70), ['#ffffff', '#ffe9f6'], 'dot', .5); },
   });
 }
 function updateRide(dt) {
+  if (updateClimbZip(dt)) return;
   const P = player, R = P.ride;
   if (R.type === 'slide') {
     R.s += dt * (.42 + R.s * 1.15);
@@ -387,6 +396,7 @@ function updateWorld(dt, t) {
   }
   spring(world.tramp, 0, 260, 7, dt);
   world.pitJiggle = Math.max(0, world.pitJiggle - dt);
+  world.stickerJig = Math.max(0, world.stickerJig - dt * 1.4); world.zipWiggle = Math.max(0, world.zipWiggle - dt * 1.5);
   updateBalls(dt);
   updateParticles(dt);
 }

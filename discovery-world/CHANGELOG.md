@@ -1,5 +1,18 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 2 · build 5 — climbing, high routes, stickers, wet paint, creature polish
+Previous build backed up as `backups/M1_build4_index.html`.
+- **Zuzu:** two baby stars orbit her (passing in front of and behind her), glitter twinkles inside her star body, a gold inner rim light, a glossy shine.
+- **Jelly:** a rainbow iridescent rim, a frilly jellyfish bell-edge along the bottom of her squishy body, glossy coloured beads on her tentacle tips.
+- **Climbing:** JUMP while touching the tower's climbing net climbs it, or tap the net. A new ladder climbs to the Wonder Engine walkway.
+- **High route through the Playhouse:**
+  - the tower's pink beam is now walkable
+  - a wobbly sky bridge (planks dip under the creature) leads to a glass-bubble-tube lookout with a flag and **secret star 7**
+  - from the lookout, walk off or tap the pulley to ride the **zipline** down over the paint wall to the colour mixer
+- **Stickers:** star, heart and rainbow sticker tiles in the paint palette, stamped on the big wall or the park easels. Stickers wiggle when the creature lands nearby. Undo removes whatever was added last (stroke or sticker). Stickers are saved.
+- **Wet paint:** fresh strokes sparkle, then grow little drips that stay on the painting.
+- The paint palette shrinks to fit narrow screens.
+
 ## Milestone 1 · build 4 — "all one world, merged together"
 Previous build backed up as `backups/M1_build3_index.html`.
 - **Removed the area-name banner** that labelled "Mega Playhouse / Imagination Studio / Wonder Lab / Adventure Park". It made the one world feel like four places.

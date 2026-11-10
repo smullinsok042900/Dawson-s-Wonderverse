@@ -1,11 +1,20 @@
-# Test report — Milestone 1, build 4
+# Test report — Milestone 2, build 5
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 60 / 60 checks passed, no console errors
+## Result: 70 / 70 checks passed, no console errors
+
+Build 5 added ten checks:
+- climb the net, which ends on the high beam
+- walk the sky bridge and get secret star 7
+- walk off the lookout onto the zipline, which drops you by the mixer
+- tap the ladder, which ends on the engine walkway
+- stamp a heart and a star sticker
+- undo removes the last sticker
+- stickers survive a reload
 
 Build 4 added three checks: the paint palette appears at the park easel, finger-painting on that easel works, and the easel painting survives a reload on the right surface.
 
