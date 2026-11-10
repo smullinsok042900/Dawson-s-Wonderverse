@@ -135,15 +135,35 @@ function rideWheel() {
   discover('wheel', 'Up, up, up on the giant wheel!', LAYOUT.wheel.cx, 150); Sound.click();
 }
 function rideCoaster() { const P = player; if (P.ride) return; P.ride = { type: 'coaster', u: 0 }; P.vx = P.vy = 0; discover('coaster', 'Zoom on the roller coaster!', 4600, 250); Sound.click(); }
-const TUBE_PATH = [[5645, 430], [5645, LAYOUT.tube.y], [300, LAYOUT.tube.y], [300, LAYOUT.tube.drop]];
-function rideTube() { const P = player; if (P.ride) return; P.ride = { type: 'tube', d: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('tube', 'Whoosh! The tube zooms all the way back to the ball pit!', 5645, 300); }
+function rideCarousel() {
+  const P = player; if (P.ride) return;
+  let best = 0, bd = -9; MOUNTS.forEach((_, i) => { const m = carouselMount(i); if (m.depth > bd) { bd = m.depth; best = i; } });
+  P.ride = { type: 'carousel', i: best, turned: 0 }; P.vx = P.vy = 0; Sound.chime();
+  discover('carousel', 'Round and round on the magic carousel!', LAYOUT.carousel.cx, 120);
+}
+// The big PAW button: do the most useful thing near the creature (no aiming needed)
+function doAction() {
+  const P = player; if (!started) return;
+  if (P.ride) { jump(); return; }
+  let best = null, bd = 1e9;
+  for (const it of INTERACT) {
+    if (it.need && !it.need()) continue;
+    const hx = it.hint ? it.hint[0] : (it.box[0] + it.box[2]) / 2, hy = it.hint ? it.hint[1] : (it.box[1] + it.box[3]) / 2;
+    const d = Math.abs(hx - P.x) - (it.force && it.force() ? 400 : 0) - (it.hint ? 40 : 0);
+    if (Math.abs(hx - P.x) < 240 && d < bd) { bd = d; best = { it, hx, hy }; }
+  }
+  if (best) { best.it.tap({ x: best.hx, y: best.hy }); return; }
+  animReact(P.anim, P.creature); Sound.giggle(); burst(P.x, P.y - 130, 8, ['#ff8fc8', '#ffd84a', '#ff6fae'], 'heart', .7);
+}
+const TUBE_PATH = [[LAYOUT.tube.x, 430], [LAYOUT.tube.x, LAYOUT.tube.y], [300, LAYOUT.tube.y], [300, LAYOUT.tube.drop]];
+function rideTube() { const P = player; if (P.ride) return; P.ride = { type: 'tube', d: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('tube', 'Whoosh! The tube zooms all the way back to the ball pit!', LAYOUT.tube.x, 300); }
 function tubePoint(d) {
   for (let i = 1; i < TUBE_PATH.length; i++) { const a = TUBE_PATH[i - 1], b = TUBE_PATH[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (d <= L) return [lerp(a[0], b[0], d / L), lerp(a[1], b[1], d / L), i]; d -= L; }
   return null;
 }
 function tapTramp() {
   world.tramp.v += 420; Sound.boing();
-  const P = player; if (!P.ride && Math.abs(P.x - LAYOUT.tramp.cx) < 260 && P.grounded) { P.x = clamp(P.x, LAYOUT.tramp.a + 10, LAYOUT.tramp.b - 10); bounce(1000); }
+  const P = player; if (!P.ride && Math.abs(P.x - LAYOUT.tramp.cx) < 260 && P.grounded) { P.x = clamp(P.x, LAYOUT.tramp.a + 10, LAYOUT.tramp.b - 10); bounce(930); }
   balls.forEach(b => { if (b.x > LAYOUT.tramp.a && b.x < LAYOUT.tramp.b) b.vy = -700; });
 }
 function tapPit(p) { world.pitJiggle = 1.2; burst(p.x, 420, 12, ['#65dcec', '#ffda68', '#b587ff', '#ff67ab'], 'dot'); Sound.pop(); discover('ballpit', 'Splash into the giant ball pit!', p.x, 380); }
@@ -188,7 +208,8 @@ const INTERACT = [
   { box: [3545, 200, 3705, 452], hint: [3625, 410], disc: 'launch', need: () => world.powered, tap: tapLauncher },
   { box: [3900, 105, 4222, 452], hint: [4060, 262], disc: 'wheel', tap: rideWheel },
   { box: [4380, 200, 5360, 452], hint: [4440, 360], disc: 'coaster', tap: rideCoaster },
-  { box: [5575, 270, 5715, 452], hint: [5645, 390], disc: 'tube', tap: rideTube },
+  { box: [5520, 40, 5880, 452], hint: [5700, 300], disc: 'carousel', tap: rideCarousel },
+  { box: [6075, 270, 6215, 452], hint: [6145, 390], disc: 'tube', tap: rideTube },
   { box: [880, 280, 1180, 452], hint: [990, 345], disc: 'slide', tap: startSlideTap },
   { box: [630, 380, 835, 452], hint: [735, 428], disc: 'trampoline', tap: tapTramp },
   { box: [110, 380, 615, 472], hint: [365, 425], disc: 'ballpit', tap: tapPit },
@@ -239,7 +260,7 @@ function updatePlayer(dt) {
     }
     if (P.y >= GROUND) { P.y = GROUND; P.vy = 0; P.grounded = true; }
     const T = LAYOUT.tramp;
-    if (P.x > T.a && P.x < T.b && P.y >= T.y - 2 && P.vy >= 0 && P.y <= GROUND) bounce(clamp(Math.max(1000, (P.vy || 0) * 1.02), 1000, 1150));
+    if (P.x > T.a && P.x < T.b && P.y >= T.y - 2 && P.vy >= 0 && P.y <= GROUND) bounce(clamp(Math.max(930, (P.vy || 0) * 1.02), 930, 1040));
     if (P.grounded) { P.jumps = 0; P.launched = false; }
     // walking off the top of the tower onto the slide
     if (P.grounded && P.y === 319 && P.x > 962 && P.vx > 30) startSlide();
@@ -287,6 +308,10 @@ function updateRide(dt) {
   } else if (R.type === 'bubble') {
     const b = R.b; P.x = b.x; P.y = b.y + b.r * .62; P.vx = b.vx; P.vy = 0;
     const h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0); if (h) P.facing = h;
+  } else if (R.type === 'carousel') {
+    const m = carouselMount(R.i); R.turned += world.carSpeed * dt;
+    P.x = m.x; P.y = m.y + 6; P.vx = m.facing * 120; P.vy = 0; P.facing = m.facing;
+    if (R.turned > TAU * 1.5 && m.depth > .92) { P.ride = null; P.y = GROUND; P.vx = 0; P.grounded = true; P.x = m.x; }
   } else if (R.type === 'tube') {
     R.d += dt * 1900;
     const p = tubePoint(R.d);
@@ -353,6 +378,9 @@ function updateWorld(dt, t) {
   world.gearSpeed += (gTarget - world.gearSpeed) * Math.min(1, dt * 1.5); world.gearAngle += world.gearSpeed * dt;
   // rides
   world.wheelSpin = world.powered ? .5 : .3; world.wheelAngle += world.wheelSpin * dt;
+  world.carSpeed = world.powered ? .9 : .55; world.carRot -= world.carSpeed * dt;
+  // a little carousel tune while riding
+  if (player.ride && player.ride.type === 'carousel') { world.musicT -= dt; if (world.musicT <= 0) { const tune = [0, 4, 7, 12, 7, 4, 9, 7]; world.musicN = ((world.musicN || 0) + 1) % tune.length; Sound.tone(523.25 * 2 ** (tune[world.musicN] / 12), .22, 'triangle', .035, 1); world.musicT = .27; } }
   if (!(player.ride && player.ride.type === 'coaster')) {
     if (world.powered) { world.coasterU += world.coasterDir * dt / 9; if (world.coasterU > 1) { world.coasterU = 1; world.coasterDir = -1; } if (world.coasterU < 0) { world.coasterU = 0; world.coasterDir = 1; } }
     else world.coasterU = Math.max(0, world.coasterU - dt * .15);
@@ -372,7 +400,7 @@ function updateBalls(dt) {
     if (b.x < b.r + 20 || b.x > WORLD_W - b.r - 20) { b.x = clamp(b.x, b.r + 20, WORLD_W - b.r - 20); b.vx *= -.7; }
     // players kick balls (collision with the creature's body circle)
     if (!P.ride) {
-      const cx = P.x, cy = P.y - 55, dx = b.x - cx, dy = b.y - cy, d = Math.hypot(dx, dy), min = b.r + 40;
+      const cx = P.x, cy = P.y - 64, dx = b.x - cx, dy = b.y - cy, d = Math.hypot(dx, dy), min = b.r + 46;
       if (d < min && d > .01) {
         const nx = dx / d, ny = dy / d; b.x = cx + nx * min; b.y = cy + ny * min;
         const rel = (P.vx - b.vx) * nx + (P.vy - b.vy) * ny;
@@ -397,6 +425,8 @@ function updateBalls(dt) {
 }
 function updateCamera(dt) {
   const P = player, fast = P.ride && (P.ride.type === 'tube') ? 14 : 5.3;
+  const focusY = P.ride && P.ride.type === 'carousel' ? GROUND : P.y;
+  camY += (clamp(focusY - 390, -80, 540 - VH) - camY) * Math.min(1, dt * 5);
   world.lookAhead += ((P.ride ? 0 : P.facing * vw * .1) - world.lookAhead) * Math.min(1, dt * 1.6);
   const target = clamp(P.x - vw / 2 + world.lookAhead, 0, Math.max(0, WORLD_W - vw));
   camera += (target - camera) * Math.min(1, dt * fast);

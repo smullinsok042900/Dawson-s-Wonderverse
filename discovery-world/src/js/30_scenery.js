@@ -67,59 +67,93 @@ function farProps(t) {
   [[4200, 120, '#ff9ccd'], [5350, 90, '#ffd36b'], [3900, 70, '#9fe6ff']].forEach(([X, y, c], i) => { const x = px(X, .3) + Math.sin(t * .4 + i) * 8, yy = y + Math.sin(t * .6 + i) * 6; if (x < -50 || x > vw + 50) return; ellipse(x, yy, 22, 26, c); ctx.strokeStyle = '#fff9'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 8, yy + 22); ctx.lineTo(x - 5, yy + 38); ctx.moveTo(x + 8, yy + 22); ctx.lineTo(x + 5, yy + 38); ctx.stroke(); rounded(x - 7, yy + 37, 14, 9, 3, '#c68b5e'); });
 }
 // Mid layer: the giant indoor/outdoor play-center frame (arches, beams, colored windows)
+// Mid layer: a giant glass conservatory play-centre — arched windows, gold columns,
+// a pink balcony walkway with railings, and hanging ivy.
 function midArchitecture(t) {
-  const k = .55;
-  for (let i = -1; i < 18; i++) {
-    const X = i * 380 + 100, x = px(X, k); if (x < -200 || x > vw + 200) continue;
-    const c = ['#ffffff', '#ffe6f6', '#e8f3ff'][i % 3 < 0 ? 0 : i % 3];
-    ctx.globalAlpha = .55; ctx.strokeStyle = c; ctx.lineWidth = 14; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x - 120, 360); ctx.lineTo(x - 120, 190); ctx.quadraticCurveTo(x, 70, x + 120, 190); ctx.lineTo(x + 120, 360); ctx.stroke();
-    ctx.globalAlpha = .25; ctx.fillStyle = ['#ff9fd6', '#ffe08a', '#8fe3ff', '#c9a6ff'][(i + 8) % 4];
-    ctx.beginPath(); ctx.moveTo(x - 110, 360); ctx.lineTo(x - 110, 195); ctx.quadraticCurveTo(x, 84, x + 110, 195); ctx.lineTo(x + 110, 360); ctx.closePath(); ctx.fill();
-    ctx.globalAlpha = 1;
-    ellipse(x, 120, 9, 9, '#fff7d6'); sparkle(x, 120, 6 + Math.sin(t * 3 + i) * 2, '#ffffff');
+  const k = .5;
+  for (let i = -1; i < 20; i++) {
+    const X = i * 360 + 120, x = px(X, k); if (x < -220 || x > vw + 220) continue;
+    // window frame + lattice panes (sky shows through)
+    ctx.save(); ctx.beginPath(); ctx.moveTo(x - 140, 380); ctx.lineTo(x - 140, 170); ctx.quadraticCurveTo(x, 20, x + 140, 170); ctx.lineTo(x + 140, 380); ctx.closePath();
+    ctx.fillStyle = 'rgba(235,248,255,.12)'; ctx.fill(); ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 2;
+    for (let gx = x - 140; gx <= x + 140; gx += 35) { ctx.beginPath(); ctx.moveTo(gx, 20); ctx.lineTo(gx, 380); ctx.stroke(); }
+    for (let gy = 60; gy < 380; gy += 40) { ctx.beginPath(); ctx.moveTo(x - 140, gy); ctx.lineTo(x + 140, gy); ctx.stroke(); }
+    ctx.restore();
+    ctx.strokeStyle = ['#c58bf0', '#ff9fd2', '#9fd4ff'][((i % 3) + 3) % 3]; ctx.lineWidth = 16; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x - 140, 380); ctx.lineTo(x - 140, 170); ctx.quadraticCurveTo(x, 20, x + 140, 170); ctx.lineTo(x + 140, 380); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 4; ctx.stroke();
+    // gold-capped column between windows
+    rounded(x + 160, 120, 26, 270, 10, grad(x + 160, 0, 26, 0, [[0, '#d7a8f5'], [.5, '#f6dcff'], [1, '#b98ae6']]));
+    ellipse(x + 173, 122, 18, 8, '#f2c35a'); star(x + 173, 104, 9, '#ffe27a');
+    for (let j = 0; j < 5; j++) bulb(x - 110 + j * 55, 132 - Math.sin((j + .5) / 5 * Math.PI) * 70, Math.sin(t * 2 + i + j) > -.5, '#ffe3a0', .7);
   }
-  // pastel bridge tubes between areas
-  for (let i = -1; i < 13; i++) {
-    const X = i * 520 + 260, x = px(X, .5); if (x < -320 || x > vw + 60) continue;
-    ctx.strokeStyle = i % 2 ? 'rgba(255,173,219,.6)' : 'rgba(157,230,239,.7)'; ctx.lineWidth = 22; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(x, 380); ctx.bezierCurveTo(x + 50, 160, x + 230, 170, x + 290, 380); ctx.stroke();
-    ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 5; ctx.stroke();
+  // rich interior wall below the windows (zone tinted)
+  const wallC = mixHex(palette.hillB, '#7a3fb0', .55);
+  ctx.fillStyle = grad(0, 280, 0, 120, [[0, withAlpha(wallC, .55)], [1, withAlpha(shade(wallC, -.25), .85)]]); ctx.fillRect(0, 282, vw, 120);
+  for (let i = -1; i < 30; i++) { const X = i * 150, x = px(X, .62); if (x < -60 || x > vw + 60) continue; rounded(x - 46, 300, 92, 70, 14, 'rgba(255,255,255,.07)', 'rgba(255,230,160,.35)', 2); star(x, 335, 8, 'rgba(255,230,140,.35)'); }
+  // balcony walkway with railing (nearer than the windows)
+  const kb = .72, y0 = 268;
+  const xs = (camera + vw / 2) * (1 - kb);
+  ctx.save(); ctx.translate(-((camera) * kb) % 48, 0);
+  ctx.fillStyle = 'rgba(214,120,200,.55)'; ctx.fillRect(-60, y0, vw + 160, 18);
+  ctx.fillStyle = 'rgba(255,214,107,.75)'; ctx.fillRect(-60, y0 - 4, vw + 160, 5);
+  ctx.strokeStyle = 'rgba(255,170,220,.85)'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(-60, y0 - 30); ctx.lineTo(vw + 100, y0 - 30); ctx.stroke();
+  for (let x = -48; x < vw + 100; x += 48) { ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y0 - 30); ctx.lineTo(x, y0); ctx.stroke(); }
+  ctx.restore();
+  for (let i = -1; i < 40; i++) {
+    const X = i * 230 + 60, x = px(X, kb); if (x < -40 || x > vw + 40) continue;
+    vine(x, y0 + 16, 50 + (i * 37) % 60, t, i);
+    if (i % 2 === 0) { glow(x + 60, y0 - 36, 18, '#fff3a6', .7); star(x + 60, y0 - 36, 9, '#ffe27a'); }
   }
 }
 // ---------------- ground ----------------
 function ground(t) {
-  const f = palette.floor;
-  ctx.fillStyle = grad(0, GROUND, 0, VH - GROUND, [[0, f[0]], [.2, f[1]], [1, f[2]]]); ctx.fillRect(0, GROUND, vw, VH - GROUND);
-  ctx.fillStyle = '#fff1b3'; ctx.fillRect(0, GROUND, vw, 9);
-  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(0, GROUND + 9, vw, 3);
-  for (let i = Math.floor(camera / 110) - 1; i < Math.ceil((camera + vw) / 110) + 1; i++) {
-    const x = i * 110 - camera;
-    rounded(x + 7, GROUND + 26, 96, 58, 14, i % 2 ? 'rgba(255,255,255,.1)' : 'rgba(40,10,80,.1)');
-    if (i % 3 === 0) star(x + 55, GROUND + 55, 9, 'rgba(255,245,170,.45)'); else ellipse(x + 55, GROUND + 55, 6, 6, 'rgba(255,255,255,.18)');
+  // glossy tiled play-floor with light reflections
+  const f = palette.floor, gy = GROUND - camY, h = VH - gy;
+  ctx.fillStyle = grad(0, gy, 0, h, [[0, f[0]], [.25, f[1]], [1, f[2]]]); ctx.fillRect(0, gy, vw, h);
+  const tw = 96, off = camera % tw;
+  for (let r = 0; r < 2; r++) {
+    const ty = gy + 12 + r * 36, th = r ? 50 : 32;
+    for (let x = -off - tw + (r ? tw / 2 : 0); x < vw + tw; x += tw) {
+      const n = Math.floor((x + camera) / tw) + r;
+      rounded(x + 3, ty, tw - 6, th, 9, n % 2 ? 'rgba(255,255,255,.13)' : 'rgba(60,10,90,.12)');
+      ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(x + 10, ty + 3, tw - 26, 3);
+      if (n % 3 === 0) star(x + tw / 2, ty + th / 2, 7, 'rgba(255,240,170,.5)');
+    }
   }
+  // long glossy sheen + reflected lights
+  ctx.fillStyle = grad(0, gy, 0, 40, [[0, 'rgba(255,255,255,.28)'], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(0, gy + 8, vw, 40);
+  for (let i = Math.floor(camera / 220) - 1; i < (camera + vw) / 220 + 1; i++) { const x = i * 220 - camera + 60; glow(x, gy + 30, 34, ['#ff9fd8', '#ffe08a', '#9fe6ff', '#c9a6ff'][((i % 4) + 4) % 4], .35); }
+  // gold edge
+  ctx.fillStyle = '#ffd36b'; ctx.fillRect(0, gy - 1, vw, 8); ctx.fillStyle = '#fff4c8'; ctx.fillRect(0, gy - 1, vw, 2.5); ctx.fillStyle = 'rgba(140,70,20,.35)'; ctx.fillRect(0, gy + 7, vw, 2);
 }
-// Foreground parallax: soft foam blocks & bobbles that slide past in front (depth!)
 function foreground(t) {
   const k = 1.35;
   for (let i = -1; i < 40; i++) {
     const X = i * 330 + 140, x = vw / 2 + (X - (camera + vw / 2)) * k; if (x < -120 || x > vw + 120) continue;
+    ctx.translate(0, -camY * 1.35 + 45);
     const kind = i % 4, c = ['#ff7fc0', '#7fd8f5', '#ffd15e', '#a98af7'][((i % 4) + 4) % 4];
     ctx.save(); ctx.globalAlpha = .92;
     if (kind === 0) { rounded(x - 46, 492, 92, 70, 18, shade(c, -.15), '#ffffffaa', 3); star(x, 520, 14, '#fff6c5'); }
     else if (kind === 1) { ellipse(x, 516, 46, 40, rg(x, 516, 46, [[0, '#ffffff'], [.25, c], [1, shade(c, -.3)]])); }
     else if (kind === 2) { rounded(x - 10, 470, 20, 80, 10, '#fff4e0'); ellipse(x, 470, 18, 18, c, '#fff', 3); }
     else { for (let j = 0; j < 3; j++) ellipse(x - 30 + j * 30, 520 - (j % 2) * 14, 24, 24, rg(x - 30 + j * 30, 520, 24, [[0, '#fff'], [.3, ['#ff9bd0', '#8fe6ff', '#ffe08a'][j]], [1, '#8a5cc9']])); }
-    ctx.restore();
+    ctx.restore(); ctx.setTransform(scale, 0, 0, scale, 0, 0);
   }
 }
 
 // ---------------- shared prop helpers ----------------
-function machineBox(x, y, w, h, c1, c2, r = 26) {
-  ellipse(x + w / 2, GROUND + 4, w * .55, 10, 'rgba(50,20,100,.2)');
-  rounded(x, y, w, h, r, grad(x, y, 0, h, [[0, c1], [1, c2]]), '#fff4e2', 6);
-  rounded(x + 10, y + 8, w - 20, 10, 5, 'rgba(255,255,255,.28)');
-  for (const bx of [x + 16, x + w - 16]) ellipse(bx, y + h - 16, 4, 4, 'rgba(255,255,255,.55)');
+function machineBox(x, y, w, h, c1, c2, r = 26, lights = true) {
+  // glossy body + gold trim + marquee bulbs, like a toy-shop machine
+  ellipse(x + w / 2, GROUND + 4, w * .55, 10, 'rgba(50,20,100,.22)');
+  rounded(x, y, w, h, r, grad(x, y, 0, h, [[0, shade(c1, .12)], [.55, c1], [1, c2]]), '#e9a93a', 8);
+  rounded(x + 3, y + 3, w - 6, h - 6, r - 3, null, '#fff2c4', 2.5);
+  rounded(x + 12, y + 10, w - 24, 12, 6, 'rgba(255,255,255,.32)');
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.beginPath(); ctx.moveTo(x + 20, y + h - 10); ctx.lineTo(x + 50, y + 26); ctx.lineTo(x + 68, y + 26); ctx.lineTo(x + 38, y + h - 10); ctx.fill();
+  for (const bx of [x + 16, x + w - 16]) ellipse(bx, y + h - 16, 4, 4, '#ffe08a', '#b07a20', 1.5);
+  if (lights) for (let bx = x + 26; bx < x + w - 16; bx += 30) bulb(bx, y + 2, Math.sin(gameTime * 3 + bx) > -.6, '#ffd76a', .75);
 }
 function drawColumn(x, y, h, color) {
   rounded(x - 18, y, 36, h, 17, grad(x - 18, 0, 36, 0, [[0, shade(color, .25)], [1, shade(color, -.12)]]), '#fff5eb', 5);
@@ -354,14 +388,14 @@ function gear(x, y, r, teeth, a, col) {
   ctx.restore();
 }
 function powerCable(t) {
-  if (!cull(3700, 900)) return;
+  if (!cull(4300, 1300)) return;
   ctx.lineCap = 'round';
-  const pathC = () => { ctx.beginPath(); ctx.moveTo(3082, 438); ctx.lineTo(4460, 438); };
+  const pathC = () => { ctx.beginPath(); ctx.moveTo(3082, 438); ctx.lineTo(5560, 438); };
   pathC(); ctx.strokeStyle = '#4b2d8a'; ctx.lineWidth = 9; ctx.stroke();
   if (world.powered) {
     ctx.setLineDash([18, 26]); ctx.lineDashOffset = -t * 160; pathC(); ctx.strokeStyle = '#fff36b'; ctx.lineWidth = 6; ctx.stroke(); ctx.setLineDash([]);
   }
-  if (world.powerT > 0) { const x = lerp(3082, 4460, 1 - world.powerT); ellipse(x, 438, 18, 12, '#fffbd0'); sparkle(x, 430, 12, '#fff36b'); }
+  if (world.powerT > 0) { const x = lerp(3082, 5560, 1 - world.powerT); ellipse(x, 438, 18, 12, '#fffbd0'); sparkle(x, 430, 12, '#fff36b'); }
 }
 function magnetMachine(t) {
   if (!cull(3310, 220)) return;
@@ -456,9 +490,9 @@ function coasterTrain(t, uOverride) {
 // The whoosh tube: a transparent pneumatic tube along the ceiling that links the far end of
 // the park back to the Playhouse ball pit — one physical loop through the whole world.
 function ceilingTube(t, front) {
-  const y = LAYOUT.tube.y, a = 300, b = 5645;
+  const y = LAYOUT.tube.y, a = 300, b = LAYOUT.tube.x;
   if (!front) {
-    const x1 = Math.max(a, camera - 40), x2 = Math.min(b, camera + vw + 40);
+    const x1 = Math.max(a, camera - 40), x2 = Math.min(b, camera + vw + 40); // a..b = whole ceiling run
     if (x2 > x1) {
       rounded(x1, y - 20, x2 - x1, 40, 20, 'rgba(210,245,255,.38)', 'rgba(255,255,255,.85)', 4);
       for (let x = Math.ceil(x1 / 300) * 300; x < x2; x += 300) rounded(x - 8, y - 24, 16, 48, 6, 'rgba(255,214,107,.85)', '#fff', 2);
@@ -495,4 +529,18 @@ function secretStars(t) {
     ctx.save(); ctx.translate(s.x, y); ctx.rotate(Math.sin(t * 2) * .2); star(0, 0, 20, '#ffd84a'); star(0, 0, 13, '#fff3a6'); ctx.restore();
     sparkle(s.x + 18, y - 16, 5 + Math.sin(t * 7) * 2, '#fff');
   }
+}
+
+// Strings of party lights on the big structures (drawn after the props)
+function decorLights(t) {
+  const P = world.powered;
+  if (cull(880, 260)) { bulbString(690, 205, 1080, 205, 14, 12, t); bulbString(950, 162, 1050, 162, 4, 4, t); }
+  if (cull(1680, 340)) { bulbString(1373, 112, 1993, 112, 22, 18, t, true, ['#ffd76a', '#ff9fd8', '#9fe6ff']); }
+  if (cull(2190, 160)) bulbString(2060, 142, 2320, 142, 8, 8, t);
+  if (cull(2900, 200)) bulbString(2716, 258, 3084, 258, 6, 11, t, true);
+  if (cull(3310, 160)) bulbString(3186, 142, 3346, 142, 5, 5, t, world.magnetOn);
+  if (cull(4060, 200)) bulbString(3925, 400, 4195, 400, 4, 8, t, P);
+  for (const sx of [LAYOUT.coaster.a - 40, LAYOUT.coaster.b + 40]) if (cull(sx, 80)) bulbString(sx - 62, 332, sx + 62, 332, 3, 5, t, P);
+  if (cull(6145, 120)) bulbString(6092, 330, 6198, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
+  for (const x of [700, 1000, 3200, 3600]) if (cull(x, 30)) vine(x + 10, x < 2000 ? 214 : 150, 60, t, x);
 }

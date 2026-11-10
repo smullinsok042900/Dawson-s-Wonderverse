@@ -4,6 +4,7 @@
 //   * secondary motion uses damped springs (ears lag, tails swish)
 //   * poses: idle, run, jump (rise), fall, land squash, ride/sit, tap reaction
 // ===================================================================
+const CHAR_SCALE = 1.18; // creatures are drawn bigger for a close-up feel
 const CREATURES = {
   pip: { name: 'Pip', title: 'Pip the rainbow fluff-bun!', cadence: 13, jump: [680, 600] },
   zuzu: { name: 'Zuzu', title: 'Zuzu the twinkly star sprite!', cadence: 10, jump: [690, 620] },
@@ -82,34 +83,51 @@ function animReact(A, kind) {
   if (A.soft) A.soft.pts.forEach((p, i) => { p.vx += rand(-260, 260); p.vy += rand(-260, 260); });
 }
 
-// ---------------- Shared face ----------------
-function drawEye(x, y, rx, ry, A, iris = '#3f2a6b', lookScale = 3) {
+// ---------------- Shared face (sparkly storybook eyes with lashes) ----------------
+function drawEye(x, y, rx, ry, A, iris = '#6b2fb0', lookScale = 3, side = 1) {
+  // storybook eye: mostly big glossy iris, thick top lash line, flicks at the OUTER corner (side = ±1)
   const closed = A.blink > 0, happy = A.happy > 0 && A.react > 0;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   if (closed || happy) {
-    ctx.strokeStyle = iris; ctx.lineWidth = 3.4; ctx.lineCap = 'round'; ctx.beginPath();
-    if (happy) ctx.arc(x, y + ry * .25, rx * .8, Math.PI * 1.15, Math.PI * 1.85); else ctx.arc(x, y, rx * .8, Math.PI * .15, Math.PI * .85);
-    ctx.stroke(); return;
+    ctx.strokeStyle = '#2a0f45'; ctx.lineWidth = 4; ctx.beginPath();
+    if (happy) ctx.arc(x, y + ry * .35, rx * .9, Math.PI * 1.12, Math.PI * 1.88); else ctx.arc(x, y - ry * .1, rx * .9, Math.PI * .12, Math.PI * .88);
+    ctx.stroke();
+    const ey = happy ? y - ry * .25 : y + ry * .15, ex = x + side * rx * .85;
+    ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex + side * 6, ey - 4); ctx.stroke();
+    return;
   }
-  ellipse(x, y, rx, ry, '#fff', '#3f2a6b', 2.2);
   const lx = A.look.x * lookScale, ly = !A.grounded && !A.seated ? clamp(A.vy / 300, -2, 2) : 0;
-  ellipse(x + lx, y + ly + 1, rx * .66, ry * .72, iris);
-  ellipse(x + lx + rx * .12, y + ly + ry * .26, rx * .38, ry * .26, '#8f6bd8aa');
-  ellipse(x + lx - rx * .24, y + ly - ry * .3, rx * .27, ry * .22, '#fff');
-  ellipse(x + lx + rx * .28, y + ly + ry * .1, rx * .1, rx * .1, '#fff');
+  ellipse(x, y, rx, ry, '#ffffff');
+  ctx.save(); ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.clip();
+  const ix = x + lx * .7, iy = y + ly + ry * .08;
+  const g = ctx.createRadialGradient(ix, iy + ry * .45, 1, ix, iy, ry * .95);
+  g.addColorStop(0, shade(iris, .6)); g.addColorStop(.4, iris); g.addColorStop(1, shade(iris, -.6));
+  ellipse(ix, iy, rx * .9, ry * .92, g);
+  ellipse(ix, iy + 1, rx * .42, ry * .44, '#1a0630');
+  ctx.globalAlpha = .6; ctx.strokeStyle = shade(iris, .75); ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(ix, iy + 1, rx * .62, .4, Math.PI - .4); ctx.stroke(); ctx.globalAlpha = 1;
+  ellipse(ix - rx * .3, iy - ry * .36, rx * .36, ry * .28, '#ffffff');
+  ellipse(ix + rx * .34, iy + ry * .26, rx * .15, rx * .15, '#ffffff');
+  sparkle(ix + rx * .3, iy - ry * .38, rx * .24, '#fffbe6');
+  ctx.restore();
+  // thick upper lash line, heavier at the outer corner, plus two flicks
+  ctx.strokeStyle = '#2a0f45'; ctx.lineWidth = 4.2; ctx.beginPath(); ctx.ellipse(x, y, rx * 1.03, ry * 1.03, 0, Math.PI * (side > 0 ? 1.18 : 1.05), Math.PI * (side > 0 ? 1.95 : 1.82)); ctx.stroke();
+  const ox = x + side * rx * .92, oy = y - ry * .42;
+  ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.quadraticCurveTo(ox + side * 5, oy - 2, ox + side * 8, oy - 7); ctx.moveTo(ox - side * 2, oy - 5); ctx.quadraticCurveTo(ox + side * 2, oy - 8, ox + side * 4, oy - 12); ctx.stroke();
 }
 function drawMouth(x, y, A, col = '#6b2f6e', size = 1) {
-  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const air = !A.grounded && !A.seated;
   ctx.beginPath();
-  if (A.react > 0 || (A.run > .55 && A.grounded)) { // big open grin
-    ctx.moveTo(x - 9 * size, y - 2); ctx.quadraticCurveTo(x, y + 14 * size, x + 9 * size, y - 2); ctx.closePath(); ctx.fill();
-    ellipse(x, y + 5 * size, 4.5 * size, 3 * size, '#ff8fb8');
-  } else if (air && A.vy < 0) { ellipse(x, y + 2, 5 * size, 6.5 * size, col); ellipse(x, y + 4, 3 * size, 3 * size, '#ff8fb8'); }
+  if (A.react > 0 || (A.run > .55 && A.grounded) || A.happy > .6) { // big open grin with tongue
+    ctx.moveTo(x - 9 * size, y - 2); ctx.quadraticCurveTo(x, y + 15 * size, x + 9 * size, y - 2); ctx.closePath(); ctx.fillStyle = '#7a1f5a'; ctx.fill();
+    ellipse(x, y + 6 * size, 5 * size, 3.4 * size, '#ff86b3');
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(x - 6 * size, y - 1); ctx.lineTo(x - 3.5 * size, y + 3 * size); ctx.lineTo(x - 1.5 * size, y - 1); ctx.fill();
+  } else if (air && A.vy < 0) { ellipse(x, y + 2, 5 * size, 6.5 * size, '#7a1f5a'); ellipse(x, y + 4, 3 * size, 3 * size, '#ff86b3'); }
   else if (A.land > .1) { ctx.moveTo(x - 8 * size, y + 2); ctx.quadraticCurveTo(x - 4, y - 3, x, y + 2); ctx.quadraticCurveTo(x + 4, y + 6, x + 8 * size, y + 1); ctx.stroke(); }
-  else { ctx.arc(x, y - 1, 7 * size, .2, Math.PI - .2); ctx.stroke(); }
+  else { ctx.moveTo(x - 8 * size, y - 1); ctx.quadraticCurveTo(x - 4 * size, y + 5 * size, x, y); ctx.quadraticCurveTo(x + 4 * size, y + 5 * size, x + 8 * size, y - 1); ctx.stroke(); }
 }
 
-// ---------------- PIP: fluffy rainbow fluff-bun with moth wings ----------------
+// ---------------- PIP: rainbow fairy-kit (fluffy kitten-fox with glitter wings & goggles) ----------------
 function pipLegs(A) {
   const ph = A.phase, run = A.run, air = !A.grounded && !A.seated;
   let near = Math.sin(ph) * .8 * run, far = -Math.sin(ph) * .8 * run;
@@ -119,102 +137,133 @@ function pipLegs(A) {
   if (A.land > 0) { const k = A.land / .35; near += .4 * k; far -= .4 * k; }
   return { near, far, liftN, liftF };
 }
+const PIP_SPOTS = [[-18, -60, 5, '#7fd8ff'], [16, -40, 4, '#ffd35a'], [-8, -34, 3.5, '#a77bff'], [22, -66, 3.5, '#ff6fb5'], [-24, -44, 3, '#ffd35a'], [-30, -112, 4, '#7fd8ff'], [36, -98, 3.5, '#a77bff'], [-34, -90, 3, '#ff6fb5'], [30, -124, 3, '#ffd35a']];
+function pipTailPath(ctxT, sway) {
+  // a big fluffy fox-tail plume: centreline curve with a width profile and scalloped edge
+  const P = u => { const v = 1 - u; return [v * v * 0 + 2 * v * u * (-62) + u * u * (-40 + sway * 18), v * v * 0 + 2 * v * u * (-6) + u * u * (-92)]; };
+  const W = u => (6 + 30 * Math.sin(Math.PI * Math.pow(u, .75))) * (1 + .07 * Math.sin(u * 34));
+  const L = [], R = [];
+  for (let i = 0; i <= 26; i++) {
+    const u = i / 26, p = P(u), q = P(Math.min(1, u + .02)), r = P(Math.max(0, u - .02));
+    const tx = q[0] - r[0], ty = q[1] - r[1], d = Math.hypot(tx, ty) || 1, nx = -ty / d, ny = tx / d, w = u > .97 ? 2 : W(u);
+    L.push([p[0] + nx * w, p[1] + ny * w]); R.push([p[0] - nx * w, p[1] - ny * w]);
+  }
+  ctx.moveTo(L[0][0], L[0][1]); L.forEach(p => ctx.lineTo(p[0], p[1])); for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath();
+}
 function drawPip(A) {
   const t = A.t, run = A.run, ph = A.phase, air = !A.grounded && !A.seated;
   const sy = A.squash.x, sx = 1 + (1 - sy) * .8;
   const bob = A.grounded && !A.seated ? (-Math.abs(Math.sin(ph)) * 7 * run + Math.sin(t * 2.6) * 1.6 * (1 - run)) : 0;
   const reactHop = A.react > 0 ? -Math.abs(Math.sin(A.react * 7)) * 14 : 0;
   ctx.save();
-  ctx.rotate(A.lean.x);
-  ctx.scale(sx, sy);
-  ctx.translate(0, bob + reactHop);
+  ctx.rotate(A.lean.x); ctx.scale(sx, sy); ctx.translate(0, bob + reactHop);
   if (A.flip > 0) { ctx.translate(0, -78); ctx.rotate((1 - A.flip) * TAU * A.flipDir); ctx.translate(0, 78); }
 
-  const OUT = '#563596';
-  const fur = grad(0, -150, 0, 150, [[0, '#8ff3ec'], [.42, '#b28cf7'], [.8, '#ff92cf'], [1, '#ffb0c8']]);
-  const L = pipLegs(A), legLen = 25;
+  const OUT = '#6d2f97';
+  const fur = grad(0, -160, 0, 160, [[0, '#f7b8ee'], [.4, '#e7a0f2'], [.75, '#c993f7'], [1, '#b98af2']]);
+  const L = pipLegs(A), legLen = 24;
   const hipN = [9, -30], hipF = [-9, -31];
   const footN = [hipN[0] + Math.sin(L.near) * legLen, hipN[1] + Math.cos(L.near) * legLen - L.liftN];
   const footF = [hipF[0] + Math.sin(L.far) * legLen, hipF[1] + Math.cos(L.far) * legLen - L.liftF];
-  const headX = 4 - A.lean.x * 18, headY = -104 + A.ear.x * 2;
-  const earAng = A.ear.x * .85 + Math.sin(t * 2.2) * .05;
-  const flap = air ? Math.sin(t * 30) * .55 : Math.sin(t * 3) * .1;
+  const headX = 5 - A.lean.x * 18, headY = -106 + A.ear.x * 2;
+  const earAng = A.ear.x * .5 + Math.sin(t * 2.2) * .04;
+  const flap = air ? Math.sin(t * 30) * .5 : Math.sin(t * 3) * .1;
 
-  // tail (rainbow curl, anchored at the rump)
-  ctx.save(); ctx.translate(-27, -42); ctx.rotate(-.2 - A.tail.x * .5);
-  ctx.lineCap = 'round';
-  const tailPath = () => { ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(-34, 4, -50, -30, -32, -48); ctx.bezierCurveTo(-20, -60, -4, -50, -12, -38); };
-  tailPath(); ctx.strokeStyle = OUT; ctx.lineWidth = 30; ctx.stroke();
-  ['#ff6fae', '#ffc95c', '#63dcd8', '#9d86ff'].forEach((c, i) => { tailPath(); ctx.strokeStyle = c; ctx.lineWidth = 22 - i * 5; ctx.stroke(); });
+  // --- rainbow fox-tail (anchored at rump) ---
+  ctx.save(); ctx.translate(-24, -38); ctx.rotate(-.15 - A.tail.x * .45);
+  const sway = Math.sin(t * (2 + run * 7)) * .5;
+  ctx.beginPath(); pipTailPath(ctx, sway); ctx.strokeStyle = OUT; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.fillStyle = grad(0, 0, -50, -95, [[0, '#ff7ac6'], [.25, '#ffd45e'], [.45, '#7ee8d6'], [.65, '#6fb8ff'], [.82, '#b88bff'], [1, '#ffffff']]); ctx.fill();
+  ctx.save(); ctx.clip(); ctx.globalAlpha = .35; for (let i = 0; i < 7; i++) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-10 - i * 6, -8 - i * 9); ctx.quadraticCurveTo(-34 - i * 3, -20 - i * 10, -30 - i * 2, -36 - i * 9); ctx.stroke(); } ctx.restore();
   ctx.restore();
 
-  // moth wings, hinged at the back of the shoulders
-  const wing = (rot, alpha, scaleW) => {
-    ctx.save(); ctx.translate(-18, -76); ctx.rotate(rot);
-    ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(-18 * scaleW, -40, -60 * scaleW, -34, -50 * scaleW, -6); ctx.bezierCurveTo(-44 * scaleW, 10, -20 * scaleW, 12, 0, 0);
-    ctx.fillStyle = withAlpha('#9ee9ff', alpha); ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, 2); ctx.bezierCurveTo(-14 * scaleW, 26, -40 * scaleW, 26, -34 * scaleW, 8); ctx.closePath();
-    ctx.fillStyle = withAlpha('#e2b8ff', alpha); ctx.fill(); ctx.stroke();
-    ellipse(-34 * scaleW, -14, 6, 6, '#fff6b0'); ellipse(-22 * scaleW, 14, 4, 4, '#ff9bd2');
+  // --- glitter fairy wings, hinged behind the shoulders ---
+  const wing = (rot, size, alpha) => {
+    ctx.save(); ctx.translate(-16, -80); ctx.rotate(rot); ctx.scale(size, size);
+    const up = () => { ctx.moveTo(0, 0); ctx.bezierCurveTo(-8, -50, -58, -66, -66, -34); ctx.bezierCurveTo(-70, -12, -30, 2, 0, 0); };
+    const lo = () => { ctx.moveTo(0, 4); ctx.bezierCurveTo(-20, 30, -50, 36, -48, 14); ctx.bezierCurveTo(-46, 2, -20, 2, 0, 4); };
+    for (const f of [up, lo]) {
+      ctx.beginPath(); f(); const g = ctx.createRadialGradient(-10, -10, 4, -30, -20, 70);
+      g.addColorStop(0, `rgba(255,240,255,${alpha})`); g.addColorStop(.45, `rgba(214,160,255,${alpha * .85})`); g.addColorStop(1, `rgba(110,220,255,${alpha * .9})`);
+      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.strokeStyle = 'rgba(160,110,230,.7)'; ctx.lineWidth = 1.6; ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-30, -36, -58, -38); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-36, -14, -60, -18); ctx.moveTo(0, 4); ctx.quadraticCurveTo(-26, 20, -42, 22); ctx.stroke();
+    [[-44, -40], [-30, -26], [-54, -22], [-20, -44], [-36, 18], [-26, 12], [-48, -50]].forEach(([gx, gy], i) => sparkle(gx, gy, 2.5 + (i % 3) + Math.sin(t * 6 + i) * 1, i % 2 ? '#fff6c9' : '#ffffff'));
     ctx.restore();
   };
-  wing(-.5 - flap, .75, .9);
+  wing(-.55 - flap, 1.05, .8);
 
   // far arm
-  const armAng = (side) => {
+  const armAng = side => {
     if (A.react > 0 && side > 0) return 2.6 + Math.sin(t * 18) * .45;
     if (A.seated) return side > 0 ? 1.0 : .8;
     if (air) return A.vy < 0 ? (side > 0 ? 2.7 : 2.3) : (side > 0 ? 1.7 : 1.35);
     return (side > 0 ? -1 : 1) * Math.sin(ph) * .95 * run + Math.sin(t * 2.6 + side) * .07 + (side > 0 ? .55 : .2);
   };
-  const shF = [-18, -64], aF = armAng(-1);
-  const handF = [shF[0] + Math.sin(aF) * 22, shF[1] + Math.cos(aF) * 22];
-  inked([{ path: () => limbPath(shF[0], shF[1], handF[0], handF[1], 7.5, 8), fill: '#9f7ff2' }], OUT, 5.5);
+  const shF = [-18, -64], aF = armAng(-1), handF = [shF[0] + Math.sin(aF) * 22, shF[1] + Math.cos(aF) * 22];
+  inked([{ path: () => limbPath(shF[0], shF[1], handF[0], handF[1], 7.5, 8.5), fill: '#d79af2' }], OUT, 5.5);
+  ellipse(handF[0], handF[1], 7, 7, '#fff4fb');
 
-  // far ear (behind head)
-  const earShape = (len, w, curl) => () => { ctx.moveTo(-w, 6); ctx.bezierCurveTo(-w * 1.5, -len * .45, -w * .6 + curl, -len, curl, -len); ctx.bezierCurveTo(w * .9 + curl, -len * .96, w * 1.3, -len * .4, w, 6); ctx.closePath(); };
-  ctx.save(); ctx.translate(headX - 16, headY - 30); ctx.rotate(-.42 + earAng);
-  inked([{ path: earShape(54, 15, -6 - A.ear.x * 10), fill: '#3fd9d6' }], OUT, 5.5);
-  ctx.beginPath(); earShape(40, 8, -5 - A.ear.x * 8)(); ctx.fillStyle = '#ff9bd6'; ctx.fill();
-  ctx.restore();
+  // ears: big pointed kitten ears with rainbow inner fluff
+  const ear = (len, w, lean) => () => { ctx.moveTo(-w, 8); ctx.quadraticCurveTo(-w * .9, -len * .55, lean - 3, -len); ctx.quadraticCurveTo(lean + 4, -len * 1.02, lean + 6, -len + 4); ctx.quadraticCurveTo(w * 1.1, -len * .45, w, 8); ctx.closePath(); };
+  const earInner = (len, w, lean) => { ctx.beginPath(); ear(len * .78, w * .58, lean * .8)(); ctx.fillStyle = grad(0, 0, 0, -len, [[0, '#ff8fd0'], [.4, '#ffd36b'], [.7, '#7fe6ff'], [1, '#c79bff']]); ctx.fill(); for (let i = 0; i < 3; i++) { ctx.strokeStyle = '#ffffffcc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2 + i * 3, -2); ctx.quadraticCurveTo(-4 + i * 4, -len * .4, lean * .6 + i * 2 - 2, -len * .66); ctx.stroke(); } };
+  ctx.save(); ctx.translate(headX - 24, headY - 26); ctx.rotate(-.42 + earAng);
+  inked([{ path: ear(50, 17, -6), fill: '#e7a6f4' }], OUT, 5.5); earInner(50, 17, -6); ctx.restore();
 
-  // MAIN merged silhouette: legs + body + head + near ear base = one creature
-  const nearEarPath = () => { ctx.save(); ctx.translate(headX + 15, headY - 32); ctx.rotate(-.08 + earAng * 1.1); earShape(56, 16, -4 - A.ear.x * 12)(); ctx.restore(); };
+  // MAIN merged silhouette
+  const nearEarPath = () => { ctx.save(); ctx.translate(headX + 22, headY - 30); ctx.rotate(.22 + earAng * 1.1); ear(52, 18, 6)(); ctx.restore(); };
   inked([
-    { path: () => limbPath(hipF[0], hipF[1], footF[0], footF[1], 10, 8), fill: '#9f86ee' },
+    { path: () => limbPath(hipF[0], hipF[1], footF[0], footF[1], 10, 8), fill: '#c993f7' },
     { path: () => limbPath(hipN[0], hipN[1], footN[0], footN[1], 10.5, 8.5), fill: fur },
-    { path: () => fluffPath(0, -52, 33, 31, 12, .06, t * .5), fill: fur },
-    { path: () => fluffPath(headX, headY, 46, 41, 16, .05, 1), fill: fur },
-    { path: nearEarPath, fill: '#a07cf4' },
-    { path: () => ctx.ellipse(footF[0] + 5, footF[1] - 1, 12, 8, Math.sin(L.far) * .4, 0, TAU), fill: '#ff8cc6' },
-    { path: () => ctx.ellipse(footN[0] + 5, footN[1] - 1, 13, 8.5, Math.sin(L.near) * .4, 0, TAU), fill: '#ffa5d4' },
+    { path: () => fluffPath(0, -52, 32, 31, 12, .07, t * .5), fill: fur },
+    { path: () => fluffPath(headX, headY, 48, 42, 18, .06, 1), fill: fur },
+    { path: () => { ctx.ellipse(headX - 40, headY + 16, 14, 11, .5, 0, TAU); }, fill: fur }, // cheek fluff tufts
+    { path: () => { ctx.ellipse(headX + 44, headY + 16, 13, 10, -.5, 0, TAU); }, fill: fur },
+    { path: nearEarPath, fill: '#eeb0f6' },
+    { path: () => ctx.ellipse(footF[0] + 5, footF[1] - 1, 12, 8, Math.sin(L.far) * .4, 0, TAU), fill: '#fff4fb' },
+    { path: () => ctx.ellipse(footN[0] + 5, footN[1] - 1, 13, 8.5, Math.sin(L.near) * .4, 0, TAU), fill: '#ffffff' },
   ], OUT, 6);
-  // inner near ear (moves with the same transform)
-  ctx.save(); ctx.translate(headX + 15, headY - 32); ctx.rotate(-.08 + earAng * 1.1);
-  ctx.beginPath(); earShape(42, 9, -4 - A.ear.x * 10)(); ctx.fillStyle = '#ffc0e6'; ctx.fill(); ctx.restore();
-  // toe beans
-  ellipse(footN[0] + 12, footN[1] - 2, 2.6, 2.6, '#ffe2f0'); ellipse(footN[0] + 6, footN[1] + 2, 2.6, 2.6, '#ffe2f0');
+  ctx.save(); ctx.translate(headX + 22, headY - 30); ctx.rotate(.22 + earAng * 1.1); earInner(52, 18, 6); ctx.restore();
+  ellipse(footN[0] + 12, footN[1] - 1, 2.6, 2.6, '#ff9ccc'); ellipse(footN[0] + 6, footN[1] + 3, 2.6, 2.6, '#ff9ccc'); ellipse(footN[0] + 1, footN[1] - 1, 2.2, 2.2, '#ff9ccc');
 
-  // belly
-  ctx.save(); ctx.beginPath(); fluffPath(3, -46, 21, 22, 10, .07); ctx.fillStyle = '#fff1fb'; ctx.fill(); ctx.restore();
-  star(4, -48, 11, '#ffd75e');
-  // rainbow forehead tuft (rooted on top of the head, sways with the ear spring)
-  for (let i = -1; i <= 1; i++) {
-    ctx.save(); ctx.translate(headX + i * 9, headY - 38); ctx.rotate(i * .35 + A.ear.x * .4 + Math.sin(t * 3 + i) * .05);
-    ellipse(0, -10, 7, 15, ['#ff74b3', '#ffd96a', '#56d8e2'][i + 1], '#ffffffcc', 2); ctx.restore();
+  // speckles (clipped to body + head)
+  ctx.save(); ctx.beginPath(); fluffPath(0, -52, 32, 31, 12, .07, t * .5); fluffPath(headX, headY, 48, 42, 18, .06, 1); ctx.clip();
+  PIP_SPOTS.forEach(([x, y, r, c]) => { ellipse(x + (y < -80 ? headX - 5 : 0), y, r, r * .85, c); ellipse(x + (y < -80 ? headX - 5 : 0) - r * .3, y - r * .3, r * .3, r * .3, 'rgba(255,255,255,.7)'); });
+  // soft rim light along the top of the head
+  ctx.globalAlpha = .35; ellipse(headX - 6, headY - 30, 34, 12, '#ffffff'); ctx.globalAlpha = 1;
+  ctx.restore();
+  // fluffy cream chest bib
+  ctx.beginPath(); fluffPath(5, -48, 19, 20, 10, .12); ctx.fillStyle = '#fff6fd'; ctx.fill();
+  star(6, -50, 9, '#ffd65a'); sparkle(9, -54, 3, '#fff');
+  // rainbow forelock swoosh
+  ctx.save(); ctx.translate(headX - 4, headY - 38); ctx.rotate(-.2 + A.ear.x * .3 + Math.sin(t * 3) * .05);
+  [['#b98bff', 0], ['#ffd45e', 7], ['#7fe6ff', 14]].forEach(([c, o]) => { ctx.beginPath(); ctx.moveTo(-10 + o * .3, 6); ctx.quadraticCurveTo(-6 + o, -18, 16 + o * .6, -16 - o * .4); ctx.quadraticCurveTo(4 + o * .5, -6, 6 + o * .4, 8); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 2.5; ctx.stroke(); });
+  ctx.restore();
+  // gold goggles pushed up on the forehead
+  ctx.strokeStyle = '#7a4a1a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(headX, headY - 8, 48, 40, 0, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
+  ctx.strokeStyle = '#d9962e'; ctx.lineWidth = 3.5; ctx.stroke();
+  for (const [gx, r] of [[headX - 11, 11], [headX + 20, 12.5]]) {
+    const gy = headY - 33;
+    ellipse(gx, gy, r + 3.5, r + 3, grad(gx, gy - r, 0, r * 2, [[0, '#ffe7a0'], [.5, '#e3a43a'], [1, '#a8661c']]), '#6b3a12', 2);
+    ellipse(gx, gy, r, r * .9, grad(gx - r, gy - r, r * 2, r * 2, [[0, '#f0d6ff'], [.45, '#a46cf0'], [1, '#5a2ba8']]));
+    ellipse(gx - r * .35, gy - r * .3, r * .32, r * .22, '#ffffff', null, 0, -.5); ellipse(gx + r * .35, gy + r * .3, r * .12, r * .12, '#ffffffbb');
   }
   // face
-  drawEye(headX - 12, headY - 4, 10.5, 14, A);
-  drawEye(headX + 18, headY - 4, 12, 15.5, A);
-  ellipse(headX - 27, headY + 14, 9, 5.5, '#ff7fb0aa'); ellipse(headX + 34, headY + 14, 9, 5.5, '#ff7fb0aa');
-  ctx.beginPath(); heartPath(headX + 4, headY + 9, 5); ctx.fillStyle = '#7b3f8a'; ctx.fill();
-  drawMouth(headX + 4, headY + 19, A);
+  drawEye(headX - 14, headY + 2, 12, 15, A, '#7a34c4', 3, -1);
+  drawEye(headX + 20, headY + 2, 13.5, 16.5, A, '#7a34c4', 3, 1);
+  ellipse(headX - 31, headY + 20, 9, 5.5, '#ff7fb0aa'); ellipse(headX + 37, headY + 20, 9, 5.5, '#ff7fb0aa');
+  ctx.beginPath(); heartPath(headX + 38, headY + 15, 4.5); ctx.fillStyle = '#ff4f9a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(headX + 1, headY + 15); ctx.quadraticCurveTo(headX + 3, headY + 12, headX + 6, headY + 15); ctx.quadraticCurveTo(headX + 3.5, headY + 19, headX + 1, headY + 15); ctx.fillStyle = '#ff6fa8'; ctx.fill();
+  drawMouth(headX + 3.5, headY + 23, A, '#6b2f6e', .9);
+  // whisker dots
+  for (const [wx, wy] of [[-24, 22], [-20, 26], [30, 22], [26, 26]]) ellipse(headX + wx, headY + wy, 1.3, 1.3, '#b36ac9');
 
   // near arm in front of the body
-  const shN = [21, -63], aN = armAng(1);
-  const handN = [shN[0] + Math.sin(aN) * 20, shN[1] + Math.cos(aN) * 20];
-  inked([{ path: () => limbPath(shN[0], shN[1], handN[0], handN[1], 8, 9), fill: '#ff9fd5' }], OUT, 5.5);
-  ellipse(handN[0] + 2, handN[1] + 1, 3, 3, '#fff0f8');
+  const shN = [21, -63], aN = armAng(1), handN = [shN[0] + Math.sin(aN) * 20, shN[1] + Math.cos(aN) * 20];
+  inked([{ path: () => limbPath(shN[0], shN[1], handN[0], handN[1], 8, 9.5), fill: '#efaaf2' }], OUT, 5.5);
+  ellipse(handN[0] + 1, handN[1] + 1, 8, 7.5, '#ffffff'); ellipse(handN[0] + 4, handN[1] + 3, 2, 2, '#ff9ccc');
+  wing(-.15 + flap * .6, .62, .6); // the near wing peeks over the shoulder
   ctx.restore();
 }
 
@@ -285,8 +334,8 @@ function drawZuzu(A) {
     const p = v[i], k = .86; ellipse(p[0] * k, p[1] * k, 9, 7.5, c, OUT, 3, Math.atan2(p[1], p[0]));
   });
   // face
-  drawEye(-15, -6, 10.5, 13.5, A, '#4a2e78', 3.5);
-  drawEye(15, -6, 10.5, 13.5, A, '#4a2e78', 3.5);
+  drawEye(-15, -6, 11.5, 14.5, A, '#2f78e0', 3.5, -1);
+  drawEye(15, -6, 11.5, 14.5, A, '#2f78e0', 3.5, 1);
   ellipse(-25, 10, 7, 4.5, '#ff6aa8aa'); ellipse(25, 10, 7, 4.5, '#ff6aa8aa');
   drawMouth(0, 13, A, '#7a2f6a', .85);
   // freckle stars
@@ -381,8 +430,8 @@ function drawJelly(A, ox, oy) {
   ellipse(tl[0] + 9, tl[1] + 22, 3.5, 3.5, '#ffffffcc');
   // face rides on the body centre
   const fx = cx + 4 + A.look.x * 3, fy = cy - 6;
-  drawEye(fx - 15, fy, 11, 14, A, '#3a2a70', 3);
-  drawEye(fx + 16, fy, 11.5, 14.5, A, '#3a2a70', 3);
+  drawEye(fx - 15, fy, 12, 15, A, '#c2399a', 3, -1);
+  drawEye(fx + 16, fy, 12.5, 15.5, A, '#c2399a', 3, 1);
   ellipse(fx - 30, fy + 15, 8, 5, '#ff70a8aa'); ellipse(fx + 31, fy + 15, 8, 5, '#ff70a8aa');
   drawMouth(fx + 1, fy + 17, A, '#5a2370');
 }
@@ -398,7 +447,8 @@ function drawCreature(kind, A, ox, oy, opts = {}) {
   ctx.save(); ctx.translate(ox, oy);
   if (!opts.noShadow) creatureShadow(kind, A, opts.drop || 0);
   if (kind === 'zuzu' && !opts.noTrail) drawZuzuTrail(A, ox, oy);
-  ctx.scale(A.facing, 1);
+  const cs = opts.scale ?? CHAR_SCALE;
+  ctx.scale(A.facing * cs, cs);
   if (kind === 'pip') drawPip(A);
   else if (kind === 'zuzu') drawZuzu(A);
   else drawJelly(A, ox, oy);
@@ -421,6 +471,6 @@ function renderPortraits(dt) {
     p.c.setTransform(1, 0, 0, 1, 0, 0); p.c.clearRect(0, 0, p.el.width, p.el.height);
     const s = p.size * p.dpr / 175;
     p.c.setTransform(s, 0, 0, s, p.el.width / 2, p.el.height * .97);
-    withCtx(p.c, () => drawCreature(p.kind, A, 0, 0, { noTrail: true }));
+    withCtx(p.c, () => drawCreature(p.kind, A, 0, 0, { noTrail: true, scale: 1 }));
   }
 }

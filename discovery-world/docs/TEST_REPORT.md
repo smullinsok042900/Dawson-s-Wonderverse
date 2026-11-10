@@ -1,11 +1,13 @@
-# Test report — Milestone 1, build 2
+# Test report — Milestone 1, build 3
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 54 / 54 checks passed, no console errors
+## Result: 57 / 57 checks passed, no console errors
+
+Build 3 added three checks: tap the carousel to ride, JUMP off the carousel, and the PAW button boards the nearest ride. The move/jump/paw buttons now measure ≥ 60 px.
 
 | # | What was tested | Result |
 |---|---|---|
@@ -28,13 +30,17 @@
 | 17 | Window blur while holding ▶ releases movement | PASS |
 | 18 | Reload keeps creature, paintings, discoveries, power/battery/mix state and position | PASS |
 | 19 | Corrupt save is ignored safely; old Prototype 01 save migrates | PASS |
-| 20 | Frame timing (headless desktop) | median 16.7 ms, p95 16.8 ms |
+| 20 | Frame timing after adaptive resolution (headless software rendering) | median 16.7 ms at 0.85 pixel density. Before the optimisations it was 33 ms: the build-3 art pushed headless Chromium just past 60 fps. |
 | 21 | Portrait 390×844 shows the "turn sideways" tip | PASS |
 
 ## Bugs the tests caught (and that are now fixed)
 - A loose ball resting in front of the SPIN wheel stole the tap. Machine buttons now have priority.
 - The creature's tickle hit box was too tall. Standing on the Ferris-wheel deck made it cover the wheel, so taps never started the ride. The box is smaller now and checked after machine buttons.
 - After a launch, mid-air braking stopped the creature after ≈280 units. Momentum is now kept unless the child steers.
+
+## Build 3 bugs caught by the tests (fixed)
+- The bigger creature's tickle area covered the wheel hub and carousel, so taps went to the creature. It is now a circle on the body.
+- The build-3 visuals dropped headless frame rate to 30 fps. Fixed with a half-resolution backdrop, pre-rendered bulb sprites and adaptive resolution.
 
 ## NOT tested
 - **No physical iPhone or real Safari/WebKit.** Chromium emulation is not iPhone Safari. iOS audio unlock, the notch/safe-area insets, Safari's toolbar resizing, and real 60 fps on older iPhones are all unverified.

@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T05:10:04.448Z",
+  "date": "2026-11-10T05:32:31.293Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 54,
-  "total": 54,
+  "passed": 57,
+  "total": 57,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -25,14 +25,14 @@
       "detail": ""
     },
     {
-      "name": "move/jump buttons are ≥ 64px tap targets",
+      "name": "move/jump/paw buttons are big tap targets (≥ 60px)",
       "ok": true,
-      "detail": "[[70,64],[70,64],[90,74]]"
+      "detail": "[[76,62],[76,62],[82,82],[62,62]]"
     },
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 375 units"
+      "detail": "moved 383 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 282 units"
+      "detail": "moved 285 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=325 jumps=1"
+      "detail": "y=326 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=142 v=453"
+      "detail": "dx=140 v=453"
     },
     {
       "name": "paint palette appears near the wall",
@@ -112,7 +112,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1184"
+      "detail": "x=1186"
     },
     {
       "name": "tapping buckets pours paint into the bowl",
@@ -137,7 +137,7 @@
     {
       "name": "colored bubbles float into the funnel and charge the battery",
       "ok": true,
-      "detail": "battery 6/6"
+      "detail": "battery 4/6"
     },
     {
       "name": "battery fills to 6",
@@ -152,7 +152,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "23,39,18"
+      "detail": "40,24,35"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -162,7 +162,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4251"
+      "detail": "landed at x=4222"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -183,6 +183,21 @@
       "name": "coaster ride finishes and drops you off",
       "ok": true,
       "detail": "x=5410"
+    },
+    {
+      "name": "tap the carousel to ride a unicorn/bunny/pony",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP hops off the carousel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "PAW button plays with the nearest thing (boards the wheel)",
+      "ok": true,
+      "detail": ""
     },
     {
       "name": "walking into the rainbow door enters the whoosh tube",
@@ -237,7 +252,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "25 discoveries"
+      "detail": "26 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -247,7 +262,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2690 → 2690"
+      "detail": "x 2705 → 2705"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -260,9 +275,9 @@
       "detail": ""
     },
     {
-      "name": "frame time (headless Chromium, 2x DPR)",
+      "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.3ms"
+      "detail": "median 16.7ms, p95 33.3ms, quality 0.70"
     },
     {
       "name": "portrait shows the turn-sideways tip",

@@ -7,7 +7,7 @@ const player = {
 };
 
 // Physical layout of the ONE continuous world (x grows left → right)
-//  Mega Playhouse 0–1300 · Imagination Studio 1300–2380 · Wonder Lab 2380–3500 · Adventure Park 3500–5800
+//  Mega Playhouse 0–1300 · Imagination Studio 1300–2380 · Wonder Lab 2380–3500 · Adventure Park 3500–6300
 const LAYOUT = {
   pit: { a: 120, b: 610 },
   tramp: { a: 655, b: 815, y: 432, cx: 735 },
@@ -20,7 +20,8 @@ const LAYOUT = {
   launcher: { a: 3570, b: 3680, y: 420, cx: 3625 },
   wheel: { cx: 4060, cy: 262, r: 137 },
   coaster: { a: 4440, b: 5300 },
-  tube: { y: 92, door: [5600, 5690], drop: 300 },
+  carousel: { cx: 5700, r: 165 },
+  tube: { y: 92, door: [6100, 6190], drop: 300, x: 6145 },
 };
 const PIPE = [[2340, 410], [2368, 410], [2368, 232], [2440, 232], [2440, 300]]; // mixer → bubble tank
 const PLATFORMS = [
@@ -46,7 +47,7 @@ const world = {
   labOn: false, magnetOn: false, powered: false, powerT: 0,
   gearAngle: 0, gearSpeed: 0, wheelAngle: 0, coasterU: 0, coasterDir: 1,
   tramp: { x: 0, v: 0 }, pitJiggle: 0, funnelWiggle: 0, leverWiggle: 0, spinnerWiggle: 0, sleepyT: 0,
-  wheelSpin: 0, mixSpin: 0,
+  wheelSpin: 0, mixSpin: 0, carRot: 0, musicT: 0,
 };
 const BALL_DEFAULTS = [
   [270, 375, 23, '#ff68bd'], [350, 400, 26, '#6bdcff'], [407, 375, 20, '#ffcf52'], [505, 406, 29, '#b17aff'],

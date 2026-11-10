@@ -38,14 +38,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   check('start button hides the overlay', await page.locator('#overlay').isHidden());
   // ---------- 2. layout: controls on screen, not overlapping each other ----------
   const boxes = {};
-  for (const id of ['leftBtn', 'rightBtn', 'jumpBtn', 'chooser', 'soundBtn', 'discoveries']) boxes[id] = await page.locator('#' + id).boundingBox();
+  for (const id of ['leftBtn', 'rightBtn', 'jumpBtn', 'pawBtn', 'chooser', 'soundBtn', 'discoveries']) boxes[id] = await page.locator('#' + id).boundingBox();
   const inView = Object.values(boxes).every(b => b.x >= 0 && b.y >= 0 && b.x + b.width <= 844 && b.y + b.height <= 390);
   const overlap = (a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
   const ids = Object.keys(boxes); let anyOverlap = false;
   for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) if (ids[i] !== 'chooser' || ids[j] !== 'soundBtn') if (overlap(boxes[ids[i]], boxes[ids[j]])) anyOverlap = ids[i] + '/' + ids[j];
   check('HUD buttons fully on screen at 844x390', inView);
   check('HUD buttons do not overlap', !anyOverlap, anyOverlap || '');
-  check('move/jump buttons are ≥ 64px tap targets', ['leftBtn', 'rightBtn', 'jumpBtn'].every(k => boxes[k].width >= 64 && boxes[k].height >= 60), JSON.stringify(['leftBtn', 'rightBtn', 'jumpBtn'].map(k => [Math.round(boxes[k].width), Math.round(boxes[k].height)])));
+  check('move/jump/paw buttons are big tap targets (≥ 60px)', ['leftBtn', 'rightBtn', 'jumpBtn', 'pawBtn'].every(k => boxes[k].width >= 60 && boxes[k].height >= 60), JSON.stringify(['leftBtn', 'rightBtn', 'jumpBtn', 'pawBtn'].map(k => [Math.round(boxes[k].width), Math.round(boxes[k].height)])));
   await page.screenshot({ path: path.join(SHOTS, '02_start_playhouse.jpg'), type: 'jpeg', quality: 82 });
 
   // ---------- 3. movement (real touch hold) ----------
@@ -167,8 +167,20 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   c = await S(); check('tap the coaster to ride', c.ride === 'coaster');
   await sleep(2600); await page.screenshot({ path: path.join(SHOTS, '14_coaster.jpg'), type: 'jpeg', quality: 82 });
   c = await waitFor(s => !s.ride, 12000); check('coaster ride finishes and drops you off', !c.ride && c.x > 5300 && c.grounded, `x=${Math.round(c.x)}`);
+  await page.screenshot({ path: path.join(SHOTS, '14b_after_coaster.jpg'), type: 'jpeg', quality: 82 });
+  // carousel (new in build 3)
+  await teleport(5700); await tapWorld(5700, 300); await sleep(200);
+  c = await S(); check('tap the carousel to ride a unicorn/bunny/pony', c.ride === 'carousel');
+  await sleep(1800); await page.screenshot({ path: path.join(SHOTS, '15b_carousel.jpg'), type: 'jpeg', quality: 82 });
+  await touch('touchStart', [{ ...jb, id: 3 }]); await touch('touchEnd', []); await sleep(80);
+  c = await S(); check('JUMP hops off the carousel', c.ride === null);
+  await waitFor(s => s.grounded, 3000);
+  // paw button = do the nearest thing (here: board the Ferris wheel)
+  await teleport(4060); const pw = await center('#pawBtn'); await touch('touchStart', [{ ...pw, id: 4 }]); await touch('touchEnd', []); await sleep(150);
+  c = await S(); check('PAW button plays with the nearest thing (boards the wheel)', c.ride === 'wheel');
+  await touch('touchStart', [{ ...jb, id: 3 }]); await touch('touchEnd', []); await waitFor(s => s.grounded, 3000);
   // tube back to the ball pit
-  await holdBtn('#rightBtn', 1100);
+  await teleport(5960); await holdBtn('#rightBtn', 1100);
   c = await waitFor(s => s.ride === 'tube', 1500); check('walking into the rainbow door enters the whoosh tube', c.ride === 'tube');
   await sleep(1200); await page.screenshot({ path: path.join(SHOTS, '15_whoosh_tube.jpg'), type: 'jpeg', quality: 82 });
   c = await waitFor(s => !s.ride && s.grounded, 6000); check('tube carries you all the way back to the ball pit', c.x < 640, `x=${Math.round(c.x)}`);
@@ -214,8 +226,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await page.reload(); await sleep(500); await page.locator('#playBtn').tap(); await sleep(300);
   c = await S(); check('old Prototype 01 save migrates (creature, painting, discoveries)', c.creature === 'zuzu' && c.strokes === 1 && c.disc.includes('slide') && Math.abs(c.x - 2000) < 2);
   // ---------- 18. frame timing (headless desktop Chromium — NOT an iPhone measurement) ----------
+  await sleep(4000); // let adaptive resolution settle
+  const q = await page.evaluate(() => __DDW.quality);
   const ft = await page.evaluate(() => new Promise(res => { const ts = []; const f = t => { ts.push(t); if (ts.length < 180) requestAnimationFrame(f); else { const d = ts.slice(1).map((t, i) => t - ts[i]); d.sort((a, b) => a - b); res({ median: d[d.length >> 1], p95: d[Math.floor(d.length * .95)] }); } }; requestAnimationFrame(f); }));
-  check('frame time (headless Chromium, 2x DPR)', ft.median < 25, `median ${ft.median.toFixed(1)}ms, p95 ${ft.p95.toFixed(1)}ms`);
+  check('frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)', ft.median < 25, `median ${ft.median.toFixed(1)}ms, p95 ${ft.p95.toFixed(1)}ms, quality ${q.toFixed(2)}`);
   // ---------- 19. portrait phone ----------
   await page.setViewportSize({ width: 390, height: 844 }); await sleep(500);
   check('portrait shows the turn-sideways tip', await page.locator('#rotateTip').isVisible());

@@ -4,9 +4,9 @@
 const canvas = document.getElementById('game');
 let ctx = canvas.getContext('2d', { alpha: false });
 
-const VH = 540;          // world units visible vertically (camera height)
+const VH = 480;          // world units visible vertically (closer camera = bigger creatures)
 const GROUND = 450;      // floor line in world units
-const WORLD_W = 5800;    // ONE continuous world, left to right
+const WORLD_W = 6300;    // ONE continuous world, left to right
 const GRAV = 1450;
 const TAU = Math.PI * 2;
 
@@ -15,7 +15,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const rand = (a, b) => a + Math.random() * (b - a);
 const smooth = t => t * t * (3 - 2 * t);
 
-let vw = 960, scale = 1, camera = 0, started = false, paused = false;
+let vw = 960, scale = 1, camera = 0, camY = 60, started = false, paused = false;
 let gameTime = 0, lastFrame = 0, frameCount = 0;
 const keys = { left: false, right: false };
 

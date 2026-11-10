@@ -1,5 +1,31 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 1 · build 3 — art-direction pass to match the target screenshots
+Target images saved in `docs/art_reference/`. Previous build backed up as `backups/M1_build2_index.html`.
+- **Pip redesigned as the fairy-kit hero:** big pointed ears with rainbow inner fluff; gold goggles; glitter fairy wings (two pairs, veins, sparkles); a big rainbow fox-tail plume; speckled fur; cream chest fluff; white paws with toe beans; cheek tufts; a heart cheek mark; a rainbow forelock. It's the same attached rig and animations as before.
+- **New storybook eyes for all three:** large glossy gradient iris, layered highlights and a twinkle, a thick upper lash line with flicks at the outer corner. Pip has violet eyes, Zuzu blue, Jelly magenta.
+- **Closer camera:** creatures are drawn 18% bigger and the view is 11% tighter, so a creature is now ~37% of screen height. The camera also rises when she climbs or bounces.
+- **Premium look:**
+  - glowing party-bulb strings and marquee bulbs on every machine
+  - gold-trimmed glossy machines
+  - a glass-conservatory backdrop: arched lattice windows, gold-capped columns, a pink balcony with railings, a rich interior wall
+  - hanging ivy and glass bubble tubes
+  - a glossy tiled floor with light reflections and the creature's mirror reflection
+- **NEW ride, the Carousel** (Adventure Park, after the coaster): a 2.5-D turning carousel with a unicorn, a bunny, a pony and a pink unicorn. Mounts gallop up and down and pass in front of and behind the centre column. She rides one at seat scale and a little tune plays; JUMP hops off. With power it spins faster and all its lights come on. The world is extended to 6300 and the whoosh-tube door moved to the new far end.
+- **HUD restyled to the targets:**
+  - bubbly rainbow logo
+  - star counter pill
+  - gold-ringed round creature portraits
+  - round pink sound button
+  - area-name banner that slides in as you enter each part of the one world
+  - glossy arrow pill for moving
+  - big round JUMP button
+  - new **PAW button** (does the nearest/most useful thing, so no aiming is needed)
+  - glossy tile paint palette
+- **Deliberately NOT copied from the targets:** the coin/gem counters with "+" buttons (they read as purchases), the "Lv 12" badge and the row of hearts (they read as lives you can lose). These conflict with the brief: no purchases, no losing.
+- **Performance:** the soft backdrop renders at half resolution. Bulbs are pre-rendered sprites. **Adaptive resolution** lowers pixel density step by step if frames run slow.
+- **Fixes found while testing:** the tickle area is now a body circle, so a bigger creature no longer blocks taps on the wheel or carousel. The hint hand never covers the creature's face. The trampoline was re-tuned for the closer camera.
+
 ## Milestone 1 · build 2 (this checkpoint)
 Built on Prototype 01 (kept untouched in `backups/`). The same world layout, rides and save data carry over, and old saves migrate automatically.
 

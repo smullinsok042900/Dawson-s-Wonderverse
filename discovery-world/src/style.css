@@ -85,3 +85,53 @@ body.playing #brand small{display:none}
   .previewCrew{margin:2px 0 6px}.introPick canvas{width:72px;height:72px}
   #playBtn{font-size:19px;padding:8px}#intro .micro{font-size:10px;margin-top:5px}
 }
+
+/* ================= Art-direction pass (matches the target screenshots) ================= */
+#brand{background:none;border:none;box-shadow:none;padding:0}
+#logo{display:flex;flex-direction:column;align-items:center;line-height:.86;transform:rotate(-3deg);filter:drop-shadow(0 4px 0 rgba(90,30,140,.45)) drop-shadow(0 6px 10px rgba(60,20,110,.35))}
+#logo span{font-weight:900;paint-order:stroke fill;-webkit-text-stroke:6px #fff;letter-spacing:.5px}
+#logo .lA{font-size:15px;color:#7b3fd0}
+#logo .lB{font-size:25px}
+#logo .lB i{font-style:normal;display:inline-block}
+#logo .lB i:nth-child(6n+1){color:#ff4fa8}#logo .lB i:nth-child(6n+2){color:#ff9a2e}#logo .lB i:nth-child(6n+3){color:#ffc21c}#logo .lB i:nth-child(6n+4){color:#36c96b}#logo .lB i:nth-child(6n+5){color:#2fa8ff}#logo .lB i:nth-child(6n){color:#a15cff}
+#logo .lB i:nth-child(odd){transform:translateY(-1px)}
+#logo .lC{font-size:17px;color:#9b4fe6}#logo .lC em{font-style:normal;color:#ffc531;font-size:13px;margin-left:2px}
+.pill{background:linear-gradient(180deg,#7a3fd0,#5a24a8);color:#fff;border:3px solid #fff;border-bottom:3px solid #fff;box-shadow:0 4px 0 #3f1880,0 8px 16px #2b105566;font-size:19px;padding:4px 14px 4px 8px;border-radius:24px}
+.pill svg{width:30px;height:30px;fill:#ffc531;stroke:#e98c1f;stroke-width:1.2;filter:drop-shadow(0 0 4px #ffe58a)}
+#soundBtn{border-radius:50%;width:50px;padding:0;background:radial-gradient(circle at 35% 30%,#ff9fd2,#e43c95);box-shadow:0 4px 0 #a01d64,0 8px 16px #2b105566}
+#soundBtn .spk{fill:#fff}#soundBtn .wave{stroke:#fff}#soundBtn .cross{stroke:#fff}
+#chooser{background:none;border:none;box-shadow:none;padding:0;gap:6px}
+.creatureChoice{border-radius:50%;width:54px;height:54px;background:radial-gradient(circle at 40% 35%,#fff,#f3dcff);border:3px solid #fff;box-shadow:0 0 0 3px #c9a3f0,0 5px 10px #2b105555}
+.creatureChoice canvas{border-radius:50%}
+.creatureChoice.chosen{border-color:#fff;box-shadow:0 0 0 4px #ffc531,0 0 14px 4px #ffe58a,0 5px 10px #2b105555;transform:scale(1.1)}
+/* area banner */
+#zoneBanner{position:fixed;top:calc(max(8px,env(safe-area-inset-top)) + 4px);left:50%;transform:translate(-50%,-80px);display:flex;align-items:center;gap:8px;padding:5px 20px 5px 8px;border-radius:30px;background:linear-gradient(180deg,#8a4ee0,#5f28b0);border:3px solid #fff;box-shadow:0 4px 0 #3f1880,0 10px 20px #2b105566;color:#fff;font-size:19px;font-weight:900;z-index:11;transition:transform .45s cubic-bezier(.3,1.6,.5,1);pointer-events:none;white-space:nowrap}
+#zoneBanner.show{transform:translate(-50%,0)}
+#zoneIcon{width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center}
+#zoneIcon svg{width:24px;height:24px}
+body.playing #toast{top:calc(max(8px,env(safe-area-inset-top)) + 64px)}
+/* controls */
+#movePill{display:flex;gap:0;padding:6px;border-radius:44px;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(220,190,255,.45));border:3px solid rgba(255,255,255,.95);box-shadow:0 6px 0 rgba(80,30,140,.35),0 12px 22px rgba(40,10,80,.35)}
+#movePill .ctrl{width:84px;height:66px;border-radius:34px;border:0;box-shadow:none;background:linear-gradient(180deg,#b58cff,#7d45d8)}
+#movePill .ctrl.right{margin-left:6px}
+#movePill .ctrl svg{width:42px;height:42px;stroke-width:3.6}
+#movePill .ctrl.pressed{transform:scale(.94);filter:brightness(1.18)}
+.ctrl.jump,.ctrl.paw{border-radius:50%;border:4px solid #fff;border-bottom:4px solid #fff;box-shadow:0 0 0 4px #c48cf5,0 7px 0 4px #6b2fb0,0 14px 22px #2c195470}
+.ctrl.jump{width:92px;height:92px;background:radial-gradient(circle at 35% 28%,#e5b8ff 0,#a35cf0 45%,#7a2fd0 100%)}
+.ctrl.jump svg{width:48px;height:48px;fill:#fff;stroke:#fff;filter:drop-shadow(0 3px 0 #5a1fa0)}
+.ctrl.paw{width:70px;height:70px;margin-bottom:12px;background:radial-gradient(circle at 35% 28%,#9ff4ff 0,#37b6ea 50%,#1f7fc8 100%);box-shadow:0 0 0 4px #8fd8ff,0 6px 0 4px #1d5f9f,0 12px 18px #2c195470}
+.ctrl.paw svg{width:36px;height:36px;fill:#fff;stroke:none;filter:drop-shadow(0 2px 0 #145a90)}
+.ctrl.jump.pressed,.ctrl.paw.pressed{transform:translateY(3px) scale(.94)}
+/* paint tools as glossy tiles */
+#paintTools{background:linear-gradient(180deg,rgba(255,255,255,.65),rgba(225,200,255,.55));border:3px solid #fff;border-radius:22px;padding:6px 8px;gap:6px;box-shadow:0 6px 0 rgba(80,30,140,.3),0 10px 22px rgba(40,10,80,.35)}
+.swatch,.toolBtn{width:46px;height:46px;border-radius:14px;border:3px solid #fff;box-shadow:inset 0 -6px 0 rgba(0,0,0,.15),inset 0 5px 0 rgba(255,255,255,.45),0 3px 6px rgba(40,10,80,.3);transform:none}
+.swatch.selected{outline:none;box-shadow:0 0 0 3px #ffc531,0 0 12px 3px #ffe58a,inset 0 -6px 0 rgba(0,0,0,.15),inset 0 5px 0 rgba(255,255,255,.45);transform:translateY(-3px)}
+.toolBtn{background:linear-gradient(180deg,#b58cff,#7d45d8)}
+@media (max-height:430px){
+  #logo .lA{font-size:12px}#logo .lB{font-size:20px}#logo .lC{font-size:13px}
+  .creatureChoice{width:46px;height:46px}.pill{min-height:44px;font-size:17px}#soundBtn{width:46px}
+  #movePill .ctrl{width:76px;height:62px}.ctrl.jump{width:82px;height:82px}.ctrl.paw{width:62px;height:62px}
+  #zoneBanner{font-size:16px;padding:3px 16px 3px 6px}#zoneIcon{width:28px;height:28px}
+  .swatch,.toolBtn{width:40px;height:40px}
+}
+@media (orientation:portrait) and (max-width:700px){ #movePill .ctrl{width:64px;height:56px}.ctrl.jump{width:76px;height:76px}.ctrl.paw{width:56px;height:56px} #zoneBanner{display:none} }

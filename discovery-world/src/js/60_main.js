@@ -1,13 +1,25 @@
 // ===================================================================
 // 60_main.js — resize, render order, hint hand, game loop, boot
 // ===================================================================
+// The soft far backdrop is drawn into a half-resolution buffer and scaled up
+// (a quarter of the pixel work; keeps phones smooth). Characters & props stay sharp.
+// Adaptive quality: if frames run slow for a while, lower the pixel density a step.
+let quality = 1, slowTime = 0, frameEMA = 1 / 60;
+function adaptQuality(rawDt) {
+  frameEMA += (rawDt - frameEMA) * .05;
+  if (frameEMA > 1 / 48 && quality > .55) { slowTime += rawDt; if (slowTime > 1.2) { quality = Math.max(.55, quality - .15); slowTime = 0; frameEMA = 1 / 60; resize(); } }
+  else slowTime = Math.max(0, slowTime - rawDt * .5);
+}
+const BG_RES = .5, bgCanvas = document.createElement('canvas'), bgCtx = bgCanvas.getContext('2d', { alpha: false });
 function resize() {
   const w = innerWidth, h = innerHeight;
   // Cap backing resolution so older iPhones stay smooth (≤ ~2.4M pixels)
   let dpr = Math.min(devicePixelRatio || 1, 2);
   if (w * h * dpr * dpr > 2.4e6) dpr = Math.sqrt(2.4e6 / (w * h));
+  dpr = Math.max(.75, dpr * quality);
   canvas.width = Math.max(1, Math.round(w * dpr)); canvas.height = Math.max(1, Math.round(h * dpr));
   vw = VH * w / h; scale = canvas.height / VH;
+  bgCanvas.width = Math.ceil(canvas.width * BG_RES); bgCanvas.height = Math.ceil(canvas.height * BG_RES);
   camera = clamp(camera, 0, Math.max(0, WORLD_W - vw));
 }
 
@@ -43,7 +55,8 @@ function drawBall(b) {
 }
 function drawHintHand(t) {
   const h = hintTarget(); if (!h || player.ride) return;
-  const [x, y] = h, k = (Math.sin(t * 4) + 1) / 2;
+  let [x, y] = h; const k = (Math.sin(t * 4) + 1) / 2;
+  if (Math.abs(x - player.x) < 70 && y > player.y - 190 && y < player.y + 10) y = player.y - 255; // never cover the creature's face
   ctx.save();
   ctx.strokeStyle = `rgba(255,255,255,${.85 - k * .6})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x, y, 22 + k * 16, 0, TAU); ctx.stroke();
   ctx.translate(x + 14, y + 16 + k * 8); ctx.rotate(-.45);
@@ -66,7 +79,7 @@ function drawPlayer(t) {
   }
   ctx.save();
   // riders shrink to fit their seat (bubble / gondola / coaster car), scaled about the feet
-  const rs = P.ride ? { bubble: .78, wheel: .5, coaster: .58 }[P.ride.type] : 0;
+  const rs = P.ride ? { bubble: .78, wheel: .5, coaster: .58, carousel: .62 }[P.ride.type] : 0;
   if (rs) { ctx.translate(P.x, P.y); ctx.scale(rs, rs); ctx.translate(-P.x, -P.y); }
   drawCreature(P.creature, A, P.x, P.y, { noShadow: !!P.ride, drop: P.grounded ? 0 : floorBelow(P.x, P.y) - P.y });
   ctx.restore();
@@ -77,34 +90,37 @@ function floorBelow(x, y) {
   return f;
 }
 function render(t) {
+  bgCtx.setTransform(scale * BG_RES, 0, 0, scale * BG_RES, 0, 0);
+  withCtx(bgCtx, () => background(t));
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(bgCanvas, 0, 0, canvas.width, canvas.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  background(t); ground(t);
-  ctx.save(); ctx.translate(-camera, 0);
+  ground(t);
+  ctx.save(); ctx.translate(-camera, -camY);
+  floorReflection(t);
   ceilingTube(t, false); hangingStars(t);
+  glassTube(1318, 150, 446, '#7fd8ff', t); glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   playStructure(t); paintWall(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
-  const onCoaster = player.ride && player.ride.type === 'coaster';
-  if (!onCoaster && cull(4870, 520)) coasterTrain(t);
+  decorLights(t);
+  const rideType = player.ride && player.ride.type;
+  if (rideType !== 'coaster' && cull(4870, 520)) coasterTrain(t);
+  drawCarousel(t, rideType === 'carousel' ? player.ride.i : -1, () => drawPlayer(t));
   if (world.needPaintT > 0 && cull(2790, 80)) { ctx.globalAlpha = Math.min(1, world.needPaintT); paintDropIcon(LAYOUT.engine.funnel[0], 92); ctx.globalAlpha = 1; }
   secretStars(t);
   balls.forEach(b => { if (cull(b.x, 40)) drawBall(b); });
   world.bubbles.forEach(b => { if (!b.ride && cull(b.x, 40)) drawBubble(b); });
-  drawPlayer(t);
+  if (rideType !== 'carousel') drawPlayer(t);
   // things that sit IN FRONT of the creature (so it is inside the ride / the pit)
-  if (onCoaster) coasterTrain(t);
-  if (player.ride && player.ride.type === 'wheel') { const W = LAYOUT.wheel, a = world.wheelAngle + player.ride.i * Math.PI / 5, x = W.cx + Math.cos(a) * W.r, y = W.cy + Math.sin(a) * W.r; rounded(x - 26, y + 24, 52, 18, 9, ['#ffbb68', '#7be1ed', '#ff85c2', '#a88af5', '#92e1a6'][player.ride.i % 5], '#fff', 3); }
+  if (rideType === 'coaster') coasterTrain(t);
+  if (rideType === 'wheel') { const W = LAYOUT.wheel, a = world.wheelAngle + player.ride.i * Math.PI / 5, x = W.cx + Math.cos(a) * W.r, y = W.cy + Math.sin(a) * W.r; rounded(x - 26, y + 24, 52, 18, 9, ['#ffbb68', '#7be1ed', '#ff85c2', '#a88af5', '#92e1a6'][player.ride.i % 5], '#fff', 3); }
   world.bubbles.forEach(b => { if (b.ride && cull(b.x, 80)) drawBubble(b); });
   if (cull(365, 260)) drawBallPitFront();
   drawParticles();
   if (started) drawHintHand(t);
   ctx.restore();
   foreground(t);
-  // slim journey strip (shows how far along the one big world you are)
-  const sx = vw / 2 - 90, sy = 18; rounded(sx, sy, 180, 8, 4, 'rgba(255,255,255,.55)');
-  ['#ff8fc8', '#ffcf5e', '#6fd8f0', '#ff9a7a'].forEach((c, i) => ellipse(sx + [12, 62, 108, 160][i], sy + 4, 3, 3, c));
-  ellipse(sx + 180 * player.x / WORLD_W, sy + 4, 7, 7, '#ffd15f', '#fff', 2);
 }
 function paintDropIcon(x, y) {
   rounded(x - 44, y - 22, 88, 44, 20, 'rgba(255,255,255,.94)', '#e3b0ee', 3);
@@ -117,14 +133,15 @@ function update(dt, t) {
   const nearWall = started && camera + vw > LAYOUT.wall.x1 + 120 && camera < LAYOUT.wall.x2 - 120;
   const pt = $('paintTools'); if (pt.classList.contains('show') !== nearWall) pt.classList.toggle('show', nearWall);
   if (!started) { updateParticles(dt); return; }
-  updatePlayer(dt); updateWorld(dt, t); updateCamera(dt);
+  updatePlayer(dt); updateWorld(dt, t); updateCamera(dt); updateZoneBanner(dt);
   if (t - lastSave > 10) { lastSave = t; save(); }
 }
 let lastSave = 0, portraitClock = 0;
 function loop(ms) {
   const t = ms / 1000;
   if (!lastFrame) lastFrame = t;
-  const dt = clamp(t - lastFrame, 0, 1 / 30); lastFrame = t;
+  const raw = t - lastFrame, dt = clamp(raw, 0, 1 / 30); lastFrame = t;
+  if (started && !paused && raw > 0 && raw < .25) adaptQuality(raw);
   if (!paused) {
     gameTime += dt; frameCount++;
     update(dt, gameTime); render(gameTime);
@@ -152,7 +169,7 @@ requestAnimationFrame(loop);
 // Test/debug hook (used by the automated smoke tests; harmless for players)
 window.__DDW = {
   player, world, balls, LAYOUT, keys, Sound, SECRET_STARS, get camera() { return camera; }, get vw() { return vw; }, VH,
-  toScreen(x, y) { const r = canvas.getBoundingClientRect(); return { x: (x - camera) / VH * r.height + r.left, y: y / VH * r.height + r.top }; },
+  toScreen(x, y) { const r = canvas.getBoundingClientRect(); return { x: (x - camera) / VH * r.height + r.left, y: (y - camY) / VH * r.height + r.top }; },
   teleport(x, y = GROUND) { player.ride = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
-  restoreInfo, activate: (x, y) => activate({ x, y }),
+  get quality() { return quality; }, restoreInfo, activate: (x, y) => activate({ x, y }),
 };
