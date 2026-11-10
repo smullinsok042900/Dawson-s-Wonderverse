@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T15:47:01.022Z",
+  "date": "2026-11-10T17:19:55.391Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 120,
-  "total": 120,
+  "passed": 130,
+  "total": 130,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 353 units"
+      "detail": "moved 390 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 284 units"
+      "detail": "moved 290 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=329 jumps=1"
+      "detail": "y=334 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=136 v=469"
+      "detail": "dx=139 v=452"
     },
     {
       "name": "paint palette appears near the wall",
@@ -147,7 +147,7 @@
     {
       "name": "walk the sky bridge to the lookout and find secret star 7",
       "ok": true,
-      "detail": "stars 1→2, x=1332"
+      "detail": "stars 1→2, x=1328"
     },
     {
       "name": "walking off the lookout grabs the zipline",
@@ -157,7 +157,7 @@
     {
       "name": "zipline drops you by the paint mixer",
       "ok": true,
-      "detail": "x=2022"
+      "detail": "x=2023"
     },
     {
       "name": "tap the engine ladder to climb it",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "39,31,35"
+      "detail": "42,23,36"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -217,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4244"
+      "detail": "landed at x=4240"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -267,7 +267,7 @@
     {
       "name": "the lift carries the creature up",
       "ok": true,
-      "detail": "y=237"
+      "detail": "y=238"
     },
     {
       "name": "walk onto the balcony and find secret star 8",
@@ -287,7 +287,7 @@
     {
       "name": "star bits get collected while playing",
       "ok": true,
-      "detail": "101 → 110"
+      "detail": "105 → 114"
     },
     {
       "name": "JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower",
@@ -307,7 +307,7 @@
     {
       "name": "giant slide lands you by the swings",
       "ok": true,
-      "detail": "x=8638"
+      "detail": "x=8636"
     },
     {
       "name": "tap the swing to ride it",
@@ -317,7 +317,7 @@
     {
       "name": "JUMP flings you off the swing",
       "ok": true,
-      "detail": "vx=-150 vy=-127"
+      "detail": "vx=251 vy=-93"
     },
     {
       "name": "the seesaw shoots its ball through the hoop",
@@ -347,7 +347,7 @@
     {
       "name": "the confetti cannon blasts you sky-high",
       "ok": true,
-      "detail": "y=18"
+      "detail": "y=25"
     },
     {
       "name": "walk on the dance floor to light it up",
@@ -372,7 +372,7 @@
     {
       "name": "walk into the low tunnel: the creature crawls (and the pet follows)",
       "ok": true,
-      "detail": "x=936 pet=808"
+      "detail": "x=935 pet=804"
     },
     {
       "name": "find a lost Star Baby in the tunnel",
@@ -405,14 +405,59 @@
       "detail": ""
     },
     {
-      "name": "play the piano inside",
+      "name": "inside is a full-sized house (its own big space, ground floor)",
+      "ok": true,
+      "detail": "x=20180"
+    },
+    {
+      "name": "play the big piano in the living room",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "tap the door again to go back outside",
+      "name": "PAW at the bottom of the stairs starts walking up",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "the stairs lead up to the second floor",
+      "ok": true,
+      "detail": "y=116"
+    },
+    {
+      "name": "tap the attic stairs: walk up to the third floor",
+      "ok": true,
+      "detail": "y=-218"
+    },
+    {
+      "name": "open the treasure chest in the attic",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "PAW at the top of the stairs walks back down",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "back on the second floor",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bounce on the bouncy bed upstairs",
+      "ok": true,
+      "detail": "highest y=-26"
+    },
+    {
+      "name": "the ceiling stops you (no jumping through floors)",
+      "ok": true,
+      "detail": "highest y=-26 (ceiling allows ≥ -26)"
+    },
+    {
+      "name": "tap the front door inside to go back outside",
+      "ok": true,
+      "detail": "x=10740"
     },
     {
       "name": "PAW at a door goes inside",
@@ -420,7 +465,12 @@
       "detail": ""
     },
     {
-      "name": "PAW inside at the door comes back OUT (never stuck inside)",
+      "name": "PAW inside at the front door comes back OUT (never stuck inside)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the Fluffkin House door goes inside too",
       "ok": true,
       "detail": ""
     },
@@ -477,7 +527,7 @@
     {
       "name": "the rainbow slide lands you back on the ground",
       "ok": true,
-      "detail": "x=2389 y=450"
+      "detail": "x=2387 y=450"
     },
     {
       "name": "the balloon bear gives you a balloon that floats with you",
@@ -567,7 +617,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "77 discoveries"
+      "detail": "81 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -577,7 +627,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2700 → 2700"
+      "detail": "x 2712 → 2712"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -592,7 +642,7 @@
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.4ms, quality 0.55"
+      "detail": "median 16.7ms, p95 33.4ms, quality 0.70"
     },
     {
       "name": "portrait shows the turn-sideways tip",

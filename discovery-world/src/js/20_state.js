@@ -70,7 +70,7 @@ const balls = BALL_DEFAULTS.map(([x, y, r, c, metal]) => ({ x, y, r, c, vx: 0, v
 const STORE = 'dawsons-discovery-world-v2', STORE_V1 = 'dawsons-discovery-world-v1';
 function snapshot() {
   return {
-    v: 2, x: Math.round(player.x), creature: player.creature, soundOn: Sound.on,
+    v: 2, x: Math.round(player.inside ? BUILDINGS[player.inside].door : player.x), creature: player.creature, soundOn: Sound.on,
     strokes: world.strokes.slice(-140).map(({ born, ...s }) => s), stickers: world.stickers, discoveries: [...world.discoveries], stars: [...world.stars],
     portions: world.portions, lastMix: world.lastMix, tank: world.tank, battery: world.battery,
     labOn: world.labOn, magnetOn: world.magnetOn, powered: world.powered,

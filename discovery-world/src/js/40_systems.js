@@ -143,7 +143,7 @@ function rideCarousel() {
 }
 // The big PAW button: do the most useful thing near the creature (no aiming needed)
 function doAction() {
-  const P = player; if (!started) return;
+  const P = player; if (!started || P.stair) return;
   if (P.ride) { jump(); return; }
   const door = nearDoor(); if (door) { door.go(); return; }
   let best = null, bd = 1e9;
@@ -175,7 +175,7 @@ function bounce(v) {
 }
 function jump() {
   const P = player;
-  if (!started || paused) return;
+  if (!started || paused || P.stair) return;
   if (P.ride) {
     if (jumpOffBigRide()) return;
     if (P.ride.type === 'tube' || P.ride.type === 'slide') return;
@@ -253,7 +253,8 @@ function hintTarget() {
 function updatePlayer(dt) {
   const P = player;
   if (P.ride && P.ride.type !== 'climb' && (P.under || P.inside)) { P.under = false; P.inside = null; } // rides are above ground
-  if (P.ride) updateRide(dt);
+  if (P.stair) updateStairs(dt); // walking up / down the stairs inside a house
+  else if (P.ride) updateRide(dt);
   else {
     const h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     if (h) P.facing = h;
@@ -277,12 +278,12 @@ function updatePlayer(dt) {
     if (lk === '' && P.x > T.a && P.x < T.b && P.y >= T.y - 2 && P.vy >= 0 && P.y <= GROUND) bounce(clamp(Math.max(930, (P.vy || 0) * 1.02), 930, 1040));
     if (P.grounded) { P.jumps = 0; P.launched = false; }
     // walking off the top of the Sky Tower / slide tower 2 onto the giant slides
-    if (P.grounded && P.y === -60 && P.x > 8058 && P.vx > 30) startBigSlide(0);
-    if (P.grounded && P.y === 150 && P.x > 12318 && P.x < 12340 && P.vx > 30) startBigSlide(1);
+    if (lk === '' && P.grounded && P.y === -60 && P.x > 8058 && P.vx > 30) startBigSlide(0);
+    if (lk === '' && P.grounded && P.y === 150 && P.x > 12318 && P.x < 12340 && P.vx > 30) startBigSlide(1);
     // walking off the top of the tower onto the slide
-    if (P.grounded && P.y === 319 && P.x > 962 && P.vx > 30) startSlide();
+    if (lk === '' && P.grounded && P.y === 319 && P.x > 962 && P.vx > 30) startSlide();
     // walking off the lookout onto the zipline
-    if (P.grounded && P.y === 213 && P.x > 1386 && P.vx > 30) startZip();
+    if (lk === '' && P.grounded && P.y === 213 && P.x > 1386 && P.vx > 30) startZip();
     // walking into the tube door
     const [d1, d2] = LAYOUT.tube.door;
     if (lk === '' && P.grounded && P.y === GROUND && P.x > d1 + 12 && P.x < d2) rideTube();
@@ -412,7 +413,7 @@ function updateWorld(dt, t) {
   updateBalls(dt);
   updateMarble(dt, t);
   updateBig(dt, t);
-  updateSky(dt, t);
+  updateSky(dt, t); updateHouses(dt, t);
   updateParticles(dt);
 }
 function updateBalls(dt) {
@@ -454,6 +455,6 @@ function updateCamera(dt) {
   const focusY = P.ride && P.ride.type === 'carousel' ? GROUND : P.y;
   camY += (clamp(focusY - 390, -950, P.under ? 340 : 540 - VH) - camY) * Math.min(1, dt * 5);
   world.lookAhead += ((P.ride ? 0 : P.facing * vw * .1) - world.lookAhead) * Math.min(1, dt * 1.6);
-  const target = clamp(P.x - vw / 2 + world.lookAhead, 0, Math.max(0, WORLD_W - vw));
+  const target = P.inside ? houseCamX() : clamp(P.x - vw / 2 + world.lookAhead, 0, Math.max(0, WORLD_W - vw));
   camera += (target - camera) * Math.min(1, dt * fast);
 }

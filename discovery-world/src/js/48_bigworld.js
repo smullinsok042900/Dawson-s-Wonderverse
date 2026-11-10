@@ -211,10 +211,10 @@ function updateFluffs(dt, t) {
       const tp = world.trail[Math.min(world.trail.length - 1, 14 + k * 16)] || [P.x, P.y];
       if (Math.hypot(tp[0] - f.px, tp[1] - f.py) > 600) { f.px = tp[0]; f.py = tp[1]; }
       f.px += (tp[0] - f.px) * Math.min(1, dt * 7); f.py += (tp[1] - f.py) * Math.min(1, dt * 7);
-      const atHome = star ? Math.abs(P.x - NEST.x) < 75 && Math.abs(P.y - NEST.y) < 4 : Math.abs(P.x - HOUSE.door) < 170 && !P.under;
+      const atHome = star ? Math.abs(P.x - NEST.x) < 75 && Math.abs(P.y - NEST.y) < 4 : (Math.abs(P.x - HOUSE.door) < 170 && !P.under && !P.inside) || P.inside === 'fluff';
       if (atHome && P.grounded && !P.ride) { f.state = 'enter'; f.enterT = 0; }
     } else if (f.state === 'enter') {
-      const tx = star ? NEST.x + 10 : HOUSE.door, ty = star ? NEST.y - 4 : GROUND;
+      const inF = !star && player.inside === 'fluff', tx = star ? NEST.x + 10 : inF ? player.x : HOUSE.door, ty = star ? NEST.y - 4 : inF ? player.y : GROUND;
       f.enterT += dt; f.px += (tx - f.px) * Math.min(1, dt * 4); f.py += (ty - f.py) * Math.min(1, dt * 4);
       if (f.enterT > .7) {
         f.state = 'home';

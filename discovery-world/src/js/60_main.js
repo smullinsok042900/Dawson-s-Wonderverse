@@ -20,7 +20,7 @@ function resize() {
   canvas.width = Math.max(1, Math.round(w * dpr)); canvas.height = Math.max(1, Math.round(h * dpr));
   vw = VH * w / h; scale = canvas.height / VH;
   bgCanvas.width = Math.ceil(canvas.width * BG_RES); bgCanvas.height = Math.ceil(canvas.height * BG_RES);
-  camera = clamp(camera, 0, Math.max(0, WORLD_W - vw));
+  if (player.inside) camera = houseCamX(); else camera = clamp(camera, 0, Math.max(0, WORLD_W - vw));
 }
 
 function drawPours(t) {
@@ -92,6 +92,7 @@ function floorBelow(x, y) {
   return f;
 }
 function render(t) {
+  if (player.inside) { renderHouse(t); return; } // inside a walk-in house (49h_houses.js)
   bgCtx.setTransform(scale * BG_RES, 0, 0, scale * BG_RES, 0, 0);
   withCtx(bgCtx, () => background(t));
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(bgCanvas, 0, 0, canvas.width, canvas.height);
@@ -104,7 +105,7 @@ function render(t) {
   glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawPortalDoors(t); drawNest(t); drawHatches(t); drawWaiting(t); drawNpcs(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawPortalDoors(t); drawNest(t); drawHatches(t); drawWaiting(t); drawNpcs(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
@@ -181,6 +182,7 @@ requestAnimationFrame(loop);
 window.__DDW = {
   player, world, balls, LAYOUT, keys, Sound, SECRET_STARS, get camera() { return camera; }, get vw() { return vw; }, VH,
   toScreen(x, y) { const r = canvas.getBoundingClientRect(); return { x: (x - camera) / VH * r.height + r.left, y: (y - camY) / VH * r.height + r.top }; },
-  teleport(x, y = GROUND) { player.ride = null; player.under = false; player.inside = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
+  houses: HOUSES, HS, enterHouse, houseLevel: () => player.inside ? houseLevel() : -1,
+  teleport(x, y = GROUND) { player.ride = null; player.stair = null; player.under = false; player.inside = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
   get quality() { return quality; }, npcs: NPCS, style: STYLE, blockPlatforms: () => builtPlatforms.length, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
 };
