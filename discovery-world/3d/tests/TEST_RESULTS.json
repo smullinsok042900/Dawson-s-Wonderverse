@@ -1,0 +1,249 @@
+{
+  "date": "2026-11-10T18:37:24.358Z",
+  "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
+  "passed": 48,
+  "total": 48,
+  "results": [
+    {
+      "name": "3D title screen shows the three creatures and a play button",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "play button hides the title card",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "move / jump / paw buttons are big (≥ 60 px) and on screen",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hold ▶ to walk right",
+      "ok": true,
+      "detail": "x 5.0 → 11.3"
+    },
+    {
+      "name": "let go and the creature stops",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hold ◀ to walk left",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP jumps",
+      "ok": true,
+      "detail": "y=1.68"
+    },
+    {
+      "name": "double jump (tap JUMP again in the air)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "lands back on the floor",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "multi-touch: walk and jump at the same time",
+      "ok": true,
+      "detail": "x 7.5→8.6, y 0.00"
+    },
+    {
+      "name": "switch to zuzu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "switch to jelly",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "switch to pip",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap your creature to tickle it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap the ball pit: splash",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk off the tower onto the twisty slide",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "slide ends on the floor and you can move again",
+      "ok": true,
+      "detail": "x=31.6"
+    },
+    {
+      "name": "walk onto the trampoline: big bounce",
+      "ok": true,
+      "detail": "y=4.13"
+    },
+    {
+      "name": "paint palette appears by the paint wall",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "finger-paint on the giant wall",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk along the giant xylophone and it plays",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap two paint buckets to mix a colour",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap the bubble machine: bubbles float out",
+      "ok": true,
+      "detail": "6 bubbles"
+    },
+    {
+      "name": "spring pad bounces you up high",
+      "ok": true,
+      "detail": "y=4.38"
+    },
+    {
+      "name": "tap the carousel to ride",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP gets off the carousel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ride the Ferris wheel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the Ferris wheel lifts you up",
+      "ok": true,
+      "detail": "y=2.8"
+    },
+    {
+      "name": "walk through star bits to collect them",
+      "ok": true,
+      "detail": "19 → 23"
+    },
+    {
+      "name": "find a baby Fluffkin: it follows you",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a door bubble pops up by the house door",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "PAW at the door: go inside the Fluffkin House",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the Fluffkins you brought are home (counter goes up)",
+      "ok": true,
+      "detail": "2 home"
+    },
+    {
+      "name": "stair bubble at the bottom of the stairs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "PAW puts you on the first step (no automatic walking)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "hold ▶ to walk up part-way, let go to stop",
+      "ok": true,
+      "detail": "k=0.5148512932765844"
+    },
+    {
+      "name": "walk off the top onto the upstairs floor",
+      "ok": true,
+      "detail": "y=4.4"
+    },
+    {
+      "name": "the ceiling stops you upstairs (no flying through the roof)",
+      "ok": true,
+      "detail": "y=4.40"
+    },
+    {
+      "name": "stair bubble at the top of the stairs",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk back down the stairs",
+      "ok": true,
+      "detail": "y=0"
+    },
+    {
+      "name": "the front door inside takes you back outside",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sound button turns sound off",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sound button turns sound back on",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload shows KEEP PLAYING",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload keeps creature, star bits, Fluffkins and painting",
+      "ok": true,
+      "detail": "{\"cr\":\"jelly\",\"bits\":23,\"fl\":2,\"p\":true}"
+    },
+    {
+      "name": "a broken save is ignored safely (fresh start, no crash)",
+      "ok": true,
+      "detail": "button=\"LET'S PLAY ▶\" save={\"v\":1,\"creature\":\"p"
+    },
+    {
+      "name": "portrait phone shows the turn-sideways tip",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no errors or warnings in the console",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "errors": []
+}
