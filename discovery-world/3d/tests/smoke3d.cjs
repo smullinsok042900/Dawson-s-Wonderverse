@@ -24,7 +24,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map((p, i) => ({ x: p.x, y: p.y, id: p.id ?? i + 1, radiusX: 6, radiusY: 6, force: 1 })) });
   const scr = (x, y, z = 0) => page.evaluate(([x, y, z]) => __DDW3.toScreen(x, y, z), [x, y, z]);
   const tapWorld = async (x, y, z = 0) => { const p = await scr(x, y, z); await touch('touchStart', [p]); await sleep(60); await touch('touchEnd', []); await sleep(150); };
-  const holdBtn = async (sel, ms) => { const c = await center(sel); await touch('touchStart', [{ ...c, id: 1 }]); await sleep(ms); await touch('touchEnd', []); await sleep(80); };
+  // drag-to-move: a finger down on the left side, slid sideways (or up/down)
+  const DRAG0 = { x: 150, y: 285, id: 7 };
+  const drag = async (dx, ms, dy = 0) => { await touch('touchStart', [DRAG0]); await touch('touchMove', [{ ...DRAG0, x: DRAG0.x + dx / 2, y: DRAG0.y + dy / 2 }]); await touch('touchMove', [{ ...DRAG0, x: DRAG0.x + dx, y: DRAG0.y + dy }]); await sleep(ms); await touch('touchEnd', []); await sleep(80); };
+  const holdBtn = async (sel, ms) => { if (sel === '#rightBtn') return drag(90, ms); if (sel === '#leftBtn') return drag(-90, ms); const c = await center(sel); await touch('touchStart', [{ ...c, id: 1 }]); await sleep(ms); await touch('touchEnd', []); await sleep(80); };
   const press = async sel => holdBtn(sel, 80);
   const teleport = async (x, y = 0) => { await page.evaluate(([x, y]) => __DDW3.teleport(x, y), [x, y]); await sleep(2200); }; // let the camera settle (slow software WebGL)
   const waitFor = async (fn, ms = 8000) => { const t0 = Date.now(); let s; while (Date.now() - t0 < ms) { s = await S(); if (fn(s)) return s; await sleep(120); } return s; };
@@ -37,15 +40,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await shot('01_title.jpg');
   await page.locator('#playBtn').tap(); await sleep(800);
   check('play button hides the title card', await page.locator('#overlay').evaluate(e => e.classList.contains('hidden')));
-  const boxes = {}; for (const id of ['leftBtn', 'rightBtn', 'jumpBtn', 'pawBtn']) boxes[id] = await page.locator('#' + id).boundingBox();
-  check('move / jump / paw buttons are big (≥ 60 px) and on screen', Object.values(boxes).every(b => b.width >= 60 && b.height >= 60 && b.x >= 0 && b.y + b.height <= 390));
+  check('no arrow buttons: a slide-your-finger hint shows instead', (await page.locator('#leftBtn').count()) === 0 && await page.locator('#dragHint').isVisible());
+  const boxes = {}; for (const id of ['jumpBtn', 'pawBtn']) boxes[id] = await page.locator('#' + id).boundingBox();
+  check('jump / paw buttons are big (≥ 60 px) and on screen', Object.values(boxes).every(b => b.width >= 60 && b.height >= 60 && b.x >= 0 && b.y + b.height <= 390));
   await shot('02_start.jpg');
   // ---------- moving + jumping ----------
   await page.evaluate(() => __DDW3.teleport(1.2)); await sleep(1500); // start at the far left (walking right leads into the ball pit and its deep part)
   c = await S(); const x0 = c.x;
-  await holdBtn('#rightBtn', 900); c = await S(); check('hold ▶ to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
+  await holdBtn('#rightBtn', 900); c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
   await sleep(400); const x1 = (await S()).x; await sleep(300); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
-  await holdBtn('#leftBtn', 500); check('hold ◀ to walk left', (await S()).x < x1 - .5);
+  await holdBtn('#leftBtn', 500); check('slide a finger left to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); const seen = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if (P.y > .3) return r(P.y); if (++n > 200) return r(P.y); requestAnimationFrame(f); }; f(); })); await touch('touchStart', [j]); await touch('touchEnd', []); const jy = await seen; check('JUMP jumps', jy > .3, `y=${jy.toFixed(2)}`);
     // (the slow software renderer here can't keep up with two real taps inside one jump, so the 2nd tap is sent on the very next frame)
     await waitFor(s => s.grounded, 3000);
@@ -53,10 +57,15 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await sleep(300); check('double jump (tap JUMP again in the air)', (await S()).disc.includes('doublejump')); }
   c = await waitFor(s => s.grounded, 4000); check('lands back on the floor', c.grounded && c.y === 0);
   // multi-touch: hold ▶ with one finger and tap JUMP with another
-  { const r = await center('#rightBtn'), j = await center('#jumpBtn'); const a = (await S()).x;
-    await touch('touchStart', [{ ...r, id: 1 }]); await sleep(300); await touch('touchStart', [{ ...r, id: 1 }, { ...j, id: 2 }]); await sleep(80); await touch('touchMove', [{ ...r, id: 1 }]); await sleep(400);
+  { const r = { ...DRAG0, x: DRAG0.x + 90 }, j = await center('#jumpBtn'); const a = (await S()).x;
+    await touch('touchStart', [DRAG0]); await touch('touchMove', [r]); await sleep(300); await touch('touchStart', [r, { ...j, id: 2 }]); await sleep(80); await touch('touchMove', [r]); await sleep(400);
     c = await S(); await touch('touchEnd', []); check('multi-touch: walk and jump at the same time', c.x > a + 1 && (c.y > .2 || c.jumps > 0 || c.disc.length), `x ${a.toFixed(1)}→${c.x.toFixed(1)}, y ${c.y.toFixed(2)}`); }
   await waitFor(s => s.grounded, 3000);
+  // drag up = jump; a gentle slide walks slowly (never faster than walking)
+  await teleport(3); await waitFor(s => s.grounded, 3000);
+  { const seen = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (++n > 120) return r(m); requestAnimationFrame(f); }; f(); })); await drag(0, 300, -90); const my = await seen; check('slide a finger up to jump', my > .3, `rose to y=${my.toFixed(2)}`); }
+  await waitFor(s => s.grounded, 3000);
+  { const v = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, Math.abs(__DDW3.player.vx)); if (++n > 60) return r(m); requestAnimationFrame(f); }; f(); })); await drag(30, 700); const vx = await v; check('a small slide walks slowly; walking is never faster than normal', vx > .5 && vx < 3.5, `speed ${vx.toFixed(2)} (normal walk 5.2)`); }
   // ---------- creatures ----------
   for (const k of ['zuzu', 'jelly', 'pip']) { await page.locator(`.creatureChoice[data-c="${k}"]`).tap(); await sleep(500); c = await S(); check(`switch to ${k}`, c.creature === k); if (k !== 'pip') await shot(`03_${k}.jpg`); }
   { await page.locator('.creatureChoice[data-c="jelly"]').tap(); await sleep(400);
@@ -73,7 +82,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await teleport(21.6, 3.8); await holdBtn('#rightBtn', 700); c = await waitFor(s => s.ride === 'slide', 2000); check('walk off the tower onto the twisty slide', c.ride === 'slide');
   await shot('05_slide.jpg');
   c = await waitFor(s => !s.ride, 9000); check('slide ends on the floor and you can move again', !c.ride && c.x > 30 && c.y === 0, `x=${c.x.toFixed(1)}`);
-  await teleport(31.5); await holdBtn('#rightBtn', 500); c = await waitFor(s => s.y > 2, 2500); check('walk onto the trampoline: big bounce', c.y > 2, `y=${c.y.toFixed(2)}`);
+  await teleport(31.5); { const top = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (m > 2 || ++n > 200) return r(m); requestAnimationFrame(f); }; f(); })); await holdBtn('#rightBtn', 500); const m = await top; check('walk onto the trampoline: big bounce', m > 2, `highest y=${m.toFixed(2)}`); }
   await shot('06_trampoline.jpg'); await waitFor(s => s.grounded && s.x > 36 || s.grounded && s.y === 0, 4000);
   // ---------- solid things ----------
   await teleport(35.8); await holdBtn('#rightBtn', 1600); c = await S(); check('walk into the climbing blocks: you hop up onto them (not through them)', c.y >= 1.15, `x=${c.x.toFixed(1)} y=${c.y.toFixed(2)}`);
@@ -85,7 +94,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await teleport(9.6); c = await S(); check('a picture bubble by the deep part of the ball pit', c.door === 'down');
   // (the software renderer here runs ~3 frames a second, so swimming is watched frame by frame inside the page)
   const sawSwim = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.player.swim) return r(true); if (++n > 400) return r(false); requestAnimationFrame(f); }; f(); }));
-  await holdBtn('#rightBtn', 1100); check('walk into the deep part: you sink into the balls and swim', await sawSwim);
+  await drag(0, 300, 90); check('slide a finger down in the ball pit: you dive into the deep part', await sawSwim);
   await teleport(12.6, -1.6);
   { const up = await page.evaluate(() => new Promise(r => { const P = __DDW3.player, b = document.getElementById('jumpBtn'), y0 = P.y; let n = 0; const f = () => { if (n % 3 === 0) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); if (P.y > y0 + .8) return r([y0, P.y]); if (++n > 300) return r([y0, P.y]); requestAnimationFrame(f); }; f(); }));
     check('tap JUMP to swim up through the balls', up[1] > up[0] + .8, `y ${up[0].toFixed(2)} → ${up[1].toFixed(2)}`); }
