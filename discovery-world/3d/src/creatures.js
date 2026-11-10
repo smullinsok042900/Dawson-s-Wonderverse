@@ -18,7 +18,7 @@ const toy = (color, o = {}) => new THREE.MeshPhysicalMaterial({
   emissive: new THREE.Color(o.em ?? '#000000'), emissiveIntensity: o.ei ?? 1,
   transparent: o.opacity != null, opacity: o.opacity ?? 1, iridescence: o.irid ?? 0, iridescenceIOR: 1.3,
 });
-export { toy };
+export { toy, ball, face };
 const SPH = new THREE.SphereGeometry(1, 32, 22);
 const SPH_LO = new THREE.SphereGeometry(1, 16, 12);
 function ball(mat, r, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1, lo) {

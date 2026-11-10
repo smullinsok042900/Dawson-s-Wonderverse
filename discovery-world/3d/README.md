@@ -37,6 +37,19 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 5: Pet Workshop, friendly critters, balloons, sparkles
+- **Pet Workshop** in the underground Cave Hall:
+  - Tap the four big buttons to choose colour, ears, tail and pattern. The pet spins in the glass dome so you can see it.
+  - Pull the lever: an egg drops, wobbles and hatches.
+  - **Your pet follows you everywhere** and does a trick when tapped. It is saved.
+- **Friendly critters** wave when you come near, and each does something when tapped:
+  - **Balloon Bear** (start of the park) gives you a balloon that floats along with you on a string. Tap again for a new colour. It is saved.
+  - **Painter Bunny** (next to the big wall) paints a heart, a star, a rainbow or a smiley on the wall.
+  - **Drummer Frog** (end of the Studio) plays the drum.
+  - **Dancing Penguin** (in the Lab) spins and sings.
+  - **Sleepy Owl** (on a tree in the park) wakes up and hoots.
+- **Sparkles:** magic sparkles float gently in the air.
+
 ## 3D build 4: drag your finger to move (no arrow buttons)
 - **Moving:** put a finger anywhere on the left half of the screen and slide it the way to go. A joystick ring appears under the finger.
   - **Sideways:** walks. A small slide walks slowly and a bigger slide walks normally. It is never faster than walking.

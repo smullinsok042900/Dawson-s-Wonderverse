@@ -10,6 +10,7 @@ const SHOTS = path.join(ROOT, 'screenshots'); fs.mkdirSync(SHOTS, { recursive: t
 const results = [];
 const check = (name, ok, detail = '') => { results.push({ name, ok: !!ok, detail }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const UG_F = -6;
 
 (async () => {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -112,6 +113,21 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await teleport(53.4, -6); c = await S(); check('a lift bubble at the bottom of the glass lift', c.door === 'up');
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y >= 0, 6000); check('the glass lift rides up to the Studio floor', c.y === 0 && !c.ride, `y=${c.y}`);
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y <= -5.99, 6000); check('and back down again', c.y <= -5.99);
+  // ---------- build 5: Pet Workshop, critters, balloon ----------
+  await teleport(9.4, -6); // stand to the side so the buttons aren't behind your creature
+  { const d0 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft)); await tapWorld(4.25, UG_F + 1.0, -1.15); await sleep(300); const d1 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft));
+    check('Pet Workshop: tap a big button to change your pet design', d0 !== d1 && (await S()).disc.includes('petmaker'), `${d0} → ${d1}`); }
+  await tapWorld(8.6, UG_F + .25, -1.2); await sleep(200); // the lever's box
+  { const hatched = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.hasPet()) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever: an egg hatches your very own pet', hatched && (await S()).disc.includes('pet')); }
+  await shot('16_pet_workshop.jpg');
+  { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 9.5 || ++n > 400) { D.keys.right = false; return res(Math.abs(D.friends.petPos.x - P.x)); } requestAnimationFrame(f); }; f(); })); check('your pet follows you', r < 3, `pet is ${r.toFixed(1)} away`); }
+  await sleep(1200); { const pp = await page.evaluate(() => __DDW3.friends.petPos.toArray()); await tapWorld(pp[0], pp[1] + .5, pp[2]); await sleep(200); check('tap your pet: it does a trick', (await S()).disc.includes('pettrick')); }
+  await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => !!__DDW3.world.balloon));
+  await shot('17_balloon_bear.jpg');
+  await teleport(72); { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapWorld(70.2, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
+  await teleport(87.8); await tapWorld(89.6, .9, -2.4); await sleep(200); check('the Drummer Frog plays when tapped', (await S()).disc.includes('frog'));
+  await teleport(107.4); await tapWorld(109.2, 1.2, -2.4); await sleep(200); check('the penguin dances when tapped', (await S()).disc.includes('penguin'));
+  await teleport(150.4); await tapWorld(152, 3.0, -3.2); await sleep(200); check('the sleepy owl wakes up when tapped', (await S()).disc.includes('owl'));
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
@@ -162,6 +178,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const before = await S(); await page.evaluate(() => __DDW3.save()); await page.reload(); await sleep(2500);
   check('reload shows KEEP PLAYING', (await page.locator('#playBtn').textContent()).includes('KEEP'));
   await page.locator('#playBtn').tap(); await sleep(800); c = await S();
+  { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: !!__DDW3.world.balloon })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
   await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
