@@ -1,0 +1,279 @@
+{
+  "date": "2026-11-10T05:02:57.044Z",
+  "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
+  "passed": 54,
+  "total": 54,
+  "results": [
+    {
+      "name": "title screen shows with play button",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "start button hides the overlay",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HUD buttons fully on screen at 844x390",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HUD buttons do not overlap",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "move/jump buttons are ≥ 64px tap targets",
+      "ok": true,
+      "detail": "[[70,64],[70,64],[90,74]]"
+    },
+    {
+      "name": "hold RIGHT moves continuously",
+      "ok": true,
+      "detail": "moved 376 units"
+    },
+    {
+      "name": "releasing RIGHT stops the creature",
+      "ok": true,
+      "detail": "vx=0.0"
+    },
+    {
+      "name": "hold LEFT moves continuously",
+      "ok": true,
+      "detail": "moved 282 units"
+    },
+    {
+      "name": "JUMP leaves the ground",
+      "ok": true,
+      "detail": "y=334 jumps=1"
+    },
+    {
+      "name": "second JUMP in mid-air = double jump",
+      "ok": true,
+      "detail": "jumps=2"
+    },
+    {
+      "name": "lands again after jumping",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "multi-touch: movement keeps going while another finger taps",
+      "ok": true,
+      "detail": "vx=310"
+    },
+    {
+      "name": "select zuzu",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "select jelly",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "select pip",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tapping the creature makes it react",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dragging a ball moves it and throws it",
+      "ok": true,
+      "detail": "dx=137 v=469"
+    },
+    {
+      "name": "paint palette appears near the wall",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "painting adds strokes on the wall",
+      "ok": true,
+      "detail": "3 new strokes"
+    },
+    {
+      "name": "walking onto the trampoline bounces you up",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tapping the slide starts a slide ride",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "slide ends and you can move again",
+      "ok": true,
+      "detail": "x=1179"
+    },
+    {
+      "name": "tapping buckets pours paint into the bowl",
+      "ok": true,
+      "detail": "b,y"
+    },
+    {
+      "name": "SPIN mixes a real new color (blue + yellow → green)",
+      "ok": true,
+      "detail": "#3cc46e"
+    },
+    {
+      "name": "paint flows through the pipe into the bubble tank",
+      "ok": true,
+      "detail": "{\"amount\":2,\"color\":\"#3cc46e\"}"
+    },
+    {
+      "name": "bubble machine blows bubbles in the mixed color",
+      "ok": true,
+      "detail": "7 colored bubbles"
+    },
+    {
+      "name": "colored bubbles float into the funnel and charge the battery",
+      "ok": true,
+      "detail": "battery 4/6"
+    },
+    {
+      "name": "battery fills to 6",
+      "ok": true,
+      "detail": "battery 6/6"
+    },
+    {
+      "name": "lever ON with full battery = POWER",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "magnet ON pulls the metal balls to it",
+      "ok": true,
+      "detail": "21,36,18"
+    },
+    {
+      "name": "powered Star Launcher launches you",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "launch flies you across the park",
+      "ok": true,
+      "detail": "landed at x=4251"
+    },
+    {
+      "name": "tap the Ferris wheel to ride",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP gets you off the wheel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap the coaster to ride",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "coaster ride finishes and drops you off",
+      "ok": true,
+      "detail": "x=5410"
+    },
+    {
+      "name": "walking into the rainbow door enters the whoosh tube",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tube carries you all the way back to the ball pit",
+      "ok": true,
+      "detail": "x=301"
+    },
+    {
+      "name": "touching the giant bubble lets you float in it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP pops the bubble and you drop out",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sound button turns sound off",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sound button turns sound back on",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "losing focus releases held movement",
+      "ok": true,
+      "detail": "{\"left\":false,\"right\":false}"
+    },
+    {
+      "name": "reload shows KEEP PLAYING",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload keeps creature",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload keeps paintings",
+      "ok": true,
+      "detail": "3 strokes"
+    },
+    {
+      "name": "reload keeps discoveries",
+      "ok": true,
+      "detail": "25 discoveries"
+    },
+    {
+      "name": "reload keeps machine/power state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reload keeps position (approx.)",
+      "ok": true,
+      "detail": "x 2691 → 2691"
+    },
+    {
+      "name": "corrupt save data is ignored safely",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "old Prototype 01 save migrates (creature, painting, discoveries)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "frame time (headless Chromium, 2x DPR)",
+      "ok": true,
+      "detail": "median 16.7ms, p95 33.3ms"
+    },
+    {
+      "name": "portrait shows the turn-sideways tip",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no runtime errors in the console",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "errors": []
+}

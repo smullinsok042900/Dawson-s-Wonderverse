@@ -1,0 +1,44 @@
+# Test report — Milestone 1, build 2
+
+**Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
+**Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
+**Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
+**Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
+
+## Result: 54 / 54 checks passed, no console errors
+
+| # | What was tested | Result |
+|---|---|---|
+| 1 | Title screen shows; LET'S PLAY hides it | PASS |
+| 2 | HUD buttons fully on screen and not overlapping at 844×390; move/jump buttons ≥ 64 px | PASS (70×64, 70×64, 90×74) |
+| 3 | Hold ▶ moves continuously; releasing stops; hold ◀ moves | PASS |
+| 4 | Jump, double jump in mid-air, landing | PASS |
+| 5 | **Multi-touch:** hold ▶ with one finger while tapping the world with another | PASS |
+| 6 | Select Zuzu, Jelly, Pip (screenshot of each running) | PASS |
+| 7 | Tap the creature → reaction | PASS |
+| 8 | Drag and throw a ball | PASS |
+| 9 | Palette appears near the wall; 3 strokes in 3 colours | PASS |
+| 10 | Walk onto the trampoline → bounce | PASS |
+| 11 | Tap slide → ride the slide path → can move again afterwards | PASS |
+| 12 | **Full chain:** pour blue + yellow → SPIN → green (#3cc46e) → pipe → tank (2 units) → green bubbles → funnel → battery 6/6 → lever → POWER | PASS |
+| 13 | Magnet pulls the metal balls | PASS |
+| 14 | Powered Star Launcher launches you across the park | PASS (lands ≈ x 4250) |
+| 15 | Ferris wheel ride + jump off; coaster full ride + drop-off; whoosh tube back to the ball pit; giant-bubble ride + jump to pop | PASS |
+| 16 | Sound off / on | PASS |
+| 17 | Window blur while holding ▶ releases movement | PASS |
+| 18 | Reload keeps creature, paintings, discoveries, power/battery/mix state and position | PASS |
+| 19 | Corrupt save is ignored safely; old Prototype 01 save migrates | PASS |
+| 20 | Frame timing (headless desktop) | median 16.7 ms, p95 16.8 ms |
+| 21 | Portrait 390×844 shows the "turn sideways" tip | PASS |
+
+## Bugs the tests caught (and that are now fixed)
+- A loose ball resting in front of the SPIN wheel stole the tap. Machine buttons now have priority.
+- The creature's tickle hit box was too tall. Standing on the Ferris-wheel deck made it cover the wheel, so taps never started the ride. The box is smaller now and checked after machine buttons.
+- After a launch, mid-air braking stopped the creature after ≈280 units. Momentum is now kept unless the child steers.
+
+## NOT tested
+- **No physical iPhone or real Safari/WebKit.** Chromium emulation is not iPhone Safari. iOS audio unlock, the notch/safe-area insets, Safari's toolbar resizing, and real 60 fps on older iPhones are all unverified.
+- Playwright's WebKit build is not installed in this sandbox, so no WebKit run either.
+- The headless frame timing above is a desktop CPU figure. It is not an iPhone performance measurement.
+- No accessibility audit, and no hearing check of the sounds (the sandbox has no audio output). Sound was checked for code paths and errors only.
+- Long play sessions (memory over hours) were not tested.

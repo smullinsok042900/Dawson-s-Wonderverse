@@ -1,0 +1,177 @@
+DAWSON'S DISCOVERY WORLD — ONE-FILE COMPLETE CLAUDE BRIEF
+Read and follow this alongside the attached HTML source.
+
+
+====================================================================
+MASTER PROMPT
+====================================================================
+DAWSON'S DISCOVERY WORLD — CLAUDE PRO MASTER DEVELOPMENT PROMPT
+
+You are taking over development of an existing playable web game. The user is building this for their five-year-old daughter, Dawson. Your job is to CONTINUE and substantially improve the actual working game, not merely plan, storyboard, produce concept art, or create a disconnected demo.
+
+ATTACHMENTS / PRIMARY SOURCE OF TRUTH
+1. Dawsons_Discovery_World_Play.html — EXISTING PLAYABLE SOURCE CODE, 45 KB, self-contained HTML/CSS/Canvas JavaScript.
+2. GAME_DESIGN_SPEC.md — complete design and acceptance criteria.
+3. HANDOFF_AUDIT_AND_ROADMAP.md — accurate inventory of existing mechanics, known gaps and test priorities.
+4. screenshots/*.png — existing gameplay screenshots; optional vision references.
+5. art_reference/*.png — a look-and-feel concept ONLY, not implemented game artwork.
+The original prototype was also hosted at https://project32440.websitepublisher.ai/index.html . Fetch the page if you can, but if not, use the attached HTML as your canonical codebase.
+
+MANDATORY USER DECISIONS
+- THIS IS A BRAND-NEW GAME, NOT DAWSON'S WONDERVERSE. Do not mix the two projects or import unrelated creatures/features.
+- One single GIANT CONNECTED CLOSE-UP SIDE-VIEW WORLD. Not four worlds, not a zoomed-out isometric map, not an overhead town, not separate scenes/level screens, and not a game-selection menu. Smooth continuous scrolling as Dawson moves. The camera shows large expressive characters and objects, like a vibrant interactive play center.
+- Blend four experiences seamlessly into that SAME physical world: Mega Playhouse, Imagination Studio, Wonder Lab, and Adventure Park. These are themes woven into the landscape, NOT separate levels.
+- Absolutely DO NOT add dinosaurs, dress-up, gardens, candy kitchens, underwater adventures, or space stations.
+- Characters are ORIGINAL, UNIQUE, COLORFUL FANTASY CREATURES, NOT PLAIN HUMANS. Three starting mascots in source are Pip, Zuzu and Jelly. Preserve the roster while substantially upgrading their cohesive anatomy and actual gameplay animation. No loose, floating horns/wings/feet; each part moves consistently with the body.
+- Control scheme C: BOTH character movement/jumping and direct tapping/dragging/painting/playing with objects. On-screen controls for mobile. No dependence on physical keyboard.
+- Designed for 5-year-old Dawson on an iPhone: landscape-first, safe areas, large tap targets, easy to understand without reading, cheerful non-scary tone, no losing, punishment, required timers, advertising, accounts, purchases or paid services.
+- User prefers significant, verified improvements rather than tiny cosmetic edits and false claims of completion.
+- Aim for beautiful, cohesive, bright, polished storybook/animated game artwork; not generic emoji placeholders and not static cutout illustrations passed off as animated characters.
+
+WORK IN THIS ORDER — BEGIN NOW; DO NOT SPEND THE RESPONSE MERELY EXPLAINING A PLAN
+A. Inspect the attached HTML source and confirm core systems. Make a backup untouched copy. State concise findings and actual verified shortcomings.
+B. Create a cohesive, working milestone, with priority on creature graphics and natural animations + close-up scene polish + real interactions. Fix bugs rather than accumulating disconnected elements.
+C. Build/update the actual playable version in an HTML/Canvas artifact or as downloadable source files. If single-file HTML is impractical, output a complete zip with index.html, scripts, assets, README. Must run without API keys or paid plugins; no missing external assets.
+D. Test with available runtime/browser tools, and describe exactly what was tested versus not tested. Do not claim actual physical iPhone testing without it. At minimum: launch, start button, mobile landscape viewport, both movement buttons, jump/double jump, creature selection, touch tap/drag, paint persistence, sound toggle, interaction with slide/trampoline, save/reload and absence of runtime errors.
+E. Give the user a usable PLAY link or direct preview AND DOWNLOADABLE COMPLETE SOURCE/checkpoint so work can continue in subsequent chats. When you cannot host publicly, be explicit, and give the exact next simplest steps without requiring spending money. Keep backups before each change.
+F. At the end provide concise summary: (1) real implemented changes, (2) tests/results, (3) remaining issues, (4) exact files, and (5) next feature milestone.
+
+FIRST IMPLEMENTATION MILESTONE (highest priority)
+1. Improve Pip, Zuzu, Jelly so they look unmistakably different, captivating and colorful. Preserve distinct silhouettes and recognizable personalities. Animate actual integrated bodies with walk/run, jump/fall, idle and reaction poses. All limbs/wings/appendages are attached correctly. Character sprite quality has priority over adding huge stretches of empty scenery.
+2. Make the environment feel close-up and interactive, not miniature. Improve layered depth/parallax, playground visuals, color harmony, appealing visual feedback and readable controls without shrinking characters.
+3. Create meaningful multi-step interaction chains using real state and physical cause-effect (e.g. mix paint -> recolor bubbles -> ride bubbles -> activate a playful machine -> unlock a moving attraction). A tap that only plays a sparkle effect does NOT count as a deep interaction.
+4. Preserve and improve the current fully connected game map; no loading screens or scene menus. Keep functional mobile touch control and real gameplay.
+5. Provide a self-contained deliverable that can be tested by opening in a normal mobile browser; do not mistake a browser-hosted game for a direct iPhone Files-app HTML launch.
+
+Do not rebuild the game from scratch unless inspection proves it necessary; if you must refactor, retain behavior and verify no regression. Do not ask the user to restate the already specified design decisions. Don't pretend each feature is implemented if it is only proposed. Work on the deliverable first, and report accurately.
+
+
+====================================================================
+CANONICAL GAME DESIGN
+====================================================================
+# Dawson's Discovery World — Canonical Game Design Specification
+
+**Audience:** Dawson, age five. **Genre:** open-ended, close-up side-view exploratory creative play. **Platform:** mobile browser first (iPhone, landscape), desktop browser secondary. **Budget:** $0 in additional software/services unless owner later explicitly approves spending. **Project boundary:** completely separate from *Dawson's Wonderverse*.
+
+## 1. Vision
+A beautiful, continuous, scrollable, vibrant play universe. Not multiple worlds or levels. The character remains large and expressive on screen as the camera follows her through one giant connected space. Physical play structures and creative installations interconnect organically. A five-year-old should be able to wander, poke, paint, drag, bounce, mix, build, ride, and cause amusing reactions without reading instructions or following a mission. Exploration is rewarding even if the child never completes a challenge.
+
+## 2. Nonnegotiable constraints
+- **ONE physically continuous world.** No separate themed worlds, no level-selection screen, no isometric map, no zoomed-out overhead perspective; no loading sequences between activities.
+- **Four interwoven activity themes:** (a) Mega Playhouse, (b) Imagination Studio, (c) Wonder Lab, (d) Adventure Park. Do not make them stand-alone worlds, separate menu items or scene loads.
+- **Excluded:** dinosaurs; dress-up; gardens; candy kitchen; underwater adventure; space station.
+- **Control mode C:** on-screen movement and jumping + direct touch/tap/hold/drag/drawing with the environment. Primary controls work on iPhone without keyboard.
+- **Characters:** entirely original, magical fantasy creatures rather than ordinary human avatars; brilliantly colored, different silhouettes, fully animated and truly part of gameplay. No fake “animation” consisting only of independently floating appendages or static still pictures drifting along the screen.
+- **Feel:** warm, imaginative, whimsical, playful, visually rich, responsive and child-friendly. No death or pressure, no accounts, paywalls, advertisements, timers required to win, or unsafe chat/social features.
+
+## 3. Play structure — blend rather than divide
+Examples of contiguous mechanics and geography:
+- A giant slide curls out of climbing structure and lands by a paintable wall.
+- A trampoline lets Dawson reach art platforms where she can activate paint rollers and stickers.
+- Mixing paint affects the color or behavior of bubbles from a nearby machine.
+- A bubble stream carries the character toward a chain-reaction contraption with pushable balls, tubes and a magnet.
+- An activated gear or paint-powered invention animates a ride in the nearby attraction area; the attraction has doors or tunnels looping back into the play structure.
+- Hidden doors, high platforms and crawlways offer secret routes without changing level.
+- Each 5–10 seconds of movement should reveal a distinctive interactive opportunity; this is a **design target**, not a claim of current implementation.
+
+## 4. Starting original playable cast
+Existing prototype characters to preserve and improve:
+
+**Pip — rainbow explorer:** fluffy colorful whimsical creature (NOT a human). Large distinct ears or tufted silhouette; energetic bounce, reactive ears, expressive eyes, running gait, jumps with pose changes, land and tumble recovery. Bright candy-pastel palette with contrast.
+
+**Zuzu — star spark:** a different silhouette and locomotion rhythm, tiny glowing/floating or star-themed creature; playful sparkle trail and bounce; clearly a standalone mascot, not Pip recolored. Motion should use one coherent rig with attached parts.
+
+**Jelly — squishy explorer:** translucent or iridescent rounded blob-like magical creature; body squash/stretch under motion and landings, wobbly appendages attached to deforming body, unique expressive facial features. Looks physically squishy and playful.
+
+Specific features above are art direction concepts, not a claim they exist fully in Prototype 01. Target at least idle + locomotion + jump + land + touch reaction for all three. Avoid accessories/dress-up systems.
+
+## 5. World interactive systems
+**Play:** real bounce and slide physics, movable balls, climbable structures, interactive buttons, swinging or moving platforms, launch pads, tunnels, toys you can actually manipulate.
+
+**Create:** paint/draw directly onto world surfaces with finger drag and persistent state; physical painting implements, color mixers with observable output, shapes or stickers that interact with nearby mechanics.
+
+**Experiment:** water or bubbles, magnets, gears, levers, tubes, moving contraptions, chain reactions and launchers. A switch should meaningfully alter a world object or system beyond particle effects.
+
+**Attractions:** Ferris wheel, roller coaster, playful arcade mechanisms and safe rides that physically carry the character and can be started or controlled by touch.
+
+**Interactions chain:** machine/paint/ride systems should connect causally — give kids the pleasure of discovering how their choices affect the connected world.
+
+## 6. Player experience
+- Landscape fullscreen responsive Canvas, correct iPhone safe-area handling.
+- Two prominent left/right move buttons and a large jump button; separate easy-to-reach direct-interaction touch targets.
+- Follow camera: close enough for character and environmental affordances to be visible, without clipping moving bodies or blocking pointer interactions.
+- Tap/drag targets are visually legible and respond immediately; show cause-and-effect without requiring an instruction panel.
+- Save locally at minimum: character chosen, paint creations, activated machines, discoveries, position and any customization meaningful to gameplay. Recover gracefully from corrupt/stale saved data.
+- Pause/resume and loss of focus should never leave movement held down.
+- Sound effects child-friendly and optional. Audio should only start after appropriate user interaction; no breaking autoplay requirement.
+- Strive for smooth animation on typical iPhone Safari; scale resolution and cull offscreen objects if needed.
+
+## 7. Visual language
+Art direction: high-quality colorful premium storybook cartoon, layered near/mid/far scenery with intentional palette, colored light, high quality organic shapes/expressive creatures, playful motion and shadow contact; NOT purely tiny iconography, not photorealism, and not a collage of mismatched clip art. The concept art image in package is aspirational only. Avoid showing that still picture as evidence of working gameplay.
+
+## 8. Delivery definition of done
+- Provide playable actual game (web page/artifact) AND full editable source checkpoint (HTML/zip, preferably modular code) for each major iteration.
+- Test start; character change; left/right continuous move on touch; repeated jump; tap activation; dragging balls; painting and reload; ride entry/exit; sound toggle; portrait warning or handling; any console errors.
+- Show representative screenshot(s) from a real running build, not just generated illustration.
+- List implemented changes separately from planned changes and untested claims.
+- Every milestone must preserve an original rollback and document meaningful changes.
+
+
+====================================================================
+CURRENT CODE AUDIT AND MILESTONES
+====================================================================
+# Handoff audit: current Prototype 01 (existing source, not aspirational promises)
+
+## Verified source file
+`Dawsons_Discovery_World_Play.html` is a ~45KB self-contained HTML file using inline CSS, JavaScript and Canvas. It contains a title/intro screen, touch-oriented controls, close-up scrolling rendering, and a functioning animation loop. It has no required external JavaScript packages, backend, API key or source sprites. Source is the canonical checkpoint; do not assume concept images are game assets.
+
+## Currently implemented in source (by code inspection)
+- 5200-unit-long SINGLE connected side-view world; camera follows player and culls distant objects.
+- Three selectable creature types: Pip, Zuzu, Jelly. Characters are custom-drawn in Canvas, with basic body-motion effects. UI buttons currently use emoji symbols, which can and should improve.
+- Left/right touch-hold movement buttons, jump button and keyboard fallback. Basic gravity, collision with floor and some platforms, double-jump, trampoline bounce and tap-to-slide.
+- Direct touch/drag of loose toy balls with simple gravity and bounces; a paintable wall with selectable colors and stored brush strokes.
+- Touch-triggered color mixer, bubble producer, lab switch, magnet, Ferris wheel and roller coaster; wheel and coaster place/animate player along a path; sound toggling and simple sound effects.
+- Discovery toast/counter and browser `localStorage` save/restore of selected character, player x position, painting, discoveries, and some machine states.
+- Colorful Canvas vector-style background and UI, and basic mobile orientation prompts/safe-area CSS.
+
+## Do NOT overclaim current state
+- The visuals are a first prototype, NOT commercial-game polished art. Concept images are not embedded as gameplay sprites.
+- Tap interactions for some machines are shallow and largely visual; paint/experiment systems don't yet drive an extensive multi-stage physics simulation.
+- Terrain is mostly one horizontal world with some platforms, not a fully detailed vertically interconnected architecture.
+- The three creature animations have not been validated on a real iPhone. Their current Canvas construction is not equivalent to professionally rigged sprite animation.
+- Earlier assistant reported Chromium/mobile emulation smoke tests, but those are not evidence of testing physical iPhone Safari or a formal regression suite.
+- Earlier ChatGPT HTML/ZIP download links could not be opened by the user on iPhone. A web-hosted prototype URL was subsequently created: `https://project32440.websitepublisher.ai/index.html`. Hosting status and behavior should be independently checked if available, and future updates should include a usable ordinary HTTPS link (not just a locally downloaded .html).
+
+## Suggested engineering roadmap (pragmatic, testable)
+
+### Milestone 1 — Strong playable character and visual foundation (DO THIS FIRST)
+- Backup original source unchanged.
+- Create cohesive character body rigs/sprites for Pip, Zuzu, Jelly. Distinct shapes, expressions, palettes; connected limbs. Animate idle/run/jump/fall/land/reaction in actual gameplay.
+- Refine camera and scene scale for close-up, playable large objects; scene lighting and foreground/midground/background depth.
+- Fix visible drawing glitches, pointer hit boxes, any platform clipping or mobile UI collisions.
+- Deploy/provide playable version and test report.
+
+### Milestone 2 — Meaningful playable interaction network
+- Implement an observable cross-system chain e.g. paint mixer changes bubble color/behavior; bubble moves player; carried item powers lab contraption; contraption activates ride.
+- Make machines have several input/output states and direct manipulation (button, lever, slider/tube/ball).
+- Add more tactile objects per section and feedback animations rather than generic sparkles.
+- Persist progress and creations robustly.
+
+### Milestone 3 — Expand same seamless environment
+- Make landscape visually coherent across the blend of Playhouse -> Creation -> Experiment -> Ride without a world transition. Expand vertically with climbable routes, tubes, secret doors and looping paths.
+- Add dozens of truly distinct interactions, not counted by decorative objects or duplicate click handlers.
+- Add intuitive child-friendly audio and responsive UI.
+
+### Milestone 4 — Release quality
+- Real device QA on iPhone Safari with user's help, orientation and safe-area verification, load/performance optimization, mobile-browser save behavior and fallback.
+- Packaged versioned snapshots, changelog, accessible HTTPS launch, source, screenshots from functioning build.
+
+## How to test realistically
+1. Inspect source and syntax, run an HTTP server and use browser automation if supported.
+2. Start game and confirm Canvas draw and game controls are not covered by overlay.
+3. Hold left/right controls, jump midair, change creature, scroll across world.
+4. Tap active objects with pointer, drag a ball and paint several strokes on the mural.
+5. Reload and confirm state persists.
+6. Trigger slide, wheel, coaster; confirm character returns to movable state.
+7. Test 16:9 landscape and narrower/taller mobile viewport and note any UI overlap.
+8. Report actual test tools, device emulation, screenshots and unmet tests. Never say 'iPhone verified' without checking a real iPhone.
