@@ -2033,9 +2033,10 @@ function rideCarousel() {
 function doAction() {
   const P = player; if (!started) return;
   if (P.ride) { jump(); return; }
+  const door = nearDoor(); if (door) { door.go(); return; }
   let best = null, bd = 1e9;
   for (const it of INTERACT) {
-    if ((it.need && !it.need()) || (it.layer || '') !== layerKey()) continue;
+    if ((it.need && !it.need()) || (it.layer !== 'any' && (it.layer || '') !== layerKey())) continue;
     const hx = it.hint ? it.hint[0] : (it.box[0] + it.box[2]) / 2, hy = it.hint ? it.hint[1] : (it.box[1] + it.box[3]) / 2;
     const d = Math.abs(hx - P.x) - (it.force && it.force() ? 400 : 0) - (it.hint ? 40 : 0);
     if (Math.abs(hx - P.x) < 240 && d < bd) { bd = d; best = { it, hx, hy }; }
@@ -2129,7 +2130,7 @@ function hintTarget() {
   // step of the paint→bubble→power chain when it is ready ("force").
   let best = null, bd = 1e9;
   for (const it of INTERACT.concat(EXTRA_HINTS)) {
-    if (!it.hint || (it.need && !it.need()) || (it.layer || '') !== layerKey()) continue;
+    if (!it.hint || (it.need && !it.need()) || (it.layer !== 'any' && (it.layer || '') !== layerKey())) continue;
     if (!(it.force && it.force()) && world.discoveries.has(it.disc)) continue;
     if (!cull(it.hint[0], 0)) continue;
     const d = Math.abs(it.hint[0] - player.x); if (d < bd) { bd = d; best = it.hint; }
@@ -3415,6 +3416,48 @@ function drawMotes(t) {
   }
 }
 
+// ---------- DOORS everywhere you'd expect them (build 9b) ----------
+// Every usable door shows a big "door bubble" when you're near; tap the door/bubble or press PAW.
+// Tower-trunk doors lead down a secret staircase into the caves (and cave doors lead back up).
+const PORTALS = [
+  { id: 'bridge', x: 1215, under: false, to: { under: true, x: 1250 }, c: '#a15cff' },   // door under the rainbow bridge
+  { id: 'cave1', x: 1250, under: true, to: { under: false, x: 1215 }, c: '#ff6fae' },
+  { id: 'tower2', x: 8010, under: false, to: { under: true, x: 7040 }, c: '#ff6fae' },   // door in the Sky Tower base
+  { id: 'cave2', x: 7040, under: true, to: { under: false, x: 8010 }, c: '#a15cff' },
+];
+function usePortal(d) {
+  const P = player; if (P.ride) return;
+  if (!!P.under !== d.under || P.inside || Math.abs(P.x - d.x) > 330) { burst(d.x, (d.under ? UG.floor : GROUND) - 40, 6); Sound.click(); return; }
+  world.doorFlash = .5; P.under = d.to.under; P.inside = null; P.x = d.to.x; P.y = d.to.under ? UG.floor : GROUND; P.vx = P.vy = 0; P.grounded = true;
+  Sound.tone(520, .25, 'triangle', .05, 1.4); Sound.tone(780, .3, 'triangle', .04, 1.3, .12);
+  burst(P.x, P.y - 60, 16, ['#fff', '#ffe36e', '#ff9fd8']);
+  discover('secretdoor', d.under ? 'Back up the secret stairs!' : 'A secret door! It leads down to the crystal caves!', P.x, P.y - 160);
+}
+// all doors in one list: [x, groundY, layer it is used from, action, isInside]
+function allDoors() {
+  const P = player, list = PORTALS.map(d => ({ x: d.x, y: d.under ? UG.floor : GROUND, lk: d.under ? 'ug' : '', go: () => usePortal(d) }));
+  for (const id of Object.keys(BUILDINGS)) { const B = BUILDINGS[id]; list.push({ x: B.door, y: GROUND, lk: P.inside === id ? 'in:' + id : '', go: () => toggleDoor(id), out: P.inside === id }); }
+  return list;
+}
+function nearDoor() { const P = player, lk = layerKey(); return allDoors().find(d => d.lk === lk && Math.abs(P.x - d.x) < 110 && Math.abs(P.y - d.y) < 6); }
+function drawPortalDoors(t) {
+  for (const d of PORTALS) {
+    const y = d.under ? UG.floor : GROUND; if (!cull(d.x, 40)) continue;
+    rounded(d.x - 24, y - 78, 48, 78, 24, grad(0, y - 78, 0, 78, [[0, shade(d.c, .15)], [1, shade(d.c, -.25)]]), '#ffd36b', 4);
+    rounded(d.x - 16, y - 66, 32, 30, 15, 'rgba(255,255,255,.18)'); ellipse(d.x + 13, y - 36, 3.5, 3.5, '#ffd36b'); star(d.x, y - 56, 7, '#fff6b0');
+    glow(d.x, y - 40, 50, '#fff3a6', .25 + Math.sin(t * 3) * .1);
+  }
+}
+function drawDoorBubble(t) {
+  const d = nearDoor(); if (!d || player.ride) return;
+  const y = d.y - 238 + Math.sin(t * 4) * 4; // above the creature's head, never over its face
+  ellipse(d.x, y, 30, 26, 'rgba(255,255,255,.96)', '#ffc531', 3);
+  rounded(d.x - 9, y - 14, 18, 26, 9, '#a15cff', '#fff', 2); ellipse(d.x + 5, y, 1.8, 1.8, '#ffd36b');
+  ctx.beginPath(); if (d.out) { ctx.moveTo(d.x + 22, y); ctx.lineTo(d.x + 12, y - 7); ctx.lineTo(d.x + 12, y + 7); } else { ctx.moveTo(d.x + 12, y); ctx.lineTo(d.x + 22, y - 7); ctx.lineTo(d.x + 22, y + 7); }
+  ctx.closePath(); ctx.fillStyle = '#ff4f9a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(d.x - 7, y + 26); ctx.lineTo(d.x, y + 36); ctx.lineTo(d.x + 7, y + 26); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fill();
+}
+
 // ---- 49x_create.js ----
 // ===================================================================
 // 49x_create.js — build 8: things to CREATE.
@@ -3572,8 +3615,11 @@ INTERACT.unshift(
   ...CRYSTALS.map(k => ({ box: [k.x - 26, k.y - k.h - 6, k.x + 26, k.y + 4], priority: true, layer: 'ug', tap: () => tapCrystal(k) })),
   { box: [PIANO.x - 6, PIANO.y - 6, PIANO.x + PIANO.w + 6, PIANO.y + 26], priority: true, layer: 'in:peek', hint: [PIANO.x + 50, PIANO.y + 8], disc: 'piano', tap: tapPiano },
   { box: [10790, 394, 10850, 452], priority: true, layer: 'in:peek', hint: [10820, 420], disc: 'toybox', tap: tapToybox },
-  { box: [10712, 372, 10768, 452], priority: true, hint: [10740, 410], disc: 'door-peek', tap: () => toggleDoor('peek') },
-  { box: [11210, 360, 11270, 452], priority: true, hint: [11240, 410], disc: 'door-fluff', tap: () => toggleDoor('fluff') },
+  // doors: usable from outside AND from inside (layer 'any'); the box includes the door bubble above
+  { box: [10710, 370, 10770, 452], priority: true, layer: 'any', hint: [10740, 410], disc: 'door-peek', force: () => player.inside === 'peek', tap: () => toggleDoor('peek') },
+  { box: [11208, 358, 11272, 452], priority: true, layer: 'any', hint: [11240, 410], disc: 'door-fluff', force: () => player.inside === 'fluff', tap: () => toggleDoor('fluff') },
+  { get box() { const d = nearDoor(); return d ? [d.x - 38, d.y - 272, d.x + 38, d.y - 200] : [0, 0, 0, 0]; }, priority: true, layer: 'any', tap: () => { const d = nearDoor(); if (d) d.go(); } }, // the door bubble
+  ...PORTALS.map(d => { const y = d.under ? UG.floor : GROUND; return { box: [d.x - 26, y - 82, d.x + 26, y + 2], priority: true, layer: d.under ? 'ug' : '', hint: [d.x, y - 40], disc: 'secretdoor', tap: () => usePortal(d) }; }),
 );
 EXTRA_HINTS.push(
   ...FLUFFS.filter(f => f.kind === 'star').map(f => ({ get hint() { return [f.hx, f.hy - 40]; }, disc: 'star-' + f.id, layer: f.layer, need: () => f.state === 'wait' })),
@@ -3891,7 +3937,7 @@ function render(t) {
   glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawNest(t); drawHatches(t); drawWaiting(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawPortalDoors(t); drawNest(t); drawHatches(t); drawWaiting(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
@@ -3906,7 +3952,7 @@ function render(t) {
   // things that sit IN FRONT of the creature (so it is inside the ride / the pit)
   if (rideType === 'coaster') coasterTrain(t);
   if (rideType === 'wheel') { const W = LAYOUT.wheel, a = world.wheelAngle + player.ride.i * Math.PI / 5, x = W.cx + Math.cos(a) * W.r, y = W.cy + Math.sin(a) * W.r; rounded(x - 26, y + 24, 52, 18, 9, ['#ffbb68', '#7be1ed', '#ff85c2', '#a88af5', '#92e1a6'][player.ride.i % 5], '#fff', 3); }
-  drawBigFront(t); drawPetFollower(t);
+  drawBigFront(t); drawPetFollower(t); drawDoorBubble(t);
   world.bubbles.forEach(b => { if (b.ride && cull(b.x, 80)) drawBubble(b); });
   if (cull(365, 260)) drawBallPitFront();
   drawParticles();
@@ -3914,6 +3960,7 @@ function render(t) {
   ctx.restore();
   foreground(t); drawMotes(t);
   // warm key light from the upper left, cool shade toward the lower right (soft-light colour grade)
+  if (world.doorFlash > 0) { world.doorFlash -= 1 / 60; ctx.fillStyle = `rgba(255,250,235,${world.doorFlash * 1.6})`; ctx.fillRect(0, 0, vw, VH); } // door transition flash
   ctx.save(); ctx.globalCompositeOperation = 'soft-light';
   ctx.fillStyle = grad(0, 0, vw * .6, VH, [[0, 'rgba(255,236,200,.5)'], [.55, 'rgba(128,128,128,0)'], [1, 'rgba(70,20,110,.32)']]); ctx.fillRect(0, 0, vw, VH);
   ctx.restore();

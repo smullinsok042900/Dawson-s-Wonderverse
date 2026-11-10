@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T14:39:07.391Z",
+  "date": "2026-11-10T14:52:10.420Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 107,
-  "total": 107,
+  "passed": 111,
+  "total": 111,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 336 units"
+      "detail": "moved 393 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 293 units"
+      "detail": "moved 282 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=324 jumps=1"
+      "detail": "y=335 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=136 v=469"
+      "detail": "dx=135 v=468"
     },
     {
       "name": "paint palette appears near the wall",
@@ -132,7 +132,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1175"
+      "detail": "x=1170"
     },
     {
       "name": "JUMP while touching the climbing net climbs it",
@@ -147,7 +147,7 @@
     {
       "name": "walk the sky bridge to the lookout and find secret star 7",
       "ok": true,
-      "detail": "stars 1→2, x=1338"
+      "detail": "stars 1→2, x=1340"
     },
     {
       "name": "walking off the lookout grabs the zipline",
@@ -192,7 +192,7 @@
     {
       "name": "colored bubbles float into the funnel and charge the battery",
       "ok": true,
-      "detail": "battery 4/6"
+      "detail": "battery 6/6"
     },
     {
       "name": "battery fills to 6",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "40,26,36"
+      "detail": "41,26,38"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -217,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4222"
+      "detail": "landed at x=4235"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -267,7 +267,7 @@
     {
       "name": "the lift carries the creature up",
       "ok": true,
-      "detail": "y=239"
+      "detail": "y=238"
     },
     {
       "name": "walk onto the balcony and find secret star 8",
@@ -287,7 +287,7 @@
     {
       "name": "star bits get collected while playing",
       "ok": true,
-      "detail": "95 → 104"
+      "detail": "99 → 108"
     },
     {
       "name": "JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower",
@@ -307,7 +307,7 @@
     {
       "name": "giant slide lands you by the swings",
       "ok": true,
-      "detail": "x=8625"
+      "detail": "x=8629"
     },
     {
       "name": "tap the swing to ride it",
@@ -317,7 +317,7 @@
     {
       "name": "JUMP flings you off the swing",
       "ok": true,
-      "detail": "vx=-352 vy=-174"
+      "detail": "vx=-304 vy=-224"
     },
     {
       "name": "the seesaw shoots its ball through the hoop",
@@ -347,7 +347,7 @@
     {
       "name": "the confetti cannon blasts you sky-high",
       "ok": true,
-      "detail": "y=26"
+      "detail": "y=25"
     },
     {
       "name": "walk on the dance floor to light it up",
@@ -372,7 +372,7 @@
     {
       "name": "walk into the low tunnel: the creature crawls (and the pet follows)",
       "ok": true,
-      "detail": "x=935 pet=816"
+      "detail": "x=933 pet=782"
     },
     {
       "name": "find a lost Star Baby in the tunnel",
@@ -413,6 +413,26 @@
       "name": "tap the door again to go back outside",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "PAW at a door goes inside",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "PAW inside at the door comes back OUT (never stuck inside)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the door under the rainbow bridge leads down a secret staircase to the caves",
+      "ok": true,
+      "detail": "x=1250 under=true"
+    },
+    {
+      "name": "the cave door leads back up",
+      "ok": true,
+      "detail": "x=1215"
     },
     {
       "name": "the paint-brush button opens the Creature Style panel",
@@ -512,7 +532,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2705 → 2705"
+      "detail": "x 2711 → 2711"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -527,7 +547,7 @@
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.4ms, quality 0.70"
+      "detail": "median 16.7ms, p95 33.4ms, quality 0.55"
     },
     {
       "name": "portrait shows the turn-sideways tip",

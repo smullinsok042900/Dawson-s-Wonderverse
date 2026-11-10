@@ -154,8 +154,11 @@ INTERACT.unshift(
   ...CRYSTALS.map(k => ({ box: [k.x - 26, k.y - k.h - 6, k.x + 26, k.y + 4], priority: true, layer: 'ug', tap: () => tapCrystal(k) })),
   { box: [PIANO.x - 6, PIANO.y - 6, PIANO.x + PIANO.w + 6, PIANO.y + 26], priority: true, layer: 'in:peek', hint: [PIANO.x + 50, PIANO.y + 8], disc: 'piano', tap: tapPiano },
   { box: [10790, 394, 10850, 452], priority: true, layer: 'in:peek', hint: [10820, 420], disc: 'toybox', tap: tapToybox },
-  { box: [10712, 372, 10768, 452], priority: true, hint: [10740, 410], disc: 'door-peek', tap: () => toggleDoor('peek') },
-  { box: [11210, 360, 11270, 452], priority: true, hint: [11240, 410], disc: 'door-fluff', tap: () => toggleDoor('fluff') },
+  // doors: usable from outside AND from inside (layer 'any'); the box includes the door bubble above
+  { box: [10710, 370, 10770, 452], priority: true, layer: 'any', hint: [10740, 410], disc: 'door-peek', force: () => player.inside === 'peek', tap: () => toggleDoor('peek') },
+  { box: [11208, 358, 11272, 452], priority: true, layer: 'any', hint: [11240, 410], disc: 'door-fluff', force: () => player.inside === 'fluff', tap: () => toggleDoor('fluff') },
+  { get box() { const d = nearDoor(); return d ? [d.x - 38, d.y - 272, d.x + 38, d.y - 200] : [0, 0, 0, 0]; }, priority: true, layer: 'any', tap: () => { const d = nearDoor(); if (d) d.go(); } }, // the door bubble
+  ...PORTALS.map(d => { const y = d.under ? UG.floor : GROUND; return { box: [d.x - 26, y - 82, d.x + 26, y + 2], priority: true, layer: d.under ? 'ug' : '', hint: [d.x, y - 40], disc: 'secretdoor', tap: () => usePortal(d) }; }),
 );
 EXTRA_HINTS.push(
   ...FLUFFS.filter(f => f.kind === 'star').map(f => ({ get hint() { return [f.hx, f.hy - 40]; }, disc: 'star-' + f.id, layer: f.layer, need: () => f.state === 'wait' })),

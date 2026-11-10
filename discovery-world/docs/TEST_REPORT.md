@@ -5,7 +5,9 @@
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 107 / 107 checks passed, no console errors
+## Result: 111 / 111 checks passed, no console errors
+
+The build 9 door fix added four checks: PAW at a door goes in, PAW inside comes back out, the bridge door leads down to the caves, and the cave door leads back up.
 
 Build 9 added four checks:
 - the style button opens the panel

@@ -13,6 +13,10 @@ Previous build backed up as `backups/M3_build8_index.html`.
   - your creature is drawn on its own layer and **lit from the upper left, with form shading underneath**, so all three look rounded and solid
   - a warm-light / cool-shade colour grade over the whole scene
   - soft contact shading where everything meets the floor
+- **Doors fixed and added (feedback: "the doors don't actually let you enter"):**
+  - The paw button now uses a door from BOTH sides. Before, once inside a house, PAW ignored the door, so you could feel stuck.
+  - A big **door bubble** (door + arrow) appears above any usable door when you're near it. Tap the door, tap the bubble, or press PAW.
+  - **Two new secret doors:** one **under the rainbow bridge** right near the start, and one in the **Sky Tower base**. Each leads down a secret staircase into the crystal caves, with cave doors that lead back up, and a bright flash as you go through.
 - **Creature Style panel**: the new 🎨 paint-brush button in the top bar opens it, with a live preview of your creature.
   - **body colour** (10 + your mixed paint)
   - **accent colour** (incl. rainbow; used for the tail, ears, star points, tentacles)

@@ -305,6 +305,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await tapWorld(10620, 410); await sleep(100); check('play the piano inside', (await S()).disc.includes('piano'));
   await page.screenshot({ path: path.join(SHOTS, '31_inside_house.jpg'), type: 'jpeg', quality: 82 });
   await tapWorld(10740, 410); await sleep(100); check('tap the door again to go back outside', (await S()).inside === null);
+  const pawB = await center('#pawBtn');
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(100);
+  check('PAW at a door goes inside', (await S()).inside === 'peek');
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(100);
+  check('PAW inside at the door comes back OUT (never stuck inside)', (await S()).inside === null);
+  await teleport(1120); await holdBtn('#rightBtn', 320); await sleep(150);
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(200);
+  c = await S(); check('the door under the rainbow bridge leads down a secret staircase to the caves', c.under && Math.abs(c.x - 1250) < 2, `x=${Math.round(c.x)} under=${c.under}`);
+  await page.screenshot({ path: path.join(SHOTS, '33_secret_door_cave.jpg'), type: 'jpeg', quality: 82 });
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(200);
+  c = await S(); check('the cave door leads back up', !c.under && Math.abs(c.x - 1215) < 2, `x=${Math.round(c.x)}`);
   // ---------- build 9: creature style panel ----------
   await page.locator('#styleBtn').tap(); await sleep(250);
   check('the paint-brush button opens the Creature Style panel', await page.locator('#stylePanel').isVisible());
