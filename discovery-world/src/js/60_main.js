@@ -78,6 +78,8 @@ function drawPlayer(t) {
     return;
   }
   ctx.save();
+  if (!P.ride || P.ride.type === 'climb') glow(P.x, P.y - (isCrawling() ? 50 : 95), isCrawling() ? 80 : 120, '#fff4e6', .32); // soft halo so the creature pops
+  if (isCrawling() && !P.ride) { ctx.translate(P.x, P.y); ctx.scale(1.12, .6); ctx.translate(-P.x, -P.y); } // scrunched down, crawling
   // riders shrink to fit their seat (bubble / gondola / coaster car), scaled about the feet
   const rs = P.ride ? ({ bubble: .78, wheel: .5, coaster: .58, carousel: .62, swing: .8, train: .58 }[P.ride.type] || 0) : 0;
   if (rs) { ctx.translate(P.x, P.y); ctx.scale(rs, rs); ctx.translate(-P.x, -P.y); }
@@ -96,12 +98,13 @@ function render(t) {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ground(t);
   ctx.save(); ctx.translate(-camera, -camY);
-  floorReflection(t);
+  drawUnderground(t); drawPetMaker(t); drawBuilder(t);
+  if (camY < 70 && !player.under) floorReflection(t);
   ceilingTube(t, false); hangingStars(t);
   glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawNest(t); drawHatches(t); drawWaiting(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
@@ -116,13 +119,13 @@ function render(t) {
   // things that sit IN FRONT of the creature (so it is inside the ride / the pit)
   if (rideType === 'coaster') coasterTrain(t);
   if (rideType === 'wheel') { const W = LAYOUT.wheel, a = world.wheelAngle + player.ride.i * Math.PI / 5, x = W.cx + Math.cos(a) * W.r, y = W.cy + Math.sin(a) * W.r; rounded(x - 26, y + 24, 52, 18, 9, ['#ffbb68', '#7be1ed', '#ff85c2', '#a88af5', '#92e1a6'][player.ride.i % 5], '#fff', 3); }
-  drawBigFront(t);
+  drawBigFront(t); drawPetFollower(t);
   world.bubbles.forEach(b => { if (b.ride && cull(b.x, 80)) drawBubble(b); });
   if (cull(365, 260)) drawBallPitFront();
   drawParticles();
   if (started) drawHintHand(t);
   ctx.restore();
-  foreground(t);
+  foreground(t); drawMotes(t);
 }
 function paintDropIcon(x, y) {
   rounded(x - 44, y - 22, 88, 44, 20, 'rgba(255,255,255,.94)', '#e3b0ee', 3);
@@ -132,7 +135,7 @@ function paintDropIcon(x, y) {
 }
 function update(dt, t) {
   if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $('toast').classList.remove('shown'); }
-  const nearWall = started && PAINT_SURFACES.some(R => camera + vw > R.x1 + Math.min(120, (R.x2 - R.x1) / 2) && camera < R.x2 - Math.min(120, (R.x2 - R.x1) / 2));
+  const nearWall = started && (player.under && player.x > 1760 && player.x < 2232 || PAINT_SURFACES.some(R => camera + vw > R.x1 + Math.min(120, (R.x2 - R.x1) / 2) && camera < R.x2 - Math.min(120, (R.x2 - R.x1) / 2)));
   const pt = $('paintTools'); if (pt.classList.contains('show') !== nearWall) pt.classList.toggle('show', nearWall);
   if (!started) { updateParticles(dt); return; }
   updatePlayer(dt); updateWorld(dt, t); updateCamera(dt);
@@ -164,7 +167,7 @@ document.querySelectorAll('.introPick canvas').forEach(c => registerPortrait(c, 
 initInput();
 selectCreature(player.creature, true);
 document.querySelectorAll('.introPick').forEach(z => z.classList.toggle('chosen', z.dataset.creature === player.creature));
-setSound(Sound.on); updateCounter(); updatePaintTools(); updateBits();
+setSound(Sound.on); updateCounter(); updatePaintTools(); updateBits(); rebuildBlockPlatforms();
 if (restoreInfo.restored) $('playBtn').textContent = '▶ KEEP PLAYING!';
 requestAnimationFrame(loop);
 
@@ -172,6 +175,6 @@ requestAnimationFrame(loop);
 window.__DDW = {
   player, world, balls, LAYOUT, keys, Sound, SECRET_STARS, get camera() { return camera; }, get vw() { return vw; }, VH,
   toScreen(x, y) { const r = canvas.getBoundingClientRect(); return { x: (x - camera) / VH * r.height + r.left, y: (y - camY) / VH * r.height + r.top }; },
-  teleport(x, y = GROUND) { player.ride = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
-  get quality() { return quality; }, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
+  teleport(x, y = GROUND) { player.ride = null; player.under = false; player.inside = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
+  get quality() { return quality; }, blockPlatforms: () => builtPlatforms.length, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
 };

@@ -1,5 +1,28 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 3 · build 8 — tunnels & doors, creating, Star Babies, graphics (playtest feedback #2)
+Previous build backed up as `backups/M2_build7_index.html`.
+- **Underground layer (secret tunnels):**
+  - **5 floor hatches**, one hidden in the ball pit, drop you below the floor
+  - there are 2 tunnel networks, with cosy rooms joined by low **crawl tunnels** where the creature scrunches down and crawls
+  - **ladders** climb back up (press JUMP)
+  - rooms: **Pet Workshop**, **Crystal Cave** (singing crystals), **Build Room**, **Echo Cave** (giant singing crystals), **Gem Room**
+  - the camera follows you underground, so you see a cutaway of the world above
+- **Doors behind the character:**
+  - tap a door (or press the paw button) to go **inside the Peekaboo House**: the front wall opens into a cutaway room with the window critters wandering about, a playable **piano**, a **toy box**, a **bouncy bed** and a high shelf
+  - you can also go **inside the Fluffkin House**, where the Fluffkins you rescued play
+- **Creating:**
+  - **Pet Maker**: five big buttons (colour incl. your mixed paint, ears, tail, pattern, eyes) with a live preview. Pull the lever and **your pet hatches and follows you everywhere**. Tap it for a trick. Saved, and you can make a new one any time.
+  - **Block Builder**: a 9×4 grid; tap squares to place block → window → door → roof (2 ways) → star → heart in your paint colour. **Solid blocks are real platforms** you can climb on. Saved.
+- **More rescue missions: 6 Star Babies** hidden in tunnels, rooms, inside the Peekaboo House and around the park. Pointing-hand hints show them. They follow you to the new **Star Nest** on the lookout, and there's a party when all 6 are home. The Fluffkin quest continues alongside.
+- **Graphics:**
+  - glowing crystal caves, lantern-lit tunnels and a gem room
+  - cosy interiors
+  - a thick glossy floor slab with a sparkly earth layer below
+  - a soft glow halo behind your creature so it stands out
+  - floating magic sparkles in the air
+- **Fixes:** waiting Fluffkins in the first half of the world weren't drawn unless the camera was in the new stretch; that's fixed. Rides now always leave the tunnels and houses properly.
+
 ## Milestone 2 · build 7 — "way bigger, lots more to do" (after Dawson's first playtest: she got bored fast)
 Previous build backed up as `backups/M2_build6_index.html`.
 - **The world is twice as long (7000 → 14100), plus a vertical Sky Tower.** It's still one continuous world, with the whoosh tube looping from the new far end back to the ball pit.

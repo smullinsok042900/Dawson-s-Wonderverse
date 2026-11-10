@@ -1,11 +1,24 @@
-# Test report — Milestone 2, build 7
+# Test report — Milestone 3, build 8
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 90 / 90 checks passed, no console errors
+## Result: 103 / 103 checks passed, no console errors
+
+Build 8 added 13 checks:
+- hatch drop into the tunnels
+- Pet Maker buttons, then the lever hatches a pet
+- crawling with the pet following
+- find a Star Baby
+- Block Builder places blocks, which become platforms
+- ladder back up
+- Star Baby delivered to the Star Nest
+- going inside the Peekaboo House, playing the piano, coming back out
+- reload keeps the pet and the building
+
+Frame timing: the adaptive resolution settled at 0.70 pixel density in headless software rendering (median 16.7 ms). That is not an iPhone measurement.
 
 Build 7 added 15 checks:
 - music drums, and star bits collected while playing

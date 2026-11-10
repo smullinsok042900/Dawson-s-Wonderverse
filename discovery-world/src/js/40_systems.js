@@ -147,7 +147,7 @@ function doAction() {
   if (P.ride) { jump(); return; }
   let best = null, bd = 1e9;
   for (const it of INTERACT) {
-    if (it.need && !it.need()) continue;
+    if ((it.need && !it.need()) || (it.layer || '') !== layerKey()) continue;
     const hx = it.hint ? it.hint[0] : (it.box[0] + it.box[2]) / 2, hy = it.hint ? it.hint[1] : (it.box[1] + it.box[3]) / 2;
     const d = Math.abs(hx - P.x) - (it.force && it.force() ? 400 : 0) - (it.hint ? 40 : 0);
     if (Math.abs(hx - P.x) < 240 && d < bd) { bd = d; best = { it, hx, hy }; }
@@ -241,7 +241,7 @@ function hintTarget() {
   // step of the paint→bubble→power chain when it is ready ("force").
   let best = null, bd = 1e9;
   for (const it of INTERACT.concat(EXTRA_HINTS)) {
-    if (!it.hint || (it.need && !it.need())) continue;
+    if (!it.hint || (it.need && !it.need()) || (it.layer || '') !== layerKey()) continue;
     if (!(it.force && it.force()) && world.discoveries.has(it.disc)) continue;
     if (!cull(it.hint[0], 0)) continue;
     const d = Math.abs(it.hint[0] - player.x); if (d < bd) { bd = d; best = it.hint; }
@@ -251,26 +251,29 @@ function hintTarget() {
 // ---------------- per-frame update ----------------
 function updatePlayer(dt) {
   const P = player;
+  if (P.ride && P.ride.type !== 'climb' && (P.under || P.inside)) { P.under = false; P.inside = null; } // rides are above ground
   if (P.ride) updateRide(dt);
   else {
     const h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     if (h) P.facing = h;
     // after a launch, keep the flight momentum unless the child steers
     if (!P.launched || h) { const accel = P.launched ? 420 : P.grounded ? 2600 : 1600; P.vx += clamp(h * 310 - P.vx, -accel * dt, accel * dt); }
-    P.x = clamp(P.x + P.vx * dt, 60, WORLD_W - 70);
-    if (P.x <= 60 || P.x >= WORLD_W - 70) P.vx = 0;
+    const lk = layerKey(), [lx1, lx2] = layerBounds();
+    P.x = clamp(P.x + P.vx * dt, lx1, lx2);
+    if (P.x <= lx1 || P.x >= lx2) P.vx = 0;
     const oldY = P.y, wasGrounded = P.grounded;
     P.vy = Math.min(P.vy + GRAV * dt, 1400); P.y += P.vy * dt; P.grounded = false;
     if (P.vy >= 0) {
       for (const z of PLATFORMS) {
-        if (P.x < z.a || P.x > z.b) continue;
+        if (P.x < z.a || P.x > z.b || (z.layer || '') !== lk) continue;
         const stepUp = z.step && wasGrounded && P.y >= z.y && P.y - z.y <= 58;
         if ((oldY <= z.y + 2 && P.y >= z.y) || stepUp) { const impact = P.vy; P.y = z.y; P.vy = 0; P.grounded = true; if (z.onLand) z.onLand(z, impact); break; }
       }
     }
-    if (P.y >= GROUND) { P.y = GROUND; P.vy = 0; P.grounded = true; }
+    const fy = floorY(); if (P.y >= fy) { P.y = fy; P.vy = 0; P.grounded = true; }
+    depthPhysics();
     const T = LAYOUT.tramp;
-    if (P.x > T.a && P.x < T.b && P.y >= T.y - 2 && P.vy >= 0 && P.y <= GROUND) bounce(clamp(Math.max(930, (P.vy || 0) * 1.02), 930, 1040));
+    if (lk === '' && P.x > T.a && P.x < T.b && P.y >= T.y - 2 && P.vy >= 0 && P.y <= GROUND) bounce(clamp(Math.max(930, (P.vy || 0) * 1.02), 930, 1040));
     if (P.grounded) { P.jumps = 0; P.launched = false; }
     // walking off the top of the Sky Tower / slide tower 2 onto the giant slides
     if (P.grounded && P.y === -60 && P.x > 8058 && P.vx > 30) startBigSlide(0);
@@ -281,7 +284,7 @@ function updatePlayer(dt) {
     if (P.grounded && P.y === 213 && P.x > 1386 && P.vx > 30) startZip();
     // walking into the tube door
     const [d1, d2] = LAYOUT.tube.door;
-    if (P.grounded && P.y === GROUND && P.x > d1 + 12 && P.x < d2) rideTube();
+    if (lk === '' && P.grounded && P.y === GROUND && P.x > d1 + 12 && P.x < d2) rideTube();
     // standing on the powered launch pad
     const L = LAYOUT.launcher;
     if (world.powered && P.grounded && P.y === L.y && P.x > L.a && P.x < L.b) { P.padTime += dt; if (P.padTime > .75) launch(); }
@@ -447,7 +450,7 @@ function updateBalls(dt) {
 function updateCamera(dt) {
   const P = player, fast = P.ride && (P.ride.type === 'tube') ? 14 : 5.3;
   const focusY = P.ride && P.ride.type === 'carousel' ? GROUND : P.y;
-  camY += (clamp(focusY - 390, -470, 540 - VH) - camY) * Math.min(1, dt * 5);
+  camY += (clamp(focusY - 390, -470, P.under ? 340 : 540 - VH) - camY) * Math.min(1, dt * 5);
   world.lookAhead += ((P.ride ? 0 : P.facing * vw * .1) - world.lookAhead) * Math.min(1, dt * 1.6);
   const target = clamp(P.x - vw / 2 + world.lookAhead, 0, Math.max(0, WORLD_W - vw));
   camera += (target - camera) * Math.min(1, dt * fast);

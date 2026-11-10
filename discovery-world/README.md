@@ -40,7 +40,7 @@ Pour two paints into the bowl → SPIN → the new colour flows down the pipe �
 ## Editing
 1. Edit files in `src/`.
 2. `node build.mjs` → regenerates `index.html`.
-3. `node tests/smoke.cjs` → runs the 54-check browser test (needs Playwright + Chromium installed).
+3. `node tests/smoke.cjs` → runs the browser test (103 checks as of build 8) (needs Playwright + Chromium installed).
 
 ## Free hosting (no cost)
 **GitHub Pages:** in this repository on github.com go to **Settings → Pages**. Under "Build and deployment", choose *Deploy from a branch*, pick the branch that contains this folder and `/ (root)`, then press Save. After a minute the game will be at

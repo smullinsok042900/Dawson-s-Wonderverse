@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T12:01:09.525Z",
+  "date": "2026-11-10T13:09:38.247Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 90,
-  "total": 90,
+  "passed": 103,
+  "total": 103,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 385 units"
+      "detail": "moved 393 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 290 units"
+      "detail": "moved 287 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=339 jumps=1"
+      "detail": "y=318 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=136 v=468"
+      "detail": "dx=140 v=452"
     },
     {
       "name": "paint palette appears near the wall",
@@ -132,7 +132,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1179"
+      "detail": "x=1170"
     },
     {
       "name": "JUMP while touching the climbing net climbs it",
@@ -147,7 +147,7 @@
     {
       "name": "walk the sky bridge to the lookout and find secret star 7",
       "ok": true,
-      "detail": "stars 1→2, x=1334"
+      "detail": "stars 1→2, x=1335"
     },
     {
       "name": "walking off the lookout grabs the zipline",
@@ -157,7 +157,7 @@
     {
       "name": "zipline drops you by the paint mixer",
       "ok": true,
-      "detail": "x=2022"
+      "detail": "x=2023"
     },
     {
       "name": "tap the engine ladder to climb it",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "39,26,35"
+      "detail": "38,29,34"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -217,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4252"
+      "detail": "landed at x=4187"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -267,7 +267,7 @@
     {
       "name": "the lift carries the creature up",
       "ok": true,
-      "detail": "y=234"
+      "detail": "y=237"
     },
     {
       "name": "walk onto the balcony and find secret star 8",
@@ -287,7 +287,7 @@
     {
       "name": "star bits get collected while playing",
       "ok": true,
-      "detail": "96 → 105"
+      "detail": "100 → 109"
     },
     {
       "name": "JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower",
@@ -307,7 +307,7 @@
     {
       "name": "giant slide lands you by the swings",
       "ok": true,
-      "detail": "x=8635"
+      "detail": "x=8638"
     },
     {
       "name": "tap the swing to ride it",
@@ -317,7 +317,7 @@
     {
       "name": "JUMP flings you off the swing",
       "ok": true,
-      "detail": "vx=-254 vy=-45"
+      "detail": "vx=-334 vy=-198"
     },
     {
       "name": "the seesaw shoots its ball through the hoop",
@@ -347,10 +347,70 @@
     {
       "name": "the confetti cannon blasts you sky-high",
       "ok": true,
-      "detail": "y=26"
+      "detail": "y=33"
     },
     {
       "name": "walk on the dance floor to light it up",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap a floor hatch to drop into the secret tunnels",
+      "ok": true,
+      "detail": "y=700"
+    },
+    {
+      "name": "Pet Maker buttons change the pet design",
+      "ok": true,
+      "detail": "{\"col\":1,\"ears\":1,\"tail\":0,\"pat\":2,\"eyes\":0}"
+    },
+    {
+      "name": "pull the lever: your pet hatches",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk into the low tunnel: the creature crawls (and the pet follows)",
+      "ok": true,
+      "detail": "x=930 pet=800"
+    },
+    {
+      "name": "find a lost Star Baby in the tunnel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Block Builder: tap squares to build",
+      "ok": true,
+      "detail": "3 blocks"
+    },
+    {
+      "name": "built blocks become platforms you can stand on",
+      "ok": true,
+      "detail": "2 platforms"
+    },
+    {
+      "name": "JUMP climbs the ladder back up to the surface",
+      "ok": true,
+      "detail": "y=450"
+    },
+    {
+      "name": "bring the Star Baby to the Star Nest",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap the door to go inside the Peekaboo House",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "play the piano inside",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap the door again to go back outside",
       "ok": true,
       "detail": ""
     },
@@ -405,6 +465,11 @@
       "detail": "4 strokes"
     },
     {
+      "name": "reload keeps your pet and your building",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "reload keeps stickers",
       "ok": true,
       "detail": ""
@@ -417,7 +482,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "56 discoveries"
+      "detail": "69 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -427,7 +492,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2705 → 2705"
+      "detail": "x 2693 → 2693"
     },
     {
       "name": "corrupt save data is ignored safely",
