@@ -1,11 +1,23 @@
-# Test report — Milestone 3, build 9
+# Test report — Milestone 3, build 10
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 111 / 111 checks passed, no console errors
+## Result: 120 / 120 checks passed, no console errors
+
+Build 10 added nine checks:
+- tap the balls to dive through the pit
+- walk into the dive pipe
+- rope ladder to the Cloud Kingdom
+- tap a cloud sheep
+- walk onto the rainbow slide and land on the ground
+- the balloon bear gives a balloon
+- the painter bunny paints
+- reload keeps the balloon
+
+Note: on one run the old-save migration check failed (the game came up fresh). It passed on the next full run and passes on its own (the old save loads as Zuzu with her painting at x 2000). It looks like a timing hiccup between page-unload saving and the test's data injection; it is being watched.
 
 The build 9 door fix added four checks: PAW at a door goes in, PAW inside comes back out, the bridge door leads down to the caves, and the cave door leads back up.
 

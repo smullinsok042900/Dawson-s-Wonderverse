@@ -1,5 +1,32 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 3 · build 10 — easy way under the ball pit, the world goes UP, friendly critters (feedback #4)
+Previous build backed up as `backups/M3_build9b_index.html`.
+- **Getting under the ball pit is easy now:**
+  - Standing in the ball pit, tap the balls or press PAW to **dive straight through** into the Pet Workshop.
+  - A big **pink dive pipe** at the far-left start: just walk into it.
+  - A bouncing "dive here" arrow over the pit.
+  - Before: the pit hatch was hidden behind the balls and had to be tapped from close by.
+- **The map expands upward: the Cloud Kingdom** above the Playhouse:
+  - a **rope ladder** at the rainbow slide's tower climbs from the floor (or the high beam) up into the clouds; JUMP to climb (long ladders climb faster)
+  - a long cloud path, **bouncy cloud puffs** up to two higher clouds, a **rainbow castle**, a rainbow arch, a sun with a face, **secret star 10**
+  - a giant friendly **sky whale** that sprays sparkles when tapped
+  - a **giant rainbow slide** back down to the Studio
+  - the background sinks away and clouds appear as you climb, so it feels high up
+- **12 friendly critters** who wander, wave and show a heart bubble when you come near. Each reacts when tapped, and the first tap gives +2 star bits.
+  - **Painter bunny** (paints a sticker on the big wall)
+  - **Owl** on the beam (flies a loop)
+  - **Bubble frog** on the bubble-machine roof (blows bubbles)
+  - **Robot** (beeps and spins, with a heart face)
+  - **Balloon bear**: gives you a **balloon that floats along with your creature**; tap again for a new colour. Saved.
+  - **Penguin** (belly wiggle)
+  - **Drummer bear** (drum roll, all the drums bounce)
+  - **Juggler** (confetti)
+  - **Tunnel mole** in the Gem Room (digs up gems, +3 star bits)
+  - **2 cloud sheep**
+  - the **sky whale**
+- No more startup "click" sound before the first touch (browsers block audio until then).
+
 ## Milestone 3 · build 9 — Pip redrawn, realistic lighting, creature customisation (playtest feedback #3)
 Previous build backed up as `backups/M3_build8_index.html`.
 - **Pip redrawn.** Build 8 Pip read as a lumpy bean: head and body merged, a jagged outline, a huge flat rainbow tail behind see-through wings, an arm sticking up, and a goggle strap over the ears. Now:

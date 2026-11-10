@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T14:52:10.420Z",
+  "date": "2026-11-10T15:47:01.022Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 111,
-  "total": 111,
+  "passed": 120,
+  "total": 120,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 393 units"
+      "detail": "moved 353 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,12 +42,12 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 282 units"
+      "detail": "moved 284 units"
     },
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=335 jumps=1"
+      "detail": "y=329 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=135 v=468"
+      "detail": "dx=136 v=469"
     },
     {
       "name": "paint palette appears near the wall",
@@ -132,7 +132,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1170"
+      "detail": "x=1179"
     },
     {
       "name": "JUMP while touching the climbing net climbs it",
@@ -147,7 +147,7 @@
     {
       "name": "walk the sky bridge to the lookout and find secret star 7",
       "ok": true,
-      "detail": "stars 1→2, x=1340"
+      "detail": "stars 1→2, x=1332"
     },
     {
       "name": "walking off the lookout grabs the zipline",
@@ -192,7 +192,7 @@
     {
       "name": "colored bubbles float into the funnel and charge the battery",
       "ok": true,
-      "detail": "battery 6/6"
+      "detail": "battery 4/6"
     },
     {
       "name": "battery fills to 6",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "41,26,38"
+      "detail": "39,31,35"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -217,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4235"
+      "detail": "landed at x=4244"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -267,7 +267,7 @@
     {
       "name": "the lift carries the creature up",
       "ok": true,
-      "detail": "y=238"
+      "detail": "y=237"
     },
     {
       "name": "walk onto the balcony and find secret star 8",
@@ -287,7 +287,7 @@
     {
       "name": "star bits get collected while playing",
       "ok": true,
-      "detail": "99 → 108"
+      "detail": "101 → 110"
     },
     {
       "name": "JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower",
@@ -307,7 +307,7 @@
     {
       "name": "giant slide lands you by the swings",
       "ok": true,
-      "detail": "x=8629"
+      "detail": "x=8638"
     },
     {
       "name": "tap the swing to ride it",
@@ -317,7 +317,7 @@
     {
       "name": "JUMP flings you off the swing",
       "ok": true,
-      "detail": "vx=-304 vy=-224"
+      "detail": "vx=-150 vy=-127"
     },
     {
       "name": "the seesaw shoots its ball through the hoop",
@@ -347,7 +347,7 @@
     {
       "name": "the confetti cannon blasts you sky-high",
       "ok": true,
-      "detail": "y=25"
+      "detail": "y=18"
     },
     {
       "name": "walk on the dance floor to light it up",
@@ -372,7 +372,7 @@
     {
       "name": "walk into the low tunnel: the creature crawls (and the pet follows)",
       "ok": true,
-      "detail": "x=933 pet=782"
+      "detail": "x=936 pet=808"
     },
     {
       "name": "find a lost Star Baby in the tunnel",
@@ -450,6 +450,46 @@
       "detail": ""
     },
     {
+      "name": "standing in the ball pit, tap the balls to dive straight through",
+      "ok": true,
+      "detail": "under=true"
+    },
+    {
+      "name": "walk left into the pink dive pipe at the start",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JUMP at the rope ladder climbs all the way to the Cloud Kingdom",
+      "ok": true,
+      "detail": "y=-320"
+    },
+    {
+      "name": "tap a cloud sheep to play with it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk off the end of the clouds onto the giant rainbow slide",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the rainbow slide lands you back on the ground",
+      "ok": true,
+      "detail": "x=2389 y=450"
+    },
+    {
+      "name": "the balloon bear gives you a balloon that floats with you",
+      "ok": true,
+      "detail": "#ff4f9a"
+    },
+    {
+      "name": "the painter bunny paints on the wall when tapped",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "walking into the rainbow door enters the whoosh tube",
       "ok": true,
       "detail": ""
@@ -505,6 +545,11 @@
       "detail": ""
     },
     {
+      "name": "reload keeps your balloon",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "reload keeps your creature style",
       "ok": true,
       "detail": ""
@@ -522,7 +567,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "70 discoveries"
+      "detail": "77 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -532,7 +577,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2711 → 2711"
+      "detail": "x 2700 → 2700"
     },
     {
       "name": "corrupt save data is ignored safely",
