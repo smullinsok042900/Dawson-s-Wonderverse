@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T20:01:23.675Z",
+  "date": "2026-11-10T21:09:50.206Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 51,
-  "total": 51,
+  "passed": 65,
+  "total": 65,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -22,7 +22,7 @@
     {
       "name": "hold ▶ to walk right",
       "ok": true,
-      "detail": "x 5.0 → 9.7"
+      "detail": "x 1.2 → 6.2"
     },
     {
       "name": "let go and the creature stops",
@@ -37,7 +37,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.76"
+      "detail": "y=1.49"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -52,7 +52,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 6.6→10.9, y 2.27"
+      "detail": "x 2.5→6.0, y 0.00"
     },
     {
       "name": "switch to zuzu",
@@ -72,7 +72,7 @@
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"8.21\",\"tap\",\"0.0\"],[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"creature\",\"0.0\"]] P=12.54,0.00,0.00"
+      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"7.65\",\"tap\",\"0.0\"],[\"Mesh\",\"8.25\",\"tap\",\"0.0\"],[\"Mesh\",\"8.31\",\"tap\",\"0.0\"],[\"Mesh\",\"8.93\",\"creature\",\"0.0\"]] P=9.02,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -92,12 +92,12 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "y=4.10"
+      "detail": "y=4.12"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.8 y=2.46"
+      "detail": "x=40.8 y=3.88"
     },
     {
       "name": "can't walk through the tall paint-jar tower",
@@ -107,7 +107,77 @@
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=9.9"
+      "detail": "x=11.4"
+    },
+    {
+      "name": "a picture bubble by the deep part of the ball pit",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk into the deep part: you sink into the balls and swim",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "tap JUMP to swim up through the balls",
+      "ok": true,
+      "detail": "y -6.00 → -4.45"
+    },
+    {
+      "name": "sink all the way down into the secret underground",
+      "ok": true,
+      "detail": "y=-6.00"
+    },
+    {
+      "name": "the underground is a new discovery",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the bounce mushroom pops you back up into the ball shaft",
+      "ok": true,
+      "detail": "y=-1.46"
+    },
+    {
+      "name": "swim up and climb out of the ball pit",
+      "ok": true,
+      "detail": "x=5.8 y=0.00"
+    },
+    {
+      "name": "walk past the singing crystals and they play",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the low tunnel makes you crawl",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "crawl all the way through the tunnel",
+      "ok": true,
+      "detail": "x=40.9"
+    },
+    {
+      "name": "find the lost Fluffkin in the underground gem room",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a lift bubble at the bottom of the glass lift",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the glass lift rides up to the Studio floor",
+      "ok": true,
+      "detail": "y=0"
+    },
+    {
+      "name": "and back down again",
+      "ok": true,
+      "detail": ""
     },
     {
       "name": "paint palette appears by the paint wall",
@@ -137,7 +207,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=4.97"
+      "detail": "y=5.25"
     },
     {
       "name": "tap the carousel to ride",
@@ -157,12 +227,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=8.1"
+      "detail": "y=3.0"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "22 → 26"
+      "detail": "29 → 33"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -197,7 +267,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.49612942806652677"
+      "detail": "k=0.486768495461498"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -207,7 +277,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.98"
+      "detail": "y=4.40"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -242,7 +312,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":26,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":33,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",

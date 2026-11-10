@@ -35,10 +35,18 @@ export function buildWorld(G) {
   // ---------- floor: glossy tiles, a different colour in each zone ----------
   const tileTex = (a, b) => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = a; g.fillRect(0, 0, 128, 128); g.fillStyle = b; g.fillRect(0, 0, 64, 64); g.fillRect(64, 64, 64, 64); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 3; g.strokeRect(0, 0, 128, 128); g.strokeRect(0, 0, 64, 64); g.strokeRect(64, 64, 64, 64); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
   const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 230, '#9fe8b4', '#7fdc9a']];
+  // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
+  const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.8, 54, -1.2, 1.2]];
+  function floorPiece(x0, x1, z0, z1, c1, c2) {
+    const t = tileTex(c1, c2); t.repeat.set((x1 - x0) / 2.4, (z1 - z0) / 2.4); t.offset.set(x0 / 2.4, -z1 / 2.4);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshPhysicalMaterial({ map: t, roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
+    f.rotation.x = -Math.PI / 2; f.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); f.receiveShadow = true; add(f);
+  }
   for (const [a, b, c1, c2] of ZONES) {
-    const t = tileTex(c1, c2); t.repeat.set((b - a) / 2.4, 18 / 2.4);
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(b - a, 18), new THREE.MeshPhysicalMaterial({ map: t, roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
-    f.rotation.x = -Math.PI / 2; f.position.set((a + b) / 2, 0, -3); f.receiveShadow = true; add(f);
+    const h = HOLES.find(([x0, x1]) => x0 > a && x1 < b);
+    if (!h) { floorPiece(a, b, -12, 6, c1, c2); continue; }
+    const [hx0, hx1, hz0, hz1] = h;
+    floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
   block(105, -.6, 4.6, 250, .6, .8, '#ffb8de', { r: .3, cast: false });
@@ -78,10 +86,10 @@ export function buildWorld(G) {
   block(8, 0, 0, .5, .9, 4.2, '#ff65b5', { r: .25 }); block(16, 0, 0, .5, .9, 4.2, '#ff65b5', { r: .25 });
   for (const x of [8, 16]) { solid(x - .25, x + .25, .9); plat(x - .25, x + .25, .9); }
   block(12, 0, -1.9, 8.5, .9, .5, '#ff65b5', { r: .25 }); block(12, 0, 1.9, 8.5, .55, .4, '#ffd84a', { r: .2 });
-  const BALLS = 200, ballMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(.24, 14, 10), toy('#ffffff', { r: .25, cc: 1 }), BALLS);
+  const BALLS = 350, ballMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(.24, 14, 10), toy('#ffffff', { r: .25, cc: 1 }), BALLS);
   ballMesh.castShadow = true; ballMesh.receiveShadow = true;
   const balls = [];
-  for (let i = 0; i < BALLS; i++) { balls.push({ x: rand(8.5, 15.5), y: .24 + (i % 3) * .4, z: rand(-1.5, 1.5), vx: 0, vy: 0, vz: 0 }); ballMesh.setColorAt(i, col.set(['#65dcec', '#ffda68', '#b587ff', '#ff67ab', '#7be08a'][i % 5])); }
+  for (let i = 0; i < BALLS; i++) { const deep = i >= 200; balls.push(deep ? { x: rand(11.1, 14.1), y: rand(-2.1, .5), z: rand(-.95, .95), vx: 0, vy: 0, vz: 0 } : { x: rand(8.5, 15.5), y: .24 + (i % 3) * .4, z: rand(-1.5, 1.5), vx: 0, vy: 0, vz: 0 }); ballMesh.setColorAt(i, col.set(['#65dcec', '#ffda68', '#b587ff', '#ff67ab', '#7be08a'][i % 5])); }
   add(ballMesh);
   G.pit = { a: PIT.a, b: PIT.b, balls, mesh: ballMesh };
   tap(ballMesh, () => G.splashPit(), { paw: [12, 0], disc: 'ballpit', hintY: 2.2 });
@@ -280,7 +288,7 @@ export function buildWorld(G) {
   line(152, 168, 1, 9); arc(172, 179, 3, 3, 6); line(181, 186, 1, 4);
   G.bitSpots = bits;
   // where the six lost baby Fluffkins wait
-  G.fluffSpots = [[22.4, 3.8, -.2], [41.2, 3.6, -.3], [87, 3.0, -.2], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
+  G.fluffSpots = [[22.4, 3.8, -.2], [44, -6, -.3], [87, 3.0, -.2], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
   G.secretStar = [12, 3.2];
 }
 function rand(a, b) { return a + Math.random() * (b - a); }
