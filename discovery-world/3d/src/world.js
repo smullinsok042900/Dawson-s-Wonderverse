@@ -28,6 +28,8 @@ export function buildWorld(G) {
   function cyl(x, y, z, r1, r2, h, color, o = {}) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true; return add(m, o.parent); }
   function sph(x, y, z, r, color, o = {}) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = o.cast ?? true; return add(m, o.parent); }
   const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); return p; };
+  // solid things in the creature's path: you can't walk through them (low ones you hop up onto by yourself)
+  const solid = (a, b, top, o = {}) => { G.solids.push({ a, b, top, layer: o.layer || '' }); };
   const tap = (obj, fn, o = {}) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); if (o.paw) G.interact.push({ x: o.paw[0], y: o.paw[1], layer: o.layer || '', disc: o.disc, run: fn, hintY: o.hintY ?? 2 }); return obj; };
 
   // ---------- floor: glossy tiles, a different colour in each zone ----------
@@ -74,6 +76,7 @@ export function buildWorld(G) {
   // BALL PIT
   const PIT = { a: 8, b: 16 };
   block(8, 0, 0, .5, .9, 4.2, '#ff65b5', { r: .25 }); block(16, 0, 0, .5, .9, 4.2, '#ff65b5', { r: .25 });
+  for (const x of [8, 16]) { solid(x - .25, x + .25, .9); plat(x - .25, x + .25, .9); }
   block(12, 0, -1.9, 8.5, .9, .5, '#ff65b5', { r: .25 }); block(12, 0, 1.9, 8.5, .55, .4, '#ffd84a', { r: .2 });
   const BALLS = 200, ballMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(.24, 14, 10), toy('#ffffff', { r: .25, cc: 1 }), BALLS);
   ballMesh.castShadow = true; ballMesh.receiveShadow = true;
@@ -83,11 +86,11 @@ export function buildWorld(G) {
   G.pit = { a: PIT.a, b: PIT.b, balls, mesh: ballMesh };
   tap(ballMesh, () => G.splashPit(), { paw: [12, 0], disc: 'ballpit', hintY: 2.2 });
   // SLIDE TOWER: steps you jump up, a top deck, a twisty slide down
-  [[18.4, 1.0], [19.7, 2.0], [21, 3.0]].forEach(([x, y], i) => { block(x, 0, -.2, 1.2, y, 1.8, ['#7fd8ff', '#ffd84a', '#b58cff'][i], { r: .18 }); plat(x - .6, x + .6, y); });
-  block(22.4, 0, -.2, 1.8, 3.8, 2, '#ff9fd2', { r: .2 }); plat(21.5, 23.3, 3.8);
+  [[18.4, 1.0], [19.7, 2.0], [21, 3.0]].forEach(([x, y], i) => { block(x, 0, -.2, 1.2, y, 1.8, ['#7fd8ff', '#ffd84a', '#b58cff'][i], { r: .18 }); plat(x - .6, x + .6, y); solid(x - .6, x + .6, y); });
+  block(22.4, 0, -.2, 1.8, 3.8, 2, '#ff9fd2', { r: .2 }); plat(21.5, 23.3, 3.8, { z: -.4 }); solid(21.5, 23.3, 3.8);
   for (const x of [21.6, 23.2]) cyl(x, 3.8, -1, .07, .07, 1.4, '#ffffff');
   const roof = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.4, 6), M('#a15cff')); roof.position.set(22.4, 5.9, -.6); roof.castShadow = true; add(roof);
-  G.slidePath = new THREE.CatmullRomCurve3([[23.3, 3.8, -.2], [24.6, 3.4, .4], [26.2, 2.6, .8], [27.4, 1.6, .2], [28.6, .8, -.4], [30.2, .25, 0], [31.2, 0, 0]].map(p => new THREE.Vector3(...p)));
+  G.slidePath = new THREE.CatmullRomCurve3([[23.3, 3.8, -.6], [24.6, 3.4, -1.2], [26.2, 2.6, -1.9], [27.4, 1.6, -2.3], [28.6, .8, -2.3], [30.2, .25, -2], [31.2, 0, -1.8]].map(p => new THREE.Vector3(...p)));
   const slideMesh = new THREE.Mesh(new THREE.TubeGeometry(G.slidePath, 80, .55, 16, false), new THREE.MeshPhysicalMaterial({ color: '#ffd84a', roughness: .2, clearcoat: 1, side: THREE.DoubleSide }));
   slideMesh.scale.y = 1; slideMesh.castShadow = true; slideMesh.receiveShadow = true; add(slideMesh);
   tap(slideMesh, () => G.startSlideTap(), { paw: [26, 0], disc: 'slide', hintY: 3.4 });
@@ -97,7 +100,7 @@ export function buildWorld(G) {
   G.tramp = trampTop;
   tap(trampTop, () => G.tapTramp(), { paw: [34, .5], disc: 'trampoline', hintY: 2.4 });
   // CLIMBING BLOCKS pyramid with a secret star on top
-  [[38, 1.2], [39.6, 2.4], [41.2, 3.6], [42.8, 2.4], [44.4, 1.2]].forEach(([x, h], i) => { block(x, 0, -.4, 1.5, h, 2, RAINBOW[i * 2 % 8], { r: .2 }); plat(x - .75, x + .75, h); });
+  [[38, 1.2], [39.6, 2.4], [41.2, 3.6], [42.8, 2.4], [44.4, 1.2]].forEach(([x, h], i) => { block(x, 0, -.4, 1.5, h, 2, RAINBOW[i * 2 % 8], { r: .2 }); plat(x - .75, x + .75, h); solid(x - .75, x + .75, h); });
 
   // =================== IMAGINATION STUDIO ===================
   // GIANT PAINT WALL (you paint on it with your finger)
@@ -123,23 +126,23 @@ export function buildWorld(G) {
   G.interact.push({ x: 78, y: 0, layer: '', disc: 'xylophone', run: () => G.playKey(G.xylo[2]), hintY: 1.6 });
   // a tall stack of paint jars (a Fluffkin waits on top)
   [[87, 0, 1.2, '#ff9fd2'], [87, 1.2, 1.0, '#9fe6ff'], [87, 2.2, .8, '#ffe066']].forEach(([x, y, h, c]) => cyl(x, y, -.2, .75, .8, h, c));
-  plat(86.3, 87.7, 3.0);
-  cyl(85.2, 0, -.2, .5, .55, 1.3, '#c9a6ff'); plat(84.7, 85.7, 1.3);
+  plat(86.3, 87.7, 3.0); solid(86.25, 87.75, 3.0);
+  cyl(85.2, 0, -.2, .5, .55, 1.3, '#c9a6ff'); plat(84.7, 85.7, 1.3); solid(84.7, 85.7, 1.3);
 
   // =================== WONDER LAB ===================
   // BUBBLE MACHINE
-  const bm = new THREE.Group(); bm.position.set(99, 0, -1.2); add(bm);
+  const bm = new THREE.Group(); bm.position.set(99, 0, -2.4); add(bm);
   block(0, 0, 0, 3, 2.6, 2.2, '#8a5ad8', { parent: bm, r: .35 });
   const dome = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshPhysicalMaterial({ color: '#dff6ff', transparent: true, opacity: .45, roughness: .02, clearcoat: 1, iridescence: 1 }));
   dome.position.y = 2.6; bm.add(dome);
   const wand = new THREE.Mesh(new THREE.TorusGeometry(.5, .08, 12, 32), M('#ffd84a')); wand.position.set(1.7, 2.2, .4); wand.rotation.y = Math.PI / 2; bm.add(wand);
   const btn = sph(0, 1.4, 1.15, .32, '#ff4f9a', { parent: bm, m: { em: '#ff4f9a', ei: .3 } });
   G.bubbleWand = wand;
-  tap(bm, () => G.spawnBubbles(100.7, 2.2), { paw: [99, 0], disc: 'bubbles', hintY: 3.6 });
-  plat(97.5, 100.5, 2.6); // you can stand on the machine
+  tap(bm, () => G.spawnBubbles(100.7, 2.2, -1), { paw: [99, 0], disc: 'bubbles', hintY: 3.6 });
+  plat(97.5, 100.5, 2.6, { z: -2 }); // you can jump up and stand on the machine
   // three colour buckets: tap two to mix the bubble colour
   G.buckets = [['r', '#ff3b6b', 104], ['y', '#ffd23f', 105.6], ['b', '#3d9bff', 107.2]].map(([k, c, x]) => {
-    const obj = add(new THREE.Group()); cyl(x, 0, .2, .55, .45, .8, '#ffffff', { parent: obj }); cyl(x, .8, .2, .5, .5, .06, c, { parent: obj, cast: false });
+    const obj = add(new THREE.Group()); cyl(x, 0, -1.8, .55, .45, .8, '#ffffff', { parent: obj }); cyl(x, .8, -1.8, .5, .5, .06, c, { parent: obj, cast: false });
     tap(obj, () => G.tapBucket(k, c, x)); return { k, c, x, obj };
   });
   G.interact.push({ x: 105.6, y: 0, layer: '', disc: 'mix', run: () => G.tapBucket('y', '#ffd23f', 105.6), hintY: 1.8 });
@@ -148,7 +151,7 @@ export function buildWorld(G) {
   block(120.5, 4.6, -.6, 7, .4, 2.4, '#c9a6ff', { r: .18 }); plat(117, 124, 5.0);
   for (const x of [117.4, 123.6]) cyl(x, 0, -1.5, .12, .12, 4.6, '#ffffff');
   // glowing orbs that zap sparkles
-  G.orbs = [127, 130.5].map(x => { cyl(x, 0, -.8, .5, .7, 1.2, '#5b2f8a'); const o = sph(x, 1.85, -.8, .65, '#c9a6ff', { m: { em: '#a15cff', ei: .8, opacity: .85, irid: 1 } }); const orb = { x, o, zap: 0 }; tap(o, () => G.zapOrb(orb), { paw: [x, 0], disc: 'orb', hintY: 2.8 }); return orb; });
+  G.orbs = [127, 130.5].map(x => { cyl(x, 0, -2, .5, .7, 1.2, '#5b2f8a'); const o = sph(x, 1.85, -2, .65, '#c9a6ff', { m: { em: '#a15cff', ei: .8, opacity: .85, irid: 1 } }); const orb = { x, o, zap: 0 }; tap(o, () => G.zapOrb(orb), { paw: [x, 0], disc: 'orb', hintY: 2.8 }); return orb; });
 
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
@@ -156,7 +159,7 @@ export function buildWorld(G) {
   const tree = (x, z, s = 1) => { cyl(x, 0, z, .22 * s, .3 * s, 2.2 * s, '#b06a32', { m: { r: .7, cc: .1 } }); [[0, 2.6, 0, 1.2], [-.7, 2.2, .2, .85], [.7, 2.3, -.1, .9], [0, 3.3, 0, .8]].forEach(([dx, dy, dz, r]) => sph(x + dx * s, dy * s, z + dz * s, r * s, ['#6fd38c', '#8fe3a3', '#5cc97c'][Math.abs(Math.round(dx * 10)) % 3], { m: { r: .6, cc: .3, sheen: .5 } })); };
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [208, -3.8]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // CAROUSEL
-  const car = new THREE.Group(); car.position.set(144, 0, -1.6); add(car);
+  const car = new THREE.Group(); car.position.set(144, 0, -5.4); add(car); // behind the path: tap it to ride
   cyl(0, 0, 0, 4.4, 4.6, .4, '#ff9fd2', { parent: car });
   const spin = new THREE.Group(); spin.position.y = .4; car.add(spin);
   cyl(0, 0, 0, .35, .35, 4.6, '#ffd84a', { parent: spin });
@@ -194,14 +197,14 @@ export function buildWorld(G) {
     gondolas.push({ g, seat, i });
   }
   G.wheel = { group: fw, wheel, gondolas, angle: 0, r: 6.4 };
-  const booth = block(167.5, 0, -.8, 2.2, 2, 2, '#7fd8ff', { r: .3 }); plat(166.4, 168.6, 2.0);
-  const awn = new THREE.Mesh(new THREE.ConeGeometry(1.7, .8, 4), M('#ff65b5')); awn.position.set(167.5, 2.4, -.8); awn.rotation.y = Math.PI / 4; add(awn);
+  const booth = block(167.5, 0, -2.4, 2.2, 2, 2, '#7fd8ff', { r: .3 }); plat(166.4, 168.6, 2.0, { z: -2.2 });
+  const awn = new THREE.Mesh(new THREE.ConeGeometry(1.7, .8, 4), M('#ff65b5')); awn.position.set(167.5, 2.4, -2.4); awn.rotation.y = Math.PI / 4; add(awn);
   tap(fw, () => G.rideWheel(), { paw: [160, 0], disc: 'wheel', hintY: 2.5 });
   // BOUNCY MUSHROOM up to a tree branch
-  cyl(174, 0, 0, .3, .4, 1.1, '#fff3e0'); const cap = sph(174, 1.1, 0, 1.1, '#ff4f9a', { m: { r: .3 } }); cap.scale.y = .5;
-  for (let i = 0; i < 5; i++) sph(174 + Math.cos(i * 1.3) * .7, 1.45, Math.sin(i * 1.3) * .7, .14, '#ffffff', { cast: false });
-  plat(173, 175, 1.55, { pad: true, top: cap, bounce: 13 });
-  tree(178.5, -.6, 1.25); block(178.6, 3.4, -.2, 2.6, .25, 1.2, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65);
+  cyl(174, 0, -1.8, .3, .4, 1.1, '#fff3e0'); const cap = sph(174, 1.1, -1.8, 1.1, '#ff4f9a', { m: { r: .3 } }); cap.scale.y = .5;
+  for (let i = 0; i < 5; i++) sph(174 + Math.cos(i * 1.3) * .7, 1.45, -1.8 + Math.sin(i * 1.3) * .7, .14, '#ffffff', { cast: false });
+  plat(173, 175, 1.55, { pad: true, top: cap, bounce: 13, z: -1.6 });
+  tree(178.5, -2.6, 1.25); block(178.6, 3.4, -1.8, 2.6, .25, 1.6, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65, { z: -1.7 });
 
   // =================== FLUFFKIN HOUSE (outside) ===================
   const H = new THREE.Group(); H.position.set(190, 0, -2.2); add(H);
@@ -243,7 +246,7 @@ export function buildWorld(G) {
   const rug = new THREE.Mesh(new THREE.CircleGeometry(3, 40), M('#ffd45e', { r: .9, cc: 0 })); rug.rotation.x = -Math.PI / 2; rug.position.set(1012, .01, -1); rug.scale.y = .6; rug.receiveShadow = true; room.add(rug);
   block(1009.5, 0, -2.8, 3.6, .9, 1.4, '#a15cff', { parent: room, r: .35 }); block(1009.5, .9, -3.4, 3.6, 1, .4, '#b58cff', { parent: room, r: .2 });
   for (const x of [1008.4, 1010.6]) block(x, .9, -2.7, 1.4, .3, 1.1, '#c9a6ff', { parent: room, r: .15 });
-  plat(1007.8, 1011.2, 1.1, { layer: 'in', step: true, bounce: 11, sofa: true });
+  plat(1007.8, 1011.2, 1.1, { layer: 'in', step: true, bounce: 11, sofa: true, z: -2.4 });
   block(1015.5, 0, -3.5, 3, 3, .9, '#ff9fc0', { parent: room, r: .2 }); block(1015.5, .2, -3.05, 1.8, 1.6, .2, '#4a2a5a', { parent: room, r: .4, cast: false });
   G.fire = [0, 1, 2].map(i => { const f = new THREE.Mesh(new THREE.ConeGeometry(.28, .9, 12), new THREE.MeshStandardMaterial({ color: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissive: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissiveIntensity: 1.2 })); f.position.set(1015 + (i - 1) * .45, .65, -2.95); room.add(f); return f; });
   const drum = cyl(1020, 0, -1.6, .8, .8, 1, '#ff6fae'); room.add(drum); cyl(1020, 1, -1.6, .8, .8, .06, '#fff8ea', { parent: room, cast: false });
@@ -277,7 +280,7 @@ export function buildWorld(G) {
   line(152, 168, 1, 9); arc(172, 179, 3, 3, 6); line(181, 186, 1, 4);
   G.bitSpots = bits;
   // where the six lost baby Fluffkins wait
-  G.fluffSpots = [[22.4, 3.8], [41.2, 3.6], [87, 3.0], [121, 5.0], [167.5, 2.0], [178.6, 3.65]];
+  G.fluffSpots = [[22.4, 3.8, -.2], [41.2, 3.6, -.3], [87, 3.0, -.2], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
   G.secretStar = [12, 3.2];
 }
 function rand(a, b) { return a + Math.random() * (b - a); }
