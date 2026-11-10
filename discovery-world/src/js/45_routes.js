@@ -14,10 +14,11 @@ const ZIP = { x1: 1398, y1: 162, x2: 2012, y2: 326 };
 const ZIP_HANG = 104; // creature hangs this far below the rope
 const zipY = x => lerp(ZIP.y1, ZIP.y2, clamp((x - ZIP.x1) / (ZIP.x2 - ZIP.x1), 0, 1));
 
-function climbZoneAt(x, y) { return CLIMBS.find(c => x > c.x1 && x < c.x2 && y > c.top + 6 && y <= c.bottom); }
+function climbZoneAt(x, y) { const lk = layerKey(); return CLIMBS.find(c => (c.layer || '') === lk && x > c.x1 && x < c.x2 && y > c.top + 6 && y <= c.bottom); }
 function startClimb(c) {
   const P = player; P.ride = { type: 'climb', c }; P.vx = 0; P.vy = 0; P.jumps = 0;
   Sound.tone(520, .12, 'triangle', .04, 1.3);
+  if (c.exit) return;
   discover(c.id === 'net' ? 'climbnet' : c.id === 'ladder' ? 'ladder' : 'towerclimb', c.id === 'net' ? 'Climb the net up to the high beam!' : c.id === 'ladder' ? 'Climb the ladder to the Wonder Engine walkway!' : 'Climb up, up, up the tower!', c.land, c.top - 60);
 }
 function tapClimb(c) {
@@ -41,7 +42,7 @@ function updateClimbZip(dt) {
     const cx = (R.c.x1 + R.c.x2) / 2; P.x += (cx - P.x) * Math.min(1, dt * 10);
     P.y -= 175 * dt; P.vy = -175; P.vx = 0;
     if (Math.random() < dt * 5) Sound.tone(600 + Math.random() * 120, .05, 'sine', .025, 1.2);
-    if (P.y <= R.c.top) { P.ride = null; P.y = R.c.top; P.x = R.c.land; P.vy = 0; P.grounded = true; burst(P.x, P.y - 10, 10); Sound.land(); }
+    if (P.y <= R.c.top) { if (R.c.exit) { P.under = false; discover('upagain', null); } P.ride = null; P.y = R.c.top; P.x = R.c.land; P.vy = 0; P.grounded = true; burst(P.x, P.y - 10, 10); Sound.land(); }
     return true;
   }
   if (R.type === 'zip') {

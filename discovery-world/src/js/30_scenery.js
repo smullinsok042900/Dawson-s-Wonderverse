@@ -115,26 +115,33 @@ function midArchitecture(t) {
 }
 // ---------------- ground ----------------
 function ground(t) {
-  // glossy tiled play-floor with light reflections
-  const f = palette.floor, gy = GROUND - camY, h = VH - gy;
-  ctx.fillStyle = grad(0, gy, 0, h, [[0, f[0]], [.25, f[1]], [1, f[2]]]); ctx.fillRect(0, gy, vw, h);
+  // a thick glossy play-floor SLAB, with the secret underground (earth, crystals) beneath it
+  const f = palette.floor, gy = GROUND - camY, slab = UG.slab - GROUND, h = VH - gy;
+  if (gy > VH) return;
+  ctx.fillStyle = grad(0, gy, 0, slab, [[0, f[0]], [.45, f[1]], [1, f[2]]]); ctx.fillRect(0, gy, vw, Math.min(h, slab));
   const tw = 96, off = camera % tw;
-  for (let r = 0; r < 2; r++) {
-    const ty = gy + 12 + r * 36, th = r ? 50 : 32;
-    for (let x = -off - tw + (r ? tw / 2 : 0); x < vw + tw; x += tw) {
-      const n = Math.floor((x + camera) / tw) + r;
-      rounded(x + 3, ty, tw - 6, th, 9, n % 2 ? 'rgba(255,255,255,.13)' : 'rgba(60,10,90,.12)');
-      ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(x + 10, ty + 3, tw - 26, 3);
-      if (n % 3 === 0) star(x + tw / 2, ty + th / 2, 7, 'rgba(255,240,170,.5)');
-    }
+  for (let x = -off - tw; x < vw + tw; x += tw) {
+    const n = Math.floor((x + camera) / tw);
+    rounded(x + 3, gy + 12, tw - 6, 32, 9, n % 2 ? 'rgba(255,255,255,.13)' : 'rgba(60,10,90,.12)');
+    ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(x + 10, gy + 15, tw - 26, 3);
+    if (n % 3 === 0) star(x + tw / 2, gy + 28, 7, 'rgba(255,240,170,.5)');
   }
-  // long glossy sheen + reflected lights
-  ctx.fillStyle = grad(0, gy, 0, 40, [[0, 'rgba(255,255,255,.28)'], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(0, gy + 8, vw, 40);
-  for (let i = Math.floor(camera / 220) - 1; i < (camera + vw) / 220 + 1; i++) { const x = i * 220 - camera + 60; glow(x, gy + 30, 34, ['#ff9fd8', '#ffe08a', '#9fe6ff', '#c9a6ff'][((i % 4) + 4) % 4], .35); }
-  // gold edge
+  ctx.fillStyle = grad(0, gy, 0, 40, [[0, 'rgba(255,255,255,.28)'], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(0, gy + 8, vw, 34);
+  for (let i = Math.floor(camera / 220) - 1; i < (camera + vw) / 220 + 1; i++) { const x = i * 220 - camera + 60; glow(x, gy + 28, 30, ['#ff9fd8', '#ffe08a', '#9fe6ff', '#c9a6ff'][((i % 4) + 4) % 4], .3); }
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(0, gy - 1, vw, 8); ctx.fillStyle = '#fff4c8'; ctx.fillRect(0, gy - 1, vw, 2.5); ctx.fillStyle = 'rgba(140,70,20,.35)'; ctx.fillRect(0, gy + 7, vw, 2);
+  // earth below the slab
+  const ey = gy + slab; if (ey >= VH) return;
+  ctx.fillStyle = grad(0, ey, 0, 300, [[0, '#5a2f78'], [.3, '#43245e'], [1, '#2a1640']]); ctx.fillRect(0, ey, vw, VH - ey);
+  ctx.fillStyle = '#ffd36b'; ctx.fillRect(0, ey, vw, 4);
+  for (let i = Math.floor(camera / 70) - 1; i < (camera + vw) / 70 + 1; i++) {
+    const x = i * 70 - camera + ((i * 37) % 40), y = ey + 24 + ((i * 53) % 220);
+    if (y > VH) continue;
+    ctx.save(); ctx.translate(x, y); ctx.rotate((i % 5) * .3); ctx.fillStyle = ['rgba(159,230,255,.5)', 'rgba(255,159,216,.45)', 'rgba(201,166,255,.5)', 'rgba(255,243,166,.4)'][((i % 4) + 4) % 4];
+    ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 0); ctx.lineTo(0, 7); ctx.lineTo(-5, 0); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
 }
 function foreground(t) {
+  if (camY > 90) return; // hidden while exploring underground
   const k = 1.35;
   for (let i = -1; i < 46; i++) {
     const X = i * 330 + 140, x = vw / 2 + (X - (camera + vw / 2)) * k; if (x < -120 || x > vw + 120) continue;

@@ -74,7 +74,7 @@ function snapshot() {
     strokes: world.strokes.slice(-140).map(({ born, ...s }) => s), stickers: world.stickers, discoveries: [...world.discoveries], stars: [...world.stars],
     portions: world.portions, lastMix: world.lastMix, tank: world.tank, battery: world.battery,
     labOn: world.labOn, magnetOn: world.magnetOn, powered: world.powered,
-    bits: world.bits, hoops: world.hoops, fluffs: FLUFFS.map(f => [f.id, f.state === 'enter' ? 'home' : f.state]),
+    bits: world.bits, hoops: world.hoops, pet: world.pet, petDraft: world.petDraft, build: world.build, fluffs: FLUFFS.map(f => [f.id, f.state === 'enter' ? 'home' : f.state]),
   };
 }
 let saveFailed = false;
@@ -121,6 +121,10 @@ function restore() {
     world.powered = !!d.powered && world.labOn && world.battery.length >= 6;
     if (typeof d.soundOn === 'boolean') Sound.on = d.soundOn;
     world.bits = Number.isFinite(d.bits) ? clamp(Math.floor(d.bits), 0, 1e6) : 0;
+    const okPet = p => p && typeof p === 'object' && ['col', 'ears', 'tail', 'pat', 'eyes'].every(k => Number.isInteger(p[k]) && p[k] >= 0 && p[k] < 12);
+    if (okPet(d.petDraft)) world.petDraft = { col: d.petDraft.col, ears: d.petDraft.ears % 5, tail: d.petDraft.tail % 4, pat: d.petDraft.pat % 5, eyes: d.petDraft.eyes % 3 };
+    if (okPet(d.pet)) { world.pet = { col: d.pet.col, ears: d.pet.ears % 5, tail: d.pet.tail % 4, pat: d.pet.pat % 5, eyes: d.pet.eyes % 3, c: isHex(d.pet.c) ? d.pet.c : '#ff9fd2' }; world.petPos = { x: player.x - 40, y: GROUND }; }
+    if (Array.isArray(d.build) && d.build.length === 36) world.build = d.build.map(b => b && BLOCK_TYPES.includes(b.t) && b.t && isHex(b.c) ? { t: b.t, c: b.c } : null);
     world.hoops = Number.isFinite(d.hoops) ? clamp(Math.floor(d.hoops), 0, 1e6) : 0;
     if (Array.isArray(d.fluffs)) d.fluffs.forEach(e => { const f = Array.isArray(e) && FLUFFS.find(z => z.id === e[0]); if (f && ['wait', 'follow', 'home'].includes(e[1])) { f.state = e[1]; f.px = player.x - 60; f.py = player.y; } });
   } catch (e) { /* corrupt fields fall back to defaults above */ }

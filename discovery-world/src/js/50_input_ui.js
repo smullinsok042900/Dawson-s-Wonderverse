@@ -73,7 +73,7 @@ function initInput() {
     Sound.tone(500, .12, 'sine', .04, .6); save();
   });
   $('soundBtn').addEventListener('click', () => setSound(!Sound.on));
-  $('bitsPill').addEventListener('click', () => { toast(`⭐ ${world.bits} star bits · ${Math.floor(world.bits / 30)} star jars · 🐣 ${FLUFFS.filter(f => f.state === 'home').length}/6 Fluffkins home`); Sound.click(); });
+  $('bitsPill').addEventListener('click', () => { toast(`⭐ ${world.bits} star bits · ${Math.floor(world.bits / 30)} star jars · 🐣 ${FLUFFS.filter(f => f.kind === 'fluff' && f.state === 'home').length}/6 Fluffkins · ⭐ ${FLUFFS.filter(f => f.kind === 'star' && f.state === 'home').length}/6 Star Babies home`); Sound.click(); });
   $('discoveries').addEventListener('click', () => { toast(`⭐ ${world.discoveries.size} discoveries · 🌟 ${world.stars.size}/${SECRET_STARS.length} secret stars`); Sound.click(); });
   $('playBtn').addEventListener('click', () => {
     $('overlay').style.display = 'none'; started = true; Sound.ensure(); Sound.chime();
@@ -97,8 +97,10 @@ function onDown(e) {
   const p = getPos(e);
   // 1. machine buttons first (they beat a ball or the creature standing in front of them)
   if (activatePriority(p)) return;
-  // 2. tap your creature's body → it reacts
-  if (!player.ride && Math.hypot(p.x - player.x, p.y - (player.y - 100)) < 46) { // a circle on the creature's body
+  // 2. tap your pet → it does a trick
+  if (world.pet && Math.hypot(p.x - world.petPos.x, p.y - (world.petPos.y - 25)) < 34) { petTapped(); return; }
+  // 2b. tap your creature's body → it reacts
+  if (!player.ride && Math.hypot(p.x - player.x, p.y - (player.y - (isCrawling() ? 55 : 100))) < 46) { // a circle on the creature's body
     animReact(player.anim, player.creature); Sound.giggle();
     burst(player.x, player.y - 120, 8, ['#ff8fc8', '#ffd84a', '#ff6fae'], 'heart', .7);
     discover('tickle', 'Hee hee! Tickle your creature!', player.x, player.y - 150); return;

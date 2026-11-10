@@ -194,35 +194,51 @@ const FLUFFS = [
 PLATFORMS.push({ a: 11995, b: 12105, y: 120 }); // the high cloud where a Fluffkin waits
 function fluffFollowers() { return FLUFFS.filter(f => f.state === 'follow'); }
 function updateFluffs(dt, t) {
-  const P = player;
+  const P = player, lk = layerKey();
   world.trail.unshift([P.x, P.y]); if (world.trail.length > 160) world.trail.length = 160;
   let k = 0;
   for (const f of FLUFFS) {
+    const star = f.kind === 'star', fam = () => FLUFFS.filter(z => z.kind === f.kind);
     if (f.state === 'wait') {
-      if (Math.hypot(P.x - f.hx, P.y - 70 - (f.hy - 20)) < 70) {
+      if ((f.layer || '') === lk && Math.hypot(P.x - f.hx, P.y - 70 - (f.hy - 20)) < 70) {
         f.state = 'follow'; f.px = f.hx; f.py = f.hy; Sound.giggle(); confetti(f.hx, f.hy - 30, 20, 300);
-        const n = FLUFFS.filter(z => z.state !== 'wait').length;
-        toast(`🐣 You found a baby Fluffkin! (${n} of 6) Take it home!`);
-        discover('fluff-' + f.id, null, f.hx, f.hy); discover('fluffkin', null); save();
+        const n = fam().filter(z => z.state !== 'wait').length;
+        toast(star ? `⭐ You found a Star Baby! (${n} of 6) Take it to the Star Nest!` : `🐣 You found a baby Fluffkin! (${n} of 6) Take it home!`);
+        discover((star ? 'star-' : 'fluff-') + f.id, null, f.hx, f.hy); discover(star ? 'starbaby' : 'fluffkin', null); save();
       }
     } else if (f.state === 'follow') {
       k++;
-      const tp = world.trail[Math.min(world.trail.length - 1, k * 16)] || [P.x, P.y];
+      const tp = world.trail[Math.min(world.trail.length - 1, 14 + k * 16)] || [P.x, P.y];
       if (Math.hypot(tp[0] - f.px, tp[1] - f.py) > 600) { f.px = tp[0]; f.py = tp[1]; }
       f.px += (tp[0] - f.px) * Math.min(1, dt * 7); f.py += (tp[1] - f.py) * Math.min(1, dt * 7);
-      if (Math.abs(P.x - HOUSE.door) < 170 && P.grounded && !P.ride) { f.state = 'enter'; f.enterT = 0; }
+      const atHome = star ? Math.abs(P.x - NEST.x) < 75 && Math.abs(P.y - NEST.y) < 4 : Math.abs(P.x - HOUSE.door) < 170 && !P.under;
+      if (atHome && P.grounded && !P.ride) { f.state = 'enter'; f.enterT = 0; }
     } else if (f.state === 'enter') {
-      f.enterT += dt; f.px += (HOUSE.door - f.px) * Math.min(1, dt * 4); f.py += (GROUND - f.py) * Math.min(1, dt * 4);
+      const tx = star ? NEST.x + 10 : HOUSE.door, ty = star ? NEST.y - 4 : GROUND;
+      f.enterT += dt; f.px += (tx - f.px) * Math.min(1, dt * 4); f.py += (ty - f.py) * Math.min(1, dt * 4);
       if (f.enterT > .7) {
-        f.state = 'home'; Sound.bell(NOTES[FLUFFS.filter(z => z.state === 'home').length], .06); burst(HOUSE.door, 380, 12, [f.c, '#fff']);
-        const home = FLUFFS.filter(z => z.state === 'home').length;
-        if (home === 6) { world.partyT = 5; toast('🎉 All the Fluffkins are home! PARTY!'); discover('allhome', null, HOUSE.x, 200); Sound.chime(); }
-        else toast(`🏠 Fluffkin home! (${home} of 6)`);
-        discover('fluffhome', null, HOUSE.x, 260); save();
+        f.state = 'home';
+        const home = fam().filter(z => z.state === 'home').length;
+        Sound.bell(NOTES[home % 8], .06); burst(tx, ty - 30, 12, [f.c, '#fff']);
+        if (home === 6) {
+          if (star) { world.nestParty = 5; toast('✨ All the Star Babies are home in the Star Nest!'); discover('allstars', null, NEST.x, 120); }
+          else { world.partyT = 5; toast('🎉 All the Fluffkins are home! PARTY!'); discover('allhome', null, HOUSE.x, 200); }
+          Sound.chime();
+        } else toast(star ? `🌟 Star Baby is home! (${home} of 6)` : `🏠 Fluffkin home! (${home} of 6)`);
+        discover(star ? 'nesthome' : 'fluffhome', null, tx, 260); save();
       }
     }
   }
   if (world.partyT > 0) { world.partyT -= dt; if (Math.random() < dt * 6) confetti(HOUSE.x + rand(-140, 140), 120, 14, 200); }
+  if (world.nestParty > 0) { world.nestParty -= dt; if (Math.random() < dt * 6) confetti(NEST.x + rand(-80, 80), 120, 12, 200); }
+}
+function drawFamilyMember(f, x, y, t, k, mood) { if (f.kind === 'star') drawStarBaby(x, y, f.c, t, k, mood); else drawFluff(x, y, f.c, t, k, mood); }
+function drawWaiting(t) {
+  for (const f of FLUFFS) {
+    if (f.state !== 'wait' || !cull(f.hx, 40)) continue;
+    if (f.layer && f.layer.startsWith('in:') && player.inside !== f.layer.slice(3)) continue;
+    drawFamilyMember(f, f.hx, f.hy, t, 0, 'wait');
+  }
 }
 function drawFluff(x, y, c, t, k, mood) {
   const hop = -Math.abs(Math.sin(t * 7 + k)) * (mood === 'wait' ? 5 : 9);
@@ -294,6 +310,7 @@ function updateBig(dt, t) {
     if (Math.abs(P.x - b.x) < 40 && Math.abs(P.y - 175 - b.y) < 40) ringBell(b);
   }
   world.swingCD = Math.max(0, (world.swingCD || 0) - dt);
+  updatePet(dt);
   updateSwings(dt); updateSeesaw(dt); updateHoops(dt); updateTrain(dt); updateFluffs(dt, t); updateClouds(dt, t); updateDance(dt);
   PEEKS.forEach(k => k.open = Math.max(0, k.open - dt));
   world.cannonT = Math.max(0, world.cannonT - dt);
@@ -393,7 +410,7 @@ function drawBigBack(t) {
   }
   // Fluffkin house
   if (cull(HOUSE.x, 200)) {
-    const home = FLUFFS.filter(f => f.state === 'home');
+    const home = FLUFFS.filter(f => f.kind === 'fluff' && f.state === 'home');
     ellipse(HOUSE.x, GROUND + 4, 120, 10, 'rgba(50,20,100,.2)');
     ctx.beginPath(); ctx.moveTo(HOUSE.x - 110, GROUND); ctx.lineTo(HOUSE.x - 110, 300); ctx.quadraticCurveTo(HOUSE.x, 140, HOUSE.x + 110, 300); ctx.lineTo(HOUSE.x + 110, GROUND); ctx.closePath();
     ctx.fillStyle = grad(0, 170, 0, 280, [[0, '#fff1b0'], [1, '#ffc46b']]); ctx.fill(); ctx.strokeStyle = '#e9a93a'; ctx.lineWidth = 6; ctx.stroke();
@@ -404,7 +421,7 @@ function drawBigBack(t) {
       if (home.length > i) { glow(wx, wy, 30, '#fff3a6', .7); drawFluff(wx, wy + 16, home[i].c, t, i, 'home'); }
     }
     star(HOUSE.x, 205, 13, '#ff6fae'); glow(HOUSE.x, 205, 26, '#fff3a6', .6);
-    for (let i = 0; i < 6; i++) ellipse(HOUSE.x - 50 + i * 20, 180, 5, 5, i < home.length ? FLUFFS.filter(f => f.state === 'home')[i].c : 'rgba(255,255,255,.4)', '#fff', 1.5);
+    for (let i = 0; i < 6; i++) ellipse(HOUSE.x - 50 + i * 20, 180, 5, 5, i < home.length ? home[i].c : 'rgba(255,255,255,.4)', '#fff', 1.5);
   }
   // clouds + bouncy castle floor
   if (cull(11700, 420)) {
@@ -440,8 +457,6 @@ function drawBigBack(t) {
   drawBitsRange();
   // train (behind the creature unless she is riding)
   if (camera + vw > 9800 && camera < 13760) drawTrain(t, false);
-  // waiting fluffkins
-  for (const f of FLUFFS) if (f.state === 'wait' && cull(f.hx, 40)) drawFluff(f.hx, f.hy, f.c, t, 0, 'wait');
 }
 function drawBigFront(t) {
   if (player.ride && player.ride.type === 'train') drawTrain(t, true);
@@ -453,7 +468,7 @@ function drawBigFront(t) {
     for (const x of [12490, 12550, 12610]) ellipse(x, 410, 16, 16, 'rgba(220,250,255,.25)', '#ffd36b', 3);
     rounded(12440, 440, 220, 12, 6, '#3fb8e0', '#ffd36b', 2);
   }
-  for (const f of FLUFFS) if ((f.state === 'follow' || f.state === 'enter') && cull(f.px, 40)) drawFluff(f.px, f.py, f.c, t, FLUFFS.indexOf(f), 'follow');
+  for (const f of FLUFFS) if ((f.state === 'follow' || f.state === 'enter') && cull(f.px, 40)) drawFamilyMember(f, f.px, f.py, t, FLUFFS.indexOf(f), 'follow');
   if (world.partyT > 0 && cull(HOUSE.x, 200)) for (let i = 0; i < 6; i++) drawFluff(HOUSE.x - 100 + i * 40, GROUND, FLUFFS[i].c, t * 1.5, i, 'party');
 }
 function drawBitsRange() {
