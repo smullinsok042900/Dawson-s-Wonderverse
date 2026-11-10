@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-10T05:02:57.044Z",
+  "date": "2026-11-10T05:10:04.448Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
   "passed": 54,
   "total": 54,
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 376 units"
+      "detail": "moved 375 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -47,7 +47,7 @@
     {
       "name": "JUMP leaves the ground",
       "ok": true,
-      "detail": "y=334 jumps=1"
+      "detail": "y=325 jumps=1"
     },
     {
       "name": "second JUMP in mid-air = double jump",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=137 v=469"
+      "detail": "dx=142 v=453"
     },
     {
       "name": "paint palette appears near the wall",
@@ -112,7 +112,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1179"
+      "detail": "x=1184"
     },
     {
       "name": "tapping buckets pours paint into the bowl",
@@ -137,7 +137,7 @@
     {
       "name": "colored bubbles float into the funnel and charge the battery",
       "ok": true,
-      "detail": "battery 4/6"
+      "detail": "battery 6/6"
     },
     {
       "name": "battery fills to 6",
@@ -152,7 +152,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "21,36,18"
+      "detail": "23,39,18"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -247,7 +247,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2691 → 2691"
+      "detail": "x 2690 → 2690"
     },
     {
       "name": "corrupt save data is ignored safely",

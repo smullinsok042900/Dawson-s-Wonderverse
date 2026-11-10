@@ -78,7 +78,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     await page.locator(`.creatureChoice[data-creature="${kind}"]`).tap(); await sleep(200);
     const s = await S(); check(`select ${kind}`, s.creature === kind);
     await teleport(560); const r = await center('#rightBtn'); await touch('touchStart', [{ ...r, id: 1 }]); await sleep(450);
-    await page.screenshot({ path: path.join(SHOTS, `04_${kind}_running.png`) });
+    await page.screenshot({ path: path.join(SHOTS, `04_${kind}_running.jpg`), type: 'jpeg', quality: 82 });
     await touch('touchEnd', []);
     await sleep(500);
   }
