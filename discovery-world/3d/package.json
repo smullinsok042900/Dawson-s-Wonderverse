@@ -1,0 +1,8 @@
+{
+  "name": "dawsons-discovery-world-3d",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Dawson's Discovery World in real 3D (Three.js). Builds to one offline HTML file.",
+  "scripts": { "build": "node build.mjs", "test": "node tests/smoke3d.cjs" },
+  "devDependencies": { "esbuild": "^0.25.0", "three": "^0.187.0" }
+}

@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T17:19:55.391Z",
+  "date": "2026-11-10T17:42:40.914Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 130,
-  "total": 130,
+  "passed": 134,
+  "total": 134,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 390 units"
+      "detail": "moved 399 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,7 +42,7 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 290 units"
+      "detail": "moved 287 units"
     },
     {
       "name": "JUMP leaves the ground",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=139 v=452"
+      "detail": "dx=135 v=469"
     },
     {
       "name": "paint palette appears near the wall",
@@ -132,7 +132,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1179"
+      "detail": "x=1175"
     },
     {
       "name": "JUMP while touching the climbing net climbs it",
@@ -147,7 +147,7 @@
     {
       "name": "walk the sky bridge to the lookout and find secret star 7",
       "ok": true,
-      "detail": "stars 1→2, x=1328"
+      "detail": "stars 1→2, x=1338"
     },
     {
       "name": "walking off the lookout grabs the zipline",
@@ -157,7 +157,7 @@
     {
       "name": "zipline drops you by the paint mixer",
       "ok": true,
-      "detail": "x=2023"
+      "detail": "x=2022"
     },
     {
       "name": "tap the engine ladder to climb it",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "42,23,36"
+      "detail": "41,24,37"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -217,7 +217,7 @@
     {
       "name": "launch flies you across the park",
       "ok": true,
-      "detail": "landed at x=4240"
+      "detail": "landed at x=4258"
     },
     {
       "name": "tap the Ferris wheel to ride",
@@ -267,7 +267,7 @@
     {
       "name": "the lift carries the creature up",
       "ok": true,
-      "detail": "y=238"
+      "detail": "y=236"
     },
     {
       "name": "walk onto the balcony and find secret star 8",
@@ -287,7 +287,7 @@
     {
       "name": "star bits get collected while playing",
       "ok": true,
-      "detail": "105 → 114"
+      "detail": "106 → 115"
     },
     {
       "name": "JUMP-JUMP-JUMP climbs all 5 levels of the Sky Tower",
@@ -307,7 +307,7 @@
     {
       "name": "giant slide lands you by the swings",
       "ok": true,
-      "detail": "x=8636"
+      "detail": "x=8632"
     },
     {
       "name": "tap the swing to ride it",
@@ -317,7 +317,7 @@
     {
       "name": "JUMP flings you off the swing",
       "ok": true,
-      "detail": "vx=251 vy=-93"
+      "detail": "vx=-296 vy=-229"
     },
     {
       "name": "the seesaw shoots its ball through the hoop",
@@ -347,7 +347,7 @@
     {
       "name": "the confetti cannon blasts you sky-high",
       "ok": true,
-      "detail": "y=25"
+      "detail": "y=26"
     },
     {
       "name": "walk on the dance floor to light it up",
@@ -372,7 +372,7 @@
     {
       "name": "walk into the low tunnel: the creature crawls (and the pet follows)",
       "ok": true,
-      "detail": "x=935 pet=804"
+      "detail": "x=932 pet=781"
     },
     {
       "name": "find a lost Star Baby in the tunnel",
@@ -415,17 +415,37 @@
       "detail": ""
     },
     {
-      "name": "PAW at the bottom of the stairs starts walking up",
+      "name": "tap the cupboard under the stairs: it opens (and does NOT start the stairs)",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "the stairs lead up to the second floor",
+      "name": "tapping the staircase itself does nothing",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "PAW at the bottom of the stairs puts you on the first step (no automatic walking)",
+      "ok": true,
+      "detail": "k=0"
+    },
+    {
+      "name": "hold ▶ to walk up the stairs, let go to stop part-way",
+      "ok": true,
+      "detail": "k=0.51"
+    },
+    {
+      "name": "◀ turns round and walks back down",
+      "ok": true,
+      "detail": "k 0.51 → 0.26"
+    },
+    {
+      "name": "walk off the top of the stairs onto the second floor",
       "ok": true,
       "detail": "y=116"
     },
     {
-      "name": "tap the attic stairs: walk up to the third floor",
+      "name": "the attic stairs: PAW, then hold ◀ to walk up to the third floor",
       "ok": true,
       "detail": "y=-218"
     },
@@ -435,12 +455,12 @@
       "detail": ""
     },
     {
-      "name": "PAW at the top of the stairs walks back down",
+      "name": "PAW at the top of the stairs puts you on the top step",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "back on the second floor",
+      "name": "hold ▶ to walk back down to the second floor",
       "ok": true,
       "detail": ""
     },
@@ -527,7 +547,7 @@
     {
       "name": "the rainbow slide lands you back on the ground",
       "ok": true,
-      "detail": "x=2387 y=450"
+      "detail": "x=2388 y=450"
     },
     {
       "name": "the balloon bear gives you a balloon that floats with you",
@@ -617,7 +637,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "81 discoveries"
+      "detail": "82 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -627,7 +647,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2712 → 2712"
+      "detail": "x 2695 → 2695"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -642,7 +662,7 @@
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.4ms, quality 0.70"
+      "detail": "median 16.7ms, p95 16.8ms, quality 0.70"
     },
     {
       "name": "portrait shows the turn-sideways tip",

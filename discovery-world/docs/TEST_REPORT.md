@@ -1,11 +1,21 @@
-# Test report — Milestone 3, build 11
+# Test report — Milestone 3, build 12
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 130 / 130 checks passed, no console errors
+## Result: 134 / 134 checks passed, no console errors
+
+Build 12 rewrote the stair checks for stairs the child walks herself:
+- tapping the cupboard under the stairs opens it and does not start the stairs
+- tapping the staircase itself does nothing
+- PAW puts the creature on the first step, and it stays there until a button is pressed
+- holding ▶ walks part-way up, and letting go stops
+- ◀ turns round and walks back down
+- walking off the top lands on the second floor
+- the attic stairs work with ◀, and walking down works from the top step
+
 
 Build 11 replaced the old one-room house checks and added ten more:
 - going inside lands you in a full-sized house on its ground floor

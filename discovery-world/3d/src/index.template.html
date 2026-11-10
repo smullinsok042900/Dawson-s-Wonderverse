@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7d4fd8">
+<title>Dawson's Discovery World 3D</title>
+<style>/*__CSS__*/</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="flash"></div>
+<div id="top">
+  <div id="brand"><svg class="brandStar" viewBox="0 0 24 24"><path d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg><span><small>Dawson's</small><b>Discovery World 3D</b></span></div>
+  <div id="upperRight">
+    <div class="pill" id="bitsPill" aria-label="star bits"><svg viewBox="0 0 24 24"><path d="M12 2l3 6.6 7.2.8-5.4 4.9 1.5 7.1L12 17.8 5.7 21.4l1.5-7.1L1.8 9.4 9 8.6z"/></svg><span id="bitsCount">0</span></div>
+    <div class="pill" id="fluffPill" aria-label="Fluffkins home"><span class="fluffIcon"></span><span id="fluffCount">0/6</span></div>
+    <div id="chooser">
+      <button class="creatureChoice" data-c="pip" aria-label="Pip"><img alt=""></button>
+      <button class="creatureChoice" data-c="zuzu" aria-label="Zuzu"><img alt=""></button>
+      <button class="creatureChoice" data-c="jelly" aria-label="Jelly"><img alt=""></button>
+    </div>
+    <button class="pill" id="soundBtn" aria-label="sound"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="paintTools"></div>
+<div id="bottom">
+  <div class="controls">
+    <button class="ctrl" id="leftBtn" aria-label="left"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="ctrl right" id="rightBtn" aria-label="right"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="controls">
+    <button class="ctrl paw" id="pawBtn" aria-label="do it"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6.2" r="2.2"/><circle cx="14" cy="6.2" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></button>
+    <button class="ctrl jump" id="jumpBtn" aria-label="jump"><svg viewBox="0 0 24 24"><path d="M12 4l7 8h-4v7H9v-7H5z"/></svg></button>
+  </div>
+</div>
+<div id="overlay">
+  <div id="intro">
+    <div class="eyebrow">A magical world to explore</div>
+    <h1>Dawson's <span>Discovery World</span> 3D</h1>
+    <div class="previewCrew">
+      <button class="introPick" data-c="pip"><img alt=""><b>Pip</b></button>
+      <button class="introPick" data-c="zuzu"><img alt=""><b>Zuzu</b></button>
+      <button class="introPick" data-c="jelly"><img alt=""><b>Jelly</b></button>
+    </div>
+    <button id="playBtn">LET'S PLAY ▶</button>
+  </div>
+</div>
+<div id="rotate"><div>↻</div></div>
+<script>/*__JS__*/</script>
+</body>
+</html>

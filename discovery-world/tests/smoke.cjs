@@ -307,21 +307,34 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await page.evaluate(() => { __DDW.player.x = 21300; }); await sleep(400);
   await tapWorld(21420, 345); await sleep(100); check('play the big piano in the living room', (await S()).disc.includes('piano'));
   await page.screenshot({ path: path.join(SHOTS, '31_inside_house.jpg'), type: 'jpeg', quality: 82 });
+  await page.evaluate(() => { __DDW.player.x = 20640; }); await sleep(300);
+  await tapWorld(20720, 380); await sleep(150); c = await S();
+  check('tap the cupboard under the stairs: it opens (and does NOT start the stairs)', c.disc.includes('cupboard') && !(await page.evaluate(() => !!__DDW.player.stair)) && Math.abs(c.y - GROUND_Y) < 1);
+  await tapWorld(20500, 300); await sleep(150);
+  check('tapping the staircase itself does nothing', !(await page.evaluate(() => !!__DDW.player.stair)));
   await page.evaluate(() => { __DDW.player.x = 20380; }); await sleep(250);
-  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(100);
-  check('PAW at the bottom of the stairs starts walking up', await page.evaluate(() => !!__DDW.player.stair));
-  await sleep(2400); c = await S(); check('the stairs lead up to the second floor', await page.evaluate(() => __DDW.houseLevel()) === 1 && Math.abs(c.y - 116) < 1, `y=${Math.round(c.y)}`);
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(500);
+  const k0 = await page.evaluate(() => __DDW.player.stair && __DDW.player.stair.k);
+  check('PAW at the bottom of the stairs puts you on the first step (no automatic walking)', k0 === 0, `k=${k0}`);
+  await holdBtn('#rightBtn', 1100); await sleep(300);
+  const k1 = await page.evaluate(() => __DDW.player.stair && __DDW.player.stair.k);
+  check('hold ▶ to walk up the stairs, let go to stop part-way', k1 > .2 && k1 < .8, `k=${k1 && k1.toFixed(2)}`);
+  await holdBtn('#leftBtn', 500); const k2 = await page.evaluate(() => __DDW.player.stair && __DDW.player.stair.k);
+  check('◀ turns round and walks back down', k2 < k1, `k ${k1 && k1.toFixed(2)} → ${k2 && k2.toFixed(2)}`);
+  await holdBtn('#rightBtn', 2600); await sleep(200); c = await S();
+  check('walk off the top of the stairs onto the second floor', await page.evaluate(() => __DDW.houseLevel()) === 1 && Math.abs(c.y - 116) < 1 && !(await page.evaluate(() => !!__DDW.player.stair)), `y=${Math.round(c.y)}`);
   await page.screenshot({ path: path.join(SHOTS, '37_house_upstairs.jpg'), type: 'jpeg', quality: 82 });
-  await page.evaluate(() => { __DDW.player.x = 21000; }); await sleep(250);
-  await tapWorld(20900, 0); await sleep(2800); // tap the staircase itself
-  c = await S(); check('tap the attic stairs: walk up to the third floor', await page.evaluate(() => __DDW.houseLevel()) === 2 && Math.abs(c.y + 218) < 1, `y=${Math.round(c.y)}`);
+  await page.evaluate(() => { __DDW.player.x = 21100; }); await sleep(250);
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(150);
+  await holdBtn('#leftBtn', 2700); await sleep(200); c = await S();
+  check('the attic stairs: PAW, then hold ◀ to walk up to the third floor', await page.evaluate(() => __DDW.houseLevel()) === 2 && Math.abs(c.y + 218) < 1, `y=${Math.round(c.y)}`);
   await page.evaluate(() => { __DDW.player.x = 21250; }); await sleep(500);
   await tapWorld(21400, -250); await sleep(100); check('open the treasure chest in the attic', (await S()).disc.includes('chest'));
   await page.screenshot({ path: path.join(SHOTS, '38_house_attic.jpg'), type: 'jpeg', quality: 82 });
   await page.evaluate(() => { __DDW.player.x = 20600; }); await sleep(250);
-  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(200); // at the top of the stairs: PAW goes down
-  check('PAW at the top of the stairs walks back down', await page.evaluate(() => __DDW.player.stair && !__DDW.player.stair.up));
-  await sleep(2800); check('back on the second floor', await page.evaluate(() => __DDW.houseLevel()) === 1);
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(200); // at the top of the stairs: PAW steps on
+  check('PAW at the top of the stairs puts you on the top step', await page.evaluate(() => !!__DDW.player.stair && __DDW.player.stair.k === 1));
+  await holdBtn('#rightBtn', 2700); await sleep(200); check('hold ▶ to walk back down to the second floor', await page.evaluate(() => __DDW.houseLevel() === 1 && !__DDW.player.stair));
   await page.evaluate(() => { const P = __DDW.player; P.x = 21380; P.y = 40; P.vy = 50; P.grounded = false; }); // drop onto the bouncy bed
   let minY = 999; for (let i = 0; i < 25; i++) { minY = Math.min(minY, (await S()).y); await sleep(40); }
   check('bounce on the bouncy bed upstairs', minY < 0, `highest y=${Math.round(minY)}`);

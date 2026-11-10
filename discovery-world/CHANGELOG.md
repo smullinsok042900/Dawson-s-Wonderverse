@@ -1,5 +1,10 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 3 · build 12 — stairs you walk yourself; cupboard fix (feedback #6)
+Previous build backed up as `backups/M3_build11_index.html`.
+- **Fixed:** tapping the cupboard under the stairs used to start the stairs instead of opening the cupboard. Tapping the staircase itself no longer does anything, so nothing near the stairs can start them by accident.
+- **Stairs are now walked by the child.** Tap the arrow bubble at the bottom or top (or press PAW there) to step onto the stairs. Then hold ◀ or ▶ to walk up or down. She can stop part-way or turn round, and walking off either end puts her on that floor. Each step still plays a note.
+
 ## Milestone 3 · build 11 — real walk-in houses with rooms and stairs (feedback #5)
 Previous build backed up as `backups/M3_build10_index.html`.
 - **Going through a front door now takes you into a full-sized house.** Before, the inside was one small box the size of the outside wall. Now each house is a big cut-away doll's house sized for the creature: rooms side by side, floors stacked above each other, and doorways between rooms.

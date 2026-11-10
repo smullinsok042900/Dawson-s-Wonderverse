@@ -1,0 +1,205 @@
+// ===================================================================
+// creatures.js: Pip, Zuzu and Jelly as real 3D models built from smooth
+// shapes, with shiny "toy" materials and procedural animation:
+// walking, squash and stretch, springy ears/tail/antennae, blinking,
+// turning to face where they walk, and a happy wiggle when tickled.
+// Also the baby Fluffkins.
+// ===================================================================
+import * as THREE from 'three';
+
+export const CREATURES = {
+  pip: { name: 'Pip', jump: [9.4, 8.2], body: '#f2c2ff' },
+  zuzu: { name: 'Zuzu', jump: [9.6, 8.4], body: '#ffd84a' },
+  jelly: { name: 'Jelly', jump: [9.8, 8.6], body: '#7ef0c8' },
+};
+const toy = (color, o = {}) => new THREE.MeshPhysicalMaterial({
+  color, roughness: o.r ?? .42, metalness: o.m ?? 0, clearcoat: o.cc ?? .7, clearcoatRoughness: o.ccr ?? .22,
+  sheen: o.sheen ?? 0, sheenColor: new THREE.Color(o.sheenColor ?? '#ffffff'), sheenRoughness: .5,
+  emissive: new THREE.Color(o.em ?? '#000000'), emissiveIntensity: o.ei ?? 1,
+  transparent: o.opacity != null, opacity: o.opacity ?? 1, iridescence: o.irid ?? 0, iridescenceIOR: 1.3,
+});
+export { toy };
+const SPH = new THREE.SphereGeometry(1, 32, 22);
+const SPH_LO = new THREE.SphereGeometry(1, 16, 12);
+function ball(mat, r, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1, lo) {
+  const m = new THREE.Mesh(lo ? SPH_LO : SPH, mat); m.scale.set(r * sx, r * sy, r * sz); m.position.set(x, y, z); m.castShadow = true; return m;
+}
+// a spring for wobbly parts
+const spring = () => ({ x: 0, v: 0 });
+function stepSpring(s, target, k, damp, dt) { s.v += (target - s.x) * k * dt; s.v *= Math.exp(-damp * dt); s.x += s.v * dt; return s.x; }
+
+const EYE_WHITE = toy('#ffffff', { r: .2, cc: 1 }), IRIS = toy('#2a0f45', { r: .15, cc: 1 }), SHINE = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+const MOUTH = new THREE.MeshStandardMaterial({ color: '#5a1a4a', roughness: .6 }), CHEEK = toy('#ff8fc4', { r: .6, cc: 0, opacity: .75 });
+function makeEye(r, irisCol) {
+  const g = new THREE.Group();
+  const white = ball(EYE_WHITE, r, 0, 0, 0, 1, 1.15, .55); white.castShadow = false;
+  const iris = ball(irisCol ? toy(irisCol, { r: .15, cc: 1 }) : IRIS, r * .72, 0, -r * .06, r * .32, 1, 1.12, .5); iris.castShadow = false;
+  const pupil = ball(IRIS, r * .38, 0, -r * .06, r * .5, 1, 1.1, .4); pupil.castShadow = false;
+  const s1 = ball(SHINE, r * .24, -r * .25, r * .28, r * .62); const s2 = ball(SHINE, r * .11, r * .22, -r * .3, r * .6);
+  s1.castShadow = s2.castShadow = false;
+  g.add(white, iris, pupil, s1, s2); return g;
+}
+function makeMouth(w) {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(w, w * .22, 8, 20, Math.PI), MOUTH); m.rotation.z = Math.PI; return m;
+}
+function face(parent, { y, z, spread, eyeR, mouthY, irisCol, cheeks = true }) {
+  const eyes = [-1, 1].map(s => { const e = makeEye(eyeR, irisCol); e.position.set(s * spread, y, z); e.rotation.y = s * .22; parent.add(e); return e; });
+  const mouth = makeMouth(eyeR * .55); mouth.position.set(0, mouthY, z + .02); parent.add(mouth);
+  if (cheeks) [-1, 1].forEach(s => { const c = ball(CHEEK, eyeR * .55, s * (spread + eyeR * .55), mouthY + eyeR * .2, z - .03, 1, .6, .3); c.castShadow = false; parent.add(c); });
+  return { eyes, mouth };
+}
+// a glossy rounded star (Zuzu, star bits, decorations)
+export function starShape(outer = 1, inner = .48, pts = 5) {
+  const sh = new THREE.Shape();
+  for (let i = 0; i < pts * 2; i++) { const a = Math.PI / 2 + i * Math.PI / pts, r = i % 2 ? inner : outer; const x = Math.cos(a) * r, y = Math.sin(a) * r; i ? sh.lineTo(x, y) : sh.moveTo(x, y); }
+  sh.closePath(); return sh;
+}
+export function starGeometry(outer, inner, depth, bevel, seg = 3) {
+  const g = new THREE.ExtrudeGeometry(starShape(outer, inner), { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * .9, bevelSegments: seg, curveSegments: 4 });
+  g.center(); g.computeVertexNormals(); return g;
+}
+
+// ---------------------------------------------------------------- PIP
+function buildPip(st) {
+  const fur = toy(st.body || '#f2c2ff', { r: .55, cc: .35, sheen: 1, sheenColor: '#ffe6fb' });
+  const cream = toy('#fff4fb', { r: .5, cc: .3, sheen: .8 }), pink = toy('#ff9fd2', { r: .5 });
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const torso = ball(fur, .42, 0, .6, 0, 1, 1.02, .92); body.add(torso);
+  body.add(ball(cream, .3, 0, .56, .2, 1, 1.05, .7));
+  const head = new THREE.Group(); head.position.set(0, 1.16, .02); body.add(head);
+  head.add(ball(fur, .5, 0, 0, 0, 1.06, .95, .95));
+  head.add(ball(cream, .26, 0, -.15, .33, 1.25, .8, .7)); // muzzle
+  head.add(ball(pink, .055, 0, -.04, .5)); // nose
+  const F = face(head, { y: .06, z: .38, spread: .19, eyeR: .14, mouthY: -.16, irisCol: '#7a3fd0' });
+  // ears with pink insides (springy)
+  const ears = [-1, 1].map(s => {
+    const piv = new THREE.Group(); piv.position.set(s * .22, .36, -.04); piv.rotation.z = -s * .28; head.add(piv);
+    const e = new THREE.Mesh(new THREE.CapsuleGeometry(.11, .46, 6, 16), fur); e.position.y = .3; e.castShadow = true; piv.add(e);
+    const inn = new THREE.Mesh(new THREE.CapsuleGeometry(.065, .36, 6, 12), pink); inn.position.set(0, .3, .06); piv.add(inn);
+    return piv;
+  });
+  // flying goggles on the forehead
+  const gold = toy('#ffc531', { r: .25, m: .6, cc: 1 }), lens = toy('#8fe3ff', { r: .05, opacity: .7, cc: 1 });
+  [-1, 1].forEach(s => { const r = new THREE.Mesh(new THREE.TorusGeometry(.1, .03, 10, 24), gold); r.position.set(s * .13, .3, .36); r.rotation.x = -.5; head.add(r); const l = ball(lens, .085, s * .13, .3, .36, 1, 1, .3); l.rotation.x = -.5; l.castShadow = false; head.add(l); });
+  // arms / paws and feet
+  const arms = [-1, 1].map(s => { const a = ball(fur, .13, s * .4, .62, .12, .9, 1.2, .9); body.add(a); return a; });
+  const feet = [-1, 1].map(s => { const f = ball(cream, .15, s * .18, .1, .06, 1, .7, 1.35); root.add(f); return f; });
+  // fairy wings (iridescent)
+  const wingMat = toy('#e6f6ff', { r: .1, opacity: .7, irid: 1, cc: 1 });
+  const wings = [-1, 1].map(s => { const piv = new THREE.Group(); piv.position.set(s * .2, .9, -.3); body.add(piv); const w = ball(wingMat, .3, s * .25, .12, 0, 1, .62, .12); w.rotation.z = s * .5; w.castShadow = false; piv.add(w); const w2 = ball(wingMat, .2, s * .22, -.2, 0, 1, .6, .1); w2.rotation.z = -s * .3; w2.castShadow = false; piv.add(w2); return piv; });
+  // curly rainbow tail made of fluffy puffs
+  const tail = new THREE.Group(); tail.position.set(0, .45, -.35); body.add(tail);
+  const tcols = ['#ff7ab8', '#ffb35c', '#ffe066', '#7be08a', '#7fc8ff', '#b58cff'];
+  const puffs = tcols.map((c, i) => { const p = ball(toy(c, { r: .5, sheen: 1 }), .16 - i * .012, 0, 0, 0); tail.add(p); return p; });
+  return { root, body, head, F, ears, arms, feet, wings, tail, puffs, torso };
+}
+// --------------------------------------------------------------- ZUZU
+function buildZuzu(st) {
+  const gold = toy(st.body || '#ffd84a', { r: .3, cc: 1, em: '#ff9a2e', ei: .12 });
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const starM = new THREE.Mesh(starGeometry(.66, .38, .22, .14, 4), gold); starM.position.y = .98; starM.castShadow = true; body.add(starM);
+  const head = new THREE.Group(); head.position.set(0, .98, .22); body.add(head);
+  const F = face(head, { y: .06, z: .06, spread: .14, eyeR: .12, mouthY: -.13, irisCol: '#2f6fff' });
+  // antenna with a glowing ball
+  const ant = new THREE.Group(); ant.position.set(0, 1.58, 0); body.add(ant);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(.018, .022, .3, 8), toy('#ffb35c')); stalk.position.y = .15; ant.add(stalk);
+  const glowM = toy('#fff6b0', { em: '#ffe36e', ei: 1.4 }); ant.add(ball(glowM, .08, 0, .33, 0));
+  const leg = toy('#ffb35c', { r: .35 });
+  const feet = [-1, 1].map(s => { const l = new THREE.Mesh(new THREE.CapsuleGeometry(.06, .22, 4, 10), leg); l.position.set(s * .14, .3, 0); l.castShadow = true; body.add(l); const f = ball(toy('#ff7ab8', { r: .4 }), .12, s * .15, .09, .05, 1, .65, 1.3); root.add(f); return f; });
+  // baby stars that orbit Zuzu
+  const babyG = starGeometry(.12, .06, .05, .03, 2);
+  const babies = ['#ff9fd2', '#9fe6ff', '#c9a6ff'].map(c => { const b = new THREE.Mesh(babyG, toy(c, { em: c, ei: .35 })); body.add(b); return b; });
+  return { root, body, head, F, ears: [ant], arms: [], feet, wings: [], babies, starM };
+}
+// -------------------------------------------------------------- JELLY
+function buildJelly(st) {
+  const col = st.body || '#7ef0c8';
+  const jm = toy(col, { r: .08, cc: 1, opacity: .82, irid: .5, em: col, ei: .08 });
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const geo = new THREE.SphereGeometry(.62, 40, 28); const base = geo.attributes.position.array.slice();
+  const blob = new THREE.Mesh(geo, jm); blob.position.y = .58; blob.castShadow = true; body.add(blob);
+  const core = ball(toy('#ffffff', { em: '#c9fff0', ei: .6, opacity: .5 }), .26, 0, .5, -.05); core.castShadow = false; body.add(core);
+  const head = new THREE.Group(); head.position.set(0, .7, .5); body.add(head);
+  const F = face(head, { y: .04, z: .04, spread: .18, eyeR: .135, mouthY: -.16, irisCol: '#1f8f6f' });
+  const ants = [-1, 1].map(s => {
+    const piv = new THREE.Group(); piv.position.set(s * .2, 1.12, .05); piv.rotation.z = -s * .3; body.add(piv);
+    const st2 = new THREE.Mesh(new THREE.CylinderGeometry(.02, .028, .36, 8), jm); st2.position.y = .18; piv.add(st2);
+    piv.add(ball(toy('#ff9fd2', { em: '#ff6fae', ei: .4 }), .075, 0, .38, 0)); return piv;
+  });
+  const frill = [0, 1, 2].map(i => { const f = ball(toy(['#ff9fd2', '#ffe066', '#9fe6ff'][i], { opacity: .9 }), .09, (i - 1) * .16, 1.16, -.12); body.add(f); return f; });
+  return { root, body, head, F, ears: ants, arms: [], feet: [], wings: [], blob, base, frill };
+}
+
+export function makeCreature(kind, style = {}) {
+  const P = kind === 'pip' ? buildPip(style) : kind === 'zuzu' ? buildZuzu(style) : buildJelly(style);
+  const A = { t: Math.random() * 9, phase: 0, run: 0, squash: spring(), turn: 0, blink: 2, earS: spring(), tailS: spring(), react: 0, prevGround: true, prevVy: 0 };
+  P.root.traverse(o => { if (o.isMesh) o.userData.creature = true; });
+  function update(dt, s) {
+    A.t += dt; const speed = Math.abs(s.vx || 0);
+    A.run += ((s.grounded && !s.seated ? Math.min(1, speed / 5) : 0) - A.run) * Math.min(1, dt * 10);
+    A.phase += dt * (kind === 'jelly' ? 8 : 11) * (s.grounded ? Math.min(1.2, speed / 5) : 0);
+    // landing squash
+    if (!A.prevGround && s.grounded && A.prevVy > 4) { A.squash.v -= Math.min(10, A.prevVy * .9); }
+    if (A.prevGround && !s.grounded && s.vy > 3) A.squash.v += 6;
+    A.prevGround = s.grounded; A.prevVy = s.vy || 0;
+    const sq = stepSpring(A.squash, 0, 180, 9, dt);
+    const breathe = Math.sin(A.t * 2.4) * .02, sy = 1 + sq * .12 + breathe, sx = 1 - sq * .07 - breathe * .5;
+    P.body.scale.set(sx, sy, sx);
+    // face the way you walk, but keep the face toward the camera
+    const target = (s.facing || 1) * (A.run > .15 || !s.grounded ? 1.05 : .5) + (A.react > 0 ? A.react * Math.PI * 4 : 0);
+    A.turn += (target - A.turn) * Math.min(1, dt * 9); P.root.rotation.y = A.turn;
+    // walk bob + lean
+    const bob = Math.abs(Math.sin(A.phase)) * .09 * A.run;
+    P.body.position.y = bob; P.body.rotation.z = -Math.sin(A.phase) * .05 * A.run; P.body.rotation.x = A.run * .1 + (s.grounded ? 0 : -.12);
+    P.feet.forEach((f, i) => { const ph = A.phase + i * Math.PI; f.position.z = .06 + Math.sin(ph) * .18 * A.run; f.position.y = (kind === 'pip' ? .1 : .09) + Math.max(0, Math.cos(ph)) * .12 * A.run + (s.grounded ? 0 : .06); });
+    P.arms.forEach((a, i) => { a.position.z = .12 - Math.sin(A.phase + i * Math.PI) * .1 * A.run; a.position.y = .62 + (s.grounded ? 0 : .12) + (A.react > 0 ? .2 : 0); });
+    // springy ears / antennae / tail
+    const ear = stepSpring(A.earS, -(s.vy || 0) * .03 - sq * .4, 120, 7, dt);
+    P.ears.forEach((e, i) => { const sgn = i ? 1 : -1; e.rotation.x = ear * .6 + Math.sin(A.t * 3 + i) * .04; if (kind !== 'zuzu') e.rotation.z = -sgn * (kind === 'pip' ? .28 : .3) + sgn * ear * .25; });
+    if (P.tail) { const tw = stepSpring(A.tailS, -(s.vx || 0) * .05 * (s.facing || 1), 90, 6, dt); P.puffs.forEach((p, i) => { const a = i * .55 + tw * .3 + Math.sin(A.t * 4 + i * .5) * .08; p.position.set(Math.sin(a * .6) * .1 * i, Math.sin(a) * .1 * i + i * .06, -Math.cos(a) * .09 * i); }); }
+    P.wings.forEach((w, i) => { w.rotation.y = (i ? 1 : -1) * (.3 + Math.sin(A.t * (s.grounded ? 4 : 22)) * (s.grounded ? .12 : .5)); });
+    if (P.babies) P.babies.forEach((b, i) => { const a = A.t * 2 + i * 2.1; b.position.set(Math.cos(a) * .75, 1.05 + Math.sin(a * 1.3) * .25, Math.sin(a) * .55); b.rotation.z = A.t * 3; });
+    if (P.starM) P.starM.rotation.z = Math.sin(A.t * 2) * .06 + (A.react > 0 ? A.react * 2 : 0);
+    if (P.blob) { // soft-body wobble for Jelly
+      const pos = P.blob.geometry.attributes.position, b = P.base, w = .04 + Math.min(.1, Math.abs(sq) * .15);
+      for (let i = 0; i < pos.count; i++) {
+        const x = b[i * 3], y = b[i * 3 + 1], z = b[i * 3 + 2];
+        const k = 1 + Math.sin(A.t * 6 + y * 6 + x * 3) * w * (y + .62) * .7;
+        pos.array[i * 3] = x * k; pos.array[i * 3 + 1] = y < 0 ? y * .45 : y; pos.array[i * 3 + 2] = z * k;
+      }
+      pos.needsUpdate = true; P.blob.geometry.computeVertexNormals();
+      P.frill.forEach((f, i) => { f.position.y = 1.16 + Math.sin(A.t * 5 + i) * .04; });
+    }
+    // blinking
+    A.blink -= dt; const closed = A.blink < .12; if (A.blink < 0) A.blink = 2 + Math.random() * 3;
+    P.F.eyes.forEach(e => { e.scale.y = closed ? .1 : (s.happy > 0 ? .75 : 1); });
+    P.F.mouth.scale.setScalar(s.happy > 0 || A.react > 0 ? 1.35 : 1);
+    A.react = Math.max(0, A.react - dt);
+  }
+  return { kind, root: P.root, parts: P, update, tickle() { A.react = .5; A.squash.v += 5; } };
+}
+
+// ----------------------------------------------------------- FLUFFKIN
+const fluffGeo = (() => {
+  const g = new THREE.IcosahedronGeometry(.3, 4), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const v = new THREE.Vector3().fromBufferAttribute(p, i); const n = 1 + (Math.sin(v.x * 40) * Math.sin(v.y * 37) * Math.sin(v.z * 43)) * .06; v.multiplyScalar(n); p.setXYZ(i, v.x, v.y, v.z); }
+  g.computeVertexNormals(); return g;
+})();
+export function makeFluff(color) {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const fur = toy(color, { r: .7, cc: .2, sheen: 1, sheenColor: '#ffffff' });
+  const b = new THREE.Mesh(fluffGeo, fur); b.position.y = .3; b.castShadow = true; body.add(b);
+  const ears = [-1, 1].map(s => { const e = new THREE.Mesh(new THREE.CapsuleGeometry(.06, .2, 4, 10), fur); e.position.set(s * .12, .62, 0); e.rotation.z = -s * .35; e.castShadow = true; body.add(e); return e; });
+  const head = new THREE.Group(); head.position.set(0, .34, .26); body.add(head);
+  const F = face(head, { y: .02, z: 0, spread: .1, eyeR: .07, mouthY: -.08 });
+  let t = Math.random() * 9;
+  return {
+    root, update(dt, mood = 'wait', facing = 0) {
+      t += dt; const hop = Math.abs(Math.sin(t * (mood === 'follow' ? 9 : mood === 'sleep' ? 0 : 5))) * (mood === 'wait' ? .1 : mood === 'sleep' ? 0 : .22);
+      body.position.y = hop; body.scale.set(1 + (mood === 'sleep' ? Math.sin(t * 2) * .03 : 0), 1 - hop * .3, 1);
+      ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (-.35 - Math.sin(t * 6) * .12); });
+      root.rotation.y += ((facing ? facing * .8 : Math.sin(t * .7) * .4) - root.rotation.y) * Math.min(1, dt * 6);
+      F.eyes.forEach(e => { e.scale.y = mood === 'sleep' ? .08 : 1; });
+    },
+  };
+}
