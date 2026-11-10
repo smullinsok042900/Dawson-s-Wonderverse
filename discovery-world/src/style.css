@@ -146,3 +146,21 @@ body.playing #toast{top:calc(max(8px,env(safe-area-inset-top)) + 64px)}
 .pill.bits{background:linear-gradient(180deg,#ff7ab8,#d43f8f);box-shadow:0 4px 0 #8f1f5c,0 8px 16px #2b105566}
 .pill.bits svg{width:24px;height:24px;fill:#fff3a6;stroke:#ffb01f}
 @media (max-width:760px){.pill{padding:3px 9px 3px 6px;font-size:15px}}
+
+/* creature style panel */
+#styleBtn{border-radius:50%;width:50px;padding:0;background:radial-gradient(circle at 35% 30%,#c9a6ff,#7d45d8);box-shadow:0 4px 0 #4b2096,0 8px 16px #2b105566}
+#styleBtn svg{width:30px;height:30px;fill:none;stroke:none;filter:none}
+#stylePanel{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(40,16,80,.45);padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+#stylePanel[hidden]{display:none}
+.sp-card{display:flex;gap:14px;align-items:center;background:linear-gradient(160deg,#fffdf6,#f2e8ff);border:5px solid #fff;border-radius:30px;padding:12px 16px;box-shadow:0 10px 0 #47216c,0 24px 50px #29104c99;max-height:100%;overflow:auto}
+.sp-left{display:flex;flex-direction:column;align-items:center;gap:10px}
+#stylePreview{width:150px;height:150px;border-radius:24px;background:radial-gradient(circle at 50% 40%,#fff,#e9dcff)}
+#styleDone{width:84px;height:56px;border-radius:28px;border:4px solid #fff;background:linear-gradient(180deg,#7be08a,#36b34f);color:#fff;font-size:30px;font-weight:900;box-shadow:0 5px 0 #23803a}
+#spRows{display:flex;flex-direction:column;gap:7px}
+.sp-row{display:flex;gap:6px;align-items:center}
+.sp-row .lbl{width:30px;font-size:22px;text-align:center}
+.sp-opt{width:40px;height:40px;border-radius:12px;border:3px solid #fff;padding:0;box-shadow:0 2px 5px rgba(40,10,80,.3);display:grid;place-items:center;background:#fff}
+.sp-opt.sel{box-shadow:0 0 0 3px #ffc531,0 0 10px 3px #ffe58a;transform:translateY(-2px)}
+.sp-opt svg{width:28px;height:28px}
+@media (max-height:430px){#stylePreview{width:120px;height:120px}.sp-opt{width:34px;height:34px;border-radius:10px}.sp-opt svg{width:24px;height:24px}#spRows{gap:4px}.sp-row .lbl{font-size:18px;width:24px}#styleDone{height:46px;font-size:24px}}
+@media (max-height:430px){#styleBtn{width:46px}}

@@ -81,6 +81,7 @@ function initInput() {
     toast(world.discoveries.size ? 'Welcome back! Your world is just how you left it.' : 'Move with the arrows, JUMP, and touch everything!');
   });
 
+  initStylePanel();
   canvas.addEventListener('pointerdown', onDown);
   canvas.addEventListener('pointermove', onMove);
   canvas.addEventListener('pointerup', endPointer);
@@ -150,3 +151,53 @@ function addPaint(p) {
   if (Math.random() < .3) burst(q[0], q[1], 1, [s.color], 'dot', .25);
 }
 
+
+// ---------- Creature Style panel (colours, eyes, pattern, extras) ----------
+const STYLE_OPTS = {
+  body: ['#e7a6f5', '#ff9fd2', '#ffc46b', '#ffe27a', '#9ff0b0', '#9fe6ff', '#7fb8ff', '#c9a6ff', '#ffffff', '#ff8a8a'],
+  accent: ['rainbow', '#ff6fae', '#ffc95c', '#7ee8d6', '#6fb8ff', '#b88bff', '#ffffff', '#ff8a3d'],
+  eyes: ['#7a34c4', '#2f78e0', '#2fae6a', '#c2399a', '#8a5a2b', '#e0a020'],
+  pattern: ['none', 'spots', 'stars', 'hearts', 'stripes'],
+};
+const EXTRAS = { pip: [['wings', 'Wings'], ['goggles', 'Goggles']], zuzu: [['babies', 'Baby stars'], ['antenna', 'Antenna']], jelly: [['frill', 'Frill'], ['antennae', 'Antennae']] };
+const PATTERN_SVG = {
+  none: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#e9dcff"/></svg>',
+  spots: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e9dcff"/><circle cx="8" cy="9" r="2.4" fill="#ff5aa5"/><circle cx="15" cy="14" r="2.4" fill="#2fa8ff"/><circle cx="14" cy="7" r="1.7" fill="#ffc21c"/></svg>',
+  stars: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e9dcff"/><path d="M12 6l1.5 3.3 3.5.4-2.6 2.4.7 3.5L12 14l-3.1 1.6.7-3.5L7 9.7l3.5-.4z" fill="#ffc21c"/></svg>',
+  hearts: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e9dcff"/><path d="M12 17s-4.5-2.8-4.5-6A2.6 2.6 0 0112 9.6a2.6 2.6 0 014.5 1.4c0 3.2-4.5 6-4.5 6z" fill="#ff4f9a"/></svg>',
+  stripes: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e9dcff"/><path d="M6 7l5 12M10 5l5 13M14 5l4 9" stroke="#b88bff" stroke-width="2.2"/></svg>',
+};
+const EXTRA_SVG = {
+  wings: '<svg viewBox="0 0 24 24"><path d="M12 13C9 4 2 4 3 9s6 6 9 4zM12 13c3-9 10-9 9-4s-6 6-9 4z" fill="#c9e9ff" stroke="#8a5ad8" stroke-width="1.2"/></svg>',
+  goggles: '<svg viewBox="0 0 24 24"><circle cx="8" cy="12" r="4.5" fill="#a46cf0" stroke="#d9962e" stroke-width="2"/><circle cx="16" cy="12" r="4.5" fill="#a46cf0" stroke="#d9962e" stroke-width="2"/></svg>',
+  babies: '<svg viewBox="0 0 24 24"><path d="M6 4l1 2.3 2.4.3-1.8 1.6.5 2.4L6 9.4 3.9 10.6l.5-2.4L2.6 6.6 5 6.3zM18 13l1 2.3 2.4.3-1.8 1.6.5 2.4-2.1-1.2-2.1 1.2.5-2.4-1.8-1.6 2.4-.3z" fill="#ffc21c"/><circle cx="12" cy="12" r="4" fill="#ffd1ec"/></svg>',
+  antenna: '<svg viewBox="0 0 24 24"><path d="M10 20c0-8 2-12 8-12" stroke="#d9962e" stroke-width="2.5" fill="none"/><path d="M18 4l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="#ffc21c"/></svg>',
+  frill: '<svg viewBox="0 0 24 24"><path d="M3 10a9 9 0 0118 0z" fill="#c9a6ff"/><path d="M3 10q1.5 4 3 0q1.5 4 3 0q1.5 4 3 0q1.5 4 3 0q1.5 4 3 0q1.5 4 3 0" fill="#ff9fd8" stroke="#8a5ad8" stroke-width="1"/></svg>',
+  antennae: '<svg viewBox="0 0 24 24"><path d="M9 20L6 7M15 20l3-13" stroke="#8a5ad8" stroke-width="2"/><circle cx="6" cy="6" r="3" fill="#7fe6ff"/><circle cx="18" cy="6" r="3" fill="#ffc95c"/></svg>',
+};
+let stylePortrait = null;
+function openStylePanel() {
+  const panel = $('stylePanel'); panel.hidden = false; Sound.chime();
+  if (!stylePortrait) stylePortrait = registerPortrait($('stylePreview'), player.creature, 150);
+  stylePortrait.kind = player.creature; renderStyleRows();
+  discover('style', 'Make your creature your own!', player.x, player.y - 160);
+}
+function renderStyleRows() {
+  const kind = player.creature, S = STYLE[kind], rows = $('spRows');
+  const row = (lbl, items) => `<div class="sp-row"><span class="lbl">${lbl}</span>${items}</div>`;
+  const sw = (field, v) => `<button class="sp-opt ${S[field] === v ? 'sel' : ''}" data-f="${field}" data-v="${v}" style="background:${v === 'rainbow' ? 'conic-gradient(#ff6fae,#ffc95c,#7ee8d6,#6fb8ff,#b88bff,#ff6fae)' : v}" aria-label="${field} ${v}"></button>`;
+  rows.innerHTML =
+    row('🎨', STYLE_OPTS.body.map(v => sw('body', v)).join('') + (world.lastMix ? sw('body', world.lastMix) : '')) +
+    row('✨', STYLE_OPTS.accent.map(v => sw('accent', v)).join('')) +
+    row('👀', STYLE_OPTS.eyes.map(v => sw('eyes', v)).join('')) +
+    row('🔵', STYLE_OPTS.pattern.map(v => `<button class="sp-opt ${S.pattern === v ? 'sel' : ''}" data-f="pattern" data-v="${v}" aria-label="pattern ${v}">${PATTERN_SVG[v]}</button>`).join('')) +
+    row('⭐', EXTRAS[kind].map(([f, name]) => `<button class="sp-opt ${S[f] ? 'sel' : ''}" data-f="${f}" data-toggle="1" aria-label="${name}">${EXTRA_SVG[f]}</button>`).join(''));
+  rows.querySelectorAll('.sp-opt').forEach(b => b.addEventListener('click', () => {
+    const f = b.dataset.f; if (b.dataset.toggle) S[f] = !S[f]; else S[f] = b.dataset.v;
+    Sound.bell(NOTES[Math.floor(Math.random() * 8)], .04); animReact(stylePortrait.A, kind); renderStyleRows(); save();
+  }));
+}
+function initStylePanel() {
+  $('styleBtn').addEventListener('click', openStylePanel);
+  $('styleDone').addEventListener('click', () => { $('stylePanel').hidden = true; animReact(player.anim, player.creature); Sound.giggle(); burst(player.x, player.y - 100, 20, ['#fff', '#ffd84a', '#ff9bd2', '#8fe6ff']); });
+}

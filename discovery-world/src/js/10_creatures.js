@@ -127,143 +127,145 @@ function drawMouth(x, y, A, col = '#6b2f6e', size = 1) {
   else { ctx.moveTo(x - 8 * size, y - 1); ctx.quadraticCurveTo(x - 4 * size, y + 5 * size, x, y); ctx.quadraticCurveTo(x + 4 * size, y + 5 * size, x + 8 * size, y - 1); ctx.stroke(); }
 }
 
-// ---------------- PIP: rainbow fairy-kit (fluffy kitten-fox with glitter wings & goggles) ----------------
+// ---------------- CREATURE STYLE (customisation: colours, eyes, pattern, extras) ----------------
+const STYLE_DEFAULTS = {
+  pip: { body: '#e7a6f5', accent: 'rainbow', eyes: '#7a34c4', pattern: 'spots', wings: true, goggles: true },
+  zuzu: { body: '#ffc65a', accent: '#ff7fb8', eyes: '#2f78e0', pattern: 'none', babies: true, antenna: true },
+  jelly: { body: '#b48cff', accent: '#5fdcd6', eyes: '#c2399a', pattern: 'none', frill: true, antennae: true },
+};
+const STYLE = JSON.parse(JSON.stringify(STYLE_DEFAULTS));
+const styleOf = (kind, A) => (A && A.style) || STYLE[kind];
+const RAINBOW6 = ['#ff6fae', '#ffc95c', '#7ee8d6', '#6fb8ff', '#b88bff'];
+const accentCol = (S, i = 0) => S.accent === 'rainbow' ? RAINBOW6[i % RAINBOW6.length] : S.accent;
+const outlineOf = b => mixHex(shade(b, -.55), '#3d1466', .45);
+// pattern painted inside an already-built clip path
+function drawPattern(S, x0, y0, w, h, seed = 0) {
+  if (S.pattern === 'none') return;
+  const col = S.accent === 'rainbow' ? null : shade(S.accent, .15);
+  for (let i = 0; i < 14; i++) {
+    const x = x0 + ((i * 47 + seed * 13) % 100) / 100 * w, y = y0 + ((i * 71 + seed * 29) % 100) / 100 * h, c = col || RAINBOW6[i % 5];
+    if (S.pattern === 'spots') { ellipse(x, y, 4.5, 4, withAlpha(c, .85)); ellipse(x - 1.2, y - 1.2, 1.4, 1.2, 'rgba(255,255,255,.7)'); }
+    else if (S.pattern === 'stars') star(x, y, 5, withAlpha(c, .9));
+    else if (S.pattern === 'hearts') { ctx.beginPath(); heartPath(x, y, 4.5); ctx.fillStyle = withAlpha(c, .9); ctx.fill(); }
+  }
+  if (S.pattern === 'stripes') for (let i = 0; i < 9; i++) { ctx.fillStyle = withAlpha(col || RAINBOW6[i % 5], .45); ctx.save(); ctx.translate(x0 + i * w / 8, y0); ctx.rotate(.25); ctx.fillRect(-3, -10, 6, h + 20); ctx.restore(); }
+}
+
+// ---------------- PIP: rainbow fairy-kit (redrawn in build 9: clear head/body, neat tail, side arms) ----------------
 function pipLegs(A) {
   const ph = A.phase, run = A.run, air = !A.grounded && !A.seated;
   let near = Math.sin(ph) * .8 * run, far = -Math.sin(ph) * .8 * run;
-  let liftN = Math.max(0, Math.cos(ph)) * 8 * run, liftF = Math.max(0, -Math.cos(ph)) * 8 * run;
-  if (air) { if (A.vy < 0) { near = .7; far = -.45; } else { near = .25 + Math.sin(A.t * 9) * .1; far = -.05; } liftN = liftF = 0; }
+  let liftN = Math.max(0, Math.cos(ph)) * 7 * run, liftF = Math.max(0, -Math.cos(ph)) * 7 * run;
+  if (air) { if (A.vy < 0) { near = .6; far = -.4; } else { near = .2 + Math.sin(A.t * 9) * .1; far = -.05; } liftN = liftF = 0; }
   if (A.seated) { near = 1.45; far = 1.3; }
-  if (A.land > 0) { const k = A.land / .35; near += .4 * k; far -= .4 * k; }
+  if (A.land > 0) { const k = A.land / .35; near += .35 * k; far -= .35 * k; }
   return { near, far, liftN, liftF };
 }
-const PIP_SPOTS = [[-18, -60, 5, '#7fd8ff'], [16, -40, 4, '#ffd35a'], [-8, -34, 3.5, '#a77bff'], [22, -66, 3.5, '#ff6fb5'], [-24, -44, 3, '#ffd35a'], [-30, -112, 4, '#7fd8ff'], [36, -98, 3.5, '#a77bff'], [-34, -90, 3, '#ff6fb5'], [30, -124, 3, '#ffd35a']];
-function pipTailPath(ctxT, sway) {
-  // a big fluffy fox-tail plume: centreline curve with a width profile and scalloped edge
-  const P = u => { const v = 1 - u; return [v * v * 0 + 2 * v * u * (-62) + u * u * (-40 + sway * 18), v * v * 0 + 2 * v * u * (-6) + u * u * (-92)]; };
-  const W = u => (6 + 30 * Math.sin(Math.PI * Math.pow(u, .75))) * (1 + .07 * Math.sin(u * 34));
-  const L = [], R = [];
-  for (let i = 0; i <= 26; i++) {
-    const u = i / 26, p = P(u), q = P(Math.min(1, u + .02)), r = P(Math.max(0, u - .02));
-    const tx = q[0] - r[0], ty = q[1] - r[1], d = Math.hypot(tx, ty) || 1, nx = -ty / d, ny = tx / d, w = u > .97 ? 2 : W(u);
-    L.push([p[0] + nx * w, p[1] + ny * w]); R.push([p[0] - nx * w, p[1] - ny * w]);
-  }
-  ctx.moveTo(L[0][0], L[0][1]); L.forEach(p => ctx.lineTo(p[0], p[1])); for (let i = R.length - 1; i >= 0; i--) ctx.lineTo(R[i][0], R[i][1]); ctx.closePath();
-}
 function drawPip(A) {
+  const S = styleOf('pip', A), b = S.body, OUT = outlineOf(b), paw = mixHex(b, '#ffffff', .7);
   const t = A.t, run = A.run, ph = A.phase, air = !A.grounded && !A.seated;
   const sy = A.squash.x, sx = 1 + (1 - sy) * .8;
-  const bob = A.grounded && !A.seated ? (-Math.abs(Math.sin(ph)) * 7 * run + Math.sin(t * 2.6) * 1.6 * (1 - run)) : 0;
+  const bob = A.grounded && !A.seated ? (-Math.abs(Math.sin(ph)) * 6 * run + Math.sin(t * 2.6) * 1.4 * (1 - run)) : 0;
   const reactHop = A.react > 0 ? -Math.abs(Math.sin(A.react * 7)) * 14 : 0;
-  ctx.save();
-  ctx.rotate(A.lean.x); ctx.scale(sx, sy); ctx.translate(0, bob + reactHop);
+  ctx.save(); ctx.rotate(A.lean.x); ctx.scale(sx, sy); ctx.translate(0, bob + reactHop);
   if (A.flip > 0) { ctx.translate(0, -78); ctx.rotate((1 - A.flip) * TAU * A.flipDir); ctx.translate(0, 78); }
-
-  const OUT = '#6d2f97';
-  const fur = grad(0, -160, 0, 160, [[0, '#f7b8ee'], [.4, '#e7a0f2'], [.75, '#c993f7'], [1, '#b98af2']]);
-  const L = pipLegs(A), legLen = 24;
-  const hipN = [9, -30], hipF = [-9, -31];
+  const fur = grad(0, -150, 0, 150, [[0, shade(b, .35)], [.45, b], [1, shade(b, -.12)]]);
+  const L = pipLegs(A), legLen = 20, hipN = [10, -26], hipF = [-9, -27];
   const footN = [hipN[0] + Math.sin(L.near) * legLen, hipN[1] + Math.cos(L.near) * legLen - L.liftN];
   const footF = [hipF[0] + Math.sin(L.far) * legLen, hipF[1] + Math.cos(L.far) * legLen - L.liftF];
-  const headX = 5 - A.lean.x * 18, headY = -106 + A.ear.x * 2;
-  const earAng = A.ear.x * .5 + Math.sin(t * 2.2) * .04;
-  const flap = air ? Math.sin(t * 30) * .5 : Math.sin(t * 3) * .1;
+  const hx = 4 - A.lean.x * 16, hy = -102 + A.ear.x * 2;
+  const earAng = A.ear.x * .5 + Math.sin(t * 2.2) * .04, flap = air ? Math.sin(t * 28) * .45 : Math.sin(t * 3) * .08;
 
-  // --- rainbow fox-tail (anchored at rump) ---
-  ctx.save(); ctx.translate(-24, -38); ctx.rotate(-.15 - A.tail.x * .45);
-  const sway = Math.sin(t * (2 + run * 7)) * .5;
-  ctx.beginPath(); pipTailPath(ctx, sway); ctx.strokeStyle = OUT; ctx.lineWidth = 6; ctx.lineJoin = 'round'; ctx.stroke();
-  ctx.fillStyle = grad(0, 0, -50, -95, [[0, '#ff7ac6'], [.25, '#ffd45e'], [.45, '#7ee8d6'], [.65, '#6fb8ff'], [.82, '#b88bff'], [1, '#ffffff']]); ctx.fill();
-  ctx.save(); ctx.clip(); ctx.globalAlpha = .35; for (let i = 0; i < 7; i++) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-10 - i * 6, -8 - i * 9); ctx.quadraticCurveTo(-34 - i * 3, -20 - i * 10, -30 - i * 2, -36 - i * 9); ctx.stroke(); } ctx.restore();
-  ctx.restore();
+  // --- neat curled fox tail, anchored at the rump ---
+  ctx.save(); ctx.translate(-18, -34); ctx.rotate(-.1 - A.tail.x * .4 + Math.sin(t * (2 + run * 6)) * .07);
+  const tail = () => { ctx.moveTo(4, 10); ctx.bezierCurveTo(-38, 14, -62, -30, -50, -74); ctx.quadraticCurveTo(-44, -94, -24, -90); ctx.quadraticCurveTo(-14, -86, -20, -78); ctx.bezierCurveTo(-36, -54, -22, -12, 8, -10); ctx.closePath(); };
+  ctx.beginPath(); tail(); ctx.lineJoin = 'round'; ctx.strokeStyle = OUT; ctx.lineWidth = 5.5; ctx.stroke();
+  const tg = grad(0, 10, -40, -100, S.accent === 'rainbow' ? [[0, b], [.25, '#ff6fae'], [.45, '#ffc95c'], [.62, '#7ee8d6'], [.78, '#b88bff'], [.93, '#ffffff']] : [[0, b], [.45, shade(b, .15)], [.62, S.accent], [.8, shade(S.accent, .2)], [.93, '#ffffff']]);
+  ctx.fillStyle = tg; ctx.fill();
+  ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.moveTo(-6 - i * 6, 2 - i * 14); ctx.quadraticCurveTo(-30 - i * 2, -8 - i * 14, -26 - i * 3, -24 - i * 14); ctx.stroke(); }
+  ctx.restore(); ctx.restore();
 
-  // --- glitter fairy wings, hinged behind the shoulders ---
+  // --- small fairy wings set high on the back ---
   const wing = (rot, size, alpha) => {
-    ctx.save(); ctx.translate(-16, -80); ctx.rotate(rot); ctx.scale(size, size);
-    const up = () => { ctx.moveTo(0, 0); ctx.bezierCurveTo(-8, -50, -58, -66, -66, -34); ctx.bezierCurveTo(-70, -12, -30, 2, 0, 0); };
-    const lo = () => { ctx.moveTo(0, 4); ctx.bezierCurveTo(-20, 30, -50, 36, -48, 14); ctx.bezierCurveTo(-46, 2, -20, 2, 0, 4); };
+    ctx.save(); ctx.translate(-12, -78); ctx.rotate(rot); ctx.scale(size, size);
+    const up = () => { ctx.moveTo(0, 0); ctx.bezierCurveTo(-4, -44, -46, -60, -54, -32); ctx.bezierCurveTo(-58, -12, -26, 0, 0, 0); };
+    const lo = () => { ctx.moveTo(0, 3); ctx.bezierCurveTo(-16, 22, -40, 26, -38, 10); ctx.bezierCurveTo(-36, 0, -16, 0, 0, 3); };
     for (const f of [up, lo]) {
-      ctx.beginPath(); f(); const g = ctx.createRadialGradient(-10, -10, 4, -30, -20, 70);
-      g.addColorStop(0, `rgba(255,240,255,${alpha})`); g.addColorStop(.45, `rgba(214,160,255,${alpha * .85})`); g.addColorStop(1, `rgba(110,220,255,${alpha * .9})`);
-      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
-      ctx.strokeStyle = 'rgba(160,110,230,.7)'; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.beginPath(); f(); const g = ctx.createLinearGradient(0, 0, -50, -40);
+      g.addColorStop(0, `rgba(255,240,255,${alpha})`); g.addColorStop(.5, `rgba(214,170,255,${alpha * .8})`); g.addColorStop(1, `rgba(120,225,255,${alpha * .9})`);
+      ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 2.5; ctx.stroke();
     }
-    ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-30, -36, -58, -38); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-36, -14, -60, -18); ctx.moveTo(0, 4); ctx.quadraticCurveTo(-26, 20, -42, 22); ctx.stroke();
-    [[-44, -40], [-30, -26], [-54, -22], [-20, -44], [-36, 18], [-26, 12], [-48, -50]].forEach(([gx, gy], i) => sparkle(gx, gy, 2.5 + (i % 3) + Math.sin(t * 6 + i) * 1, i % 2 ? '#fff6c9' : '#ffffff'));
+    ctx.strokeStyle = 'rgba(160,110,230,.55)'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-24, -30, -46, -36); ctx.moveTo(0, 3); ctx.quadraticCurveTo(-20, 16, -34, 14); ctx.stroke();
+    [[-36, -36], [-22, -24], [-44, -20], [-28, 14]].forEach(([gx, gy], i) => sparkle(gx, gy, 2.4 + Math.sin(t * 6 + i), '#ffffff'));
     ctx.restore();
   };
-  wing(-.55 - flap, 1.05, .8);
+  if (S.wings) wing(-.35 - flap, .85, .75);
 
-  // far arm
+  // --- arms: little paws resting at the sides ---
   const armAng = side => {
-    if (A.react > 0 && side > 0) return 2.6 + Math.sin(t * 18) * .45;
-    if (A.seated) return side > 0 ? 1.0 : .8;
-    if (air) return A.vy < 0 ? (side > 0 ? 2.7 : 2.3) : (side > 0 ? 1.7 : 1.35);
-    return (side > 0 ? -1 : 1) * Math.sin(ph) * .95 * run + Math.sin(t * 2.6 + side) * .07 + (side > 0 ? .55 : .2);
+    if (A.react > 0 && side > 0) return 2.5 + Math.sin(t * 18) * .4;
+    if (A.seated) return side > 0 ? .9 : .7;
+    if (air) return A.vy < 0 ? (side > 0 ? 2.4 : 2.1) : (side > 0 ? 1.5 : 1.2);
+    return (side > 0 ? -1 : 1) * Math.sin(ph) * .8 * run + Math.sin(t * 2.6 + side) * .05 + .12;
   };
-  const shF = [-18, -64], aF = armAng(-1), handF = [shF[0] + Math.sin(aF) * 22, shF[1] + Math.cos(aF) * 22];
-  inked([{ path: () => limbPath(shF[0], shF[1], handF[0], handF[1], 7.5, 8.5), fill: '#d79af2' }], OUT, 5.5);
-  ellipse(handF[0], handF[1], 7, 7, '#fff4fb');
+  const shF = [-21, -58], aF = armAng(-1), handF = [shF[0] + Math.sin(aF) * 17, shF[1] + Math.cos(aF) * 17];
+  inked([{ path: () => limbPath(shF[0], shF[1], handF[0], handF[1], 7.5, 7.5), fill: shade(b, -.08) }], OUT, 5);
+  ellipse(handF[0], handF[1] + 1, 7, 6.5, paw);
 
-  // ears: big pointed kitten ears with rainbow inner fluff
+  // --- ears (far ear behind the head) ---
   const ear = (len, w, lean) => () => { ctx.moveTo(-w, 8); ctx.quadraticCurveTo(-w * .9, -len * .55, lean - 3, -len); ctx.quadraticCurveTo(lean + 4, -len * 1.02, lean + 6, -len + 4); ctx.quadraticCurveTo(w * 1.1, -len * .45, w, 8); ctx.closePath(); };
-  const earInner = (len, w, lean) => { ctx.beginPath(); ear(len * .78, w * .58, lean * .8)(); ctx.fillStyle = grad(0, 0, 0, -len, [[0, '#ff8fd0'], [.4, '#ffd36b'], [.7, '#7fe6ff'], [1, '#c79bff']]); ctx.fill(); for (let i = 0; i < 3; i++) { ctx.strokeStyle = '#ffffffcc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-2 + i * 3, -2); ctx.quadraticCurveTo(-4 + i * 4, -len * .4, lean * .6 + i * 2 - 2, -len * .66); ctx.stroke(); } };
-  ctx.save(); ctx.translate(headX - 24, headY - 26); ctx.rotate(-.42 + earAng);
-  inked([{ path: ear(50, 17, -6), fill: '#e7a6f4' }], OUT, 5.5); earInner(50, 17, -6); ctx.restore();
+  const earInner = (len, w, lean) => { ctx.beginPath(); ear(len * .74, w * .56, lean * .8)(); ctx.fillStyle = S.accent === 'rainbow' ? grad(0, 0, 0, -len, [[0, '#ff8fd0'], [.4, '#ffd36b'], [.7, '#7fe6ff'], [1, '#c79bff']]) : grad(0, 0, 0, -len, [[0, '#ffd1ec'], [1, S.accent]]); ctx.fill(); };
+  ctx.save(); ctx.translate(hx - 22, hy - 24); ctx.rotate(-.38 + earAng); inked([{ path: ear(44, 15, -5), fill: shade(b, -.05) }], OUT, 5); earInner(44, 15, -5); ctx.restore();
 
-  // MAIN merged silhouette
-  const nearEarPath = () => { ctx.save(); ctx.translate(headX + 22, headY - 30); ctx.rotate(.22 + earAng * 1.1); ear(52, 18, 6)(); ctx.restore(); };
+  // --- MAIN silhouette: legs + body + head + near ear (one merged shape) ---
+  const nearEar = () => { ctx.save(); ctx.translate(hx + 20, hy - 27); ctx.rotate(.22 + earAng * 1.1); ear(46, 16, 6)(); ctx.restore(); };
+  const cheek = s => () => { ctx.moveTo(hx + s * 36, hy + 4); ctx.lineTo(hx + s * 52, hy + 14); ctx.lineTo(hx + s * 40, hy + 16); ctx.lineTo(hx + s * 50, hy + 25); ctx.lineTo(hx + s * 32, hy + 24); ctx.closePath(); };
   inked([
-    { path: () => limbPath(hipF[0], hipF[1], footF[0], footF[1], 10, 8), fill: '#c993f7' },
-    { path: () => limbPath(hipN[0], hipN[1], footN[0], footN[1], 10.5, 8.5), fill: fur },
-    { path: () => fluffPath(0, -52, 32, 31, 12, .07, t * .5), fill: fur },
-    { path: () => fluffPath(headX, headY, 48, 42, 18, .06, 1), fill: fur },
-    { path: () => { ctx.ellipse(headX - 40, headY + 16, 14, 11, .5, 0, TAU); }, fill: fur }, // cheek fluff tufts
-    { path: () => { ctx.ellipse(headX + 44, headY + 16, 13, 10, -.5, 0, TAU); }, fill: fur },
-    { path: nearEarPath, fill: '#eeb0f6' },
-    { path: () => ctx.ellipse(footF[0] + 5, footF[1] - 1, 12, 8, Math.sin(L.far) * .4, 0, TAU), fill: '#fff4fb' },
-    { path: () => ctx.ellipse(footN[0] + 5, footN[1] - 1, 13, 8.5, Math.sin(L.near) * .4, 0, TAU), fill: '#ffffff' },
-  ], OUT, 6);
-  ctx.save(); ctx.translate(headX + 22, headY - 30); ctx.rotate(.22 + earAng * 1.1); earInner(52, 18, 6); ctx.restore();
-  ellipse(footN[0] + 12, footN[1] - 1, 2.6, 2.6, '#ff9ccc'); ellipse(footN[0] + 6, footN[1] + 3, 2.6, 2.6, '#ff9ccc'); ellipse(footN[0] + 1, footN[1] - 1, 2.2, 2.2, '#ff9ccc');
-
-  // speckles (clipped to body + head)
-  ctx.save(); ctx.beginPath(); fluffPath(0, -52, 32, 31, 12, .07, t * .5); fluffPath(headX, headY, 48, 42, 18, .06, 1); ctx.clip();
-  PIP_SPOTS.forEach(([x, y, r, c]) => { ellipse(x + (y < -80 ? headX - 5 : 0), y, r, r * .85, c); ellipse(x + (y < -80 ? headX - 5 : 0) - r * .3, y - r * .3, r * .3, r * .3, 'rgba(255,255,255,.7)'); });
-  // soft rim light along the top of the head
-  ctx.globalAlpha = .35; ellipse(headX - 6, headY - 30, 34, 12, '#ffffff'); ctx.globalAlpha = 1;
+    { path: () => limbPath(hipF[0], hipF[1], footF[0], footF[1], 9, 7.5), fill: shade(b, -.1) },
+    { path: () => limbPath(hipN[0], hipN[1], footN[0], footN[1], 9.5, 8), fill: fur },
+    { path: () => ctx.ellipse(0, -46, 29, 31, 0, 0, TAU), fill: fur },
+    { path: () => ctx.ellipse(hx, hy, 43, 38, 0, 0, TAU), fill: fur },
+    { path: cheek(-1), fill: fur }, { path: cheek(1), fill: fur },
+    { path: nearEar, fill: b },
+    { path: () => ctx.ellipse(footF[0] + 4, footF[1] - 1, 11, 7, Math.sin(L.far) * .4, 0, TAU), fill: paw },
+    { path: () => ctx.ellipse(footN[0] + 4, footN[1] - 1, 12, 7.5, Math.sin(L.near) * .4, 0, TAU), fill: paw },
+  ], OUT, 5.5);
+  ctx.save(); ctx.translate(hx + 20, hy - 27); ctx.rotate(.22 + earAng * 1.1); earInner(46, 16, 6); ctx.restore();
+  ellipse(footN[0] + 10, footN[1] - 1, 2.3, 2.3, '#ff9ccc'); ellipse(footN[0] + 5, footN[1] + 2.5, 2.3, 2.3, '#ff9ccc');
+  // pattern on body + head
+  ctx.save(); ctx.beginPath(); ctx.ellipse(0, -46, 29, 31, 0, 0, TAU); ctx.ellipse(hx, hy, 43, 38, 0, 0, TAU); ctx.clip();
+  drawPattern(S, -40, -140, 90, 120, 1);
+  ctx.globalAlpha = .4; ellipse(hx - 10, hy - 24, 26, 10, '#ffffff', null, 0, -.2); ctx.globalAlpha = 1; // soft top highlight
   ctx.restore();
-  // fluffy cream chest bib
-  ctx.beginPath(); fluffPath(5, -48, 19, 20, 10, .12); ctx.fillStyle = '#fff6fd'; ctx.fill();
-  star(6, -50, 9, '#ffd65a'); sparkle(9, -54, 3, '#fff');
-  // rainbow forelock swoosh
-  ctx.save(); ctx.translate(headX - 4, headY - 38); ctx.rotate(-.2 + A.ear.x * .3 + Math.sin(t * 3) * .05);
-  [['#b98bff', 0], ['#ffd45e', 7], ['#7fe6ff', 14]].forEach(([c, o]) => { ctx.beginPath(); ctx.moveTo(-10 + o * .3, 6); ctx.quadraticCurveTo(-6 + o, -18, 16 + o * .6, -16 - o * .4); ctx.quadraticCurveTo(4 + o * .5, -6, 6 + o * .4, 8); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 2.5; ctx.stroke(); });
+  // fluffy neck collar (separates head from body) + belly
+  ctx.beginPath(); fluffPath(3, -66, 24, 12, 12, .16, 0); ctx.fillStyle = '#fff6fd'; ctx.fill(); ctx.strokeStyle = 'rgba(200,150,220,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ellipse(4, -40, 16, 18, 'rgba(255,246,253,.85)'); star(4, -40, 7, '#ffd65a');
+  // forelock swoosh
+  ctx.save(); ctx.translate(hx - 2, hy - 34); ctx.rotate(-.2 + A.ear.x * .3 + Math.sin(t * 3) * .05);
+  [0, 7, 14].forEach((o, i) => { ctx.beginPath(); ctx.moveTo(-8 + o * .3, 6); ctx.quadraticCurveTo(-5 + o, -14, 14 + o * .6, -13 - o * .4); ctx.quadraticCurveTo(4 + o * .5, -5, 6 + o * .4, 7); ctx.closePath(); ctx.fillStyle = accentCol(S, i * 2); ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 2.2; ctx.stroke(); });
   ctx.restore();
-  // gold goggles pushed up on the forehead
-  ctx.strokeStyle = '#7a4a1a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.ellipse(headX, headY - 8, 48, 40, 0, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
-  ctx.strokeStyle = '#d9962e'; ctx.lineWidth = 3.5; ctx.stroke();
-  for (const [gx, r] of [[headX - 11, 11], [headX + 20, 12.5]]) {
-    const gy = headY - 33;
-    ellipse(gx, gy, r + 3.5, r + 3, grad(gx, gy - r, 0, r * 2, [[0, '#ffe7a0'], [.5, '#e3a43a'], [1, '#a8661c']]), '#6b3a12', 2);
-    ellipse(gx, gy, r, r * .9, grad(gx - r, gy - r, r * 2, r * 2, [[0, '#f0d6ff'], [.45, '#a46cf0'], [1, '#5a2ba8']]));
-    ellipse(gx - r * .35, gy - r * .3, r * .32, r * .22, '#ffffff', null, 0, -.5); ellipse(gx + r * .35, gy + r * .3, r * .12, r * .12, '#ffffffbb');
+  // goggles sit on the forehead
+  if (S.goggles) {
+    ctx.strokeStyle = '#7a4a1a'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(hx - 34, hy - 18); ctx.quadraticCurveTo(hx + 4, hy - 34, hx + 40, hy - 19); ctx.stroke();
+    for (const [gx, r] of [[hx - 10, 9], [hx + 17, 10]]) {
+      const gy = hy - 28;
+      ellipse(gx, gy, r + 3, r + 2.5, grad(gx, gy - r, 0, r * 2, [[0, '#ffe7a0'], [.5, '#e3a43a'], [1, '#a8661c']]), '#6b3a12', 1.6);
+      ellipse(gx, gy, r, r * .9, grad(gx - r, gy - r, r * 2, r * 2, [[0, '#f0d6ff'], [.45, '#a46cf0'], [1, '#5a2ba8']]));
+      ellipse(gx - r * .35, gy - r * .3, r * .3, r * .2, '#ffffff', null, 0, -.5);
+    }
   }
   // face
-  drawEye(headX - 14, headY + 2, 12, 15, A, '#7a34c4', 3, -1);
-  drawEye(headX + 20, headY + 2, 13.5, 16.5, A, '#7a34c4', 3, 1);
-  ellipse(headX - 31, headY + 20, 9, 5.5, '#ff7fb0aa'); ellipse(headX + 37, headY + 20, 9, 5.5, '#ff7fb0aa');
-  ctx.beginPath(); heartPath(headX + 38, headY + 15, 4.5); ctx.fillStyle = '#ff4f9a'; ctx.fill();
-  ctx.beginPath(); ctx.moveTo(headX + 1, headY + 15); ctx.quadraticCurveTo(headX + 3, headY + 12, headX + 6, headY + 15); ctx.quadraticCurveTo(headX + 3.5, headY + 19, headX + 1, headY + 15); ctx.fillStyle = '#ff6fa8'; ctx.fill();
-  drawMouth(headX + 3.5, headY + 23, A, '#6b2f6e', .9);
-  // whisker dots
-  for (const [wx, wy] of [[-24, 22], [-20, 26], [30, 22], [26, 26]]) ellipse(headX + wx, headY + wy, 1.3, 1.3, '#b36ac9');
-
-  // near arm in front of the body
-  const shN = [21, -63], aN = armAng(1), handN = [shN[0] + Math.sin(aN) * 20, shN[1] + Math.cos(aN) * 20];
-  inked([{ path: () => limbPath(shN[0], shN[1], handN[0], handN[1], 8, 9.5), fill: '#efaaf2' }], OUT, 5.5);
-  ellipse(handN[0] + 1, handN[1] + 1, 8, 7.5, '#ffffff'); ellipse(handN[0] + 4, handN[1] + 3, 2, 2, '#ff9ccc');
-  wing(-.15 + flap * .6, .62, .6); // the near wing peeks over the shoulder
+  drawEye(hx - 12, hy + 4, 11.5, 14.5, A, S.eyes, 3, -1);
+  drawEye(hx + 19, hy + 4, 13, 16, A, S.eyes, 3, 1);
+  ellipse(hx - 28, hy + 20, 8, 5, '#ff7fb0aa'); ellipse(hx + 35, hy + 20, 8, 5, '#ff7fb0aa');
+  ctx.beginPath(); ctx.moveTo(hx + 2, hy + 16); ctx.quadraticCurveTo(hx + 4, hy + 13, hx + 7, hy + 16); ctx.quadraticCurveTo(hx + 4.5, hy + 20, hx + 2, hy + 16); ctx.fillStyle = '#ff6fa8'; ctx.fill();
+  drawMouth(hx + 4.5, hy + 24, A, '#6b2f6e', .85);
+  // near arm (in front)
+  const shN = [22, -57], aN = armAng(1), handN = [shN[0] + Math.sin(aN) * 17, shN[1] + Math.cos(aN) * 17];
+  inked([{ path: () => limbPath(shN[0], shN[1], handN[0], handN[1], 8, 8), fill: shade(b, .1) }], OUT, 5);
+  ellipse(handN[0] + 1, handN[1] + 1, 7.5, 7, paw); ellipse(handN[0] + 3, handN[1] + 3, 1.8, 1.8, '#ff9ccc');
+  if (S.wings) wing(-.05 + flap * .5, .5, .55);
   ctx.restore();
 }
 
@@ -306,6 +308,7 @@ function drawZuzuTrail(A, ox, oy) {
   for (let i = 2; i < A.trail.length; i += 3) sparkle(A.trail[i].x - ox + Math.sin(A.t * 9 + i) * 8, A.trail[i].y - oy + 10, 4 + (i % 2) * 2, '#fffbe0');
 }
 function drawZuzu(A) {
+  const S = styleOf('zuzu', A);
   const t = A.t, hover = zuzuHover(A), cy = -(hover + 60);
   const sy = A.squash.x, sx = 1 + (1 - sy) * .9;
   // glow
@@ -320,37 +323,40 @@ function drawZuzu(A) {
   const v = zuzuVerts(A), OUT = '#7a3fa6';
   // antenna curl rooted at the crown tip
   const top = v[0], sw = A.ear.x * .8 + Math.sin(t * 3) * .12;
+  if (S.antenna) {
   ctx.save(); ctx.translate(top[0], top[1] + 6); ctx.rotate(-.2 - sw);
   ctx.strokeStyle = OUT; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(4, -20, 26, -26, 24, -10); ctx.stroke();
   ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 4.5; ctx.stroke();
   star(24, -10, 9 + Math.sin(t * 6) * 1.5, '#fff6c2'); ctx.restore();
+  }
 
   // two baby stars orbit Zuzu (her signature): the ones behind are drawn first
   const orbit = k => { const a = t * 1.7 + k * Math.PI; return { x: Math.cos(a) * 74, y: Math.sin(a) * 20 - 6, front: Math.sin(a) > 0, s: 7 + Math.sin(a) * 2 }; };
   const babyStar = o => { ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(t * 3); ctx.beginPath(); starPath(0, 0, o.s, 5, -Math.PI / 2, .5); ctx.fillStyle = '#fff3a0'; ctx.fill(); ctx.strokeStyle = '#ff9f2e'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.restore(); glow(o.x, o.y, 16, '#fff3a6', .6); };
-  [0, 1].map(orbit).filter(o => !o.front).forEach(babyStar);
-  const body = grad(-40, -60, 60, 120, [[0, '#fff7a8'], [.45, '#ffc65a'], [.85, '#ff7fb8'], [1, '#ff6fa8']]);
+  if (S.babies) [0, 1].map(orbit).filter(o => !o.front).forEach(babyStar);
+  const body = grad(-40, -60, 60, 120, [[0, shade(S.body, .5)], [.45, S.body], [.85, mixHex(S.body, accentCol(S, 0), .6)], [1, accentCol(S, 0)]]);
   inked([{ path: () => roundedPoly(v), fill: body }], OUT, 6.5);
   ctx.save(); ctx.beginPath(); roundedPoly(v); ctx.clip();
   ctx.strokeStyle = 'rgba(255,214,107,.85)'; ctx.lineWidth = 7; ctx.beginPath(); roundedPoly(v); ctx.stroke();   // inner gold rim light
+  drawPattern(S, -50, -55, 100, 110, 3);
   for (let i = 0; i < 16; i++) { const gx = ((i * 37) % 90) - 45, gy = ((i * 53) % 90) - 45, tw = Math.sin(t * 5 + i * 1.9); if (tw > -.2) sparkle(gx, gy, 1.6 + tw * 2.2, i % 3 ? '#ffffff' : '#fff3b0'); }
   ctx.restore();
   ellipse(-24, -30, 13, 7, 'rgba(255,255,255,.75)', null, 0, -.7); ellipse(-12, -40, 4, 3, '#ffffff');
   // inner shine + tummy shimmer (same shape, smaller)
   ctx.save(); ctx.translate(-5, -7); ctx.scale(.72, .72); ctx.beginPath(); roundedPoly(v); ctx.fillStyle = 'rgba(255,255,230,.45)'; ctx.fill(); ctx.restore();
   // soft pads on the foot tips & mitten tips on the arm tips
-  [[2, '#7ee8ff'], [4, '#7ee8ff'], [6, '#ff9ed2'], [8, '#ff9ed2']].forEach(([i, c]) => {
+  [[2, accentCol(S, 3)], [4, accentCol(S, 3)], [6, accentCol(S, 0)], [8, accentCol(S, 0)]].forEach(([i, c]) => {
     const p = v[i], k = .86; ellipse(p[0] * k, p[1] * k, 9, 7.5, c, OUT, 3, Math.atan2(p[1], p[0]));
   });
   // face
-  drawEye(-15, -6, 11.5, 14.5, A, '#2f78e0', 3.5, -1);
-  drawEye(15, -6, 11.5, 14.5, A, '#2f78e0', 3.5, 1);
+  drawEye(-15, -6, 11.5, 14.5, A, S.eyes, 3.5, -1);
+  drawEye(15, -6, 11.5, 14.5, A, S.eyes, 3.5, 1);
   ellipse(-25, 10, 7, 4.5, '#ff6aa8aa'); ellipse(25, 10, 7, 4.5, '#ff6aa8aa');
   drawMouth(0, 13, A, '#7a2f6a', .85);
   // freckle stars
   sparkle(-30, -24, 4, '#fffef0'); sparkle(28, 24, 3.5, '#fffef0');
   ctx.restore();
-  ctx.save(); ctx.translate(0, cy); [0, 1].map(orbit).filter(o => o.front).forEach(babyStar); ctx.restore();
+  if (S.babies) { ctx.save(); ctx.translate(0, cy); [0, 1].map(orbit).filter(o => o.front).forEach(babyStar); ctx.restore(); }
 }
 
 // ---------------- JELLY: translucent soft-body blob with tentacle feet ----------------
@@ -385,6 +391,7 @@ function updateJellySoft(A, dt, st) {
   }
 }
 function drawJelly(A, ox, oy) {
+  const S = styleOf('jelly', A);
   const t = A.t, f = A.facing;
   if (!A.soft) updateJellySoft(A, 0, { x: ox, y: oy });
   const P = A.soft.pts.map(p => [(p.x - ox) * f, p.y - oy, p.vx * f, p.vy]);
@@ -400,13 +407,13 @@ function drawJelly(A, ox, oy) {
     const tipX = p[0] + step - p[2] * .05 + Math.sin(t * 6 + k) * (air ? 7 : 2.5), tipY = p[1] + len - lift - p[3] * .02;
     const ctrlX = p[0] + (tipX - p[0]) * .2 + Math.sin(t * 7 + k) * 4, ctrlY = p[1] + len * .6;
     ctx.lineCap = 'round';
-    for (const [w, c] of [[13, OUT], [8.5, ['#6fead8', '#ff7cc4', '#ffcf5e', '#a48cff', '#7fe0ff'][k]]]) {
+    for (const [w, c] of [[13, OUT], [8.5, S.accent === 'rainbow' ? RAINBOW6[k] : (k % 2 ? S.accent : shade(S.body, .2))]]) {
       ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(p[0], p[1] - 6); ctx.quadraticCurveTo(ctrlX, ctrlY, tipX, tipY); ctx.stroke();
     }
     ellipse(tipX, tipY + 1, 5, 5, ['#ff9fe0', '#ffe48a', '#9ff7e0', '#d6a6ff', '#9fd0ff'][k], OUT, 2); ellipse(tipX - 1.5, tipY - .5, 1.8, 1.8, '#ffffff');
   });
   // antennae rooted on the two upper body points
-  [[1, 1], [JN - 1, -1]].forEach(([idx, side], k) => {
+  if (S.antennae) [[1, 1], [JN - 1, -1]].forEach(([idx, side], k) => {
     const p = P[idx], lag = -p[2] * .06, sw = Math.sin(t * 4 + k) * 4;
     const tx = p[0] + side * 16 + lag + sw, ty = p[1] - 34 - p[3] * .04 - A.ear.x * 6;
     ctx.strokeStyle = OUT; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(p[0], p[1] + 4);
@@ -421,10 +428,11 @@ function drawJelly(A, ox, oy) {
     ctx.closePath();
   };
   const fill = ctx.createRadialGradient(cx - 14, cy - 24, 6, cx, cy, 72);
-  fill.addColorStop(0, 'rgba(255,214,250,.93)'); fill.addColorStop(.45, 'rgba(184,146,255,.86)'); fill.addColorStop(.85, 'rgba(110,150,250,.84)'); fill.addColorStop(1, 'rgba(80,225,215,.9)');
+  fill.addColorStop(0, withAlpha(mixHex(S.body, '#ffffff', .7), .93)); fill.addColorStop(.45, withAlpha(S.body, .86)); fill.addColorStop(.85, withAlpha(mixHex(S.body, accentCol(S, 3), .5), .84)); fill.addColorStop(1, withAlpha(accentCol(S, 3), .9));
   ctx.lineJoin = 'round'; ctx.beginPath(); bodyPath(); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OUT; ctx.lineWidth = 5.5; ctx.stroke();
   // inside the jelly: drifting glitter and a glowing heart core
   ctx.save(); ctx.beginPath(); bodyPath(); ctx.clip();
+  drawPattern(S, cx - 50, cy - 50, 100, 90, 5);
   for (let i = 0; i < 9; i++) {
     const a = t * (.6 + i * .07) + i * 2.1, r = 14 + (i * 7) % 26;
     sparkle(cx + Math.cos(a) * r, cy + 10 + Math.sin(a) * r * .5, 2.5 + (i % 3), ['#fff', '#fff3a0', '#bff9ff'][i % 3]);
@@ -438,7 +446,7 @@ function drawJelly(A, ox, oy) {
   ctx.globalAlpha = .55 + Math.sin(t * 2) * .1; ctx.strokeStyle = iri; ctx.lineWidth = 9; ctx.beginPath(); bodyPath(); ctx.stroke(); ctx.globalAlpha = 1;
   ctx.restore();
   // frilly bell edge along the bottom of the deforming body
-  for (let i = 6; i <= 12; i++) {
+  if (S.frill) for (let i = 6; i <= 12; i++) {
     const a = P[i], b = P[i + 1], mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, r = Math.hypot(b[0] - a[0], b[1] - a[1]) / 2;
     ctx.beginPath(); ctx.arc(mx, my, r + 1, 0, Math.PI); ctx.fillStyle = i % 2 ? 'rgba(255,170,230,.85)' : 'rgba(170,220,255,.85)'; ctx.fill();
     ctx.strokeStyle = OUT; ctx.lineWidth = 2.5; ctx.stroke();
@@ -450,8 +458,8 @@ function drawJelly(A, ox, oy) {
   ellipse(tl[0] + 9, tl[1] + 22, 3.5, 3.5, '#ffffffcc');
   // face rides on the body centre
   const fx = cx + 4 + A.look.x * 3, fy = cy - 6;
-  drawEye(fx - 15, fy, 12, 15, A, '#c2399a', 3, -1);
-  drawEye(fx + 16, fy, 12.5, 15.5, A, '#c2399a', 3, 1);
+  drawEye(fx - 15, fy, 12, 15, A, S.eyes, 3, -1);
+  drawEye(fx + 16, fy, 12.5, 15.5, A, S.eyes, 3, 1);
   ellipse(fx - 30, fy + 15, 8, 5, '#ff70a8aa'); ellipse(fx + 31, fy + 15, 8, 5, '#ff70a8aa');
   drawMouth(fx + 1, fy + 17, A, '#5a2370');
 }
@@ -475,13 +483,39 @@ function drawCreature(kind, A, ox, oy, opts = {}) {
   ctx.restore();
 }
 
+// "Realistic" lighting: the creature is drawn into an offscreen layer, then lit from the upper left
+// (soft highlight) and shaded underneath (form shadow) using 'source-atop', so it reads as rounded.
+const shadeCv = document.createElement('canvas'), shadeCx = shadeCv.getContext('2d');
+function drawCreatureLit(kind, A, ox, oy, opts = {}) {
+  const m = ctx.getTransform(), tp = (x, y) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f];
+  const pts = [tp(ox - 150, oy - 260), tp(ox + 150, oy - 260), tp(ox - 150, oy + 30), tp(ox + 150, oy + 30)];
+  const bx = Math.floor(Math.min(...pts.map(p => p[0]))), by = Math.floor(Math.min(...pts.map(p => p[1])));
+  const bw = Math.ceil(Math.max(...pts.map(p => p[0]))) - bx, bh = Math.ceil(Math.max(...pts.map(p => p[1]))) - by;
+  if (!(bw > 0 && bh > 0 && bw < 2400 && bh < 2400)) { drawCreature(kind, A, ox, oy, opts); return; }
+  if (!opts.noShadow) { ctx.save(); ctx.translate(ox, oy); creatureShadow(kind, A, opts.drop || 0); ctx.restore(); }
+  if (shadeCv.width < bw || shadeCv.height < bh) { shadeCv.width = Math.max(shadeCv.width, bw); shadeCv.height = Math.max(shadeCv.height, bh); }
+  shadeCx.setTransform(1, 0, 0, 1, 0, 0); shadeCx.globalCompositeOperation = 'source-over'; shadeCx.clearRect(0, 0, bw, bh);
+  shadeCx.setTransform(m.a, m.b, m.c, m.d, m.e - bx, m.f - by);
+  withCtx(shadeCx, () => drawCreature(kind, A, ox, oy, { ...opts, noShadow: true }));
+  shadeCx.setTransform(1, 0, 0, 1, 0, 0); shadeCx.globalCompositeOperation = 'source-atop';
+  const lx = bw * .38, ly = bh * .28;
+  let g = shadeCx.createRadialGradient(lx, ly, bw * .04, lx, ly, bw * .55);
+  g.addColorStop(0, 'rgba(255,252,235,.38)'); g.addColorStop(.5, 'rgba(255,252,235,.1)'); g.addColorStop(1, 'rgba(255,252,235,0)');
+  shadeCx.fillStyle = g; shadeCx.fillRect(0, 0, bw, bh);
+  g = shadeCx.createLinearGradient(bw * .35, bh * .45, bw * .62, bh * .95);
+  g.addColorStop(0, 'rgba(120,30,140,0)'); g.addColorStop(1, 'rgba(120,30,140,.2)');
+  shadeCx.fillStyle = g; shadeCx.fillRect(0, 0, bw, bh);
+  shadeCx.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(shadeCv, 0, 0, bw, bh, bx, by, bw, bh); ctx.restore();
+}
+
 // Portraits: the same rig drawn into small canvases (chooser buttons + title screen)
 const portraits = [];
 function registerPortrait(el, kind, size) {
   const c = el.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
   el.width = size * dpr; el.height = size * dpr;
   const A = makeAnim(); A.t = Math.random() * 5; A.facing = 1;
-  portraits.push({ el, c, kind, size, dpr, A, x: 0 });
+  const entry = { el, c, kind, size, dpr, A, x: 0 }; portraits.push(entry); return entry;
 }
 function renderPortraits(dt) {
   for (const p of portraits) {

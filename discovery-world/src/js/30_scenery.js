@@ -129,6 +129,7 @@ function ground(t) {
   ctx.fillStyle = grad(0, gy, 0, 40, [[0, 'rgba(255,255,255,.28)'], [1, 'rgba(255,255,255,0)']]); ctx.fillRect(0, gy + 8, vw, 34);
   for (let i = Math.floor(camera / 220) - 1; i < (camera + vw) / 220 + 1; i++) { const x = i * 220 - camera + 60; glow(x, gy + 28, 30, ['#ff9fd8', '#ffe08a', '#9fe6ff', '#c9a6ff'][((i % 4) + 4) % 4], .3); }
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(0, gy - 1, vw, 8); ctx.fillStyle = '#fff4c8'; ctx.fillRect(0, gy - 1, vw, 2.5); ctx.fillStyle = 'rgba(140,70,20,.35)'; ctx.fillRect(0, gy + 7, vw, 2);
+  ctx.fillStyle = grad(0, gy + 9, 0, 22, [[0, 'rgba(30,0,60,.2)'], [1, 'rgba(30,0,60,0)']]); ctx.fillRect(0, gy + 9, vw, 22); // contact shading where things meet the floor
   // earth below the slab
   const ey = gy + slab; if (ey >= VH) return;
   ctx.fillStyle = grad(0, ey, 0, 300, [[0, '#5a2f78'], [.3, '#43245e'], [1, '#2a1640']]); ctx.fillRect(0, ey, vw, VH - ey);
