@@ -211,7 +211,10 @@ const INTERACT = [
   { box: [3900, 105, 4222, 452], hint: [4060, 262], disc: 'wheel', tap: rideWheel },
   { box: [4380, 200, 5360, 452], hint: [4440, 360], disc: 'coaster', tap: rideCoaster },
   { box: [5520, 40, 5880, 452], hint: [5700, 300], disc: 'carousel', tap: rideCarousel },
-  { box: [6075, 270, 6215, 452], hint: [6145, 390], disc: 'tube', tap: rideTube },
+  { box: [6166, 362, 6214, 402], hint: [6190, 382], disc: 'dispenser', priority: true, tap: dispense },
+  { box: [6672, 150, 6790, 232], hint: [6730, 200], disc: 'xylophone', priority: true, tap: tapXylo },
+  { box: [6150, 100, 6232, 450], tap: dispense },
+  { box: [6775, 270, 6915, 452], hint: [6845, 390], disc: 'tube', tap: rideTube },
   { box: [688, 236, 784, 360], hint: [737, 300], disc: 'climbnet', tap: () => tapClimb(CLIMBS[0]) },
   { box: [2682, 296, 2728, 452], hint: [2705, 380], disc: 'ladder', tap: () => tapClimb(CLIMBS[1]) },
   { box: [1378, 136, 1446, 204], hint: [1416, 176], disc: 'zipline', tap: tapZip },
@@ -398,6 +401,7 @@ function updateWorld(dt, t) {
   world.pitJiggle = Math.max(0, world.pitJiggle - dt);
   world.stickerJig = Math.max(0, world.stickerJig - dt * 1.4); world.zipWiggle = Math.max(0, world.zipWiggle - dt * 1.5);
   updateBalls(dt);
+  updateMarble(dt, t);
   updateParticles(dt);
 }
 function updateBalls(dt) {

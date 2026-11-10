@@ -6,7 +6,7 @@ let ctx = canvas.getContext('2d', { alpha: false });
 
 const VH = 480;          // world units visible vertically (closer camera = bigger creatures)
 const GROUND = 450;      // floor line in world units
-const WORLD_W = 6300;    // ONE continuous world, left to right
+const WORLD_W = 7000;    // ONE continuous world, left to right
 const GRAV = 1450;
 const TAU = Math.PI * 2;
 
@@ -173,7 +173,10 @@ const Sound = {
   pour() { this.noise(.45, 300, 900, .05); this.tone(260, .25, 'sine', .03, .7, .05); },
   whoosh() { this.noise(.5, 400, 3000, .06); },
   click() { this.tone(720, .05, 'square', .025, .9); },
-  chime() { [0, 4, 7, 12].forEach((s, i) => this.tone(523.25 * 2 ** (s / 12), .4, 'triangle', .045, 1, i * .07)); },
+  // soft bell: fundamental + a quiet bright overtone, gentle decay (xylophone / music-box feel)
+  bell(freq, vol = .05, delay = 0) { this.tone(freq, .9, 'sine', vol, 1, delay); this.tone(freq * 2.01, .35, 'triangle', vol * .35, 1, delay); this.tone(freq * 3.99, .15, 'sine', vol * .12, 1, delay); },
+  chime() { [0, 2, 4, 7].forEach((k, i) => this.bell([523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51][k], .045, i * .085)); },
+  twinkle() { const P = [784, 880, 1047, 1175, 1319]; this.bell(P[Math.floor(Math.random() * P.length)], .03); },
   giggle() { [0, 1, 2, 3].forEach(i => this.tone(700 + i * 90 + Math.random() * 40, .07, 'sine', .05, 1.25, i * .075)); },
   hum(on) { this.tone(on ? 110 : 220, .5, 'sawtooth', .025, on ? 2.2 : .5); },
 };
