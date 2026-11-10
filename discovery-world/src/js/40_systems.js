@@ -145,9 +145,10 @@ function rideCarousel() {
 function doAction() {
   const P = player; if (!started) return;
   if (P.ride) { jump(); return; }
+  const door = nearDoor(); if (door) { door.go(); return; }
   let best = null, bd = 1e9;
   for (const it of INTERACT) {
-    if ((it.need && !it.need()) || (it.layer || '') !== layerKey()) continue;
+    if ((it.need && !it.need()) || (it.layer !== 'any' && (it.layer || '') !== layerKey())) continue;
     const hx = it.hint ? it.hint[0] : (it.box[0] + it.box[2]) / 2, hy = it.hint ? it.hint[1] : (it.box[1] + it.box[3]) / 2;
     const d = Math.abs(hx - P.x) - (it.force && it.force() ? 400 : 0) - (it.hint ? 40 : 0);
     if (Math.abs(hx - P.x) < 240 && d < bd) { bd = d; best = { it, hx, hy }; }
@@ -241,7 +242,7 @@ function hintTarget() {
   // step of the paint→bubble→power chain when it is ready ("force").
   let best = null, bd = 1e9;
   for (const it of INTERACT.concat(EXTRA_HINTS)) {
-    if (!it.hint || (it.need && !it.need()) || (it.layer || '') !== layerKey()) continue;
+    if (!it.hint || (it.need && !it.need()) || (it.layer !== 'any' && (it.layer || '') !== layerKey())) continue;
     if (!(it.force && it.force()) && world.discoveries.has(it.disc)) continue;
     if (!cull(it.hint[0], 0)) continue;
     const d = Math.abs(it.hint[0] - player.x); if (d < bd) { bd = d; best = it.hint; }

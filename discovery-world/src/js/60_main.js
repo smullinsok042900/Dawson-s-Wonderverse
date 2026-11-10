@@ -83,7 +83,7 @@ function drawPlayer(t) {
   // riders shrink to fit their seat (bubble / gondola / coaster car), scaled about the feet
   const rs = P.ride ? ({ bubble: .78, wheel: .5, coaster: .58, carousel: .62, swing: .8, train: .58 }[P.ride.type] || 0) : 0;
   if (rs) { ctx.translate(P.x, P.y); ctx.scale(rs, rs); ctx.translate(-P.x, -P.y); }
-  drawCreature(P.creature, A, P.x, P.y, { noShadow: !!P.ride, drop: P.grounded ? 0 : floorBelow(P.x, P.y) - P.y });
+  drawCreatureLit(P.creature, A, P.x, P.y, { noShadow: !!P.ride, drop: P.grounded ? 0 : floorBelow(P.x, P.y) - P.y });
   ctx.restore();
 }
 function floorBelow(x, y) {
@@ -104,7 +104,7 @@ function render(t) {
   glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawNest(t); drawHatches(t); drawWaiting(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawPortalDoors(t); drawNest(t); drawHatches(t); drawWaiting(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
@@ -119,13 +119,18 @@ function render(t) {
   // things that sit IN FRONT of the creature (so it is inside the ride / the pit)
   if (rideType === 'coaster') coasterTrain(t);
   if (rideType === 'wheel') { const W = LAYOUT.wheel, a = world.wheelAngle + player.ride.i * Math.PI / 5, x = W.cx + Math.cos(a) * W.r, y = W.cy + Math.sin(a) * W.r; rounded(x - 26, y + 24, 52, 18, 9, ['#ffbb68', '#7be1ed', '#ff85c2', '#a88af5', '#92e1a6'][player.ride.i % 5], '#fff', 3); }
-  drawBigFront(t); drawPetFollower(t);
+  drawBigFront(t); drawPetFollower(t); drawDoorBubble(t);
   world.bubbles.forEach(b => { if (b.ride && cull(b.x, 80)) drawBubble(b); });
   if (cull(365, 260)) drawBallPitFront();
   drawParticles();
   if (started) drawHintHand(t);
   ctx.restore();
   foreground(t); drawMotes(t);
+  // warm key light from the upper left, cool shade toward the lower right (soft-light colour grade)
+  if (world.doorFlash > 0) { world.doorFlash -= 1 / 60; ctx.fillStyle = `rgba(255,250,235,${world.doorFlash * 1.6})`; ctx.fillRect(0, 0, vw, VH); } // door transition flash
+  ctx.save(); ctx.globalCompositeOperation = 'soft-light';
+  ctx.fillStyle = grad(0, 0, vw * .6, VH, [[0, 'rgba(255,236,200,.5)'], [.55, 'rgba(128,128,128,0)'], [1, 'rgba(70,20,110,.32)']]); ctx.fillRect(0, 0, vw, VH);
+  ctx.restore();
 }
 function paintDropIcon(x, y) {
   rounded(x - 44, y - 22, 88, 44, 20, 'rgba(255,255,255,.94)', '#e3b0ee', 3);
@@ -176,5 +181,5 @@ window.__DDW = {
   player, world, balls, LAYOUT, keys, Sound, SECRET_STARS, get camera() { return camera; }, get vw() { return vw; }, VH,
   toScreen(x, y) { const r = canvas.getBoundingClientRect(); return { x: (x - camera) / VH * r.height + r.left, y: (y - camY) / VH * r.height + r.top }; },
   teleport(x, y = GROUND) { player.ride = null; player.under = false; player.inside = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
-  get quality() { return quality; }, blockPlatforms: () => builtPlatforms.length, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
+  get quality() { return quality; }, style: STYLE, blockPlatforms: () => builtPlatforms.length, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
 };

@@ -1,11 +1,21 @@
-# Test report — Milestone 3, build 8
+# Test report — Milestone 3, build 9
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 103 / 103 checks passed, no console errors
+## Result: 111 / 111 checks passed, no console errors
+
+The build 9 door fix added four checks: PAW at a door goes in, PAW inside comes back out, the bridge door leads down to the caves, and the cave door leads back up.
+
+Build 9 added four checks:
+- the style button opens the panel
+- colour, pattern and extras change
+- ✓ closes the panel
+- reload keeps the style
+
+Frame timing after adaptive resolution: median 16.7 ms at 0.70 density (headless software rendering, not an iPhone).
 
 Build 8 added 13 checks:
 - hatch drop into the tunnels

@@ -210,3 +210,45 @@ function drawMotes(t) {
     if (a > .1) glow(x, y, 6 + (i % 3) * 3, ['#fff6c8', '#ffd1f0', '#c9f2ff'][i % 3], a);
   }
 }
+
+// ---------- DOORS everywhere you'd expect them (build 9b) ----------
+// Every usable door shows a big "door bubble" when you're near; tap the door/bubble or press PAW.
+// Tower-trunk doors lead down a secret staircase into the caves (and cave doors lead back up).
+const PORTALS = [
+  { id: 'bridge', x: 1215, under: false, to: { under: true, x: 1250 }, c: '#a15cff' },   // door under the rainbow bridge
+  { id: 'cave1', x: 1250, under: true, to: { under: false, x: 1215 }, c: '#ff6fae' },
+  { id: 'tower2', x: 8010, under: false, to: { under: true, x: 7040 }, c: '#ff6fae' },   // door in the Sky Tower base
+  { id: 'cave2', x: 7040, under: true, to: { under: false, x: 8010 }, c: '#a15cff' },
+];
+function usePortal(d) {
+  const P = player; if (P.ride) return;
+  if (!!P.under !== d.under || P.inside || Math.abs(P.x - d.x) > 330) { burst(d.x, (d.under ? UG.floor : GROUND) - 40, 6); Sound.click(); return; }
+  world.doorFlash = .5; P.under = d.to.under; P.inside = null; P.x = d.to.x; P.y = d.to.under ? UG.floor : GROUND; P.vx = P.vy = 0; P.grounded = true;
+  Sound.tone(520, .25, 'triangle', .05, 1.4); Sound.tone(780, .3, 'triangle', .04, 1.3, .12);
+  burst(P.x, P.y - 60, 16, ['#fff', '#ffe36e', '#ff9fd8']);
+  discover('secretdoor', d.under ? 'Back up the secret stairs!' : 'A secret door! It leads down to the crystal caves!', P.x, P.y - 160);
+}
+// all doors in one list: [x, groundY, layer it is used from, action, isInside]
+function allDoors() {
+  const P = player, list = PORTALS.map(d => ({ x: d.x, y: d.under ? UG.floor : GROUND, lk: d.under ? 'ug' : '', go: () => usePortal(d) }));
+  for (const id of Object.keys(BUILDINGS)) { const B = BUILDINGS[id]; list.push({ x: B.door, y: GROUND, lk: P.inside === id ? 'in:' + id : '', go: () => toggleDoor(id), out: P.inside === id }); }
+  return list;
+}
+function nearDoor() { const P = player, lk = layerKey(); return allDoors().find(d => d.lk === lk && Math.abs(P.x - d.x) < 110 && Math.abs(P.y - d.y) < 6); }
+function drawPortalDoors(t) {
+  for (const d of PORTALS) {
+    const y = d.under ? UG.floor : GROUND; if (!cull(d.x, 40)) continue;
+    rounded(d.x - 24, y - 78, 48, 78, 24, grad(0, y - 78, 0, 78, [[0, shade(d.c, .15)], [1, shade(d.c, -.25)]]), '#ffd36b', 4);
+    rounded(d.x - 16, y - 66, 32, 30, 15, 'rgba(255,255,255,.18)'); ellipse(d.x + 13, y - 36, 3.5, 3.5, '#ffd36b'); star(d.x, y - 56, 7, '#fff6b0');
+    glow(d.x, y - 40, 50, '#fff3a6', .25 + Math.sin(t * 3) * .1);
+  }
+}
+function drawDoorBubble(t) {
+  const d = nearDoor(); if (!d || player.ride) return;
+  const y = d.y - 238 + Math.sin(t * 4) * 4; // above the creature's head, never over its face
+  ellipse(d.x, y, 30, 26, 'rgba(255,255,255,.96)', '#ffc531', 3);
+  rounded(d.x - 9, y - 14, 18, 26, 9, '#a15cff', '#fff', 2); ellipse(d.x + 5, y, 1.8, 1.8, '#ffd36b');
+  ctx.beginPath(); if (d.out) { ctx.moveTo(d.x + 22, y); ctx.lineTo(d.x + 12, y - 7); ctx.lineTo(d.x + 12, y + 7); } else { ctx.moveTo(d.x + 12, y); ctx.lineTo(d.x + 22, y - 7); ctx.lineTo(d.x + 22, y + 7); }
+  ctx.closePath(); ctx.fillStyle = '#ff4f9a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(d.x - 7, y + 26); ctx.lineTo(d.x, y + 36); ctx.lineTo(d.x + 7, y + 26); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fill();
+}

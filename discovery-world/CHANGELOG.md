@@ -1,5 +1,31 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 3 · build 9 — Pip redrawn, realistic lighting, creature customisation (playtest feedback #3)
+Previous build backed up as `backups/M3_build8_index.html`.
+- **Pip redrawn.** Build 8 Pip read as a lumpy bean: head and body merged, a jagged outline, a huge flat rainbow tail behind see-through wings, an arm sticking up, and a goggle strap over the ears. Now:
+  - a round head on a chubby body, with a fluffy **neck collar** between them and cheek-fur tufts
+  - a neat **curled fox tail** with clean rainbow bands and a white tip
+  - small fairy wings set high on the back
+  - short arms with paws resting at the sides
+  - goggles sitting on the forehead
+  - a soft highlight on top of the head
+- **More realistic lighting:**
+  - your creature is drawn on its own layer and **lit from the upper left, with form shading underneath**, so all three look rounded and solid
+  - a warm-light / cool-shade colour grade over the whole scene
+  - soft contact shading where everything meets the floor
+- **Doors fixed and added (feedback: "the doors don't actually let you enter"):**
+  - The paw button now uses a door from BOTH sides. Before, once inside a house, PAW ignored the door, so you could feel stuck.
+  - A big **door bubble** (door + arrow) appears above any usable door when you're near it. Tap the door, tap the bubble, or press PAW.
+  - **Two new secret doors:** one **under the rainbow bridge** right near the start, and one in the **Sky Tower base**. Each leads down a secret staircase into the crystal caves, with cave doors that lead back up, and a bright flash as you go through.
+- **Creature Style panel**: the new 🎨 paint-brush button in the top bar opens it, with a live preview of your creature.
+  - **body colour** (10 + your mixed paint)
+  - **accent colour** (incl. rainbow; used for the tail, ears, star points, tentacles)
+  - **eye colour** (6)
+  - **pattern**: none / spots / stars / hearts / stripes
+  - two **feature toggles** per creature: Pip wings & goggles, Zuzu baby stars & antenna, Jelly frill & antennae
+  - each creature keeps its own style, and it's saved
+  - these are body colours and features, not clothes, so the brief's "no dress-up" still holds
+
 ## Milestone 3 · build 8 — tunnels & doors, creating, Star Babies, graphics (playtest feedback #2)
 Previous build backed up as `backups/M2_build7_index.html`.
 - **Underground layer (secret tunnels):**
