@@ -37,6 +37,15 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 4: drag your finger to move (no arrow buttons)
+- **Moving:** put a finger anywhere on the left half of the screen and slide it the way to go. A joystick ring appears under the finger.
+  - **Sideways:** walks. A small slide walks slowly and a bigger slide walks normally. It is never faster than walking.
+  - **Up:** jumps, goes in through a door, goes up the stairs or the glass lift, and swims up. Hold it up to keep swimming.
+  - **Down:** dives into the deep part of the ball pit, and goes down the stairs or the lift.
+  - **Quick tap:** a touch that doesn't slide still taps whatever is there.
+- **Buttons:** JUMP and PAW stay on the right. On the keyboard, the arrow keys still work.
+- **Fixed:** a code typo had been skipping the sun's shadow settings, so shadows are now set up properly.
+
 ## 3D build 3: tube slide, nothing to walk through, livelier creatures, better graphics
 - **A real tube slide:** a big see-through rainbow tube. The creature whooshes down inside it and pops out at the bottom.
 - **Nothing blocks the way back any more:** the slide tower, its steps and the paint-jar tower stand just behind the path. You jump up onto them, and you can always walk past them. The glass lift also moved behind the path.
@@ -88,7 +97,7 @@ npm test             # 48 automated checks in headless Chromium
 `?test` runs a light mode (lower resolution, no shadows) that is used only by the automated tests, because the test browser has no graphics card. `?hq` turns off the automatic quality lowering, for screenshots.
 
 ## Test report (3D build 1)
-**Result:** 66/66 checks passed (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
+**Result:** 69/69 checks passed (3D build 4). Movement now uses finger slides, plus checks for a slide up to jump, a gentle slide walking slowly, and a slide down to dive. Earlier: 66/66 (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
 
 **Setup:** Playwright headless Chromium at 844×390 with touch input. WebGL ran in software (SwiftShader), so it was very slow (about 2–3 frames per second). That speed says nothing about a real iPhone.
 

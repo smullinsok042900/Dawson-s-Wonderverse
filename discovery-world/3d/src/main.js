@@ -35,7 +35,7 @@ scene.fog = new THREE.Fog('#f3c9ff', 60, 170);
 const camera = new THREE.PerspectiveCamera(38, 2, .1, 600);
 const hemi = new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .85); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1dc', 2.1); sun.castShadow = true;
-sun.shadow.mapSize.set(MOBILE ? 1536 : 2048, MOBILE ? 1536 : 2048); sun.shadow.radius = 4; // soft shadow edges Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
+sun.shadow.mapSize.set(MOBILE ? 1536 : 2048, MOBILE ? 1536 : 2048); sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 // gradient sky dome + puffy clouds
 const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), new THREE.ShaderMaterial({
@@ -274,7 +274,9 @@ function startStairs(up) {
   discover(up ? 'stairs-up' : 'stairs-down', up ? 'Walk up the stairs with the arrow buttons!' : 'Walk down the stairs with the arrow buttons!');
 }
 function updateStairs(dt) {
-  const P = player, S = IN.stair, St = P.stair, h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0), len = Math.hypot(S.x1 - S.x0, S.y1 - S.y0);
+  const P = player, S = IN.stair, St = P.stair, len = Math.hypot(S.x1 - S.x0, S.y1 - S.y0), upDir = Math.sign(S.x1 - S.x0);
+  let h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  if (stick && stick.active && Math.abs(stick.dy) > 30 && Math.abs(stick.dy) > Math.abs(stick.dx)) h = stick.dy < 0 ? upDir : -upDir; // drag up / down walks the stairs
   if (h) P.facing = h;
   St.k += h * 4 / len * dt;
   if (St.k < 0 || St.k > 1) { const top = St.k > 1; P.stair = null; P.x = (top ? S.x1 : S.x0) + h * .05; P.y = top ? S.y1 : S.y0; P.vx = h * 4; P.vy = 0; P.grounded = true; return; }
@@ -323,18 +325,43 @@ function updateHint(t) {
 }
 
 // ---------------- input ----------------
-const keys = { left: false, right: false };
-function hold(id, key) {
-  const el = $(id); const set = v => { keys[key] = v; el.classList.toggle('pressed', v); };
-  el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); set(true); Sound.unlocked = true; });
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => el.addEventListener(n, () => set(false)));
+const keys = { left: false, right: false, scale: 1 };
+// ---- DRAG TO MOVE: put a finger down on the left side and slide it the way to go ----
+// sideways = walk (a small slide walks slowly, a bigger slide walks normally; never faster),
+// up = jump / go up the stairs or lift / swim up (hold to keep swimming), down = dive / go down.
+// A quick tap without sliding still taps whatever is there.
+let stick = null;
+const STICK_R = 55;
+function stickUI(show) { const st = $('stick'); st.classList.toggle('show', show); if (show) { st.style.left = stick.x0 + 'px'; st.style.top = stick.y0 + 'px'; } }
+function stickMove(e) {
+  const dx = e.clientX - stick.x0, dy = e.clientY - stick.y0, d = Math.hypot(dx, dy);
+  if (!stick.active && d > 14) { stick.active = true; stickUI(true); $('dragHint').classList.add('gone'); discover('drag'); }
+  if (!stick.active) return;
+  stick.dx = dx; stick.dy = dy;
+  const k = Math.min(1, STICK_R / Math.max(d, 1)); $('knob').style.transform = `translate(${dx * k}px,${dy * k}px)`;
+  const ax = Math.abs(dx); keys.right = dx > 14; keys.left = dx < -14; keys.scale = clamp((ax - 14) / 45, .35, 1);
+  if (dy < -45 && !stick.upFired && -dy > ax * .6) { stick.upFired = true; upAction(); }
+  if (dy > -25) stick.upFired = false;
+  if (dy > 45 && !stick.downFired && dy > ax * .6) { stick.downFired = true; downAction(); }
+  if (dy < 25) stick.downFired = false;
 }
-hold('leftBtn', 'left'); hold('rightBtn', 'right');
+function stickEnd() { keys.left = keys.right = false; keys.scale = 1; stickUI(false); $('knob').style.transform = ''; stick = null; }
+function upAction() {
+  const P = player; if (!started || P.stair) return;
+  const d = nearDoor(); if (d && d.kind !== 'down') { d.go(); return; } // up at a door goes in/out; at the bottom of stairs or the lift goes up
+  jump();
+}
+function downAction() {
+  const P = player; if (!started || P.stair || P.ride) return;
+  const d = nearDoor(); if (d && d.kind === 'down') { d.go(); return; }
+  if (P.layer === '' && P.grounded && P.y < .1 && P.x > 8.4 && P.x < 15.6) { dive(); return; } // anywhere in the ball pit: dive into the deep part
+  creature.cheer(); // a little squat
+}
 const press = (id, fn) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; $(id).classList.add('pressed'); setTimeout(() => $(id).classList.remove('pressed'), 140); fn(); });
 press('jumpBtn', jump); press('pawBtn', doAction);
-addEventListener('keydown', e => { if (e.repeat) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ' || e.key === 'ArrowUp') jump(); if (e.key === 'e' || e.key === 'Enter') doAction(); });
+addEventListener('keydown', e => { if (e.repeat) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ') jump(); if (e.key === 'ArrowUp') upAction(); if (e.key === 'ArrowDown') downAction(); if (e.key === 'e' || e.key === 'Enter') doAction(); });
 addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.left = false; if (e.key === 'ArrowRight') keys.right = false; });
-addEventListener('blur', () => { keys.left = keys.right = false; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); });
+addEventListener('blur', () => { if (stick) stickEnd(); keys.left = keys.right = false; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); });
 
 function jump() {
   const P = player; if (!started || P.stair) return;
@@ -358,8 +385,13 @@ function pointerRay(e) { const r = canvas.getBoundingClientRect(); ndc.set((e.cl
 function nearPaint() { const P = player; return P.layer === '' && P.y > -.5 && P.x > G.paint.x1 && P.x < G.paint.x2 && !P.ride; }
 canvas.addEventListener('pointerdown', e => {
   if (!started) return; Sound.unlocked = true; pointerRay(e);
-  const targets = [creature.root, ...G.taps, ...bubbles.map(b => b.m), ...DOORS.filter(d => d.sprite.visible).map(d => d.sprite)];
   if (nearPaint()) { const h = ray.intersectObject(G.paint.mesh)[0]; if (h && !ray.intersectObjects(DOORS.map(d => d.sprite).filter(s => s.visible)).length) { painting = { id: e.pointerId, last: h.uv.clone() }; paintAt(h.uv, h.uv); canvas.setPointerCapture(e.pointerId); discover('paint', 'Paint with your finger! Pick a colour below.'); return; } }
+  if (!stick && e.clientX < innerWidth * .5) { stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), active: false, dx: 0, dy: 0, cx: e.clientX, cy: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (_) { } return; }
+  worldTap(e);
+});
+function worldTap(e) {
+  pointerRay(e);
+  const targets = [creature.root, ...G.taps, ...bubbles.map(b => b.m), ...DOORS.filter(d => d.sprite.visible).map(d => d.sprite)];
   const hits = ray.intersectObjects(targets, true);
   // tapping your creature always tickles it, even when it stands behind balls or bubbles
   if (hits.some(h => h.object.userData.creature) && !hits.some(h => h.object.isSprite)) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return; }
@@ -369,9 +401,12 @@ canvas.addEventListener('pointerdown', e => {
     if (o.userData.creature) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return; }
     o.userData.tap(h); return;
   }
-});
-canvas.addEventListener('pointermove', e => { if (!painting || e.pointerId !== painting.id) return; pointerRay(e); const h = ray.intersectObject(G.paint.mesh)[0]; if (h) { paintAt(painting.last, h.uv); painting.last = h.uv.clone(); } });
-['pointerup', 'pointercancel'].forEach(n => canvas.addEventListener(n, e => { if (painting && e.pointerId === painting.id) { painting = null; saveSoon(); } }));
+}
+canvas.addEventListener('pointermove', e => { if (stick && e.pointerId === stick.id) { stickMove(e); return; } if (!painting || e.pointerId !== painting.id) return; pointerRay(e); const h = ray.intersectObject(G.paint.mesh)[0]; if (h) { paintAt(painting.last, h.uv); painting.last = h.uv.clone(); } });
+['pointerup', 'pointercancel'].forEach(n => canvas.addEventListener(n, e => {
+  if (stick && e.pointerId === stick.id) { const tapped = !stick.active && performance.now() - stick.t0 < 1500 && n === 'pointerup'; /* a touch that didn't slide is a tap */ const at = { clientX: stick.cx, clientY: stick.cy }; stickEnd(); if (tapped) worldTap(at); return; }
+  if (painting && e.pointerId === painting.id) { painting = null; saveSoon(); }
+}));
 function paintAt(a, b) {
   const g = G.paint.ctx, W = G.paint.canvas.width, H = G.paint.canvas.height;
   let c = world.paintColor; if (c === 'rainbow') { world.rainbowHue = (world.rainbowHue + 6) % 360; c = `hsl(${world.rainbowHue},90%,60%)`; }
@@ -401,7 +436,7 @@ function updatePlayer(dt) {
   const crawl = P.layer === '' && P.y < UG.ceil - .1 && P.x > UG.tunnel[0] - .3 && P.x < UG.tunnel[1] + .3 && P.y < UG.tunnelCeil - .5;
   if (crawl && !P.crawl) discover('crawl', 'A tiny tunnel! Crawl through it.');
   P.crawl = crawl;
-  const top = swim ? 2.2 : crawl ? 3.4 : 5.2, accel = P.grounded ? 40 : 22; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt);
+  const top = (swim ? 2.2 : crawl ? 3.4 : 5.2) * keys.scale, accel = P.grounded ? 40 : 22; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt);
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
   // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
   for (const s of G.solids) {
@@ -563,6 +598,7 @@ const timer = new THREE.Timer(); let T = 0;
 let acc = 0;
 function step(dt) {
   T += dt;
+  if (stick && stick.active && stick.dy < -45 && player.swim) { stick.swimT = (stick.swimT || 0) - dt; if (stick.swimT <= 0) { stick.swimT = .38; jump(); } }
   if (started) { updatePlayer(dt); updateFluffs(dt, T); updateBubbles(dt); }
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt); updateCamera(dt);
 }
@@ -594,6 +630,7 @@ restore(saved);
 setCreature(player.creature);
 document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x.dataset.c === player.creature));
 updateCounters(); snapCamera(); updateBits(0);
+if (world.disc.has('drag')) $('dragHint').classList.add('gone');
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
 addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
