@@ -41,10 +41,15 @@ function background(t) {
     ctx.globalAlpha = .9; ellipse(x, y, 62, 22, '#ffffff'); ellipse(x - 26, y - 12, 32, 24, '#ffffff'); ellipse(x + 18, y - 18, 36, 29, '#ffffff'); ctx.globalAlpha = 1;
   }
   // rolling hills (two depths)
+  // climbing into the sky: the distant scenery sinks away so more sky opens up above
+  const up = Math.max(0, -camY) * .45;
+  ctx.save(); ctx.translate(0, up);
   hills(.16, 330, 42, palette.hillB, .0042, 0);
   farProps(t);
   hills(.3, 372, 34, palette.hillA, .006, 2);
   midArchitecture(t);
+  ctx.restore();
+  if (up > 0) for (let i = 0; i < 7; i++) { const x = ((i * 260 - camera * .08 + t * 5) % (vw + 300) + vw + 300) % (vw + 300) - 150, y = up * .6 - 120 + (i % 3) * 70; ctx.globalAlpha = Math.min(1, up / 200) * .9; ellipse(x, y, 90, 30, '#ffffff'); ellipse(x - 40, y - 16, 44, 30, '#ffffff'); ellipse(x + 30, y - 22, 50, 36, '#ffffff'); ctx.globalAlpha = 1; }
 }
 function hills(k, base, amp, col, freq, seed) {
   ctx.beginPath(); ctx.moveTo(0, VH);

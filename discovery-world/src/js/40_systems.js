@@ -167,7 +167,7 @@ function tapTramp() {
   const P = player; if (!P.ride && Math.abs(P.x - LAYOUT.tramp.cx) < 260 && P.grounded) { P.x = clamp(P.x, LAYOUT.tramp.a + 10, LAYOUT.tramp.b - 10); bounce(930); }
   balls.forEach(b => { if (b.x > LAYOUT.tramp.a && b.x < LAYOUT.tramp.b) b.vy = -700; });
 }
-function tapPit(p) { world.pitJiggle = 1.2; burst(p.x, 420, 12, ['#65dcec', '#ffda68', '#b587ff', '#ff67ab'], 'dot'); Sound.pop(); discover('ballpit', 'Splash into the giant ball pit!', p.x, 380); }
+function tapPit(p) { if (inPit()) { diveThroughPit(); return; } world.pitJiggle = 1.2; burst(p.x, 420, 12, ['#65dcec', '#ffda68', '#b587ff', '#ff67ab'], 'dot'); Sound.pop(); discover('ballpit', 'Splash into the giant ball pit!', p.x, 380); }
 function bounce(v) {
   const P = player; P.vy = -v; P.grounded = false; P.jumps = 1; P.y = LAYOUT.tramp.y - 1; world.tramp.v += 520;
   Sound.boing(); burst(P.x, LAYOUT.tramp.y, 12, ['#fff16e', '#fff', '#ff9bd2']); animJump(P.anim, P.creature, 1);
@@ -412,6 +412,7 @@ function updateWorld(dt, t) {
   updateBalls(dt);
   updateMarble(dt, t);
   updateBig(dt, t);
+  updateSky(dt, t);
   updateParticles(dt);
 }
 function updateBalls(dt) {
@@ -451,7 +452,7 @@ function updateBalls(dt) {
 function updateCamera(dt) {
   const P = player, fast = P.ride && (P.ride.type === 'tube') ? 14 : 5.3;
   const focusY = P.ride && P.ride.type === 'carousel' ? GROUND : P.y;
-  camY += (clamp(focusY - 390, -470, P.under ? 340 : 540 - VH) - camY) * Math.min(1, dt * 5);
+  camY += (clamp(focusY - 390, -950, P.under ? 340 : 540 - VH) - camY) * Math.min(1, dt * 5);
   world.lookAhead += ((P.ride ? 0 : P.facing * vw * .1) - world.lookAhead) * Math.min(1, dt * 1.6);
   const target = clamp(P.x - vw / 2 + world.lookAhead, 0, Math.max(0, WORLD_W - vw));
   camera += (target - camera) * Math.min(1, dt * fast);

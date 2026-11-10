@@ -98,13 +98,13 @@ function render(t) {
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ground(t);
   ctx.save(); ctx.translate(-camera, -camY);
-  drawUnderground(t); drawPetMaker(t); drawBuilder(t);
+  drawUnderground(t); drawPetMaker(t); drawBuilder(t); drawSky(t);
   if (camY < 70 && !player.under) floorReflection(t);
   ceilingTube(t, false); hangingStars(t);
   glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawPortalDoors(t); drawNest(t); drawHatches(t); drawWaiting(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); drawBigBack(t); drawBuildingDoors(t); drawInteriors(t); drawPortalDoors(t); drawNest(t); drawHatches(t); drawWaiting(t); drawNpcs(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);
@@ -119,9 +119,10 @@ function render(t) {
   // things that sit IN FRONT of the creature (so it is inside the ride / the pit)
   if (rideType === 'coaster') coasterTrain(t);
   if (rideType === 'wheel') { const W = LAYOUT.wheel, a = world.wheelAngle + player.ride.i * Math.PI / 5, x = W.cx + Math.cos(a) * W.r, y = W.cy + Math.sin(a) * W.r; rounded(x - 26, y + 24, 52, 18, 9, ['#ffbb68', '#7be1ed', '#ff85c2', '#a88af5', '#92e1a6'][player.ride.i % 5], '#fff', 3); }
-  drawBigFront(t); drawPetFollower(t); drawDoorBubble(t);
+  drawBigFront(t); drawPetFollower(t); drawBalloon(t); drawDoorBubble(t);
   world.bubbles.forEach(b => { if (b.ride && cull(b.x, 80)) drawBubble(b); });
   if (cull(365, 260)) drawBallPitFront();
+  drawPitHelpers(t);
   drawParticles();
   if (started) drawHintHand(t);
   ctx.restore();
@@ -172,7 +173,7 @@ document.querySelectorAll('.introPick canvas').forEach(c => registerPortrait(c, 
 initInput();
 selectCreature(player.creature, true);
 document.querySelectorAll('.introPick').forEach(z => z.classList.toggle('chosen', z.dataset.creature === player.creature));
-setSound(Sound.on); updateCounter(); updatePaintTools(); updateBits(); rebuildBlockPlatforms();
+setSound(Sound.on, true); updateCounter(); updatePaintTools(); updateBits(); rebuildBlockPlatforms();
 if (restoreInfo.restored) $('playBtn').textContent = '▶ KEEP PLAYING!';
 requestAnimationFrame(loop);
 
@@ -181,5 +182,5 @@ window.__DDW = {
   player, world, balls, LAYOUT, keys, Sound, SECRET_STARS, get camera() { return camera; }, get vw() { return vw; }, VH,
   toScreen(x, y) { const r = canvas.getBoundingClientRect(); return { x: (x - camera) / VH * r.height + r.left, y: (y - camY) / VH * r.height + r.top }; },
   teleport(x, y = GROUND) { player.ride = null; player.under = false; player.inside = null; player.x = x; player.y = y; player.vx = player.vy = 0; camera = clamp(x - vw / 2, 0, WORLD_W - vw); },
-  get quality() { return quality; }, style: STYLE, blockPlatforms: () => builtPlatforms.length, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
+  get quality() { return quality; }, npcs: NPCS, style: STYLE, blockPlatforms: () => builtPlatforms.length, train: TRAIN, restoreInfo, activate: (x, y) => activate({ x, y }),
 };

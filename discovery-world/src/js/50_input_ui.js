@@ -13,9 +13,9 @@ function selectCreature(kind, quiet) {
   if (!quiet) { Sound.giggle(); if (changed && started) { toast(CREATURES[kind].title); burst(player.x, player.y - 80, 20, ['#fff', '#ffd84a', '#ff9bd2', '#8fe6ff']); } animReact(player.anim, kind); }
   save();
 }
-function setSound(on) {
+function setSound(on, quiet) {
   Sound.on = on; $('soundBtn').classList.toggle('muted', !on); $('soundBtn').setAttribute('aria-label', on ? 'Sound on' : 'Sound off');
-  if (on) Sound.click(); else if (Sound.ac) Sound.ac.suspend?.();
+  if (on && !quiet) Sound.click(); else if (!on && Sound.ac) Sound.ac.suspend?.();
   save();
 }
 function updatePaintTools() {

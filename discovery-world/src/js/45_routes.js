@@ -40,7 +40,7 @@ function updateClimbZip(dt) {
   const P = player, R = P.ride;
   if (R.type === 'climb') {
     const cx = (R.c.x1 + R.c.x2) / 2; P.x += (cx - P.x) * Math.min(1, dt * 10);
-    P.y -= 175 * dt; P.vy = -175; P.vx = 0;
+    const sp = Math.max(175, (R.c.bottom - R.c.top) / 1.8); P.y -= sp * dt; P.vy = -sp; P.vx = 0; // long ladders climb faster
     if (Math.random() < dt * 5) Sound.tone(600 + Math.random() * 120, .05, 'sine', .025, 1.2);
     if (P.y <= R.c.top) { if (R.c.exit) { P.under = false; discover('upagain', null); } P.ride = null; P.y = R.c.top; P.x = R.c.land; P.vy = 0; P.grounded = true; burst(P.x, P.y - 10, 10); Sound.land(); }
     return true;

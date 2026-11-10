@@ -74,7 +74,7 @@ function snapshot() {
     strokes: world.strokes.slice(-140).map(({ born, ...s }) => s), stickers: world.stickers, discoveries: [...world.discoveries], stars: [...world.stars],
     portions: world.portions, lastMix: world.lastMix, tank: world.tank, battery: world.battery,
     labOn: world.labOn, magnetOn: world.magnetOn, powered: world.powered,
-    style: STYLE, bits: world.bits, hoops: world.hoops, pet: world.pet, petDraft: world.petDraft, build: world.build, fluffs: FLUFFS.map(f => [f.id, f.state === 'enter' ? 'home' : f.state]),
+    style: STYLE, balloon: world.balloon, bits: world.bits, hoops: world.hoops, pet: world.pet, petDraft: world.petDraft, build: world.build, fluffs: FLUFFS.map(f => [f.id, f.state === 'enter' ? 'home' : f.state]),
   };
 }
 let saveFailed = false;
@@ -134,6 +134,7 @@ function restore() {
         else if (typeof def === 'string' && f !== 'pattern' && (isHex(v) || (f === 'accent' && v === 'rainbow'))) STYLE[k][f] = v;
       }
     }
+    world.balloon = isHex(d.balloon) ? d.balloon : null;
     world.hoops = Number.isFinite(d.hoops) ? clamp(Math.floor(d.hoops), 0, 1e6) : 0;
     if (Array.isArray(d.fluffs)) d.fluffs.forEach(e => { const f = Array.isArray(e) && FLUFFS.find(z => z.id === e[0]); if (f && ['wait', 'follow', 'home'].includes(e[1])) { f.state = e[1]; f.px = player.x - 60; f.py = player.y; } });
   } catch (e) { /* corrupt fields fall back to defaults above */ }
