@@ -23,19 +23,19 @@ const TEST = /[?&]test/.test(location.search);
 const canvas = $('game');
 // phones: start lighter (no MSAA at high pixel density, smaller shadow map, 1.5x resolution)
 const MOBILE = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/.test(navigator.userAgent);
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: !MOBILE, powerPreference: 'default' });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); window.__oops && window.__oops('The device reset the 3D graphics (it may be low on memory). Tap Try again.'); });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .45;
+scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture; scene.environmentIntensity = .6;
 scene.fog = new THREE.Fog('#f3c9ff', 60, 170);
 const camera = new THREE.PerspectiveCamera(38, 2, .1, 600);
 const hemi = new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .85); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1dc', 2.1); sun.castShadow = true;
-sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
+sun.shadow.mapSize.set(MOBILE ? 1536 : 2048, MOBILE ? 1536 : 2048); sun.shadow.radius = 4; // soft shadow edges Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 // gradient sky dome + puffy clouds
 const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), new THREE.ShaderMaterial({
@@ -83,7 +83,7 @@ function updateParticles(dt) {
 // ---------------- UI helpers ----------------
 let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('shown'); toastT = 3; }
-function discover(id, msg) { if (world.disc.has(id)) return false; world.disc.add(id); if (msg) toast('✨ ' + msg); Sound.chime(); player.happy = 1.4; burst(player.x, player.y + 2.2, player.z, undefined, 18); save(); return true; }
+function discover(id, msg) { if (world.disc.has(id)) return false; world.disc.add(id); if (msg) toast('✨ ' + msg); Sound.chime(); player.happy = 1.4; if (creature) creature.cheer(); burst(player.x, player.y + 2.2, player.z, undefined, 18); save(); return true; }
 function updateCounters() {
   $('bitsCount').textContent = world.bits.size;
   $('fluffCount').textContent = `${fluffs.filter(f => f.state === 'home').length}/6`;
@@ -91,6 +91,10 @@ function updateCounters() {
 
 // ---------------- the player's creature ----------------
 let creature = null;
+// soft contact shadow on the ground under the creature (shrinks and fades as it jumps)
+const shadowMat = new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true, depthWrite: false, opacity: 1, polygonOffset: true, polygonOffsetFactor: -4 });
+const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; scene.add(blob);
+function groundUnder(x, y) { let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
   player.creature = kind; creature = makeCreature(kind); scene.add(creature.root);
@@ -214,8 +218,8 @@ G.tapMobile = () => { world.mobileT = 4; [4, 2, 0, 2, 4, 4, 4].forEach((n, i) =>
 G.tapBed = j => { const f = fluffs[j]; if (f.state === 'home') { world.wake[j] = 2; Sound.giggle(); discover('fluffbed', 'Wake up, little Fluffkin! Bounce!'); } else { Sound.click(); burst(G.beds[j].x, IN.f2 + 1, -2.8, ['#fff', '#e3b0ee'], 8, 2); discover('emptybed', 'This bed is waiting for a lost Fluffkin.'); } };
 
 // ---------------- rides: slide, carousel, Ferris wheel ----------------
-function startSlide() { const P = player; P.ride = { type: 'slide', u: 0, v: .25 }; P.vx = P.vy = 0; Sound.whoosh(); discover('slide', 'Wheee! The twisty slide!'); }
-G.startSlideTap = () => { const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 25) > 9) { Sound.click(); return; } P.x = 23.2; P.y = 3.8; startSlide(); };
+function startSlide() { const P = player; P.ride = { type: 'slide', u: 0, v: .12 }; P.vx = P.vy = 0; Sound.whoosh(); discover('slide', 'Wheee! The twisty slide!'); }
+G.startSlideTap = () => { const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 25) > 9) { Sound.click(); return; } P.x = 23.2; P.y = 3.8; P.z = -1.9; startSlide(); };
 G.rideCarousel = () => {
   const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 144) > 8) { Sound.click(); return; }
   let best = 0, bz = -9; G.carousel.mounts.forEach((m, i) => { m.seat.getWorldPosition(V); if (V.z > bz) { bz = V.z; best = i; } });
@@ -230,16 +234,17 @@ function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P
 function updateRide(dt) {
   const P = player, R = P.ride;
   if (R.type === 'slide') {
-    R.v = Math.min(.55, R.v + dt * .35); R.u += R.v * dt;
-    if (R.u >= 1) { P.x = 31.2; P.y = 0; P.z = 0; endRide(6, 0); P.grounded = true; P.facing = 1; burst(31, .3, 0, undefined, 10); return; }
-    G.slidePath.getPointAt(R.u, V); P.x = V.x; P.y = V.y + .25; P.z = V.z; P.facing = 1; P.vx = 6;
-    if (Math.random() < dt * 20) burst(P.x - .3, P.y + .2, P.z, ['#fff', '#ffe36e'], 1, .5);
+    // inside the tube: speed up as you go, sit on the bottom of the tube, face the way you slide
+    R.v = Math.min(.42, R.v + dt * .3); R.u += R.v * dt;
+    if (R.u >= 1) { const e = G.slidePath.getPointAt(1); P.x = e.x + .5; P.y = Math.max(0, e.y - .55); P.z = e.z; endRide(4.5, 3); P.facing = 1; burst(P.x, .5, P.z, ['#fff', '#ffe36e', '#9fe6ff'], 16, 2.5); Sound.boing(); return; }
+    G.slidePath.getPointAt(R.u, V); P.x = V.x; P.y = V.y - .62; P.z = V.z; const tg = G.slidePath.getTangentAt(R.u); P.facing = tg.x >= 0 ? 1 : -1; P.vx = 6 * P.facing;
+    if (Math.random() < dt * 25) burst(P.x - tg.x * .6, P.y + .3, P.z - tg.z * .6, ['#fff', '#ffe36e', '#9fe6ff'], 1, .6);
   } else if (R.type === 'carousel') {
     R.t += dt; const m = G.carousel.mounts[R.i]; m.seat.getWorldPosition(V); P.x = V.x; P.y = V.y; P.z = V.z; P.vx = 3;
     P.facing = Math.cos(G.carousel.spin.rotation.y + R.i / 6 * Math.PI * 2) > 0 ? 1 : -1;
     if (R.t > 12) { P.y = 0; P.z = 0; endRide(0, 4); }
   } else if (R.type === 'lift') {
-    P.x += (UG.lift - P.x) * Math.min(1, dt * 8); P.z += (-.2 - P.z) * Math.min(1, dt * 8);
+    P.x += (UG.lift - P.x) * Math.min(1, dt * 8); P.z += (UG.liftZ - P.z) * Math.min(1, dt * 8);
     const d = R.to - P.y, st = Math.sign(d) * Math.min(Math.abs(d), 3.2 * dt); P.y += st; P.vx = 0;
     if (Math.abs(R.to - P.y) < .001) { P.y = R.to; P.ride = null; P.vy = 0; P.grounded = true; P.jumps = 0; burst(P.x, P.y + .2, P.z, ['#fff', '#9ff7e0'], 10, 2); }
   } else if (R.type === 'wheel') {
@@ -536,7 +541,7 @@ document.querySelectorAll('.creatureChoice').forEach(b => b.addEventListener('po
 document.querySelectorAll('.introPick').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x === b)); setCreature(b.dataset.c); }));
 
 // ---------------- resize + adaptive quality ----------------
-let quality = TEST ? .4 : MOBILE ? .75 : 1, slow = 0, ema = 1 / 60;
+let quality = TEST ? .4 : MOBILE ? .85 : 1, slow = 0, ema = 1 / 60;
 if (TEST) renderer.shadowMap.enabled = false;
 function resize() {
   const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2) * quality;
@@ -570,7 +575,8 @@ function frame() {
   if (started) updateBits(T); updateHint(T);
   const P = player;
   creature.root.position.set(P.x, P.y, P.z);
-  { const k = Math.min(1, dt * 10), sy = P.crawl ? .6 : 1, sx = P.crawl ? 1.15 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
+  { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide')) && !P.swim; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
+  { const sliding = P.ride && P.ride.type === 'slide', k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && nearPaint());
@@ -603,5 +609,6 @@ window.__DDW3 = {
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
+  bodyScaleY: () => creature.parts.body.scale.y,
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };

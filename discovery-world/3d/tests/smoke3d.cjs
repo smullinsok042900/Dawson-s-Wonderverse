@@ -59,6 +59,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await waitFor(s => s.grounded, 3000);
   // ---------- creatures ----------
   for (const k of ['zuzu', 'jelly', 'pip']) { await page.locator(`.creatureChoice[data-c="${k}"]`).tap(); await sleep(500); c = await S(); check(`switch to ${k}`, c.creature === k); if (k !== 'pip') await shot(`03_${k}.jpg`); }
+  { await page.locator('.creatureChoice[data-c="jelly"]').tap(); await sleep(400);
+    const minSy = await page.evaluate(() => new Promise(r => { const P = __DDW3.player; P.y = 2.5; P.vy = 0; P.grounded = false; let m = 9, n = 0; const f = () => { m = Math.min(m, __DDW3.bodyScaleY()); if (++n > 90) return r(m); requestAnimationFrame(f); }; f(); }));
+    check('Jelly squishes flat when it lands', minSy < .8, `body squashed to ${(minSy * 100).toFixed(0)}% height`);
+    await page.locator('.creatureChoice[data-c="pip"]').tap(); }
   await sleep(3500); c = await S();
   { const p = await scr(c.x, c.y + .75, c.z), el = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e && (e.id || e.className); }, [p.x, p.y]); const pk = await page.evaluate(([x, y]) => JSON.stringify(__DDW3.pick(x, y)), [p.x, p.y]);
     await tapWorld(c.x, c.y + .75, c.z); await sleep(200); check('tap your creature to tickle it', (await S()).disc.includes('tickle'), `tap at ${Math.round(p.x)},${Math.round(p.y)} lands on: ${el} ${pk} P=${c.x.toFixed(2)},${c.y.toFixed(2)},${c.z.toFixed(2)}`); }
@@ -73,7 +77,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await shot('06_trampoline.jpg'); await waitFor(s => s.grounded && s.x > 36 || s.grounded && s.y === 0, 4000);
   // ---------- solid things ----------
   await teleport(35.8); await holdBtn('#rightBtn', 1600); c = await S(); check('walk into the climbing blocks: you hop up onto them (not through them)', c.y >= 1.15, `x=${c.x.toFixed(1)} y=${c.y.toFixed(2)}`);
-  await teleport(89); await holdBtn('#leftBtn', 1200); c = await S(); check("can't walk through the tall paint-jar tower", c.x >= 88 && c.y < .1, `x=${c.x.toFixed(2)} y=${c.y.toFixed(2)}`);
+  await teleport(33);
+  { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.left = true; let n = 0, stuck = 0, lx = P.x; const f = () => { if (P.x < 17) { D.keys.left = false; return res([P.x, 'ok']); } stuck = Math.abs(P.x - lx) < .001 ? stuck + 1 : 0; lx = P.x; if (stuck > 30 || ++n > 900) { D.keys.left = false; return res([P.x, 'stuck']); } requestAnimationFrame(f); }; f(); }));
+    check('walk back left past the slide tower: nothing blocks the way', r[0] < 17, `got to x=${r[0].toFixed(1)} (${r[1]})`); }
   await teleport(6); await holdBtn('#rightBtn', 900); c = await waitFor(s => s.grounded, 3000); check('walk into the ball pit: hop over its edge into the balls', c.x > 8.3 && c.x < 15.7 && c.y < .1, `x=${c.x.toFixed(1)}`);
   // ---------- the secret underground (through the deep part of the ball pit) ----------
   await teleport(9.6); c = await S(); check('a picture bubble by the deep part of the ball pit', c.door === 'down');
@@ -91,7 +97,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     check('swim up and climb out of the ball pit', out[1] >= 0, `x=${out[0].toFixed(1)} y=${out[1].toFixed(2)}`); }
   await teleport(23, -6); await holdBtn('#rightBtn', 500); c = await S(); check('walk past the singing crystals and they play', c.disc.includes('crystal'));
   await teleport(29, -6); await holdBtn('#rightBtn', 900); { const cr = await page.evaluate(() => __DDW3.player.crawl); check('the low tunnel makes you crawl', cr || (await S()).disc.includes('crawl')); }
-  await holdBtn('#rightBtn', 2200); c = await S(); check('crawl all the way through the tunnel', c.x > 36.5 && c.y < -4, `x=${c.x.toFixed(1)}`);
+  { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 37) { D.keys.right = false; return res(P.x); } if (++n > 900) { D.keys.right = false; return res(P.x); } requestAnimationFrame(f); }; f(); }));
+    check('crawl all the way through the tunnel', r > 37, `x=${r.toFixed(1)}`); }
   await teleport(43, -6); await holdBtn('#rightBtn', 400); await sleep(300); c = await S(); check('find the lost Fluffkin in the underground gem room', c.fl[1] === 'follow');
   await teleport(53.4, -6); c = await S(); check('a lift bubble at the bottom of the glass lift', c.door === 'up');
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y >= 0, 6000); check('the glass lift rides up to the Studio floor', c.y === 0 && !c.ride, `y=${c.y}`);

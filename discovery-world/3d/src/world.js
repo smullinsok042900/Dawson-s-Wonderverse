@@ -21,11 +21,16 @@ const M = (c, o) => { const k = c + JSON.stringify(o || {}); return matCache[k] 
 export function buildWorld(G) {
   const { scene } = G;
   const add = (m, parent = scene) => { parent.add(m); return m; };
+  // a soft dark patch on the floor where things stand (makes objects look grounded, like real contact shadows)
+  const aoTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 4, 32, 32, 32); gr.addColorStop(0, 'rgba(40,10,60,.55)'); gr.addColorStop(.6, 'rgba(40,10,60,.22)'); gr.addColorStop(1, 'rgba(40,10,60,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+  const aoMat = new THREE.MeshBasicMaterial({ map: aoTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  function ao(x, z, w, d, y = 0, parent) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), aoMat); m.rotation.x = -Math.PI / 2; m.position.set(x, y + .012, z); m.renderOrder = 1; add(m, parent); }
+  G.aoTex = aoTex;
   function block(x, y, z, w, h, d, color, o = {}) { // y = bottom
     const m = new THREE.Mesh(rbox(w, h, d, o.r ?? .12), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z);
-    m.castShadow = o.cast ?? true; m.receiveShadow = true; return add(m, o.parent);
+    m.castShadow = o.cast ?? true; m.receiveShadow = true; if ((y === 0 || o.aoY != null) && h > .3 && !o.noAO && !o.parent) ao(x, z, w * 1.5 + .4, d * 1.5 + .4, o.aoY ?? 0); return add(m, o.parent);
   }
-  function cyl(x, y, z, r1, r2, h, color, o = {}) { const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true; return add(m, o.parent); }
+  function cyl(x, y, z, r1, r2, h, color, o = {}) { if (y === 0 && h > .3 && !o.parent) ao(x, z, r2 * 3.2, r2 * 3.2); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true; return add(m, o.parent); }
   function sph(x, y, z, r, color, o = {}) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = o.cast ?? true; return add(m, o.parent); }
   const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); return p; };
   // solid things in the creature's path: you can't walk through them (low ones you hop up onto by yourself)
@@ -33,10 +38,17 @@ export function buildWorld(G) {
   const tap = (obj, fn, o = {}) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); if (o.paw) G.interact.push({ x: o.paw[0], y: o.paw[1], layer: o.layer || '', disc: o.disc, run: fn, hintY: o.hintY ?? 2 }); return obj; };
 
   // ---------- floor: glossy tiles, a different colour in each zone ----------
-  const tileTex = (a, b) => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = a; g.fillRect(0, 0, 128, 128); g.fillStyle = b; g.fillRect(0, 0, 64, 64); g.fillRect(64, 64, 64, 64); g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 3; g.strokeRect(0, 0, 128, 128); g.strokeRect(0, 0, 64, 64); g.strokeRect(64, 64, 64, 64); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t; };
+  const tileTex = (a, b) => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    const tile = (x, y, col) => { const gr = g.createLinearGradient(x, y, x + 128, y + 128); gr.addColorStop(0, col); gr.addColorStop(1, col); g.fillStyle = gr; g.fillRect(x, y, 128, 128); g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(x + 4, y + 4, 120, 5); g.fillRect(x + 4, y + 4, 5, 120); g.fillStyle = 'rgba(80,20,90,.10)'; g.fillRect(x + 4, y + 119, 120, 5); g.fillRect(x + 119, y + 4, 5, 120); };
+    tile(0, 0, b); tile(128, 0, a); tile(0, 128, a); tile(128, 128, b);
+    for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${i % 2 ? '255,255,255' : '90,40,110'},${.03 + (i % 5) * .006})`; g.fillRect((i * 97) % 256, (i * 57) % 256, 2, 2); }
+    g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+  };
   const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 230, '#9fe8b4', '#7fdc9a']];
   // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
-  const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.8, 54, -1.2, 1.2]];
+  const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.6, 54.2, -3.2, -1.6]];
   function floorPiece(x0, x1, z0, z1, c1, c2) {
     const t = tileTex(c1, c2); t.repeat.set((x1 - x0) / 2.4, (z1 - z0) / 2.4); t.offset.set(x0 / 2.4, -z1 / 2.4);
     const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshPhysicalMaterial({ map: t, roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
@@ -71,6 +83,11 @@ export function buildWorld(G) {
   const mtx = new THREE.Matrix4(), col = new THREE.Color();
   bulbPos.forEach(([x, y, z], i) => { mtx.makeTranslation(x, y, z); bulbs.setMatrixAt(i, mtx); bulbs.setColorAt(i, col.set(['#ffe36e', '#ff9fd8', '#9fe6ff', '#c9a6ff'][i % 4])); });
   add(bulbs);
+  const haloTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(.25, 'rgba(255,255,255,.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+  G.haloTex = haloTex;
+  { const geo = new THREE.BufferGeometry(), pos = [], cols = []; bulbPos.forEach(([x, y, z], i) => { pos.push(x, y, z + .05); col.set(['#ffe36e', '#ff9fd8', '#9fe6ff', '#c9a6ff'][i % 4]); cols.push(col.r, col.g, col.b); });
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+    const halos = new THREE.Points(geo, new THREE.PointsMaterial({ size: 1.1, map: haloTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .8 })); add(halos); }
 
   // ---------- rainbow arches between zones ----------
   for (const x of [51, 92, 135]) {
@@ -93,15 +110,21 @@ export function buildWorld(G) {
   add(ballMesh);
   G.pit = { a: PIT.a, b: PIT.b, balls, mesh: ballMesh };
   tap(ballMesh, () => G.splashPit(), { paw: [12, 0], disc: 'ballpit', hintY: 2.2 });
-  // SLIDE TOWER: steps you jump up, a top deck, a twisty slide down
-  [[18.4, 1.0], [19.7, 2.0], [21, 3.0]].forEach(([x, y], i) => { block(x, 0, -.2, 1.2, y, 1.8, ['#7fd8ff', '#ffd84a', '#b58cff'][i], { r: .18 }); plat(x - .6, x + .6, y); solid(x - .6, x + .6, y); });
-  block(22.4, 0, -.2, 1.8, 3.8, 2, '#ff9fd2', { r: .2 }); plat(21.5, 23.3, 3.8, { z: -.4 }); solid(21.5, 23.3, 3.8);
-  for (const x of [21.6, 23.2]) cyl(x, 3.8, -1, .07, .07, 1.4, '#ffffff');
-  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.4, 6), M('#a15cff')); roof.position.set(22.4, 5.9, -.6); roof.castShadow = true; add(roof);
-  G.slidePath = new THREE.CatmullRomCurve3([[23.3, 3.8, -.6], [24.6, 3.4, -1.2], [26.2, 2.6, -1.9], [27.4, 1.6, -2.3], [28.6, .8, -2.3], [30.2, .25, -2], [31.2, 0, -1.8]].map(p => new THREE.Vector3(...p)));
-  const slideMesh = new THREE.Mesh(new THREE.TubeGeometry(G.slidePath, 80, .55, 16, false), new THREE.MeshPhysicalMaterial({ color: '#ffd84a', roughness: .2, clearcoat: 1, side: THREE.DoubleSide }));
-  slideMesh.scale.y = 1; slideMesh.castShadow = true; slideMesh.receiveShadow = true; add(slideMesh);
-  tap(slideMesh, () => G.startSlideTap(), { paw: [26, 0], disc: 'slide', hintY: 3.4 });
+  // SLIDE TOWER (just behind the path, so you can always walk past it): jump up the steps to the top deck,
+  // then walk off the deck into the big see-through TUBE SLIDE and whoosh down inside it
+  const TZ = -1.9;
+  [[18.4, 1.0], [19.7, 2.0], [21, 3.0]].forEach(([x, y], i) => { block(x, 0, TZ, 1.2, y, 1.6, ['#7fd8ff', '#ffd84a', '#b58cff'][i], { r: .18 }); plat(x - .6, x + .6, y, { z: TZ }); });
+  block(22.4, 0, TZ, 1.8, 3.8, 2, '#ff9fd2', { r: .2 }); plat(21.5, 23.3, 3.8, { z: TZ });
+  for (const x of [21.6, 23.2]) cyl(x, 3.8, TZ - .8, .07, .07, 1.4, '#ffffff');
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.4, 6), M('#a15cff')); roof.position.set(22.4, 5.9, TZ - .3); roof.castShadow = true; add(roof);
+  G.slidePath = new THREE.CatmullRomCurve3([[23.2, 4.3, TZ], [24.4, 4.0, TZ - .4], [25.8, 3.3, TZ - 1.2], [26.6, 2.4, TZ - 2.0], [25.9, 1.6, TZ - 2.8], [26.9, .9, TZ - 3.0], [28.6, .55, TZ - 2.2], [30.2, .55, TZ - .9], [31.4, .55, TZ + .2]].map(p => new THREE.Vector3(...p)), false, 'catmullrom', .4);
+  // the tube: see-through with rainbow stripes, so you can watch your creature whoosh down inside
+  const stripeTex = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d'); g.fillStyle = 'rgba(190,240,255,.55)'; g.fillRect(0, 0, 256, 64); RAINBOW.slice(0, 6).forEach((col, i) => { g.fillStyle = col; g.fillRect(i * 42 + 6, 0, 16, 64); }); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(14, 1); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const slideMesh = new THREE.Mesh(new THREE.TubeGeometry(G.slidePath, 140, .95, 28, false), new THREE.MeshPhysicalMaterial({ map: stripeTex, transparent: true, opacity: .62, roughness: .08, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false }));
+  slideMesh.renderOrder = 2; add(slideMesh);
+  for (const u of [0, 1]) { const p = G.slidePath.getPointAt(u), tg = G.slidePath.getTangentAt(u); const ring = new THREE.Mesh(new THREE.TorusGeometry(.98, .12, 12, 36), M('#ffd84a')); ring.position.copy(p); ring.lookAt(p.clone().add(tg)); ring.castShadow = true; add(ring); }
+  for (let u = .12; u < .95; u += .16) { const p = G.slidePath.getPointAt(u); if (p.y > 1.2) cyl(p.x, 0, p.z, .09, .09, p.y - .9, '#ffffff'); }
+  tap(slideMesh, () => G.startSlideTap(), { paw: [25.5, 0], disc: 'slide', hintY: 4.4 });
   // TRAMPOLINE
   cyl(34, 0, 0, 1.7, 1.8, .45, '#5b6cff'); const trampTop = cyl(34, .45, 0, 1.55, 1.55, .06, '#ff65b5', { m: { r: .3 } });
   plat(32.4, 35.6, .45, { tramp: true, step: true });
@@ -133,9 +156,9 @@ export function buildWorld(G) {
   }
   G.interact.push({ x: 78, y: 0, layer: '', disc: 'xylophone', run: () => G.playKey(G.xylo[2]), hintY: 1.6 });
   // a tall stack of paint jars (a Fluffkin waits on top)
-  [[87, 0, 1.2, '#ff9fd2'], [87, 1.2, 1.0, '#9fe6ff'], [87, 2.2, .8, '#ffe066']].forEach(([x, y, h, c]) => cyl(x, y, -.2, .75, .8, h, c));
-  plat(86.3, 87.7, 3.0); solid(86.25, 87.75, 3.0);
-  cyl(85.2, 0, -.2, .5, .55, 1.3, '#c9a6ff'); plat(84.7, 85.7, 1.3); solid(84.7, 85.7, 1.3);
+  [[87, 0, 1.2, '#ff9fd2'], [87, 1.2, 1.0, '#9fe6ff'], [87, 2.2, .8, '#ffe066']].forEach(([x, y, h, c]) => cyl(x, y, -1.8, .75, .8, h, c));
+  plat(86.3, 87.7, 3.0, { z: -1.7 });
+  cyl(85.2, 0, -1.8, .5, .55, 1.3, '#c9a6ff'); plat(84.7, 85.7, 1.3, { z: -1.7 }); // (behind the path: jump up the jars)
 
   // =================== WONDER LAB ===================
   // BUBBLE MACHINE
@@ -230,6 +253,7 @@ export function buildWorld(G) {
   const IN = { ox: 1000, w: 30, f2: 4.4, slab: .3 };
   G.inside = { ...IN, exit: 1003, door: 190, ceil1: IN.f2 - IN.slab, ceil2: 8.8, stair: { x0: 1022.6, x1: 1028.2, y0: 0, y1: IN.f2, z: -2.4 } };
   const room = new THREE.Group(); add(room);
+  block(1015, -4, -.6, 31.6, 4, 7.4, '#c98a5a', { parent: room, r: .1, cast: false }); // the house's foundations (no gap under the floor)
   const wallTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#ffe6f2'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#ffd1e8'; for (let i = 0; i < 4; i++) g.fillRect(i * 32, 0, 14, 128); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 3); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const backWall = new THREE.Mesh(new THREE.PlaneGeometry(30, 9), new THREE.MeshStandardMaterial({ map: wallTex, roughness: .8 })); backWall.position.set(1015, 4.5, -4.1); backWall.receiveShadow = true; room.add(backWall);
   block(1015, 0, -4, 30, 1.1, .2, '#ffffff', { parent: room, cast: false }); block(1015, IN.f2, -4, 30, 1.1, .2, '#ffffff', { parent: room, cast: false });
@@ -288,7 +312,7 @@ export function buildWorld(G) {
   line(152, 168, 1, 9); arc(172, 179, 3, 3, 6); line(181, 186, 1, 4);
   G.bitSpots = bits;
   // where the six lost baby Fluffkins wait
-  G.fluffSpots = [[22.4, 3.8, -.2], [44, -6, -.3], [87, 3.0, -.2], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
+  G.fluffSpots = [[22.4, 3.8, -1.9], [44, -6, -.3], [87, 3.0, -1.7], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
   G.secretStar = [12, 3.2];
 }
 function rand(a, b) { return a + Math.random() * (b - a); }

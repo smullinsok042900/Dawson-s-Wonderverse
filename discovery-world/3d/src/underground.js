@@ -19,7 +19,7 @@ export const UG = {
   ceil: -1.6, floor: -6, x0: 2, x1: 57,
   shaft: [10.8, 14.4], shaftZ: 1.2, swimBottom: -2.4,
   tunnel: [30, 36.5], tunnelCeil: -4.75,
-  lift: 53.4,
+  lift: 53.4, liftZ: -2.4,
 };
 export const inShaftX = x => x > UG.shaft[0] && x < UG.shaft[1];
 
@@ -42,8 +42,8 @@ export function buildUnderground(G) {
   const earth = M('#8a4f9e', { r: .9, cc: 0 }), earthTop = M('#6b3a80', { r: .9, cc: 0 });
   const [s0, s1] = UG.shaft, L = UG.lift;
   const slab = (x0, x1, z0, z1) => box(x0, x1, UG.ceil, -.02, z0, z1, '', { mat: earth });
-  slab(-2, s0, -6.5, UG.shaftZ); slab(s1, L - .6, -6.5, UG.shaftZ); slab(L + .6, 58, -6.5, UG.shaftZ);
-  slab(s0, s1, -6.5, -UG.shaftZ); slab(L - .6, L + .6, -6.5, -UG.shaftZ);
+  slab(-2, s0, -6.5, UG.shaftZ); slab(s1, L - .8, -6.5, UG.shaftZ); slab(L + .8, 58, -6.5, UG.shaftZ);
+  slab(s0, s1, -6.5, -UG.shaftZ); slab(L - .8, L + .8, -6.5, -3.2); slab(L - .8, L + .8, -1.6, UG.shaftZ);
   // a band of soil along the front edge, so the ground has thickness (stripes of rock)
   for (let i = 0; i < 4; i++) box(-2, 58, UG.ceil + i * .4, UG.ceil + i * .4 + .2, UG.shaftZ - .02, UG.shaftZ, '', { mat: M(['#a8669e', '#9a5a92', '#b57aa8', '#8f4f88'][i], { r: .9, cc: 0 }) });
   // floor, back wall, end walls
@@ -116,9 +116,9 @@ export function buildUnderground(G) {
 
   // ---------- GLASS LIFT up to the Studio ----------
   const tube = new THREE.Mesh(new THREE.CylinderGeometry(.85, .85, -UG.floor + 2.6, 28, 1, true), new THREE.MeshPhysicalMaterial({ color: '#e6f8ff', transparent: true, opacity: .22, roughness: .03, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false }));
-  tube.position.set(L, (UG.floor + 2.6) / 2, -.2); add(tube);
-  for (const y of [UG.floor + .05, 2.55]) { const r = new THREE.Mesh(new THREE.TorusGeometry(.88, .08, 10, 32), M('#ffd84a')); r.rotation.x = Math.PI / 2; r.position.set(L, y, -.2); add(r); }
-  const liftPad = new THREE.Mesh(new THREE.CylinderGeometry(.8, .8, .14, 28), M('#ff65b5', { em: '#ff65b5', ei: .25 })); liftPad.position.set(L, -.07, -.2); liftPad.castShadow = true; add(liftPad);
+  tube.position.set(L, (UG.floor + 2.6) / 2, UG.liftZ); add(tube);
+  for (const y of [UG.floor + .05, 2.55]) { const r = new THREE.Mesh(new THREE.TorusGeometry(.88, .08, 10, 32), M('#ffd84a')); r.rotation.x = Math.PI / 2; r.position.set(L, y, UG.liftZ); add(r); }
+  const liftPad = new THREE.Mesh(new THREE.CylinderGeometry(.8, .8, .14, 28), M('#ff65b5', { em: '#ff65b5', ei: .25 })); liftPad.position.set(L, -.07, UG.liftZ); liftPad.castShadow = true; add(liftPad);
   G.liftPad = liftPad;
   tap(liftPad, () => G.useLift());
   G.interact.push({ x: L, y: 0, layer: '', disc: 'liftdown', run: () => G.useLift(), hintY: 3 });
