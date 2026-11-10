@@ -37,6 +37,34 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 3: tube slide, nothing to walk through, livelier creatures, better graphics
+- **A real tube slide:** a big see-through rainbow tube. The creature whooshes down inside it and pops out at the bottom.
+- **Nothing blocks the way back any more:** the slide tower, its steps and the paint-jar tower stand just behind the path. You jump up onto them, and you can always walk past them. The glass lift also moved behind the path.
+- **Livelier creatures:**
+  - Much bigger squish and stretch. Jelly is very squishy: it flattens when it lands and bounces as it walks.
+  - Tickling makes them hop, spin, flap and giggle.
+  - When you stand still, they wave, twirl, jiggle, hop or look at you.
+  - They cheer when you discover something.
+- **Graphics:**
+  - Smooth edges on phones.
+  - Soft shadow edges.
+  - A soft shadow under the creature that shrinks as it jumps.
+  - Shading where things touch the floor.
+  - Glowing halos around the party lights.
+  - Floor tiles with grout and sheen.
+  - No gap under the floor inside the house.
+
+## 3D build 2: the secret underground (through the ball pit)
+- **Part of the ball pit is now really deep.** You walk into it (or press PAW or tap the arrow bubble) and plunge in with a splash. You sink slowly through the balls, and **JUMP swims up**. You can climb back out at the top.
+- **At the bottom is a secret underground world** under the Playhouse, shown as a cut-away below the floor. From left to right:
+  - **Cave Hall:** a pile of spilled balls and a glowing bounce mushroom. Climb or jump onto it and it pops you back up into the ball shaft, then you swim to the top. Sinking in from above gives you a soft landing instead.
+  - **Crystal Cave:** seven crystals that sing when you walk past or tap them.
+  - **Crawl Tunnel:** a low tunnel where the creature crawls automatically.
+  - **Gem Room:** rocky ledges, sparkly gems to tap, and one of the six lost Fluffkins.
+  - **Glass Lift:** tap it, its bubble, or PAW to ride up to the Studio floor, and back down again.
+- Star bits are hidden all through the caves.
+- **Solid things:** low steps and edges you hop up onto by yourself, tall things block you, and big rides and machines stand just behind the path.
+
 ## 3D build 1b: loading fixes (after "the 3D won't load")
 - **Lighter start on phones:** 1.5× resolution instead of 2×, no extra anti-aliasing, and a smaller shadow map. The game still lowers its resolution further by itself if it runs slowly.
 - **One 3D drawing surface only:** the character pictures on the title screen used to be drawn with a second, temporary 3D surface. iPhones handle that badly. They are now drawn with the game's own.
@@ -60,7 +88,7 @@ npm test             # 48 automated checks in headless Chromium
 `?test` runs a light mode (lower resolution, no shadows) that is used only by the automated tests, because the test browser has no graphics card. `?hq` turns off the automatic quality lowering, for screenshots.
 
 ## Test report (3D build 1)
-**Result:** 48/48 checks passed (3D build 1b), with no console errors or warnings.
+**Result:** 66/66 checks passed (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
 
 **Setup:** Playwright headless Chromium at 844×390 with touch input. WebGL ran in software (SwiftShader), so it was very slow (about 2–3 frames per second). That speed says nothing about a real iPhone.
 
@@ -81,6 +109,8 @@ npm test             # 48 automated checks in headless Chromium
 
 **Problems found while testing:**
 - **Fixed:** you couldn't walk onto the trampoline or the spring pads.
+- **Fixed:** the bounce mushroom sat right under the ball shaft, so sinking in bounced you straight back up forever. Sinking in now lands softly and slides you off the mushroom.
+- **Fixed:** walking straight across the deep part let you hop out the far side before you sank. You now plunge in and move more slowly through the balls.
 - **Test-only:** in the very slow software renderer, two real taps on JUMP can't land inside one jump. The double-jump check therefore sends its second tap on the next frame.
 
 **Not tested:**
