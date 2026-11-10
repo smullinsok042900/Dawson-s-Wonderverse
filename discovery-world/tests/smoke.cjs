@@ -215,7 +215,25 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   c = await S(); check('PAW button plays with the nearest thing (boards the wheel)', c.ride === 'wheel');
   await touch('touchStart', [{ ...jb, id: 3 }]); await touch('touchEnd', []); await waitFor(s => s.grounded, 3000);
   // tube back to the ball pit
-  await teleport(5960); await holdBtn('#rightBtn', 1100);
+  // marble machine (build 6): dispense balls → xylophone ramps → paddle wheel → gears → lift
+  await teleport(6300); await sleep(300);
+  for (let i = 0; i < 5; i++) { await tapWorld(6190, 382); await sleep(900); }
+  c = await waitFor(s => s.disc.includes('liftup'), 9000);
+  const lift = await page.evaluate(() => ({ lvl: __DDW.world.liftLevel, xy: __DDW.world.xyloHit }));
+  check('dispenser balls roll down the xylophone ramps into the paddle wheel', c.disc.includes('marblerun'));
+  check('5 balls raise the lift all the way', lift.lvl > .99, `level ${lift.lvl.toFixed(2)}`);
+  await page.screenshot({ path: path.join(SHOTS, '15c_marble_machine.jpg'), type: 'jpeg', quality: 82 });
+  await page.evaluate(() => { __DDW.world.liftLevel = 0; __DDW.world.liftY = 450; }); await sleep(200);
+  await page.evaluate(() => __DDW.teleport(6610)); await sleep(300);
+  for (let i = 0; i < 5; i++) { await tapWorld(6190, 382); await sleep(700); }
+  c = await waitFor(s => s.y < 240, 12000); check('the lift carries the creature up', c.y < 240 && c.grounded, `y=${Math.round(c.y)}`);
+  const sb = (await S()).stars;
+  await holdBtn('#rightBtn', 380);
+  c = await S(); check('walk onto the balcony and find secret star 8', c.stars === sb + 1 && Math.abs(c.y - 230) < 1, `stars ${sb}→${c.stars}, y=${Math.round(c.y)}`);
+  await tapWorld(6700, 200); await sleep(80);
+  check('tap the balcony xylophone to play it', (await S()).disc.includes('xylophone'));
+  await page.screenshot({ path: path.join(SHOTS, '15d_balcony_xylophone.jpg'), type: 'jpeg', quality: 82 });
+  await teleport(6660); await holdBtn('#rightBtn', 1100);
   c = await waitFor(s => s.ride === 'tube', 1500); check('walking into the rainbow door enters the whoosh tube', c.ride === 'tube');
   await sleep(1200); await page.screenshot({ path: path.join(SHOTS, '15_whoosh_tube.jpg'), type: 'jpeg', quality: 82 });
   c = await waitFor(s => !s.ride && s.grounded, 6000); check('tube carries you all the way back to the ball pit', c.x < 640, `x=${Math.round(c.x)}`);

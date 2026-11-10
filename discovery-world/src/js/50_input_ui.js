@@ -115,7 +115,7 @@ function onDown(e) {
   // 5. machines, rides, play equipment
   if (activate(p)) return;
   // 6. anything else: a little twinkle where you touched
-  if (p.y < GROUND) { burst(p.x, p.y, 5); Sound.tone(630 + Math.random() * 200, .05, 'sine', .03); }
+  if (p.y < GROUND) { burst(p.x, p.y, 5); Sound.twinkle(); }
 }
 function onMove(e) {
   if (!grab || e.pointerId !== grab.id) return;

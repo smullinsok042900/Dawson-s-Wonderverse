@@ -1,5 +1,16 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 2 · build 6 — the Marble Machine (second cause-and-effect chain) + musical sounds
+Previous build backed up as `backups/M2_build5_index.html`. The world is extended to 7000 and the whoosh-tube door moved to the new far end.
+- **Marble Machine** (after the carousel):
+  - a gumball-style **dispenser**: tap its button for a ball, or throw ANY ball from anywhere in the world into its glass top
+  - balls roll on real ramp physics down **three xylophone ramps**; every bar a ball touches plays its note and lights up, so each run plays a little melody
+  - at the bottom a ball spins the **paddle wheel**, which turns a chain of meshing **gears**
+  - the gears raise the **lift** one step per ball (5 lights show the level); stand on it to ride up
+  - at the top is a **balcony** with a **tap-to-play rainbow xylophone** and **secret star 8**
+  - the lift sinks back slowly when nobody feeds it
+- **Friendlier sounds:** a new soft bell voice (a music-box feel) for chimes and the xylophone. Taps on the scenery now play pentatonic notes, so random tapping always sounds musical.
+
 ## Milestone 2 · build 5 — climbing, high routes, stickers, wet paint, creature polish
 Previous build backed up as `backups/M1_build4_index.html`.
 - **Zuzu:** two baby stars orbit her (passing in front of and behind her), glitter twinkles inside her star body, a gold inner rim light, a glossy shine.

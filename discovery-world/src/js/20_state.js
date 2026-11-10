@@ -21,7 +21,7 @@ const LAYOUT = {
   wheel: { cx: 4060, cy: 262, r: 137 },
   coaster: { a: 4440, b: 5300 },
   carousel: { cx: 5700, r: 165 },
-  tube: { y: 92, door: [6100, 6190], drop: 300, x: 6145 },
+  tube: { y: 92, door: [6800, 6890], drop: 300, x: 6845 },
 };
 // Everything you can finger-paint on (the big wall + easels out in the park)
 const PAINT_SURFACES = [

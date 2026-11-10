@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T11:20:46.433Z",
+  "date": "2026-11-10T11:37:15.864Z",
   "environment": "Playwright Chromium (headless, Linux), 844x390 touch viewport, DPR 2 — NOT a physical iPhone",
-  "passed": 70,
-  "total": 70,
+  "passed": 75,
+  "total": 75,
   "results": [
     {
       "name": "title screen shows with play button",
@@ -32,7 +32,7 @@
     {
       "name": "hold RIGHT moves continuously",
       "ok": true,
-      "detail": "moved 370 units"
+      "detail": "moved 385 units"
     },
     {
       "name": "releasing RIGHT stops the creature",
@@ -42,7 +42,7 @@
     {
       "name": "hold LEFT moves continuously",
       "ok": true,
-      "detail": "moved 288 units"
+      "detail": "moved 287 units"
     },
     {
       "name": "JUMP leaves the ground",
@@ -87,7 +87,7 @@
     {
       "name": "dragging a ball moves it and throws it",
       "ok": true,
-      "detail": "dx=140 v=452"
+      "detail": "dx=141 v=452"
     },
     {
       "name": "paint palette appears near the wall",
@@ -132,7 +132,7 @@
     {
       "name": "slide ends and you can move again",
       "ok": true,
-      "detail": "x=1185"
+      "detail": "x=1175"
     },
     {
       "name": "JUMP while touching the climbing net climbs it",
@@ -192,7 +192,7 @@
     {
       "name": "colored bubbles float into the funnel and charge the battery",
       "ok": true,
-      "detail": "battery 5/6"
+      "detail": "battery 4/6"
     },
     {
       "name": "battery fills to 6",
@@ -207,7 +207,7 @@
     {
       "name": "magnet ON pulls the metal balls to it",
       "ok": true,
-      "detail": "41,22,37"
+      "detail": "42,24,36"
     },
     {
       "name": "powered Star Launcher launches you",
@@ -251,6 +251,31 @@
     },
     {
       "name": "PAW button plays with the nearest thing (boards the wheel)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dispenser balls roll down the xylophone ramps into the paddle wheel",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "5 balls raise the lift all the way",
+      "ok": true,
+      "detail": "level 1.00"
+    },
+    {
+      "name": "the lift carries the creature up",
+      "ok": true,
+      "detail": "y=236"
+    },
+    {
+      "name": "walk onto the balcony and find secret star 8",
+      "ok": true,
+      "detail": "stars 4→5, y=230"
+    },
+    {
+      "name": "tap the balcony xylophone to play it",
       "ok": true,
       "detail": ""
     },
@@ -317,7 +342,7 @@
     {
       "name": "reload keeps discoveries",
       "ok": true,
-      "detail": "32 discoveries"
+      "detail": "38 discoveries"
     },
     {
       "name": "reload keeps machine/power state",
@@ -327,7 +352,7 @@
     {
       "name": "reload keeps position (approx.)",
       "ok": true,
-      "detail": "x 2696 → 2696"
+      "detail": "x 2695 → 2695"
     },
     {
       "name": "corrupt save data is ignored safely",
@@ -342,7 +367,7 @@
     {
       "name": "frame time after adaptive resolution (headless Chromium — software rendering, NOT an iPhone)",
       "ok": true,
-      "detail": "median 16.7ms, p95 33.3ms, quality 0.85"
+      "detail": "median 16.7ms, p95 33.3ms, quality 0.70"
     },
     {
       "name": "portrait shows the turn-sideways tip",

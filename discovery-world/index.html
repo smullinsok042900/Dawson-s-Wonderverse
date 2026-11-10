@@ -224,7 +224,7 @@ let ctx = canvas.getContext('2d', { alpha: false });
 
 const VH = 480;          // world units visible vertically (closer camera = bigger creatures)
 const GROUND = 450;      // floor line in world units
-const WORLD_W = 6300;    // ONE continuous world, left to right
+const WORLD_W = 7000;    // ONE continuous world, left to right
 const GRAV = 1450;
 const TAU = Math.PI * 2;
 
@@ -391,7 +391,10 @@ const Sound = {
   pour() { this.noise(.45, 300, 900, .05); this.tone(260, .25, 'sine', .03, .7, .05); },
   whoosh() { this.noise(.5, 400, 3000, .06); },
   click() { this.tone(720, .05, 'square', .025, .9); },
-  chime() { [0, 4, 7, 12].forEach((s, i) => this.tone(523.25 * 2 ** (s / 12), .4, 'triangle', .045, 1, i * .07)); },
+  // soft bell: fundamental + a quiet bright overtone, gentle decay (xylophone / music-box feel)
+  bell(freq, vol = .05, delay = 0) { this.tone(freq, .9, 'sine', vol, 1, delay); this.tone(freq * 2.01, .35, 'triangle', vol * .35, 1, delay); this.tone(freq * 3.99, .15, 'sine', vol * .12, 1, delay); },
+  chime() { [0, 2, 4, 7].forEach((k, i) => this.bell([523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51][k], .045, i * .085)); },
+  twinkle() { const P = [784, 880, 1047, 1175, 1319]; this.bell(P[Math.floor(Math.random() * P.length)], .03); },
   giggle() { [0, 1, 2, 3].forEach(i => this.tone(700 + i * 90 + Math.random() * 40, .07, 'sine', .05, 1.25, i * .075)); },
   hum(on) { this.tone(on ? 110 : 220, .5, 'sawtooth', .025, on ? 2.2 : .5); },
 };
@@ -943,7 +946,7 @@ const LAYOUT = {
   wheel: { cx: 4060, cy: 262, r: 137 },
   coaster: { a: 4440, b: 5300 },
   carousel: { cx: 5700, r: 165 },
-  tube: { y: 92, door: [6100, 6190], drop: 300, x: 6145 },
+  tube: { y: 92, door: [6800, 6890], drop: 300, x: 6845 },
 };
 // Everything you can finger-paint on (the big wall + easels out in the park)
 const PAINT_SURFACES = [
@@ -1596,7 +1599,7 @@ function decorLights(t) {
   if (cull(3310, 160)) bulbString(3186, 142, 3346, 142, 5, 5, t, world.magnetOn);
   if (cull(4060, 200)) bulbString(3925, 400, 4195, 400, 4, 8, t, P);
   for (const sx of [LAYOUT.coaster.a - 40, LAYOUT.coaster.b + 40]) if (cull(sx, 80)) bulbString(sx - 62, 332, sx + 62, 332, 3, 5, t, P);
-  if (cull(6145, 120)) bulbString(6092, 330, 6198, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
+  if (cull(6845, 120)) bulbString(6792, 330, 6898, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
   for (const x of [700, 1000, 3200, 3600]) if (cull(x, 30)) vine(x + 10, x < 2000 ? 214 : 150, 60, t, x);
 }
 
@@ -1626,7 +1629,7 @@ function weaveDecor(t) {
     if (!cull(x, 60)) continue;
     ctx.globalAlpha = .85; ellipse(x, GROUND + 9, 36, 7, c); ellipse(x - 30, GROUND + 7, 9, 3, c); ellipse(x + 34, GROUND + 10, 7, 2.6, c); ellipse(x + 8, GROUND + 6, 10, 3, 'rgba(255,255,255,.45)'); ctx.globalAlpha = 1;
   }
-  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
+  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200], [6250, 6440, 120]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
   if (cull(3125, 80)) {
     const B = ROPE_BRIDGE;
     ctx.strokeStyle = '#a8662c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(B.a, B.y - 30); ctx.quadraticCurveTo((B.a + B.b) / 2, B.y - 18, B.b, B.y - 30); ctx.stroke();
@@ -2005,7 +2008,10 @@ const INTERACT = [
   { box: [3900, 105, 4222, 452], hint: [4060, 262], disc: 'wheel', tap: rideWheel },
   { box: [4380, 200, 5360, 452], hint: [4440, 360], disc: 'coaster', tap: rideCoaster },
   { box: [5520, 40, 5880, 452], hint: [5700, 300], disc: 'carousel', tap: rideCarousel },
-  { box: [6075, 270, 6215, 452], hint: [6145, 390], disc: 'tube', tap: rideTube },
+  { box: [6166, 362, 6214, 402], hint: [6190, 382], disc: 'dispenser', priority: true, tap: dispense },
+  { box: [6672, 150, 6790, 232], hint: [6730, 200], disc: 'xylophone', priority: true, tap: tapXylo },
+  { box: [6150, 100, 6232, 450], tap: dispense },
+  { box: [6775, 270, 6915, 452], hint: [6845, 390], disc: 'tube', tap: rideTube },
   { box: [688, 236, 784, 360], hint: [737, 300], disc: 'climbnet', tap: () => tapClimb(CLIMBS[0]) },
   { box: [2682, 296, 2728, 452], hint: [2705, 380], disc: 'ladder', tap: () => tapClimb(CLIMBS[1]) },
   { box: [1378, 136, 1446, 204], hint: [1416, 176], disc: 'zipline', tap: tapZip },
@@ -2192,6 +2198,7 @@ function updateWorld(dt, t) {
   world.pitJiggle = Math.max(0, world.pitJiggle - dt);
   world.stickerJig = Math.max(0, world.stickerJig - dt * 1.4); world.zipWiggle = Math.max(0, world.zipWiggle - dt * 1.5);
   updateBalls(dt);
+  updateMarble(dt, t);
   updateParticles(dt);
 }
 function updateBalls(dt) {
@@ -2386,6 +2393,156 @@ function drawDripsAndShine(s) {
   if (age < 2.5 && s.points.length) for (let i = 0; i < 3; i++) { const p = s.points[Math.floor((gameTime * 7 + i * 13) % s.points.length)]; sparkle(p[0] + Math.sin(i * 5) * 5, p[1] - 3, 4 * (1 - age / 2.5) + 1, '#ffffff'); }
 }
 
+// ---- 47_marble.js ----
+// ===================================================================
+// 47_marble.js — Milestone 2 chain #2: the MARBLE MACHINE.
+//   dispenser (or throw ANY ball into its glass top) → xylophone ramps that
+//   play a real melody → paddle wheel → meshing gears → a LIFT that rises one
+//   step per ball and carries the creature up to a balcony with a playable
+//   xylophone and secret star 8.
+// ===================================================================
+const MARBLE = {
+  disp: { x: 6190, top: 118, globe: [6190, 150], button: [6190, 382] },
+  wheel: { x: 6476, y: 378, r: 40 },
+  lift: { a: 6560, b: 6662, low: GROUND, high: 230 },
+  balcony: { a: 6662, b: 6790, y: 230 },
+};
+// pentatonic notes (always sound nice together)
+const NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
+const BAR_COLS = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
+// Ramps are real line segments the balls roll on; bars on them are notes.
+const RAMPS = [
+  { x1: 6232, y1: 168, x2: 6400, y2: 208, bars: 6, n0: 7, dir: -1 },
+  { x1: 6430, y1: 246, x2: 6292, y2: 280, bars: 5, n0: 0, dir: 1 },
+  { x1: 6250, y1: 322, x2: 6430, y2: 358, bars: 6, n0: 2, dir: 1 },
+];
+const WALLS = [{ x1: 6440, y1: 190, x2: 6440, y2: 262 }, { x1: 6243, y1: 262, x2: 6243, y2: 318 }];
+Object.assign(world, { liftLevel: 0, liftY: GROUND, liftIdle: 0, wheelA: 0, wheelV: 0, xyloHit: new Array(8).fill(0) });
+const LIFT_PLATFORM = { a: MARBLE.lift.a, b: MARBLE.lift.b, y: GROUND, step: true, moving: true };
+PLATFORMS.push(LIFT_PLATFORM, { a: MARBLE.balcony.a, b: MARBLE.balcony.b, y: MARBLE.balcony.y });
+SECRET_STARS.push({ id: 'star8', x: 6745, y: 150 });
+
+function dispense() {
+  const D = MARBLE.disp;
+  const mine = balls.filter(b => b.mb); if (mine.length >= 6) balls.splice(balls.indexOf(mine[0]), 1);
+  const c = BAR_COLS[Math.floor(Math.random() * BAR_COLS.length)];
+  balls.push({ x: D.x + 56, y: D.top + 28, r: 15, c, vx: 45, vy: 0, mb: true });
+  world.dispT = .3; Sound.tone(392, .12, 'triangle', .05, 1.5); Sound.pop();
+  discover('dispenser', 'Push the button — watch the ball roll and play music!', D.x, D.top);
+}
+function playBar(i, loud = 1) {
+  i = clamp(i, 0, 7); world.xyloHit[i] = 1;
+  Sound.bell(NOTES[i], .05 * loud);
+}
+function tapXylo(p) {
+  const i = clamp(Math.floor((p.x - 6676) / 13.5), 0, 7);
+  playBar(i); burst(6683 + i * 13.5, 204, 4, [BAR_COLS[i], '#fff'], 'star', .4);
+  discover('xylophone', 'Play the rainbow xylophone!', 6730, 180);
+}
+// ball ↔ segment collisions for the machine's ramps & walls
+function segCollide(b, s, onHit) {
+  const dx = s.x2 - s.x1, dy = s.y2 - s.y1, L2 = dx * dx + dy * dy;
+  const u = clamp(((b.x - s.x1) * dx + (b.y - s.y1) * dy) / L2, 0, 1);
+  const px = s.x1 + dx * u, py = s.y1 + dy * u, ex = b.x - px, ey = b.y - py, d = Math.hypot(ex, ey);
+  if (d >= b.r || d < .001) return;
+  const nx = ex / d, ny = ey / d; b.x = px + nx * b.r; b.y = py + ny * b.r;
+  const vn = b.vx * nx + b.vy * ny;
+  if (vn < 0) { b.vx -= nx * vn * 1.35; b.vy -= ny * vn * 1.35; }
+  onHit && onHit(u, Math.abs(vn));
+}
+function updateMarble(dt, t) {
+  world.dispT = Math.max(0, (world.dispT || 0) - dt);
+  world.xyloHit = world.xyloHit.map(v => Math.max(0, v - dt * 3));
+  const D = MARBLE.disp, W = MARBLE.wheel;
+  for (const b of balls) {
+    if (b.dragged) continue;
+    // any ball dropped into the glass top goes into the machine
+    if (Math.hypot(b.x - D.globe[0], b.y - D.globe[1]) < 34 && !b.inMachine) { b.inMachine = true; b.x = D.x + 56; b.y = D.top + 28 - (b.r - 15); b.vx = 45; b.vy = 0; Sound.pop(); discover('feedball', 'Any ball can go into the marble machine!', D.x, D.top); }
+    if (b.x < 6225 || b.x > 6460 || b.y > 380) continue;
+    RAMPS.forEach((s, ri) => segCollide(b, s, (u, vn) => {
+      const bar = Math.floor(u * s.bars), key = ri * 10 + bar;
+      if (b.lastBar !== key && (Math.abs(b.vx) > 25 || vn > 40)) { b.lastBar = key; playBar(s.n0 + (s.dir > 0 ? bar : -bar) * (s.dir > 0 ? 1 : 1)); }
+    }));
+    WALLS.forEach(s => segCollide(b, s));
+  }
+  for (const b of balls) {
+    if (b.dragged || b.wheeled) continue;
+    if (Math.hypot(b.x - W.x, b.y - W.y) < W.r + b.r - 6) {
+      b.wheeled = true; b.fade = 3.5;
+      world.wheelV += 7; world.liftLevel = Math.min(1, world.liftLevel + .2); world.liftIdle = 0;
+      Sound.bell(NOTES[4], .06); Sound.bell(NOTES[7], .04);
+      burst(W.x, W.y, 14, [b.c, '#fff', '#ffe36e']);
+      discover('marblerun', 'The ball turns the wheel, the gears lift the platform!', W.x, W.y - 60);
+      if (world.liftLevel >= 1) discover('liftup', 'The lift is all the way up! Ride it to the balcony.', 6610, 200);
+    }
+  }
+  for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i]; if (b.fade != null) { b.fade -= dt; if (b.fade <= 0) { burst(b.x, b.y, 8, [b.c, '#fff'], 'dot', .5); balls.splice(i, 1); } } }
+  world.wheelV *= Math.exp(-dt * .8); world.wheelA += world.wheelV * dt;
+  // lift: rises to the level the balls earned; sinks back slowly when idle
+  world.liftIdle += dt; if (world.liftIdle > 10) world.liftLevel = Math.max(0, world.liftLevel - dt * .04);
+  const L = MARBLE.lift, target = lerp(L.low, L.high, world.liftLevel), prev = world.liftY;
+  world.liftY += clamp(target - world.liftY, -70 * dt, 70 * dt);
+  LIFT_PLATFORM.y = Math.round(world.liftY * 10) / 10;
+  // carry the creature standing on the lift
+  const P = player;
+  if (!P.ride && P.grounded && Math.abs(P.y - prev) < .6 && P.x > L.a && P.x < L.b) { P.y = LIFT_PLATFORM.y; }
+}
+// ---------- drawing ----------
+function drawMarble(t) {
+  if (!cull(6470, 340)) return;
+  const D = MARBLE.disp, W = MARBLE.wheel, L = MARBLE.lift, B = MARBLE.balcony;
+  // dispenser: gumball-machine globe on a gold stand
+  ellipse(D.x, GROUND + 4, 50, 9, 'rgba(50,20,100,.2)');
+  rounded(D.x - 34, 200, 68, 250, 18, grad(D.x - 34, 0, 68, 0, [[0, '#ff7ab8'], [.5, '#ffa6d4'], [1, '#e2459f']]), '#e9a93a', 6);
+  for (let y = 230; y < 340; y += 38) star(D.x, y, 9, '#ffe27a');
+  ctx.save(); ctx.beginPath(); ctx.arc(D.globe[0], D.globe[1] + 6, 44, 0, TAU); ctx.clip();
+  ctx.fillStyle = 'rgba(225,245,255,.5)'; ctx.fillRect(D.x - 46, 100, 92, 100);
+  for (let i = 0; i < 9; i++) ellipse(D.x - 26 + (i % 4) * 17, 186 - Math.floor(i / 4) * 15 + Math.sin(t * 3 + i) * world.dispT * 8, 8, 8, BAR_COLS[i % 8], 'rgba(255,255,255,.7)', 1.5);
+  ctx.restore();
+  ellipse(D.globe[0], D.globe[1] + 6, 44, 44, null, '#ffffff', 4); ellipse(D.x - 16, D.globe[1] - 14, 12, 7, 'rgba(255,255,255,.8)', null, 0, -.6);
+  rounded(D.x - 10, D.top - 34, 20, 10, 4, '#ffd36b', '#fff', 2);
+  rounded(D.x + 26, D.top + 34, 26, 10, 4, '#ffd36b', '#fff', 2); // chute onto the first ramp
+  const [bx, by] = D.button, press = world.dispT > 0 ? 3 : 0;
+  ellipse(bx, by + 6, 22, 9, '#8a1f52'); ellipse(bx, by + press, 20, 9, grad(0, by - 9, 0, 18, [[0, '#ffe57a'], [1, '#ffb01f']]), '#fff', 3);
+  // xylophone ramps (rainbow bars that light up when they play)
+  RAMPS.forEach(s => {
+    ctx.strokeStyle = '#7a4a1a'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(s.x1, s.y1 + 9); ctx.lineTo(s.x2, s.y2 + 9); ctx.stroke();
+    const ang = Math.atan2(s.y2 - s.y1, s.x2 - s.x1);
+    for (let i = 0; i < s.bars; i++) {
+      const u = (i + .5) / s.bars, x = lerp(s.x1, s.x2, u), y = lerp(s.y1, s.y2, u), n = clamp(s.n0 + (s.dir > 0 ? i : -i), 0, 7), lit = world.xyloHit[n];
+      ctx.save(); ctx.translate(x, y + 4); ctx.rotate(ang);
+      if (lit > 0) glow(0, 0, 22, BAR_COLS[n], lit);
+      rounded(-13, -4, 26, 9, 3, BAR_COLS[n], '#fff', 2); ellipse(-8, 0, 1.6, 1.6, '#fff'); ellipse(8, 0, 1.6, 1.6, '#fff');
+      ctx.restore();
+    }
+  });
+  WALLS.forEach(s => rounded(s.x1 - 4, s.y1, 8, s.y2 - s.y1, 4, '#ffd36b', '#fff', 1.5));
+  // paddle wheel + gear train to the lift
+  ctx.save(); ctx.translate(W.x, W.y); ctx.rotate(world.wheelA);
+  for (let i = 0; i < 8; i++) { ctx.rotate(TAU / 8); rounded(-5, -W.r - 4, 10, 26, 4, BAR_COLS[i], '#fff', 2); }
+  ellipse(0, 0, W.r * .62, W.r * .62, '#ffd36b', '#fff', 3); star(0, 0, 10, '#fff6c2');
+  ctx.restore();
+  gear(W.x + 52, W.y - 34, 22, 8, -world.wheelA * 1.6, '#9fe6ff');
+  gear(W.x + 82, W.y - 70, 16, 6, world.wheelA * 2.1, '#ffd16b');
+  // lift: rails with level lights + platform
+  for (const x of [L.a - 6, L.b + 6]) rounded(x - 5, L.high - 30, 10, GROUND - L.high + 30, 5, grad(x - 5, 0, 10, 0, [[0, '#ffd88f'], [1, '#d9962e']]), '#fff3c4', 1.5);
+  for (let i = 0; i < 5; i++) bulb(L.a - 6, GROUND - 30 - i * 40, world.liftLevel >= (i + 1) * .2 - .01, BAR_COLS[i * 2 % 8], .8);
+  const ly = LIFT_PLATFORM.y;
+  rounded(L.a, ly, L.b - L.a, 16, 7, grad(0, ly, 0, 16, [[0, '#b58cff'], [1, '#7d45d8']]), '#ffd36b', 3);
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(L.a + 4, ly - 26); ctx.lineTo(L.b - 4, ly - 26); ctx.stroke();
+  for (let x = L.a + 6; x < L.b; x += 24) { ctx.beginPath(); ctx.moveTo(x, ly - 26); ctx.lineTo(x, ly); ctx.stroke(); }
+  // balcony + standing xylophone
+  rounded(B.a, B.y, B.b - B.a, 18, 8, grad(0, B.y, 0, 18, [[0, '#ff9fd2'], [1, '#e2459f']]), '#ffd36b', 3);
+  rounded(B.b - 14, B.y + 16, 12, GROUND - B.y - 16, 5, '#e9b8ff', '#fff', 2);
+  for (let i = 0; i < 8; i++) {
+    const h = 44 - i * 3.5, x = 6676 + i * 13.5, lit = world.xyloHit[i];
+    if (lit > 0) glow(x + 6, B.y - h / 2, 18, BAR_COLS[i], lit);
+    rounded(x, B.y - h - 4 - lit * 4, 11, h, 4, BAR_COLS[i], '#fff', 2);
+  }
+  ctx.strokeStyle = '#a8662c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(6672, B.y - 6); ctx.lineTo(6786, B.y - 6); ctx.stroke();
+  bulbString(B.a, B.y - 70, B.b, B.y - 70, 8, 5, t, world.liftLevel > .99, ['#ff9fd8', '#ffd76a', '#9fe6ff']);
+}
+
 // ---- 50_input_ui.js ----
 // ===================================================================
 // 50_input_ui.js — touch/mouse/keyboard input + DOM HUD
@@ -2504,7 +2661,7 @@ function onDown(e) {
   // 5. machines, rides, play equipment
   if (activate(p)) return;
   // 6. anything else: a little twinkle where you touched
-  if (p.y < GROUND) { burst(p.x, p.y, 5); Sound.tone(630 + Math.random() * 200, .05, 'sine', .03); }
+  if (p.y < GROUND) { burst(p.x, p.y, 5); Sound.twinkle(); }
 }
 function onMove(e) {
   if (!grab || e.pointerId !== grab.id) return;
@@ -2641,7 +2798,7 @@ function render(t) {
   glassTube(3118, 128, 446, '#b58cff', t); glassTube(5458, 160, 446, '#ff8fd0', t);
   if (cull(365, 260)) drawBallPitBack();
   weaveDecor(t);
-  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); mixerMachine(t); drawPours(t); drawPipe(t);
+  playStructure(t); paintWall(t); drawEasel(1, t); drawEasel(2, t); drawRoutes(t); drawMarble(t); mixerMachine(t); drawPours(t); drawPipe(t);
   bubbleMachine(t); powerCable(t); wonderEngine(t); magnetMachine(t); launchPad(t);
   ferrisWheel(t); coasterTrack(t);
   decorLights(t);

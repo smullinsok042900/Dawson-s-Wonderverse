@@ -548,7 +548,7 @@ function decorLights(t) {
   if (cull(3310, 160)) bulbString(3186, 142, 3346, 142, 5, 5, t, world.magnetOn);
   if (cull(4060, 200)) bulbString(3925, 400, 4195, 400, 4, 8, t, P);
   for (const sx of [LAYOUT.coaster.a - 40, LAYOUT.coaster.b + 40]) if (cull(sx, 80)) bulbString(sx - 62, 332, sx + 62, 332, 3, 5, t, P);
-  if (cull(6145, 120)) bulbString(6092, 330, 6198, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
+  if (cull(6845, 120)) bulbString(6792, 330, 6898, 330, -20, 7, t, true, ['#ff6fae', '#ffd23f', '#6fe3ff', '#a98af7']);
   for (const x of [700, 1000, 3200, 3600]) if (cull(x, 30)) vine(x + 10, x < 2000 ? 214 : 150, 60, t, x);
 }
 
@@ -578,7 +578,7 @@ function weaveDecor(t) {
     if (!cull(x, 60)) continue;
     ctx.globalAlpha = .85; ellipse(x, GROUND + 9, 36, 7, c); ellipse(x - 30, GROUND + 7, 9, 3, c); ellipse(x + 34, GROUND + 10, 7, 2.6, c); ellipse(x + 8, GROUND + 6, 10, 3, 'rgba(255,255,255,.45)'); ctx.globalAlpha = 1;
   }
-  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
+  for (const [x1, x2, y] of [[1990, 2400, 150], [3460, 3920, 170], [4600, 5150, 150], [5880, 6080, 200], [6250, 6440, 120]]) if (cull((x1 + x2) / 2, (x2 - x1) / 2 + 20)) bunting(x1, y, x2 - x1, t);
   if (cull(3125, 80)) {
     const B = ROPE_BRIDGE;
     ctx.strokeStyle = '#a8662c'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(B.a, B.y - 30); ctx.quadraticCurveTo((B.a + B.b) / 2, B.y - 18, B.b, B.y - 30); ctx.stroke();

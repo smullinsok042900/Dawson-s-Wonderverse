@@ -1,11 +1,20 @@
-# Test report — Milestone 2, build 5
+# Test report — Milestone 2, build 6
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 70 / 70 checks passed, no console errors
+## Result: 75 / 75 checks passed, no console errors
+
+Build 6 added five checks:
+- dispenser balls roll down the ramps into the paddle wheel
+- 5 balls raise the lift fully
+- the lift carries the creature up
+- walk onto the balcony and get star 8
+- tap the xylophone
+
+The new tests caught two real machine bugs, both fixed: the ball spawned beside the first ramp and bounced off backwards, and the gap at the end of ramp 2 was narrower than a ball, so balls got stuck.
 
 Build 5 added ten checks:
 - climb the net, which ends on the high beam
