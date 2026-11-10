@@ -302,14 +302,41 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   c = await S(); check('bring the Star Baby to the Star Nest', c.disc.includes('nesthome'));
   await teleport(10700); await tapWorld(10740, 410); await sleep(200);
   c = await S(); check('tap the door to go inside the Peekaboo House', c.inside === 'peek');
-  await tapWorld(10620, 410); await sleep(100); check('play the piano inside', (await S()).disc.includes('piano'));
-  await page.screenshot({ path: path.join(SHOTS, '31_inside_house.jpg'), type: 'jpeg', quality: 82 });
-  await tapWorld(10740, 410); await sleep(100); check('tap the door again to go back outside', (await S()).inside === null);
   const pawB = await center('#pawBtn');
+  c = await S(); check('inside is a full-sized house (its own big space, ground floor)', c.x >= 20000 && Math.abs(c.y - GROUND_Y) < 1, `x=${Math.round(c.x)}`);
+  await page.evaluate(() => { __DDW.player.x = 21300; }); await sleep(400);
+  await tapWorld(21420, 345); await sleep(100); check('play the big piano in the living room', (await S()).disc.includes('piano'));
+  await page.screenshot({ path: path.join(SHOTS, '31_inside_house.jpg'), type: 'jpeg', quality: 82 });
+  await page.evaluate(() => { __DDW.player.x = 20380; }); await sleep(250);
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(100);
+  check('PAW at the bottom of the stairs starts walking up', await page.evaluate(() => !!__DDW.player.stair));
+  await sleep(2400); c = await S(); check('the stairs lead up to the second floor', await page.evaluate(() => __DDW.houseLevel()) === 1 && Math.abs(c.y - 116) < 1, `y=${Math.round(c.y)}`);
+  await page.screenshot({ path: path.join(SHOTS, '37_house_upstairs.jpg'), type: 'jpeg', quality: 82 });
+  await page.evaluate(() => { __DDW.player.x = 21000; }); await sleep(250);
+  await tapWorld(20900, 0); await sleep(2800); // tap the staircase itself
+  c = await S(); check('tap the attic stairs: walk up to the third floor', await page.evaluate(() => __DDW.houseLevel()) === 2 && Math.abs(c.y + 218) < 1, `y=${Math.round(c.y)}`);
+  await page.evaluate(() => { __DDW.player.x = 21250; }); await sleep(500);
+  await tapWorld(21400, -250); await sleep(100); check('open the treasure chest in the attic', (await S()).disc.includes('chest'));
+  await page.screenshot({ path: path.join(SHOTS, '38_house_attic.jpg'), type: 'jpeg', quality: 82 });
+  await page.evaluate(() => { __DDW.player.x = 20600; }); await sleep(250);
+  await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(200); // at the top of the stairs: PAW goes down
+  check('PAW at the top of the stairs walks back down', await page.evaluate(() => __DDW.player.stair && !__DDW.player.stair.up));
+  await sleep(2800); check('back on the second floor', await page.evaluate(() => __DDW.houseLevel()) === 1);
+  await page.evaluate(() => { const P = __DDW.player; P.x = 21380; P.y = 40; P.vy = 50; P.grounded = false; }); // drop onto the bouncy bed
+  let minY = 999; for (let i = 0; i < 25; i++) { minY = Math.min(minY, (await S()).y); await sleep(40); }
+  check('bounce on the bouncy bed upstairs', minY < 0, `highest y=${Math.round(minY)}`);
+  check('the ceiling stops you (no jumping through floors)', minY >= -27, `highest y=${Math.round(minY)} (ceiling allows ≥ -26)`);
+  await sleep(1500);
+  await page.evaluate(() => { const P = __DDW.player; P.x = 20180; P.y = 450; P.vy = 0; }); await sleep(1100);
+  await tapWorld(20180, 330); await sleep(200); c = await S(); check('tap the front door inside to go back outside', c.inside === null && Math.abs(c.x - 10740) < 2, `x=${Math.round(c.x)}`);
   await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(100);
   check('PAW at a door goes inside', (await S()).inside === 'peek');
   await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(100);
-  check('PAW inside at the door comes back OUT (never stuck inside)', (await S()).inside === null);
+  check('PAW inside at the front door comes back OUT (never stuck inside)', (await S()).inside === null);
+  await teleport(11240); await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(150);
+  check('the Fluffkin House door goes inside too', (await S()).inside === 'fluff');
+  await page.evaluate(() => { __DDW.player.x = 24200; }); await sleep(400);
+  await page.screenshot({ path: path.join(SHOTS, '39_fluffkin_house.jpg'), type: 'jpeg', quality: 82 });
   await teleport(1120); await holdBtn('#rightBtn', 320); await sleep(150);
   await touch('touchStart', [{ ...pawB, id: 4 }]); await touch('touchEnd', []); await sleep(200);
   c = await S(); check('the door under the rainbow bridge leads down a secret staircase to the caves', c.under && Math.abs(c.x - 1250) < 2, `x=${Math.round(c.x)} under=${c.under}`);

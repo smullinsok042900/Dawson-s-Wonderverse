@@ -152,11 +152,11 @@ INTERACT.unshift(
   { box: [BB.x0, BB.y0, BB.x0 + BB.cols * BB.cell, BB.y0 + BB.rows * BB.cell], priority: true, layer: 'ug', hint: [BB.x0 + 200, BB.y0 + 140], disc: 'builder', tap: tapBuild },
   ...HATCHES.map(h => ({ box: [h.x - 34, GROUND - 30, h.x + 34, GROUND + 20], priority: true, hint: [h.x, GROUND - 6], disc: 'underground', tap: () => dropIntoHatch(h) })),
   ...CRYSTALS.map(k => ({ box: [k.x - 26, k.y - k.h - 6, k.x + 26, k.y + 4], priority: true, layer: 'ug', tap: () => tapCrystal(k) })),
-  { box: [PIANO.x - 6, PIANO.y - 6, PIANO.x + PIANO.w + 6, PIANO.y + 26], priority: true, layer: 'in:peek', hint: [PIANO.x + 50, PIANO.y + 8], disc: 'piano', tap: tapPiano },
-  { box: [10790, 394, 10850, 452], priority: true, layer: 'in:peek', hint: [10820, 420], disc: 'toybox', tap: tapToybox },
-  // doors: usable from outside AND from inside (layer 'any'); the box includes the door bubble above
-  { box: [10710, 370, 10770, 452], priority: true, layer: 'any', hint: [10740, 410], disc: 'door-peek', force: () => player.inside === 'peek', tap: () => toggleDoor('peek') },
-  { box: [11208, 358, 11272, 452], priority: true, layer: 'any', hint: [11240, 410], disc: 'door-fluff', force: () => player.inside === 'fluff', tap: () => toggleDoor('fluff') },
+  { box: [PIANO.x - 6, PIANO.y - 6, PIANO.x + PIANO.w + 6, PIANO.y + 30], priority: true, layer: 'in:peek', hint: [PIANO.x + 75, PIANO.y + 10], disc: 'piano', tap: tapPiano },
+  { box: [21596, 380, 21690, 452], priority: true, layer: 'in:peek', hint: [21642, 420], disc: 'toybox', tap: tapToybox },
+  // front doors outside (the way back out is the front door inside each house, see 49h_houses.js)
+  { box: [10710, 370, 10770, 452], priority: true, layer: '', hint: [10740, 410], disc: 'door-peek', tap: () => toggleDoor('peek') },
+  { box: [11208, 358, 11272, 452], priority: true, layer: '', hint: [11240, 410], disc: 'door-fluff', tap: () => toggleDoor('fluff') },
   { get box() { const d = nearDoor(); return d ? [d.x - 38, d.y - 272, d.x + 38, d.y - 200] : [0, 0, 0, 0]; }, priority: true, layer: 'any', tap: () => { const d = nearDoor(); if (d) d.go(); } }, // the door bubble
   ...PORTALS.map(d => { const y = d.under ? UG.floor : GROUND; return { box: [d.x - 26, y - 82, d.x + 26, y + 2], priority: true, layer: d.under ? 'ug' : '', hint: [d.x, y - 40], disc: 'secretdoor', tap: () => usePortal(d) }; }),
 );

@@ -1,5 +1,26 @@
 # Changelog — Dawson's Discovery World
 
+## Milestone 3 · build 11 — real walk-in houses with rooms and stairs (feedback #5)
+Previous build backed up as `backups/M3_build10_index.html`.
+- **Going through a front door now takes you into a full-sized house.** Before, the inside was one small box the size of the outside wall. Now each house is a big cut-away doll's house sized for the creature: rooms side by side, floors stacked above each other, and doorways between rooms.
+- **Stairs:** to go up or down, tap the staircase or the footsteps bubble, or press PAW at the bottom or top of the stairs. The creature then walks up or down by itself, and each step plays a note (up the scale going up, down the scale going down). Floors are solid: you can't jump through a ceiling.
+- **Peekaboo House: 3 floors, 7 rooms.**
+  - **Ground floor:**
+    - Front hall: coat pegs and a swinging sparkly chandelier. The cupboard under the stairs opens and someone peeks out.
+    - Living room: a bouncy sofa, a crackling fireplace, a full-sized piano, and the house critters wandering about.
+    - Playroom: a toy box, a block tower that tumbles and builds itself back up, and a rocking horse.
+  - **Upstairs:**
+    - Landing: a cuckoo clock, a window seat, and portraits of Pip, Zuzu and Jelly.
+    - Bedroom: a bouncy bed, a teddy to hug, and a night light that turns the room starry. A Star Baby waits on the high shelf.
+    - Bathroom: a bubble bath and a squeaky rubber duck.
+  - **Attic:** a telescope at the round window shows shooting stars. There's also a treasure chest, a music box with a little dancer, and an old trunk to climb for **secret star 11**.
+- **Fluffkin House: 2 floors.**
+  - Family room: a bouncy cushion pile, and a toy drum that makes every Fluffkin jump. A family photo wall fills in with a picture of each Fluffkin you bring home.
+  - Nursery: **six little beds**, one for each Fluffkin. Rescued Fluffkins sleep there, and tapping one wakes it up to bounce.
+  - You can now also bring Fluffkins home by walking inside with them.
+- Every room has a light switch by its doorway (tap it for lights off and twinkly stars) and a ceiling lamp.
+- To leave, use the front door inside: tap it, tap its bubble, or press PAW next to it.
+
 ## Milestone 3 · build 10 — easy way under the ball pit, the world goes UP, friendly critters (feedback #4)
 Previous build backed up as `backups/M3_build9b_index.html`.
 - **Getting under the ball pit is easy now:**

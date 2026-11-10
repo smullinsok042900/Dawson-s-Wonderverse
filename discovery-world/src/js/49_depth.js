@@ -20,8 +20,7 @@ const BUILDINGS = {
   peek: { x1: 10560, x2: 10920, door: 10740, roof: 186, name: 'Peekaboo House' },
   fluff: { x1: 11132, x2: 11348, door: 11240, roof: 236, name: 'Fluffkin House' },
 };
-PLATFORMS.push({ a: 10840, b: 10912, y: 336, layer: 'in:peek' },                                  // high toy shelf
-  { a: 10584, b: 10676, y: 418, step: true, bounce: 700, layer: 'in:peek', drum: { x: 10630, y: 418, note: 4, sq: 0 }, onLand: drumLand }); // bouncy bed
+// (build 11: the insides are now full-sized walk-in houses — see 49h_houses.js)
 
 function layerKey() { const P = player; return P.under ? 'ug' : P.inside ? 'in:' + P.inside : ''; }
 function netAt(x) { return NETWORKS.find(n => x >= n.a && x <= n.b); }
@@ -29,7 +28,7 @@ function segAt(x) { const n = netAt(x); return n && n.segs.find(s => x >= s[0] &
 function layerBounds() {
   const P = player;
   if (P.under) { const n = netAt(P.x) || NETWORKS[0]; return [n.a + 22, n.b - 22]; }
-  if (P.inside) { const B = BUILDINGS[P.inside]; return [B.x1 + 26, B.x2 - 26]; }
+  if (P.inside) { const H = HOUSES[P.inside]; return [H.ox + 60, H.ox + H.w - 60]; }
   return [60, WORLD_W - 70];
 }
 const floorY = () => player.under ? UG.floor : GROUND;
@@ -37,7 +36,7 @@ function isCrawling() { const s = player.under && segAt(player.x); return !!s &&
 function ceilingAt() {
   const P = player;
   if (P.under) { const s = segAt(P.x); return s && s[2] === 'crawl' ? UG.crawlCeil : UG.roomCeil; }
-  if (P.inside) return BUILDINGS[P.inside].roof;
+  if (P.inside) return houseCeiling();
   return null;
 }
 const creatureH = () => isCrawling() ? 104 : 168;
@@ -59,11 +58,13 @@ function dropIntoHatch(h) {
   discover('underground', 'A secret tunnel under the floor! Crawl and explore!', h.x, GROUND + 80);
 }
 function toggleDoor(id) {
-  const P = player, B = BUILDINGS[id]; if (P.ride) return;
-  if (P.inside === id) { P.inside = null; P.x = B.door; Sound.tone(440, .2, 'triangle', .05, .7); burst(B.door, 410, 8); return; }
-  if (P.under || Math.abs(P.x - B.door) > 330) { burst(B.door, 410, 6); Sound.click(); return; }
-  P.inside = id; P.x = B.door; P.vx = 0; Sound.tone(520, .25, 'triangle', .05, 1.4); burst(B.door, 410, 12, ['#fff', '#ffe36e']);
-  discover('door-' + id, `You went inside the ${B.name}!`, B.door, 300);
+  const P = player, B = BUILDINGS[id], H = HOUSES[id]; if (P.ride || P.stair) return;
+  if (P.inside === id) { // from inside: walk out of the front door (only from the ground floor, near the door)
+    if (Math.abs(P.x - H.exit) > 330 || Math.abs(P.y - GROUND) > 4) { burst(H.exit, GROUND - 100, 6); Sound.click(); return; }
+    leaveHouse(); return;
+  }
+  if (P.inside || P.under || Math.abs(P.x - B.door) > 330) { burst(B.door, 410, 6); Sound.click(); return; }
+  enterHouse(id);
 }
 
 // ---------- underground + interior interactives ----------
@@ -72,16 +73,16 @@ const CRYSTALS = [
   ...[7000, 7070, 7140, 7210, 7280].map((x, i) => ({ x, y: 700, h: 110 + Math.sin(i * 2) * 40, c: RAINBOW[i + 1], note: i + 3, lit: 0, big: true })),
 ];
 function tapCrystal(k) { k.lit = 1; Sound.bell(NOTES[k.note % 8] / (k.big ? 2 : 1), .06); Sound.bell(NOTES[k.note % 8], .03, .05); burst(k.x, k.y - k.h * .7, 8, [k.c, '#fff'], 'star', .5); discover('crystal', 'Singing crystals! Tap them to play.', k.x, k.y - k.h); }
-const PIANO = { x: 10596, w: 104, y: 404, keys: 8, lit: new Array(8).fill(0) };
-function tapPiano(p) { const i = clamp(Math.floor((p.x - PIANO.x) / (PIANO.w / PIANO.keys)), 0, 7); PIANO.lit[i] = 1; Sound.bell(NOTES[i], .06); burst(p.x, PIANO.y - 10, 4, [RAINBOW[i], '#fff'], 'star', .4); discover('piano', 'Play the piano!', p.x, 330); }
-function tapToybox() { world.toyT = 1.2; confetti(10820, 400, 24, 360); burst(10820, 400, 12, RAINBOW, 'heart', .8); Sound.giggle(); discover('toybox', 'Toys pop out of the toy box!', 10820, 330); }
-const ROOMIES = [0, 1, 2, 3, 4].map(i => ({ x: 10600 + i * 62, dir: i % 2 ? 1 : -1, hop: 0, i }));
+const PIANO = { x: 21390, w: 150, y: 336, keys: 8, lit: new Array(8).fill(0) };
+function tapPiano(p) { const i = clamp(Math.floor((p.x - PIANO.x) / (PIANO.w / PIANO.keys)), 0, 7); PIANO.lit[i] = 1; Sound.bell(NOTES[i], .06); burst(p.x, PIANO.y - 10, 4, [RAINBOW[i], '#fff'], 'star', .4); discover('piano', 'Play the piano!', p.x, 260); }
+function tapToybox() { world.toyT = 1.2; confetti(21642, 390, 24, 360); burst(21642, 390, 12, RAINBOW, 'heart', .8); Sound.giggle(); discover('toybox', 'Toys pop out of the toy box!', 21642, 300); }
+const ROOMIES = [0, 1, 2, 3, 4].map(i => ({ x: 20960 + i * 110, dir: i % 2 ? 1 : -1, hop: 0, i }));
 
 // ---------- STAR BABIES (second rescue family) ----------
 const NEST = { x: 1342, y: 213 };
 [
   { id: 's1', x: 870, y: UG.floor, layer: 'ug' }, { id: 's2', x: 8420, y: UG.floor, layer: 'ug' }, { id: 's3', x: 7080, y: UG.floor, layer: 'ug' },
-  { id: 's4', x: 10880, y: 336, layer: 'in:peek' }, { id: 's5', x: 4150, y: 410 }, { id: 's6', x: 13250, y: GROUND },
+  { id: 's4', x: 21712, y: -4, layer: 'in:peek' }, { id: 's5', x: 4150, y: 410 }, { id: 's6', x: 13250, y: GROUND },
 ].forEach((s, i) => FLUFFS.push({ ...s, kind: 'star', c: RAINBOW[(i * 3) % 8], hx: s.x, hy: s.y, state: 'wait', px: s.x, py: s.y, enterT: 0 }));
 FLUFFS.forEach(f => { f.kind = f.kind || 'fluff'; });
 function drawStarBaby(x, y, c, t, k, mood) {
@@ -146,51 +147,9 @@ function drawHatches(t) {
 }
 function drawBuildingDoors(t) {
   // the Peekaboo House gets a front door (the Fluffkin House already has one)
-  if (cull(10740, 60) && player.inside !== 'peek') {
+  if (cull(10740, 60)) {
     rounded(10712, 372, 56, 80, 26, grad(0, 372, 0, 80, [[0, '#c26ae8'], [1, '#8a3fc4']]), '#ffd36b', 4);
     ellipse(10756, 414, 4, 4, '#ffd36b'); star(10740, 392, 7, '#fff6b0');
-  }
-}
-function drawInteriors(t) {
-  const P = player;
-  if (P.inside === 'peek' && cull(10740, 200)) {
-    const B = BUILDINGS.peek;
-    rounded(B.x1 + 6, B.roof - 10, B.x2 - B.x1 - 12, GROUND - B.roof + 10, 18, grad(0, B.roof, 0, GROUND - B.roof, [[0, '#fff1f8'], [1, '#ffd1ec']]));
-    for (let x = B.x1 + 30; x < B.x2; x += 52) { ctx.fillStyle = 'rgba(255,170,220,.35)'; ctx.fillRect(x, B.roof, 18, GROUND - B.roof); }
-    rounded(10760, 214, 90, 70, 10, '#bff0ff', '#ffd36b', 4); ctx.strokeStyle = '#ffd36b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(10805, 214); ctx.lineTo(10805, 284); ctx.moveTo(10760, 249); ctx.lineTo(10850, 249); ctx.stroke(); // window
-    // bouncy bed
-    rounded(10584, 418, 92, 32, 10, '#a15cff', '#ffd36b', 3); rounded(10588, 404, 84, 18, 9, '#ffd1ec', '#fff', 2); ellipse(10600, 400, 14, 9, '#fff', '#ffd1ec', 2);
-    // high shelf + toy box + piano
-    rounded(10840, 336, 72, 12, 5, '#ffb35c', '#fff', 2); rounded(10876, 348, 6, 30, 3, '#d9962e');
-    rounded(10790, 394, 60, 56, 10, grad(0, 394, 0, 56, [[0, '#ff7ab8'], [1, '#d4569b']]), '#ffd36b', 3); star(10820, 420, 10, '#fff6b0');
-    if (world.toyT > 0) { world.toyT -= 1 / 60; ctx.save(); ctx.translate(10820, 392); ctx.rotate(-.5); rounded(-30, -6, 60, 8, 4, '#ff9fd2', '#fff', 2); ctx.restore(); }
-    rounded(PIANO.x - 6, PIANO.y - 40, PIANO.w + 12, 40, 8, '#5b2f8a', '#ffd36b', 3);
-    for (let i = 0; i < PIANO.keys; i++) { const w = PIANO.w / PIANO.keys, lit = PIANO.lit[i] = Math.max(0, PIANO.lit[i] - 1 / 40); rounded(PIANO.x + i * w + 1, PIANO.y - 2 + lit * 3, w - 2, 26, 3, lit > 0 ? RAINBOW[i] : '#ffffff', '#5b2f8a', 1.5); }
-    rounded(PIANO.x, PIANO.y + 24, 8, 22, 3, '#5b2f8a'); rounded(PIANO.x + PIANO.w - 8, PIANO.y + 24, 8, 22, 3, '#5b2f8a');
-    // the critters who live here wander about
-    for (const r of ROOMIES) {
-      r.x += r.dir * 30 / 60; if (r.x < B.x1 + 40 || r.x > B.x2 - 40) r.dir *= -1;
-      const c = RAINBOW[(r.i * 3) % 8], y = GROUND - Math.abs(Math.sin(t * 6 + r.i)) * 8;
-      ellipse(r.x, GROUND, 14, 4, 'rgba(60,25,110,.18)');
-      if (r.i % 2 === 0) { ellipse(r.x - 8, y - 38, 4, 10, c, '#fff', 1.5); ellipse(r.x + 8, y - 38, 4, 10, c, '#fff', 1.5); } else { ellipse(r.x - 11, y - 30, 6, 6, c, '#fff', 1.5); ellipse(r.x + 11, y - 30, 6, 6, c, '#fff', 1.5); }
-      ellipse(r.x, y - 18, 16, 16, c, '#fff', 2); ellipse(r.x - 5 * -r.dir, y - 21, 2.6, 3.4, '#2a0f45'); ellipse(r.x + 5 * r.dir, y - 21, 2.6, 3.4, '#2a0f45');
-      ctx.strokeStyle = '#2a0f45'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(r.x, y - 14, 4, .2, Math.PI - .2); ctx.stroke();
-    }
-    // cutaway frame (shows we're inside)
-    rounded(B.x1, B.roof - 16, B.x2 - B.x1, GROUND - B.roof + 16, 22, null, '#e9a93a', 8);
-    rounded(B.door - 28, 372, 56, 80, 26, 'rgba(160,90,220,.35)', '#ffd36b', 3);
-  }
-  if (P.inside === 'fluff' && cull(11240, 140)) {
-    const B = BUILDINGS.fluff;
-    ctx.save(); ctx.beginPath(); ctx.moveTo(B.x1 + 6, GROUND); ctx.lineTo(B.x1 + 6, 300); ctx.quadraticCurveTo(B.door, 150, B.x2 - 6, 300); ctx.lineTo(B.x2 - 6, GROUND); ctx.closePath(); ctx.clip();
-    ctx.fillStyle = grad(0, 160, 0, 290, [[0, '#fff6d8'], [1, '#ffd89a']]); ctx.fillRect(B.x1, 150, B.x2 - B.x1, 300);
-    for (let i = 0; i < 9; i++) bulb(B.x1 + 20 + i * 22, 250 + Math.sin(i) * 12, true, RAINBOW[i % 8], .8);
-    [[11170, '#ff9fd2'], [11240, '#9fe6ff'], [11310, '#c9a6ff']].forEach(([x, c]) => { ellipse(x, 438, 32, 14, c, '#fff', 2); });
-    const home = FLUFFS.filter(f => f.kind === 'fluff' && f.state === 'home');
-    home.forEach((f, i) => drawFluff(B.x1 + 34 + (i * 31 + Math.sin(t * .7 + i) * 18) % (B.x2 - B.x1 - 60), GROUND - 6, f.c, t * 1.3, i, 'home'));
-    if (!home.length) { text('?', B.door, 330, 40, '#e9a93a', '#fff'); }
-    ctx.restore();
-    ctx.beginPath(); ctx.moveTo(B.x1, GROUND); ctx.lineTo(B.x1, 300); ctx.quadraticCurveTo(B.door, 140, B.x2, 300); ctx.lineTo(B.x2, GROUND); ctx.strokeStyle = '#e9a93a'; ctx.lineWidth = 7; ctx.stroke();
   }
 }
 function drawNest(t) {
@@ -231,8 +190,8 @@ function usePortal(d) {
 // all doors in one list: [x, groundY, layer it is used from, action, isInside]
 function allDoors() {
   const P = player, list = PORTALS.map(d => ({ x: d.x, y: d.under ? UG.floor : GROUND, lk: d.under ? 'ug' : '', go: () => usePortal(d) }));
-  for (const id of Object.keys(BUILDINGS)) { const B = BUILDINGS[id]; list.push({ x: B.door, y: GROUND, lk: P.inside === id ? 'in:' + id : '', go: () => toggleDoor(id), out: P.inside === id }); }
-  return list;
+  for (const id of Object.keys(BUILDINGS)) { const B = BUILDINGS[id]; list.push({ x: B.door, y: GROUND, lk: '', go: () => toggleDoor(id) }); }
+  return list.concat(houseDoors());
 }
 function nearDoor() { const P = player, lk = layerKey(); return allDoors().find(d => d.lk === lk && Math.abs(P.x - d.x) < 110 && Math.abs(P.y - d.y) < 6); }
 function drawPortalDoors(t) {
@@ -244,10 +203,18 @@ function drawPortalDoors(t) {
   }
 }
 function drawDoorBubble(t) {
-  const d = nearDoor(); if (!d || player.ride) return;
+  const d = nearDoor(); if (!d || player.ride || player.stair) return;
   const y = d.y - 238 + Math.sin(t * 4) * 4; // above the creature's head, never over its face
   ellipse(d.x, y, 30, 26, 'rgba(255,255,255,.96)', '#ffc531', 3);
   rounded(d.x - 9, y - 14, 18, 26, 9, '#a15cff', '#fff', 2); ellipse(d.x + 5, y, 1.8, 1.8, '#ffd36b');
+  if (d.icon) { // stairs: footsteps going up or down
+    ellipse(d.x, y, 30, 26, 'rgba(255,255,255,.96)', '#ffc531', 3);
+    for (let i = 0; i < 3; i++) { const sx = d.x - 24 + i * 12, sy = y + 4 - i * 9; rounded(sx, sy, 12, y + 16 - sy, 2, '#e8a464', '#c8722e', 1.5); }
+    const u = d.icon === 'up' ? -1 : 1, ax = d.x + 18, ay = y + (u < 0 ? -12 : 4);
+    ctx.beginPath(); ctx.moveTo(ax, ay + u * 10); ctx.lineTo(ax - 8, ay); ctx.lineTo(ax + 8, ay); ctx.closePath(); ctx.fillStyle = '#ff4f9a'; ctx.fill(); rounded(ax - 3, u < 0 ? ay : ay - 8, 6, 8, 2, '#ff4f9a');
+    ctx.beginPath(); ctx.moveTo(d.x - 7, y + 26); ctx.lineTo(d.x, y + 36); ctx.lineTo(d.x + 7, y + 26); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fill();
+    return;
+  }
   ctx.beginPath(); if (d.out) { ctx.moveTo(d.x + 22, y); ctx.lineTo(d.x + 12, y - 7); ctx.lineTo(d.x + 12, y + 7); } else { ctx.moveTo(d.x + 12, y); ctx.lineTo(d.x + 22, y - 7); ctx.lineTo(d.x + 22, y + 7); }
   ctx.closePath(); ctx.fillStyle = '#ff4f9a'; ctx.fill();
   ctx.beginPath(); ctx.moveTo(d.x - 7, y + 26); ctx.lineTo(d.x, y + 36); ctx.lineTo(d.x + 7, y + 26); ctx.fillStyle = 'rgba(255,255,255,.96)'; ctx.fill();

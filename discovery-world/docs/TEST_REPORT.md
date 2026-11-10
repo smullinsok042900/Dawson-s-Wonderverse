@@ -1,11 +1,28 @@
-# Test report — Milestone 3, build 10
+# Test report — Milestone 3, build 11
 
 **Tool:** Playwright with headless Chromium on Linux, running the built `index.html` from disk.
 **Viewport:** 844×390 CSS px (the size of a landscape iPhone 14/15), `hasTouch`, `isMobile`, device pixel ratio 2.
 **Input:** real Chrome DevTools touch events (`Input.dispatchTouchEvent`) for holds, multi-touch and drags, plus Playwright `touchscreen.tap` for taps. These are the same pointer and touch events the game receives on a phone.
 **Script:** `tests/smoke.cjs`. Raw results: `tests/TEST_RESULTS.json`. Screenshots: `screenshots/`.
 
-## Result: 120 / 120 checks passed, no console errors
+## Result: 130 / 130 checks passed, no console errors
+
+Build 11 replaced the old one-room house checks and added ten more:
+- going inside lands you in a full-sized house on its ground floor
+- the living-room piano plays
+- PAW at the bottom of the stairs walks the creature up, and it arrives on the second floor
+- tapping the attic staircase walks up to the third floor
+- the attic treasure chest opens
+- PAW at the top of the stairs walks back down to the second floor
+- the bouncy bed bounces you up, and the ceiling stops you (no jumping through floors)
+- the front door inside takes you back outside to the house's door
+- PAW goes in and out at the front doors, and the Fluffkin House door works too
+
+Flaky checks seen while testing build 11, each passing again on the next full runs:
+- Once, "tap the Ferris wheel to ride" failed. Nothing near the wheel changed in this build.
+- Once, "tap the front door inside to go back outside" failed. The test tapped before the camera had finished gliding back down from upstairs, so the door was still off screen. The test now waits for the camera. That wasn't a game bug.
+After that fix, the full suite passed two runs in a row.
+
 
 Build 10 added nine checks:
 - tap the balls to dive through the pit
