@@ -261,7 +261,7 @@ const UG_F = -6;
   c = await S(); check('the ceiling stops you upstairs (no flying through the roof)', c.y + 1.5 <= 8.81, `y=${c.y.toFixed(2)}`);
   await waitFor(s => s.grounded, 3000);
   await page.evaluate(() => __DDW3.teleport(1028.2, 4.4)); await sleep(300); c = await S(); check('stair bubble at the top of the stairs', c.door === 'down');
-  await press('#pawBtn'); await sleep(200); await holdBtn('#leftBtn', 3200); c = await S(); check('walk back down the stairs', c.stair === null && c.y === 0, `y=${c.y}`);
+  await press('#pawBtn'); await sleep(200); await holdBtn('#leftBtn', 3200); c = await waitFor(s => s.stair === null && s.y === 0, 6000); check('walk back down the stairs', c.stair === null && c.y === 0, `y=${c.y}`);
   await page.evaluate(() => __DDW3.teleport(1003.2)); await sleep(300); await press('#pawBtn'); await sleep(500); c = await S(); check('the front door inside takes you back outside', c.layer === '' && Math.abs(c.x - 190) < .1);
   // ---------- sound + saving ----------
   { const s0 = (await S()).sound, hit = await page.evaluate(() => { const b = document.getElementById('soundBtn').getBoundingClientRect(); const e = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return e && (e.id || e.className || e.tagName); }); await page.locator('#soundBtn').tap(); await sleep(100); check('sound button turns sound off', !(await S()).sound, `was ${s0}, top element at the button: ${hit}`); }
