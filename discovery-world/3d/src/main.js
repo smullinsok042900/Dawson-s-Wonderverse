@@ -630,6 +630,7 @@ function updateCamera(dt) {
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
   camera.position.set(camT.x, y + 2.5 + Math.max(0, -camT.z) * .25, CAM_DIST + camT.z); camera.lookAt(camT.x, y + 1.3, camT.z);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
+  if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
   sun.position.set(camT.x - 7, 16 + Math.max(0, camT.y), 10); sun.target.position.set(camT.x, Math.max(0, camT.y), 0);
 }
