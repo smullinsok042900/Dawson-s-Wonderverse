@@ -157,7 +157,7 @@ const UG_F = -6;
   await teleport(229.6);
   check('the colour palette appears by the Colouring Corner', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
   await page.locator('.swatch').nth(1).tap(); await sleep(150);
-  { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(228.17, 2.18, -2.3); // the castle in the middle of the picture (well clear of the buttons) await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
+  { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(228.17, 2.18, -2.3); await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
     check('tap part of a colouring picture: it fills with your colour', before !== after && (await S()).disc.includes('coloring')); }
   await shot('20_colouring.jpg');
   await teleport(238); await tapWorld(240, 1.2, -2.4); await sleep(300);
