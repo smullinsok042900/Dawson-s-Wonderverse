@@ -134,7 +134,7 @@ export function initTrain(G, api) {
     face(dir); T.mode = 'running'; T.target = next; whistle();
   }
 
-  const ACC = 8, VMAX = 18;
+  const ACC = 6, VMAX = 14;
   function update(dt, t, P, stick, keys) {
     const riding = P.ride && P.ride.type === 'train';
     STATIONS.forEach(s => { s.bell.rotation.z *= Math.max(0, 1 - dt * 3); s.bell.rotation.z = Math.sin(t * 18) * Math.abs(s.bell.rotation.z); });

@@ -66,7 +66,7 @@ const UG_F = -6;
   await teleport(3); await waitFor(s => s.grounded, 3000);
   { const seen = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (++n > 120) return r(m); requestAnimationFrame(f); }; f(); })); await drag(0, 300, -90); const my = await seen; check('tap ▲ to jump', my > .3, `rose to y=${my.toFixed(2)}`); }
   await waitFor(s => s.grounded, 3000);
-  { const v = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, Math.abs(__DDW3.player.vx)); if (++n > 60) return r(m); requestAnimationFrame(f); }; f(); })); await drag(90, 700); const vx = await v; check('holding ▶ walks at a normal speed (never too fast)', vx > 4 && vx < 8, `speed ${vx.toFixed(2)} (normal walk 7.2)`); }
+  { const v = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, Math.abs(__DDW3.player.vx)); if (++n > 60) return r(m); requestAnimationFrame(f); }; f(); })); await drag(90, 700); const vx = await v; check('holding ▶ walks at a normal speed (never too fast)', vx > 2.5 && vx < 6, `speed ${vx.toFixed(2)} (normal walk 5.2)`); }
   // ---------- creatures ----------
   for (const k of ['zuzu', 'jelly', 'pip']) { await page.locator(`.creatureChoice[data-c="${k}"]`).tap(); await sleep(500); c = await S(); check(`switch to ${k}`, c.creature === k); if (k !== 'pip') await shot(`03_${k}.jpg`); }
   { await page.locator('.creatureChoice[data-c="jelly"]').tap(); await sleep(400);

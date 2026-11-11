@@ -39,7 +39,7 @@ These are planned for later 3D builds:
 
 ## 3D build 9: arrow buttons are back, the Wonder Express train, the Marble Machine
 - **Arrow buttons are back** (by request): a ◀ ▶ ▲ ▼ arrow pad at the bottom left replaces drag-to-move.
-  - Hold ◀ ▶ to walk. Walking is faster now (by request), and so is the train.
+  - Hold ◀ ▶ to walk at a normal speed.
   - ▲ jumps, goes in doors, climbs stairs and the rope ladder, and swims up (hold it).
   - ▼ dives in the ball pit, goes down, parks the kart and gets off the train.
   - Touching the screen anywhere else is just a tap.
