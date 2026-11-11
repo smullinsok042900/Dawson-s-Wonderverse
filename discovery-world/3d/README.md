@@ -37,6 +37,18 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## Test report (builds 9 to 11)
+The automated test is Playwright, headless Chromium, software WebGL, on an 844x390 touch screen. It is **not** a physical iPhone.
+- The last full run passed **123 of 125** checks. It covers the arrow pad, train, Marble Machine, Dino Valley, Princess Castle, multiple pets and followers, plus everything from earlier builds.
+- The 2 misses, both fixed:
+  - **Boarding the train:** the check read your position one frame before you were moved into the seat. Boarding now puts you straight into the seat, and I re-checked it on its own.
+  - **Bottom of the stairs:** the check didn't wait for the landing to finish in the slow test browser. The check now waits.
+- Real bugs these test runs caught and fixed:
+  - Tapping a dino egg did nothing (the hidden baby caught the tap).
+  - The hatched baby couldn't be tapped (the hidden shell caught the tap).
+  - The top Marble Machine ramps were under the buttons at the top of the screen.
+  - The station signs could be off-screen.
+
 ## 3D build 11: more pets, and friends who follow you
 - **More than one pet:** the Pet Workshop lever now makes up to **5 pets**, each one designed with the buttons. They all follow you.
 - **New friends you can meet.** Tap them and they come with you everywhere (saved):
