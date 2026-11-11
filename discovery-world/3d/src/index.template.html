@@ -4,8 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dawson's World">
+<meta name="application-name" content="Dawson's World">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <meta name="theme-color" content="#7d4fd8">
-<title>Dawson's Discovery World 3D</title>
+<title>Dawson's Discovery World</title>
 <style>/*__CSS__*/</style>
 </head>
 <body>
@@ -58,5 +65,9 @@ addEventListener('unhandledrejection', function (e) { __oops(e.reason && e.reaso
 </div>
 <div id="rotate"><div class="phone"><div class="screen">★</div></div><b>Turn your phone sideways</b></div>
 <script>/*__JS__*/</script>
+<script>
+// Home-screen app: keep a copy for offline play (only on the real website, not when opened as a file or preview).
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && window.top === window.self) addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { }); });
+</script>
 </body>
 </html>
