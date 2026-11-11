@@ -46,8 +46,11 @@ addEventListener('unhandledrejection', function (e) { __oops(e.reason && e.reaso
 <div id="buildTools"></div>
 <div id="stylePanel"><div class="spRow" id="styleCols"></div><div class="spRow"><button id="sparkleBtn" class="spBig">✨</button><button id="styleDone" class="spBig done">✓</button></div></div>
 <div id="bottom">
-  <div class="controls hintOnly">
-    <div id="dragHint" aria-label="slide your finger here to move"><div class="ring"><div class="dot"></div></div><svg viewBox="0 0 48 24"><path d="M2 12l7-6v12zM46 12l-7-6v12zM24 0l-5 6h10zM24 24l-5-6h10z"/></svg></div>
+  <div class="dpad">
+    <button class="ctrl arrow up" id="upBtn" aria-label="up"><svg viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg></button>
+    <button class="ctrl arrow left" id="leftBtn" aria-label="left"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="ctrl arrow right" id="rightBtn" aria-label="right"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="ctrl arrow down" id="downBtn" aria-label="down"><svg viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></svg></button>
   </div>
   <div class="controls">
     <button class="ctrl paw" id="pawBtn" aria-label="do it"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="15.5" rx="5" ry="4.2"/><circle cx="6" cy="9.5" r="2.2"/><circle cx="10" cy="6.2" r="2.2"/><circle cx="14" cy="6.2" r="2.2"/><circle cx="18" cy="9.5" r="2.2"/></svg></button>

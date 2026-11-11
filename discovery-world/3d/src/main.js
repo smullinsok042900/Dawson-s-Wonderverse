@@ -16,6 +16,8 @@ import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
 import { SKY, buildSky } from './sky.js';
 import { buildMeadow, BLOCKS, BUILD, ERASE } from './meadow.js';
 import { initKarts, KART, KART_COLS } from './kart.js';
+import { initTrain } from './train.js';
+import { initMarbles } from './marble.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -187,10 +189,13 @@ const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) 
 G.startKart = () => {
   const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - KART.flag) > 4 || P.y > .5) { Sound.click(); return; }
   P.ride = { type: 'kart', u: 0, v: 2, lap: 0, hop: 0, hopV: 0 }; P.vx = P.vy = 0; Sound.whoosh(); Sound.tone(220, .5, 'sawtooth', .03, 2.2);
-  discover('kart', 'Vroom! Slide right to go faster, left to slow down. JUMP hops, PAW parks.');
+  discover('kart', 'Vroom! Hold ▶ to go faster, ◀ to slow down. JUMP hops, PAW parks.');
 };
 function parkKart() { const P = player; if (!P.ride || P.ride.type !== 'kart') return; karts.honk(); P.ride = null; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.groundZ = 0; burst(P.x, .5, P.z, ['#fff', '#ffd23f'], 10, 2); }
 const karts = initKarts(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), startKart: () => G.startKart(), tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
+const tapApi = (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); };
+const train = initTrain(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, tap: tapApi });
+const marbles = initMarbles(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), player, tap: tapApi });
 const friends = initFriends(G, {
   scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, world, UG,
   tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
@@ -279,8 +284,8 @@ function updateRide(dt) {
     if (R.u >= 1) { const e = path.getPointAt(1); P.x = e.x + .5; P.y = Math.max(0, e.y - .55); P.z = e.z; endRide(4.5, 3); P.facing = 1; burst(P.x, .5, P.z, ['#fff', '#ffe36e', '#9fe6ff'], 16, 2.5); Sound.boing(); return; }
     path.getPointAt(R.u, V); P.x = V.x; P.y = V.y - .62; P.z = V.z; const tg = path.getTangentAt(R.u); P.facing = tg.x >= 0 ? 1 : -1; P.vx = 6 * P.facing;
     if (Math.random() < dt * 25) burst(P.x - tg.x * .6, P.y + .3, P.z - tg.z * .6, ['#fff', '#ffe36e', '#9fe6ff'], 1, .6);
-  } else if (R.type === 'kart') {
-    // (moved by kart.js)
+  } else if (R.type === 'kart' || R.type === 'train') {
+    // (moved by kart.js / train.js)
   } else if (R.type === 'climb') {
     // climbing the rope ladder: slide your finger up/down (or arrow keys), or tap JUMP to climb a step
     const L = SKY.ladder; let v = 0;
@@ -289,7 +294,7 @@ function updateRide(dt) {
     if (R.boost > 0) { v = Math.max(v, 4.2); R.boost -= dt; }
     P.y += v * dt; P.x += (L.x - P.x) * Math.min(1, dt * 10); P.z += (L.z - P.z) * Math.min(1, dt * 10); P.vx = 0; P.vy = v;
     if (v) { R.t = (R.t || 0) + dt; if (R.t > .3) { R.t = 0; Sound.tone(v > 0 ? 500 + P.y * 40 : 700 - (L.top - P.y) * 30, .08, 'triangle', .03, 1.2); } }
-    if (stick && stick.active && Math.abs(stick.dx) > 50 && Math.abs(stick.dx) > Math.abs(stick.dy) * 1.5) { endRide(Math.sign(stick.dx) * 3, 2); return; } // let go sideways
+    if ((stick && stick.active && Math.abs(stick.dx) > 50 && Math.abs(stick.dx) > Math.abs(stick.dy) * 1.5) || keys.left || keys.right) { endRide((keys.left ? -1 : keys.right ? 1 : Math.sign(stick.dx)) * 3, 2); return; } // let go sideways
     if (P.y >= L.top) { P.y = L.top; P.x = L.x + .8; P.ride = null; P.vy = 0; P.grounded = true; P.groundZ = SKY.z; discover('sky', 'The Cloud Kingdom! Bounce on the cloud puffs!'); burst(P.x, P.y + .5, P.z, ['#fff', '#ffe6fb', '#9fe6ff'], 16, 2); return; }
     if (P.y <= 0) { P.y = 0; P.ride = null; P.vy = 0; P.grounded = true; return; }
   } else if (R.type === 'carousel') {
@@ -330,6 +335,7 @@ function updateStairs(dt) {
   const P = player, S = IN.stair, St = P.stair, len = Math.hypot(S.x1 - S.x0, S.y1 - S.y0), upDir = Math.sign(S.x1 - S.x0);
   let h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
   if (stick && stick.active && Math.abs(stick.dy) > 30 && Math.abs(stick.dy) > Math.abs(stick.dx)) h = stick.dy < 0 ? upDir : -upDir; // drag up / down walks the stairs
+  if (keys.up) h = upDir; if (keys.down) h = -upDir; // ▲ ▼ walk the stairs too
   if (h) P.facing = h;
   St.k += h * 4 / len * dt;
   if (St.k < 0 || St.k > 1) { const top = St.k > 1; P.stair = null; P.x = (top ? S.x1 : S.x0) + h * .05; P.y = top ? S.y1 : S.y0; P.vx = h * 4; P.vy = 0; P.grounded = true; return; }
@@ -363,7 +369,7 @@ G.useLift = () => {
   P.ride = { type: 'lift', to: down ? UG.floor : 0 }; P.vx = P.vy = 0; Sound.tone(down ? 520 : 400, .5, 'sine', .04, down ? .6 : 1.6);
   discover(down ? 'liftdown' : 'liftup', down ? 'Down, down in the glass lift!' : 'Up, up in the glass lift!');
 };
-G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Slide up to climb.'); };
+G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
 G.tapWhale = () => { const W = G.whale; W.spout = 2.4; [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22)); discover('whale', 'The sky whale sings you a song!'); };
 G.bounceUp = () => { const P = player; if (P.ride || Math.abs(P.x - (UG.shaft[0] + UG.shaft[1]) / 2) > 2.5 || P.y > UG.floor + 1.5) return; P.x = (UG.shaft[0] + UG.shaft[1]) / 2; P.y = UG.floor + 1; P.vy = 13.5; P.grounded = false; Sound.boing(); discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); };
 G.singCrystal = k => { k.lit = 1; k.cd = 1; Sound.bell(NOTES[k.i % 8] / 2, .06); Sound.bell(NOTES[(k.i + 2) % 8], .025, .08); burst(k.x, UG.floor + 1.5, -1.4, [k.c, '#fff'], 10, 2); discover('crystal', 'Singing crystals! Tap them or walk past them.'); };
@@ -383,6 +389,7 @@ function updateHint(t) {
 
 // ---------------- input ----------------
 const keys = { left: false, right: false, scale: 1 };
+let swimT = .38; // holding ▲ while swimming keeps swimming up
 // ---- DRAG TO MOVE: put a finger down on the left side and slide it the way to go ----
 // sideways = walk (a small slide walks slowly, a bigger slide walks normally; never faster),
 // up = jump / go up the stairs or lift / swim up (hold to keep swimming), down = dive / go down.
@@ -410,20 +417,29 @@ function upAction() {
 }
 function downAction() {
   const P = player; if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
+  if (P.ride && P.ride.type === 'train') { train.hopOff(); return; }
   if (!started || P.stair || P.ride) return;
   const d = nearDoor(); if (d && d.kind === 'down') { d.go(); return; }
   if (P.layer === '' && P.grounded && P.y < .1 && P.x > 8.4 && P.x < 15.6) { dive(); return; } // anywhere in the ball pit: dive into the deep part
   creature.cheer(); // a little squat
 }
+// arrow buttons: hold ◀ ▶ to walk; ▲ ▼ do up/down things (go in, stairs, ladder, lift, swim up, dive)
+function hold(id, key, onPress) {
+  const el = $(id); const set = v => { if (keys[key] === v) return; keys[key] = v; el.classList.toggle('pressed', v); if (v && onPress) onPress(); };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) { } Sound.unlocked = true; if (key === 'left' || key === 'right') keys.scale = 1; set(true); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => el.addEventListener(n, () => set(false)));
+}
+hold('leftBtn', 'left'); hold('rightBtn', 'right'); hold('upBtn', 'up', () => upAction()); hold('downBtn', 'down', () => downAction());
 const press = (id, fn) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; $(id).classList.add('pressed'); setTimeout(() => $(id).classList.remove('pressed'), 140); fn(); });
 press('jumpBtn', jump); press('pawBtn', doAction);
 addEventListener('keydown', e => { if (e.repeat) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ') jump(); if (e.key === 'ArrowUp') { keys.up = true; upAction(); } if (e.key === 'ArrowDown') { keys.down = true; downAction(); } if (e.key === 'e' || e.key === 'Enter') doAction(); });
 addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.left = false; if (e.key === 'ArrowRight') keys.right = false; if (e.key === 'ArrowUp') keys.up = false; if (e.key === 'ArrowDown') keys.down = false; });
-addEventListener('blur', () => { if (stick) stickEnd(); keys.left = keys.right = false; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); });
+addEventListener('blur', () => { if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); });
 
 function jump() {
   const P = player; if (!started || P.stair) return;
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
+  if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
   if (P.ride) { if (P.ride.type === 'slide') return; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = z; Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
@@ -432,6 +448,7 @@ function jump() {
 function doAction() {
   const P = player; if (!started || P.stair) return;
   if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
+  if (P.ride && P.ride.type === 'train') { train.hopOff(); return; }
   if (P.ride) { jump(); return; }
   const d = nearDoor(); if (d) { d.go(); return; }
   let best = null, bd = 3.2;
@@ -447,7 +464,7 @@ function nearPaint() { const P = player; return P.layer === '' && P.y > -.5 && P
 canvas.addEventListener('pointerdown', e => {
   if (!started) return; Sound.unlocked = true; pointerRay(e);
   if (nearPaint()) { const h = ray.intersectObject(G.paint.mesh)[0]; if (h && !ray.intersectObjects(DOORS.map(d => d.sprite).filter(s => s.visible)).length) { painting = { id: e.pointerId, last: h.uv.clone() }; paintAt(h.uv, h.uv); canvas.setPointerCapture(e.pointerId); discover('paint', 'Paint with your finger! Pick a colour below.'); return; } }
-  if (!stick && e.clientX < innerWidth * .5) { stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), active: false, dx: 0, dy: 0, cx: e.clientX, cy: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (_) { } return; }
+  if (false && !stick && e.clientX < innerWidth * .5) { stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), active: false, dx: 0, dy: 0, cx: e.clientX, cy: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (_) { } return; }
   worldTap(e);
 });
 function worldTap(e) {
@@ -505,7 +522,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 302]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 349]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -580,16 +597,16 @@ const CAM_DIST = 9;
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 305 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 353 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
 function updateCamera(dt) {
   const P = player;
-  camT.look += ((P.ride ? 0 : P.facing * 1.8) - camT.look) * Math.min(1, dt * 1.6);
+  camT.look += ((P.ride ? (P.ride.type === 'train' ? P.facing * 2.6 : 0) : P.facing * 1.8) - camT.look) * Math.min(1, dt * 1.6);
   camT.x += (camTargetX() - camT.x) * Math.min(1, dt * 5);
   camT.y += (P.y - camT.y) * Math.min(1, dt * (P.grounded ? 4 : 2));
   const y = camT.y;
-  const kz = P.ride && P.ride.type === 'kart' ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
+  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
   camera.position.set(camT.x, y + 2.5 + Math.max(0, -camT.z) * .25, CAM_DIST + camT.z); camera.lookAt(camT.x, y + 1.3, camT.z);
   sun.position.set(camT.x - 7, 16 + Math.max(0, camT.y), 10); sun.target.position.set(camT.x, Math.max(0, camT.y), 0);
 }
@@ -702,9 +719,9 @@ const timer = new THREE.Timer(); let T = 0;
 let acc = 0;
 function step(dt) {
   T += dt;
-  if (stick && stick.active && stick.dy < -45 && player.swim) { stick.swimT = (stick.swimT || 0) - dt; if (stick.swimT <= 0) { stick.swimT = .38; jump(); } }
+  if (((stick && stick.active && stick.dy < -45) || keys.up) && player.swim) { swimT -= dt; if (swimT <= 0) { swimT = .38; jump(); } } else swimT = .38;
   if (started) { updatePlayer(dt); updateFluffs(dt, T); updateBubbles(dt); }
-  karts.update(dt, T, player, stick, keys); friends.update(dt, T, player, world.trail); meadow.update(dt);
+  karts.update(dt, T, player, stick, keys); train.update(dt, T, player, stick, keys); marbles.update(dt); friends.update(dt, T, player, world.trail); meadow.update(dt);
   if (world.sparkle && started && (Math.abs(player.vx) > 1 || !player.grounded) && Math.random() < dt * 14) { const c = (world.styles || {})[player.creature] || CREATURES[player.creature].body; burst(player.x - player.facing * .3, player.y + .3 + Math.random() * .6, player.z, [c, '#ffffff', '#ffe36e'], 2, .8); }
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt); updateCamera(dt);
 }
@@ -718,7 +735,7 @@ function frame() {
   const P = player;
   creature.root.position.set(P.x, P.y, P.z);
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide')) && !P.swim; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
-  { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
+  { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
@@ -738,7 +755,7 @@ setCreature(player.creature);
 document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x.dataset.c === player.creature));
 friends.restored(); meadow.restored(); karts.rebuildPreview();
 updateCounters(); snapCamera(); updateBits(0);
-if (world.disc.has('drag')) $('dragHint').classList.add('gone');
+// (build 9: arrow buttons are back, so there is no drag hint)
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
 addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
@@ -754,6 +771,6 @@ window.__DDW3 = {
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
-  bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, meadowRestore: () => meadow.restored(),
+  bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, meadowRestore: () => meadow.restored(),
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };

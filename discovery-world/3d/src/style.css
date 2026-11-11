@@ -84,3 +84,12 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 .spBig{width:64px;height:54px;border-radius:18px;border:4px solid #fff;background:#efe2ff;font-size:28px;padding:0;box-shadow:0 3px 8px #3b217744}
 .spBig.on{background:#fff3a6;outline:4px solid #ffc531}
 .spBig.done{background:#9ff7c8}
+
+/* arrow pad (bottom left): hold left/right to walk, up/down to climb, go in, swim and dive */
+.dpad{pointer-events:auto;display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,52px);gap:2px;margin-bottom:-6px}
+.ctrl.arrow{width:64px;height:58px;border-radius:20px;touch-action:none}
+.ctrl.arrow svg{width:34px;height:34px}
+.dpad .up{grid-column:2;grid-row:1;height:52px}.dpad .left{grid-column:1;grid-row:2}.dpad .right{grid-column:3;grid-row:2;background:linear-gradient(155deg,#8a72fb,#4b49ce)}.dpad .down{grid-column:2;grid-row:3;height:52px}
+.dpad .up,.dpad .down{background:linear-gradient(155deg,#b77cff,#7d45d6)}
+.dpad .left,.dpad .right{height:64px;align-self:center}
+@media (max-height:360px){.dpad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,46px)}.ctrl.arrow{width:56px;height:50px}.dpad .up,.dpad .down{height:46px}.dpad .left,.dpad .right{height:56px}}

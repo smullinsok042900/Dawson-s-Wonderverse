@@ -12,6 +12,8 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
+import { STATIONS } from './train.js';
+const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
 const boxGeoCache = {};
@@ -47,12 +49,28 @@ export function buildWorld(G) {
     g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
   };
-  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a']];
+  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 362, '#c4e2ff', '#a9d3ff']];
   // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
   const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.6, 54.2, -3.2, -1.6]];
+  // a normal map so each tile has softly rounded edges and grout lines that catch the light (made once, shared)
+  const tileNormal = (() => {
+    const N = 256, hgt = new Float32Array(N * N);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const ex = Math.min(x % 128, 128 - x % 128), ey = Math.min(y % 128, 128 - y % 128), e = Math.min(ex, ey);
+      const bevel = Math.min(1, Math.max(0, (e - 2) / 9)); // grout (0) rising over a rounded bevel to the tile top (1)
+      hgt[y * N + x] = Math.sin(bevel * Math.PI / 2) + Math.sin(x * .31 + Math.sin(y * .23) * 2) * .012 + Math.sin(y * .37 + x * .05) * .01;
+    }
+    const c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), img = g.createImageData(N, N);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const h = (i, j) => hgt[((j + N) % N) * N + ((i + N) % N)], dx = (h(x + 1, y) - h(x - 1, y)) * 2.2, dy = (h(x, y + 1) - h(x, y - 1)) * 2.2, l = Math.hypot(dx, dy, 1), k = (y * N + x) * 4;
+      img.data[k] = (-dx / l * .5 + .5) * 255; img.data[k + 1] = (dy / l * .5 + .5) * 255; img.data[k + 2] = (1 / l * .5 + .5) * 255; img.data[k + 3] = 255;
+    }
+    g.putImageData(img, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
+  })();
   function floorPiece(x0, x1, z0, z1, c1, c2) {
     const t = tileTex(c1, c2); t.repeat.set((x1 - x0) / 2.4, (z1 - z0) / 2.4); t.offset.set(x0 / 2.4, -z1 / 2.4);
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshPhysicalMaterial({ map: t, roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
+    const nm = tileNormal.clone(); nm.repeat.copy(t.repeat); nm.offset.copy(t.offset);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshPhysicalMaterial({ map: t, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
     f.rotation.x = -Math.PI / 2; f.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); f.receiveShadow = true; add(f);
   }
   for (const [a, b, c1, c2] of ZONES) {
@@ -62,13 +80,17 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
-  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false });
+  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(334, -.6, 4.6, 52, .6, .8, '#ffb8de', { r: .3, cast: false });
 
   // ---------- back walls ----------
+  const wallAO = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, map: (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(50,15,70,.32)'); gr.addColorStop(.45, 'rgba(50,15,70,.1)'); gr.addColorStop(1, 'rgba(50,15,70,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); return new THREE.CanvasTexture(c); })() });
   function wall(a, b, color, trim) {
     block((a + b) / 2, 0, -6.6, b - a, 9, .6, color, { r: .2, cast: false, m: { r: .6, cc: .2 } });
     block((a + b) / 2, 0, -6.1, b - a, .8, .3, trim, { r: .12, cast: false });
     block((a + b) / 2, 8.6, -6.1, b - a, .5, .4, trim, { r: .2, cast: false });
+    // soft shadow where the wall meets the floor (ambient occlusion), and under the ceiling trim
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(b - a, 1.6), wallAO); f.rotation.x = -Math.PI / 2; f.position.set((a + b) / 2, .013, -5.15); f.renderOrder = 1; add(f);
+    const u = new THREE.Mesh(new THREE.PlaneGeometry(b - a, 1.4), wallAO); u.position.set((a + b) / 2, 7.9, -6.27); u.renderOrder = 1; add(u);
   }
   wall(-20, 51, '#ff9fd2', '#ffffff'); wall(51, 92, '#ffd98a', '#ff9fd2'); wall(92, 135, '#b89cff', '#ffd84a');
   // round windows + arches on the playhouse wall
@@ -79,7 +101,7 @@ export function buildWorld(G) {
 
   // ---------- party bulbs strung across (instanced, glowing) ----------
   const bulbPos = [];
-  for (let a = -18; a < 304; a += 9) for (let i = 0; i <= 9; i++) { const k = i / 9, x = a + k * 9, y = 8.2 - Math.sin(k * Math.PI) * 1.2; bulbPos.push([x, y, -4.5]); }
+  for (let a = -18; a < 350; a += 9) for (let i = 0; i <= 9; i++) { const k = i / 9, x = a + k * 9, y = 8.2 - Math.sin(k * Math.PI) * 1.2; bulbPos.push([x, y, -4.5]); }
   const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 12, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 1.6 }), bulbPos.length);
   const mtx = new THREE.Matrix4(), col = new THREE.Color();
   bulbPos.forEach(([x, y, z], i) => { mtx.makeTranslation(x, y, z); bulbs.setMatrixAt(i, mtx); bulbs.setColorAt(i, col.set(['#ffe36e', '#ff9fd8', '#9fe6ff', '#c9a6ff'][i % 4])); });
@@ -188,9 +210,9 @@ export function buildWorld(G) {
 
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
-  for (let i = 0; i < 17; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
+  for (let i = 0; i < 22; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const tree = (x, z, s = 1) => { cyl(x, 0, z, .22 * s, .3 * s, 2.2 * s, '#b06a32', { m: { r: .7, cc: .1 } }); [[0, 2.6, 0, 1.2], [-.7, 2.2, .2, .85], [.7, 2.3, -.1, .9], [0, 3.3, 0, .8]].forEach(([dx, dy, dz, r]) => sph(x + dx * s, dy * s, z + dz * s, r * s, ['#6fd38c', '#8fe3a3', '#5cc97c'][Math.abs(Math.round(dx * 10)) % 3], { m: { r: .6, cc: .3, sheen: .5 } })); };
-  [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
+  [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS: thousands of little swaying grass tufts across the park and meadow (one instanced mesh, cheap)
   {
     const blade = new THREE.ConeGeometry(.05, .42, 4); blade.translate(0, .21, 0);
@@ -202,9 +224,11 @@ export function buildWorld(G) {
     const N = 2400, grass = new THREE.InstancedMesh(tuft, gMat, N), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();
     let k = 0, seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     while (k < N) {
-      const x = 136 + rnd() * 168, z = rnd() < .8 ? -11 + rnd() * 8.6 : 2.3 + rnd() * 2;
+      const x = 136 + rnd() * 216, z = rnd() < .85 ? -11 + rnd() * 8.6 : 4.0 + rnd() * .4;
       if (Math.abs(x - 144) < 5.5 && z < -1 && z > -10.5) continue; // not under the carousel
       if (x > 271.5 && x < 300 && z < -2.4 && z > -11.4) continue; // not on the race track
+      if (x > 325.5 && x < 338.5 && z > -3.6) continue; // not in front of the marble machine
+      if (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8)) continue; // not on the train platforms
       e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const sc = .7 + rnd() * .8;
       m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(sc, sc * (.8 + rnd() * .6), sc)); grass.setMatrixAt(k, m4);
       grass.setColorAt(k, cl.setHSL(.33 + rnd() * .06, .55 + rnd() * .2, .45 + rnd() * .15)); k++;
@@ -269,7 +293,7 @@ export function buildWorld(G) {
   G.houseWindows = H;
   tap(door, () => G.enterHouse(), {});
   // right edge of the world: a rainbow gate
-  for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(3 - i * .3, .2, 12, 40, Math.PI), M(RAINBOW[i])); t.position.set(304, 0, -1.5); t.rotation.y = Math.PI / 2; add(t); }
+  for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(3 - i * .3, .2, 12, 40, Math.PI), M(RAINBOW[i])); t.position.set(352, 0, -1.5); t.rotation.y = Math.PI / 2; add(t); }
 
   // =================== FLUFFKIN HOUSE (inside, at x 1000) ===================
   const IN = { ox: 1000, w: 30, f2: 4.4, slab: .3 };
