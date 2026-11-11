@@ -100,14 +100,17 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 .spBig.on{background:#fff3a6;outline:4px solid #ffc531}
 .spBig.done{background:#9ff7c8}
 
-/* arrow pad (bottom left): hold left/right to walk, up/down to climb, go in, swim and dive */
-.dpad{pointer-events:auto;display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(3,52px);gap:2px;margin-bottom:-6px}
-.ctrl.arrow{width:64px;height:58px;border-radius:20px;touch-action:none}
-.ctrl.arrow svg{width:34px;height:34px}
-.dpad .up{grid-column:2;grid-row:1;height:52px}.dpad .left{grid-column:1;grid-row:2}.dpad .right{grid-column:3;grid-row:2;background:linear-gradient(155deg,#8a72fb,#4b49ce)}.dpad .down{grid-column:2;grid-row:3;height:52px}
-.dpad .up,.dpad .down{background:linear-gradient(155deg,#b77cff,#7d45d6)}
-.dpad .left,.dpad .right{height:64px;align-self:center}
-@media (max-height:360px){.dpad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,46px)}.ctrl.arrow{width:56px;height:50px}.dpad .up,.dpad .down{height:46px}.dpad .left,.dpad .right{height:56px}}
+/* 4-way arrow pad (bottom left), one joined round controller: hold ◀ ▶ to walk; ▲ ▼ climb, go in, swim and dive */
+.dpad{pointer-events:auto;position:relative;width:176px;height:176px;border-radius:50%;margin:0 0 -4px -4px;background:radial-gradient(circle,rgba(255,255,255,.55),rgba(214,190,255,.5));border:4px solid rgba(255,255,255,.9);box-shadow:0 10px 22px #2c195455;touch-action:none}
+.dpad::after{content:"";position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#9a6cfb,#5a33b8);pointer-events:none;box-shadow:inset 0 2px 4px #ffffff55}
+.ctrl.arrow{position:absolute;width:56px;height:62px;padding:0;border:none;border-radius:16px;background:linear-gradient(155deg,#9a6cfb,#663ac8);box-shadow:0 4px 0 #4a2a99;touch-action:none}
+.ctrl.arrow svg{width:32px;height:32px}
+.dpad .up{left:56px;top:8px;border-radius:16px 16px 4px 4px}
+.dpad .down{left:56px;bottom:8px;border-radius:4px 4px 16px 16px}
+.dpad .left{top:56px;left:8px;width:62px;height:56px;border-radius:16px 4px 4px 16px}
+.dpad .right{top:56px;right:8px;width:62px;height:56px;border-radius:4px 16px 16px 4px}
+.dpad .ctrl.arrow.pressed{transform:scale(.94);filter:brightness(1.25);box-shadow:0 1px 0 #4a2a99}
+@media (max-height:360px){.dpad{transform:scale(.86);transform-origin:bottom left}}
 </style>
 </head>
 <body>
