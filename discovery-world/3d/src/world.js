@@ -13,7 +13,8 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
-import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock } from './nature.js';
+import { plush, quadSpec } from './critterkit.js';
+import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -72,8 +73,11 @@ export function buildWorld(G) {
   function lawnPiece(x0, x1, z0, z1) {
     const L = lawnTextures(), map = L.map.clone(), nm = L.normal.clone();
     for (const t of [map, nm]) { t.repeat.set((x1 - x0) / 4, (z1 - z0) / 4); t.offset.set(x0 / 4, -z1 / 4); t.needsUpdate = true; }
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .93 }));
-    f.rotation.x = -Math.PI / 2; f.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); f.receiveShadow = true; add(f);
+    // build 16: the lawn follows the rolling meadow (a gently curved surface, not a flat sheet)
+    const geo = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil(x1 - x0), Math.ceil((z1 - z0) * 1.5)); geo.rotateX(-Math.PI / 2); geo.translate((x0 + x1) / 2, 0, (z0 + z1) / 2);
+    { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, terrainH(p.getX(i), p.getZ(i))); geo.computeVertexNormals(); }
+    const f = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .93 }));
+    f.receiveShadow = true; add(f);
   }
   function floorPiece(x0, x1, z0, z1, c1, c2) {
     if (x0 >= LAWN_FROM && x1 <= LAWN_TO) return lawnPiece(x0, x1, z0, z1);
@@ -259,12 +263,13 @@ export function buildWorld(G) {
     const a = i / 6 * Math.PI * 2, m = new THREE.Group(); m.position.set(Math.cos(a) * 3.2, 0, Math.sin(a) * 3.2); m.rotation.y = -a; spin.add(m);
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 4.6, 8), M('#ffffff')); pole.position.y = 2.3; m.add(pole);
     const ride = new THREE.Group(); m.add(ride);
-    const c = RAINBOW[i];
-    const bodyM = sph(0, 1.3, 0, .55, c, { parent: ride }); bodyM.scale.set(1.3, .8, .7);
-    sph(.68, 1.7, 0, .32, c, { parent: ride }); // head
-    const hornM = new THREE.Mesh(new THREE.ConeGeometry(.08, .36, 12), M('#ffd84a')); hornM.position.set(.8, 2.05, 0); hornM.rotation.z = -.4; ride.add(hornM);
-    sph(-.7, 1.4, 0, .18, '#fff3a6', { parent: ride }); // tail puff
-    const seat = new THREE.Object3D(); seat.position.set(0, 1.62, 0); ride.add(seat);
+    // build 16: sculpted carousel ponies (glossy painted, with a golden horn and a pastel mane)
+    const c = ['#ff8fc8', '#ffb35c', '#ffd84a', '#6fd38c', '#6fb8ff', '#b28cff'][i], pony = new THREE.Group(); pony.position.y = .42; ride.add(pony);
+    plush(pony, quadSpec({ scale: .82, body: '#fffafc', belly: '#fffafc', snoutCol: '#ffe6f2', hoof: '#ffd23f', horn: '#ffd23f', legLen: .42, neck: 1.05, tail: 'long', iris: '#8a4ae0', voxel: .03,
+      extraPaints: (s2, hx2, hyy) => [{ type: 'limb', a: s2([hx2 - .35, hyy - .15, 0]), b: s2([hx2 - .02, hyy + .15, 0]), ra: .13 * .62, rb: .1 * .62, color: c, soft: .02 }, { type: 'sphere', c: s2([-.95, .75, 0]), r: .25 * .62, color: c, soft: .02 }] }),
+      { fur: false, rough: .22, clearcoat: 1, lid: '#fffafc', iris: '#8a4ae0', mouth: false });
+    const saddle = new THREE.Mesh(new THREE.CylinderGeometry(.24, .26, .1, 20), M(c, { r: .4 })); saddle.scale.z = .75; saddle.position.set(-.05, 1.25, 0); ride.add(saddle);
+    const seat = new THREE.Object3D(); seat.position.set(-.05, 1.36, 0); ride.add(seat);
     mounts.push({ m, ride, seat });
   }
   G.carousel = { group: car, spin, mounts, speed: .25 };
@@ -286,12 +291,30 @@ export function buildWorld(G) {
     gondolas.push({ g, seat, i });
   }
   G.wheel = { group: fw, wheel, gondolas, angle: 0, r: 6.4 };
-  const booth = block(167.5, 0, -2.4, 2.2, 2, 2, '#7fd8ff', { r: .3 }); plat(166.4, 168.6, 2.0, { z: -2.2 });
-  const awn = new THREE.Mesh(new THREE.ConeGeometry(1.7, .8, 4), M('#ff65b5')); awn.position.set(167.5, 2.4, -2.4); awn.rotation.y = Math.PI / 4; add(awn);
+  // build 16: a cute ticket kiosk (panelled walls, a framed window and counter, a striped scalloped awning, light bulbs)
+  { const K = new THREE.Group(); K.position.set(167.5, 0, -2.4); add(K);
+    const wall = new THREE.Mesh(new RoundedBoxGeometry(2.2, 1.9, 2, 4, .22), toy('#bfe6ff', { r: .55, cc: .3 })); wall.position.y = .95; wall.castShadow = wall.receiveShadow = true; K.add(wall);
+    for (let i = 0; i < 6; i++) { const pl = new THREE.Mesh(new THREE.BoxGeometry(.04, 1.5, .02), toy('#a8dbff', { r: .6 })); pl.position.set(-.9 + i * .36, .9, 1.005); K.add(pl); }
+    const base = new THREE.Mesh(new RoundedBoxGeometry(2.4, .22, 2.2, 3, .08), toy('#ffffff', { r: .5 })); base.position.y = .11; K.add(base);
+    const frame = new THREE.Mesh(new RoundedBoxGeometry(1.3, .8, .12, 3, .06), toy('#ffffff', { r: .4 })); frame.position.set(0, 1.25, 1.0); K.add(frame);
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .62), new THREE.MeshPhysicalMaterial({ color: '#fff6c8', emissive: '#ffe08a', emissiveIntensity: .35, roughness: .1, clearcoat: 1 })); glass.position.set(0, 1.25, 1.065); K.add(glass);
+    const counter = new THREE.Mesh(new RoundedBoxGeometry(1.5, .1, .4, 2, .04), toy('#ffd23f', { r: .35 })); counter.position.set(0, .82, 1.12); counter.castShadow = true; K.add(counter);
+    // striped, scalloped awning
+    const stripe = (() => { const cc = document.createElement('canvas'); cc.width = 256; cc.height = 64; const g = cc.getContext('2d'); for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#ffffff' : '#ff6fb5'; g.fillRect(i * 32, 0, 32, 64); } const t = new THREE.CanvasTexture(cc); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+    const awn = new THREE.Mesh(new THREE.CylinderGeometry(.2, 1.65, .7, 4, 1), new THREE.MeshStandardMaterial({ map: stripe, roughness: .7 })); awn.rotation.y = Math.PI / 4; awn.position.y = 2.25; awn.castShadow = true; K.add(awn);
+    for (let i = 0; i < 12; i++) { const side = Math.floor(i / 3), k = (i % 3 - 1) * .7, sc = new THREE.Mesh(new THREE.SphereGeometry(.2, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), toy(i % 2 ? '#ffffff' : '#ff6fb5', { r: .6 })); sc.rotation.x = Math.PI; const pos = [[k, 1.18], [1.18, k], [k, -1.18], [-1.18, k]][side]; sc.position.set(pos[0], 1.92, pos[1]); sc.scale.y = .6; K.add(sc); }
+    for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), toy('#fff6b0', { em: '#ffd84a', ei: 1.1 })); b.position.set(-.9 + i * .3, 1.86, 1.25); K.add(b); }
+    const sign = new THREE.Mesh(new THREE.CircleGeometry(.28, 28), new THREE.MeshBasicMaterial({ map: (() => { const cc = document.createElement('canvas'); cc.width = cc.height = 96; const g = cc.getContext('2d'); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(48, 48, 46, 0, 7); g.fill(); g.font = '60px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🎡', 48, 54); const t = new THREE.CanvasTexture(cc); t.colorSpace = THREE.SRGBColorSpace; return t; })() })); sign.position.set(0, 2.72, 0); sign.lookAt(167.5, 2.72, 10); K.add(sign); }
+  plat(166.4, 168.6, 2.0, { z: -2.2 });
   tap(fw, () => G.rideWheel(), { paw: [160, 0], disc: 'wheel', hintY: 2.5 });
   // BOUNCY MUSHROOM up to a tree branch
-  cyl(174, 0, -1.8, .3, .4, 1.1, '#fff3e0'); const cap = sph(174, 1.1, -1.8, 1.1, '#ff4f9a', { m: { r: .3 } }); cap.scale.y = .5;
-  for (let i = 0; i < 5; i++) sph(174 + Math.cos(i * 1.3) * .7, 1.45, -1.8 + Math.sin(i * 1.3) * .7, .14, '#ffffff', { cast: false });
+  // build 16: a properly shaped toadstool: a curved stem with a skirt, a domed cap with gills underneath and raised spots
+  { const stemPts = [[.0, 0], [.42, 0], [.36, .1], [.3, .4], [.28, .8], [.33, 1.05], [.0, 1.1]].map(([a, b]) => new THREE.Vector2(a, b)); const stem = new THREE.Mesh(new THREE.LatheGeometry(stemPts, 32), toy('#fff6ea', { r: .7, cc: .2, sheen: .5 })); stem.position.set(174, 0, -1.8); stem.castShadow = stem.receiveShadow = true; add(stem);
+    const skirt = new THREE.Mesh(new THREE.TorusGeometry(.33, .05, 10, 32), toy('#fff6ea', { r: .7 })); skirt.rotation.x = Math.PI / 2; skirt.position.set(174, .78, -1.8); add(skirt);
+    const gills = new THREE.Mesh(new THREE.CircleGeometry(1.0, 40), toy('#ffd9e8', { r: .8 })); gills.rotation.x = Math.PI / 2; gills.position.set(174, 1.1, -1.8); add(gills); }
+  const capPts = [[0, .62], [.35, .6], [.7, .5], [.95, .32], [1.08, .12], [1.05, .02], [.9, 0]].map(([a, b]) => new THREE.Vector2(a, b));
+  const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 40), toy('#ff4f9a', { r: .32, cc: .9 })); cap.position.set(174, 1.08, -1.8); cap.castShadow = true; add(cap);
+  for (let i = 0; i < 9; i++) { const a = i * 2.4, rr = i < 1 ? 0 : .35 + (i % 3) * .2, sp = new THREE.Mesh(new THREE.SphereGeometry(.13 - (i % 3) * .02, 14, 8), toy('#ffffff', { r: .5 })); sp.scale.y = .45; const yy = 1.08 + .6 - rr * rr * .45; sp.position.set(174 + Math.cos(a) * rr, yy, -1.8 + Math.sin(a) * rr); add(sp); }
   plat(173, 175, 1.55, { pad: true, top: cap, bounce: 13, z: -1.6 });
   tree(178.5, -2.6, 1.25); block(178.6, 3.4, -1.8, 2.6, .25, 1.6, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65, { z: -1.7 });
 

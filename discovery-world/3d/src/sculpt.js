@@ -136,7 +136,12 @@ function pool() {
   } catch (e) { workers.failed = true; }
   return workers;
 }
+const asyncCache = new Map();
 export function sculptAsync(spec) {
+  const key = JSON.stringify(spec); if (asyncCache.has(key)) return asyncCache.get(key);
+  const pr = sculptAsync2(spec); asyncCache.set(key, pr); return pr;
+}
+function sculptAsync2(spec) {
   const ws = pool();
   if (!ws.length || ws.failed) return new Promise(res => setTimeout(() => res(sculpt(spec)), 0)); // (no workers: do it on the main thread, a bit later)
   const id = ++jobId, w = ws.reduce((a, b) => (a.busy <= b.busy ? a : b)); w.busy++;
