@@ -114,7 +114,7 @@ const UG_F = -6;
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y >= 0, 6000); check('the glass lift rides up to the Studio floor', c.y === 0 && !c.ride, `y=${c.y}`);
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y <= -5.99, 6000); check('and back down again', c.y <= -5.99);
   // ---------- build 5: Pet Workshop, critters, balloon ----------
-  await teleport(9.4, -6); // stand to the side so the buttons aren't behind your creature
+  await teleport(7.4, -6); // stand to the side so the buttons aren't behind your creature
   { const d0 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft)); await tapWorld(4.25, UG_F + 1.0, -1.15); await sleep(300); const d1 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft));
     check('Pet Workshop: tap a big button to change your pet design', d0 !== d1 && (await S()).disc.includes('petmaker'), `${d0} → ${d1}`); }
   await tapWorld(8.6, UG_F + .25, -1.2); await sleep(200); // the lever's box
