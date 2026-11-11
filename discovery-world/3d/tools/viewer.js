@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { makeCreature } from '../src/creatures.js';
-import { plush, foxSpec } from '../src/critterkit.js';
+import { plush, foxSpec, bearSpec, bunnySpec } from '../src/critterkit.js';
 const q = new URLSearchParams(location.search), kind = q.get('k') || 'pip', walk = +(q.get('walk') || 0), happy = +(q.get('happy') || 0);
 const W = 1200, H = 420, renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); renderer.setSize(W, H); renderer.setPixelRatio(1);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.setScissorTest(true);
@@ -15,7 +15,8 @@ scene.add(new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .8));
 const sun = new THREE.DirectionalLight('#fff1dc', 2.2); sun.position.set(-3, 6, 5); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); Object.assign(sun.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); scene.add(sun);
 const floor = new THREE.Mesh(new THREE.CircleGeometry(4, 48), new THREE.MeshStandardMaterial({ color: '#f7d6ee', roughness: .8 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 const t0 = performance.now(); let c;
-if (kind === 'fox') { const g = new THREE.Group(); const k = plush(g, foxSpec({ scale: 1.25 }), { lid: '#e2692a', iris: '#e0901a', lidOpen: .78, furShells: +(q.get('fur') ?? 10), furLength: .022, furDensity: 260 }); c = { root: g, update: (dt) => k.tick(dt, performance.now() / 1000, false) }; await new Promise(r => { g.userData.onReady = r; }); }
+const SPECS = { fox: () => foxSpec({ scale: 1.25 }), bear: () => bearSpec({ scale: 1.25 }), bunny: () => bunnySpec({ scale: 1.15 }) };
+if (SPECS[kind]) { const g = new THREE.Group(); const k = plush(g, SPECS[kind](), { lid: '#e2692a', iris: '#e0901a', lidOpen: .78, furShells: +(q.get('fur') ?? 10), furLength: .022, furDensity: 260 }); c = { root: g, update: (dt) => k.tick(dt, performance.now() / 1000, false) }; await new Promise(r => { g.userData.onReady = r; }); }
 else c = makeCreature(kind);
 window.ms = performance.now() - t0; scene.add(c.root);
 const cam = new THREE.PerspectiveCamera(32, (W / 3) / H, .05, 50);

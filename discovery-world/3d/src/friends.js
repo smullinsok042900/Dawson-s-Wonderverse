@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { plushNormal } from './nature.js';
-import { plush, bipedSpec, quadSpec, personSpec, foxSpec } from './critterkit.js';
+import { plush, bipedSpec, quadSpec, personSpec, foxSpec, bearSpec, bunnySpec } from './critterkit.js';
 import { fabricMat, metalMatOf } from './nature.js';
 const capMat = () => fabricMat('#3d7bd8'), metalMat = () => metalMatOf('#c9ccd9');
 import { NOTES } from './audio.js';
@@ -181,7 +181,7 @@ export function initFriends(G, api) {
   function tapCritter(c) { c.act = 1.6; c.onTap(c); discover(c.disc, c.msg); const lines = TALK[c.kind] || ['😊']; c.line = ((c.line ?? -1) + 1) % lines.length; say(c, lines[c.line]); }
   // Balloon Bear (park entrance)
   critter('bear', 137.6, 0, -2.4, r => {
-    const S = 1.15, k = plush(r, bipedSpec({ scale: S, body: '#c98a55', belly: '#f3dcbc', muzzle: '#f3dcbc', ears: 'round', snout: .03, tail: 'puff', iris: '#a06a32' }), { lid: '#c98a55', iris: '#a06a32' });
+    const k = plush(r, bearSpec({ scale: 1.25 }), { lid: '#a86a3c', iris: '#a06a32', lidOpen: .85, furShells: 8, furLength: .026, furDensity: 210 }); // build 15: a real bear shape
     const bunch = new THREE.Group(); bunch.position.set(.55, 2.75, 0); r.add(bunch);
     BALLOON_COLS.forEach((c, i) => { const b = ball(M(c, { r: .15, cc: 1 }), .3, (i - 2) * .32, Math.abs(i - 2) * -.15, 0, 1, 1.15, 1); bunch.add(b); });
     const str = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 1.7, 4), M('#ffffff')); str.position.set(.52, 1.75, .1); r.add(str);
@@ -189,9 +189,9 @@ export function initFriends(G, api) {
   }, c => { const B = world.balloons; if (B.length >= MAXBALLOONS) { letGo(); toast('🎈🎈🎈 Wheee! Up, up and away!'); } else { B.push(BALLOON_COLS[B.length % BALLOON_COLS.length]); Sound.giggle(); burst(c.x, 3, c.z, [B[B.length - 1], '#fff'], 14, 2); toast('🎈'.repeat(B.length) + (B.length === 1 ? ' A balloon for you! Tap the bear for more.' : '')); } api.saveSoon(); }, 'balloon', null);
   // Painter Bunny (studio, by the paint wall)
   critter('bunny', 52.4, 0, -2.4, r => {
-    const k = plush(r, bipedSpec({ scale: 1.05, body: '#ffffff', belly: '#fff4f8', ears: 'long', snout: 0, nose: '#ff8fc0', tail: 'puff', iris: '#8a6ad0' }), { lid: '#ffffff', iris: '#8a6ad0',
-      accessories: (B, at) => { const beret = ball(M('#ff4f9a', { r: .6, sheen: 1 }), .2, 0, 0, 0, 1.25, .38, 1.25); beret.rotation.z = -.25; at(B.head, beret, .06, 1.5, -.02); at(B.head, ball(M('#ff4f9a'), .03, 0, 0, 0), .1, 1.58, -.02);
-        const brush = new THREE.Group(); const h = new THREE.Mesh(new THREE.CylinderGeometry(.025, .03, .55, 8), M('#b06a32')); h.position.y = .2; brush.add(h); brush.add(ball(M('#3d9bff'), .055, 0, .5, 0, 1, 1.4, 1)); brush.rotation.z = -.3; at(B.handL, brush, .44, .6, .12); } });
+    const k = plush(r, bunnySpec({ scale: 1.15 }), { lid: '#fbf7f4', iris: '#8a6ad0', lidOpen: .9, furShells: 8, furLength: .02, furDensity: 260, // build 15: a real bunny shape
+      accessories: (B, at) => { const beret = new THREE.Mesh(new THREE.SphereGeometry(.17, 32, 16), fabricMat('#ff4f9a')); beret.scale.set(1.2, .36, 1.2); beret.rotation.z = -.25; at(B.head, beret, .05, 1.37, 0); at(B.head, ball(M('#ff4f9a'), .025, 0, 0, 0), .08, 1.43, 0);
+        const brush = new THREE.Group(); const h = new THREE.Mesh(new THREE.CylinderGeometry(.025, .03, .55, 8), M('#b06a32')); h.position.y = .2; brush.add(h); brush.add(ball(M('#3d9bff'), .055, 0, .5, 0, 1, 1.4, 1)); brush.rotation.z = -.3; at(B.handL, brush, .25, .7, .16); } });
     return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { api.paintStamp(); Sound.tone(600, .2, 'sine', .05, 1.4); burst(c.x, 1.6, c.z, ['#ff4f9a', '#3d9bff', '#ffd23f'], 14, 2); }, 'painter', 'The painter bunny paints a picture for you!');
   // Drummer Frog (end of the studio)

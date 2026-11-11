@@ -223,6 +223,86 @@ export function foxSpec(o = {}) {
   return { voxel: .0155 * S, bones, parts, paints, eye: { x: .072 * S, y: 1.24 * S, z: .183 * S, r: .039 * S }, mouth: { y: 1.1 * S, z: .28 * S } };
 }
 
+// ---------- the BEAR: big, sturdy and cuddly ----------
+export function bearSpec(o = {}) {
+  const br = o.body || '#a86a3c', lt = '#e9c79a', dk = '#2a1a14', pad = '#4a3028', S = o.scale || 1, s = p => p.map(n => n * S);
+  const bones = [
+    { name: 'root', pos: [0, 0, 0] }, { name: 'hips', parent: 'root', pos: s([0, .5, -.02]) }, { name: 'spine', parent: 'hips', pos: s([0, .74, 0]) }, { name: 'chest', parent: 'spine', pos: s([0, .9, .02]) },
+    { name: 'head', parent: 'chest', pos: s([0, 1.1, .06]) }, { name: 'earL', parent: 'head', pos: s([.17, 1.38, 0]) }, { name: 'earR', parent: 'head', pos: s([-.17, 1.38, 0]) },
+    { name: 'armL', parent: 'chest', pos: s([.24, .98, .04]) }, { name: 'handL', parent: 'armL', pos: s([.33, .66, .12]) }, { name: 'armR', parent: 'chest', pos: s([-.24, .98, .04]) }, { name: 'handR', parent: 'armR', pos: s([-.33, .66, .12]) },
+    { name: 'legL', parent: 'hips', pos: s([.15, .44, 0]) }, { name: 'footL', parent: 'legL', pos: s([.16, .12, .04]) }, { name: 'legR', parent: 'hips', pos: s([-.15, .44, 0]) }, { name: 'footR', parent: 'legR', pos: s([-.16, .12, .04]) },
+    { name: 'tail', parent: 'hips', pos: s([0, .45, -.3]) },
+  ];
+  const P = (type, o2) => ({ type, ...o2 });
+  const parts = [
+    P('ellipsoid', { c: s([0, .56, 0]), r: s([.31, .3, .28]), bone: 'hips', color: br, k: .1 * S }),
+    P('ellipsoid', { c: s([0, .82, .02]), r: s([.3, .26, .26]), bone: 'spine', color: br, k: .1 * S }),
+    P('ellipsoid', { c: s([0, .97, -.06]), r: s([.24, .14, .2]), bone: 'chest', color: br, k: .1 * S }),                 // shoulder hump
+    P('limb', { a: s([0, .95, .04]), b: s([0, 1.08, .07]), ra: .17 * S, rb: .17 * S, bone: 'head', color: br, k: .08 * S }),
+    P('ellipsoid', { c: s([0, 1.2, .07]), r: s([.23, .2, .2]), bone: 'head', color: br, k: .06 * S }),
+    P('ellipsoid', { c: s([.13, 1.12, .12]), r: s([.1, .08, .1]), bone: 'head', color: br, k: .07 * S }), P('ellipsoid', { c: s([-.13, 1.12, .12]), r: s([.1, .08, .1]), bone: 'head', color: br, k: .07 * S }),
+    P('ellipsoid', { c: s([0, 1.11, .23]), r: s([.11, .085, .1]), bone: 'head', color: lt, k: .05 * S, soft: .025 }),       // short wide muzzle
+    P('ellipsoid', { c: s([0, 1.155, .32]), r: s([.055, .036, .035]), bone: 'head', color: dk, k: .015 * S, soft: .003, bare: true }), // big nose
+    P('ellipsoid', { c: s([.075, 1.26, .225]), r: s([.045, .016, .025]), bone: 'head', color: br, k: .03 * S }), P('ellipsoid', { c: s([-.075, 1.26, .225]), r: s([.045, .016, .025]), bone: 'head', color: br, k: .03 * S }), // brows
+    P('sphere', { c: s([.17, 1.38, 0]), r: .075 * S, bone: 'earL', color: br, k: .04 * S }), P('sphere', { c: s([-.17, 1.38, 0]), r: .075 * S, bone: 'earR', color: br, k: .04 * S }),
+    ...[[1, 'L'], [-1, 'R']].flatMap(([g, n]) => [
+      P('limb', { a: s([.24 * g, .98, .03]), b: s([.32 * g, .7, .1]), ra: .1 * S, rb: .085 * S, bone: 'arm' + n, color: br, k: .07 * S }),
+      P('ellipsoid', { c: s([.33 * g, .64, .13]), r: s([.085, .08, .075]), bone: 'hand' + n, color: br, k: .04 * S }),
+      P('ellipsoid', { c: s([.33 * g, .62, .2]), r: s([.05, .05, .02]), bone: 'hand' + n, color: pad, k: .015 * S, soft: .004, bare: true }),
+      P('limb', { a: s([.15 * g, .46, 0]), b: s([.16 * g, .18, .03]), ra: .13 * S, rb: .1 * S, bone: 'leg' + n, color: br, k: .08 * S }),
+      P('ellipsoid', { c: s([.16 * g, .06, .08]), r: s([.11, .065, .15]), bone: 'foot' + n, color: br, k: .05 * S }),
+      P('ellipsoid', { c: s([.16 * g, .05, .225]), r: s([.07, .045, .02]), bone: 'foot' + n, color: pad, k: .015 * S, soft: .004, bare: true }),
+    ]),
+    P('sphere', { c: s([0, .45, -.3]), r: .07 * S, bone: 'tail', color: br, k: .04 * S }),
+    P('sphere', { c: s([.085, 1.22, .232]), r: .046 * S, carve: true, k: .015 * S }), P('sphere', { c: s([-.085, 1.22, .232]), r: .046 * S, carve: true, k: .015 * S }),
+  ];
+  const paints = [
+    P('ellipsoid', { c: s([0, .62, .24]), r: s([.19, .2, .08]), color: lt, soft: .05 }),
+    P('sphere', { c: s([.17, 1.38, .05]), r: .045 * S, color: lt, soft: .02 }), P('sphere', { c: s([-.17, 1.38, .05]), r: .045 * S, color: lt, soft: .02 }),
+    P('limb', { a: s([0, 1.13, .32]), b: s([0, 1.08, .31]), ra: .006 * S, rb: .006 * S, color: dk, soft: .003 }), P('limb', { a: s([-.045, 1.085, .29]), b: s([0, 1.075, .31]), ra: .007 * S, rb: .007 * S, color: dk, soft: .003 }), P('limb', { a: s([0, 1.075, .31]), b: s([.045, 1.085, .29]), ra: .007 * S, rb: .007 * S, color: dk, soft: .003 }),
+  ];
+  return { furScale: S, voxel: .019 * S, bones, parts, paints, eye: { x: .085 * S, y: 1.22 * S, z: .22 * S, r: .041 * S }, mouth: { y: 1.075 * S, z: .3 * S } };
+}
+// ---------- the BUNNY: slim, long ears, long feet, cotton tail ----------
+export function bunnySpec(o = {}) {
+  const wh = o.body || '#fbf7f4', pk = '#ffb3cf', dk = '#3a2030', S = o.scale || 1, s = p => p.map(n => n * S);
+  const bones = [
+    { name: 'root', pos: [0, 0, 0] }, { name: 'hips', parent: 'root', pos: s([0, .46, -.02]) }, { name: 'spine', parent: 'hips', pos: s([0, .68, 0]) }, { name: 'head', parent: 'spine', pos: s([0, .94, .04]) },
+    { name: 'earL', parent: 'head', pos: s([.07, 1.24, -.02]) }, { name: 'earL2', parent: 'earL', pos: s([.1, 1.5, -.05]) }, { name: 'earR', parent: 'head', pos: s([-.07, 1.24, -.02]) }, { name: 'earR2', parent: 'earR', pos: s([-.1, 1.5, -.05]) },
+    { name: 'armL', parent: 'spine', pos: s([.15, .82, .05]) }, { name: 'handL', parent: 'armL', pos: s([.21, .62, .12]) }, { name: 'armR', parent: 'spine', pos: s([-.15, .82, .05]) }, { name: 'handR', parent: 'armR', pos: s([-.21, .62, .12]) },
+    { name: 'legL', parent: 'hips', pos: s([.12, .42, 0]) }, { name: 'footL', parent: 'legL', pos: s([.13, .1, .02]) }, { name: 'legR', parent: 'hips', pos: s([-.12, .42, 0]) }, { name: 'footR', parent: 'legR', pos: s([-.13, .1, .02]) },
+    { name: 'tail', parent: 'hips', pos: s([0, .42, -.24]) },
+  ];
+  const P = (type, o2) => ({ type, ...o2 });
+  const parts = [
+    P('ellipsoid', { c: s([0, .5, 0]), r: s([.21, .22, .2]), bone: 'hips', color: wh, k: .09 * S }),
+    P('ellipsoid', { c: s([0, .72, .02]), r: s([.16, .17, .15]), bone: 'spine', color: wh, k: .09 * S }),
+    P('limb', { a: s([0, .84, .03]), b: s([0, .94, .05]), ra: .1 * S, rb: .11 * S, bone: 'head', color: wh, k: .06 * S }),
+    P('ellipsoid', { c: s([0, 1.04, .05]), r: s([.17, .16, .16]), bone: 'head', color: wh, k: .05 * S }),
+    P('ellipsoid', { c: s([.06, .99, .17]), r: s([.065, .055, .06]), bone: 'head', color: wh, k: .04 * S }), P('ellipsoid', { c: s([-.06, .99, .17]), r: s([.065, .055, .06]), bone: 'head', color: wh, k: .04 * S }), // whisker puffs
+    P('ellipsoid', { c: s([0, 1.03, .205]), r: s([.026, .02, .018]), bone: 'head', color: pk, k: .012 * S, soft: .004, bare: true }),       // twitchy nose
+    P('ellipsoid', { c: s([0, .94, .2]), r: s([.03, .025, .01]), bone: 'head', color: '#ffffff', k: .008 * S, soft: .004, bare: true }),     // buck teeth
+    P('limb', { a: s([.06, 1.17, -.01]), b: s([.1, 1.48, -.05]), ra: .045 * S, rb: .06 * S, bone: 'earL', color: wh, k: .03 * S }), P('limb', { a: s([.1, 1.48, -.05]), b: s([.115, 1.66, -.08]), ra: .06 * S, rb: .03 * S, bone: 'earL2', color: wh, k: .025 * S }),
+    P('limb', { a: s([-.06, 1.17, -.01]), b: s([-.1, 1.48, -.05]), ra: .045 * S, rb: .06 * S, bone: 'earR', color: wh, k: .03 * S }), P('limb', { a: s([-.1, 1.48, -.05]), b: s([-.115, 1.66, -.08]), ra: .06 * S, rb: .03 * S, bone: 'earR2', color: wh, k: .025 * S }),
+    ...[[1, 'L'], [-1, 'R']].flatMap(([g, n]) => [
+      P('limb', { a: s([.14 * g, .82, .04]), b: s([.2 * g, .65, .11]), ra: .045 * S, rb: .04 * S, bone: 'arm' + n, color: wh, k: .04 * S }),
+      P('ellipsoid', { c: s([.21 * g, .61, .13]), r: s([.04, .045, .04]), bone: 'hand' + n, color: wh, k: .025 * S }),
+      P('ellipsoid', { c: s([.14 * g, .38, .02]), r: s([.1, .13, .12]), bone: 'leg' + n, color: wh, k: .07 * S }),           // strong haunches
+      P('limb', { a: s([.14 * g, .3, .02]), b: s([.13 * g, .09, .06]), ra: .07 * S, rb: .055 * S, bone: 'foot' + n, color: wh, k: .06 * S }),
+      P('ellipsoid', { c: s([.13 * g, .05, .12]), r: s([.065, .05, .17]), bone: 'foot' + n, color: wh, k: .05 * S }),         // long hind feet
+    ]),
+    P('sphere', { c: s([0, .42, -.23]), r: .08 * S, bone: 'tail', color: '#ffffff', k: .04 * S }),
+    P('sphere', { c: s([.068, 1.07, .17]), r: .043 * S, carve: true, k: .014 * S }), P('sphere', { c: s([-.068, 1.07, .17]), r: .043 * S, carve: true, k: .014 * S }),
+  ];
+  const paints = [
+    P('ellipsoid', { c: s([.095, 1.4, .0]), r: s([.025, .17, .03]), color: pk, soft: .02 }), P('ellipsoid', { c: s([-.095, 1.4, .0]), r: s([.025, .17, .03]), color: pk, soft: .02 }),
+    P('sphere', { c: s([.11, .99, .16]), r: .04 * S, color: '#ffc4dc', soft: .03 }), P('sphere', { c: s([-.11, .99, .16]), r: .04 * S, color: '#ffc4dc', soft: .03 }),
+    P('limb', { a: s([0, 1.02, .205]), b: s([0, .965, .2]), ra: .004 * S, rb: .004 * S, color: dk, soft: .002 }),
+    P('ellipsoid', { c: s([.13, .01, .15]), r: s([.04, .02, .08]), color: pk, soft: .01 }), P('ellipsoid', { c: s([-.13, .01, .15]), r: s([.04, .02, .08]), color: pk, soft: .01 }),
+  ];
+  return { furScale: S, voxel: .016 * S, bones, parts, paints, eye: { x: .068 * S, y: 1.07 * S, z: .158 * S, r: .039 * S }, mouth: { y: .955 * S, z: .195 * S } };
+}
+
 // ---------- building one ----------
 // opts: { spec (from the builders above), fur (true = soft plush), gloss, accessories(B, att) }
 export function plush(group, spec, opts = {}) {

@@ -154,7 +154,7 @@ function bladeClump(n = 7) {
   const nrm = new Float32Array(pos.length); for (let i = 0; i < nrm.length; i += 3) { nrm[i] = 0; nrm[i + 1] = 1; nrm[i + 2] = 0; } g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
   return g;
 }
-export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = 1100, bands = [[-11, -2.25], [3.6, 4.45]] }) {
+export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 60 : 1100, bands = [[-11, -2.25], [3.6, 4.45]] }) {
   const geo = bladeClump(7);
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, side: THREE.DoubleSide });
   mat.onBeforeCompile = sh => {

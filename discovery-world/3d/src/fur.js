@@ -27,7 +27,9 @@ function furMaterial(base, layer, o) {
   return m;
 }
 // add fur shells to a skinned mesh (shares its geometry and skeleton)
+const LIGHT_TEST = typeof location !== 'undefined' && /[?&]test/.test(location.search); // (the automated tests' light mode skips fur)
 export function addFur(mesh, o = {}) {
+  if (LIGHT_TEST) return [];
   const n = o.shells ?? 10, opts = { length: o.length ?? .03, density: o.density ?? 260, droop: o.droop, tint: o.tint }, shells = [];
   for (let i = 1; i <= n; i++) {
     const s = new THREE.SkinnedMesh(mesh.geometry, furMaterial(mesh.material, i / n, opts));

@@ -31,8 +31,8 @@ const UG_F = -6;
   const holdBtn = async (sel, ms) => { const c = await center(sel); await touch('touchStart', [{ ...c, id: 1 }]); await sleep(ms); await touch('touchEnd', []); await sleep(80); };
   const press = async sel => holdBtn(sel, 80);
   const teleport = async (x, y = 0) => { await page.evaluate(([x, y]) => __DDW3.teleport(x, y), [x, y]); await sleep(2200); }; // let the camera settle (slow software WebGL)
-  const waitFor = async (fn, ms = 8000) => { const t0 = Date.now(); let s; while (Date.now() - t0 < ms) { s = await S(); if (fn(s)) return s; await sleep(120); } return s; };
-  const shot = n => page.screenshot({ path: path.join(SHOTS, n), type: 'jpeg', quality: 84 });
+  const waitFor = async (fn, ms = 8000) => { ms *= 3; /* (the software-graphics test browser is slow) */ const t0 = Date.now(); let s; while (Date.now() - t0 < ms) { s = await S(); if (fn(s)) return s; await sleep(120); } return s; };
+  const shot = n => page.screenshot({ path: path.join(SHOTS, n), type: 'jpeg', quality: 84, timeout: 240000 });
   let c;
 
   // ---------- start ----------
