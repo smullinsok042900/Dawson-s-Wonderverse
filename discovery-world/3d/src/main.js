@@ -489,10 +489,16 @@ function updatePlayer(dt) {
   const oldY = P.y, wasG = P.grounded;
   if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else P.vy -= GRAV * dt; // in the deep ball pit you sink slowly
   P.y += P.vy * dt; P.grounded = false;
+  // land on the HIGHEST surface you reach (so a bouncy puff on top of a cloud wins over the cloud)
+  let land = null, landStep = false;
   if (P.vy <= 0) for (const z of G.platforms) {
     if (z.layer !== P.layer || P.x < z.a || P.x > z.b) continue;
     const stepUp = z.step && wasG && z.y > oldY - .01 && z.y - oldY < .5;
-    if ((oldY >= z.y - .02 && P.y <= z.y) || stepUp) {
+    if (((oldY >= z.y - .02 && P.y <= z.y) || stepUp) && (!land || z.y > land.y)) { land = z; landStep = stepUp; }
+  }
+  if (land) {
+    const z = land, stepUp = landStep;
+    {
       const impact = -P.vy, fromShaft = P.fromShaft; P.y = z.y; P.vy = 0; P.grounded = true; P.groundZ = z.z || 0;
       if (z.onLand && (!wasG || stepUp)) z.onLand(z);
       if (z.tramp) { P.vy = 13.5; P.grounded = false; P.jumps = 1; world.trampT = 1; Sound.boing(); discover('trampoline', 'Boing! Super bounce!'); }
@@ -500,7 +506,6 @@ function updatePlayer(dt) {
       else if (z.pad) { if (z.upShaft) discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); P.vy = z.bounce || 15.5; P.grounded = false; P.jumps = 1; Sound.boing(); burst(P.x, z.y + .2, 0, ['#9ff7c8', '#fff'], 10, 2); if (z.top) z.top.scale.y *= .7; discover('springpad', 'Boing! Spring pads bounce you up high!'); }
       else if (z.sofa && impact > 3) { P.vy = 9; P.grounded = false; P.jumps = 1; Sound.boing(); discover('sofa', 'A bouncy sofa!'); }
       else if (impact > 6) Sound.land();
-      break;
     }
   }
   // the floor: normally y 0; under the floor (or down the deep shaft) it is the underground floor
