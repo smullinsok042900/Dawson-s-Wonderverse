@@ -12,7 +12,9 @@
 import * as THREE from 'three';
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { plushNormal } from './nature.js';
-import { plush, bipedSpec, quadSpec, personSpec } from './critterkit.js';
+import { plush, bipedSpec, quadSpec, personSpec, foxSpec } from './critterkit.js';
+import { fabricMat, metalMatOf } from './nature.js';
+const capMat = () => fabricMat('#3d7bd8'), metalMat = () => metalMatOf('#c9ccd9');
 import { NOTES } from './audio.js';
 
 export const PET_COLS = ['#ff8fd0', '#8fd8ff', '#ffd45e', '#a98cff', '#7be08a', '#ff9a6b', '#ffffff'];
@@ -248,9 +250,10 @@ export function initFriends(G, api) {
   }, c => { Sound.tone(900, .3, 'sine', .03, .5); }, 'snail', 'The little snail hides in its shell!');
 
   critter('fox', 260.8, 0, -2.4, r => {
-    const k = plush(r, bipedSpec({ scale: 1.05, body: '#ff8a4a', belly: '#ffffff', muzzle: '#ffffff', ears: 'pointy', innerEar: '#ffffff', snout: .07, tail: 'bushy', tailTip: '#ffffff', legCol: '#5a3a3a', footCol: '#5a3a3a', armCol: '#ff8a4a', pawCol: '#5a3a3a', iris: '#d08a20' }), { lid: '#ff8a4a', iris: '#d08a20',
-      accessories: (B, at) => { const cap = new THREE.Mesh(new THREE.SphereGeometry(.29, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M('#3d9bff')); at(B.head, cap, 0, 1.38, -.02);
-        const wrench = new THREE.Mesh(new THREE.BoxGeometry(.05, .42, .04), M('#c9c9d9', { m: .6, r: .3 })); at(B.handL, wrench, .44, .78, .14); } });
+    // build 15: the benchmark fox (fox anatomy + real fur)
+    const k = plush(r, foxSpec({ scale: 1.25 }), { lid: '#e2692a', iris: '#e0901a', lidOpen: .78, furShells: 10, furLength: .022, furDensity: 260,
+      accessories: (B, at) => { const cap = new THREE.Mesh(new THREE.SphereGeometry(.17, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), capMat()); cap.scale.set(1.05, .7, 1.1); at(B.head, cap, 0, 1.7, .08); const brim = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .012, 24, 1, false, -Math.PI / 2, Math.PI), capMat()); brim.rotation.y = Math.PI; at(B.head, brim, 0, 1.67, .25);
+        const wrench = new THREE.Group(); const sh = new THREE.Mesh(new THREE.BoxGeometry(.035, .32, .02), metalMat()); sh.position.y = .12; wrench.add(sh); const hd = new THREE.Mesh(new THREE.TorusGeometry(.04, .014, 8, 16, 4.5), metalMat()); hd.position.y = .3; wrench.add(hd); at(B.handL, wrench, .2 * 1.25, .6 * 1.25, .17 * 1.25); } });
     return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { Sound.tone(700, .08, 'square', .03, 1); Sound.tone(900, .08, 'square', .03, 1, .1); burst(c.x, 1.6, c.z, ['#ff9a5a', '#fff'], 10, 2); }, 'fox', 'The mechanic fox fixed up your kart!');
 

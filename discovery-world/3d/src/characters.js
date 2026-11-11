@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { sculpt, makeSkeleton, attach, skin } from './sculpt.js';
 import { plushNormal } from './nature.js';
+import { addFur } from './fur.js';
 
 const geoCache = new Map();
 const cached = (key, make) => { if (!geoCache.has(key)) geoCache.set(key, make()); return geoCache.get(key); };
@@ -89,7 +90,7 @@ function pipSpec(body) {
     { type: 'ellipsoid', c: [.19, 1.08, .17], r: [.17, .13, .15], bone: 'head', color: fur, k: .1 },
     { type: 'ellipsoid', c: [-.19, 1.08, .17], r: [.17, .13, .15], bone: 'head', color: fur, k: .1 },
     { type: 'ellipsoid', c: [0, 1.08, .29], r: [.15, .1, .11], bone: 'head', color: cream, k: .08, soft: .02 },
-    { type: 'ellipsoid', c: [0, 1.135, .385], r: [.055, .038, .035], bone: 'head', color: pink, k: .02, soft: .008 },
+    { type: 'ellipsoid', c: [0, 1.135, .385], r: [.055, .038, .035], bone: 'head', color: pink, k: .02, soft: .008, bare: true },
     // ears (two bones each so the tips flop)
     { type: 'limb', a: [.14, 1.45, -.03], b: [.21, 1.78, -.06], ra: .085, rb: .11, bone: 'earL', color: fur, k: .06 },
     { type: 'limb', a: [.21, 1.78, -.06], b: [.25, 2.0, -.08], ra: .11, rb: .07, bone: 'earL2', color: fur, k: .05 },
@@ -204,6 +205,7 @@ export function buildCharacter(kind, style = {}) {
   const mesh = new THREE.SkinnedMesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
   mesh.add(sk.root); mesh.updateMatrixWorld(true); sk.skeleton.calculateInverses(); mesh.bind(sk.skeleton, mesh.matrixWorld); // (record the bind pose after the bones are in place)
   const root = new THREE.Group(), bodyG = new THREE.Group(); root.add(bodyG); bodyG.add(mesh);
+  if (kind === 'pip') addFur(mesh, { shells: 9, length: .02, density: 250 }); // build 15: real fur
   const lidMat = new THREE.MeshPhysicalMaterial({ color: kind === 'jelly' ? shade(body, .9) : body, roughness: kind === 'pip' ? .8 : .3, sheen: kind === 'pip' ? 1 : 0, clearcoat: kind === 'pip' ? 0 : .8, transparent: kind === 'jelly', opacity: kind === 'jelly' ? .95 : 1 });
   const P = { root, body: bodyG, mesh, B, eyes: [], extras: {} };
   if (kind === 'pip') {

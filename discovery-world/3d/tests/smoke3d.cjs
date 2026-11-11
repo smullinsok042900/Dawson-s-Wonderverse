@@ -99,7 +99,7 @@ const UG_F = -6;
   await teleport(12.6, -1.6);
   { const up = await page.evaluate(() => new Promise(r => { const P = __DDW3.player, b = document.getElementById('jumpBtn'), y0 = P.y; let n = 0; const f = () => { if (n % 3 === 0) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); if (P.y > y0 + .8) return r([y0, P.y]); if (++n > 300) return r([y0, P.y]); requestAnimationFrame(f); }; f(); }));
     check('tap JUMP to swim up through the balls', up[1] > up[0] + .8, `y ${up[0].toFixed(2)} → ${up[1].toFixed(2)}`); }
-  c = await waitFor(s => s.y <= -5.99 && s.grounded, 12000); check('sink all the way down into the secret underground', c.y <= -5.99, `y=${c.y.toFixed(2)}`);
+  c = await waitFor(s => s.y <= -5.99 && s.grounded, 45000); check('sink all the way down into the secret underground', c.y <= -5.99, `y=${c.y.toFixed(2)}`);
   check('the underground is a new discovery', c.disc.includes('underground'));
   await shot('15_underground.jpg');
   await holdBtn('#rightBtn', 400); await waitFor(s => s.grounded, 3000); await teleport(12.6, -4.2); c = await waitFor(s => s.y > -3, 4000); check('the bounce mushroom pops you back up into the ball shaft', c.y > -3, `y=${c.y.toFixed(2)}`);

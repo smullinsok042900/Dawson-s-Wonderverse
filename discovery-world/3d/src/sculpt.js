@@ -86,16 +86,16 @@ export function sculptCore(spec) {
     grad(x, y, z, g); normal[i * 3] = g[0]; normal[i * 3 + 1] = g[1]; normal[i * 3 + 2] = g[2];
   }
   // colours (soft regions) and skin weights (the 4 strongest bones)
-  const nb = spec.boneCount, skinIndex = new Uint16Array(nv * 4), skinWeight = new Float32Array(nv * 4), bw = new Float32Array(nb), ds = new Float32Array(shapes.length);
+  const furAmt = new Float32Array(nv), nb = spec.boneCount, skinIndex = new Uint16Array(nv * 4), skinWeight = new Float32Array(nv * 4), bw = new Float32Array(nb), ds = new Float32Array(shapes.length);
   for (let i = 0; i < nv; i++) {
     const x = position[i * 3], y = position[i * 3 + 1], z = position[i * 3 + 2];
-    let r = 0, gg = 0, b = 0, ws = 0, dmin = 1e9; bw.fill(0);
+    let r = 0, gg = 0, b = 0, ws = 0, bare = 0, dmin = 1e9; bw.fill(0);
     for (let k = 0; k < shapes.length; k++) { ds[k] = partDist(shapes[k], x, y, z); if (ds[k] < dmin) dmin = ds[k]; }
     for (let k = 0; k < shapes.length; k++) {
       const p = shapes[k], w = exp(-(ds[k] - dmin) / (p.soft || .035)), c = p.color;
-      r += c[0] * w; gg += c[1] * w; b += c[2] * w; ws += w; bw[p.bone] += exp(-(ds[k] - dmin) / (p.wsoft || .05));
+      r += c[0] * w; gg += c[1] * w; b += c[2] * w; ws += w; if (p.bare) bare += w; bw[p.bone] += exp(-(ds[k] - dmin) / (p.wsoft || .05));
     }
-    r /= ws; gg /= ws; b /= ws;
+    r /= ws; gg /= ws; b /= ws; furAmt[i] = 1 - bare / ws;
     for (const p of paints) { const d = partDist(p, x, y, z), s = p.soft || .025; let t = clamp(.5 - d / (2 * s), 0, 1); if (t > 0) { t = t * t * (3 - 2 * t); r += (p.color[0] - r) * t; gg += (p.color[1] - gg) * t; b += (p.color[2] - b) * t; } }
     color[i * 3] = r; color[i * 3 + 1] = gg; color[i * 3 + 2] = b;
     let tot = 0; const top = [];
@@ -104,7 +104,7 @@ export function sculptCore(spec) {
     if (!top.length) skinWeight[i * 4] = 1;
   }
   const uv = new Float32Array(nv * 2); for (let i = 0; i < nv; i++) { const x = position[i * 3], y = position[i * 3 + 1], z = position[i * 3 + 2]; uv[i * 2] = (Math.atan2(x, z) / (Math.PI * 2) + .5) * 3; uv[i * 2 + 1] = y * 2.5; }
-  return { position, normal, color, skinIndex, skinWeight, uv, index: new Uint32Array(index) };
+  return { position, normal, color, skinIndex, skinWeight, uv, furAmt, index: new Uint32Array(index) };
 }
 
 // turn colours into linear RGB arrays and bone names into numbers
@@ -118,7 +118,7 @@ function toGeometry(r) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(r.position, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(r.normal, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(r.color, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(r.uv, 2));
-  geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(r.skinIndex, 4)); geo.setAttribute('skinWeight', new THREE.BufferAttribute(r.skinWeight, 4));
+  geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(r.skinIndex, 4)); geo.setAttribute('skinWeight', new THREE.BufferAttribute(r.skinWeight, 4)); geo.setAttribute('furAmt', new THREE.BufferAttribute(r.furAmt, 1));
   geo.setIndex(new THREE.BufferAttribute(r.index, 1)); geo.computeBoundingSphere(); return geo;
 }
 export function sculpt(spec) { return toGeometry(sculptCore(prepare(spec))); }
@@ -129,7 +129,7 @@ function pool() {
   if (workers) return workers;
   workers = [];
   try {
-    const src = `const sculptCore = ${sculptCore.toString()};\nself.onmessage = e => { const r = sculptCore(e.data.spec); self.postMessage({ id: e.data.id, r }, [r.position.buffer, r.normal.buffer, r.color.buffer, r.skinIndex.buffer, r.skinWeight.buffer, r.uv.buffer, r.index.buffer]); };`;
+    const src = `const sculptCore = ${sculptCore.toString()};\nself.onmessage = e => { const r = sculptCore(e.data.spec); self.postMessage({ id: e.data.id, r }, [r.position.buffer, r.normal.buffer, r.color.buffer, r.skinIndex.buffer, r.skinWeight.buffer, r.uv.buffer, r.furAmt.buffer, r.index.buffer]); };`;
     const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
     const n = Math.max(1, Math.min(3, (navigator.hardwareConcurrency || 2) - 1));
     for (let i = 0; i < n; i++) { const w = new Worker(url); w.busy = 0; w.onmessage = e => { w.busy--; const j = jobs.get(e.data.id); jobs.delete(e.data.id); j.resolve(toGeometry(e.data.r)); }; w.onerror = () => { workers.failed = true; }; workers.push(w); }
@@ -158,7 +158,8 @@ export function makeSkeleton(boneSpec) {
 }
 // put a skinned mesh on a skeleton (records the bind pose after the bones are in place)
 export function skin(geo, mat, sk) {
-  const mesh = new THREE.SkinnedMesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
+  if (!geo.userData.padded) { geo.computeBoundingSphere(); geo.boundingSphere.radius *= 1.35; geo.userData.padded = true; } // (room for waving arms and tails)
+  const mesh = new THREE.SkinnedMesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = true;
   mesh.add(sk.root); mesh.updateMatrixWorld(true); sk.skeleton.calculateInverses(); mesh.bind(sk.skeleton, mesh.matrixWorld);
   return mesh;
 }
