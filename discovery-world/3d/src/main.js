@@ -11,6 +11,7 @@ import { Sound, NOTES } from './audio.js';
 import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatures.js';
 import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
+import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -156,6 +157,21 @@ function bringFluffsHome() {
   setTimeout(() => { toast(home === 6 ? '🎉 All six Fluffkins are home! Thank you!' : `🏠 Welcome home, little Fluffkin! (${home} of 6) They sleep upstairs.`); Sound.chime(); for (let i = 0; i < 4; i++) burst(player.x + i - 2, 3, 0, RAINBOW, 20, 4); }, 400);
   discover('fluffhome'); updateCounters(); save();
 }
+
+// ---------------- friends: Pet Workshop, critters, balloon, sparkles ----------------
+function paintStamp() { // the painter bunny paints a picture on the big wall
+  const g = G.paint.ctx, W = G.paint.canvas.width, H = G.paint.canvas.height, x = 120 + Math.random() * (W - 240), y = 120 + Math.random() * (H - 240), k = Math.floor(Math.random() * 4);
+  g.save(); g.translate(x, y); g.lineWidth = 14; g.lineCap = 'round';
+  if (k === 0) { g.fillStyle = '#ff4f9a'; g.beginPath(); g.moveTo(0, 40); g.bezierCurveTo(-90, -20, -40, -90, 0, -40); g.bezierCurveTo(40, -90, 90, -20, 0, 40); g.fill(); }
+  else if (k === 1) { g.fillStyle = '#ffd23f'; g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 30 : 75; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.fill(); }
+  else if (k === 2) { RAINBOW.slice(0, 6).forEach((c, i) => { g.strokeStyle = c; g.beginPath(); g.arc(0, 50, 110 - i * 15, Math.PI, 0); g.stroke(); }); }
+  else { g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(0, 0, 70, 0, 7); g.fill(); g.fillStyle = '#3a2864'; g.beginPath(); g.arc(-24, -14, 9, 0, 7); g.arc(24, -14, 9, 0, 7); g.fill(); g.strokeStyle = '#3a2864'; g.lineWidth = 9; g.beginPath(); g.arc(0, 8, 34, .3, Math.PI - .3); g.stroke(); }
+  g.restore(); G.paint.tex.needsUpdate = true; world.painted = true; saveSoon();
+}
+const friends = initFriends(G, {
+  scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, world, UG,
+  tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
+});
 
 // ---------------- bubbles ----------------
 const bubbles = [], bubbleGeo = new THREE.SphereGeometry(1, 24, 16);
@@ -319,7 +335,7 @@ const hint = new THREE.Group(); scene.add(hint);
 { const c = new THREE.Mesh(new THREE.ConeGeometry(.28, .55, 20), toy('#ffd84a', { em: '#ffb000', ei: .5 })); c.rotation.x = Math.PI; hint.add(c); const r = new THREE.Mesh(new THREE.TorusGeometry(.3, .07, 10, 24), toy('#ff6fae', { em: '#ff6fae', ei: .4 })); r.position.y = .45; r.rotation.x = Math.PI / 2; hint.add(r); }
 function updateHint(t) {
   const P = player; let best = null, bd = 13;
-  if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
+  if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4 || (it.need && !it.need())) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
   hint.visible = !!best;
   if (best) { hint.position.set(best.x, best.y + best.hintY + Math.sin(t * 4) * .15, .3); hint.rotation.y = t * 2; }
 }
@@ -374,7 +390,7 @@ function doAction() {
   if (P.ride) { jump(); return; }
   const d = nearDoor(); if (d) { d.go(); return; }
   let best = null, bd = 3.2;
-  for (const it of G.interact) { if (it.layer !== P.layer) continue; const dd = Math.abs(it.x - P.x); if (dd < bd && Math.abs(it.y - P.y) < 3) { bd = dd; best = it; } }
+  for (const it of G.interact) { if (it.layer !== P.layer || (it.need && !it.need())) continue; const dd = Math.abs(it.x - P.x); if (dd < bd && Math.abs(it.y - P.y) < 3) { bd = dd; best = it; } }
   if (best) { best.run(); return; }
   creature.tickle(); Sound.giggle(); burst(P.x, P.y + 2, P.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2);
 }
@@ -534,7 +550,7 @@ let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: world.pet || null, petDraft: world.petDraft || null, balloon: world.balloon || null };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -544,6 +560,10 @@ function load() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '
 function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
+  const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
+  if (okRec(d.pet)) world.pet = { col: d.pet.col, ears: d.pet.ears, tail: d.pet.tail, pat: d.pet.pat };
+  if (okRec(d.petDraft)) world.petDraft = { col: d.petDraft.col, ears: d.petDraft.ears, tail: d.petDraft.tail, pat: d.petDraft.pat };
+  if (typeof d.balloon === 'string' && /^#[0-9a-f]{6}$/i.test(d.balloon)) world.balloon = d.balloon;
   if (typeof d.x === 'number' && isFinite(d.x)) player.x = clamp(d.x, .5, 202);
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
@@ -600,6 +620,7 @@ function step(dt) {
   T += dt;
   if (stick && stick.active && stick.dy < -45 && player.swim) { stick.swimT = (stick.swimT || 0) - dt; if (stick.swimT <= 0) { stick.swimT = .38; jump(); } }
   if (started) { updatePlayer(dt); updateFluffs(dt, T); updateBubbles(dt); }
+  friends.update(dt, T, player, world.trail);
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt); updateCamera(dt);
 }
 function frame() {
@@ -629,6 +650,7 @@ const saved = load();
 restore(saved);
 setCreature(player.creature);
 document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x.dataset.c === player.creature));
+friends.restored();
 updateCounters(); snapCamera(); updateBits(0);
 if (world.disc.has('drag')) $('dragHint').classList.add('gone');
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
@@ -646,6 +668,6 @@ window.__DDW3 = {
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
-  bodyScaleY: () => creature.parts.body.scale.y,
+  bodyScaleY: () => creature.parts.body.scale.y, friends,
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };

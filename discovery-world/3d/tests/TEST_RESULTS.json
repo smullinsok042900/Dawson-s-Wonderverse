@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T23:16:02.789Z",
+  "date": "2026-11-10T23:55:00.452Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 69,
-  "total": 69,
+  "passed": 79,
+  "total": 79,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 8.0"
+      "detail": "x 1.2 → 7.1"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=0.68"
+      "detail": "y=1.55"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 5.2→8.5, y 2.11"
+      "detail": "x 1.6→3.9, y 0.00"
     },
     {
       "name": "slide a finger up to jump",
       "ok": true,
-      "detail": "rose to y=1.60"
+      "detail": "rose to y=1.71"
     },
     {
       "name": "a small slide walks slowly; walking is never faster than normal",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 68% height"
+      "detail": "body squashed to 55% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"8.92\",\"creature\",\"0.0\"],[\"Mesh\",\"8.99\",\"creature\",\"0.0\"],[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"creature\",\"0.0\"]] P=5.39,0.00,0.00"
+      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.69\",\"creature\",\"0.1\"]] P=6.21,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -117,17 +117,17 @@
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=43.2 y=2.40"
+      "detail": "x=42.7 y=3.30"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.8 (ok)"
+      "detail": "got to x=16.6 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=10.8"
+      "detail": "x=14.1"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -5.11 → -3.56"
+      "detail": "y -3.40 → -1.70"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-1.62"
+      "detail": "y=-0.25"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=2.2 y=0.00"
+      "detail": "x=9.7 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.1"
+      "detail": "x=37.9"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -196,6 +196,51 @@
     },
     {
       "name": "and back down again",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Pet Workshop: tap a big button to change your pet design",
+      "ok": true,
+      "detail": "{\"col\":0,\"ears\":0,\"tail\":0,\"pat\":0} → {\"col\":1,\"ears\":0,\"tail\":0,\"pat\":0}"
+    },
+    {
+      "name": "pull the lever: an egg hatches your very own pet",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "your pet follows you",
+      "ok": true,
+      "detail": "pet is 1.7 away"
+    },
+    {
+      "name": "tap your pet: it does a trick",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the Balloon Bear gives you a balloon",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the Painter Bunny paints a picture on the wall",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the Drummer Frog plays when tapped",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the penguin dances when tapped",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the sleepy owl wakes up when tapped",
       "ok": true,
       "detail": ""
     },
@@ -227,7 +272,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.00"
+      "detail": "y=4.43"
     },
     {
       "name": "tap the carousel to ride",
@@ -247,12 +292,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=3.1"
+      "detail": "y=2.8"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "34 → 38"
+      "detail": "41 → 44"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -287,7 +332,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.851844867057621"
+      "detail": "k=0.9360932605028801"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -330,9 +375,14 @@
       "detail": ""
     },
     {
+      "name": "reload keeps your pet and your balloon",
+      "ok": true,
+      "detail": "{\"pet\":true,\"bal\":true}"
+    },
+    {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":38,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":44,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",
