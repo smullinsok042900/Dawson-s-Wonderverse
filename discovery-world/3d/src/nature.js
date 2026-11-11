@@ -11,6 +11,27 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 const canvas = (w, h = w) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
 let seed = 12345; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = a => a[Math.floor(rnd() * a.length)];
+// (build 18) for grass and leaves: light both sides of a blade or leaf the same (three.js normally flips the
+// normal on the back face, which turned half of all blades and leaves dark)
+// (build 18) leafy surface for bushes and tree crowns: overlapping leaves (light) with shady gaps between them (dark),
+// as a colour-detail texture plus matching gentle bumps (instead of a strong random-blob bump map)
+let leafDetailCache = null;
+export function leafDetail() {
+  if (leafDetailCache) return leafDetailCache;
+  const N = 256, [c, g] = canvas(N); g.fillStyle = '#5c5c5c'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 1100; i++) {
+    const x = rnd() * N, y = rnd() * N, L = 6 + rnd() * 6, a = rnd() * Math.PI * 2;
+    for (const [ox, oy] of [[0, 0], [N, 0], [-N, 0], [0, N], [0, -N]]) {
+      g.save(); g.translate(x + ox, y + oy); g.rotate(a);
+      const gr = g.createLinearGradient(0, -L * .5, 0, L * .5); const v = 200 + Math.floor(rnd() * 55); gr.addColorStop(0, `rgb(${v},${v},${v})`); gr.addColorStop(1, `rgb(${v - 70},${v - 70},${v - 70})`);
+      g.fillStyle = gr; g.strokeStyle = 'rgba(40,40,40,.45)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(-L, 0); g.quadraticCurveTo(0, -L * .55, L, 0); g.quadraticCurveTo(0, L * .55, -L, 0); g.fill(); g.stroke(); g.restore();
+    }
+  }
+  const map = tex(c), normal = tex(normalFromCanvas(c, 1.6), false); map.repeat.set(2, 2); normal.repeat.set(2, 2);
+  leafDetailCache = { map, normal }; return leafDetailCache;
+}
+const NO_FLIP = THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '');
 
 // turn a picture's brightness into bumps (a normal map)
 export function normalFromCanvas(src, strength = 2) {
@@ -42,10 +63,10 @@ let lawnCache = null;
 export function lawnTextures() {
   if (lawnCache) return lawnCache;
   const N = 512, [c, g] = canvas(N);
-  g.fillStyle = '#93db82'; g.fillRect(0, 0, N, N);
-  for (let i = 0; i < 260; i++) { g.fillStyle = pick(['#79c86f', '#93db87', '#6fbf68', '#a2e392', '#8ad57f']); g.globalAlpha = .18; const r = 12 + rnd() * 46, x = rnd() * N, y = rnd() * N; for (const [ox, oy] of [[0, 0], [N, 0], [-N, 0], [0, N], [0, -N]]) { g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill(); } }
+  g.fillStyle = '#74ad5f'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 260; i++) { g.fillStyle = pick(['#5f9b52', '#7cb565', '#679f58', '#8bbf6e', '#71a95e']); g.globalAlpha = .18; const r = 12 + rnd() * 46, x = rnd() * N, y = rnd() * N; for (const [ox, oy] of [[0, 0], [N, 0], [-N, 0], [0, N], [0, -N]]) { g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill(); } }
   g.globalAlpha = 1; g.lineCap = 'round';
-  for (let i = 0; i < 9000; i++) { const x = rnd() * N, y = rnd() * N, l = 3 + rnd() * 7, a = -Math.PI / 2 + (rnd() - .5) * .9; g.strokeStyle = pick(['#5aa957', '#6dbd65', '#9fe08f', '#b9ee9f', '#4f9d4f', '#80cf74']); g.lineWidth = 1 + rnd() * 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
+  for (let i = 0; i < 9000; i++) { const x = rnd() * N, y = rnd() * N, l = 3 + rnd() * 7, a = -Math.PI / 2 + (rnd() - .5) * .9; g.strokeStyle = pick(['#4d8a48', '#5f9b55', '#8ec275', '#a3cf86', '#457d43', '#6eaa5f']); g.lineWidth = 1 + rnd() * 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
   for (let i = 0; i < 40; i++) { g.fillStyle = pick(['#ffffff', '#fff3a6', '#ffd1ec']); g.beginPath(); g.arc(rnd() * N, rnd() * N, 1.6, 0, 7); g.fill(); }
   lawnCache = { map: tex(c), normal: tex(normalFromCanvas(c, 3.5), false) };
   return lawnCache;
@@ -110,11 +131,11 @@ export function scatterNature(scene, { ok, x0, x1, count = 520, bushes = 80 }) {
   for (const m of [stems, petals, mids]) { m.count = n; m.castShadow = false; m.receiveShadow = true; scene.add(m); }
   // bushes: soft leafy clumps along the back
   const clump = []; for (let i = 0; i < 7; i++) { const r = .35 + rnd() * .25, s = new THREE.SphereGeometry(r, 14, 10); s.translate((rnd() - .5) * .9, r * .8 + rnd() * .2, (rnd() - .5) * .6); clump.push(s); }
-  const bushG = mergeGeometries(clump), lm = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .75, sheen: .6, sheenColor: new THREE.Color('#e8ffd8'), normalMap: leafNormal(), normalScale: new THREE.Vector2(1.2, 1.2) });
+  const bushG = mergeGeometries(clump), lm = new THREE.MeshPhysicalMaterial({ color: '#ffffff', map: leafDetail().map, roughness: .8, sheen: .5, sheenRoughness: .6, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) });
   const bush = new THREE.InstancedMesh(bushG, lm, bushes); let b = 0; tries = 0;
   while (b < bushes && tries++ < bushes * 40) {
     const x = x0 + rnd() * (x1 - x0), z = -10.8 + rnd() * 5; if (!ok(x, z) || !ok(x + .8, z) || !ok(x - .8, z)) continue;
-    e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const s = .8 + rnd() * .9; m4.compose(V.set(x, 0, z), q, S.set(s, s * (.8 + rnd() * .4), s)); m4.elements[13] += terrainH(x, z); bush.setMatrixAt(b, m4); bush.setColorAt(b, cl.setHSL(.3 + rnd() * .07, .45 + rnd() * .2, .42 + rnd() * .12)); b++;
+    e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const s = .8 + rnd() * .9; m4.compose(V.set(x, 0, z), q, S.set(s, s * (.8 + rnd() * .4), s)); m4.elements[13] += terrainH(x, z); bush.setMatrixAt(b, m4); bush.setColorAt(b, cl.setHSL(.26 + rnd() * .06, .36 + rnd() * .14, .42 + rnd() * .1)); b++;
   }
   bush.count = b; bush.castShadow = true; bush.receiveShadow = true; scene.add(bush);
   return { flowers: n, bushes: b };
@@ -156,21 +177,23 @@ function bladeClump(n = 9) {
     const hue = rnd(); // some blades a little yellow, some a little blue-green
     for (let i = 0; i <= 3; i++) {
       const t = i / 3, y = t * h, off = bend * t * t, ww = w * Math.sin((1 - t * .85) * Math.PI / 2 + .2);
-      for (const sgn of [-1, 1]) { pos.push(x0 + dx * off + px * ww * sgn, y, z0 + dz * off + pz * ww * sgn); const k = .62 + t * .55; col.push(k * (.9 + hue * .18), k, k * (.72 + (1 - hue) * .12)); hh.push(t); }
+      for (const sgn of [-1, 1]) { pos.push(x0 + dx * off + px * ww * sgn, y, z0 + dz * off + pz * ww * sgn); const k = .4 + t * .62; col.push(k * (.92 + hue * .14 + t * .06), k, k * (.74 + (1 - hue) * .1)); hh.push(t); }
     }
     for (let i = 0; i < 3; i++) { const q = base + i * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
     base += 8;
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('gh', new THREE.Float32BufferAttribute(hh, 1)); g.setIndex(idx);
-  const nrm = new Float32Array(pos.length); for (let i = 0; i < nrm.length; i += 3) { nrm[i + 1] = 1; } g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+  // (build 18) normals: mostly up (soft, even light like a real lawn) with a little lean along each blade, so blades differ gently
+  const nrm = new Float32Array(pos.length); for (let b = 0, v = 0; b < n; b++) { const a = (b * 2.399) % 6.283; for (let i = 0; i < 8; i++, v++) { const nx = Math.cos(a) * .35, nz = Math.sin(a) * .35, l = Math.hypot(nx, 1, nz); nrm[v * 3] = nx / l; nrm[v * 3 + 1] = 1 / l; nrm[v * 3 + 2] = nz / l; } }
+  g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
   return g;
 }
 export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 60 : 1700, bands = [[-11, -2.2], [3.6, 4.45]] }) {
   const geo = bladeClump(9);
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, side: THREE.DoubleSide });
   mat.onBeforeCompile = sh => {
-    sh.uniforms.uTime = time;
+    sh.uniforms.uTime = time; sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', NO_FLIP);
     sh.vertexShader = 'uniform float uTime; attribute float gh;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec4 gw = instanceMatrix * vec4(0., 0., 0., 1.);
       float wind = sin(uTime * 1.7 + gw.x * .45 + gw.z * .3) * .7 + sin(uTime * 3.1 + gw.x * 1.3) * .3;
@@ -184,7 +207,7 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
       let zr = rnd() * area, z = 0; for (const [z0, z1] of bands) { if (zr < z1 - z0) { z = z0 + zr; break; } zr -= z1 - z0; }
       const x = cx + rnd() * Math.min(chunk, x1 - cx); if (!ok(x, z)) continue;
       e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const near = z > -5.5 && z < 0 ? 1 : 0, s = (.8 + rnd() * .6) * (near ? .85 : 1.1); m4.compose(V.set(x, terrainH(x, z), z), q, S.set(s, s * (.8 + rnd() * .5), s));
-      im.setMatrixAt(n, m4); im.setColorAt(n, cl.setHSL(.25 + rnd() * .08, .55 + rnd() * .2, .5 + rnd() * .1)); n++;
+      im.setMatrixAt(n, m4); const dry = rnd() < .08; im.setColorAt(n, dry ? cl.setHSL(.15 + rnd() * .04, .42, .44) : cl.setHSL(.235 + rnd() * .07, .4 + rnd() * .14, .34 + rnd() * .1)); n++;
     }
     im.count = n; im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im);
   }
@@ -203,20 +226,25 @@ function leafTexture() {
   for (let i = 0; i < 46; i++) {
     const x = 20 + rnd() * (N - 40), y = 20 + rnd() * (N - 40), a = rnd() * Math.PI * 2, L = 22 + rnd() * 18;
     g.save(); g.translate(x, y); g.rotate(a);
-    const gr = g.createLinearGradient(-L, 0, L, 0); const base = pick(['#4f9e4a', '#5fb352', '#6cc061', '#478f45', '#7ccc6a']); gr.addColorStop(0, base); gr.addColorStop(1, '#a8e08a');
+    const gr = g.createLinearGradient(-L, 0, L, 0); const base = pick(['#4a8e44', '#58a04c', '#63a955', '#437f40', '#6eb25c']); gr.addColorStop(0, base); gr.addColorStop(1, '#9cc97c');
     g.fillStyle = gr; g.beginPath(); g.moveTo(-L, 0); g.quadraticCurveTo(0, -L * .45, L, 0); g.quadraticCurveTo(0, L * .45, -L, 0); g.fill();
     g.strokeStyle = 'rgba(30,70,30,.5)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-L * .9, 0); g.lineTo(L * .9, 0); g.stroke();
     for (let v = -2; v <= 2; v++) { if (!v) continue; g.beginPath(); g.moveTo(v * L * .3, 0); g.lineTo(v * L * .3 + L * .18, v > 0 ? -L * .2 : L * .2); g.stroke(); }
     g.restore();
   }
-  leafTexCache = new THREE.CanvasTexture(c); leafTexCache.colorSpace = THREE.SRGBColorSpace; leafTexCache.anisotropy = 4; return leafTexCache;
+  leafTexCache = new THREE.CanvasTexture(c); leafTexCache.generateMipmaps = true; leafTexCache.colorSpace = THREE.SRGBColorSpace; leafTexCache.anisotropy = 4; return leafTexCache;
 }
 let leafMatCache = null, barkMatCache = null, canopyMats = null, canopyCache = null;
 // a lumpy cloud-like blob for tree tops
-function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.IcosahedronGeometry(1, 4), p = g.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); const n = 1 + Math.sin(v.x * 4.1) * Math.sin(v.y * 3.7 + 1) * Math.sin(v.z * 4.3) * .13 + Math.sin(v.x * 9 + v.z * 7) * .03; v.multiplyScalar(n); p.setXYZ(i, v.x, v.y, v.z); } g.computeVertexNormals(); canopyCache = g; return g; }
+function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.IcosahedronGeometry(1, 4), p = g.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); const n = 1 + Math.sin(v.x * 4.1) * Math.sin(v.y * 3.7 + 1) * Math.sin(v.z * 4.3) * .13 + Math.sin(v.x * 9 + v.z * 7) * .03; v.multiplyScalar(n); p.setXYZ(i, v.x, v.y, v.z); } g.computeVertexNormals();
+  // (build 18) soften: lean every normal toward the round crown, so the lumps read as soft clusters, not facets
+  { const nn = g.attributes.normal, w = new THREE.Vector3(); for (let i = 0; i < nn.count; i++) { w.fromBufferAttribute(p, i).normalize().multiplyScalar(.65); v.fromBufferAttribute(nn, i).multiplyScalar(.35).add(w).normalize(); nn.setXYZ(i, v.x, v.y, v.z); } }
+  canopyCache = g; return g; }
 export function makeTree(scene, x, z, s = 1) {
   if (!barkMatCache) { const B = barkTextures(); B.map.repeat.set(1, 2); B.normal.repeat.set(1, 2); barkMatCache = new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(1.5, 1.5), roughness: .92 }); }
-  if (!leafMatCache) leafMatCache = new THREE.MeshStandardMaterial({ map: leafTexture(), alphaTest: .5, side: THREE.DoubleSide, roughness: .75, color: '#ffffff' });
+  if (!leafMatCache) { leafMatCache = new THREE.MeshStandardMaterial({ map: leafTexture(), alphaTest: .5, side: THREE.DoubleSide, roughness: .75, color: '#ffffff' });
+    // (build 18) each leaf card is lit as part of a round crown: its normal points out from the middle of the tree, never flipped
+    leafMatCache.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n#ifdef USE_INSTANCING\n vec3 crown = instanceMatrix[3].xyz - vec3(0., 2.1, 0.); objectNormal = inverse(mat3(instanceMatrix)) * normalize(normalize(crown) + vec3(0., .55, 0.));\n#endif'); sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>', NO_FLIP); }; }
   const g = new THREE.Group(); g.position.set(x, terrainH(x, z), z); scene.add(g);
   const segs = [], tips = [], up = new THREE.Vector3(0, 1, 0);
   // grow: each branch is a tapered cylinder pointing along dir
@@ -241,7 +269,7 @@ export function makeTree(scene, x, z, s = 1) {
   const flare = new THREE.Mesh(new THREE.ConeGeometry(.42 * s, .35 * s, 12, 1, true), barkMatCache); flare.position.y = .12 * s; g.add(flare);
   // leaves: clusters of leaf cards around every branch tip, in layers
   // soft, full canopy: big leafy blobs around the branch tips (build 16), with a fringe of leaf cards
-  if (!canopyMats) canopyMats = ['#7fd36e', '#93df7c', '#6cc663', '#a6e88a'].map(c => new THREE.MeshPhysicalMaterial({ color: c, roughness: .82, sheen: .9, sheenRoughness: .5, sheenColor: new THREE.Color('#f4ffd0'), normalMap: leafNormal(), normalScale: new THREE.Vector2(1.6, 1.6) }));
+  if (!canopyMats) canopyMats = ['#74b65c', '#84c266', '#69a957', '#93cb70'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .6, sheenRoughness: .6, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   const blobG = canopyGeo();
   tips.forEach((t, i) => { if (i % 2) return; const m = new THREE.Mesh(blobG, canopyMats[(i + Math.round(x)) % 4]); const r = (.55 + rnd() * .3) * s; m.scale.set(r, r * .85, r); m.position.copy(t).add(new THREE.Vector3(0, .15 * s, 0)); m.rotation.y = rnd() * 6; m.castShadow = true; m.receiveShadow = true; g.add(m); });
   const perTip = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 3 : 10, cards = new THREE.InstancedMesh(new THREE.PlaneGeometry(.95 * s, .95 * s), leafMatCache, tips.length * perTip), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();

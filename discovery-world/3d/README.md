@@ -37,6 +37,50 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 18: lighting pipeline correction and fidelity upgrade (audit first, then fixes)
+Nothing new was added; this build makes what's already there render properly. The backup of build 17 is `backups/3D_build17_index.html`.
+
+**Audit: why the picture looked washed out** (measured by switching each light on alone at the same camera position)
+- The scene's environment (reflection) lighting was a bright *indoor studio* environment (`RoomEnvironment`) at 0.62. On its own it lit the park to an average brightness of 0.68, brighter than the sun (0.36). That light comes from every direction, casts no shadows and is unaffected by AO, so it filled every shadow and pushed pastel colours past white.
+- Bloom started at 0.92, below ordinary sunlit pastel surfaces, so large areas glowed and bled together (the haze).
+- Fog started at 26 m (build 17), hazing the middle distance.
+- Double-sided grass blades and leaf cards had their normals flipped on the back face (three.js default). Half of all blades and leaves therefore faced "down" and rendered dark, which made the harsh, jagged grass.
+- Grass and tree colours were saturated lime (grass up to S 0.75, L 0.6, with tips boosted 1.17x).
+- A few canvas textures were not marked sRGB, so they displayed too light.
+
+**Fixes**
+- **Lighting rig:** a sky-only environment (blue above, warm horizon, olive ground bounce) at 0.5, hemisphere 0.55, sun 3.1 warm, rim 0.55, exposure 0.95. Key to fill is about 3:1, so objects have form and visible shadows.
+- **Bloom** only above 1.5 (true glow: sparkles, lamps, glints), at half the previous strength.
+- **Fog** pushed back to 55–190 m. No artificial saturation boost; contrast now comes from the lighting.
+- **Final pass:** mild contrast-adaptive sharpening (crisper textures, gentle on hard edges) and dithering (no banding in the sky or soft gradients).
+- **AO:** GTAO radius increased (0.7 to 1.1) for stronger contact shading where things meet.
+- **Vegetation:**
+  - Grass blades are lit the same on both sides, with darker roots (natural self-shadowing) and soft varied normals.
+  - A cohesive meadow palette for lawn, grass, bushes, hedges and trees.
+  - Tree leaf cards are lit as part of a round crown.
+  - A new leaf-cluster texture (overlapping leaves with shady gaps, plus matching gentle bumps) for bushes, hedges and tree crowns, replacing a strong random-blob bump map.
+  - Crown normals softened toward the round shape.
+- **Geometry and textures (`src/refine.js`):** a one-time pass at load. Untouched primitives get more segments, biggest and most visible first, within a triangle budget of 250k on phones. Remaining sharp boxes get bevelled edges (most boxes were already rounded). All textures get 8x anisotropic filtering, colour textures are marked sRGB, and gloss is capped (minimum roughness 0.3, clearcoat at most 0.5). This run's result: 19 boxes bevelled, 98 spheres and 34 cylinders/cones smoothed, 4 textures colour-fixed, 94 materials de-glossed.
+
+**Measured (same 6 camera positions, HUD excluded, 0–1 scale)**
+
+| view | brightness before → after | near-white pixels | contrast (std) |
+|---|---|---|---|
+| studio | 0.75 → 0.63 | 18% → 13% | 0.15 → 0.20 |
+| carousel | 0.81 → 0.65 | 28% → 3% | 0.15 → 0.17 |
+| park | 0.78 → 0.60 | 26% → 4% | 0.17 → 0.21 |
+| Balloon Bear | 0.79 → 0.63 | 19% → 4% | 0.14 → 0.17 |
+| dinosaur | 0.81 → 0.62 | 32% → 4% | 0.16 → 0.18 |
+| castle | 0.84 → 0.71 | 38% → 15% | 0.12 → 0.19 |
+
+Before/after: `screenshots/compare_b18_1.jpg` and `screenshots/compare_b18_2.jpg`.
+
+**Limits (honest)**
+- Asset sites (Poly Haven, Quaternius, Kenney) are blocked from the build environment, so models and textures stay procedural (sculpted or canvas-generated).
+- The geometry pass refines simple shapes only. The sculpted characters and custom shapes are unchanged in this build.
+- The castle front faces the sun head-on and is built from pale pastels, so it stays the lightest scene.
+- Screenshots come from headless Chromium with software WebGL. Not tested on a physical iPhone.
+
 ## 3D build 17: professional picture pipeline (rendering overhaul)
 This build improves how everything already in the game is drawn. It adds no new content.
 - **HDR rendering:** the world is drawn into a high-range picture with 4x anti-aliasing, then tone-mapped (Neutral) and colour-managed in one final pass.

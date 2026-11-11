@@ -14,7 +14,7 @@ import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
-import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
+import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -228,9 +228,9 @@ export function buildWorld(G) {
 
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
-  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
+  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#93cf9c', '#82c28e', '#a6dbb0'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
-  const leafMats = ['#5fc77e', '#7ed895', '#4fb86e', '#8fe0a0'].map(c => new THREE.MeshPhysicalMaterial({ color: c, roughness: .7, sheen: .7, sheenColor: new THREE.Color('#eaffd8'), normalMap: leafNormal(), normalScale: new THREE.Vector2(1.4, 1.4) }));
+  const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   const tree = (x, z, s = 1) => makeTree(scene, x, z, s); // build 15: real branching trees
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)

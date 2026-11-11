@@ -19,7 +19,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
-import { fabricMat, normalFromCanvas, leafNormal as leafNormalK } from './nature.js';
+import { fabricMat, normalFromCanvas, leafDetail } from './nature.js';
 
 // pastel stone bricks with soft bumps (castle walls), and scalloped roof tiles
 function brickMat() {
@@ -194,7 +194,7 @@ export function initKingdom(G, api) {
     // climbing roses up the towers (leafy vines with flowers)
     for (const tx of [-6.6, 6.6]) for (let i = 0; i < 26; i++) { const a = (tx > 0 ? -1 : 1) * .5 + Math.sin(i * .7) * .5 + Math.PI / 2, y = .3 + i * .25; const v = add2(new THREE.Mesh(new THREE.SphereGeometry(i % 3 ? .12 : .1, 10, 8), i % 3 ? toy('#5fc06a', { r: .7, sheen: .5 }) : toy('#ff6f9f', { r: .5 })), tx + Math.cos(a) * 1.55, y, -4.9 + Math.sin(a) * 1.55); v.castShadow = false; }
     // trimmed hedges and topiary balls in front
-    const hedgeM = new THREE.MeshPhysicalMaterial({ color: '#6cc86a', roughness: .85, sheen: .8, sheenColor: new THREE.Color('#e8ffd0'), normalMap: leafNormalK(), normalScale: new THREE.Vector2(1.5, 1.5) });
+    const hedgeM = new THREE.MeshPhysicalMaterial({ color: '#7fbf68', map: leafDetail().map, roughness: .8, sheen: .5, sheenRoughness: .6, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }); // (build 18: leafy detail)
     for (const hx of [-4.7, 4.7]) { add2(new THREE.Mesh(new RoundedBoxGeometry(2.6, .8, .8, 3, .3), hedgeM), hx, .4, -3.3); }
     for (const tx of [-3.1, 3.1]) { add2(new THREE.Mesh(new THREE.CylinderGeometry(.22, .26, .4, 16), toy('#ffffff', { r: .5 })), tx, .2, -3.2); add2(new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .4, 8), toy('#8a5a3a')), tx, .6, -3.2); add2(new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 16), hedgeM), tx, 1.1, -3.2); }
   }

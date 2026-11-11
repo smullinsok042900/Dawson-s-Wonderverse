@@ -24,36 +24,43 @@ export function makePost(renderer, scene, camera, { mobile }) {
   const rtB1 = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }), rtB2 = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
   const gtao = new GTAOPass(scene, camera, 1, 1, { depthTexture: depth });
   gtao.output = GTAOPass.OUTPUT.Default; gtao.blendIntensity = 1;
-  gtao.updateGtaoMaterial({ radius: .7, distanceExponent: 1.3, thickness: 1.4, scale: 1.25, samples: mobile ? 8 : 12, distanceFallOff: 1, screenSpaceRadius: false });
+  gtao.updateGtaoMaterial({ radius: 1.1, distanceExponent: 1.3, thickness: 1.4, scale: 1.25, samples: mobile ? 8 : 12, distanceFallOff: 1, screenSpaceRadius: false });
   gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: mobile ? 8 : 12 });
 
   // bloom: keep only what is brighter than white, then blur it (quarter size)
-  const bright = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tIn: { value: null }, uThresh: { value: .92 } }, vertexShader: vert,
+  const bright = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tIn: { value: null }, uThresh: { value: 1.5 } }, vertexShader: vert,
     fragmentShader: 'uniform sampler2D tIn; uniform float uThresh; varying vec2 vUv; void main(){ vec3 c = texture2D(tIn, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(uThresh, uThresh + .6, l), 1.); }' }));
   const blurMat = new THREE.ShaderMaterial({ uniforms: { tIn: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: vert,
     fragmentShader: 'uniform sampler2D tIn; uniform vec2 uDir; varying vec2 vUv; void main(){ vec3 c = texture2D(tIn, vUv).rgb * .227; c += (texture2D(tIn, vUv + uDir * 1.385).rgb + texture2D(tIn, vUv - uDir * 1.385).rgb) * .316; c += (texture2D(tIn, vUv + uDir * 3.231).rgb + texture2D(tIn, vUv - uDir * 3.231).rgb) * .07; gl_FragColor = vec4(c, 1.); }' });
   const blur = new FullScreenQuad(blurMat);
 
-  // final: tone mapping + colour grade + vignette, written straight to the screen
+  // final: sharpen + tone mapping + colour grade + dithering, written straight to the screen
+  // (build 18: no artificial saturation boost; contrast comes from the lighting now. A light
+  //  contrast-adaptive sharpen keeps textures crisp, and a tiny dither removes banding in the sky.)
   const finalMat = new THREE.ShaderMaterial({
-    uniforms: { tIn: { value: null }, tBloom: { value: null }, uBloom: { value: .32 }, toneMappingExposure: { value: 1 }, uSat: { value: 1.12 }, uContrast: { value: 1.06 }, uVig: { value: .22 } },
+    uniforms: { tIn: { value: null }, tBloom: { value: null }, uBloom: { value: .16 }, toneMappingExposure: { value: 1 }, uContrast: { value: 1.05 }, uVig: { value: .14 }, uTexel: { value: new THREE.Vector2(1, 1) }, uSharp: { value: .2 } },
     vertexShader: vert,
     fragmentShader: `
-      uniform sampler2D tIn; uniform sampler2D tBloom; uniform float uBloom; uniform float uSat; uniform float uContrast; uniform float uVig; varying vec2 vUv;
+      uniform sampler2D tIn; uniform sampler2D tBloom; uniform float uBloom; uniform float uContrast; uniform float uVig; uniform vec2 uTexel; uniform float uSharp; varying vec2 vUv;
       // (three.js adds the tone mapping and colour space functions to every ShaderMaterial)
+      vec3 tm(vec3 c){ return NeutralToneMapping(c); }
+      float luma(vec3 c){ return dot(c, vec3(.2126, .7152, .0722)); }
       void main(){
-        vec3 c = texture2D(tIn, vUv).rgb + texture2D(tBloom, vUv).rgb * uBloom;
-        c = NeutralToneMapping(c);
-        // colour grade (in linear light): richer colour, then a soft S-curve
-        float l = dot(c, vec3(.2126, .7152, .0722));
-        c = mix(vec3(l), c, uSat);
-        c = clamp(c, 0., 1.);
-        vec4 s = sRGBTransferOETF(vec4(c, 1.));
-        vec3 g = s.rgb;
-        g = (g - .5) * uContrast + .5;
-        g += vec3(.012, .004, -.006) * smoothstep(.45, 1., l);   // warm highlights
-        g += vec3(-.006, -.002, .014) * (1. - smoothstep(0., .35, l)); // cool shadows
-        float d = length(vUv - .5); g *= 1. - uVig * smoothstep(.35, .85, d);
+        vec3 c = tm(texture2D(tIn, vUv).rgb);
+        vec3 n = tm(texture2D(tIn, vUv + vec2(0., uTexel.y)).rgb), s = tm(texture2D(tIn, vUv - vec2(0., uTexel.y)).rgb);
+        vec3 e = tm(texture2D(tIn, vUv + vec2(uTexel.x, 0.)).rgb), w = tm(texture2D(tIn, vUv - vec2(uTexel.x, 0.)).rgb);
+        // contrast-adaptive sharpening: strong on soft detail, gentle on edges that are already hard
+        float mn = min(luma(c), min(min(luma(n), luma(s)), min(luma(e), luma(w)))), mx = max(luma(c), max(max(luma(n), luma(s)), max(luma(e), luma(w))));
+        float amt = uSharp * sqrt(clamp(min(mn, 1. - mx) / max(mx, 1e-3), 0., 1.));
+        c = clamp(c + (c * 4. - n - s - e - w) * amt * .25, 0., 1.);
+        c += tm(texture2D(tBloom, vUv).rgb) * uBloom; // glow (only from truly bright things)
+        float l = luma(c);
+        vec3 g = sRGBTransferOETF(vec4(clamp(c, 0., 1.), 1.)).rgb;
+        g = (g - .5) * uContrast + .5;                                   // a gentle contrast lift
+        g += vec3(.010, .004, -.006) * smoothstep(.5, 1., l);            // warm highlights
+        g += vec3(-.004, -.001, .010) * (1. - smoothstep(0., .3, l));     // cool shadows
+        float d = length(vUv - .5); g *= 1. - uVig * smoothstep(.4, .9, d);
+        g += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - .5) / 255.; // dither: no banding
         gl_FragColor = vec4(clamp(g, 0., 1.), 1.);
       }` });
   const fin = new FullScreenQuad(finalMat);
@@ -63,7 +70,7 @@ export function makePost(renderer, scene, camera, { mobile }) {
       const W = Math.max(1, Math.floor(w * dpr)), H = Math.max(1, Math.floor(h * dpr));
       rtScene.setSize(W, H); rtAO.setSize(W, H);
       gtao.setSize(Math.max(1, W >> 1), Math.max(1, H >> 1)); // AO at half size
-      const bw = Math.max(1, W >> 2), bh = Math.max(1, H >> 2); rtB1.setSize(bw, bh); rtB2.setSize(bw, bh); post.bt = [1 / bw, 1 / bh];
+      finalMat.uniforms.uTexel.value.set(1 / W, 1 / H); const bw = Math.max(1, W >> 2), bh = Math.max(1, H >> 2); rtB1.setSize(bw, bh); rtB2.setSize(bw, bh); post.bt = [1 / bw, 1 / bh];
     },
     render() {
       renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
