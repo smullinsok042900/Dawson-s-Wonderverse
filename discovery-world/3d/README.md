@@ -37,6 +37,13 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## Home-screen app: "Dawson's Discovery World" (full screen, works offline)
+On the iPhone, open https://smullinsok042900.github.io/Dawson-s-Wonderverse/discovery-world/3d/ in **Safari**. Tap the **Share** button (the square with an arrow), then **Add to Home Screen**, then **Add**.
+
+The icon is called **Dawson's World** and shows Pip. It opens full screen with no Safari bars, and keeps a copy on the phone so it works without internet. New versions download automatically when online.
+
+Technically, it is a web app manifest (`manifest.webmanifest`), app icons, and a small offline helper (`sw.js`). There is nothing to buy and no App Store needed.
+
 ## 3D build 6: the Cloud Kingdom (the world goes up)
 - **A rope ladder** next to the climbing blocks climbs into the sky. Slide a finger up or down to climb, or tap JUMP to climb a step. Slide hard sideways to let go. There are star bits on the way up.
 - **The Cloud Kingdom** above the Playhouse and Studio:
