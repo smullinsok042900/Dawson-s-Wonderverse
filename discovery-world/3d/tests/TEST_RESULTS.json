@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-11T09:12:42.730Z",
+  "date": "2026-11-11T14:32:00.880Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 134,
+  "passed": 132,
   "total": 136,
   "results": [
     {
@@ -17,7 +17,7 @@
     {
       "name": "four big arrow buttons (◀ ▶ ▲ ▼) at the bottom left",
       "ok": true,
-      "detail": "[[22,268,62,56],[112,268,62,56],[70,220,56,62],[70,310,56,62]]"
+      "detail": "[[21,277,57,52],[104,277,57,52],[65,233,52,57],[65,316,52,57]]"
     },
     {
       "name": "jump / paw buttons are big (≥ 60 px) and on screen",
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 4.9"
+      "detail": "x 1.2 → 3.4"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.55"
+      "detail": "y=1.60"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 2.6→4.9, y 0.00"
+      "detail": "x 0.4→3.2, y 0.80"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.76"
+      "detail": "rose to y=1.60"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -92,7 +92,7 @@
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 311,229 lands on: game [[\"SkinnedMesh\",\"9.04\",\"creature\",\"0.0\"]] P=6.90,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=5.60,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,12 +112,12 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.33"
+      "detail": "highest y=2.77"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=38.7 y=2.56"
+      "detail": "x=40.1 y=3.66"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -3.07 → -1.22"
+      "detail": "y -4.87 → -3.32"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,7 +157,7 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-0.85"
+      "detail": "y=-0.42"
     },
     {
       "name": "swim up and climb out of the ball pit",
@@ -217,7 +217,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 1.4 away"
+      "detail": "pet is 2.0 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.051 → 1.038, z=-3.4"
+      "detail": "u 0.051 → 1.047, z=-3.4"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -371,28 +371,28 @@
     },
     {
       "name": "tap a station sign: the train chugs in and you hop aboard",
-      "ok": true,
-      "detail": "ride=train z=3.20"
+      "ok": false,
+      "detail": "ride=null z=-0.00"
     },
     {
       "name": "JUMP on the train toots the whistle (and you stay on)",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "hold ▶ to drive the train yourself",
-      "ok": true,
-      "detail": "x 170.0 → 171.0"
+      "ok": false,
+      "detail": "x 170.0 → 172.6"
     },
     {
       "name": "let go and the train stops",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "PAW: hop off the train (anywhere)",
       "ok": true,
-      "detail": "ride=null x=170.0"
+      "detail": "ride=null x=172.6"
     },
     {
       "name": "tap the Marble Machine board: a marble drops",
@@ -471,8 +471,8 @@
     },
     {
       "name": "tap the sky whale: ride on its back",
-      "ok": false,
-      "detail": "ride=whale y=9.5"
+      "ok": true,
+      "detail": "ride=whale y=17.2"
     },
     {
       "name": "JUMP hops off the whale onto the clouds",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.13"
+      "detail": "y=3.13"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=2.2"
+      "detail": "y=1.6"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "42 → 45"
+      "detail": "46 → 49"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,17 +597,17 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.2808279781508645"
+      "detail": "k=0.5616559563017284"
     },
     {
       "name": "walk off the top onto the upstairs floor",
-      "ok": false,
-      "detail": "y=4.324750863523306"
+      "ok": true,
+      "detail": "y=4.4"
     },
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=5.95"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":45,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":49,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",

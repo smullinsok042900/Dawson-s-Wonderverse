@@ -39,6 +39,9 @@ export function initFriends(G, api) {
   const add = o => { scene.add(o); return o; };
   const M = (c, o) => toy(c, o);
   const UGF = api.UG.floor;
+  // a soft shadow on the ground under a character (makes them sit in the world)
+  const shadowMat = G.aoTex ? new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true, depthWrite: false, opacity: .85, polygonOffset: true, polygonOffsetFactor: -2 }) : null;
+  function contactShadow(root, w, d) { if (!shadowMat) return; const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), shadowMat); m.rotation.x = -Math.PI / 2; m.position.y = .015; m.renderOrder = 1; root.add(m); }
   const fluffy = (c, o) => { const m = toy(c, { r: .6, cc: .2, sheen: 1, sheenColor: '#ffffff', ...o }); m.normalMap = plushNormal(); m.normalScale.set(.35, .35); return m; };
 
   // =================== PET WORKSHOP (underground, left end of the Cave Hall) ===================
@@ -101,7 +104,7 @@ export function initFriends(G, api) {
   function comeAlong(f) { if (!followers.includes(f)) followers.push(f); f.waiting = false; Sound.chime(); burst(f.pos.x, f.pos.y + 1.1, f.pos.z, ['#ff6fae', '#fff', '#ffd84a'], 12, 2); }
   function followerTrick(f) { f.trick = 1.2; Sound.giggle(); burst(f.pos.x, f.pos.y + 1, f.pos.z, ['#ff8fc8', '#ffd84a'], 12, 2); }
   function spawnPet(rec, x, y, z) {
-    const p = buildPet(rec, .9); add(p.root);
+    const p = buildPet(rec, .9); add(p.root); contactShadow(p.root, .8, .7);
     const f = addFollower({ kind: 'pet', root: p.root, pet: p }); if (x != null) f.pos.set(x, y, z);
     pets.push(f); const idx = pets.length - 1;
     p.root.userData.tap = () => p.root.children[0].userData.tapFn(); p.root.children[0].userData.tapFn = () => { world.petStay = world.petStay || []; if (f.waiting) { comeAlong(f); world.petStay[idx] = false; followerTrick(f); } else { waveBye(f); world.petStay[idx] = true; } discover('pettrick', 'Your pet does a trick!'); api.saveSoon(); }; G.taps.push(p.root);
@@ -113,7 +116,7 @@ export function initFriends(G, api) {
   world.buddies = world.buddies || {};
   const buddies = {};
   function buddy(id, x, z, emoji, build, o = {}) {
-    const root = new THREE.Group(); add(root); const parts = build(root) || {};
+    const root = new THREE.Group(); add(root); const parts = build(root) || {}; if (!o.fly) contactShadow(root, 1.1, .8);
     root.traverse(m => { if (m.isMesh) m.castShadow = true; });
     const b = { id, home: new THREE.Vector3(x, 0, z), root, parts, emoji, fly: !!o.fly, f: null, t: Math.random() * 6 };
     root.position.copy(b.home);
@@ -158,7 +161,7 @@ export function initFriends(G, api) {
   const critters = [];
   function critter(kind, x, y, z, build, onTap, disc, msg) {
     const root = new THREE.Group(); root.position.set(x, y, z); add(root);
-    const parts = build(root);
+    const parts = build(root); contactShadow(root, kind === 'unicorn' ? 2.2 : 1.3, kind === 'unicorn' ? 1.1 : 1.0);
     const c = { kind, root, parts, x, y, z, t: Math.random() * 6, act: 0, near: 0, onTap, disc, msg };
     root.userData.tap = () => tapCritter(c); root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => tapCritter(c); } }); G.taps.push(root);
     G.interact.push({ x, y, layer: '', disc, run: () => tapCritter(c), hintY: 2.6 });

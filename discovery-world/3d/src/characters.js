@@ -22,33 +22,51 @@ const mixC = (a, b, t) => '#' + new THREE.Color(a).lerp(new THREE.Color(b), t).g
 const irisTexCache = new Map();
 function irisTexture(color) {
   if (irisTexCache.has(color)) return irisTexCache.get(color);
-  const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d');
-  // x = around the eye, y = from the pupil (top) out to the rim (bottom)
-  const base = new THREE.Color(color), light = '#' + base.clone().lerp(new THREE.Color('#ffffff'), .45).getHexString(), dark = '#' + base.clone().multiplyScalar(.45).getHexString();
-  const gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, '#0b0614'); gr.addColorStop(.36, '#0b0614'); gr.addColorStop(.42, dark); gr.addColorStop(.6, light); gr.addColorStop(.85, color); gr.addColorStop(.93, dark); gr.addColorStop(1, '#1a0f2a');
-  g.fillStyle = gr; g.fillRect(0, 0, 128, 64);
-  for (let i = 0; i < 90; i++) { const x = Math.random() * 128; g.strokeStyle = `rgba(${Math.random() < .5 ? '255,255,255' : '20,10,40'},${.12 + Math.random() * .18})`; g.lineWidth = 1; g.beginPath(); g.moveTo(x, 26); g.lineTo(x + (Math.random() - .5) * 3, 54); g.stroke(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; irisTexCache.set(color, t); return t;
+  // build 16: a big, sparkly iris. The texture wraps around the eye: x = around, y = from the pupil (top) out to the rim (bottom)
+  const W = 256, H = 128, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const base = new THREE.Color(color), hex = k => '#' + k.getHexString();
+  const deep = hex(base.clone().multiplyScalar(.35)), mid = hex(base), light = hex(base.clone().lerp(new THREE.Color('#ffffff'), .5)), glow = hex(base.clone().lerp(new THREE.Color('#fff6c8'), .65));
+  const gr = g.createLinearGradient(0, 0, 0, H);
+  gr.addColorStop(0, '#07040c'); gr.addColorStop(.3, '#0a0612'); gr.addColorStop(.335, deep); gr.addColorStop(.45, mid); gr.addColorStop(.62, glow); gr.addColorStop(.78, light); gr.addColorStop(.88, mid); gr.addColorStop(.95, deep); gr.addColorStop(1, '#120a20');
+  g.fillStyle = gr; g.fillRect(0, 0, W, H);
+  // fine radial fibres and a few bright flecks
+  for (let i = 0; i < 220; i++) { const x = Math.random() * W, y0 = H * (.34 + Math.random() * .1), y1 = H * (.8 + Math.random() * .12); g.strokeStyle = `rgba(${Math.random() < .55 ? '255,255,240' : '20,10,40'},${.08 + Math.random() * .16})`; g.lineWidth = .8 + Math.random() * .8; g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + (Math.random() - .5) * 6, (y0 + y1) / 2, x + (Math.random() - .5) * 4, y1); g.stroke(); }
+  for (let i = 0; i < 26; i++) { g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(Math.random() * W, H * (.5 + Math.random() * .3), .8 + Math.random() * 1.4, 0, 7); g.fill(); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; irisTexCache.set(color, t); return t;
 }
-const SCLERA = new THREE.MeshPhysicalMaterial({ color: '#fbf8ff', roughness: .35, clearcoat: .4 });
-const CORNEA = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0, metalness: 0, clearcoat: 1, clearcoatRoughness: 0, transparent: true, opacity: .18, depthWrite: false });
-const SHINE = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+const SCLERA = new THREE.MeshPhysicalMaterial({ color: '#fdfbff', roughness: .3, clearcoat: .5, sheen: .3, sheenColor: new THREE.Color('#ffe8f4') });
+const CORNEA = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0, metalness: 0, clearcoat: 1, clearcoatRoughness: 0, transparent: true, opacity: .12, depthWrite: false });
+const SHINE = new THREE.MeshBasicMaterial({ color: '#ffffff' }), SHINE2 = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .75 });
+const irisMatCache = new Map();
+function irisMat(color) { if (!irisMatCache.has(color)) { const tx = irisTexture(color); irisMatCache.set(color, new THREE.MeshPhysicalMaterial({ map: tx, emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: .32, roughness: .25, clearcoat: .8 })); } return irisMatCache.get(color); }
 function makeEye(r, irisColor, lidMat) {
   const g = new THREE.Group();
-  const ball = new THREE.Mesh(cached('eyeball', () => new THREE.SphereGeometry(1, 28, 20)), SCLERA); ball.scale.setScalar(r); g.add(ball);
-  const iris = new THREE.Mesh(cached('iris', () => { const s = new THREE.SphereGeometry(1.012, 32, 10, 0, Math.PI * 2, 0, .78); s.rotateX(Math.PI / 2); return s; }), new THREE.MeshPhysicalMaterial({ map: irisTexture(irisColor), roughness: .3, clearcoat: .6 }));
-  iris.scale.setScalar(r); g.add(iris);
-  const cornea = new THREE.Mesh(cached('cornea', () => { const s = new THREE.SphereGeometry(1.05, 28, 12, 0, Math.PI * 2, 0, .9); s.rotateX(Math.PI / 2); return s; }), CORNEA); cornea.scale.setScalar(r); g.add(cornea);
-  const s1 = new THREE.Mesh(cached('shine', () => new THREE.SphereGeometry(1, 10, 8)), SHINE); s1.scale.set(r * .2, r * .24, r * .06); s1.position.set(-r * .28, r * .3, r * .99); g.add(s1);
-  const s2 = new THREE.Mesh(s1.geometry, SHINE); s2.scale.set(r * .09, r * .09, r * .04); s2.position.set(r * .25, -r * .22, r * 1.0); g.add(s2);
+  const ball = new THREE.Mesh(cached('eyeball', () => new THREE.SphereGeometry(1, 32, 22)), SCLERA); ball.scale.setScalar(r); g.add(ball);
+  // the iris and pupil sit on a "gaze" pivot so they can glance around
+  const gaze = new THREE.Group(); g.add(gaze);
+  const iris = new THREE.Mesh(cached('iris2', () => { const s = new THREE.SphereGeometry(1.012, 40, 12, 0, Math.PI * 2, 0, .9); s.rotateX(Math.PI / 2); return s; }), irisMat(irisColor));
+  iris.scale.setScalar(r); gaze.add(iris);
+  const cornea = new THREE.Mesh(cached('cornea', () => { const s = new THREE.SphereGeometry(1.05, 28, 12, 0, Math.PI * 2, 0, 1.0); s.rotateX(Math.PI / 2); return s; }), CORNEA); cornea.scale.setScalar(r); g.add(cornea);
+  // catchlights (stay put while the eye glances, like real reflections): a big soft one, a small one, a tiny sparkle
+  const sg = cached('shine', () => new THREE.SphereGeometry(1, 14, 10));
+  const s1 = new THREE.Mesh(sg, SHINE); s1.scale.set(r * .27, r * .32, r * .05); s1.position.set(-r * .3, r * .33, r * .97); s1.rotation.z = .4; g.add(s1);
+  const s2 = new THREE.Mesh(sg, SHINE2); s2.scale.set(r * .11, r * .11, r * .04); s2.position.set(r * .3, -r * .26, r * .98); g.add(s2);
+  const s3 = new THREE.Mesh(sg, SHINE2); s3.scale.set(r * .06, r * .06, r * .03); s3.position.set(-r * .05, r * .5, r * .89); g.add(s3);
   // eyelids: an upper lid that slides down to blink (and half-closes when happy)
-  const lidG = cached('lid', () => new THREE.SphereGeometry(1.09, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2));
+  const lidG = cached('lid', () => new THREE.SphereGeometry(1.09, 32, 14, 0, Math.PI * 2, 0, Math.PI / 2));
   const upper = new THREE.Group(); g.add(upper); const lid = new THREE.Mesh(lidG, lidMat); lid.scale.setScalar(r); upper.add(lid);
   const lower = new THREE.Group(); g.add(lower); const lid2 = new THREE.Mesh(lidG, lidMat); lid2.scale.setScalar(r); lid2.rotation.x = Math.PI; lower.add(lid2);
   g.traverse(o => { if (o.isMesh) o.castShadow = false; });
-  g.userData = { upper, lower, open: 1 };
+  g.userData = { upper, lower, gaze, open: 1, gx: 0, gy: 0, tx: 0, ty: 0, next: Math.random() * 2 };
   setLids(g, 1, 0);
   return g;
+}
+// eyes glance around now and then (small quick moves, like real eyes), or look at a point
+function glance(eyes, dt) {
+  const U0 = eyes[0] && eyes[0].userData; if (!U0) return;
+  U0.next -= dt; if (U0.next < 0) { U0.next = 1 + Math.random() * 2.5; U0.tx = (Math.random() - .5) * .45; U0.ty = (Math.random() - .5) * .25; }
+  U0.gx += (U0.tx - U0.gx) * Math.min(1, dt * 18); U0.gy += (U0.ty - U0.gy) * Math.min(1, dt * 18);
+  for (const e of eyes) { e.userData.gaze.rotation.y = U0.gx; e.userData.gaze.rotation.x = U0.gy; }
 }
 // open: 1 = wide open, 0 = closed. happy squints the lower lid up.
 function setLids(eye, open, happy) {
@@ -209,7 +227,7 @@ export function buildCharacter(kind, style = {}) {
   const lidMat = new THREE.MeshPhysicalMaterial({ color: kind === 'jelly' ? shade(body, .9) : body, roughness: kind === 'pip' ? .8 : .3, sheen: kind === 'pip' ? 1 : 0, clearcoat: kind === 'pip' ? 0 : .8, transparent: kind === 'jelly', opacity: kind === 'jelly' ? .95 : 1 });
   const P = { root, body: bodyG, mesh, B, eyes: [], extras: {} };
   if (kind === 'pip') {
-    P.eyes = [1, -1].map(s => attach(B.head, makeEye(.11, '#7a3fd0', lidMat), s * .16, 1.35, .32));
+    P.eyes = [1, -1].map(s => attach(B.head, makeEye(.128, '#8a4ae0', lidMat), s * .165, 1.345, .305));
     P.eyes.forEach((e, i) => { e.rotation.y = (i ? -1 : 1) * .28; e.rotation.x = -.05; });
     P.mouth = attach(B.head, makeMouth(.07), 0, 1.125, .375);
     // flying goggles on the forehead
@@ -305,7 +323,8 @@ export function animateCharacter(kind, P, A, s, dt, extra) {
   A.blink -= dt; const closed = A.blink < .12; if (A.blink < 0) A.blink = 2 + Math.random() * 3;
   const happy = (s.happy > 0 || r > 0) ? 1 : 0;
   P.eyes.forEach(e => setLids(e, closed ? 0 : 1 - happy * .25, happy));
+  glance(P.eyes, dt);
   const ms = happy ? 1 : act ? .55 : .001; P.mouth.scale.setScalar(P.mouth.scale.x + (ms - P.mouth.scale.x) * Math.min(1, dt * 10));
 }
 export { spring, stepSpring };
-export { pipSpec, zuzuSpec, jellySpec, makeEye, setLids, makeMouth };
+export { pipSpec, zuzuSpec, jellySpec, makeEye, setLids, makeMouth, glance };

@@ -8,7 +8,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { sculptAsync, makeSkeleton, attach, skin } from './sculpt.js';
-import { makeEye, setLids, makeMouth } from './characters.js';
+import { makeEye, setLids, makeMouth, glance } from './characters.js';
 import { plushNormal } from './nature.js';
 import { addFur } from './fur.js';
 
@@ -326,6 +326,7 @@ export function plush(group, spec, opts = {}) {
     if (excited) happyT = .6; happyT = Math.max(0, happyT - dt);
     const closed = blink < .12, happy = happyT > 0 ? 1 : 0;
     eyes.forEach(e => setLids(e, closed ? 0 : (opts.lidOpen ?? 1) - happy * .2, happy));
+    glance(eyes, dt);
     if (mouth) { const m = happy ? 1 : .001; mouth.scale.setScalar(mouth.scale.x + (m - mouth.scale.x) * Math.min(1, dt * 10)); }
     const br = Math.sin(t * 2.1);
     (B.spine || B.chest).scale.set(1 + br * .015, 1 + br * .02, 1 + br * .015);

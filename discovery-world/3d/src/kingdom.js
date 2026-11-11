@@ -19,6 +19,25 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
+import { fabricMat, normalFromCanvas, leafNormal as leafNormalK } from './nature.js';
+
+// pastel stone bricks with soft bumps (castle walls), and scalloped roof tiles
+function brickMat() {
+  const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
+  g.fillStyle = '#f4d4e6'; g.fillRect(0, 0, W, W);
+  for (let r = 0; r < 8; r++) for (let k = 0; k < 4; k++) { const x = k * 64 + (r % 2) * 32, y = r * 32; const shade = 228 + Math.floor(Math.random() * 22); g.fillStyle = `rgb(255,${shade - 14},${shade})`; g.beginPath(); g.roundRect(x + 3, y + 3, 58, 26, 7); g.fill(); if (x + 64 > W) { g.beginPath(); g.roundRect(x + 3 - W, y + 3, 58, 26, 7); g.fill(); } }
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(3, 3);
+  const nm = new THREE.CanvasTexture(normalFromCanvas(c, 4)); nm.wrapS = nm.wrapT = THREE.RepeatWrapping; nm.repeat.set(3, 3);
+  return new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1, 1), roughness: .8 });
+}
+function roofTileMat() {
+  const W = 128, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
+  g.fillStyle = '#9a76e8'; g.fillRect(0, 0, W, W);
+  for (let r = 0; r < 8; r++) for (let k = 0; k < 9; k++) { const x = k * 16 + (r % 2) * 8, y = r * 16; const gr = g.createRadialGradient(x, y + 4, 1, x, y + 8, 10); gr.addColorStop(0, '#c9b0ff'); gr.addColorStop(1, '#8a64dc'); g.fillStyle = gr; g.beginPath(); g.arc(x, y + 8, 8, 0, Math.PI); g.fill(); }
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(6, 3);
+  const nm = new THREE.CanvasTexture(normalFromCanvas(c, 3)); nm.wrapS = nm.wrapT = THREE.RepeatWrapping; nm.repeat.set(6, 3);
+  return new THREE.MeshPhysicalMaterial({ map, normalMap: nm, roughness: .4, clearcoat: .6 });
+}
 
 export const KINGDOM = { x0: 356, dino: 378, dz: -2.0, nest: 363.4, tops: 390, castle: 407, x1: 422 };
 
@@ -124,7 +143,7 @@ export function initKingdom(G, api) {
 
   // =================== PRINCESS CASTLE ===================
   const C = new THREE.Group(); C.position.set(K.castle, 0, 0); add(C);
-  const wallM = toy('#ffe0f0', { r: .55, cc: .4 }), trimM = toy('#ffffff', { r: .4, cc: .6 }), roofM = toy('#b28cff', { r: .3, cc: 1 }), goldM = toy('#ffd23f', { r: .2, cc: 1, m: .6 });
+  const wallM = brickMat(), roofTiles = roofTileMat(), trimM = toy('#ffffff', { r: .4, cc: .6 }), roofM = roofTiles, goldM = toy('#ffd23f', { r: .2, cc: 1, m: .6 });
   { const keep = new THREE.Mesh(new RoundedBoxGeometry(12, 7, 3, 3, .25), wallM); keep.position.set(0, 3.5, -5.6); keep.receiveShadow = true; C.add(keep);
     for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new RoundedBoxGeometry(.8, .7, 1, 2, .12), wallM); b.position.set(-5.4 + i * 1.35, 7.3, -4.6); b.castShadow = true; C.add(b); }
     for (const tx of [-6.6, 6.6]) {
@@ -144,6 +163,40 @@ export function initKingdom(G, api) {
     for (const [wx, wy] of [[-3.4, 4.6], [3.4, 4.6], [-3.4, 2], [3.4, 2], [0, 5.4]]) { const w = new THREE.Mesh(new RoundedBoxGeometry(1.1, 1.4, .1, 2, .4), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .55 })); w.position.set(wx, wy, -4.08); C.add(w); }
     G.castleDoor = door;
     tapObj(door, () => { door.userData.open = 1.6; Sound.chime(); burst(K.castle, 2, -3.5, ['#ffd23f', '#ff8fc8', '#fff', '#b28cff'], 24, 3); discover('castle', 'The Princess Castle! Dance on the shiny floor!'); setTimeout(() => enterCastle(), 350); });
+  }
+  // ---------- build 16: a magical castle front ----------
+  { const add2 = (m, x, y, z) => { m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; C.add(m); return m; };
+    // steps up to the door, and a golden arch around it
+    for (let i = 0; i < 3; i++) add2(new THREE.Mesh(new RoundedBoxGeometry(3.6 - i * .4, .14, .9 - i * .25, 2, .05), toy('#fff4fa', { r: .6, cc: .2 })), 0, .07 + i * .14, -3.5 - i * .2);
+    const archT = new THREE.Mesh(new THREE.TorusGeometry(1.38, .1, 12, 40, Math.PI), goldM); add2(archT, 0, 2.6, -3.98);
+    for (const sx of [-1.38, 1.38]) add2(new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, 2.6, 12), goldM), sx, 1.3, -3.98);
+    // a balcony with a railing above the door
+    const balc = add2(new THREE.Mesh(new RoundedBoxGeometry(3.4, .18, 1.1, 2, .06), trimM), 0, 4.05, -3.65);
+    for (let i = 0; i <= 10; i++) add2(new THREE.Mesh(new THREE.CylinderGeometry(.035, .045, .5, 8), trimM), -1.6 + i * .32, 4.39, -3.15);
+    add2(new THREE.Mesh(new RoundedBoxGeometry(3.4, .08, .12, 2, .03), trimM), 0, 4.66, -3.15);
+    for (let i = 0; i < 4; i++) add2(new THREE.Mesh(new THREE.ConeGeometry(.12, .5, 10), trimM), -1.2 + i * .8, 3.8, -3.3).rotation.x = Math.PI;
+    // arched windows with frames, shutters and flower boxes
+    for (const [wx, wy] of [[-3.4, 4.6], [3.4, 4.6], [-3.4, 2], [3.4, 2]]) {
+      const fr = new THREE.Mesh(new THREE.TorusGeometry(.62, .07, 10, 24, Math.PI), trimM); add2(fr, wx, wy + .55, -4.02);
+      for (const sx of [-.95, .95]) { const sh = add2(new THREE.Mesh(new RoundedBoxGeometry(.4, 1.3, .08, 2, .04), toy('#b28cff', { r: .5 })), wx + sx, wy + .2, -4.0); sh.rotation.y = sx > 0 ? -.3 : .3; }
+      const box = add2(new THREE.Mesh(new RoundedBoxGeometry(1.4, .22, .32, 2, .06), toy('#ffffff', { r: .6 })), wx, wy - .55, -3.85);
+      for (let k = 0; k < 7; k++) add2(new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), toy(['#ff4f8a', '#ffd23f', '#ff9fd2', '#ffffff'][k % 4], { r: .5 })), wx - .55 + k * .18, wy - .38, -3.82);
+      for (let k = 0; k < 5; k++) add2(new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), toy('#5fc06a', { r: .7, sheen: .5 })), wx - .5 + k * .25, wy - .42, -3.9);
+    }
+    // a round rose window above the balcony
+    const rose = new THREE.Mesh(new THREE.CircleGeometry(.6, 32), new THREE.MeshStandardMaterial({ color: '#ffe0f6', emissive: '#ff9fd8', emissiveIntensity: .5 })); add2(rose, 0, 5.9, -4.07);
+    add2(new THREE.Mesh(new THREE.TorusGeometry(.62, .08, 10, 32), goldM), 0, 5.9, -4.04);
+    for (let k = 0; k < 8; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(.03, 1.15, .02), goldM); sp.rotation.z = k / 8 * Math.PI; add2(sp, 0, 5.9, -4.03); }
+    // hanging banners with a heart
+    for (const bx of [-1.9, 1.9]) { const b = add2(new THREE.Mesh(new THREE.PlaneGeometry(.6, 1.6, 1, 4), fabricMat('#ff6fb5')), bx, 5.3, -3.95); const h = new THREE.Mesh(starGeometry(.16, .08, .03, .01, 1), goldM); h.position.set(0, -.2, .03); b.add(h); }
+    // lanterns either side of the door
+    for (const lx of [-2.1, 2.1]) { add2(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .5, 8), goldM), lx, 2.7, -3.85); const l = add2(new THREE.Mesh(new THREE.SphereGeometry(.17, 16, 12), new THREE.MeshStandardMaterial({ color: '#fff6c8', emissive: '#ffd76a', emissiveIntensity: 1.1 })), lx, 2.35, -3.85); l.castShadow = false; add2(new THREE.Mesh(new THREE.ConeGeometry(.2, .18, 12), goldM), lx, 2.56, -3.85); }
+    // climbing roses up the towers (leafy vines with flowers)
+    for (const tx of [-6.6, 6.6]) for (let i = 0; i < 26; i++) { const a = (tx > 0 ? -1 : 1) * .5 + Math.sin(i * .7) * .5 + Math.PI / 2, y = .3 + i * .25; const v = add2(new THREE.Mesh(new THREE.SphereGeometry(i % 3 ? .12 : .1, 10, 8), i % 3 ? toy('#5fc06a', { r: .7, sheen: .5 }) : toy('#ff6f9f', { r: .5 })), tx + Math.cos(a) * 1.55, y, -4.9 + Math.sin(a) * 1.55); v.castShadow = false; }
+    // trimmed hedges and topiary balls in front
+    const hedgeM = new THREE.MeshPhysicalMaterial({ color: '#6cc86a', roughness: .85, sheen: .8, sheenColor: new THREE.Color('#e8ffd0'), normalMap: leafNormalK(), normalScale: new THREE.Vector2(1.5, 1.5) });
+    for (const hx of [-4.7, 4.7]) { add2(new THREE.Mesh(new RoundedBoxGeometry(2.6, .8, .8, 3, .3), hedgeM), hx, .4, -3.3); }
+    for (const tx of [-3.1, 3.1]) { add2(new THREE.Mesh(new THREE.CylinderGeometry(.22, .26, .4, 16), toy('#ffffff', { r: .5 })), tx, .2, -3.2); add2(new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .4, 8), toy('#8a5a3a')), tx, .6, -3.2); add2(new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 16), hedgeM), tx, 1.1, -3.2); }
   }
   // flags on the towers wave
   const flags = [];

@@ -114,7 +114,7 @@ const UG_F = -6;
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y >= 0, 6000); check('the glass lift rides up to the Studio floor', c.y === 0 && !c.ride, `y=${c.y}`);
   await press('#pawBtn'); c = await waitFor(s => !s.ride && s.y <= -5.99, 6000); check('and back down again', c.y <= -5.99);
   // ---------- build 5: Pet Workshop, critters, balloon ----------
-  await teleport(9.4, -6); // stand to the side so the buttons aren't behind your creature
+  await teleport(7.4, -6); // stand to the side so the buttons aren't behind your creature
   { const d0 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft)); await tapWorld(4.25, UG_F + 1.0, -1.15); await sleep(300); const d1 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft));
     check('Pet Workshop: tap a big button to change your pet design', d0 !== d1 && (await S()).disc.includes('petmaker'), `${d0} → ${d1}`); }
   await tapWorld(8.6, UG_F + .25, -1.2); await sleep(200); // the lever's box
@@ -140,7 +140,7 @@ const UG_F = -6;
   check('the Cloud Kingdom is a new discovery', (await S()).disc.includes('sky'));
   await shot('18_cloud_kingdom.jpg');
   await teleport(50.4, 9.5); { const my = await page.evaluate(() => new Promise(r => { const D = __DDW3; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, D.player.y); if (D.player.x > 51.4) D.keys.right = false; if (m > 13 || ++n > 500) { D.keys.right = false; return r(m); } requestAnimationFrame(f); }; f(); })); check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
-  await teleport(54.5, 9.5); await tapWorld(56, 13.2, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
+  await teleport(54.5, 9.5); { const wp = await page.evaluate(() => __DDW3.G.whale.g.position.toArray()); await tapWorld(wp[0], wp[1], wp[2]); } await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
   await teleport(65.8, 9.5);
   { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
     await holdBtn('#rightBtn', 600); const r = await sl; check('walk off the clouds onto the giant rainbow slide, all the way down to the floor', r[0] && r[2] < .6 && r[1] > 71, `slid=${r[0]} landed x=${r[1].toFixed(1)} y=${r[2].toFixed(2)}`); }
@@ -186,7 +186,7 @@ const UG_F = -6;
   await press('#pawBtn'); await sleep(300); c = await S(); check('PAW parks the kart and you hop out', !c.ride && c.y < .1);
   // ---------- build 9: the Wonder Express train ----------
   await teleport(170);
-  await tapWorld(172.4, .82, 4.15); c = await waitFor(s => s.ride === 'train', 90000);
+  await press('#pawBtn'); c = await waitFor(s => s.ride === 'train', 90000); // (PAW at a station calls the train; the signs sit low on screen with the closer camera)
   check('tap a station sign: the train chugs in and you hop aboard', c.ride === 'train' && Math.abs(c.z - 3.2) < .3 && c.disc.includes('train'), `ride=${c.ride} z=${c.z.toFixed(2)}`);
   await press('#jumpBtn'); await sleep(200); check('JUMP on the train toots the whistle (and you stay on)', (await S()).disc.includes('toot') && (await S()).ride === 'train');
   { const x0 = (await S()).x; await holdBtn('#rightBtn', 900); c = await S(); check('hold ▶ to drive the train yourself', c.ride === 'train' && c.x > x0 + .5, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`); }
@@ -241,7 +241,7 @@ const UG_F = -6;
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
   await page.locator('.swatch').nth(4).tap();
-  { const a = await scr(58, 3.2, -3.2), b = await scr(63, 4.4, -3.2); await touch('touchStart', [a]); for (let i = 1; i <= 8; i++) { await touch('touchMove', [{ x: a.x + (b.x - a.x) * i / 8, y: a.y + (b.y - a.y) * i / 8 }]); await sleep(40); } await touch('touchEnd', []); }
+  { const a = await scr(57.5, 2.0, -3.2), b = await scr(63, 2.9, -3.2); await touch('touchStart', [a]); for (let i = 1; i <= 8; i++) { await touch('touchMove', [{ x: a.x + (b.x - a.x) * i / 8, y: a.y + (b.y - a.y) * i / 8 }]); await sleep(40); } await touch('touchEnd', []); }
   await sleep(200); c = await S(); check('finger-paint on the giant wall', c.painted && c.disc.includes('paint'));
   await shot('07_painting.jpg');
   await teleport(71); await holdBtn('#rightBtn', 1200); c = await S(); check('walk along the giant xylophone and it plays', c.disc.includes('xylophone'));

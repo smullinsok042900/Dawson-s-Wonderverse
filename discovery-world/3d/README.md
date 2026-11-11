@@ -37,6 +37,27 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 16: a softer, more magical look (benchmark: the park, Pip and the castle)
+- **Sparkly eyes on every character:**
+  - Big patterned irises with fine fibres, a dark rim and a soft inner glow.
+  - Three film-style catchlights that stay put while the iris and pupil glance around naturally.
+  - A softer eyeball, and bigger, more appealing eyes for Pip.
+- **Grass:** short, soft, rounded stylized blades in varied fresh greens with sunny tips, denser and brighter.
+- **Rolling meadow:** gentle mounds behind the path, flat where rides and buildings stand. The lawn, grass, flowers, bushes, rocks and trees all follow the ground.
+- **Fuller, softer trees:** big lumpy leafy canopies over the branches, with a fringe of leaf cards.
+- **Park pieces rebuilt:**
+  - **Ferris wheel ticket booth:** a panelled kiosk with a framed window, counter, striped scalloped awning, light bulbs and a sign.
+  - **Bouncy toadstool:** a proper shape, with a stem skirt, gills and raised spots.
+  - **Carousel:** sculpted ponies with golden horns, colourful manes and saddles.
+- **The Princess Castle front**, which used to be a plain pink wall:
+  - Pastel stone-brick walls and towers, scalloped roof tiles, steps up to a golden arched door, and a balcony with railings.
+  - Arched windows with frames, shutters and flower boxes, a rose window, banners and lanterns.
+  - Climbing roses up the towers, trimmed hedges and topiary.
+  - The camera steps back and looks up near the castle so you can see all of it.
+- **Soft contact shadows** under every friend, pet and buddy.
+- **Camera and controls:** the camera is a little closer, so characters show better. The controls and top buttons are a little smaller, and still big for small fingers.
+- **Screenshots:** `screenshots/compare_castle.jpg` and `compare_park2.jpg` are before and after. `pip_eyes_b16.jpg` and `park_carousel_b16.jpg` show the new eyes and carousel.
+
 ## 3D build 15: benchmark character and environment (graphics overhaul, stage 3)
 - **Benchmark character: the Mechanic Fox** (`foxSpec` in `src/critterkit.js`). It's designed from fox anatomy instead of the shared round body:
   - a slim upright body, a deep chest with a white ruff, a long tapering snout with a bare black nose

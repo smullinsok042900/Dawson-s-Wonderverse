@@ -614,7 +614,7 @@ function updatePlayer(dt) {
 // ---------------- camera ----------------
 const camT = { x: 5, y: 1.6, look: 0 };
 function viewHalfW(dist) { return Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect; }
-const CAM_DIST = 9;
+const CAM_DIST = 7.6; // build 16: a little closer, to show the characters
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
@@ -627,8 +627,11 @@ function updateCamera(dt) {
   camT.x += (camTargetX() - camT.x) * Math.min(1, dt * 5);
   camT.y += (P.y - camT.y) * Math.min(1, dt * (P.grounded ? 4 : 2));
   const y = camT.y;
+  // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
+  // (also a little at the Marble Machine, so its top ramps stay clear of the buttons)
+  const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45) : 0; camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * Math.min(1, dt * 1.5);
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
-  camera.position.set(camT.x, y + 2.5 + Math.max(0, -camT.z) * .25, CAM_DIST + camT.z); camera.lookAt(camT.x, y + 1.3, camT.z);
+  camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2, CAM_DIST + camT.z + camT.cz * 3.2); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4, camT.z - camT.cz * 2);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
