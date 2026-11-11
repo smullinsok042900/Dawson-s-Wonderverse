@@ -55,9 +55,9 @@ export function initKingdom(G, api) {
   { const pts = [new THREE.Vector3(bx - 1.6, 2.35, Z)]; for (let k = 6; k >= 0; k--) pts.push(new THREE.Vector3(369.95 + k * .85, .45 * (k + 1) - .45, Z)); pts.push(new THREE.Vector3(368.6, .18, Z)); dottie.add(taperTube(pts, .72, .14)); }
   const back = plat({ a: 375.45, b: 379.7, y: backY, z: Z, step: true, dino: true });
   // the neck: a smooth curve from her shoulders down to her head in the flowers (you slide down it)
-  const neckPath = new THREE.CatmullRomCurve3([[379.5, backY + .62, Z], [381.2, backY + .25, Z], [382.7, 2.3, Z], [383.9, 1.2, Z + .05], [384.9, .66, Z + .2]].map(p => new THREE.Vector3(...p)));
+  const neckPath = new THREE.CatmullRomCurve3([[379.5, backY + .62, Z], [381.2, backY + .25, Z], [382.7, 2.75, Z], [383.9, 1.95, Z + .05], [384.9, 1.62, Z + .1]].map(p => new THREE.Vector3(...p)));
   (G.slideEdges = G.slideEdges || []).push({ y: backY, x: back.b - .25, path: neckPath, disc: 'dinoslide', msg: 'Wheee! Down Dottie\'s long neck!' });
-  { const pts = []; for (let i = 0; i <= 10; i++) { const p = neckPath.getPointAt(i / 10); pts.push(new THREE.Vector3(p.x, p.y - .62 - .42, p.z)); } pts.unshift(new THREE.Vector3(bx + 1.2, 2.4, Z)); dottie.add(taperTube(pts, .78, .42)); }
+  { const pts = []; for (let i = 0; i <= 10; i++) { const p = neckPath.getPointAt(i / 10), r = .78 + (.42 - .78) * ((i + 1) / 11); pts.push(new THREE.Vector3(p.x, p.y - .62 - r, p.z)); } pts.unshift(new THREE.Vector3(bx + 1.2, 2.4, Z)); dottie.add(taperTube(pts, .78, .42)); }
   for (let i = 1; i < 6; i++) { const p = neckPath.getPointAt(i / 7); const pl = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 10), plate); pl.position.set(p.x, p.y - .55, p.z - .42); pl.rotation.x = -.5; dottie.add(pl); }
   const dHead = new THREE.Group(); dHead.position.set(385.75, .62, Z + .15); dottie.add(dHead);
   dHead.add(ball(skin, .62, 0, 0, 0, 1.25, .78, .95)); dHead.add(ball(belly, .38, .35, -.18, .2, 1.1, .6, .9));
@@ -106,7 +106,7 @@ export function initKingdom(G, api) {
   function tapBaby(e) {
     if (!world.dinoEggs[e.i]) { tapEgg(e); return; } // (the hidden baby sits inside the egg: a tap there means the egg)
     if (!e.f) { world.dinoFollow[e.i] = true; followBaby(e); Sound.chime(); toast('🦕💖 A baby dino wants to come with you!'); discover('dinofollow', 'Baby dinos follow you when you tap them!'); api.saveSoon(); }
-    else friends.followerTrick(e.f);
+    else { friends.waveBye(e.f); e.restY = e.f.pos.y; e.f = null; world.dinoFollow[e.i] = false; api.saveSoon(); return; }
     e.hop = .7; Sound.tone(900 + e.i * 120, .12, 'sine', .05, 1.5); Sound.tone(1100 + e.i * 120, .1, 'sine', .04, 1.4, .12); burst(e.baby.position.x, 1.1, e.baby.position.z, ['#ff8fc8', '#fff'], 6, 1.2); discover('babydino', 'Baby dinos! They squeak when you tap them.'); }
   G.interact.push({ x: K.nest, y: 0, layer: '', disc: 'dinoegg', run: () => { const e = eggs.find(e2 => !world.dinoEggs[e2.i]); if (e) tapEgg(e); else tapBaby(eggs[Math.floor(Math.random() * 3)]); }, hintY: 1.6 });
 
@@ -154,7 +154,7 @@ export function initKingdom(G, api) {
     door.add(ball(goldM, .1, .8, 1.3, .16)); const hrt = new THREE.Mesh(starGeometry(.35, .17, .06, .02, 1), goldM); hrt.position.set(0, 2.85, .14); door.add(hrt);
     for (const [wx, wy] of [[-3.4, 4.6], [3.4, 4.6], [-3.4, 2], [3.4, 2], [0, 5.4]]) { const w = new THREE.Mesh(new RoundedBoxGeometry(1.1, 1.4, .1, 2, .4), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .55 })); w.position.set(wx, wy, -4.08); C.add(w); }
     G.castleDoor = door;
-    tapObj(door, () => { door.userData.open = 1.6; Sound.chime(); burst(K.castle, 2, -3.5, ['#ffd23f', '#ff8fc8', '#fff', '#b28cff'], 24, 3); discover('castle', 'The Princess Castle! Dance on the shiny floor!'); });
+    tapObj(door, () => { door.userData.open = 1.6; Sound.chime(); burst(K.castle, 2, -3.5, ['#ffd23f', '#ff8fc8', '#fff', '#b28cff'], 24, 3); discover('castle', 'The Princess Castle! Dance on the shiny floor!'); setTimeout(() => enterCastle(), 350); });
   }
   // flags on the towers wave
   const flags = [];
@@ -191,7 +191,7 @@ export function initKingdom(G, api) {
     for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(.04, .14, 6), goldM); sp.position.set(Math.cos(a) * .17, .1, Math.sin(a) * .17); crown.add(sp); }
     crown.add(ball(toy(trimC, { em: trimC, ei: .3 }), .05, 0, .02, .19));
     // arms (the right one waves; the left holds a wand or a rose)
-    const arm = new THREE.Group(); arm.position.set(.3, 1.55, 0); r.add(arm); arm.add(ball(sk, .07, 0, .24, 0, 1, 3.2, 1)); arm.add(ball(sk, .07, 0, .48, 0));
+    const arm = new THREE.Group(); arm.position.set(.3, 1.55, .02); r.add(arm); arm.add(ball(sk, .07, 0, -.22, 0, 1, 3, 1)); arm.add(ball(sk, .075, 0, -.46, 0));
     const larm = new THREE.Group(); larm.position.set(-.3, 1.5, .05); larm.rotation.z = -.5; r.add(larm); larm.add(ball(sk, .07, 0, -.22, 0, 1, 3, 1));
     if (wandOrRose === 'wand') { const w = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .5, 6), trim); w.position.set(-.05, -.5, .15); larm.add(w); const st = new THREE.Mesh(starGeometry(.12, .05, .03, .01, 1), toy('#fff3a6', { em: '#ffe36e', ei: .9 })); st.position.set(-.05, -.25, .15); larm.add(st); }
     else { larm.add(ball(toy('#ff4f6e', { r: .4, cc: .8 }), .09, 0, -.45, .1)); }
@@ -220,9 +220,105 @@ export function initKingdom(G, api) {
   }
   let lastTile = -1, danceT = 0;
 
+  // =================== INSIDE THE PRINCESS CASTLE (a throne room, at x 2000) ===================
+  const CI = { ox: 2000, w: 24 }; G.castleIn = CI;
+  const IC = new THREE.Group(); IC.position.set(CI.ox, 0, 0); add(IC);
+  const icTap = (obj, fn, x, disc, hintY = 2) => { tapObj(obj, fn); G.interact.push({ x: CI.ox + x, y: 0, layer: 'castle', disc, run: fn, hintY }); };
+  { // checkered floor, carpet, walls, pillars, stained-glass windows
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) { g.fillStyle = (x + y) % 2 ? '#ffd1e8' : '#fffaf7'; g.fillRect(x * 64, y * 64, 64, 64); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(CI.w / 2, 6); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    const fl = new THREE.Mesh(new THREE.PlaneGeometry(CI.w, 12), new THREE.MeshPhysicalMaterial({ map: t, roughness: .2, clearcoat: 1, clearcoatRoughness: .08 })); fl.rotation.x = -Math.PI / 2; fl.position.set(CI.w / 2, 0, 0); fl.receiveShadow = true; IC.add(fl);
+    const carpet = new THREE.Mesh(new THREE.PlaneGeometry(CI.w - 2, 1.5), toy('#e0457a', { r: .9, cc: 0, sheen: 1, sheenColor: '#ff9fc8' })); carpet.rotation.x = -Math.PI / 2; carpet.position.set(CI.w / 2, .012, 0); carpet.receiveShadow = true; IC.add(carpet);
+    for (const z of [-.8, .8]) { const b = new THREE.Mesh(new THREE.PlaneGeometry(CI.w - 2, .12), goldM); b.rotation.x = -Math.PI / 2; b.position.set(CI.w / 2, .014, z); IC.add(b); }
+    const backW = new THREE.Mesh(new RoundedBoxGeometry(CI.w + .8, 9.5, .5, 2, .15), toy('#ffe3f1', { r: .6, cc: .3 })); backW.position.set(CI.w / 2, 4.75, -5.8); backW.receiveShadow = true; IC.add(backW);
+    const skirting = new THREE.Mesh(new RoundedBoxGeometry(CI.w + .8, .6, .3, 2, .1), trimM); skirting.position.set(CI.w / 2, .3, -5.45); IC.add(skirting);
+    for (const x of [-.25, CI.w + .25]) { const sw = new THREE.Mesh(new RoundedBoxGeometry(.5, 9.5, 12, 2, .15), toy('#ffd6ec', { r: .6, cc: .3 })); sw.position.set(x, 4.75, 0); sw.receiveShadow = true; IC.add(sw); }
+    const front = new THREE.Mesh(new RoundedBoxGeometry(CI.w + 1, .6, .6, 2, .2), toy('#ffb8de')); front.position.set(CI.w / 2, -.25, 6); IC.add(front);
+    for (const x of [3.5, 9, 15, 20.5]) { const pl = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, 8.6, 24), trimM); pl.position.set(x, 4.3, -4.9); pl.castShadow = true; pl.receiveShadow = true; IC.add(pl); for (const y of [.2, 8.5]) { const cap = new THREE.Mesh(new THREE.CylinderGeometry(.62, .62, .35, 24), goldM); cap.position.set(x, y, -4.9); IC.add(cap); } }
+    const glass = (cols) => { const cc = document.createElement('canvas'); cc.width = 128; cc.height = 256; const gg = cc.getContext('2d'); gg.fillStyle = '#ffffff'; gg.fillRect(0, 0, 128, 256); for (let y = 0; y < 8; y++) for (let x = 0; x < 4; x++) { gg.fillStyle = cols[(x + y * 3) % cols.length]; gg.beginPath(); gg.moveTo(x * 32 + 16, y * 32 + 2); gg.lineTo(x * 32 + 30, y * 32 + 16); gg.lineTo(x * 32 + 16, y * 32 + 30); gg.lineTo(x * 32 + 2, y * 32 + 16); gg.fill(); } const tt = new THREE.CanvasTexture(cc); tt.colorSpace = THREE.SRGBColorSpace; return tt; };
+    [[6.2, ['#ff6fae', '#ffd23f', '#9fe6ff', '#b28cff']], [12, ['#b28cff', '#ff8fc8', '#ffffff', '#5bc8ff']], [17.8, ['#3cc46e', '#ffd23f', '#ff6fae', '#9fe6ff']]].forEach(([x, cols]) => {
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(2, 4), new THREE.MeshStandardMaterial({ map: glass(cols), emissive: '#ffffff', emissiveMap: glass(cols), emissiveIntensity: .55 })); w.position.set(x, 4.6, -5.53); IC.add(w);
+      const top = new THREE.Mesh(new THREE.CircleGeometry(1, 24, 0, Math.PI), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .6 })); top.position.set(x, 6.6, -5.53); IC.add(top);
+      const fr = new THREE.Mesh(new THREE.TorusGeometry(1.05, .08, 8, 24, Math.PI), goldM); fr.position.set(x, 6.6, -5.5); IC.add(fr);
+    });
+  }
+  // the way out (a door at the left of the back wall)
+  { const d = new THREE.Mesh(new RoundedBoxGeometry(1.7, 2.8, .2, 2, .1), toy('#c870b0', { r: .45, cc: .6 })); d.position.set(1.9, 1.4, -5.5); IC.add(d); IC.add(ball(goldM, .09, 2.5, 1.4, -5.38)); }
+  // the throne on a little stage (tap it to sit on the throne)
+  const throne = new THREE.Group(); throne.position.set(19.5, 0, -3.3); IC.add(throne);
+  { const st1 = new THREE.Mesh(new RoundedBoxGeometry(4, .3, 2.6, 2, .08), toy('#e0457a', { r: .8, sheen: 1 })); st1.position.y = .15; throne.add(st1);
+    const st2 = new THREE.Mesh(new RoundedBoxGeometry(3, .3, 2, 2, .08), toy('#e0457a', { r: .8, sheen: 1 })); st2.position.y = .45; throne.add(st2);
+    const seat = new THREE.Mesh(new RoundedBoxGeometry(1.3, .35, 1.1, 2, .12), toy('#ff8fc8', { r: .6, sheen: 1 })); seat.position.set(0, .78, 0); throne.add(seat);
+    const back = new THREE.Mesh(new RoundedBoxGeometry(1.4, 2.4, .25, 2, .12), goldM); back.position.set(0, 1.9, -.5); throne.add(back);
+    const pad = new THREE.Mesh(new RoundedBoxGeometry(1.1, 1.9, .1, 2, .08), toy('#ff8fc8', { r: .6, sheen: 1 })); pad.position.set(0, 1.85, -.36); throne.add(pad);
+    const tc = new THREE.Mesh(starGeometry(.3, .14, .08, .02, 1), toy('#fff3a6', { em: '#ffd84a', ei: .6 })); tc.position.set(0, 3.25, -.5); throne.add(tc);
+    for (const s of [-1, 1]) { const arm = new THREE.Mesh(new RoundedBoxGeometry(.2, .6, 1, 2, .08), goldM); arm.position.set(s * .7, 1.15, 0); throne.add(arm); throne.add(ball(goldM, .13, s * .7, 1.5, .45)); }
+    throne.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); }
+  plat({ a: CI.ox + 17.5, b: CI.ox + 21.5, y: .3, z: -3.3, layer: 'castle', step: true });
+  plat({ a: CI.ox + 18, b: CI.ox + 21, y: .6, z: -3.3, layer: 'castle', step: true });
+  plat({ a: CI.ox + 18.9, b: CI.ox + 20.1, y: .95, z: -3.3, layer: 'castle' });
+  const sitThrone = () => { const P = api.player; if (P.layer !== 'castle' || P.ride) return; P.x = CI.ox + 19.5; P.y = 1.4; P.vx = 0; P.vy = 0; P.grounded = false; Sound.chime(); [0, 4, 7, 12].forEach((n, i) => Sound.tone(NOTES[n % 8] * (n > 7 ? 2 : 1), .3, 'triangle', .04, 1, i * .15)); burst(CI.ox + 19.5, 3, -3, ['#ffd23f', '#fff3a6', '#ff8fc8', '#fff'], 26, 3); discover('throne', 'You sit on the royal throne!'); };
+  icTap(throne, sitThrone, 19.5, 'throne', 3.9);
+  // the crystal chandelier (tap it and it sparkles and spins)
+  const chand = new THREE.Group(); chand.position.set(12, 7.3, -1.6); IC.add(chand);
+  { const ring = new THREE.Mesh(new THREE.TorusGeometry(1.2, .08, 8, 36), goldM); ring.rotation.x = Math.PI / 2; chand.add(ring);
+    const chain = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, 2.4, 6), goldM); chain.position.y = 1.2; chand.add(chain);
+    chand.userData.crystals = [];
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; const cr = new THREE.Mesh(new THREE.OctahedronGeometry(.13), new THREE.MeshPhysicalMaterial({ color: '#e6f8ff', roughness: .02, clearcoat: 1, iridescence: 1, emissive: '#bfe8ff', emissiveIntensity: .2 })); cr.position.set(Math.cos(a) * 1.2, -.3, Math.sin(a) * 1.2); cr.scale.y = 1.6; chand.add(cr); chand.userData.crystals.push(cr); }
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; chand.add(ball(toy('#fff6b0', { em: '#ffd84a', ei: 1.2 }), .08, Math.cos(a) * 1.2, .2, Math.sin(a) * 1.2)); } }
+  let chandSpin = 0;
+  icTap(chand, () => { chandSpin = 2.5; Sound.twinkle && Sound.twinkle(); [7, 9, 11, 12, 14].forEach((n, i) => Sound.bell(NOTES[n % 8] * 2, .03, i * .1)); burst(CI.ox + 12, 6.5, -1.6, ['#ffffff', '#bfe8ff', '#fff3a6'], 26, 3); discover('chandelier', 'The sparkly chandelier!'); }, 12, 'chandelier', 1.2);
+  // the royal party cake (tap: the candles light up; tap again: blow them out)
+  const cake = new THREE.Group(); cake.position.set(6.5, 0, -2.8); IC.add(cake);
+  const flames = [];
+  { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.15, .25, 1, 12), goldM); leg.position.y = .5; cake.add(leg);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, .12, 32), trimM); top.position.y = 1.06; cake.add(top);
+    [[.8, .45, '#ffd1ec'], [.6, .4, '#ffffff'], [.4, .35, '#ffb8de']].reduce((y, [r, h, c]) => { const t = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 32), toy(c, { r: .5, cc: .5 })); t.position.y = y + h / 2; cake.add(t); const icing = new THREE.Mesh(new THREE.TorusGeometry(r, .05, 8, 32), toy('#ff6fae', { r: .4 })); icing.rotation.x = Math.PI / 2; icing.position.y = y + h; cake.add(icing); return y + h; }, 1.12);
+    for (let i = 0; i < 3; i++) { const x = (i - 1) * .2; const cnd = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .3, 8), toy(['#3d9bff', '#ffd23f', '#3cc46e'][i])); cnd.position.set(x, 2.47, 0); cake.add(cnd); const fl = new THREE.Mesh(new THREE.SphereGeometry(.06, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffcf4a' })); fl.scale.y = 1.6; fl.position.set(x, 2.7, 0); fl.visible = false; cake.add(fl); flames.push(fl); }
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; cake.add(ball(toy(['#ff4f6e', '#ffffff'][i % 2], { r: .3 }), .06, Math.cos(a) * .62, 1.6, Math.sin(a) * .62)); }
+    cake.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; }); }
+  icTap(cake, () => { const lit = !flames[0].visible; flames.forEach(f => { f.visible = lit; }); if (lit) { [0, 0, 1, 0, 3, 2].forEach((n, i) => Sound.tone(NOTES[n] , .25, 'triangle', .045, 1, i * .22)); burst(CI.ox + 6.5, 3, -2.8, ['#ff4f9a', '#ffd23f', '#3d9bff', '#3cc46e', '#fff'], 30, 3.5); } else { Sound.whoosh(); burst(CI.ox + 6.5, 2.8, -2.8, ['#ffffff', '#e9dcff'], 12, 1.5); } discover('cake', 'A royal party cake! Tap to light the candles.'); }, 6.5, 'cake', 3.2);
+  // a music box with a tiny dancer (tap it: music, and she twirls)
+  const mbox = new THREE.Group(); mbox.position.set(13.8, 0, -3.2); IC.add(mbox);
+  let dancer, mlid, music = 0;
+  { const stand = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, .9, 24), trimM); stand.position.y = .45; mbox.add(stand);
+    const box = new THREE.Mesh(new RoundedBoxGeometry(1.1, .55, .8, 2, .1), toy('#b28cff', { r: .3, cc: 1 })); box.position.y = 1.18; mbox.add(box);
+    mlid = new THREE.Group(); mlid.position.set(0, 1.45, -.4); mbox.add(mlid); const lidM = new THREE.Mesh(new RoundedBoxGeometry(1.12, .12, .82, 2, .05), toy('#ff8fc8', { r: .3, cc: 1 })); lidM.position.z = .41; mlid.add(lidM);
+    dancer = new THREE.Group(); dancer.position.set(0, 1.46, 0); mbox.add(dancer);
+    const tutu = new THREE.Mesh(new THREE.ConeGeometry(.16, .12, 16), toy('#ffd1ec', { sheen: 1 })); tutu.position.y = .15; tutu.rotation.x = Math.PI; dancer.add(tutu);
+    dancer.add(ball(toy('#ffd1ec'), .05, 0, .26, 0, 1, 1.4, 1)); dancer.add(ball(toy('#f6d0b4'), .05, 0, .37, 0)); dancer.add(ball(toy('#8a5530'), .035, 0, .42, -.01));
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .14, 6), toy('#f6d0b4')); leg.position.y = .07; dancer.add(leg);
+    mbox.traverse(o => { if (o.isMesh) o.castShadow = true; }); }
+  icTap(mbox, () => { music = 4; const tune = [4, 2, 0, 2, 4, 4, 4, 2, 2, 2, 4, 7, 7]; tune.forEach((n, i) => Sound.bell(NOTES[n % 8] * 2, .035, i * .28)); discover('musicbox', 'A music box with a tiny dancer!'); }, 13.8, 'musicbox', 2.4);
+  // the royal toy chest (tap: the lid pops open and toys bounce out)
+  const chest = new THREE.Group(); chest.position.set(23, 0, -2.6); IC.add(chest);
+  let clid, toysOut = [];
+  { const body = new THREE.Mesh(new RoundedBoxGeometry(1.4, .8, .9, 2, .1), toy('#c48a52', { r: .6, cc: .3 })); body.position.y = .4; chest.add(body);
+    for (const x of [-.45, .45]) { const band = new THREE.Mesh(new THREE.BoxGeometry(.1, .82, .92), goldM); band.position.set(x, .4, 0); chest.add(band); }
+    clid = new THREE.Group(); clid.position.set(0, .8, -.45); chest.add(clid); const l = new THREE.Mesh(new RoundedBoxGeometry(1.42, .25, .92, 2, .1), toy('#a96f3e', { r: .6, cc: .3 })); l.position.set(0, .12, .46); clid.add(l);
+    chest.add(ball(goldM, .08, 0, .7, .47)); chest.traverse(o => { if (o.isMesh) o.castShadow = true; }); }
+  let chestOpen = 0;
+  icTap(chest, () => { chestOpen = 2.5; Sound.boing(); Sound.giggle();
+    for (let i = 0; i < 4; i++) { const kind = (Math.random() * 3) | 0, col = ['#ff4f9a', '#3d9bff', '#ffd23f', '#3cc46e', '#a15cff'][(Math.random() * 5) | 0];
+      const m = kind === 0 ? ball(toy(col, { r: .2, cc: 1 }), .16) : kind === 1 ? new THREE.Mesh(starGeometry(.2, .09, .08, .02, 1), toy(col, { em: col, ei: .2 })) : new THREE.Mesh(new RoundedBoxGeometry(.28, .28, .28, 2, .06), toy(col)); m.castShadow = true;
+      m.position.set(CI.ox + 23, 1, -2.6); add(m); toysOut.push({ m, vx: (Math.random() - .5) * 3, vy: 4 + Math.random() * 3, vz: 1 + Math.random() * 1.5, life: 3 }); }
+    discover('toychest', 'A treasure chest full of toys!'); }, 22.5, 'toychest', 1.8);
+  // getting in and out
+  function enterCastle() { const P = api.player; if (P.ride || P.layer !== '' || Math.abs(P.x - K.castle) > 5) { Sound.click(); return; } world.flash = 1; P.layer = 'castle'; P.x = CI.ox + 2.8; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; api.snapCamera(); Sound.chime(); discover('castlein', 'Inside the Princess Castle! Tap the throne, the cake, the music box and the toy chest.'); }
+  function leaveCastle() { const P = api.player; if (P.layer !== 'castle' || P.y > .7) { Sound.click(); return; } world.flash = 1; P.layer = ''; P.x = K.castle; P.y = 0; P.z = 0; P.vx = P.vy = 0; api.snapCamera(); Sound.tone(440, .2, 'triangle', .05, .7); }
+  G.enterCastle = enterCastle;
+  function updateInside(dt, t) {
+    chandSpin = Math.max(0, chandSpin - dt); chand.rotation.y += dt * (.15 + chandSpin * 1.5); chand.userData.crystals.forEach((c, i) => { c.material.emissiveIntensity = .2 + (chandSpin > 0 ? (Math.sin(t * 12 + i) * .5 + .5) * 1.2 : 0); });
+    flames.forEach((f, i) => { if (f.visible) f.scale.set(1 + Math.sin(t * 20 + i) * .15, 1.6 + Math.sin(t * 17 + i * 2) * .3, 1); });
+    music = Math.max(0, music - dt); dancer.rotation.y += dt * (music > 0 ? 6 : 0); mlid.rotation.x += ((music > 0 ? -1.2 : 0) - mlid.rotation.x) * Math.min(1, dt * 6);
+    chestOpen = Math.max(0, chestOpen - dt); clid.rotation.x += ((chestOpen > 0 ? -1.4 : 0) - clid.rotation.x) * Math.min(1, dt * 8);
+    for (let i = toysOut.length - 1; i >= 0; i--) { const o = toysOut[i]; o.life -= dt; o.vy -= 12 * dt; o.m.position.x += o.vx * dt; o.m.position.z += o.vz * dt; o.m.position.y = Math.max(.16, o.m.position.y + o.vy * dt); if (o.m.position.y <= .16 && o.vy < 0) o.vy *= -.5; o.m.rotation.x += dt * 4; if (o.life <= 0) { o.m.scale.multiplyScalar(.85); if (o.m.scale.x < .05) { scene.remove(o.m); toysOut.splice(i, 1); } } }
+  }
+
   // =================== per-frame ===================
   const V = new THREE.Vector3();
   function update(dt, t, P) {
+    if (P.layer === 'castle') updateInside(dt, t);
     // Dottie breathes and hums; her neck slide starts when you walk off the front of her back
     dottie.scale.y = 1; dHead.rotation.z = Math.sin(t * .8) * .06 + (hum > 0 ? Math.sin(hum * 9) * .12 : 0); dHead.position.y = .62 + (hum > 0 ? Math.abs(Math.sin(hum * 4)) * .25 : Math.sin(t * 1.4) * .03); hum = Math.max(0, hum - dt);
     if (P.layer === '' && P.grounded && P.y > .3 && P.x > 369 && P.x < 380 && steps.concat(back).some(s => Math.abs(P.y - s.y) < .02 && P.x >= s.a && P.x <= s.b)) discover('dinoclimb', 'You climbed onto a dinosaur!');
@@ -232,7 +328,7 @@ export function initKingdom(G, api) {
       if (world.dinoEggs[e.i]) { if (!e.baby.visible) showHatched(e); }
       else if (e.wob > 0) { e.wob -= dt; e.egg.rotation.z = Math.sin(e.wob * 30) * .25 * Math.min(1, e.wob * 2); if (e.wob <= 0) { world.dinoEggs[e.i] = true; showHatched(e); e.hop = .6; Sound.chime(); Sound.giggle(); burst(e.x, .7, e.z, ['#fff', '#ffd23f', '#ff8fc8', '#9ff7c8'], 22, 2.5); toast('🦕 A baby dino hatched!'); discover('hatch'); api.saveSoon(); } }
       if (e.baby.visible && world.dinoFollow[e.i] && !e.f) followBaby(e);
-      if (e.baby.visible && !e.f) { e.hop = Math.max(0, e.hop - dt); const bob = Math.abs(Math.sin(e.t * 2.4 + e.i)) * .06 + (e.hop > 0 ? Math.sin(e.hop / .7 * Math.PI) * .6 : 0); e.baby.position.y = .05 + bob; e.baby.rotation.y = Math.sin(e.t * .9 + e.i * 2) * .6 + (Math.sign(P.x - e.x) || 1) * .4; }
+      if (e.baby.visible && !e.f) { e.hop = Math.max(0, e.hop - dt); const bob = Math.abs(Math.sin(e.t * 2.4 + e.i)) * .06 + (e.hop > 0 ? Math.sin(e.hop / .7 * Math.PI) * .6 : 0); e.baby.position.y = (e.restY ?? .05) + bob; e.baby.rotation.y = Math.sin(e.t * .9 + e.i * 2) * .6 + (Math.sign(P.x - e.x) || 1) * .4; }
     }
     // the castle door swings open when tapped
     if (G.castleDoor) { const o = G.castleDoor.userData.open || 0; G.castleDoor.userData.open = Math.max(0, o - dt * .6); G.castleDoor.scale.x = 1 - Math.sin(Math.min(1, o) * Math.PI / 2) * .6; }
@@ -251,5 +347,5 @@ export function initKingdom(G, api) {
     for (const tl of tiles) { tl.glow = Math.max(on === tl.i ? .6 : 0, tl.glow - dt * 1.5); tl.m.material.emissiveIntensity = .05 + tl.glow * 1.1 + (danceT > 0 ? (Math.sin(t * 6 + tl.i + tl.j * 2) * .5 + .5) * .25 : 0); }
     for (const c of [rosie, luna]) { if (danceT > 0 && c.act <= 0) { c.dance = (c.dance || 0) + dt; c.root.rotation.y = c.dance * 3; c.root.position.y = c.y + Math.abs(Math.sin(c.dance * 6)) * .12; } else c.dance = 0; if (c.parts.skirt) c.parts.skirt.scale.set(1 + (danceT > 0 ? .08 : 0), 1, 1 + (danceT > 0 ? .08 : 0)); }
   }
-  return { update, eggs, rosie, luna, tiles, giveCrown, tapEgg, neckPath, back, steps, crown: myCrown };
+  return { update, eggs, rosie, luna, tiles, giveCrown, tapEgg, neckPath, back, steps, crown: myCrown, enterCastle, leaveCastle, sitThrone, CI };
 }

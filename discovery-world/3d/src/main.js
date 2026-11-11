@@ -18,7 +18,7 @@ import { buildMeadow, BLOCKS, BUILD, ERASE } from './meadow.js';
 import { initKarts, KART, KART_COLS } from './kart.js';
 import { initTrain } from './train.js';
 import { initMarbles } from './marble.js';
-import { initKingdom } from './kingdom.js';
+import { initKingdom, KINGDOM } from './kingdom.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -189,7 +189,7 @@ function paintStamp() { // the painter bunny paints a picture on the big wall
 }
 const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), saveSoon: () => saveSoon(), tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
 G.startKart = () => {
-  const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - KART.flag) > 4 || P.y > .5) { Sound.click(); return; }
+  const P = player; if (P.ride || P.layer !== '' || P.x < KART.garage - 5 || P.x > KART.flag + 5 || P.y > .5) { Sound.click(); return; }
   P.ride = { type: 'kart', u: 0, v: 2, lap: 0, hop: 0, hopV: 0 }; P.vx = P.vy = 0; Sound.whoosh(); Sound.tone(220, .5, 'sawtooth', .03, 2.2);
   discover('kart', 'Vroom! Hold ▶ to go faster, ◀ to slow down. JUMP hops, PAW parks.');
 };
@@ -202,7 +202,7 @@ const friends = initFriends(G, {
   scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, world, UG,
   tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
 });
-const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); } });
+const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
 
 // ---------------- bubbles ----------------
 const bubbles = [], bubbleGeo = new THREE.SphereGeometry(1, 24, 16);
@@ -289,6 +289,14 @@ function updateRide(dt) {
     if (Math.random() < dt * 25) burst(P.x - tg.x * .6, P.y + .3, P.z - tg.z * .6, ['#fff', '#ffe36e', '#9fe6ff'], 1, .6);
   } else if (R.type === 'kart' || R.type === 'train') {
     // (moved by kart.js / train.js)
+  } else if (R.type === 'whale') {
+    // riding the sky whale: one big loop over the Cloud Kingdom, then back home (JUMP hops off onto the clouds)
+    const W = G.whale; R.u += dt / 20;
+    if (R.u >= 1) { const g = W.g.position; P.x = g.x; P.y = g.y + 1.6; P.z = W.g.position.z; endRide(0, 2); return; }
+    const a = R.u * Math.PI * 2, x = W.x + Math.sin(a) * 8, y = W.y + 1.4 + Math.sin(a * 2) * 1.2, vx = Math.cos(a);
+    W.g.position.set(x, y, -7.5); W.g.rotation.y += ((vx >= 0 ? 0 : Math.PI) - W.g.rotation.y) * Math.min(1, dt * 2); W.g.rotation.z = Math.cos(a * 2) * .12 * (vx >= 0 ? 1 : -1);
+    P.x = x; P.y = y + 1.55; P.z = -7.5; P.facing = vx >= 0 ? 1 : -1; P.vx = vx * 3; P.grounded = true;
+    if (Math.random() < dt * .4) W.spout = 1.5;
   } else if (R.type === 'climb') {
     // climbing the rope ladder: slide your finger up/down (or arrow keys), or tap JUMP to climb a step
     const L = SKY.ladder; let v = 0;
@@ -364,6 +372,8 @@ const DOORS = [
   { kind: 'down', layer: '', x: SKY.ladder.x + .6, y: SKY.y, z: .6, go: () => G.startClimb(false) }, // and back down                 // the deep part of the ball pit
   { kind: 'down', layer: '', x: UG.lift, y: 0, z: .6, go: () => G.useLift() },         // glass lift down
   { kind: 'up', layer: '', x: UG.lift, y: UG.floor, z: .6, go: () => G.useLift() },    // glass lift up
+  { kind: 'door', layer: '', x: KINGDOM.castle, y: 0, z: -2.6, go: () => kingdom.enterCastle() },          // into the Princess Castle
+  { kind: 'out', layer: 'castle', x: 2001.9, y: 0, z: -3.6, go: () => kingdom.leaveCastle() },             // and back out
 ];
 function dive() { const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 12.6) > 4 || P.y > 1.5) return; P.x = 12.6; P.vy = -2; P.grounded = false; P.vx = 0; Sound.whoosh(); }
 G.useLift = () => {
@@ -373,7 +383,7 @@ G.useLift = () => {
   discover(down ? 'liftdown' : 'liftup', down ? 'Down, down in the glass lift!' : 'Up, up in the glass lift!');
 };
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
-G.tapWhale = () => { const W = G.whale; W.spout = 2.4; [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22)); discover('whale', 'The sky whale sings you a song!'); };
+G.tapWhale = () => { const W = G.whale, P = player; if (!P.ride && P.layer === '' && P.y > SKY.y - .6 && Math.abs(P.x - W.g.position.x) < 10) { P.ride = { type: 'whale', u: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('whaleride', 'You are riding the sky whale! JUMP to hop off.'); } W.spout = 2.4; [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22)); discover('whale', 'The sky whale sings you a song!'); };
 G.bounceUp = () => { const P = player; if (P.ride || Math.abs(P.x - (UG.shaft[0] + UG.shaft[1]) / 2) > 2.5 || P.y > UG.floor + 1.5) return; P.x = (UG.shaft[0] + UG.shaft[1]) / 2; P.y = UG.floor + 1; P.vy = 13.5; P.grounded = false; Sound.boing(); discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); };
 G.singCrystal = k => { k.lit = 1; k.cd = 1; Sound.bell(NOTES[k.i % 8] / 2, .06); Sound.bell(NOTES[(k.i + 2) % 8], .025, .08); burst(k.x, UG.floor + 1.5, -1.4, [k.c, '#fff'], 10, 2); discover('crystal', 'Singing crystals! Tap them or walk past them.'); };
 G.tapGem = k => { k.spin = 1.5; Sound.twinkle(); Sound.bell(NOTES[(k.i * 2) % 8], .04); burst(k.x, k.y + .5, -.6, [RAINBOW[k.i], '#fff'], 14, 2.5); discover('gem', 'Sparkly gems!'); };
@@ -491,15 +501,19 @@ canvas.addEventListener('pointermove', e => { if (stick && e.pointerId === stick
 function paintAt(a, b) {
   const g = G.paint.ctx, W = G.paint.canvas.width, H = G.paint.canvas.height;
   let c = world.paintColor; if (c === 'rainbow') { world.rainbowHue = (world.rainbowHue + 6) % 360; c = `hsl(${world.rainbowHue},90%,60%)`; }
-  g.strokeStyle = c; g.lineWidth = 26; g.lineCap = 'round'; g.lineJoin = 'round';
+  const erase = c === 'erase'; if (erase) c = '#fffaf2';
+  g.strokeStyle = c; g.lineWidth = erase ? 60 : 26; g.lineCap = 'round'; g.lineJoin = 'round';
   g.beginPath(); g.moveTo(a.x * W, (1 - a.y) * H); g.lineTo(b.x * W, (1 - b.y) * H); g.stroke();
+  if (erase) { G.paint.tex.needsUpdate = true; return; }
   g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 7; g.beginPath(); g.moveTo(a.x * W - 5, (1 - a.y) * H - 5); g.lineTo(b.x * W - 5, (1 - b.y) * H - 5); g.stroke();
   G.paint.tex.needsUpdate = true; world.painted = true;
   if (Math.random() < .2) Sound.tone(300 + Math.random() * 300, .05, 'sine', .015, 1.2);
 }
 // paint palette (appears only by the paint wall)
-const PAINTS = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ffffff', 'rainbow'];
-PAINTS.forEach(c => { const b = document.createElement('button'); b.className = 'swatch' + (c === world.paintColor ? ' selected' : ''); b.style.background = c === 'rainbow' ? 'conic-gradient(#ff4f9a,#ffd23f,#3cc46e,#3d9bff,#a15cff,#ff4f9a)' : c; b.addEventListener('pointerdown', e => { e.preventDefault(); world.paintColor = c; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s === b)); Sound.click(); }); $('paintTools').appendChild(b); });
+const PAINTS = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ffffff', 'rainbow', 'erase', 'clear'];
+// (🧽 = eraser: rub out paint, or tap a coloured part to make it white again; 🗑️ = start the picture over)
+function clearBoard() { if (nearPaint()) { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; saveSoon(); } else if (meadow.nearColor(player)) meadow.clearColoring(player); Sound.whoosh(); discover('clearboard', 'A clean page to start again!'); }
+PAINTS.forEach(c => { const b = document.createElement('button'); b.className = 'swatch' + (c === world.paintColor ? ' selected' : '') + (c === 'erase' || c === 'clear' ? ' tool' : ''); b.style.background = c === 'rainbow' ? 'conic-gradient(#ff4f9a,#ffd23f,#3cc46e,#3d9bff,#a15cff,#ff4f9a)' : c === 'erase' || c === 'clear' ? '#ffffff' : c; if (c === 'erase' || c === 'clear') b.textContent = c === 'erase' ? '🧽' : '🗑️'; b.setAttribute('aria-label', c); b.addEventListener('pointerdown', e => { e.preventDefault(); if (c === 'clear') { clearBoard(); b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 150); return; } world.paintColor = c; if (c === 'erase') discover('eraser', 'The eraser! Rub out what you drew.'); document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s === b)); Sound.click(); }); $('paintTools').appendChild(b); });
 
 // ---------------- block tray (Block Builder) ----------------
 [...BLOCKS.map((b, i) => [i, b]), [ERASE, { icon: '🧽', c: '#ffffff' }]].forEach(([i, b]) => {
@@ -525,7 +539,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 419]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 419]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -561,7 +575,7 @@ function updatePlayer(dt) {
   let land = null, landStep = false;
   if (P.vy <= 0) for (const z of G.platforms) {
     if (z.layer !== P.layer || P.x < z.a || P.x > z.b) continue;
-    const stepUp = z.step && wasG && z.y > oldY - .01 && z.y - oldY < .5;
+    const stepUp = z.step && wasG && z.y > oldY - .01 && z.y - oldY < (z.stepMax || .5);
     if (((oldY >= z.y - .02 && P.y <= z.y) || stepUp) && (!land || z.y > land.y)) { land = z; landStep = stepUp; }
   }
   if (land) {
@@ -601,7 +615,7 @@ const CAM_DIST = 9;
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 423 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, 423 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
 function updateCamera(dt) {
@@ -610,7 +624,7 @@ function updateCamera(dt) {
   camT.x += (camTargetX() - camT.x) * Math.min(1, dt * 5);
   camT.y += (P.y - camT.y) * Math.min(1, dt * (P.grounded ? 4 : 2));
   const y = camT.y;
-  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
+  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
   camera.position.set(camT.x, y + 2.5 + Math.max(0, -camT.z) * .25, CAM_DIST + camT.z); camera.lookAt(camT.x, y + 1.3, camT.z);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
@@ -636,7 +650,7 @@ function updateWorldAnim(dt, t) {
   for (const k of G.crystals) { if (P0.y < UG.ceil && Math.abs(P0.x - k.x) < .45 && k.cd <= 0 && P0.grounded) G.singCrystal(k); k.cd = Math.max(0, k.cd - dt); k.lit = Math.max(0, k.lit - dt * 1.5); k.m.material.emissiveIntensity = .25 + k.lit * 1.2; k.m.rotation.y += dt * (.3 + k.lit * 6); }
   for (const g of G.gems) { g.spin = Math.max(0, g.spin - dt); g.g.rotation.y += dt * (1 + g.spin * 10); g.g.position.y = g.y + .45 + Math.sin(t * 2 + g.i) * .08 + g.spin * .3; }
   if (!(P0.ride && P0.ride.type === 'lift')) { const target = P0.y < -1 ? UG.floor : 0; G.liftPad.position.y += (target - .07 - G.liftPad.position.y) * Math.min(1, dt * 3); } else G.liftPad.position.y = P0.y - .07;
-  { const W = G.whale; W.spout = Math.max(0, W.spout - dt); W.g.position.y = W.y + Math.sin(t * .8) * .35; W.g.position.x = W.x + Math.sin(t * .23) * 2; W.g.rotation.z = Math.sin(t * .8) * .05; W.tail.rotation.y = Math.sin(t * 2.2) * .4;
+  { const W = G.whale; W.spout = Math.max(0, W.spout - dt); if (!(player.ride && player.ride.type === 'whale')) { const k = Math.min(1, dt * 2); W.g.position.y += (W.y + Math.sin(t * .8) * .35 - W.g.position.y) * k; W.g.position.x += (W.x + Math.sin(t * .23) * 2 - W.g.position.x) * k; W.g.rotation.z = Math.sin(t * .8) * .05; W.g.rotation.y *= 1 - k; } W.tail.rotation.y = Math.sin(t * 2.2) * .4;
     if (W.spout > 0 && Math.random() < dt * 30) burst(W.g.position.x + 1.4, W.g.position.y + 1.8, W.g.position.z, ['#bfe8ff', '#ffffff', '#9fe6ff'], 3, 2.5); }
   G.skyPuffs.forEach(m => { m.position.y = SKY.y + .25 + Math.sin(t * 2 + m.position.x) * .04; });
   G.grassTime.value = t;
@@ -651,7 +665,7 @@ let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloon: world.balloon || null, build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -665,10 +679,12 @@ function restore(d) {
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
   if (Array.isArray(d.pets) && d.pets.length <= 5 && d.pets.every(okRec)) world.pets = d.pets.map(cleanRec);
   else if (okRec(d.pet)) world.pets = [cleanRec(d.pet)]; // (saves from before build 10 had one pet)
+  if (Array.isArray(d.petStay) && d.petStay.length <= 5) world.petStay = d.petStay.map(v => v === true);
   if (d.buddies && typeof d.buddies === 'object') { world.buddies = {}; for (const k of ['biscuit', 'pom', 'twinkle']) if (d.buddies[k] === true) world.buddies[k] = true; }
   if (Array.isArray(d.dinoFollow) && d.dinoFollow.length === 3 && d.dinoFollow.every(v => typeof v === 'boolean')) world.dinoFollow = d.dinoFollow.slice();
   if (okRec(d.petDraft)) world.petDraft = { col: d.petDraft.col, ears: d.petDraft.ears, tail: d.petDraft.tail, pat: d.petDraft.pat };
-  if (typeof d.balloon === 'string' && /^#[0-9a-f]{6}$/i.test(d.balloon)) world.balloon = d.balloon;
+  const okCol = c => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
+  if (Array.isArray(d.balloons) && d.balloons.length <= 6 && d.balloons.every(okCol)) world.balloons = d.balloons.slice(); else if (okCol(d.balloon)) world.balloons = [d.balloon]; // (older saves had one balloon)
   const hex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
   if (Array.isArray(d.build) && d.build.length === BUILD.cols * BUILD.rows && d.build.every(v => Number.isInteger(v) && v >= -1 && v < BLOCKS.length)) world.build = d.build.slice();
   if (Array.isArray(d.colorings) && d.colorings.length === meadow.PICTURES.length && d.colorings.every((a, n) => Array.isArray(a) && a.length === meadow.PICTURES[n].length && a.every(hex))) world.colorings = d.colorings.map(a => a.slice());
@@ -747,7 +763,7 @@ function frame() {
   const P = player;
   creature.root.position.set(P.x, P.y, P.z);
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide')) && !P.swim; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
-  { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
+  { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
@@ -780,7 +796,7 @@ setTimeout(begin, 8000);
 // debug/test hook (used by the automated tests only)
 window.__DDW3 = {
   player, world, keys, fluffs, G, camera, Sound, save, IN,
-  teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
+  teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 2000 ? 'castle' : x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
   bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, kingdom: () => kingdom, meadowRestore: () => meadow.restored(),

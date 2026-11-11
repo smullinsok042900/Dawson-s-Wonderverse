@@ -56,21 +56,23 @@ export function initKarts(G, api) {
     for (let i = 0; i < 8; i++) { const s = new THREE.Mesh(new THREE.BoxGeometry(.45, .5, .05), toy(i % 2 ? '#ffffff' : '#ff4f9a')); s.position.set(gx - 3.15 + i * .9, 4.0, -1.88); add(s); }
     // tools on the wall
     for (const [x, c] of [[gx - 2.2, '#ffd23f'], [gx - 1.4, '#3cc46e'], [gx + 1.6, '#a15cff']]) { const t = new THREE.Mesh(new RoundedBoxGeometry(.18, .9, .1, 1, .05), toy(c)); t.position.set(x, 2.6, -4.9); add(t); }
-    const turn = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, .2, 32), toy('#c9a6ff', { m: .3 })); turn.position.set(gx, .1, -3.6); turn.receiveShadow = true; add(turn); G.kartTurn = turn;
+    const turn = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, .2, 32), toy('#c9a6ff', { m: .3 })); turn.position.set(gx + 1.3, .1, -3.6); turn.receiveShadow = true; add(turn); G.kartTurn = turn;
   }
-  const preview = new THREE.Group(); preview.position.set(gx, .2, -3.6); add(preview);
+  const preview = new THREE.Group(); preview.position.set(gx + 1.3, .2, -3.6); add(preview);
   let previewKart = null; function rebuildPreview() { if (previewKart) preview.remove(previewKart); previewKart = buildKart(world.kart); preview.add(previewKart); }
   rebuildPreview();
+  // tap the kart on the turntable (or the turntable) to hop in and drive
+  preview.userData.tap = () => api.startKart(); G.taps.push(preview); G.kartTurn.userData.tap = () => api.startKart(); G.taps.push(G.kartTurn);
   const BTN = [['col', '#ff4f9a', '🎨'], ['shape', '#3d9bff', '🚗'], ['wheels', '#ffd23f', '⚙️']];
   const iconTex = e => { const c = document.createElement('canvas'); c.width = c.height = 96; const g = c.getContext('2d'); g.font = '68px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 48, 54); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
   BTN.forEach(([part, c, e], i) => {
-    const g = new THREE.Group(); g.position.set(gx - 2.6 + i * 1.3, 0, -1.3); add(g);
+    const g = new THREE.Group(); g.position.set(gx - 2.8 + i * 1.0, 0, -1.3); add(g);
     const post = new THREE.Mesh(new THREE.CylinderGeometry(.12, .16, .9, 12), toy('#ffffff')); post.position.y = .45; post.castShadow = true; g.add(post);
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(.36, .36, .18, 24), toy(c, { em: c, ei: .3 })); cap.position.y = 1.0; cap.rotation.x = .5; cap.castShadow = true; g.add(cap);
     const ic = new THREE.Mesh(new THREE.PlaneGeometry(.5, .5), new THREE.MeshBasicMaterial({ map: iconTex(e), transparent: true })); ic.position.set(0, 1.2, .2); ic.rotation.x = -.4; g.add(ic);
     api.tap(g, () => { const n = { col: KART_COLS.length, shape: 3, wheels: 3 }[part]; world.kart[part] = (world.kart[part] + 1) % n; rebuildPreview(); Sound.tone(500 + i * 120, .12, 'triangle', .05, 1.4); burst(gx, 1.4, -3, ['#fff', KART_COLS[world.kart.col]], 10, 2); discover('kartmaker', 'The Kart Garage! Design your kart, then tap the flag to drive.'); api.saveSoon(); });
   });
-  G.interact.push({ x: gx - 1.3, y: 0, layer: '', disc: 'kartmaker', run: () => { world.kart.col = (world.kart.col + 1) % KART_COLS.length; rebuildPreview(); Sound.tone(500, .12, 'triangle', .05, 1.4); discover('kartmaker', 'The Kart Garage! Design your kart, then tap the flag to drive.'); }, hintY: 2.4 });
+  G.interact.push({ x: gx, y: 0, layer: '', disc: 'kartmaker', run: () => { discover('kartmaker', 'The Kart Garage! Tap the buttons to design your kart.'); api.startKart(); }, hintY: 2.4 });
   // the checkered "go" flag
   const flagTex = (() => { const c = document.createElement('canvas'); c.width = 128; c.height = 80; const g = c.getContext('2d'); for (let y = 0; y < 5; y++) for (let x = 0; x < 8; x++) { g.fillStyle = (x + y) % 2 ? '#2a1a40' : '#ffffff'; g.fillRect(x * 16, y * 16, 16, 16); } const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
   const flag = new THREE.Group(); flag.position.set(KART.flag, 0, -1.4); add(flag);

@@ -112,7 +112,7 @@ export function buildMeadow(G, api) {
       if (!h || !h.uv) return;
       const x = h.uv.x * PW, y = (1 - h.uv.y) * PH;
       for (let k = pic.length - 1; k >= 0; k--) if (g.isPointInPath(pic[k], x, y)) {
-        let col = world.paintColor; if (col === 'rainbow') col = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'][Math.floor(Math.random() * 6)];
+        let col = world.paintColor; if (col === 'erase') col = '#ffffff'; if (col === 'rainbow') col = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'][Math.floor(Math.random() * 6)];
         world.colorings[n][k] = col; draw(); Sound.tone(500 + k * 30, .12, 'sine', .05, 1.4); burst(h.point.x, h.point.y, h.point.z + .1, [col, '#fff'], 8, 1.5);
         discover('coloring', 'The Colouring Corner! Pick a colour, then tap the picture.'); api.saveSoon(); return;
       }
@@ -134,6 +134,7 @@ export function buildMeadow(G, api) {
   const near = P => P.layer === '' && P.y < 6 && P.y > -.5;
   return {
     update, restored, PICTURES,
+    clearColoring: P => { const n = Math.abs(P.x - COLOR_X[0]) < Math.abs(P.x - COLOR_X[1]) ? 0 : 1; world.colorings[n] = world.colorings[n].map(() => '#ffffff'); pics[n].draw(); api.saveSoon(); },
     nearBuild: P => near(P) && P.x > B.x0 - 2.5 && P.x < B.x0 + W + 2.5,
     nearColor: P => near(P) && P.x > COLOR_X[0] - 4 && P.x < COLOR_X[1] + 4,
   };
