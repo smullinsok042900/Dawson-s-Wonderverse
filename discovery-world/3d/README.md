@@ -37,6 +37,18 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 8: Kart Garage, race track, more realistic look
+- **Kart Garage** past the Creative Meadow:
+  - Three big buttons change your kart's colour, its shape (bug, rocket or bubble) and its wheels, and the kart spins on a turntable.
+  - A **Mechanic Fox** talks to you.
+  - Saved.
+- **Race track:** tap the checkered flag to drive round a big oval track with kerbs, cones and a start/finish arch. Slide right to go faster and left to slow down. JUMP hops, and PAW (or sliding down) parks. There's confetti every lap. The camera follows you round the track.
+- **More realistic graphics:**
+  - Shiny things now reflect a soft sky (blue above, pink at the horizon and a bright sun) mixed with studio light.
+  - Thousands of grass tufts sway in the breeze across the park, meadow and track area.
+  - More hills and trees around the track.
+  - A bloom glow was tried and left out. It washed the colours out, and it is too heavy for phones.
+
 ## 3D build 7: the Creative Meadow (a bigger world), talking friends, colours
 - **Easier purple shelf in the Lab:** the second spring pad bounces higher and gently pushes you onto the shelf, so the purple Fluffkin is easy to reach in one bounce. The shelf is also wider.
 - **The world is bigger:** the new **Creative Meadow** comes after the Fluffkin House, through a pastel arch.
@@ -137,7 +149,7 @@ npm test             # 48 automated checks in headless Chromium
 `?test` runs a light mode (lower resolution, no shadows) that is used only by the automated tests, because the test browser has no graphics card. `?hq` turns off the automatic quality lowering, for screenshots.
 
 ## Test report (3D build 1)
-**Result:** 96/96 checks passed (3D build 7). New checks cover:
+**Result:** 104/104 checks passed (3D build 8). New checks cover the kart buttons, driving, hopping, a lap, parking, the fox, and the kart design surviving a reload. Earlier: 96/96 (3D build 7). New checks cover:
 - one bounce landing on the purple shelf
 - the block tray, placing, stacking and erasing blocks, and standing on them
 - the colour palette and filling a colouring picture
