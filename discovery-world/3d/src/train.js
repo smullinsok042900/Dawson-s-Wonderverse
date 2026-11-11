@@ -123,7 +123,7 @@ export function initTrain(G, api) {
   }
   function board(i) {
     const P = api.player; if (P.ride || Math.abs(P.x - STATIONS[i].x) > 6 || P.layer !== '' || P.y > 1.5) { T.mode = 'parked'; T.at = i; return; }
-    P.ride = { type: 'train' }; P.vx = P.vy = 0; T.mode = 'stopped'; T.at = i; T.wait = 1.6; T.v = 0;
+    P.ride = { type: 'train' }; P.vx = P.vy = 0; P.x = STATIONS[i].x; P.y = .57; P.z = TRAIN.z; // straight into the seat T.mode = 'stopped'; T.at = i; T.wait = 1.6; T.v = 0;
     Sound.chime(); burst(STATIONS[i].x, 1.2, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8'], 12, 2);
     if (i === STATIONS.length - 1) face(-1); else if (i === 0) face(1);
   }
