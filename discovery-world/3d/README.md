@@ -37,6 +37,20 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 17: professional picture pipeline (rendering overhaul)
+This build improves how everything already in the game is drawn. It adds no new content.
+- **HDR rendering:** the world is drawn into a high-range picture with 4x anti-aliasing, then tone-mapped (Neutral) and colour-managed in one final pass.
+- **Bloom:** sparkles, glowing windows and sunlit highlights get a soft glow. Only the brightest things glow, blurred at quarter size so it stays cheap.
+- **Colour grade:** slightly richer colour, a soft contrast curve, warm highlights, cool shadows and a gentle vignette.
+- **Ambient occlusion:** soft shading where things meet the ground or each other (GTAO at half size). It reuses the depth picture, so the world is not drawn twice.
+- **Shadows:** 2048px shadow maps with a tighter shadow box around the player, so shadows are sharper. The sun is snapped to shadow texels so shadow edges no longer shimmer as you walk.
+- **Materials:** every toy-like material gets a fine surface-detail normal map and slightly rougher, softer clearcoat. That makes things look less like shiny plastic.
+- **Atmosphere:** softer, deeper pink-lilac distance haze.
+- **Smoother motion:** the character and camera are interpolated between physics steps, so movement looks smooth on 60Hz and 120Hz screens (no judder).
+- **iPhone performance:** if frames drop, the game first lowers resolution a little, then turns off the extra effects, then lowers resolution further (60fps target, 30fps floor).
+- Before/after: `screenshots/compare_b17.jpg`.
+- Saves, controls and all gameplay are unchanged.
+
 ## 3D build 16: a softer, more magical look (benchmark: the park, Pip and the castle)
 - **Sparkly eyes on every character:**
   - Big patterned irises with fine fibres, a dark rim and a soft inner glow.
