@@ -226,7 +226,7 @@ const UG_F = -6;
   await teleport(300); await sleep(600);
   { const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await page.evaluate(() => { let done = false; __DDW3.friends.buddies.biscuit.root.traverse(o => { if (!done && o.userData.tap) { done = true; o.userData.tap(); } }); }); await sleep(300);
     const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap a friend who follows you: they stay (tap again to bring them)', r[0] === n0 - 1 && r[1] === false, `followers ${n0} → ${r[0]}`); }
-  await teleport(55, 9.6); await page.evaluate(() => __DDW3.G.tapWhale()); await sleep(300); c = await S(); check('tap the sky whale: ride on its back', c.ride === 'whale' && c.y > 12, `ride=${c.ride} y=${c.y.toFixed(1)}`);
+  await teleport(55, 9.6); await page.evaluate(() => __DDW3.G.tapWhale()); c = await waitFor(s => s.ride === 'whale' && s.y > 12, 5000); check('tap the sky whale: ride on its back', c.ride === 'whale' && c.y > 12, `ride=${c.ride} y=${c.y.toFixed(1)}`);
   await press('#jumpBtn'); await sleep(300); check('JUMP hops off the whale onto the clouds', !(await S()).ride);
   await teleport(16.5); { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let top = 0, n = 0; const f = () => { top = Math.max(top, P.y); if ((P.ride && P.ride.type === 'slide') || ++n > 600) { D.keys.right = false; return res([top, P.ride && P.ride.type]); } requestAnimationFrame(f); }; f(); }));
     check('walk up the steps by the ball pit to the little slide (no jumping needed)', r[0] > 3.7 && r[1] === 'slide', JSON.stringify(r)); }
