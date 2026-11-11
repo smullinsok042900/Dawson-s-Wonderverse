@@ -122,7 +122,21 @@ export function initFriends(G, api) {
     G.interact.push({ x, y, layer: '', disc, run: () => tapCritter(c), hintY: 2.6 });
     critters.push(c); return c;
   }
-  function tapCritter(c) { c.act = 1.6; c.onTap(c); discover(c.disc, c.msg); }
+  // every critter TALKS: a picture speech bubble (emoji, no reading) and a babbling voice
+  const TALK = {
+    bear: ['🎈😊', '🎈❤️', '👋🐻'], bunny: ['🎨✨', '🖌️💖', '🌈😄'], frog: ['🥁🎶', '🐸😄', '🎵🎵'], penguin: ['💃🎵', '🐧❄️', '🕺✨'], owl: ['🦉💤', '🌙⭐', '😴💤'],
+    beaver: ['🧱👉', '🏠✨', '🔨😊'], unicorn: ['🌈✨', '🦄💖', '⭐🌟'], hedgehog: ['🎸🎶', '🎵😊', '🎶💕'], snail: ['🐌💨', '🐚😴', '🍃😊'],
+  };
+  const VOICE = { bear: 260, bunny: 620, frog: 300, penguin: 520, owl: 380, beaver: 340, unicorn: 700, hedgehog: 560, snail: 800 };
+  const bubbles = [];
+  function bubbleTex(text) { const c = document.createElement('canvas'); c.width = 256; c.height = 160; const g = c.getContext('2d'); g.fillStyle = 'rgba(255,255,255,.97)'; g.strokeStyle = '#c9a6ff'; g.lineWidth = 8; g.beginPath(); g.roundRect(8, 8, 240, 110, 46); g.fill(); g.stroke(); g.beginPath(); g.moveTo(100, 114); g.lineTo(128, 152); g.lineTo(150, 114); g.fill(); g.font = '64px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 66); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+  function say(c, text) {
+    const old = bubbles.find(b => b.c === c); if (old) { scene.remove(old.s); bubbles.splice(bubbles.indexOf(old), 1); }
+    const s2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(text), depthTest: false })); s2.scale.set(1.8, 1.12, 1); s2.renderOrder = 11; add(s2);
+    bubbles.push({ c, s: s2, life: 2.8 });
+    const base = VOICE[c.kind] || 500; for (let i = 0; i < 4 + Math.floor(Math.random() * 3); i++) Sound.tone(base * (.85 + Math.random() * .4), .08, i % 2 ? 'triangle' : 'sine', .045, .9 + Math.random() * .4, i * .1);
+  }
+  function tapCritter(c) { c.act = 1.6; c.onTap(c); discover(c.disc, c.msg); const lines = TALK[c.kind] || ['😊']; c.line = ((c.line ?? -1) + 1) % lines.length; say(c, lines[c.line]); }
   const fluffy = (c, o) => toy(c, { r: .6, cc: .2, sheen: 1, sheenColor: '#ffffff', ...o });
   // Balloon Bear (park entrance)
   critter('bear', 137.6, 0, -2.4, r => {
@@ -183,6 +197,50 @@ export function initFriends(G, api) {
     return { head, arm, eyes: f.eyes };
   }, c => { Sound.tone(420, .35, 'sine', .05, .8); Sound.tone(360, .45, 'sine', .05, .8, .4); burst(c.x, c.y + 1.2, c.z, ['#fff3a6', '#fff'], 12, 2); }, 'owl', 'Hoo hoo! The sleepy owl woke up!');
 
+  // ----- the Creative Meadow friends -----
+  critter('beaver', 205.6, 0, -2.4, r => {
+    const fur = fluffy('#b07a4a'), light = fluffy('#f0d0a8');
+    r.add(ball(fur, .45, 0, .5, 0, 1, 1.1, .9)); r.add(ball(light, .3, 0, .48, .22, 1, 1, .5));
+    const head = new THREE.Group(); head.position.y = 1.15; r.add(head); head.add(ball(fur, .36)); head.add(ball(light, .16, 0, -.1, .3, 1.3, .8, .7));
+    head.add(ball(M('#ffffff'), .06, 0, -.24, .36, 1.3, 1, .5)); for (const s2 of [-1, 1]) head.add(ball(fur, .1, s2 * .26, .28, 0));
+    face(head, { y: .06, z: .3, spread: .13, eyeR: .08, mouthY: -.14 });
+    const hat = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#ffd23f')); hat.position.y = .22; head.add(hat);
+    const tail = ball(M('#7a4a2a', { r: .6 }), .25, 0, .25, -.4, 1.3, .3, 1.4); r.add(tail);
+    const arm = new THREE.Group(); arm.position.set(.42, .7, .15); r.add(arm); arm.add(ball(fur, .11, 0, .12, 0, 1, 1.5, 1));
+    const blk = new THREE.Mesh(new THREE.BoxGeometry(.3, .3, .3), M('#ff4f9a')); blk.position.set(0, .4, .1); arm.add(blk);
+    return { head, arm };
+  }, c => { Sound.tone(500, .1, 'square', .03, 1); burst(c.x, 1.6, c.z, ['#ff4f9a', '#ffd23f', '#3d9bff'], 12, 2); }, 'beaver', 'The builder beaver says: build something!');
+  critter('unicorn', 240, 0, -2.4, r => {
+    const coat = fluffy('#ffffff'), pink = toy('#ffb8dc');
+    r.add(ball(coat, .6, 0, .95, 0, 1.4, .9, .8));
+    for (const [x, z] of [[-.5, -.25], [-.5, .25], [.5, -.25], [.5, .25]]) { const l = new THREE.Mesh(new THREE.CapsuleGeometry(.11, .5, 4, 8), coat); l.position.set(x, .35, z); r.add(l); r.add(ball(M('#c9a6ff'), .12, x, .08, z, 1, .6, 1.1)); }
+    const head = new THREE.Group(); head.position.set(.85, 1.5, 0); r.add(head); head.add(ball(coat, .36, 0, 0, 0, 1.2, 1, .9)); head.add(ball(pink, .17, .3, -.12, 0, 1, .8, 1));
+    const horn = new THREE.Mesh(new THREE.ConeGeometry(.08, .45, 12), toy('#ffd84a', { em: '#ffd84a', ei: .4 })); horn.position.set(.12, .45, 0); horn.rotation.z = -.3; head.add(horn);
+    const fh = new THREE.Group(); fh.rotation.y = Math.PI / 2; fh.position.set(.1, .05, 0); head.add(fh); face(fh, { y: .02, z: .3, spread: .13, eyeR: .08, mouthY: -.14 });
+    ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'].forEach((c2, i) => { r.add(ball(toy(c2), .14, .55 - i * .12, 1.55 + Math.sin(i) * .05, -.12, 1, 1.3, .7)); r.add(ball(toy(c2), .13, -.85, 1.05 - i * .1, 0, 1, 1, .7)); });
+    const arm = new THREE.Group(); r.add(arm);
+    return { head, arm };
+  }, c => { for (let i = 0; i < 4; i++) burst(c.x + .8, 2.2, c.z, ['#ff4f9a', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'], 14, 3.5); Sound.chime(); }, 'unicorn', 'The rainbow unicorn sprinkles rainbow sparkles!');
+  critter('hedgehog', 246, 0, -2.4, r => {
+    const face1 = fluffy('#f3d6b0'), spikes = toy('#8a5a3a', { r: .7 });
+    r.add(ball(face1, .38, 0, .42, .05, 1, .95, .95));
+    for (let i = 0; i < 16; i++) { const a = -1.1 + (i % 8) * .3, b = i < 8 ? .2 : -.3; const sp = new THREE.Mesh(new THREE.ConeGeometry(.08, .32, 6), spikes); sp.position.set(Math.sin(a) * .4, .5 + Math.cos(a) * .35, b - .1); sp.lookAt(sp.position.clone().multiplyScalar(2).add(new THREE.Vector3(0, -.5, -.6))); sp.rotateX(Math.PI / 2); r.add(sp); }
+    const head = new THREE.Group(); head.position.set(0, .55, .3); r.add(head); face(head, { y: .05, z: .06, spread: .1, eyeR: .07, mouthY: -.08 });
+    head.add(ball(M('#3a2030'), .05, 0, -.02, .16));
+    const arm = new THREE.Group(); arm.position.set(.1, .35, .4); r.add(arm);
+    const guitar = new THREE.Group(); guitar.rotation.z = .6; arm.add(guitar); guitar.add(ball(M('#ff9a2e'), .18, 0, 0, 0, 1, 1.2, .4)); const neck = new THREE.Mesh(new THREE.BoxGeometry(.06, .45, .04), M('#7a4a2a')); neck.position.y = .3; guitar.add(neck);
+    return { head, arm };
+  }, c => { [0, 2, 4, 5, 4, 2, 0].forEach((n, i) => Sound.tone([262, 294, 330, 349, 392, 440, 494][n] * 2, .25, 'triangle', .05, 1, i * .14)); burst(c.x, 1.2, c.z, ['#ffd23f', '#fff'], 10, 2); }, 'hedgehog', 'The hedgehog plays a song on the guitar!');
+  critter('snail', 251, 0, -2.0, r => {
+    const body = new THREE.Group(); r.add(body);
+    const skin = toy('#b9f0b0', { r: .3, cc: .9 }); const shell = new THREE.Mesh(new THREE.TorusGeometry(.25, .17, 12, 24), toy('#ff9fd2', { cc: 1 })); shell.position.set(-.05, .45, 0); body.add(shell);
+    r.add(ball(skin, .2, .05, .12, 0, 2.2, .6, .8));
+    const head = new THREE.Group(); head.position.set(.45, .32, 0); r.add(head); head.add(ball(skin, .16));
+    for (const z of [-.06, .06]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .25, 6), skin); st.position.set(.03, .2, z); head.add(st); head.add(ball(M('#ffffff'), .05, .03, .33, z)); head.add(ball(M('#2a0f45'), .03, .06, .34, z)); }
+    const arm = new THREE.Group(); r.add(arm);
+    return { head, arm, body };
+  }, c => { Sound.tone(900, .3, 'sine', .03, .5); }, 'snail', 'The little snail hides in its shell!');
+
   // =================== the balloon that floats with you ===================
   const balloon = new THREE.Group(); add(balloon);
   const bMat = M('#ff4f9a', { r: .15, cc: 1 });
@@ -232,7 +290,9 @@ export function initFriends(G, api) {
     for (const c of critters) {
       c.t += dt; c.act = Math.max(0, c.act - dt);
       const near = Math.abs(P.x - c.x) < 3.5 && Math.abs(P.y - c.y) < 3; c.near += ((near ? 1 : 0) - c.near) * Math.min(1, dt * 4);
+      if (near && !c.greeted) { c.greeted = true; say(c, '👋😊'); }
       const p = c.parts, a = c.act;
+      if (c.kind === 'snail') { c.x += (c.dir || (c.dir = 1)) * dt * .25; if (c.x > 254 || c.x < 249.5) c.dir *= -1; c.root.position.x = c.x; c.root.scale.x = c.dir > 0 ? 1 : -1; if (p.body) p.body.scale.setScalar(a > 0 ? Math.max(.05, 1 - Math.sin(a / 1.6 * Math.PI) ) : 1); }
       c.root.position.y = c.y + Math.abs(Math.sin(c.t * 2)) * .03 + (a > 0 && c.kind !== 'owl' ? Math.abs(Math.sin(a * 8)) * .35 : 0);
       c.root.rotation.y = Math.sin(c.t * .7) * .2 + (c.near > .5 ? Math.sign(P.x - c.x) * .4 : 0) + (c.kind === 'penguin' && a > 0 ? (1.6 - a) * 8 : 0);
       if (p.arm) p.arm.rotation.z = c.near > .5 || a > 0 ? 1.8 + Math.sin(c.t * 12) * .5 : .2;
@@ -241,6 +301,7 @@ export function initFriends(G, api) {
       if (c.kind === 'frog' && p.drumTop) p.drumTop.position.y = .57 - (a > 0 ? Math.abs(Math.sin(a * 22)) * .05 : 0);
       if (c.kind === 'bear') p.bunch.position.y = 2.6 + Math.sin(c.t * 1.6) * .08;
     }
+    for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.life -= dt; b.s.position.set(b.c.root.position.x, b.c.y + (b.c.kind === 'unicorn' ? 3.3 : 2.7) + Math.sin(t * 3) * .05, b.c.root.position.z + .4); b.s.material.opacity = Math.min(1, b.life * 2); if (b.life <= 0) { scene.remove(b.s); bubbles.splice(i, 1); } }
     // balloon floats above you on a string
     balloon.visible = str.visible = !!world.balloon && !(P.ride && P.ride.type === 'slide');
     if (world.balloon) {
@@ -257,5 +318,5 @@ export function initFriends(G, api) {
     mGeo.attributes.position.needsUpdate = true;
   }
   function restored() { world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 }; rebuildPreview(); if (world.pet) spawnPet(player.x - 1.2, player.y, 0); }
-  return { update, restored, hasPet: () => !!pet, petPos, critters };
+  return { update, restored, hasPet: () => !!pet, petPos, critters, bubbleCount: () => bubbles.length };
 }

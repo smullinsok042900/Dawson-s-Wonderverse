@@ -37,6 +37,15 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 7: the Creative Meadow (a bigger world), talking friends, colours
+- **Easier purple shelf in the Lab:** the second spring pad bounces higher and gently pushes you onto the shelf, so the purple Fluffkin is easy to reach in one bounce. The shelf is also wider.
+- **The world is bigger:** the new **Creative Meadow** comes after the Fluffkin House, through a pastel arch.
+  - **Block Builder:** a building wall 10 blocks wide and 5 high. Pick a block in the tray: 6 colours, window, door, roof, star, heart, or the sponge to erase. Then tap where it goes. Build houses, stairs and towers. **You can climb on what you build.** Saved.
+  - **Colouring Corner:** two big colouring pictures, a rainbow castle and a butterfly. Pick a colour and tap a part to fill it. Saved.
+  - **New friends:** Builder Beaver, Rainbow Unicorn (sprinkles rainbow sparkles), Hedgehog (plays a guitar song), and a little Snail that crawls about and hides in its shell.
+- **Every friend talks:** they say hello with a 👋 bubble when you come near. When tapped, they "say" something in a picture speech bubble (emoji, no reading) with a cute babbling voice.
+- **Customize your creature:** the new paint-palette button opens a panel to choose your creature's colour (8 per creature) and switch on a **sparkle trail**. Saved.
+
 ## Home-screen app: "Dawson's Discovery World" (full screen, works offline)
 On the iPhone, open https://smullinsok042900.github.io/Dawson-s-Wonderverse/discovery-world/3d/ in **Safari**. Tap the **Share** button (the square with an arrow), then **Add to Home Screen**, then **Add**.
 
@@ -128,7 +137,15 @@ npm test             # 48 automated checks in headless Chromium
 `?test` runs a light mode (lower resolution, no shadows) that is used only by the automated tests, because the test browser has no graphics card. `?hq` turns off the automatic quality lowering, for screenshots.
 
 ## Test report (3D build 1)
-**Result:** 84/84 checks passed (3D build 6). New checks: climbing the rope ladder, bouncing on the cloud puffs, the sky whale, and the giant rainbow slide. One real bug was caught and fixed: when two surfaces overlapped, you landed on the lower one, so the cloud puffs didn't bounce. Earlier: 79/79 (3D build 5). New checks cover the Pet Workshop buttons, hatching a pet, the pet following you, the pet's trick, the Balloon Bear, the Painter Bunny, the frog, penguin and owl, and reloading with your pet and balloon still there. Earlier: 69/69 (3D build 4). Movement now uses finger slides, plus checks for a slide up to jump, a gentle slide walking slowly, and a slide down to dive. Earlier: 66/66 (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
+**Result:** 96/96 checks passed (3D build 7). New checks cover:
+- one bounce landing on the purple shelf
+- the block tray, placing, stacking and erasing blocks, and standing on them
+- the colour palette and filling a colouring picture
+- the unicorn's speech bubble and the hedgehog
+- choosing a creature colour and the sparkle trail
+- reloading with your building, colouring and colours still there
+
+One real bug was caught and fixed: the block tray sat over the bottom row of the building wall, so tapping that row picked a block instead of placing one. The tray is now a small grid on the right side. Earlier: 84/84 (3D build 6). New checks: climbing the rope ladder, bouncing on the cloud puffs, the sky whale, and the giant rainbow slide. One real bug was caught and fixed: when two surfaces overlapped, you landed on the lower one, so the cloud puffs didn't bounce. Earlier: 79/79 (3D build 5). New checks cover the Pet Workshop buttons, hatching a pet, the pet following you, the pet's trick, the Balloon Bear, the Painter Bunny, the frog, penguin and owl, and reloading with your pet and balloon still there. Earlier: 69/69 (3D build 4). Movement now uses finger slides, plus checks for a slide up to jump, a gentle slide walking slowly, and a slide down to dive. Earlier: 66/66 (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
 
 **Setup:** Playwright headless Chromium at 844×390 with touch input. WebGL ran in software (SwiftShader), so it was very slow (about 2–3 frames per second). That speed says nothing about a real iPhone.
 

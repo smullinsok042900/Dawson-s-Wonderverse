@@ -49,7 +49,7 @@ const UG_F = -6;
   await page.evaluate(() => __DDW3.teleport(1.2)); await sleep(1500); // start at the far left (walking right leads into the ball pit and its deep part)
   c = await S(); const x0 = c.x;
   await holdBtn('#rightBtn', 600); c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
-  await sleep(1200); const x1 = (await S()).x; await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
+  const x1 = await page.evaluate(() => new Promise(r => { let still = 0, n = 0; const f = () => { const P = __DDW3.player; still = Math.abs(P.vx) < .01 ? still + 1 : 0; if (still > 4 || ++n > 300) return r(P.x); requestAnimationFrame(f); }; f(); })); await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
   await holdBtn('#leftBtn', 500); check('slide a finger left to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); const seen = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if (P.y > .3) return r(P.y); if (++n > 200) return r(P.y); requestAnimationFrame(f); }; f(); })); await touch('touchStart', [j]); await touch('touchEnd', []); const jy = await seen; check('JUMP jumps', jy > .3, `y=${jy.toFixed(2)}`);
     // (the slow software renderer here can't keep up with two real taps inside one jump, so the 2nd tap is sent on the very next frame)
@@ -136,10 +136,37 @@ const UG_F = -6;
   check('the Cloud Kingdom is a new discovery', (await S()).disc.includes('sky'));
   await shot('18_cloud_kingdom.jpg');
   await teleport(50.4, 9.5); { const my = await page.evaluate(() => new Promise(r => { const D = __DDW3; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, D.player.y); if (D.player.x > 51.4) D.keys.right = false; if (m > 13 || ++n > 500) { D.keys.right = false; return r(m); } requestAnimationFrame(f); }; f(); })); check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
-  await teleport(54.5, 9.5); await tapWorld(56, 14.1, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
+  await teleport(54.5, 9.5); await tapWorld(56, 13.2, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
   await teleport(65.8, 9.5);
   { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
     await holdBtn('#rightBtn', 600); const r = await sl; check('walk off the clouds onto the giant rainbow slide, all the way down to the floor', r[0] && r[2] < .6 && r[1] > 71, `slid=${r[0]} landed x=${r[1].toFixed(1)} y=${r[2].toFixed(2)}`); }
+  // ---------- build 7: easier purple shelf, Creative Meadow ----------
+  await teleport(114.2);
+  { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, P.y); if (P.x > 114.9) D.keys.right = false; if ((m > 5 && P.grounded) || ++n > 700) { D.keys.right = false; return res([P.y, P.x]); } requestAnimationFrame(f); }; f(); }));
+    check('one bounce on the second spring pad lands you on the purple shelf', Math.abs(r[0] - 5) < .05, `ended at y=${r[0].toFixed(2)} x=${r[1].toFixed(1)}`); }
+  await teleport(211);
+  check('the block tray appears by the Block Builder', await page.locator('#buildTools').evaluate(e => e.classList.contains('show')));
+  await page.locator('.blk[data-t="2"]').tap(); await sleep(150);
+  await tapWorld(213.8, .5, -1.0); await sleep(300);
+  { const b = await page.evaluate(() => __DDW3.world.build.filter(v => v >= 0).length); check('tap the builder wall: a block appears', b === 1, `${b} blocks`); }
+  await tapWorld(213.8, 1.5, -1.0); await sleep(300); await tapWorld(215.0, .5, -1.0); await sleep(300);
+  { const b = await page.evaluate(() => __DDW3.world.build.filter(v => v >= 0).length), plats = await page.evaluate(() => __DDW3.G.platforms.filter(p => p.builder).length); check('build more blocks; their tops are things you can stand on', b === 3 && plats >= 2, `${b} blocks, ${plats} standable tops`); }
+  await page.locator('.blk[data-t="-2"]').tap(); await sleep(150); await tapWorld(215.0, .5, -1.0); await sleep(300);
+  { const b = await page.evaluate(() => __DDW3.world.build.filter(v => v >= 0).length); check('the sponge erases a block', b === 2, `${b} blocks`); }
+  await shot('19_block_builder.jpg');
+  await teleport(229.6);
+  check('the colour palette appears by the Colouring Corner', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
+  await page.locator('.swatch').nth(1).tap(); await sleep(150);
+  { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(228.17, 2.18, -2.3); await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
+    check('tap part of a colouring picture: it fills with your colour', before !== after && (await S()).disc.includes('coloring')); }
+  await shot('20_colouring.jpg');
+  await teleport(238); await tapWorld(240, 1.2, -2.4); await sleep(300);
+  { const n = await page.evaluate(() => __DDW3.friends.bubbleCount()); check('tap the unicorn: it talks in a picture speech bubble', (await S()).disc.includes('unicorn') && n > 0, `${n} bubbles`); }
+  await teleport(244.4); await tapWorld(246, .6, -2.4); await sleep(200); check('the hedgehog plays a song', (await S()).disc.includes('hedgehog'));
+  await page.locator('#styleBtn').tap(); await sleep(300); check('the paint-palette button opens the creature colours', await page.locator('#stylePanel').evaluate(e => e.classList.contains('show')));
+  await page.locator('.spCol').nth(2).tap(); await sleep(300); await page.locator('#sparkleBtn').tap(); await sleep(200);
+  { const st = await page.evaluate(() => ({ s: __DDW3.world.styles, sp: __DDW3.world.sparkle, k: __DDW3.player.creature })); check('pick a new colour for your creature and turn on the sparkle trail', st.s && st.s[st.k] && st.sp, JSON.stringify(st)); }
+  await page.locator('#styleDone').tap(); await sleep(200);
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
@@ -184,13 +211,14 @@ const UG_F = -6;
   await press('#pawBtn'); await sleep(200); await holdBtn('#leftBtn', 3200); c = await S(); check('walk back down the stairs', c.stair === null && c.y === 0, `y=${c.y}`);
   await page.evaluate(() => __DDW3.teleport(1003.2)); await sleep(300); await press('#pawBtn'); await sleep(500); c = await S(); check('the front door inside takes you back outside', c.layer === '' && Math.abs(c.x - 190) < .1);
   // ---------- sound + saving ----------
-  await page.locator('#soundBtn').tap(); await sleep(100); check('sound button turns sound off', !(await S()).sound);
+  { const s0 = (await S()).sound, hit = await page.evaluate(() => { const b = document.getElementById('soundBtn').getBoundingClientRect(); const e = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return e && (e.id || e.className || e.tagName); }); await page.locator('#soundBtn').tap(); await sleep(100); check('sound button turns sound off', !(await S()).sound, `was ${s0}, top element at the button: ${hit}`); }
   await page.locator('#soundBtn').tap(); await sleep(100); check('sound button turns sound back on', (await S()).sound);
   await page.locator('.creatureChoice[data-c="jelly"]').tap(); await sleep(300);
   const before = await S(); await page.evaluate(() => __DDW3.save()); await page.reload(); await sleep(2500);
   check('reload shows KEEP PLAYING', (await page.locator('#playBtn').textContent()).includes('KEEP'));
   await page.locator('#playBtn').tap(); await sleep(800); c = await S();
   { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: !!__DDW3.world.balloon })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
+  { const k = await page.evaluate(() => ({ b: __DDW3.world.build.filter(v => v >= 0).length, c: __DDW3.world.colorings[0].some(x => x !== '#ffffff'), s: Object.keys(__DDW3.world.styles || {}).length, sp: __DDW3.world.sparkle })); check('reload keeps your building, colouring, colours and sparkles', k.b === 2 && k.c && k.s > 0 && k.sp, JSON.stringify(k)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
   await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
