@@ -104,6 +104,7 @@ export function initKingdom(G, api) {
   world.dinoFollow = Array.isArray(world.dinoFollow) && world.dinoFollow.length === 3 ? world.dinoFollow : [false, false, false];
   function followBaby(e) { e.f = friends.addFollower({ kind: 'dino', root: e.baby, orient: 'x' }); e.f.pos.copy(e.baby.position); }
   function tapBaby(e) {
+    if (!world.dinoEggs[e.i]) { tapEgg(e); return; } // (the hidden baby sits inside the egg: a tap there means the egg)
     if (!e.f) { world.dinoFollow[e.i] = true; followBaby(e); Sound.chime(); toast('🦕💖 A baby dino wants to come with you!'); discover('dinofollow', 'Baby dinos follow you when you tap them!'); api.saveSoon(); }
     else friends.followerTrick(e.f);
     e.hop = .7; Sound.tone(900 + e.i * 120, .12, 'sine', .05, 1.5); Sound.tone(1100 + e.i * 120, .1, 'sine', .04, 1.4, .12); burst(e.baby.position.x, 1.1, e.baby.position.z, ['#ff8fc8', '#fff'], 6, 1.2); discover('babydino', 'Baby dinos! They squeak when you tap them.'); }
