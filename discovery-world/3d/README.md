@@ -37,6 +37,27 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 9: arrow buttons are back, the Wonder Express train, the Marble Machine
+- **Arrow buttons are back** (by request): a ◀ ▶ ▲ ▼ arrow pad at the bottom left replaces drag-to-move.
+  - Hold ◀ ▶ to walk at a normal speed.
+  - ▲ jumps, goes in doors, climbs stairs and the rope ladder, and swims up (hold it).
+  - ▼ dives in the ball pit, goes down, parks the kart and gets off the train.
+  - Touching the screen anywhere else is just a tap.
+- **The Wonder Express:** a little steam train with a smiley face runs along the front of the whole world.
+  - There are seven stations, each with a picture sign: 🏠 🎨 🧪 🎠 🧱 🏎️ 🔮
+  - Tap a station sign (or PAW by it) and the train chugs in, puffing smoke, and you hop into the blue carriage.
+  - It drives itself and stops at every station ("ding ding!").
+  - While it is stopped, hold ◀ or ▶ to go that way, or PAW / ▼ to hop off. JUMP toots the whistle.
+- **The Marble Machine:** a new sky-blue area past the race track, so the world is bigger.
+  - Tap the board and a shiny marble drops from the top.
+  - Marbles bounce off golden pegs and roll down coloured ramps.
+  - Tap a ramp to flip it and send the marbles a different way.
+  - Eight music bins at the bottom each ring their own note and light up. It's a music toy you design, with no winning or losing.
+- **More realistic look:**
+  - The floor tiles now have rounded edges and grout lines that catch the light (a normal map).
+  - There are soft shadows where the walls meet the floor and the ceiling trim.
+  - More hills, trees and grass in the new area.
+
 ## 3D build 8: Kart Garage, race track, more realistic look
 - **Kart Garage** past the Creative Meadow:
   - Three big buttons change your kart's colour, its shape (bug, rocket or bubble) and its wheels, and the kart spins on a turntable.
