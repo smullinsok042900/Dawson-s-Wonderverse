@@ -13,6 +13,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
+import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -67,7 +68,15 @@ export function buildWorld(G) {
     }
     g.putImageData(img, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
   })();
+  const LAWN_FROM = 135, LAWN_TO = 394; // the outdoor part of the world is a real lawn (the castle courtyard keeps its tiles)
+  function lawnPiece(x0, x1, z0, z1) {
+    const L = lawnTextures(), map = L.map.clone(), nm = L.normal.clone();
+    for (const t of [map, nm]) { t.repeat.set((x1 - x0) / 4, (z1 - z0) / 4); t.offset.set(x0 / 4, -z1 / 4); t.needsUpdate = true; }
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .93 }));
+    f.rotation.x = -Math.PI / 2; f.position.set((x0 + x1) / 2, 0, (z0 + z1) / 2); f.receiveShadow = true; add(f);
+  }
   function floorPiece(x0, x1, z0, z1, c1, c2) {
+    if (x0 >= LAWN_FROM && x1 <= LAWN_TO) return lawnPiece(x0, x1, z0, z1);
     const t = tileTex(c1, c2); t.repeat.set((x1 - x0) / 2.4, (z1 - z0) / 2.4); t.offset.set(x0 / 2.4, -z1 / 2.4);
     const nm = tileNormal.clone(); nm.repeat.copy(t.repeat); nm.offset.copy(t.offset);
     const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshPhysicalMaterial({ map: t, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
@@ -79,13 +88,18 @@ export function buildWorld(G) {
     const [hx0, hx1, hz0, hz1] = h;
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
+  // a cobblestone path through the park, the meadow and the valley (where you walk)
+  { const C = cobbleTextures(), x0 = LAWN_FROM, x1 = LAWN_TO, map = C.map, nm = C.normal; for (const t of [map, nm]) t.repeat.set((x1 - x0) / 3, 1);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1.1, 1.1), roughness: .82 }));
+    path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);
+    for (const z of [-1.55, 1.55]) { const edge = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .07, .14), M('#fff6ea', { r: .6, cc: .2 })); edge.position.set((x0 + x1) / 2, .035, z); edge.receiveShadow = true; add(edge); } }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
   block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(370, -.6, 4.6, 124, .6, .8, '#ffb8de', { r: .3, cast: false });
 
   // ---------- back walls ----------
   const wallAO = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, map: (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(50,15,70,.32)'); gr.addColorStop(.45, 'rgba(50,15,70,.1)'); gr.addColorStop(1, 'rgba(50,15,70,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); return new THREE.CanvasTexture(c); })() });
   function wall(a, b, color, trim) {
-    block((a + b) / 2, 0, -6.6, b - a, 9, .6, color, { r: .2, cast: false, m: { r: .6, cc: .2 } });
+    { const pm = toy(color, { r: .7, cc: .15 }), nm = plasterNormal().clone(); nm.repeat.set((b - a) / 3, 3); nm.needsUpdate = true; pm.normalMap = nm; pm.normalScale.set(.5, .5); block((a + b) / 2, 0, -6.6, b - a, 9, .6, color, { r: .2, cast: false, mat: pm }); }
     block((a + b) / 2, 0, -6.1, b - a, .8, .3, trim, { r: .12, cast: false });
     block((a + b) / 2, 8.6, -6.1, b - a, .5, .4, trim, { r: .2, cast: false });
     // soft shadow where the wall meets the floor (ambient occlusion), and under the ceiling trim
@@ -211,17 +225,21 @@ export function buildWorld(G) {
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
   for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
-  const tree = (x, z, s = 1) => { cyl(x, 0, z, .22 * s, .3 * s, 2.2 * s, '#b06a32', { m: { r: .7, cc: .1 } }); [[0, 2.6, 0, 1.2], [-.7, 2.2, .2, .85], [.7, 2.3, -.1, .9], [0, 3.3, 0, .8]].forEach(([dx, dy, dz, r]) => sph(x + dx * s, dy * s, z + dz * s, r * s, ['#6fd38c', '#8fe3a3', '#5cc97c'][Math.abs(Math.round(dx * 10)) % 3], { m: { r: .6, cc: .3, sheen: .5 } })); };
+  const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
+  const leafMats = ['#5fc77e', '#7ed895', '#4fb86e', '#8fe0a0'].map(c => new THREE.MeshPhysicalMaterial({ color: c, roughness: .7, sheen: .7, sheenColor: new THREE.Color('#eaffd8'), normalMap: leafNormal(), normalScale: new THREE.Vector2(1.4, 1.4) }));
+  const tree = (x, z, s = 1) => { cyl(x, 0, z, .2 * s, .32 * s, 2.3 * s, '#b06a32', { mat: barkMat });
+    [[0, 2.7, 0, 1.15], [-.75, 2.25, .25, .8], [.75, 2.35, -.15, .85], [0, 3.45, -.05, .8], [-.4, 3.1, -.45, .7], [.45, 3.0, .45, .7], [.1, 2.2, .7, .65], [-.2, 2.4, -.7, .65]].forEach(([dx, dy, dz, r], k) => sph(x + dx * s, dy * s, z + dz * s, r * s, null, { mat: leafMats[(k + Math.round(x)) % 4] })); };
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS: thousands of little swaying grass tufts across the park and meadow (one instanced mesh, cheap)
   {
     const blade = new THREE.ConeGeometry(.05, .42, 4); blade.translate(0, .21, 0);
     const parts = [[0, 0, 0, 0], [.08, .03, .3, .85], [-.07, -.04, -.35, .75], [.02, .07, .1, .65]].map(([x, z, tilt, sc]) => { const g = blade.clone(); g.scale(1, sc, 1); g.rotateZ(tilt); g.translate(x, 0, z); return g; });
     const tuft = mergeGeometries(parts);
-    const gMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .8 });
+    { const pos = tuft.attributes.position, col = new Float32Array(pos.count * 3); for (let i = 0; i < pos.count; i++) { const k = .45 + Math.min(1, pos.getY(i) / .42) * .75; col[i * 3] = k; col[i * 3 + 1] = k; col[i * 3 + 2] = k * .9; } tuft.setAttribute('color', new THREE.BufferAttribute(col, 3)); }
+    const gMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .8, vertexColors: true });
     gMat.onBeforeCompile = sh => { sh.uniforms.uTime = G.grassTime; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvec4 gwp = instanceMatrix * vec4(0.,0.,0.,1.); transformed.x += sin(uTime * 1.6 + gwp.x * .7 + gwp.z) * position.y * .18;'); };
     G.grassTime = { value: 0 };
-    const N = 2400, grass = new THREE.InstancedMesh(tuft, gMat, N), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();
+    const N = 3600, grass = new THREE.InstancedMesh(tuft, gMat, N), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();
     let k = 0, seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     while (k < N) {
       const x = 136 + rnd() * 258, z = rnd() < .85 ? -11 + rnd() * 8.6 : 4.0 + rnd() * .4;
@@ -235,6 +253,17 @@ export function buildWorld(G) {
     }
     grass.receiveShadow = true; add(grass);
   }
+  // flowers and bushes everywhere on the lawns (kept off rides, paths and buildings)
+  G.nature = scatterNature(scene, { x0: 136, x1: 393, ok: (x, z) => !(
+    (Math.abs(x - 144) < 6 && z < -1 && z > -11) ||                // carousel
+    (x > 156 && x < 165 && z < -3 && z > -11) ||                   // Ferris wheel
+    (x > 183.5 && x < 196.5 && z > -4.8) ||                        // Fluffkin House
+    (x > 260 && x < 301 && z < -1.8) ||                            // kart garage and race track
+    (x > 206 && x < 236 && z > -4) ||                              // block builder and colouring corner
+    (x > 325 && x < 339 && z > -3.8) ||                            // marble machine
+    (x > 367 && x < 392 && z > -4.2) ||                            // Dottie and Tops
+    (Math.abs(x - 363.4) < 1.8 && z > -3.8) ||                     // the dino nest
+    (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8))) });  // train platforms
   // CAROUSEL
   const car = new THREE.Group(); car.position.set(144, 0, -5.4); add(car); // behind the path: tap it to ride
   cyl(0, 0, 0, 4.4, 4.6, .4, '#ff9fd2', { parent: car });

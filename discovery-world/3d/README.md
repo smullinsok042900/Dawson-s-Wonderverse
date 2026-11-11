@@ -37,6 +37,22 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 13: much more detailed, realistic graphics
+- **Soft natural shadows (ambient occlusion):** corners, the spots under creatures and the gaps between things get soft shading, like real light.
+  - It reuses the depth picture the game already makes and runs at half size, so it stays light.
+  - If a device can't keep up, it switches itself off first, before anything else is lowered.
+- **Anti-aliasing:** edges are smoother.
+- **Rim light:** a cool light from behind outlines everything, so shapes look rounder.
+- **Real surfaces, all drawn in code** (still one offline file, no image downloads):
+  - The park, meadow, marble area and dino valley are a grassy lawn with blades and little flowers in the texture.
+  - A cobblestone path with stone edges runs through them.
+  - The playhouse, studio and lab walls have plaster texture.
+  - The trees have bark, and fuller, leafy tops with eight clumps instead of four.
+  - Furry characters and critters have a soft velvety surface.
+- **More detail everywhere:**
+  - More grass tufts (3,600), darker at the roots and lighter at the tips.
+  - About 500 flowers and 80 leafy bushes scattered over the lawns, kept off rides and paths.
+
 ## Test report (builds 9 to 11)
 The automated test is Playwright, headless Chromium, software WebGL, on an 844x390 touch screen. It is **not** a physical iPhone.
 - The last full run passed **123 of 125** checks. It covers the arrow pad, train, Marble Machine, Dino Valley, Princess Castle, multiple pets and followers, plus everything from earlier builds.

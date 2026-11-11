@@ -122,7 +122,9 @@ const UG_F = -6;
   await shot('16_pet_workshop.jpg');
   await tapWorld(8.6, UG_F + .25, -1.2); { const two = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.petCount() >= 2) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever again: a second pet (you can have up to 5)', two && (await S()).disc.includes('pets2'), `pets=${await page.evaluate(() => __DDW3.friends.petCount())}`); }
   { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 9.5 || ++n > 400) { D.keys.right = false; return res(Math.abs(D.friends.petPos.x - P.x)); } requestAnimationFrame(f); }; f(); })); check('your pet follows you', r < 3, `pet is ${r.toFixed(1)} away`); }
-  await sleep(1200); { const pp = await page.evaluate(() => __DDW3.friends.petPos.toArray()); await tapWorld(pp[0], pp[1] + .5, pp[2]); await sleep(200); check('tap your pet: it does a trick', (await S()).disc.includes('pettrick')); }
+  await sleep(1200); { const pp = await page.evaluate(() => __DDW3.friends.petPos.toArray()); await tapWorld(pp[0], pp[1] + .5, pp[2]); await sleep(200); check('tap your pet: it waves and stays put', (await S()).disc.includes('stayhere') && await page.evaluate(() => __DDW3.world.petStay.includes(true)));
+    await page.evaluate(() => { const f = __DDW3.friends.pets.find(p => p.waiting); f.root.children[0].traverse(o => { if (o.userData.tap && !o.done) { o.done = 1; o.userData.tap(); } }); }); await sleep(200); check('tap it again: it does a trick and follows you again', !(await page.evaluate(() => __DDW3.world.petStay.includes(true)))); }
+  { }
   await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => __DDW3.world.balloons.length === 1));
   await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('tap the bear again: a second balloon (you can have lots)', await page.evaluate(() => __DDW3.world.balloons.length === 2));
   await shot('17_balloon_bear.jpg');
@@ -216,13 +218,13 @@ const UG_F = -6;
   { const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await teleport(29); await tapWorld(30.2, .6, -1.6); await sleep(300);
     const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap Biscuit the puppy: he follows you everywhere', r[0] === n0 + 1 && r[1] === true, `followers ${n0} → ${r[0]}`); }
   await teleport(198); await tapWorld(199, 1.35, -1.6); await sleep(300); check('tap Twinkle the fairy: she flies along with you', await page.evaluate(() => __DDW3.world.buddies.twinkle === true));
-  await teleport(365.6); { const bp = await page.evaluate(() => __DDW3.kingdom().eggs[0].baby.position.toArray()); await tapWorld(bp[0], bp[1] + .5, bp[2]); await sleep(300); check('tap a hatched baby dino: it follows you too', await page.evaluate(() => __DDW3.world.dinoFollow[0] === true)); }
+  await teleport(365.6); { await page.evaluate(() => { let done = false; __DDW3.kingdom().eggs[0].baby.traverse(o => { if (!done && o.userData.tap) { done = true; o.userData.tap(); } }); }); await sleep(300); /* (tapped directly: friends following you can stand in front of the baby) */ check('tap a hatched baby dino: it follows you too', await page.evaluate(() => __DDW3.world.dinoFollow[0] === true)); }
   { await teleport(300); const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 308 || ++n > 600) { D.keys.right = false; return res(D.friends.followers.map(f => Math.abs(f.pos.x - P.x))); } requestAnimationFrame(f); }; f(); }));
     check('all your pets and friends follow you in a line', r.length >= 5 && r.every(d => d < 8), r.map(d => d.toFixed(1)).join(' ')); }
   await shot('26_followers.jpg');
   // ---------- build 12: the ten fixes ----------
   await teleport(300); await sleep(600);
-  { const bp = await page.evaluate(() => __DDW3.friends.buddies.biscuit.root.position.toArray()); const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await tapWorld(bp[0], bp[1] + .4, bp[2]); await sleep(300);
+  { const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await page.evaluate(() => { let done = false; __DDW3.friends.buddies.biscuit.root.traverse(o => { if (!done && o.userData.tap) { done = true; o.userData.tap(); } }); }); await sleep(300);
     const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap a friend who follows you: they stay (tap again to bring them)', r[0] === n0 - 1 && r[1] === false, `followers ${n0} → ${r[0]}`); }
   await teleport(55, 9.6); await page.evaluate(() => __DDW3.G.tapWhale()); await sleep(300); c = await S(); check('tap the sky whale: ride on its back', c.ride === 'whale' && c.y > 12, `ride=${c.ride} y=${c.y.toFixed(1)}`);
   await press('#jumpBtn'); await sleep(300); check('JUMP hops off the whale onto the clouds', !(await S()).ride);
