@@ -13,6 +13,7 @@ import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
 import { SKY, buildSky } from './sky.js';
+import { buildMeadow, BLOCKS, BUILD, ERASE } from './meadow.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -100,7 +101,7 @@ const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.
 function groundUnder(x, y) { let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
-  player.creature = kind; creature = makeCreature(kind); scene.add(creature.root);
+  player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root);
   document.querySelectorAll('.creatureChoice').forEach(b => b.classList.toggle('chosen', b.dataset.c === kind));
 }
 
@@ -170,6 +171,7 @@ function paintStamp() { // the painter bunny paints a picture on the big wall
   else { g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(0, 0, 70, 0, 7); g.fill(); g.fillStyle = '#3a2864'; g.beginPath(); g.arc(-24, -14, 9, 0, 7); g.arc(24, -14, 9, 0, 7); g.fill(); g.strokeStyle = '#3a2864'; g.lineWidth = 9; g.beginPath(); g.arc(0, 8, 34, .3, Math.PI - .3); g.stroke(); }
   g.restore(); G.paint.tex.needsUpdate = true; world.painted = true; saveSoon();
 }
+const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), saveSoon: () => saveSoon(), tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
 const friends = initFriends(G, {
   scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, world, UG,
   tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
@@ -455,9 +457,31 @@ function paintAt(a, b) {
 const PAINTS = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ffffff', 'rainbow'];
 PAINTS.forEach(c => { const b = document.createElement('button'); b.className = 'swatch' + (c === world.paintColor ? ' selected' : ''); b.style.background = c === 'rainbow' ? 'conic-gradient(#ff4f9a,#ffd23f,#3cc46e,#3d9bff,#a15cff,#ff4f9a)' : c; b.addEventListener('pointerdown', e => { e.preventDefault(); world.paintColor = c; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s === b)); Sound.click(); }); $('paintTools').appendChild(b); });
 
+// ---------------- block tray (Block Builder) ----------------
+[...BLOCKS.map((b, i) => [i, b]), [ERASE, { icon: '🧽', c: '#ffffff' }]].forEach(([i, b]) => {
+  const el = document.createElement('button'); el.className = 'blk' + (i === (world.buildType ?? 0) ? ' selected' : ''); el.dataset.t = i;
+  if (b.icon) el.textContent = b.icon; else el.style.background = b.c;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); world.buildType = i; document.querySelectorAll('.blk').forEach(x => x.classList.toggle('selected', x === el)); Sound.click(); });
+  $('buildTools').appendChild(el);
+});
+// ---------------- creature style panel (colours + sparkle trail) ----------------
+const STYLE_COLS = ['#ff9fd2', '#9fe6ff', '#b58cff', '#ffd45e', '#7be08a', '#ff9a6b', '#ffffff'];
+function renderStyle() {
+  const row = $('styleCols'); row.innerHTML = ''; const k = player.creature, cur = (world.styles || {})[k] || CREATURES[k].body;
+  [CREATURES[k].body, ...STYLE_COLS.filter(c => c !== CREATURES[k].body)].forEach(c => {
+    const b = document.createElement('button'); b.className = 'spCol' + (c === cur ? ' selected' : ''); b.style.background = c;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); world.styles = world.styles || {}; world.styles[k] = c; setCreature(k); creature.cheer(); Sound.chime(); renderStyle(); discover('style', 'You changed your colour!'); save(); });
+    row.appendChild(b);
+  });
+  $('sparkleBtn').classList.toggle('on', !!world.sparkle);
+}
+$('styleBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; renderStyle(); $('stylePanel').classList.add('show'); Sound.click(); });
+$('styleDone').addEventListener('pointerdown', e => { e.preventDefault(); $('stylePanel').classList.remove('show'); Sound.click(); });
+$('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world.sparkle = !world.sparkle; renderStyle(); Sound.twinkle(); discover('sparkle', 'A sparkle trail!'); save(); });
+
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 203]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 258]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -471,7 +495,7 @@ function updatePlayer(dt) {
   const crawl = P.layer === '' && P.y < UG.ceil - .1 && P.x > UG.tunnel[0] - .3 && P.x < UG.tunnel[1] + .3 && P.y < UG.tunnelCeil - .5;
   if (crawl && !P.crawl) discover('crawl', 'A tiny tunnel! Crawl through it.');
   P.crawl = crawl;
-  const top = (swim ? 2.2 : crawl ? 3.4 : 5.2) * keys.scale, accel = P.grounded ? 40 : 22; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt);
+  const top = (swim ? 2.2 : crawl ? 3.4 : 5.2) * keys.scale, accel = P.grounded ? 40 : 22; if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
   // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
   for (const s of G.solids) {
@@ -503,7 +527,7 @@ function updatePlayer(dt) {
       if (z.onLand && (!wasG || stepUp)) z.onLand(z);
       if (z.tramp) { P.vy = 13.5; P.grounded = false; P.jumps = 1; world.trampT = 1; Sound.boing(); discover('trampoline', 'Boing! Super bounce!'); }
       else if (z.upShaft && P.fromShaft) { P.fromShaft = false; P.x = z.b + .45; P.vx = 2.5; P.vy = 3; P.grounded = false; P.facing = 1; Sound.land(); Sound.giggle(); discover('underground', 'A secret underground world! Explore the caves.'); } // soft landing when you sink in from the ball pit
-      else if (z.pad) { if (z.upShaft) discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); P.vy = z.bounce || 15.5; P.grounded = false; P.jumps = 1; Sound.boing(); burst(P.x, z.y + .2, 0, ['#9ff7c8', '#fff'], 10, 2); if (z.top) z.top.scale.y *= .7; discover('springpad', 'Boing! Spring pads bounce you up high!'); }
+      else if (z.pad) { if (z.upShaft) discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); P.vy = z.bounce || 15.5; if (z.nudge) { P.vx = z.nudge; P.driftT = 1.1; P.drift = z.nudge; P.hopX = 0; } P.grounded = false; P.jumps = 1; Sound.boing(); burst(P.x, z.y + .2, 0, ['#9ff7c8', '#fff'], 10, 2); if (z.top) z.top.scale.y *= .7; discover('springpad', 'Boing! Spring pads bounce you up high!'); }
       else if (z.sofa && impact > 3) { P.vy = 9; P.grounded = false; P.jumps = 1; Sound.boing(); discover('sofa', 'A bouncy sofa!'); }
       else if (impact > 6) Sound.land();
     }
@@ -532,7 +556,7 @@ const CAM_DIST = 9;
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 205 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 261 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
 function updateCamera(dt) {
@@ -578,7 +602,7 @@ let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: world.pet || null, petDraft: world.petDraft || null, balloon: world.balloon || null };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: world.pet || null, petDraft: world.petDraft || null, balloon: world.balloon || null, build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -592,7 +616,12 @@ function restore(d) {
   if (okRec(d.pet)) world.pet = { col: d.pet.col, ears: d.pet.ears, tail: d.pet.tail, pat: d.pet.pat };
   if (okRec(d.petDraft)) world.petDraft = { col: d.petDraft.col, ears: d.petDraft.ears, tail: d.petDraft.tail, pat: d.petDraft.pat };
   if (typeof d.balloon === 'string' && /^#[0-9a-f]{6}$/i.test(d.balloon)) world.balloon = d.balloon;
-  if (typeof d.x === 'number' && isFinite(d.x)) player.x = clamp(d.x, .5, 202);
+  const hex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
+  if (Array.isArray(d.build) && d.build.length === BUILD.cols * BUILD.rows && d.build.every(v => Number.isInteger(v) && v >= -1 && v < BLOCKS.length)) world.build = d.build.slice();
+  if (Array.isArray(d.colorings) && d.colorings.length === meadow.PICTURES.length && d.colorings.every((a, n) => Array.isArray(a) && a.length === meadow.PICTURES[n].length && a.every(hex))) world.colorings = d.colorings.map(a => a.slice());
+  if (d.styles && typeof d.styles === 'object') { world.styles = {}; for (const k of Object.keys(CREATURES)) if (hex(d.styles[k])) world.styles[k] = d.styles[k]; }
+  world.sparkle = d.sparkle === true;
+  if (typeof d.x === 'number' && isFinite(d.x)) player.x = clamp(d.x, .5, 257);
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
   world.secret = d.secret === true;
@@ -648,7 +677,8 @@ function step(dt) {
   T += dt;
   if (stick && stick.active && stick.dy < -45 && player.swim) { stick.swimT = (stick.swimT || 0) - dt; if (stick.swimT <= 0) { stick.swimT = .38; jump(); } }
   if (started) { updatePlayer(dt); updateFluffs(dt, T); updateBubbles(dt); }
-  friends.update(dt, T, player, world.trail);
+  friends.update(dt, T, player, world.trail); meadow.update(dt);
+  if (world.sparkle && started && (Math.abs(player.vx) > 1 || !player.grounded) && Math.random() < dt * 14) { const c = (world.styles || {})[player.creature] || CREATURES[player.creature].body; burst(player.x - player.facing * .3, player.y + .3 + Math.random() * .6, player.z, [c, '#ffffff', '#ffe36e'], 2, .8); }
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt); updateCamera(dt);
 }
 function frame() {
@@ -664,7 +694,8 @@ function frame() {
   { const sliding = P.ride && P.ride.type === 'slide', k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
   P.happy = Math.max(0, P.happy - dt);
-  $('paintTools').classList.toggle('show', started && nearPaint());
+  $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
+  $('buildTools').classList.toggle('show', started && meadow.nearBuild(player));
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
@@ -678,7 +709,7 @@ const saved = load();
 restore(saved);
 setCreature(player.creature);
 document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x.dataset.c === player.creature));
-friends.restored();
+friends.restored(); meadow.restored();
 updateCounters(); snapCamera(); updateBits(0);
 if (world.disc.has('drag')) $('dragHint').classList.add('gone');
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
@@ -696,6 +727,6 @@ window.__DDW3 = {
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
-  bodyScaleY: () => creature.parts.body.scale.y, friends,
+  bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, meadowRestore: () => meadow.restored(),
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };

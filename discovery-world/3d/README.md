@@ -37,6 +37,15 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 7: the Creative Meadow (a bigger world), talking friends, colours
+- **Easier purple shelf in the Lab:** the second spring pad bounces higher and gently pushes you onto the shelf, so the purple Fluffkin is easy to reach in one bounce. The shelf is also wider.
+- **The world is bigger:** the new **Creative Meadow** comes after the Fluffkin House, through a pastel arch.
+  - **Block Builder:** a building wall 10 blocks wide and 5 high. Pick a block in the tray: 6 colours, window, door, roof, star, heart, or the sponge to erase. Then tap where it goes. Build houses, stairs and towers. **You can climb on what you build.** Saved.
+  - **Colouring Corner:** two big colouring pictures, a rainbow castle and a butterfly. Pick a colour and tap a part to fill it. Saved.
+  - **New friends:** Builder Beaver, Rainbow Unicorn (sprinkles rainbow sparkles), Hedgehog (plays a guitar song), and a little Snail that crawls about and hides in its shell.
+- **Every friend talks:** they say hello with a 👋 bubble when you come near. When tapped, they "say" something in a picture speech bubble (emoji, no reading) with a cute babbling voice.
+- **Customize your creature:** the new paint-palette button opens a panel to choose your creature's colour (8 per creature) and switch on a **sparkle trail**. Saved.
+
 ## Home-screen app: "Dawson's Discovery World" (full screen, works offline)
 On the iPhone, open https://smullinsok042900.github.io/Dawson-s-Wonderverse/discovery-world/3d/ in **Safari**. Tap the **Share** button (the square with an arrow), then **Add to Home Screen**, then **Add**.
 

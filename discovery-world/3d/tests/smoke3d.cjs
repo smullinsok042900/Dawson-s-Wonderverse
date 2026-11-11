@@ -140,6 +140,33 @@ const UG_F = -6;
   await teleport(65.8, 9.5);
   { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
     await holdBtn('#rightBtn', 600); const r = await sl; check('walk off the clouds onto the giant rainbow slide, all the way down to the floor', r[0] && r[2] < .6 && r[1] > 71, `slid=${r[0]} landed x=${r[1].toFixed(1)} y=${r[2].toFixed(2)}`); }
+  // ---------- build 7: easier purple shelf, Creative Meadow ----------
+  await teleport(114.2);
+  { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, P.y); if (P.x > 114.9) D.keys.right = false; if ((m > 5 && P.grounded) || ++n > 700) { D.keys.right = false; return res([P.y, P.x]); } requestAnimationFrame(f); }; f(); }));
+    check('one bounce on the second spring pad lands you on the purple shelf', Math.abs(r[0] - 5) < .05, `ended at y=${r[0].toFixed(2)} x=${r[1].toFixed(1)}`); }
+  await teleport(211);
+  check('the block tray appears by the Block Builder', await page.locator('#buildTools').evaluate(e => e.classList.contains('show')));
+  await page.locator('.blk[data-t="2"]').tap(); await sleep(150);
+  await tapWorld(213.8, .5, -1.0); await sleep(300);
+  { const b = await page.evaluate(() => __DDW3.world.build.filter(v => v >= 0).length); check('tap the builder wall: a block appears', b === 1, `${b} blocks`); }
+  await tapWorld(213.8, 1.5, -1.0); await sleep(300); await tapWorld(215.0, .5, -1.0); await sleep(300);
+  { const b = await page.evaluate(() => __DDW3.world.build.filter(v => v >= 0).length), plats = await page.evaluate(() => __DDW3.G.platforms.filter(p => p.builder).length); check('build more blocks; their tops are things you can stand on', b === 3 && plats >= 2, `${b} blocks, ${plats} standable tops`); }
+  await page.locator('.blk[data-t="-2"]').tap(); await sleep(150); await tapWorld(215.0, .5, -1.0); await sleep(300);
+  { const b = await page.evaluate(() => __DDW3.world.build.filter(v => v >= 0).length); check('the sponge erases a block', b === 2, `${b} blocks`); }
+  await shot('19_block_builder.jpg');
+  await teleport(229.6);
+  check('the colour palette appears by the Colouring Corner', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
+  await page.locator('.swatch').nth(1).tap(); await sleep(150);
+  { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(227.4 + .9, 3.9, -2.3); await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
+    check('tap part of a colouring picture: it fills with your colour', before !== after && (await S()).disc.includes('coloring')); }
+  await shot('20_colouring.jpg');
+  await teleport(238); await tapWorld(240, 1.2, -2.4); await sleep(300);
+  { const n = await page.evaluate(() => __DDW3.friends.bubbleCount()); check('tap the unicorn: it talks in a picture speech bubble', (await S()).disc.includes('unicorn') && n > 0, `${n} bubbles`); }
+  await teleport(244.4); await tapWorld(246, .6, -2.4); await sleep(200); check('the hedgehog plays a song', (await S()).disc.includes('hedgehog'));
+  await page.locator('#styleBtn').tap(); await sleep(300); check('the paint-palette button opens the creature colours', await page.locator('#stylePanel').evaluate(e => e.classList.contains('show')));
+  await page.locator('.spCol').nth(2).tap(); await sleep(300); await page.locator('#sparkleBtn').tap(); await sleep(200);
+  { const st = await page.evaluate(() => ({ s: __DDW3.world.styles, sp: __DDW3.world.sparkle, k: __DDW3.player.creature })); check('pick a new colour for your creature and turn on the sparkle trail', st.s && st.s[st.k] && st.sp, JSON.stringify(st)); }
+  await page.locator('#styleDone').tap(); await sleep(200);
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
@@ -191,6 +218,7 @@ const UG_F = -6;
   check('reload shows KEEP PLAYING', (await page.locator('#playBtn').textContent()).includes('KEEP'));
   await page.locator('#playBtn').tap(); await sleep(800); c = await S();
   { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: !!__DDW3.world.balloon })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
+  { const k = await page.evaluate(() => ({ b: __DDW3.world.build.filter(v => v >= 0).length, c: __DDW3.world.colorings[0].some(x => x !== '#ffffff'), s: Object.keys(__DDW3.world.styles || {}).length, sp: __DDW3.world.sparkle })); check('reload keeps your building, colouring, colours and sparkles', k.b === 2 && k.c && k.s > 0 && k.sp, JSON.stringify(k)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
   await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));

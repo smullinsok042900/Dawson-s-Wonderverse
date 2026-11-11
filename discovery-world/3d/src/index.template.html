@@ -36,12 +36,15 @@ addEventListener('unhandledrejection', function (e) { __oops(e.reason && e.reaso
       <button class="creatureChoice" data-c="zuzu" aria-label="Zuzu"><img alt=""></button>
       <button class="creatureChoice" data-c="jelly" aria-label="Jelly"><img alt=""></button>
     </div>
+    <button class="pill" id="styleBtn" aria-label="change my creature"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.7-.8 1.7-1.6 0-1.1-.9-1.4-.9-2.4 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z" fill="#ffd1ec" stroke="#a15cff" stroke-width="1.6"/><circle cx="7.5" cy="11" r="1.6" fill="#ff4f9a"/><circle cx="10" cy="7" r="1.6" fill="#ffd23f"/><circle cx="14.5" cy="7" r="1.6" fill="#3cc46e"/><circle cx="17" cy="11" r="1.6" fill="#3d9bff"/></svg></button>
     <button class="pill" id="soundBtn" aria-label="sound"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path class="spk" d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l5 6M21 9l-5 6"/></svg></button>
   </div>
 </div>
 <div id="toast"></div>
 <div id="stick"><div id="knob"></div></div>
 <div id="paintTools"></div>
+<div id="buildTools"></div>
+<div id="stylePanel"><div class="spRow" id="styleCols"></div><div class="spRow"><button id="sparkleBtn" class="spBig">✨</button><button id="styleDone" class="spBig done">✓</button></div></div>
 <div id="bottom">
   <div class="controls hintOnly">
     <div id="dragHint" aria-label="slide your finger here to move"><div class="ring"><div class="dot"></div></div><svg viewBox="0 0 48 24"><path d="M2 12l7-6v12zM46 12l-7-6v12zM24 0l-5 6h10zM24 24l-5-6h10z"/></svg></div>

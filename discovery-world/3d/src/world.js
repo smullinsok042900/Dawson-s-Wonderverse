@@ -46,7 +46,7 @@ export function buildWorld(G) {
     g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
   };
-  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 230, '#9fe8b4', '#7fdc9a']];
+  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 268, '#9fe8b4', '#7fdc9a']];
   // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
   const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.6, 54.2, -3.2, -1.6]];
   function floorPiece(x0, x1, z0, z1, c1, c2) {
@@ -61,7 +61,7 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
-  block(105, -.6, 4.6, 250, .6, .8, '#ffb8de', { r: .3, cast: false });
+  block(122, -.6, 4.6, 284, .6, .8, '#ffb8de', { r: .3, cast: false });
 
   // ---------- back walls ----------
   function wall(a, b, color, trim) {
@@ -78,7 +78,7 @@ export function buildWorld(G) {
 
   // ---------- party bulbs strung across (instanced, glowing) ----------
   const bulbPos = [];
-  for (let a = -18; a < 230; a += 9) for (let i = 0; i <= 9; i++) { const k = i / 9, x = a + k * 9, y = 8.2 - Math.sin(k * Math.PI) * 1.2; bulbPos.push([x, y, -4.5]); }
+  for (let a = -18; a < 262; a += 9) for (let i = 0; i <= 9; i++) { const k = i / 9, x = a + k * 9, y = 8.2 - Math.sin(k * Math.PI) * 1.2; bulbPos.push([x, y, -4.5]); }
   const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 12, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 1.6 }), bulbPos.length);
   const mtx = new THREE.Matrix4(), col = new THREE.Color();
   bulbPos.forEach(([x, y, z], i) => { mtx.makeTranslation(x, y, z); bulbs.setMatrixAt(i, mtx); bulbs.setColorAt(i, col.set(['#ffe36e', '#ff9fd8', '#9fe6ff', '#c9a6ff'][i % 4])); });
@@ -178,9 +178,10 @@ export function buildWorld(G) {
   });
   G.interact.push({ x: 105.6, y: 0, layer: '', disc: 'mix', run: () => G.tapBucket('y', '#ffd23f', 105.6), hintY: 1.8 });
   // spring pads up to a high shelf (Fluffkin + star bits up there)
-  for (const x of [112, 116]) { cyl(x, 0, 0, .8, .9, .3, '#36c96b'); const top = cyl(x, .3, 0, .7, .7, .08, '#9ff7c8', { m: { em: '#36c96b', ei: .3 } }); plat(x - .8, x + .8, .38, { pad: true, top, step: true }); }
-  block(120.5, 4.6, -.6, 7, .4, 2.4, '#c9a6ff', { r: .18 }); plat(117, 124, 5.0);
-  for (const x of [117.4, 123.6]) cyl(x, 0, -1.5, .12, .12, 4.6, '#ffffff');
+  // (build 7) the second pad bounces higher and gently pushes you onto the shelf, so the purple Fluffkin is easy to reach
+  for (const [x, b, nudge] of [[112, 15.5, 0], [115.4, 18, 2.4]]) { cyl(x, 0, 0, .8, .9, .3, '#36c96b'); const top = cyl(x, .3, 0, .7, .7, .08, '#9ff7c8', { m: { em: '#36c96b', ei: .3 } }); plat(x - .8, x + .8, .38, { pad: true, top, step: true, bounce: b, nudge }); }
+  block(120.2, 4.6, -.6, 8, .4, 2.4, '#c9a6ff', { r: .18 }); plat(116.2, 124.2, 5.0);
+  for (const x of [116.6, 123.8]) cyl(x, 0, -1.5, .12, .12, 4.6, '#ffffff');
   // glowing orbs that zap sparkles
   G.orbs = [127, 130.5].map(x => { cyl(x, 0, -2, .5, .7, 1.2, '#5b2f8a'); const o = sph(x, 1.85, -2, .65, '#c9a6ff', { m: { em: '#a15cff', ei: .8, opacity: .85, irid: 1 } }); const orb = { x, o, zap: 0 }; tap(o, () => G.zapOrb(orb), { paw: [x, 0], disc: 'orb', hintY: 2.8 }); return orb; });
 
@@ -188,7 +189,7 @@ export function buildWorld(G) {
   // soft hills and trees in the back
   for (let i = 0; i < 9; i++) { const h = sph(140 + i * 10, -3, -14 - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const tree = (x, z, s = 1) => { cyl(x, 0, z, .22 * s, .3 * s, 2.2 * s, '#b06a32', { m: { r: .7, cc: .1 } }); [[0, 2.6, 0, 1.2], [-.7, 2.2, .2, .85], [.7, 2.3, -.1, .9], [0, 3.3, 0, .8]].forEach(([dx, dy, dz, r]) => sph(x + dx * s, dy * s, z + dz * s, r * s, ['#6fd38c', '#8fe3a3', '#5cc97c'][Math.abs(Math.round(dx * 10)) % 3], { m: { r: .6, cc: .3, sheen: .5 } })); };
-  [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [208, -3.8]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
+  [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // CAROUSEL
   const car = new THREE.Group(); car.position.set(144, 0, -5.4); add(car); // behind the path: tap it to ride
   cyl(0, 0, 0, 4.4, 4.6, .4, '#ff9fd2', { parent: car });
@@ -247,7 +248,7 @@ export function buildWorld(G) {
   G.houseWindows = H;
   tap(door, () => G.enterHouse(), {});
   // right edge of the world: a rainbow gate
-  for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(3 - i * .3, .2, 12, 40, Math.PI), M(RAINBOW[i])); t.position.set(205, 0, -1.5); t.rotation.y = Math.PI / 2; add(t); }
+  for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(3 - i * .3, .2, 12, 40, Math.PI), M(RAINBOW[i])); t.position.set(260, 0, -1.5); t.rotation.y = Math.PI / 2; add(t); }
 
   // =================== FLUFFKIN HOUSE (inside, at x 1000) ===================
   const IN = { ox: 1000, w: 30, f2: 4.4, slab: .3 };
