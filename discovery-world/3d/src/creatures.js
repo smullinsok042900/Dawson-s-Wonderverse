@@ -6,6 +6,7 @@
 // Also the baby Fluffkins.
 // ===================================================================
 import * as THREE from 'three';
+import { plushNormal } from './nature.js';
 
 export const CREATURES = {
   pip: { name: 'Pip', jump: [9.4, 8.2], body: '#f2c2ff' },
@@ -132,6 +133,8 @@ function buildJelly(st) {
 
 export function makeCreature(kind, style = {}) {
   const P = kind === 'pip' ? buildPip(style) : kind === 'zuzu' ? buildZuzu(style) : buildJelly(style);
+  // furry parts get a soft velvety surface (tiny fibres catch the light)
+  P.root.traverse(o => { if (o.isMesh && o.material && o.material.sheen > .5 && !o.material.normalMap) { o.material.normalMap = plushNormal(); o.material.normalScale.set(.35, .35); o.material.needsUpdate = true; } });
   const A = { t: Math.random() * 9, phase: 0, run: 0, squash: spring(), turn: 0, blink: 2, earS: spring(), tailS: spring(), react: 0, prevGround: true, prevVy: 0, idle: 0, act: null, actT: 0, lastStep: 0, hop: 0 };
   // how squishy each creature is (Jelly is VERY squishy)
   const SQ = { pip: .2, zuzu: .16, jelly: .5 }[kind], SQX = SQ * .6;

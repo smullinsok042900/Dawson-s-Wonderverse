@@ -11,6 +11,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { toy, ball, face, starGeometry } from './creatures.js';
+import { plushNormal } from './nature.js';
 import { NOTES } from './audio.js';
 
 export const PET_COLS = ['#ff8fd0', '#8fd8ff', '#ffd45e', '#a98cff', '#7be08a', '#ff9a6b', '#ffffff'];
@@ -53,7 +54,7 @@ export function initFriends(G, api) {
   const add = o => { scene.add(o); return o; };
   const M = (c, o) => toy(c, o);
   const UGF = api.UG.floor;
-  const fluffy = (c, o) => toy(c, { r: .6, cc: .2, sheen: 1, sheenColor: '#ffffff', ...o });
+  const fluffy = (c, o) => { const m = toy(c, { r: .6, cc: .2, sheen: 1, sheenColor: '#ffffff', ...o }); m.normalMap = plushNormal(); m.normalScale.set(.35, .35); return m; };
 
   // =================== PET WORKSHOP (underground, left end of the Cave Hall) ===================
   const PM = { x: 6.2, z: -2.6 };

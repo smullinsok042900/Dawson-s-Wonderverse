@@ -19,6 +19,7 @@ import { initKarts, KART, KART_COLS } from './kart.js';
 import { initTrain } from './train.js';
 import { initMarbles } from './marble.js';
 import { initKingdom, KINGDOM } from './kingdom.js';
+import { makePost } from './post.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -55,6 +56,8 @@ const hemi = new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .85); scene.add(hem
 const sun = new THREE.DirectionalLight('#fff1dc', 2.1); sun.castShadow = true;
 sun.shadow.mapSize.set(MOBILE ? 1536 : 2048, MOBILE ? 1536 : 2048); sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 12, bottom: -6, near: 1, far: 60 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
+// a soft cool light from behind: it outlines everything with a gentle rim, so shapes look rounder and more real
+const rim = new THREE.DirectionalLight('#d6e4ff', .6); rim.position.set(-6, 7, -12); scene.add(rim);
 // gradient sky dome + puffy clouds
 const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false, fog: false,
@@ -727,10 +730,13 @@ document.querySelectorAll('.introPick').forEach(b => b.addEventListener('click',
 // ---------------- resize + adaptive quality ----------------
 let quality = TEST ? .4 : MOBILE ? .85 : 1, slow = 0, ema = 1 / 60;
 if (TEST) renderer.shadowMap.enabled = false;
+// soft "ambient occlusion" shadows (post.js); off in the light test mode and with ?nopost
+const post = makePost(renderer, scene, camera, { mobile: MOBILE }); post.enabled = !TEST && !/[?&]nopost/.test(location.search);
 function resize() {
   const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2) * quality;
   renderer.setPixelRatio(Math.max(.75, dpr)); renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
+  post.setSize(w, h, renderer.getPixelRatio());
 }
 addEventListener('resize', resize); resize();
 let portraits = {};
@@ -738,7 +744,7 @@ try { portraits = renderPortraits(); } catch (e) { }
 document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
 function adapt(dt) {
   ema += (dt - ema) * .05;
-  if (ema > 1 / 45 && quality > .55) { slow += dt; if (slow > 1.5) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } } }
+  if (ema > 1 / 45 && (quality > .55 || post.enabled)) { slow += dt; if (slow > 1.5 && post.enabled) { post.enabled = false; slow = 0; ema = 1 / 60; return; } /* first, switch the soft shadows off */ if (slow > 1.5) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } } }
   else slow = Math.max(0, slow - dt * .5);
 }
 
@@ -771,7 +777,7 @@ function frame() {
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
-  renderer.render(scene, camera);
+  if (post.enabled) post.render(); else renderer.render(scene, camera);
   if (!TEST && !/[?&]hq/.test(location.search)) adapt(raw);
   requestAnimationFrame(frame);
 }
@@ -800,5 +806,5 @@ window.__DDW3 = {
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
   bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, kingdom: () => kingdom, meadowRestore: () => meadow.restored(),
-  bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
+  bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), post, quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };
