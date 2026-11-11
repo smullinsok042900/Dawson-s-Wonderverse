@@ -136,8 +136,8 @@ export function buildWorld(G) {
   // SLIDE TOWER (just behind the path, so you can always walk past it): jump up the steps to the top deck,
   // then walk off the deck into the big see-through TUBE SLIDE and whoosh down inside it
   const TZ = -1.9;
-  [[18.4, 1.0], [19.7, 2.0], [21, 3.0]].forEach(([x, y], i) => { block(x, 0, TZ, 1.2, y, 1.6, ['#7fd8ff', '#ffd84a', '#b58cff'][i], { r: .18 }); plat(x - .6, x + .6, y, { z: TZ }); });
-  block(22.4, 0, TZ, 1.8, 3.8, 2, '#ff9fd2', { r: .2 }); plat(21.5, 23.3, 3.8, { z: TZ });
+  [[18.4, 1.0], [19.7, 2.0], [21, 3.0]].forEach(([x, y], i) => { block(x, 0, TZ, 1.2, y, 1.6, ['#7fd8ff', '#ffd84a', '#b58cff'][i], { r: .18 }); plat(x - .66, x + .66, y, { z: TZ, step: true, stepMax: 1.1 }); }); // stairs you walk up by yourself (no jumping needed)
+  block(22.4, 0, TZ, 1.8, 3.8, 2, '#ff9fd2', { r: .2 }); plat(21.5, 23.3, 3.8, { z: TZ, step: true, stepMax: 1.1 });
   for (const x of [21.6, 23.2]) cyl(x, 3.8, TZ - .8, .07, .07, 1.4, '#ffffff');
   const roof = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.4, 6), M('#a15cff')); roof.position.set(22.4, 5.9, TZ - .3); roof.castShadow = true; add(roof);
   G.slidePath = new THREE.CatmullRomCurve3([[23.2, 4.3, TZ], [24.4, 4.0, TZ - .4], [25.8, 3.3, TZ - 1.2], [26.6, 2.4, TZ - 2.0], [25.9, 1.6, TZ - 2.8], [26.9, .9, TZ - 3.0], [28.6, .55, TZ - 2.2], [30.2, .55, TZ - .9], [31.4, .55, TZ + .2]].map(p => new THREE.Vector3(...p)), false, 'catmullrom', .4);

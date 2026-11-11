@@ -123,7 +123,8 @@ const UG_F = -6;
   await tapWorld(8.6, UG_F + .25, -1.2); { const two = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.petCount() >= 2) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever again: a second pet (you can have up to 5)', two && (await S()).disc.includes('pets2'), `pets=${await page.evaluate(() => __DDW3.friends.petCount())}`); }
   { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 9.5 || ++n > 400) { D.keys.right = false; return res(Math.abs(D.friends.petPos.x - P.x)); } requestAnimationFrame(f); }; f(); })); check('your pet follows you', r < 3, `pet is ${r.toFixed(1)} away`); }
   await sleep(1200); { const pp = await page.evaluate(() => __DDW3.friends.petPos.toArray()); await tapWorld(pp[0], pp[1] + .5, pp[2]); await sleep(200); check('tap your pet: it does a trick', (await S()).disc.includes('pettrick')); }
-  await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => !!__DDW3.world.balloon));
+  await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => __DDW3.world.balloons.length === 1));
+  await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('tap the bear again: a second balloon (you can have lots)', await page.evaluate(() => __DDW3.world.balloons.length === 2));
   await shot('17_balloon_bear.jpg');
   await teleport(54.6); { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapWorld(52.4, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
   await teleport(87.8); await tapWorld(89.6, .9, -2.4); await sleep(200); check('the Drummer Frog plays when tapped', (await S()).disc.includes('frog'));
@@ -172,8 +173,8 @@ const UG_F = -6;
   await teleport(262.2);
   { const k0 = await page.evaluate(() => JSON.stringify(__DDW3.world.kart)); await tapWorld(263.0, 1.0, -1.3); await sleep(300); const k1 = await page.evaluate(() => JSON.stringify(__DDW3.world.kart));
     check('Kart Garage: tap a big button to change your kart', k0 !== k1 && (await S()).disc.includes('kartmaker'), `${k0} → ${k1}`); }
-  await teleport(268.2); await tapWorld(269.4, 1.2, -1.4); await sleep(300);
-  check('tap the checkered flag: drive your kart', (await S()).ride === 'kart');
+  await teleport(263.5); await tapWorld(266.9, .7, -3.6); await sleep(300);
+  check('tap the kart on the turntable: hop in and drive', (await S()).ride === 'kart');
   { const r = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, u0 = P.ride.u + P.ride.lap; let n = 0; const f = () => { if (++n > 40) return res([u0, P.ride ? P.ride.u + P.ride.lap : -1, P.z]); /* (laps counted: the slow test browser can run a whole lap in 40 frames) */ requestAnimationFrame(f); }; f(); })); check('the kart drives round the track', r[1] > r[0], `u ${r[0].toFixed(3)} → ${r[1].toFixed(3)}, z=${r[2].toFixed(1)}`); }
   await page.evaluate(() => new Promise(r => requestAnimationFrame(() => { document.getElementById('jumpBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); r(); })));
   { const h = await page.evaluate(() => new Promise(res => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.ride ? __DDW3.player.ride.hop : 0); if (++n > 30) return res(m); requestAnimationFrame(f); }; f(); })); check('JUMP makes the kart hop', h > .2, `hop ${h.toFixed(2)}`); }
@@ -186,10 +187,10 @@ const UG_F = -6;
   await tapWorld(172.4, .82, 4.15); c = await waitFor(s => s.ride === 'train', 90000);
   check('tap a station sign: the train chugs in and you hop aboard', c.ride === 'train' && Math.abs(c.z - 3.2) < .3 && c.disc.includes('train'), `ride=${c.ride} z=${c.z.toFixed(2)}`);
   await press('#jumpBtn'); await sleep(200); check('JUMP on the train toots the whistle (and you stay on)', (await S()).disc.includes('toot') && (await S()).ride === 'train');
-  c = await waitFor(s => s.ride === 'train' && Math.abs(s.x - 222) < .05 && Math.abs(s.vx) < .01, 120000);
-  check('the train drives itself to the next station and stops', Math.abs(c.x - 222) < .05, `x=${c.x.toFixed(2)}`);
+  { const x0 = (await S()).x; await holdBtn('#rightBtn', 900); c = await S(); check('hold ▶ to drive the train yourself', c.ride === 'train' && c.x > x0 + .5, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`); }
+  c = await waitFor(s => Math.abs(s.vx) < .01, 20000); check('let go and the train stops', Math.abs(c.vx) < .01 && c.ride === 'train');
   await shot('22_train.jpg');
-  await press('#pawBtn'); await sleep(400); c = await S(); check('PAW at a station: hop off the train', !c.ride && Math.abs(c.x - 222) < .1 && c.y < .1, `ride=${c.ride} x=${c.x.toFixed(1)}`);
+  await press('#pawBtn'); await sleep(400); c = await S(); check('PAW: hop off the train (anywhere)', !c.ride && c.y < .1, `ride=${c.ride} x=${c.x.toFixed(1)}`);
   // ---------- build 9: the Marble Machine ----------
   await teleport(332);
   { const n0 = await page.evaluate(() => __DDW3.marbles.marbles.length); await tapWorld(327.6, 2.3, -2.2); const n1 = await page.evaluate(() => __DDW3.marbles.marbles.length);
@@ -219,6 +220,20 @@ const UG_F = -6;
   { await teleport(300); const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 308 || ++n > 600) { D.keys.right = false; return res(D.friends.followers.map(f => Math.abs(f.pos.x - P.x))); } requestAnimationFrame(f); }; f(); }));
     check('all your pets and friends follow you in a line', r.length >= 5 && r.every(d => d < 8), r.map(d => d.toFixed(1)).join(' ')); }
   await shot('26_followers.jpg');
+  // ---------- build 12: the ten fixes ----------
+  await teleport(300); await sleep(600);
+  { const bp = await page.evaluate(() => __DDW3.friends.buddies.biscuit.root.position.toArray()); const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await tapWorld(bp[0], bp[1] + .4, bp[2]); await sleep(300);
+    const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap a friend who follows you: they stay (tap again to bring them)', r[0] === n0 - 1 && r[1] === false, `followers ${n0} → ${r[0]}`); }
+  await teleport(55, 9.6); await page.evaluate(() => __DDW3.G.tapWhale()); await sleep(300); c = await S(); check('tap the sky whale: ride on its back', c.ride === 'whale' && c.y > 12, `ride=${c.ride} y=${c.y.toFixed(1)}`);
+  await press('#jumpBtn'); await sleep(300); check('JUMP hops off the whale onto the clouds', !(await S()).ride);
+  await teleport(16.5); { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let top = 0, n = 0; const f = () => { top = Math.max(top, P.y); if ((P.ride && P.ride.type === 'slide') || ++n > 600) { D.keys.right = false; return res([top, P.ride && P.ride.type]); } requestAnimationFrame(f); }; f(); }));
+    check('walk up the steps by the ball pit to the little slide (no jumping needed)', r[0] > 3.7 && r[1] === 'slide', JSON.stringify(r)); }
+  await teleport(60); await page.locator('#paintTools .swatch.tool').first().tap(); check('the paint wall has an eraser and a start-again button', await page.evaluate(() => __DDW3.world.paintColor === 'erase') && (await page.locator('#paintTools .swatch.tool').count()) === 2);
+  await page.evaluate(() => { __DDW3.world.paintColor = '#ff4f9a'; });
+  await teleport(406); await press('#pawBtn'); await sleep(500); c = await S(); check('walk into the Princess Castle', c.layer === 'castle', `layer=${c.layer}`);
+  await teleport(2016); await tapWorld(2019.5, 2, -3.6); await sleep(600); c = await S(); check('tap the throne inside the castle: sit on it', c.disc.includes('throne') && c.y > .8, `y=${c.y.toFixed(2)}`);
+  await shot('27_castle_inside.jpg');
+  await teleport(2002); await press('#pawBtn'); await sleep(500); c = await S(); check('the castle door takes you back outside', c.layer === '' && Math.abs(c.x - 407) < .5);
   await teleport(259.2); await tapWorld(260.8, 1.2, -2.4); await sleep(200); check('the mechanic fox talks', (await S()).disc.includes('fox'));
   // ---------- studio ----------
   await teleport(61); await sleep(300);
@@ -270,10 +285,10 @@ const UG_F = -6;
   const before = await S(); await page.evaluate(() => __DDW3.save()); await page.reload(); await sleep(2500);
   check('reload shows KEEP PLAYING', (await page.locator('#playBtn').textContent()).includes('KEEP'));
   await page.locator('#playBtn').tap(); await sleep(800); c = await S();
-  { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: !!__DDW3.world.balloon })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
+  { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: __DDW3.world.balloons.length === 2 })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
   { const k = await page.evaluate(() => ({ b: __DDW3.world.build.filter(v => v >= 0).length, c: __DDW3.world.colorings[0].some(x => x !== '#ffffff'), s: Object.keys(__DDW3.world.styles || {}).length, sp: __DDW3.world.sparkle })); check('reload keeps your building, colouring, colours and sparkles', k.b === 2 && k.c && k.s > 0 && k.sp, JSON.stringify(k)); }
   { const kk = await page.evaluate(() => JSON.stringify(__DDW3.world.kart)); check('reload keeps your kart design', kk !== JSON.stringify({ col: 0, shape: 0, wheels: 0 }), kk); }
-  { const k = await page.evaluate(() => ({ pets: __DDW3.friends.petCount(), f: __DDW3.friends.followers.length })); check('reload keeps all your pets and the friends who follow you', k.pets === 2 && k.f >= 5, JSON.stringify(k)); }
+  { const k = await page.evaluate(() => ({ pets: __DDW3.friends.petCount(), f: __DDW3.friends.followers.length })); check('reload keeps all your pets and the friends who follow you', k.pets === 2 && k.f >= 4, JSON.stringify(k)); }
   { const k = await page.evaluate(() => ({ crown: __DDW3.world.crown, eggs: __DDW3.world.dinoEggs })); check('reload keeps your crown and your hatched baby dino', k.crown === true && k.eggs[0] === true, JSON.stringify(k)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save

@@ -96,3 +96,5 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 .dpad .right{top:56px;right:8px;width:62px;height:56px;border-radius:4px 16px 16px 4px}
 .dpad .ctrl.arrow.pressed{transform:scale(.94);filter:brightness(1.25);box-shadow:0 1px 0 #4a2a99}
 @media (max-height:360px){.dpad{transform:scale(.86);transform-origin:bottom left}}
+
+.swatch.tool{font-size:22px;line-height:36px;text-align:center;box-shadow:inset 0 0 0 2px #e1d2f6}

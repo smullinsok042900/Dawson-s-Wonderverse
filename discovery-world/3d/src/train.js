@@ -123,43 +123,50 @@ export function initTrain(G, api) {
   }
   function board(i) {
     const P = api.player; if (P.ride || Math.abs(P.x - STATIONS[i].x) > 6 || P.layer !== '' || P.y > 1.5) { T.mode = 'parked'; T.at = i; return; }
-    P.ride = { type: 'train' }; P.vx = P.vy = 0; P.x = STATIONS[i].x; P.y = .57; P.z = TRAIN.z; // straight into the seat T.mode = 'stopped'; T.at = i; T.wait = 1.6; T.v = 0;
+    P.ride = { type: 'train' }; P.vx = P.vy = 0; P.x = STATIONS[i].x; P.y = .57; P.z = TRAIN.z; /* straight into the seat */
+    T.mode = 'driving'; T.at = i; T.v = 0;
     Sound.chime(); burst(STATIONS[i].x, 1.2, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8'], 12, 2);
+    toast('🚂 Hold ▶ or ◀ to drive the train! 🐾 hops off.');
     if (i === STATIONS.length - 1) face(-1); else if (i === 0) face(1);
   }
+  // hop off whenever you like: the train stops and you step down onto the path
   function hopOff() {
     const P = api.player; if (!P.ride || P.ride.type !== 'train') return false;
-    if (T.mode !== 'stopped') { whistle(); return true; }
-    P.ride = null; P.x = STATIONS[T.at].x; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.groundZ = 0; T.mode = 'parked';
+    const sx = seatX(), near = nearestStation(sx);
+    T.v = 0; T.mode = 'parked'; T.at = near;
+    P.ride = null; P.x = Math.abs(STATIONS[near].x - sx) < 2.5 ? STATIONS[near].x : sx; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.groundZ = 0;
     Sound.boing(); burst(P.x, .5, P.z, ['#fff', '#ffd23f'], 10, 2); return true;
   }
-  function depart(dir) {
-    const next = T.at + dir; if (next < 0 || next >= STATIONS.length) return;
-    face(dir); T.mode = 'running'; T.target = next; whistle();
-  }
 
-  const ACC = 6, VMAX = 14;
+  const ACC = 6, VMAX = 12, X0 = STATIONS[0].x, X1 = STATIONS[STATIONS.length - 1].x;
+  let passed = -1;
   function update(dt, t, P, stick, keys) {
     const riding = P.ride && P.ride.type === 'train';
+    if (!riding && T.mode === 'driving') T.mode = 'parked';
     STATIONS.forEach(s => s.bells.forEach(b => { b.userData.sw = (b.userData.sw ?? 0); b.userData.sw *= Math.max(0, 1 - dt * 3); b.rotation.z = Math.sin(t * 18) * b.userData.sw; }));
-    if (T.mode === 'arriving' || T.mode === 'running') {
+    if (T.mode === 'arriving') {
       const goal = STATIONS[T.target].x + T.dir * TRAIN.seat, dist = (goal - T.x) * T.dir;
-      const want = Math.min(VMAX, Math.sqrt(Math.max(0, 2 * ACC * dist)) + .4);
-      T.v = Math.min(want, T.v + ACC * dt);
+      T.v = Math.min(Math.min(VMAX, Math.sqrt(Math.max(0, 2 * ACC * dist)) + .4), T.v + ACC * dt);
       T.x += T.dir * T.v * dt;
-      if (dist <= .02 || (goal - T.x) * T.dir <= 0) {
-        T.x = goal; T.v = 0;
-        if (T.mode === 'arriving') { board(T.target); }
-        else { T.mode = 'stopped'; T.at = T.target; T.wait = 2.6; Sound.chime(); toast(STATIONS[T.at].e + ' Ding ding!'); burst(STATIONS[T.at].x, 1.4, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8', '#9fe6ff'], 14, 2.4); STATIONS[T.at].bells.forEach(b => { b.userData.sw = .6; }); discover('station' + T.at, 'Next stop!'); if (T.at === STATIONS.length - 1 || T.at === 0) face(T.at === 0 ? 1 : -1); }
-      }
+      if (dist <= .02 || (goal - T.x) * T.dir <= 0) { T.x = goal; T.v = 0; board(T.target); }
       if (Math.random() < dt * (2 + T.v)) puff();
-    } else if (T.mode === 'stopped' && riding) {
+    } else if (T.mode === 'driving') {
+      // YOU drive: hold ▶ or ◀ to go that way, let go and it gently stops
       let d = 0;
       if (stick && stick.active) { if (stick.dx > 30) d = 1; else if (stick.dx < -30) d = -1; }
       if (keys.right) d = 1; if (keys.left) d = -1;
-      T.wait -= dt;
-      if (d && P.ride) depart(d); else if (T.wait <= 0 && P.ride) depart(T.dir);
-      if (Math.random() < dt * 1.2) puff();
+      if (d && d !== T.dir) { if (T.v < .6) { T.v = 0; face(d); } else T.v = Math.max(0, T.v - ACC * 2 * dt); }
+      else if (d) T.v = Math.min(VMAX, T.v + ACC * dt);
+      else T.v = Math.max(0, T.v - ACC * 1.3 * dt);
+      // the ends of the line
+      const sx = seatX(); let nx = sx + T.dir * T.v * dt;
+      if (nx < X0) { nx = X0; T.v = 0; } if (nx > X1) { nx = X1; T.v = 0; }
+      T.x = nx + T.dir * TRAIN.seat;
+      // ding! as you pass each station
+      const near = nearestStation(nx); if (Math.abs(STATIONS[near].x - nx) < .6 && near !== passed) { passed = near; T.at = near; STATIONS[near].bells.forEach(b => { b.userData.sw = .6; }); Sound.bell(1318, .04); Sound.bell(1046, .03, .15); burst(STATIONS[near].x, 1.4, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8', '#9fe6ff'], 10, 2); discover('station' + near, 'Ding ding! A station!'); }
+      if (Math.abs(STATIONS[near].x - nx) > 3) passed = -1;
+      if (T.v > .3) discover('drivetrain', 'You are driving the train! Let go to stop.');
+      if (Math.random() < dt * (1 + T.v * .8)) puff();
     } else if (Math.random() < dt * .5) puff();
     // place the train and the rider
     train.position.set(T.x, 0, TRAIN.z); train.rotation.y = T.dir > 0 ? 0 : Math.PI;

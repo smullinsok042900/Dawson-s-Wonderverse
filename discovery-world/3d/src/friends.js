@@ -110,12 +110,16 @@ export function initFriends(G, api) {
   world.pets = world.pets || [];
   function addFollower(f) { f.pos = new THREE.Vector3(player.x - 1.2 - followers.length * .6, player.y, player.z + .7); f.trick = 0; f.root.position.copy(f.pos); followers.push(f); return f; }
   function removeFollower(f) { const i = followers.indexOf(f); if (i >= 0) followers.splice(i, 1); }
+  // tap a friend who follows you and they stay put (they wave bye-bye); tap again and they come along
+  function waveBye(f) { removeFollower(f); f.waiting = true; Sound.tone(620, .12, 'sine', .05, .8); Sound.tone(520, .16, 'sine', .04, .8, .12); burst(f.pos.x, f.pos.y + 1.1, f.pos.z, ['#ffffff', '#9fe6ff', '#ffd84a'], 10, 1.6); toast('👋 Bye-bye! Tap me to come along again.'); discover('stayhere', 'Tap a friend to make them stay. Tap again and they follow you!'); }
+  function comeAlong(f) { if (!followers.includes(f)) followers.push(f); f.waiting = false; Sound.chime(); burst(f.pos.x, f.pos.y + 1.1, f.pos.z, ['#ff6fae', '#fff', '#ffd84a'], 12, 2); }
   function followerTrick(f) { f.trick = 1.2; Sound.giggle(); burst(f.pos.x, f.pos.y + 1, f.pos.z, ['#ff8fc8', '#ffd84a'], 12, 2); }
   function spawnPet(rec, x, y, z) {
     const p = buildPet(rec, .9); add(p.root);
     const f = addFollower({ kind: 'pet', root: p.root, pet: p }); if (x != null) f.pos.set(x, y, z);
-    p.root.traverse(o => { if (o.isMesh) o.userData.tap = () => { followerTrick(f); discover('pettrick', 'Your pet does a trick!'); }; }); G.taps.push(p.root);
-    pets.push(f); return f;
+    pets.push(f); const idx = pets.length - 1;
+    p.root.traverse(o => { if (o.isMesh) o.userData.tap = () => { world.petStay = world.petStay || []; if (f.waiting) { comeAlong(f); world.petStay[idx] = false; followerTrick(f); } else { waveBye(f); world.petStay[idx] = true; } discover('pettrick', 'Your pet does a trick!'); api.saveSoon(); }; }); G.taps.push(p.root);
+    return f;
   }
   api.petTap = () => { if (pets[0]) followerTrick(pets[0]); };
 
@@ -129,7 +133,7 @@ export function initFriends(G, api) {
     root.position.copy(b.home);
     const tapB = () => {
       if (!b.f) { world.buddies[id] = true; follow(b); Sound.chime(); Sound.giggle(); burst(root.position.x, root.position.y + 1.2, root.position.z, ['#ff6fae', '#fff', '#ffd84a'], 18, 2.4); toast(emoji + '💖 ' + o.name + ' wants to come with you!'); discover('buddy_' + id, o.name + ' follows you now!'); discover('buddy'); api.saveSoon(); }
-      else { followerTrick(b.f); }
+      else { waveBye(b.f); b.baseY = b.f.pos.y; b.f = null; world.buddies[id] = false; api.saveSoon(); }
     };
     root.traverse(m => { if (m.isMesh) m.userData.tap = tapB; }); G.taps.push(root);
     G.interact.push({ x, y: 0, layer: '', disc: 'buddy_' + id, run: tapB, hintY: 2, need: () => !b.f });
@@ -208,7 +212,7 @@ export function initFriends(G, api) {
     BALLOON_COLS.forEach((c, i) => { const b = ball(M(c, { r: .15, cc: 1 }), .3, (i - 2) * .32, Math.abs(i - 2) * -.15, 0, 1, 1.15, 1); bunch.add(b); });
     const str = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 1.5, 4), M('#ffffff')); str.position.set(.5, 1.75, 0); r.add(str);
     return { head, arm, bunch };
-  }, c => { world.balloon = BALLOON_COLS[(BALLOON_COLS.indexOf(world.balloon) + 1) % BALLOON_COLS.length]; Sound.giggle(); burst(c.x, 3, c.z, [world.balloon, '#fff'], 14, 2); toast('🎈 A balloon for you! Tap the bear again for a new colour.'); api.saveSoon(); }, 'balloon', null);
+  }, c => { const B = world.balloons; if (B.length >= MAXBALLOONS) { letGo(); toast('🎈🎈🎈 Wheee! Up, up and away!'); } else { B.push(BALLOON_COLS[B.length % BALLOON_COLS.length]); Sound.giggle(); burst(c.x, 3, c.z, [B[B.length - 1], '#fff'], 14, 2); toast('🎈'.repeat(B.length) + (B.length === 1 ? ' A balloon for you! Tap the bear for more.' : '')); } api.saveSoon(); }, 'balloon', null);
   // Painter Bunny (studio, by the paint wall)
   critter('bunny', 52.4, 0, -2.4, r => {
     const fur = fluffy('#ffffff'), pink = fluffy('#ffb8dc');
@@ -312,15 +316,20 @@ export function initFriends(G, api) {
     return { head, arm };
   }, c => { Sound.tone(700, .08, 'square', .03, 1); Sound.tone(900, .08, 'square', .03, 1, .1); burst(c.x, 1.6, c.z, ['#ff9a5a', '#fff'], 10, 2); }, 'fox', 'The mechanic fox fixed up your kart!');
 
-  // =================== the balloon that floats with you ===================
-  const balloon = new THREE.Group(); add(balloon);
-  const bMat = M('#ff4f9a', { r: .15, cc: 1 });
-  const bBall = ball(bMat, .35, 0, 0, 0, 1, 1.18, 1); balloon.add(bBall);
-  const knot = new THREE.Mesh(new THREE.ConeGeometry(.07, .12, 8), bMat); knot.position.y = -.42; knot.rotation.x = Math.PI; balloon.add(knot);
-  const strGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
-  const str = new THREE.Line(strGeo, new THREE.LineBasicMaterial({ color: '#ffffff' })); str.frustumCulled = false; add(str);
-  const bPos = new THREE.Vector3(player.x, player.y + 3, 0), bVel = new THREE.Vector3();
-
+  // =================== balloons that float with you (up to 6) ===================
+  const MAXBALLOONS = 6; world.balloons = world.balloons || [];
+  const strMat = new THREE.LineBasicMaterial({ color: '#ffffff' });
+  const balloons = [];
+  function balloonMesh() {
+    const mat = M('#ff4f9a', { r: .15, cc: 1 }), g = new THREE.Group(); add(g);
+    g.add(ball(mat, .35, 0, 0, 0, 1, 1.18, 1)); const knot = new THREE.Mesh(new THREE.ConeGeometry(.07, .12, 8), mat); knot.position.y = -.42; knot.rotation.x = Math.PI; g.add(knot);
+    const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]); const line = new THREE.Line(geo, strMat); line.frustumCulled = false; add(line);
+    const b = { g, mat, line, pos: new THREE.Vector3(player.x, player.y + 3, player.z), vel: new THREE.Vector3(), free: 0 };
+    g.traverse(o => { if (o.isMesh) o.userData.tap = () => { Sound.pop(); b.vel.y += 3; }; }); G.taps.push(g); return b;
+  }
+  // tap the bear when you have lots: they all float away into the sky (then you can start again)
+  const flying = [];
+  function letGo() { for (const b of balloons) { b.free = 4; b.line.visible = false; flying.push(b); } balloons.length = 0; world.balloons = []; Sound.whoosh(); Sound.chime(); discover('letgo', 'Your balloons float up into the sky!'); }
   // =================== floating magic sparkles in the air ===================
   const MN = 70, mGeo = new THREE.BufferGeometry(), mPos = new Float32Array(MN * 3), mSeed = [];
   for (let i = 0; i < MN; i++) mSeed.push([Math.random() * 30 - 15, Math.random() * 7, Math.random() * 8 - 5, Math.random() * 6]);
@@ -360,7 +369,8 @@ export function initFriends(G, api) {
     });
     if (pets[0]) petPos.copy(pets[0].pos);
     // friends waiting to be met bob about at home
-    for (const b of Object.values(buddies)) if (!b.f) { b.t += dt; b.root.position.y = (b.fly ? 1.2 + Math.sin(b.t * 2) * .2 : Math.abs(Math.sin(b.t * 2)) * .05); b.root.rotation.y = Math.sin(b.t * .7) * .4; if (b.parts.anim) b.parts.anim(b.t, false); }
+    for (const p of pets) if (p.waiting) { p.root.position.set(p.pos.x, p.pos.y + Math.abs(Math.sin(t * 2 + p.pos.x)) * .05, p.pos.z); p.root.rotation.y = Math.sin(t * .7 + p.pos.x) * .5; }
+    for (const b of Object.values(buddies)) if (!b.f) { b.t += dt; b.root.position.y = (b.baseY || 0) + (b.fly ? 1.2 + Math.sin(b.t * 2) * .2 : Math.abs(Math.sin(b.t * 2)) * .05); b.root.rotation.y = Math.sin(b.t * .7) * .4; if (b.parts.anim) b.parts.anim(b.t, false); }
     // critters: bob, wave when you're near, act when tapped
     for (const c of critters) {
       c.t += dt; c.act = Math.max(0, c.act - dt);
@@ -377,21 +387,24 @@ export function initFriends(G, api) {
       if (c.kind === 'bear') p.bunch.position.y = 2.6 + Math.sin(c.t * 1.6) * .08;
     }
     for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.life -= dt; b.s.position.set(b.c.root.position.x, b.c.y + (b.c.kind === 'unicorn' ? 3.3 : 2.7) + Math.sin(t * 3) * .05, b.c.root.position.z + .4); b.s.material.opacity = Math.min(1, b.life * 2); if (b.life <= 0) { scene.remove(b.s); bubbles.splice(i, 1); } }
-    // balloon floats above you on a string
-    balloon.visible = str.visible = !!world.balloon && !(P.ride && P.ride.type === 'slide');
-    if (world.balloon) {
-      bMat.color.set(world.balloon);
-      const hx = P.x - P.facing * .3, hy = P.y + 1.2, tx = hx - P.vx * .08 + Math.sin(t * 1.3) * .2, ty = hy + 1.9;
-      bVel.x += (tx - bPos.x) * 14 * dt; bVel.y += (ty - bPos.y) * 14 * dt; bVel.z += (P.z - .3 - bPos.z) * 10 * dt; bVel.multiplyScalar(Math.exp(-dt * 4));
-      bPos.addScaledVector(bVel, dt); if (Math.abs(bPos.x - hx) > 10) bPos.set(hx, ty, P.z);
-      balloon.position.copy(bPos); balloon.rotation.z = -bVel.x * .1;
-      const pa = str.geometry.attributes.position; pa.setXYZ(0, hx, hy, P.z); pa.setXYZ(1, bPos.x, bPos.y - .45, bPos.z); pa.needsUpdate = true;
-    }
+    // balloons float above you on strings, spread out like a bunch
+    while (balloons.length < world.balloons.length) balloons.push(balloonMesh());
+    const showB = !(P.ride && P.ride.type === 'slide');
+    balloons.forEach((b, i) => {
+      const n = balloons.length, spread = (i - (n - 1) / 2) * .42;
+      b.mat.color.set(world.balloons[i] || '#ff4f9a'); b.g.visible = b.line.visible = showB;
+      const hx = P.x - P.facing * .3, hy = P.y + 1.2, tx = hx + spread - P.vx * .08 + Math.sin(t * 1.3 + i) * .2, ty = hy + 1.9 + (i % 2) * .35;
+      b.vel.x += (tx - b.pos.x) * 14 * dt; b.vel.y += (ty - b.pos.y) * 14 * dt; b.vel.z += (P.z - .3 - (i % 3) * .2 - b.pos.z) * 10 * dt; b.vel.multiplyScalar(Math.exp(-dt * 4));
+      b.pos.addScaledVector(b.vel, dt); if (Math.abs(b.pos.x - hx) > 10) b.pos.set(hx, ty, P.z);
+      b.g.position.copy(b.pos); b.g.rotation.z = -b.vel.x * .1;
+      const pa = b.line.geometry.attributes.position; pa.setXYZ(0, hx, hy, P.z); pa.setXYZ(1, b.pos.x, b.pos.y - .45, b.pos.z); pa.needsUpdate = true;
+    });
+    for (let i = flying.length - 1; i >= 0; i--) { const b = flying[i]; b.free -= dt; b.pos.y += dt * (2 + (4 - b.free)); b.pos.x += Math.sin(t * 2 + i) * dt; b.g.position.copy(b.pos); if (b.free <= 0) { scene.remove(b.g); scene.remove(b.line); flying.splice(i, 1); } }
     // floating sparkles drift around the camera view
     const cx = G.camera.position.x, cy = G.camera.position.y - 2.4;
     for (let i = 0; i < MN; i++) { const s = mSeed[i]; let x = s[0] + Math.sin(t * .3 + s[3]) * 1.5, y = s[1] + ((t * .25 + s[3]) % 7); x = ((x - cx) % 30 + 45) % 30 - 15 + cx; mPos[i * 3] = x; mPos[i * 3 + 1] = cy + y - 1; mPos[i * 3 + 2] = s[2] + Math.cos(t * .4 + s[3]); }
     mGeo.attributes.position.needsUpdate = true;
   }
-  function restored() { world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 }; rebuildPreview(); world.pets.forEach((rec, i) => spawnPet(rec, player.x - 1.2 - i * .6, player.y, 0)); for (const [id, b] of Object.entries(buddies)) if (world.buddies[id] && !b.f) { b.root.position.set(player.x - 1, player.y, .7); follow(b); } }
-  return { update, restored, hasPet: () => pets.length > 0, petCount: () => pets.length, petPos, addFollower, removeFollower, followerTrick, followers, buddies, critters, bubbleCount: () => bubbles.length, critter, say, TALK, VOICE };
+  function restored() { world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 }; rebuildPreview(); world.pets.forEach((rec, i) => { const f = spawnPet(rec, player.x - 1.2 - i * .6, player.y, 0); if ((world.petStay || [])[i]) { removeFollower(f); f.waiting = true; f.pos.set(PM.x + 3.6 + i * .9, UGF, -1.4); } }); for (const [id, b] of Object.entries(buddies)) if (world.buddies[id] && !b.f) { b.root.position.set(player.x - 1, player.y, .7); follow(b); } }
+  return { update, restored, hasPet: () => pets.length > 0, petCount: () => pets.length, waveBye, comeAlong, pets, petPos, addFollower, removeFollower, followerTrick, followers, buddies, critters, bubbleCount: () => bubbles.length, critter, say, TALK, VOICE };
 }
