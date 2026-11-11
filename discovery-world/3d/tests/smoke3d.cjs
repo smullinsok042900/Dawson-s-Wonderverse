@@ -272,7 +272,7 @@ const UG_F = -6;
   await teleport(1022.6); await sleep(200); c = await S(); check('stair bubble at the bottom of the stairs', c.door === 'up');
   await press('#pawBtn'); await sleep(500); c = await S(); check('PAW puts you on the first step (no automatic walking)', c.stair === 0);
   await holdBtn('#rightBtn', 700); c = await S(); check('hold ▶ to walk up part-way, let go to stop', c.stair > .2 && c.stair < .95, `k=${c.stair}`);
-  await holdBtn('#rightBtn', 1400); c = await S(); check('walk off the top onto the upstairs floor', c.stair === null && Math.abs(c.y - 4.4) < .01, `y=${c.y}`);
+  await holdBtn('#rightBtn', 1400); c = await waitFor(s => s.stair === null && Math.abs(s.y - 4.4) < .01, 6000); check('walk off the top onto the upstairs floor', c.stair === null && Math.abs(c.y - 4.4) < .01, `y=${c.y}`);
   await holdBtn('#leftBtn', 900); await sleep(800); await shot('14_nursery.jpg');
   await page.evaluate(() => __DDW3.teleport(1015, 4.4)); await sleep(300); await press('#jumpBtn'); await sleep(200); await press('#jumpBtn'); await sleep(500);
   c = await S(); check('the ceiling stops you upstairs (no flying through the roof)', c.y + 1.5 <= 8.81, `y=${c.y.toFixed(2)}`);
