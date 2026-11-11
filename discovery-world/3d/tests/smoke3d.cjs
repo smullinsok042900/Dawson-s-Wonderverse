@@ -216,7 +216,7 @@ const UG_F = -6;
     const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap Biscuit the puppy: he follows you everywhere', r[0] === n0 + 1 && r[1] === true, `followers ${n0} → ${r[0]}`); }
   await teleport(198); await tapWorld(199, 1.35, -1.6); await sleep(300); check('tap Twinkle the fairy: she flies along with you', await page.evaluate(() => __DDW3.world.buddies.twinkle === true));
   await teleport(365.6); { const bp = await page.evaluate(() => __DDW3.kingdom().eggs[0].baby.position.toArray()); await tapWorld(bp[0], bp[1] + .5, bp[2]); await sleep(300); check('tap a hatched baby dino: it follows you too', await page.evaluate(() => __DDW3.world.dinoFollow[0] === true)); }
-  { await teleport(150); const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 158 || ++n > 600) { D.keys.right = false; return res(D.friends.followers.map(f => Math.abs(f.pos.x - P.x))); } requestAnimationFrame(f); }; f(); }));
+  { await teleport(300); const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 308 || ++n > 600) { D.keys.right = false; return res(D.friends.followers.map(f => Math.abs(f.pos.x - P.x))); } requestAnimationFrame(f); }; f(); }));
     check('all your pets and friends follow you in a line', r.length >= 5 && r.every(d => d < 8), r.map(d => d.toFixed(1)).join(' ')); }
   await shot('26_followers.jpg');
   await teleport(259.2); await tapWorld(260.8, 1.2, -2.4); await sleep(200); check('the mechanic fox talks', (await S()).disc.includes('fox'));
