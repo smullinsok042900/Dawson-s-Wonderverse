@@ -203,7 +203,7 @@ const UG_F = -6;
   await teleport(367);
   { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let top = 0, slid = false, n = 0; const f = () => { top = Math.max(top, P.y); if (P.ride && P.ride.type === 'slide') slid = true; if (++n > 1500 || P.x > 388) { D.keys.right = false; return res([top, slid]); } requestAnimationFrame(f); }; f(); }));
     c = await S(); check('walk right: climb up Dottie the dinosaur\'s tail, across her back, and slide down her neck', r[0] > 3.3 && r[1] && c.disc.includes('dinoclimb') && c.disc.includes('dinoslide'), `top y=${r[0].toFixed(2)} slid=${r[1]}`); }
-  await teleport(363.4); await tapWorld(362.8, .55, -2.05);
+  await teleport(365.6); await tapWorld(362.8, .55, -2.05); // (stand aside so your creature isn't in front of the egg)
   c = await waitFor(s => s.disc.includes('hatch'), 60000); check('tap a dino egg: it wobbles and a baby dino hatches', c.disc.includes('hatch') && await page.evaluate(() => __DDW3.world.dinoEggs[0] === true));
   await shot('24_dino_valley.jpg');
   await teleport(389); await tapWorld(390, .9, -2.4); await sleep(300); check('tap Tops the little dino: stomp stomp!', (await S()).disc.includes('tops'));
@@ -215,7 +215,7 @@ const UG_F = -6;
   { const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await teleport(29); await tapWorld(30.2, .6, -1.6); await sleep(300);
     const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap Biscuit the puppy: he follows you everywhere', r[0] === n0 + 1 && r[1] === true, `followers ${n0} → ${r[0]}`); }
   await teleport(198); await tapWorld(199, 1.35, -1.6); await sleep(300); check('tap Twinkle the fairy: she flies along with you', await page.evaluate(() => __DDW3.world.buddies.twinkle === true));
-  await teleport(363.4); { const bp = await page.evaluate(() => __DDW3.kingdom().eggs[0].baby.position.toArray()); await tapWorld(bp[0], bp[1] + .5, bp[2]); await sleep(300); check('tap a hatched baby dino: it follows you too', await page.evaluate(() => __DDW3.world.dinoFollow[0] === true)); }
+  await teleport(365.6); { const bp = await page.evaluate(() => __DDW3.kingdom().eggs[0].baby.position.toArray()); await tapWorld(bp[0], bp[1] + .5, bp[2]); await sleep(300); check('tap a hatched baby dino: it follows you too', await page.evaluate(() => __DDW3.world.dinoFollow[0] === true)); }
   { await teleport(150); const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 158 || ++n > 600) { D.keys.right = false; return res(D.friends.followers.map(f => Math.abs(f.pos.x - P.x))); } requestAnimationFrame(f); }; f(); }));
     check('all your pets and friends follow you in a line', r.length >= 5 && r.every(d => d < 8), r.map(d => d.toFixed(1)).join(' ')); }
   await shot('26_followers.jpg');
