@@ -167,6 +167,20 @@ const UG_F = -6;
   await page.locator('.spCol').nth(2).tap(); await sleep(300); await page.locator('#sparkleBtn').tap(); await sleep(200);
   { const st = await page.evaluate(() => ({ s: __DDW3.world.styles, sp: __DDW3.world.sparkle, k: __DDW3.player.creature })); check('pick a new colour for your creature and turn on the sparkle trail', st.s && st.s[st.k] && st.sp, JSON.stringify(st)); }
   await page.locator('#styleDone').tap(); await sleep(200);
+  // ---------- build 8: Kart Garage and race track ----------
+  await teleport(262.2);
+  { const k0 = await page.evaluate(() => JSON.stringify(__DDW3.world.kart)); await tapWorld(263.0, 1.0, -1.3); await sleep(300); const k1 = await page.evaluate(() => JSON.stringify(__DDW3.world.kart));
+    check('Kart Garage: tap a big button to change your kart', k0 !== k1 && (await S()).disc.includes('kartmaker'), `${k0} → ${k1}`); }
+  await teleport(268.2); await tapWorld(269.4, 1.2, -1.4); await sleep(300);
+  check('tap the checkered flag: drive your kart', (await S()).ride === 'kart');
+  { const r = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, u0 = P.ride.u; let n = 0; const f = () => { if (++n > 40) return res([u0, P.ride ? P.ride.u : -1, P.z]); requestAnimationFrame(f); }; f(); })); check('the kart drives round the track', r[1] > r[0], `u ${r[0].toFixed(3)} → ${r[1].toFixed(3)}, z=${r[2].toFixed(1)}`); }
+  await page.evaluate(() => new Promise(r => requestAnimationFrame(() => { document.getElementById('jumpBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); r(); })));
+  { const h = await page.evaluate(() => new Promise(res => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.ride ? __DDW3.player.ride.hop : 0); if (++n > 30) return res(m); requestAnimationFrame(f); }; f(); })); check('JUMP makes the kart hop', h > .2, `hop ${h.toFixed(2)}`); }
+  await page.evaluate(() => { __DDW3.player.ride.u = .985; });
+  { const lap = await page.evaluate(() => new Promise(res => { let n = 0; const f = () => { const R = __DDW3.player.ride; if ((R && R.lap > 0) || ++n > 300) return res(R ? R.lap : -1); requestAnimationFrame(f); }; f(); })); check('crossing the finish line counts a lap (with confetti)', lap >= 1, `lap ${lap}`); }
+  await shot('21_kart_race.jpg');
+  await press('#pawBtn'); await sleep(300); c = await S(); check('PAW parks the kart and you hop out', !c.ride && c.y < .1);
+  await teleport(259.2); await tapWorld(260.8, 1.2, -2.4); await sleep(200); check('the mechanic fox talks', (await S()).disc.includes('fox'));
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
@@ -219,6 +233,7 @@ const UG_F = -6;
   await page.locator('#playBtn').tap(); await sleep(800); c = await S();
   { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: !!__DDW3.world.balloon })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
   { const k = await page.evaluate(() => ({ b: __DDW3.world.build.filter(v => v >= 0).length, c: __DDW3.world.colorings[0].some(x => x !== '#ffffff'), s: Object.keys(__DDW3.world.styles || {}).length, sp: __DDW3.world.sparkle })); check('reload keeps your building, colouring, colours and sparkles', k.b === 2 && k.c && k.s > 0 && k.sp, JSON.stringify(k)); }
+  { const kk = await page.evaluate(() => JSON.stringify(__DDW3.world.kart)); check('reload keeps your kart design', kk !== JSON.stringify({ col: 0, shape: 0, wheels: 0 }), kk); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
   await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));

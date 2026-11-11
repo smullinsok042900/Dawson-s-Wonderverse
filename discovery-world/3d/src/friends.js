@@ -125,9 +125,9 @@ export function initFriends(G, api) {
   // every critter TALKS: a picture speech bubble (emoji, no reading) and a babbling voice
   const TALK = {
     bear: ['🎈😊', '🎈❤️', '👋🐻'], bunny: ['🎨✨', '🖌️💖', '🌈😄'], frog: ['🥁🎶', '🐸😄', '🎵🎵'], penguin: ['💃🎵', '🐧❄️', '🕺✨'], owl: ['🦉💤', '🌙⭐', '😴💤'],
-    beaver: ['🧱👉', '🏠✨', '🔨😊'], unicorn: ['🌈✨', '🦄💖', '⭐🌟'], hedgehog: ['🎸🎶', '🎵😊', '🎶💕'], snail: ['🐌💨', '🐚😴', '🍃😊'],
+    beaver: ['🧱👉', '🏠✨', '🔨😊'], unicorn: ['🌈✨', '🦄💖', '⭐🌟'], hedgehog: ['🎸🎶', '🎵😊', '🎶💕'], snail: ['🐌💨', '🐚😴', '🍃😊'], fox: ['🏎️💨', '🏁😄', '🔧✨'],
   };
-  const VOICE = { bear: 260, bunny: 620, frog: 300, penguin: 520, owl: 380, beaver: 340, unicorn: 700, hedgehog: 560, snail: 800 };
+  const VOICE = { bear: 260, bunny: 620, frog: 300, penguin: 520, owl: 380, beaver: 340, unicorn: 700, hedgehog: 560, snail: 800, fox: 460 };
   const bubbles = [];
   function bubbleTex(text) { const c = document.createElement('canvas'); c.width = 256; c.height = 160; const g = c.getContext('2d'); g.fillStyle = 'rgba(255,255,255,.97)'; g.strokeStyle = '#c9a6ff'; g.lineWidth = 8; g.beginPath(); g.roundRect(8, 8, 240, 110, 46); g.fill(); g.stroke(); g.beginPath(); g.moveTo(100, 114); g.lineTo(128, 152); g.lineTo(150, 114); g.fill(); g.font = '64px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 66); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
   function say(c, text) {
@@ -240,6 +240,19 @@ export function initFriends(G, api) {
     const arm = new THREE.Group(); r.add(arm);
     return { head, arm, body };
   }, c => { Sound.tone(900, .3, 'sine', .03, .5); }, 'snail', 'The little snail hides in its shell!');
+
+  critter('fox', 260.8, 0, -2.4, r => {
+    const fur = fluffy('#ff9a5a'), white = fluffy('#ffffff');
+    r.add(ball(fur, .42, 0, .5, 0, 1, 1.1, .9)); r.add(ball(white, .26, 0, .48, .22, 1, 1.1, .5));
+    const head = new THREE.Group(); head.position.y = 1.12; r.add(head); head.add(ball(fur, .34)); head.add(ball(white, .15, 0, -.1, .28, 1.4, .8, .8)); head.add(ball(M('#3a2030'), .05, 0, -.06, .42));
+    for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.ConeGeometry(.12, .3, 10), fur); e.position.set(s2 * .18, .32, 0); e.rotation.z = -s2 * .25; head.add(e); }
+    face(head, { y: .06, z: .28, spread: .12, eyeR: .08, mouthY: -.14 });
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#3d9bff')); cap.position.y = .2; head.add(cap);
+    const tail = ball(fur, .2, 0, .4, -.42, .8, .8, 1.6); r.add(tail); r.add(ball(white, .1, 0, .45, -.68));
+    const arm = new THREE.Group(); arm.position.set(.42, .7, .12); r.add(arm); arm.add(ball(fur, .1, 0, .12, 0, 1, 1.5, 1));
+    const wrench = new THREE.Mesh(new THREE.BoxGeometry(.06, .45, .05), M('#c9c9d9', { m: .6, r: .3 })); wrench.position.set(0, .4, .05); arm.add(wrench);
+    return { head, arm };
+  }, c => { Sound.tone(700, .08, 'square', .03, 1); Sound.tone(900, .08, 'square', .03, 1, .1); burst(c.x, 1.6, c.z, ['#ff9a5a', '#fff'], 10, 2); }, 'fox', 'The mechanic fox fixed up your kart!');
 
   // =================== the balloon that floats with you ===================
   const balloon = new THREE.Group(); add(balloon);
