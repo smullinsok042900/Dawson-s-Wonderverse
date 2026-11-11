@@ -49,7 +49,7 @@ export function buildWorld(G) {
     g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
   };
-  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 362, '#c4e2ff', '#a9d3ff']];
+  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 356, '#c4e2ff', '#a9d3ff'], [356, 394, '#d9f2b4', '#c5e89c'], [394, 432, '#ffdcef', '#ffc9e4']];
   // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
   const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.6, 54.2, -3.2, -1.6]];
   // a normal map so each tile has softly rounded edges and grout lines that catch the light (made once, shared)
@@ -80,7 +80,7 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
-  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(334, -.6, 4.6, 52, .6, .8, '#ffb8de', { r: .3, cast: false });
+  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(370, -.6, 4.6, 124, .6, .8, '#ffb8de', { r: .3, cast: false });
 
   // ---------- back walls ----------
   const wallAO = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, map: (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(50,15,70,.32)'); gr.addColorStop(.45, 'rgba(50,15,70,.1)'); gr.addColorStop(1, 'rgba(50,15,70,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); return new THREE.CanvasTexture(c); })() });
@@ -101,7 +101,7 @@ export function buildWorld(G) {
 
   // ---------- party bulbs strung across (instanced, glowing) ----------
   const bulbPos = [];
-  for (let a = -18; a < 350; a += 9) for (let i = 0; i <= 9; i++) { const k = i / 9, x = a + k * 9, y = 8.2 - Math.sin(k * Math.PI) * 1.2; bulbPos.push([x, y, -4.5]); }
+  for (let a = -18; a < 420; a += 9) for (let i = 0; i <= 9; i++) { const k = i / 9, x = a + k * 9, y = 8.2 - Math.sin(k * Math.PI) * 1.2; bulbPos.push([x, y, -4.5]); }
   const bulbs = new THREE.InstancedMesh(new THREE.SphereGeometry(.13, 12, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 1.6 }), bulbPos.length);
   const mtx = new THREE.Matrix4(), col = new THREE.Color();
   bulbPos.forEach(([x, y, z], i) => { mtx.makeTranslation(x, y, z); bulbs.setMatrixAt(i, mtx); bulbs.setColorAt(i, col.set(['#ffe36e', '#ff9fd8', '#9fe6ff', '#c9a6ff'][i % 4])); });
@@ -210,7 +210,7 @@ export function buildWorld(G) {
 
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
-  for (let i = 0; i < 22; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
+  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const tree = (x, z, s = 1) => { cyl(x, 0, z, .22 * s, .3 * s, 2.2 * s, '#b06a32', { m: { r: .7, cc: .1 } }); [[0, 2.6, 0, 1.2], [-.7, 2.2, .2, .85], [.7, 2.3, -.1, .9], [0, 3.3, 0, .8]].forEach(([dx, dy, dz, r]) => sph(x + dx * s, dy * s, z + dz * s, r * s, ['#6fd38c', '#8fe3a3', '#5cc97c'][Math.abs(Math.round(dx * 10)) % 3], { m: { r: .6, cc: .3, sheen: .5 } })); };
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS: thousands of little swaying grass tufts across the park and meadow (one instanced mesh, cheap)
@@ -224,7 +224,7 @@ export function buildWorld(G) {
     const N = 2400, grass = new THREE.InstancedMesh(tuft, gMat, N), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();
     let k = 0, seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     while (k < N) {
-      const x = 136 + rnd() * 216, z = rnd() < .85 ? -11 + rnd() * 8.6 : 4.0 + rnd() * .4;
+      const x = 136 + rnd() * 258, z = rnd() < .85 ? -11 + rnd() * 8.6 : 4.0 + rnd() * .4;
       if (Math.abs(x - 144) < 5.5 && z < -1 && z > -10.5) continue; // not under the carousel
       if (x > 271.5 && x < 300 && z < -2.4 && z > -11.4) continue; // not on the race track
       if (x > 325.5 && x < 338.5 && z > -3.6) continue; // not in front of the marble machine
@@ -293,7 +293,7 @@ export function buildWorld(G) {
   G.houseWindows = H;
   tap(door, () => G.enterHouse(), {});
   // right edge of the world: a rainbow gate
-  for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(3 - i * .3, .2, 12, 40, Math.PI), M(RAINBOW[i])); t.position.set(352, 0, -1.5); t.rotation.y = Math.PI / 2; add(t); }
+  for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(3 - i * .3, .2, 12, 40, Math.PI), M(RAINBOW[i])); t.position.set(422, 0, -1.5); t.rotation.y = Math.PI / 2; add(t); }
 
   // =================== FLUFFKIN HOUSE (inside, at x 1000) ===================
   const IN = { ox: 1000, w: 30, f2: 4.4, slab: .3 };

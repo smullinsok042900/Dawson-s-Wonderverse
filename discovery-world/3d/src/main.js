@@ -18,6 +18,7 @@ import { buildMeadow, BLOCKS, BUILD, ERASE } from './meadow.js';
 import { initKarts, KART, KART_COLS } from './kart.js';
 import { initTrain } from './train.js';
 import { initMarbles } from './marble.js';
+import { initKingdom } from './kingdom.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -116,6 +117,7 @@ function groundUnder(x, y) { let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : pla
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
   player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root);
+  { const bb = new THREE.Box3().setFromObject(creature.root); G.headTop = bb.max.y - creature.root.position.y; } // (for the princess crown)
   document.querySelectorAll('.creatureChoice').forEach(b => b.classList.toggle('chosen', b.dataset.c === kind));
 }
 
@@ -200,6 +202,7 @@ const friends = initFriends(G, {
   scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, world, UG,
   tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
 });
+const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); } });
 
 // ---------------- bubbles ----------------
 const bubbles = [], bubbleGeo = new THREE.SphereGeometry(1, 24, 16);
@@ -522,7 +525,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 349]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 419]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -586,6 +589,7 @@ function updatePlayer(dt) {
   // walk off the top of the slide tower onto the slide
   if (P.layer === '' && P.grounded && Math.abs(P.y - 3.8) < .01 && P.x > 23.2 && P.vx > .5) startSlide();
   if (P.layer === '' && P.grounded && Math.abs(P.y - SKY.y) < .01 && P.x > SKY.b - .15 && P.vx > .5) startSlide(G.skySlide);
+  for (const se of G.slideEdges || []) if (!P.ride && P.layer === '' && P.grounded && Math.abs(P.y - se.y) < .01 && P.x > se.x && P.vx > .5) { startSlide(se.path); if (se.disc) discover(se.disc, se.msg); }
   // secret star
   if (!world.secret && P.layer === '' && Math.hypot(P.x - G.secretStar[0], P.y + .8 - G.secretStar[1]) < 1.1) { world.secret = true; Sound.chime(); toast('🌟 You found the secret star!'); burst(G.secretStar[0], G.secretStar[1], 0, ['#ffd84a', '#fff'], 40, 4); save(); }
 }
@@ -597,7 +601,7 @@ const CAM_DIST = 9;
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 353 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : clamp(x, -1 + hw, 423 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
 function updateCamera(dt) {
@@ -608,6 +612,8 @@ function updateCamera(dt) {
   const y = camT.y;
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
   camera.position.set(camT.x, y + 2.5 + Math.max(0, -camT.z) * .25, CAM_DIST + camT.z); camera.lookAt(camT.x, y + 1.3, camT.z);
+  if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
+  sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
   sun.position.set(camT.x - 7, 16 + Math.max(0, camT.y), 10); sun.target.position.set(camT.x, Math.max(0, camT.y), 0);
 }
 
@@ -645,7 +651,7 @@ let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: world.pet || null, petDraft: world.petDraft || null, balloon: world.balloon || null, build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloon: world.balloon || null, build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -656,7 +662,11 @@ function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
-  if (okRec(d.pet)) world.pet = { col: d.pet.col, ears: d.pet.ears, tail: d.pet.tail, pat: d.pet.pat };
+  const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
+  if (Array.isArray(d.pets) && d.pets.length <= 5 && d.pets.every(okRec)) world.pets = d.pets.map(cleanRec);
+  else if (okRec(d.pet)) world.pets = [cleanRec(d.pet)]; // (saves from before build 10 had one pet)
+  if (d.buddies && typeof d.buddies === 'object') { world.buddies = {}; for (const k of ['biscuit', 'pom', 'twinkle']) if (d.buddies[k] === true) world.buddies[k] = true; }
+  if (Array.isArray(d.dinoFollow) && d.dinoFollow.length === 3 && d.dinoFollow.every(v => typeof v === 'boolean')) world.dinoFollow = d.dinoFollow.slice();
   if (okRec(d.petDraft)) world.petDraft = { col: d.petDraft.col, ears: d.petDraft.ears, tail: d.petDraft.tail, pat: d.petDraft.pat };
   if (typeof d.balloon === 'string' && /^#[0-9a-f]{6}$/i.test(d.balloon)) world.balloon = d.balloon;
   const hex = v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v);
@@ -665,6 +675,8 @@ function restore(d) {
   if (d.styles && typeof d.styles === 'object') { world.styles = {}; for (const k of Object.keys(CREATURES)) if (hex(d.styles[k])) world.styles[k] = d.styles[k]; }
   world.sparkle = d.sparkle === true;
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
+  if (d.crown === true) world.crown = true;
+  if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
   if (typeof d.x === 'number' && isFinite(d.x)) player.x = clamp(d.x, .5, 301);
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
@@ -721,7 +733,7 @@ function step(dt) {
   T += dt;
   if (((stick && stick.active && stick.dy < -45) || keys.up) && player.swim) { swimT -= dt; if (swimT <= 0) { swimT = .38; jump(); } } else swimT = .38;
   if (started) { updatePlayer(dt); updateFluffs(dt, T); updateBubbles(dt); }
-  karts.update(dt, T, player, stick, keys); train.update(dt, T, player, stick, keys); marbles.update(dt); friends.update(dt, T, player, world.trail); meadow.update(dt);
+  karts.update(dt, T, player, stick, keys); train.update(dt, T, player, stick, keys); marbles.update(dt); friends.update(dt, T, player, world.trail); kingdom.update(dt, T, player); meadow.update(dt);
   if (world.sparkle && started && (Math.abs(player.vx) > 1 || !player.grounded) && Math.random() < dt * 14) { const c = (world.styles || {})[player.creature] || CREATURES[player.creature].body; burst(player.x - player.facing * .3, player.y + .3 + Math.random() * .6, player.z, [c, '#ffffff', '#ffe36e'], 2, .8); }
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt); updateCamera(dt);
 }
@@ -771,6 +783,6 @@ window.__DDW3 = {
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
-  bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, meadowRestore: () => meadow.restored(),
+  bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, kingdom: () => kingdom, meadowRestore: () => meadow.restored(),
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };

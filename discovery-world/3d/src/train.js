@@ -10,10 +10,10 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { toy, ball } from './creatures.js';
 
-export const TRAIN = { z: 3.2, x0: -2, x1: 352, seat: 2.25 };
+export const TRAIN = { z: 3.2, x0: -2, x1: 422, seat: 2.25 };
 export const STATIONS = [
   { x: 1.2, e: '🏠' }, { x: 61, e: '🎨' }, { x: 113, e: '🧪' }, { x: 170, e: '🎠' },
-  { x: 222, e: '🧱' }, { x: 277, e: '🏎️' }, { x: 320, e: '🔮' },
+  { x: 222, e: '🧱' }, { x: 277, e: '🏎️' }, { x: 320, e: '🔮' }, { x: 366.5, e: '🦕' }, { x: 397, e: '👑' },
 ];
 
 const emojiTex = (e, bg) => {
@@ -83,11 +83,15 @@ export function initTrain(G, api) {
     const g = new THREE.Group(); g.position.set(st.x, 0, 0); add(g);
     const plat = new THREE.Mesh(new RoundedBoxGeometry(4.2, .22, .8, 2, .08), toy('#fff1dc', { r: .5, cc: .4 })); plat.position.set(0, .11, TRAIN.z + .95); plat.receiveShadow = true; g.add(plat);
     for (let k = 0; k < 6; k++) { const t = new THREE.Mesh(new THREE.BoxGeometry(.6, .03, .12), toy(k % 2 ? '#ff4f9a' : '#ffd23f')); t.position.set(-1.75 + k * .7, .235, TRAIN.z + .6); g.add(t); }
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 1.1, 10), toy('#ffffff')); post.position.set(-2.4, .55, TRAIN.z + .9); post.castShadow = true; g.add(post);
-    const sign = new THREE.Mesh(new THREE.CircleGeometry(.42, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
-    sign.position.set(-2.4, 1.35, TRAIN.z + .95); g.add(sign);
-    const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(-2.4, .95, TRAIN.z + 1.05); bell.rotation.x = Math.PI; g.add(bell);
-    st.bell = bell;
+    // a picture sign with a bell at both ends of the platform (so one is always on screen)
+    st.bells = [];
+    for (const sx of [-2.4, 2.4]) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .6, 10), toy('#ffffff')); post.position.set(sx, .3, TRAIN.z + .9); post.castShadow = true; g.add(post);
+      const sign = new THREE.Mesh(new THREE.CircleGeometry(.32, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
+      sign.position.set(sx, .82, TRAIN.z + .95); /* low, so it never hides your creature */ g.add(sign);
+      const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(sx + .42, .55, TRAIN.z + .95); bell.rotation.x = Math.PI; g.add(bell);
+      st.bells.push(bell);
+    }
     api.tap(g, () => call(i));
     G.interact.push({ x: st.x, y: 0, layer: '', disc: 'train', run: () => call(i), hintY: 1.8 });
   });
@@ -110,7 +114,7 @@ export function initTrain(G, api) {
   function call(i) {
     const P = api.player; if (P.ride || P.layer !== '' || P.y > 1) { if (!(P.ride && P.ride.type === 'train')) Sound.click(); return; }
     const st = STATIONS[i];
-    st.bell.rotation.z = .6; Sound.bell(1318, .05); Sound.bell(1046, .04, .18);
+    st.bells.forEach(b => { b.userData.sw = .6; }); Sound.bell(1318, .05); Sound.bell(1046, .04, .18);
     discover('train', 'All aboard the Wonder Express! It stops at every station.');
     if (T.mode !== 'arriving' && Math.abs(seatX() - st.x) < 1.2) { board(i); return; }
     // the train chugs in from the side (it then carries on that way)
@@ -119,7 +123,7 @@ export function initTrain(G, api) {
   }
   function board(i) {
     const P = api.player; if (P.ride || Math.abs(P.x - STATIONS[i].x) > 6 || P.layer !== '' || P.y > 1.5) { T.mode = 'parked'; T.at = i; return; }
-    P.ride = { type: 'train' }; P.vx = P.vy = 0; T.mode = 'stopped'; T.at = i; T.wait = 1.6; T.v = 0;
+    P.ride = { type: 'train' }; P.vx = P.vy = 0; P.x = STATIONS[i].x; P.y = .57; P.z = TRAIN.z; // straight into the seat T.mode = 'stopped'; T.at = i; T.wait = 1.6; T.v = 0;
     Sound.chime(); burst(STATIONS[i].x, 1.2, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8'], 12, 2);
     if (i === STATIONS.length - 1) face(-1); else if (i === 0) face(1);
   }
@@ -137,7 +141,7 @@ export function initTrain(G, api) {
   const ACC = 6, VMAX = 14;
   function update(dt, t, P, stick, keys) {
     const riding = P.ride && P.ride.type === 'train';
-    STATIONS.forEach(s => { s.bell.rotation.z *= Math.max(0, 1 - dt * 3); s.bell.rotation.z = Math.sin(t * 18) * Math.abs(s.bell.rotation.z); });
+    STATIONS.forEach(s => s.bells.forEach(b => { b.userData.sw = (b.userData.sw ?? 0); b.userData.sw *= Math.max(0, 1 - dt * 3); b.rotation.z = Math.sin(t * 18) * b.userData.sw; }));
     if (T.mode === 'arriving' || T.mode === 'running') {
       const goal = STATIONS[T.target].x + T.dir * TRAIN.seat, dist = (goal - T.x) * T.dir;
       const want = Math.min(VMAX, Math.sqrt(Math.max(0, 2 * ACC * dist)) + .4);
@@ -146,7 +150,7 @@ export function initTrain(G, api) {
       if (dist <= .02 || (goal - T.x) * T.dir <= 0) {
         T.x = goal; T.v = 0;
         if (T.mode === 'arriving') { board(T.target); }
-        else { T.mode = 'stopped'; T.at = T.target; T.wait = 2.6; Sound.chime(); toast(STATIONS[T.at].e + ' Ding ding!'); burst(STATIONS[T.at].x, 1.4, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8', '#9fe6ff'], 14, 2.4); STATIONS[T.at].bell.rotation.z = .6; discover('station' + T.at, 'Next stop!'); if (T.at === STATIONS.length - 1 || T.at === 0) face(T.at === 0 ? 1 : -1); }
+        else { T.mode = 'stopped'; T.at = T.target; T.wait = 2.6; Sound.chime(); toast(STATIONS[T.at].e + ' Ding ding!'); burst(STATIONS[T.at].x, 1.4, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8', '#9fe6ff'], 14, 2.4); STATIONS[T.at].bells.forEach(b => { b.userData.sw = .6; }); discover('station' + T.at, 'Next stop!'); if (T.at === STATIONS.length - 1 || T.at === 0) face(T.at === 0 ? 1 : -1); }
       }
       if (Math.random() < dt * (2 + T.v)) puff();
     } else if (T.mode === 'stopped' && riding) {
