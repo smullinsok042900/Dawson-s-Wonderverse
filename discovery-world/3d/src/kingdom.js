@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
+import { plush, quadSpec, personSpec } from './critterkit.js';
 
 export const KINGDOM = { x0: 356, dino: 378, dz: -2.0, nest: 363.4, tops: 390, castle: 407, x1: 422 };
 
@@ -88,15 +89,11 @@ export function initKingdom(G, api) {
     for (let s = 0; s < 4; s++) egg.add(ball(toy('#ffffff', { r: .4 }), .06, Math.cos(s * 1.7) * .22, .2 + s * .1, Math.sin(s * 1.7) * .22 + .05, 1, 1, .4));
     // the baby inside
     const baby = new THREE.Group(); baby.position.set(x, .05, z + .2); baby.visible = false; add(baby);
-    const bs = toy(kid, { r: .4, cc: .7, sheen: .4 });
-    baby.add(ball(bs, .3, 0, .32, 0, 1.1, 1, 1)); const hd = new THREE.Group(); hd.position.set(.18, .72, .05); baby.add(hd); hd.add(ball(bs, .24, 0, 0, 0, 1.15, 1, 1));
-    face(hd, { y: .03, z: .21, spread: .09, eyeR: .065, mouthY: -.08 });
-    baby.add(ball(bs, .12, -.33, .2, 0, 1.6, .7, .8));
-    for (const s of [-1, 1]) baby.add(ball(bs, .08, .06, .05, s * .16, 1, .7, 1.2));
+    plush(baby, quadSpec({ scale: .42, body: kid, belly: '#fff6ee', snoutCol: kid, hoof: kid, ears: false, tail: 'long', legLen: .32, long: .8, neck: 1.1, fat: 1.15, plates: '#ffffff', iris: '#6a3a9a', voxel: .032 }), { fur: false, rough: .4, clearcoat: .7, lid: kid, iris: '#6a3a9a' });
     const shellBits = [0, 1].map(s => { const h = new THREE.Mesh(new THREE.SphereGeometry(.3, 14, 8, 0, Math.PI * 2, s ? Math.PI / 2 : 0, Math.PI / 2), toy(shell, { r: .3, cc: 1, }).clone()); h.material.side = THREE.DoubleSide; h.position.set(x + (s ? .35 : -.35), .15, z + .25); h.scale.set(1, 1.2, 1); h.visible = false; add(h); return h; });
     const e = { i, egg, baby, shellBits, wob: 0, hop: 0, t: Math.random() * 5, x, z };
     egg.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => tapEgg(e); } }); G.taps.push(egg);
-    baby.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => tapBaby(e); } }); G.taps.push(baby);
+    baby.userData.tap = () => tapBaby(e); G.taps.push(baby);
     return e;
   });
   function showHatched(e) { e.egg.visible = false; e.baby.visible = true; e.shellBits.forEach(s => { s.visible = true; }); }
@@ -113,16 +110,8 @@ export function initKingdom(G, api) {
   // Tops, a little horned dino (a talking friend)
   friends.TALK.tops = ['🦖💚', '🌿😋', '🦕🎶', '💪😄']; friends.VOICE.tops = 240;
   friends.critter('tops', K.tops, 0, -2.4, r => {
-    const sk = toy('#ffb35c', { r: .45, cc: .7, sheen: .3 }), fr = toy('#ff7a9a', { r: .35, cc: .8 }), horn = toy('#fff6e0', { r: .3, cc: 1 });
-    r.add(ball(sk, .6, 0, .7, 0, 1.4, .95, 1)); r.add(ball(toy('#ffe2b8', { r: .5 }), .45, .15, .55, .3, 1.2, .7, .6));
-    for (const lx of [-.5, .45]) for (const s of [-1, 1]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.16, .19, .45, 12), sk); l.position.set(lx, .22, s * .38); r.add(l); }
-    r.add(ball(sk, .2, -.95, .55, 0, 1.8, .7, .8));
-    const head = new THREE.Group(); head.position.set(.95, .95, 0); r.add(head);
-    const frill = new THREE.Mesh(new THREE.CylinderGeometry(.62, .62, .1, 24, 1, false, 0, Math.PI), fr); frill.rotation.set(Math.PI / 2, 0, Math.PI / 2); frill.position.set(-.22, .2, 0); head.add(frill);
-    head.add(ball(sk, .42, 0, 0, 0, 1.15, .95, 1));
-    for (const [hx, hy, hz, rz] of [[.18, .42, .2, -.4], [.18, .42, -.2, -.4], [.42, .12, 0, -1.1]]) { const h = new THREE.Mesh(new THREE.ConeGeometry(.07, .32, 10), horn); h.position.set(hx, hy, hz); h.rotation.z = rz; head.add(h); }
-    face(head, { y: .05, z: .38, spread: .15, eyeR: .085, mouthY: -.15 });
-    return { head };
+    const k2 = plush(r, quadSpec({ scale: .95, body: '#ffb35c', belly: '#ffe2b8', snoutCol: '#ffd09a', hoof: '#e8904a', ears: false, tail: 'long', legLen: .32, long: .9, neck: .55, fat: 1.25, frill: '#ff7a9a', horns: '#fff6e0', iris: '#3a7ad0' }), { fur: false, rough: .45, clearcoat: .6, lid: '#ffb35c', iris: '#3a7ad0' });
+    return { head: k2.B.head, tick: k2.tick };
   }, c => { [0, .25].forEach(d => Sound.tone(70, .25, 'sine', .1, .6, d)); burst(c.x, .2, c.z + .4, ['#e8d2a8', '#fff'], 16, 2.5); G.shake = .35; }, 'tops', 'Stomp stomp! Tops the little dino says hi!');
 
   // a few palm-ish ferns and rocks to make it a valley
@@ -174,28 +163,21 @@ export function initKingdom(G, api) {
   // two princesses (original characters): Rosie and Luna
   const princess = (kind, x, gownC, trimC, skinC, hairC, wandOrRose) => friends.critter(kind, x, 0, -2.3, r => {
     const gown = toy(gownC, { r: .35, cc: .8, sheen: .6, sheenColor: '#ffffff' }), trim = toy(trimC, { r: .3, cc: 1, m: .2 }), sk = toy(skinC, { r: .55, cc: .2 }), hair = toy(hairC, { r: .5, cc: .4, sheen: .5 });
-    const prof = [[0, 0], [.72, 0], [.7, .08], [.6, .4], [.45, .8], [.3, 1.1], [.22, 1.25], [0, 1.27]].map(([a, b]) => new THREE.Vector2(a, b));
-    const skirt = new THREE.Mesh(new THREE.LatheGeometry(prof, 32), gown); r.add(skirt);
-    const hem = new THREE.Mesh(new THREE.TorusGeometry(.7, .05, 8, 32), trim); hem.rotation.x = Math.PI / 2; hem.position.y = .06; r.add(hem);
-    const body = ball(gown, .26, 0, 1.38, 0, 1, 1.15, .85); r.add(body);
-    for (const s of [-1, 1]) r.add(ball(gown, .14, s * .27, 1.55, 0));
-    const head = new THREE.Group(); head.position.y = 1.95; r.add(head);
-    head.add(ball(sk, .3, 0, 0, 0, 1, 1.05, 1));
-    // hair: a soft round bob with a puff on top
-    head.add(ball(hair, .33, 0, .06, -.07, 1.06, 1.05, 1)); head.add(ball(hair, .14, 0, .34, -.05));
-    for (const s of [-1, 1]) head.add(ball(hair, .15, s * .26, -.18, -.02, 1, 1.4, 1));
-    face(head, { y: 0, z: .27, spread: .11, eyeR: .07, mouthY: -.12 });
-    // little crown
-    const crown = new THREE.Group(); crown.position.set(0, .34, .02); head.add(crown);
-    const band = new THREE.Mesh(new THREE.CylinderGeometry(.17, .19, .09, 18, 1, true), goldM); band.material = goldM; crown.add(band);
-    for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(.04, .14, 6), goldM); sp.position.set(Math.cos(a) * .17, .1, Math.sin(a) * .17); crown.add(sp); }
-    crown.add(ball(toy(trimC, { em: trimC, ei: .3 }), .05, 0, .02, .19));
-    // arms (the right one waves; the left holds a wand or a rose)
-    const arm = new THREE.Group(); arm.position.set(.3, 1.55, .02); r.add(arm); arm.add(ball(sk, .07, 0, -.22, 0, 1, 3, 1)); arm.add(ball(sk, .075, 0, -.46, 0));
-    const larm = new THREE.Group(); larm.position.set(-.3, 1.5, .05); larm.rotation.z = -.5; r.add(larm); larm.add(ball(sk, .07, 0, -.22, 0, 1, 3, 1));
-    if (wandOrRose === 'wand') { const w = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .5, 6), trim); w.position.set(-.05, -.5, .15); larm.add(w); const st = new THREE.Mesh(starGeometry(.12, .05, .03, .01, 1), toy('#fff3a6', { em: '#ffe36e', ei: .9 })); st.position.set(-.05, -.25, .15); larm.add(st); }
-    else { larm.add(ball(toy('#ff4f6e', { r: .4, cc: .8 }), .09, 0, -.45, .1)); }
-    return { head, arm, skirt };
+    const prof = [[0, 0], [.72, 0], [.7, .08], [.6, .4], [.45, .8], [.3, 1.1], [.2, 1.24], [0, 1.26]].map(([a, b]) => new THREE.Vector2(a, b));
+    const skirt = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), gown); skirt.castShadow = true; r.add(skirt);
+    const hem = new THREE.Mesh(new THREE.TorusGeometry(.7, .05, 8, 40), trim); hem.rotation.x = Math.PI / 2; hem.position.y = .06; r.add(hem);
+    // build 14: a sculpted princess (one smooth body, real eyes) on a skeleton
+    const k2 = plush(r, personSpec({ skin: skinC, gown: gownC, hair: hairC }), { fur: false, rough: .5, clearcoat: .3, lid: skinC, iris: wandOrRose === 'wand' ? '#6a4ad0' : '#3a8a5a',
+      accessories: (B, at) => {
+        const crown = new THREE.Group(); const band = new THREE.Mesh(new THREE.CylinderGeometry(.13, .145, .07, 20, 1, true), goldM); crown.add(band);
+        for (let q = 0; q < 5; q++) { const a = q / 5 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(.03, .1, 6), goldM); sp.position.set(Math.cos(a) * .13, .07, Math.sin(a) * .13); crown.add(sp); }
+        crown.add(ball(toy(trimC, { em: trimC, ei: .3 }), .035, 0, .01, .145)); crown.rotation.x = -.2; at(B.head, crown, 0, 2.27, .02);
+        if (wandOrRose === 'wand') { const w = new THREE.Group(); const st2 = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .45, 6), trim); st2.position.y = .2; w.add(st2); const st = new THREE.Mesh(starGeometry(.1, .045, .03, .01, 1), toy('#fff3a6', { em: '#ffe36e', ei: .9 })); st.position.y = .45; w.add(st); at(B.handR, w, -.31, 1.18, .08); }
+        else at(B.handR, ball(toy('#ff4f6e', { r: .4, cc: .8 }), .07, 0, 0, 0), -.31, 1.14, .1);
+      } });
+    const head = k2.B.head, arm = k2.B.armL;
+    r.userData.tick = k2.tick;
+    return { head, arm, skirt, tick: k2.tick };
   }, c => (kind === 'rosie' ? giveCrown(c) : (fountainSpray(), burst(c.x, 2, c.z + .4, ['#fff3a6', '#b28cff', '#fff'], 18, 2.5))), kind, kind === 'rosie' ? 'Princess Rosie gives you a golden crown!' : 'Princess Luna waves her magic wand!');
   friends.TALK.rosie = ['👑✨', '💖😊', '🌹👋', '💃🎶']; friends.VOICE.rosie = 760;
   friends.TALK.luna = ['🌙⭐', '✨🪄', '⛲💦', '💃🎶']; friends.VOICE.luna = 660;

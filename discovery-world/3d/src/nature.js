@@ -116,3 +116,136 @@ export function plushNormal() {
   for (let i = 0; i < 9000; i++) { const x = rnd() * N, y = rnd() * N, a = rnd() * 6.3, l = 1.5 + rnd() * 3; g.strokeStyle = `rgba(${rnd() < .5 ? '255,255,255' : '0,0,0'},.18)`; g.lineWidth = .8; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
   plushCache = tex(normalFromCanvas(c, 2.5), false); plushCache.repeat.set(3, 3); return plushCache;
 }
+
+// ---------- fabric (woven) and brushed metal ----------
+let weaveCache = null;
+function weaveNormal() {
+  if (weaveCache) return weaveCache;
+  const N = 128, [c, g] = canvas(N); g.fillStyle = '#808080'; g.fillRect(0, 0, N, N);
+  for (let y = 0; y < N; y += 4) for (let x = 0; x < N; x += 4) { const over = ((x + y) / 4) % 2; g.fillStyle = over ? '#b0b0b0' : '#505050'; g.fillRect(x, y, over ? 4 : 2, over ? 2 : 4); }
+  weaveCache = tex(normalFromCanvas(c, 2), false); weaveCache.repeat.set(6, 6); return weaveCache;
+}
+export function fabricMat(color) { return new THREE.MeshPhysicalMaterial({ color, roughness: .85, sheen: .8, sheenRoughness: .6, sheenColor: new THREE.Color('#ffffff'), normalMap: weaveNormal(), normalScale: new THREE.Vector2(.6, .6) }); }
+let brushCache = null;
+export function metalMatOf(color) {
+  if (!brushCache) { const [c, g] = canvas(128); g.fillStyle = '#808080'; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(${rnd() < .5 ? '255,255,255' : '0,0,0'},.08)`; g.fillRect(0, rnd() * 128, 128, 1); } brushCache = tex(c, false); }
+  return new THREE.MeshPhysicalMaterial({ color, roughness: .35, metalness: .9, roughnessMap: brushCache });
+}
+
+// ===================================================================
+// build 15: REAL GRASS (thousands of curved blades that sway in the wind)
+// ===================================================================
+function bladeClump(n = 7) {
+  const pos = [], col = [], hh = [], idx = []; let base = 0;
+  for (let b = 0; b < n; b++) {
+    const a = rnd() * Math.PI * 2, r = rnd() * .07, x0 = Math.cos(a) * r, z0 = Math.sin(a) * r, h = .22 + rnd() * .26, w = .022 + rnd() * .014, bend = .08 + rnd() * .12, rot = rnd() * Math.PI * 2;
+    const dx = Math.cos(rot), dz = Math.sin(rot), px = -dz, pz = dx; // bend direction and blade width direction
+    const tint = .85 + rnd() * .3;
+    for (let i = 0; i <= 4; i++) {
+      const t = i / 4, y = t * h, off = bend * t * t, ww = w * (1 - t * .92);
+      for (const sgn of [-1, 1]) { pos.push(x0 + dx * off + px * ww * sgn, y, z0 + dz * off + pz * ww * sgn); const k = (.42 + t * .7) * tint; col.push(k * .92, k, k * .78); hh.push(t); }
+    }
+    for (let i = 0; i < 4; i++) { const q = base + i * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
+    base += 10;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setAttribute('gh', new THREE.Float32BufferAttribute(hh, 1)); g.setIndex(idx);
+  // normals mostly point up (soft, even lighting like a real lawn)
+  const nrm = new Float32Array(pos.length); for (let i = 0; i < nrm.length; i += 3) { nrm[i] = 0; nrm[i + 1] = 1; nrm[i + 2] = 0; } g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+  return g;
+}
+export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 60 : 1100, bands = [[-11, -2.25], [3.6, 4.45]] }) {
+  const geo = bladeClump(7);
+  const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, side: THREE.DoubleSide });
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = time;
+    sh.vertexShader = 'uniform float uTime; attribute float gh;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      vec4 gw = instanceMatrix * vec4(0., 0., 0., 1.);
+      float wind = sin(uTime * 1.7 + gw.x * .45 + gw.z * .3) * .7 + sin(uTime * 3.1 + gw.x * 1.3) * .3;
+      transformed.x += wind * gh * gh * .11; transformed.z += wind * gh * gh * .04;`);
+  };
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), V = new THREE.Vector3(), S = new THREE.Vector3(), cl = new THREE.Color();
+  const area = bands.reduce((a, [z0, z1]) => a + (z1 - z0), 0), meshes = [];
+  for (let cx = x0; cx < x1; cx += chunk) {
+    const im = new THREE.InstancedMesh(geo, mat, perChunk); let n = 0, tries = 0;
+    while (n < perChunk && tries++ < perChunk * 4) {
+      let zr = rnd() * area, z = 0; for (const [z0, z1] of bands) { if (zr < z1 - z0) { z = z0 + zr; break; } zr -= z1 - z0; }
+      const x = cx + rnd() * Math.min(chunk, x1 - cx); if (!ok(x, z)) continue;
+      e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const s = .75 + rnd() * .7; m4.compose(V.set(x, 0, z), q, S.set(s, s * (.8 + rnd() * .5), s));
+      im.setMatrixAt(n, m4); im.setColorAt(n, cl.setHSL(.27 + rnd() * .07, .5 + rnd() * .2, .42 + rnd() * .12)); n++;
+    }
+    im.count = n; im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im);
+  }
+  return meshes;
+}
+
+// ===================================================================
+// build 15: REAL TREES (a trunk that splits into branches and twigs, bark,
+// and layered clusters of leaf shapes)
+// ===================================================================
+let leafTexCache = null;
+function leafTexture() {
+  if (leafTexCache) return leafTexCache;
+  const N = 256, [c, g] = canvas(N);
+  g.clearRect(0, 0, N, N);
+  for (let i = 0; i < 46; i++) {
+    const x = 20 + rnd() * (N - 40), y = 20 + rnd() * (N - 40), a = rnd() * Math.PI * 2, L = 22 + rnd() * 18;
+    g.save(); g.translate(x, y); g.rotate(a);
+    const gr = g.createLinearGradient(-L, 0, L, 0); const base = pick(['#4f9e4a', '#5fb352', '#6cc061', '#478f45', '#7ccc6a']); gr.addColorStop(0, base); gr.addColorStop(1, '#a8e08a');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(-L, 0); g.quadraticCurveTo(0, -L * .45, L, 0); g.quadraticCurveTo(0, L * .45, -L, 0); g.fill();
+    g.strokeStyle = 'rgba(30,70,30,.5)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-L * .9, 0); g.lineTo(L * .9, 0); g.stroke();
+    for (let v = -2; v <= 2; v++) { if (!v) continue; g.beginPath(); g.moveTo(v * L * .3, 0); g.lineTo(v * L * .3 + L * .18, v > 0 ? -L * .2 : L * .2); g.stroke(); }
+    g.restore();
+  }
+  leafTexCache = new THREE.CanvasTexture(c); leafTexCache.colorSpace = THREE.SRGBColorSpace; leafTexCache.anisotropy = 4; return leafTexCache;
+}
+let leafMatCache = null, barkMatCache = null;
+export function makeTree(scene, x, z, s = 1) {
+  if (!barkMatCache) { const B = barkTextures(); B.map.repeat.set(1, 2); B.normal.repeat.set(1, 2); barkMatCache = new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(1.5, 1.5), roughness: .92 }); }
+  if (!leafMatCache) leafMatCache = new THREE.MeshStandardMaterial({ map: leafTexture(), alphaTest: .5, side: THREE.DoubleSide, roughness: .75, color: '#ffffff' });
+  const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g);
+  const segs = [], tips = [], up = new THREE.Vector3(0, 1, 0);
+  // grow: each branch is a tapered cylinder pointing along dir
+  function grow(p0, dir, len, r0, depth) {
+    const r1 = r0 * .62, p1 = p0.clone().addScaledVector(dir, len);
+    const cyl = new THREE.CylinderGeometry(r1, r0, len, depth ? 7 : 10, 3); cyl.translate(0, len / 2, 0);
+    // gentle wobble so it isn't a perfect cylinder
+    const pa = cyl.attributes.position; for (let i = 0; i < pa.count; i++) { const yy = pa.getY(i); pa.setX(i, pa.getX(i) + Math.sin(yy * 7 + depth) * r0 * .12); }
+    const qq = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize()); cyl.applyQuaternion(qq); cyl.translate(p0.x, p0.y, p0.z); segs.push(cyl);
+    if (depth >= 3) { tips.push(p1); return; }
+    const kids = depth === 0 ? 3 : 2 + (rnd() < .5 ? 1 : 0);
+    for (let k = 0; k < kids; k++) {
+      const a = (k / kids) * Math.PI * 2 + rnd() * .8, tilt = .45 + rnd() * .35 + depth * .1;
+      const nd = new THREE.Vector3(Math.cos(a) * Math.sin(tilt), Math.cos(tilt), Math.sin(a) * Math.sin(tilt)).lerp(dir, .35).normalize();
+      grow(p1, nd, len * (.62 + rnd() * .15), r1, depth + 1);
+    }
+    if (depth >= 1) tips.push(p1);
+  }
+  grow(new THREE.Vector3(0, 0, 0), new THREE.Vector3((rnd() - .5) * .1, 1, (rnd() - .5) * .1).normalize(), 1.5 * s, .2 * s, 0);
+  const wood = new THREE.Mesh(mergeGeometries(segs), barkMatCache); wood.castShadow = true; wood.receiveShadow = true; g.add(wood);
+  // root flare at the base
+  const flare = new THREE.Mesh(new THREE.ConeGeometry(.42 * s, .35 * s, 12, 1, true), barkMatCache); flare.position.y = .12 * s; g.add(flare);
+  // leaves: clusters of leaf cards around every branch tip, in layers
+  const perTip = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 3 : 16, cards = new THREE.InstancedMesh(new THREE.PlaneGeometry(.95 * s, .95 * s), leafMatCache, tips.length * perTip), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();
+  let n = 0;
+  for (const t of tips) for (let i = 0; i < perTip; i++) {
+    const v = new THREE.Vector3(rnd() - .5, rnd() * .8 - .2, rnd() - .5).normalize().multiplyScalar(rnd() * .55 * s);
+    e.set(rnd() * 3, rnd() * 3, rnd() * 3); q.setFromEuler(e); const sc = .7 + rnd() * .6;
+    m4.compose(t.clone().add(v), q, new THREE.Vector3(sc, sc, sc)); cards.setMatrixAt(n, m4);
+    const shade = .7 + (v.y / (.55 * s) + .5) * .35; cards.setColorAt(n, cl.setRGB(shade * (.9 + rnd() * .15), shade, shade * (.85 + rnd() * .1))); n++;
+  }
+  cards.count = n; cards.castShadow = true; cards.receiveShadow = true; g.add(cards);
+  return g;
+}
+
+// ===================================================================
+// build 15: natural rocks (lumpy, with stone texture)
+// ===================================================================
+let stoneMat = null;
+export function makeRock(scene, x, z, s = 1) {
+  if (!stoneMat) { const [c, g] = canvas(256); g.fillStyle = '#a99fb0'; g.fillRect(0, 0, 256, 256); for (let i = 0; i < 2500; i++) { g.fillStyle = pick(['#8f8698', '#c0b8c6', '#9a90a3', '#b3abbb', '#7f7789']); g.globalAlpha = .4; g.beginPath(); g.arc(rnd() * 256, rnd() * 256, 1 + rnd() * 4, 0, 7); g.fill(); } g.globalAlpha = 1; stoneMat = new THREE.MeshStandardMaterial({ map: tex(c), normalMap: tex(normalFromCanvas(c, 3), false), roughness: .95 }); }
+  const geo = new THREE.IcosahedronGeometry(1, 3), p = geo.attributes.position, v = new THREE.Vector3(), k = rnd() * 10;
+  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); const n = 1 + Math.sin(v.x * 2.3 + k) * Math.sin(v.y * 2.9 + k) * Math.sin(v.z * 2.1) * .22 + Math.sin(v.x * 7 + v.z * 5) * .04; v.multiplyScalar(n); v.y = Math.max(v.y, -.25); p.setXYZ(i, v.x, v.y, v.z); }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, stoneMat); m.scale.set(s * (1 + rnd() * .4), s * (.55 + rnd() * .3), s); m.rotation.y = rnd() * 6; m.position.set(x, s * .12, z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
+}

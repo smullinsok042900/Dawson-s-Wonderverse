@@ -13,7 +13,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
-import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature } from './nature.js';
+import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -227,32 +227,15 @@ export function buildWorld(G) {
   for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
   const leafMats = ['#5fc77e', '#7ed895', '#4fb86e', '#8fe0a0'].map(c => new THREE.MeshPhysicalMaterial({ color: c, roughness: .7, sheen: .7, sheenColor: new THREE.Color('#eaffd8'), normalMap: leafNormal(), normalScale: new THREE.Vector2(1.4, 1.4) }));
-  const tree = (x, z, s = 1) => { cyl(x, 0, z, .2 * s, .32 * s, 2.3 * s, '#b06a32', { mat: barkMat });
-    [[0, 2.7, 0, 1.15], [-.75, 2.25, .25, .8], [.75, 2.35, -.15, .85], [0, 3.45, -.05, .8], [-.4, 3.1, -.45, .7], [.45, 3.0, .45, .7], [.1, 2.2, .7, .65], [-.2, 2.4, -.7, .65]].forEach(([dx, dy, dz, r], k) => sph(x + dx * s, dy * s, z + dz * s, r * s, null, { mat: leafMats[(k + Math.round(x)) % 4] })); };
+  const tree = (x, z, s = 1) => makeTree(scene, x, z, s); // build 15: real branching trees
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
-  // GRASS: thousands of little swaying grass tufts across the park and meadow (one instanced mesh, cheap)
-  {
-    const blade = new THREE.ConeGeometry(.05, .42, 4); blade.translate(0, .21, 0);
-    const parts = [[0, 0, 0, 0], [.08, .03, .3, .85], [-.07, -.04, -.35, .75], [.02, .07, .1, .65]].map(([x, z, tilt, sc]) => { const g = blade.clone(); g.scale(1, sc, 1); g.rotateZ(tilt); g.translate(x, 0, z); return g; });
-    const tuft = mergeGeometries(parts);
-    { const pos = tuft.attributes.position, col = new Float32Array(pos.count * 3); for (let i = 0; i < pos.count; i++) { const k = .45 + Math.min(1, pos.getY(i) / .42) * .75; col[i * 3] = k; col[i * 3 + 1] = k; col[i * 3 + 2] = k * .9; } tuft.setAttribute('color', new THREE.BufferAttribute(col, 3)); }
-    const gMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .8, vertexColors: true });
-    gMat.onBeforeCompile = sh => { sh.uniforms.uTime = G.grassTime; sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvec4 gwp = instanceMatrix * vec4(0.,0.,0.,1.); transformed.x += sin(uTime * 1.6 + gwp.x * .7 + gwp.z) * position.y * .18;'); };
-    G.grassTime = { value: 0 };
-    const N = 3600, grass = new THREE.InstancedMesh(tuft, gMat, N), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), cl = new THREE.Color();
-    let k = 0, seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    while (k < N) {
-      const x = 136 + rnd() * 258, z = rnd() < .85 ? -11 + rnd() * 8.6 : 4.0 + rnd() * .4;
-      if (Math.abs(x - 144) < 5.5 && z < -1 && z > -10.5) continue; // not under the carousel
-      if (x > 271.5 && x < 300 && z < -2.4 && z > -11.4) continue; // not on the race track
-      if (x > 325.5 && x < 338.5 && z > -3.6) continue; // not in front of the marble machine
-      if (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8)) continue; // not on the train platforms
-      e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const sc = .7 + rnd() * .8;
-      m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(sc, sc * (.8 + rnd() * .6), sc)); grass.setMatrixAt(k, m4);
-      grass.setColorAt(k, cl.setHSL(.33 + rnd() * .06, .55 + rnd() * .2, .45 + rnd() * .15)); k++;
-    }
-    grass.receiveShadow = true; add(grass);
-  }
+  // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)
+  G.grassTime = { value: 0 };
+  grassField(scene, { x0: 136, x1: 394, time: G.grassTime, ok: (x, z) => !(
+    (Math.abs(x - 144) < 5.5 && z < -1 && z > -10.5) || (x > 271.5 && x < 300 && z < -2.4 && z > -11.4) || (x > 325.5 && x < 338.5 && z > -3.6) ||
+    (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8)) || (x > 183.5 && x < 196.5 && z > -4.6) || (x > 260 && x < 271 && z > -6) || (Math.abs(x - 363.4) < 1.6 && z > -3.6)) });
+  // natural rocks
+  [[141, -9.5, .5], [168, -10.2, .7], [186, -8.8, .4], [214, -9.6, .6], [252, -10.4, .55], [305, -9.6, .7], [341, -8.9, .45], [359, -9.8, .6], [393, -9.2, .5], [181, 4.25, .22], [233, 4.2, .2], [318, 4.25, .24]].forEach(([x, z, sc]) => makeRock(scene, x, z, sc));
   // flowers and bushes everywhere on the lawns (kept off rides, paths and buildings)
   G.nature = scatterNature(scene, { x0: 136, x1: 393, ok: (x, z) => !(
     (Math.abs(x - 144) < 6 && z < -1 && z > -11) ||                // carousel

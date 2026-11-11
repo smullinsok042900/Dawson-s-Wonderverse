@@ -37,6 +37,46 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 15: benchmark character and environment (graphics overhaul, stage 3)
+- **Benchmark character: the Mechanic Fox** (`foxSpec` in `src/critterkit.js`). It's designed from fox anatomy instead of the shared round body:
+  - a slim upright body, a deep chest with a white ruff, a long tapering snout with a bare black nose
+  - big pointed ears with dark tips (two bones each, with an ear flick now and then), cheek tufts and brow ridges
+  - eyes sitting in carved sockets with relaxed eyelids
+  - dark "gloves" with fingers, legs that bend like a fox's (thigh, shin and long foot with toes), and a four-bone bushy tail with a white tip
+  - about 45 sculpted parts on 26 bones
+- **Real fur** (`src/fur.js`, "shell fur"):
+  - Each furry body is drawn in several stacked layers; each layer keeps only the dots where a hair passes through.
+  - The result is thousands of soft hairs that bend with the skeleton, are darker at the roots and lighter at the tips, and droop slightly.
+  - Hairs are scattered (no grid pattern), and bare parts (noses, eyes) have none.
+  - On: the fox (10 layers), Pip (9) and every furry friend and pet (6).
+- **Benchmark environment: the outdoor park, meadow and valley** (`src/nature.js`):
+  - **Real grass:** clumps of individual curved blades, darker at the roots, that sway in the wind. It's split into chunks so grass off screen isn't drawn.
+  - **Real trees:** grown like a tree, with a trunk that splits into branches and twigs (with root flare and bark). Layered clusters of real leaf shapes cast dappled shadows.
+  - **Natural rocks**, plus woven fabric and brushed metal materials for the fox's cap and wrench.
+- **Performance:** skinned characters and fur are now culled when off screen, with a safety margin for waving arms and tails.
+- **Screenshots:** `screenshots/compare_park.jpg` and `screenshots/compare_fox.jpg` are before and after. `fox_closeup_front_34_side.jpg` and `pip_fur_front_34_side.jpg` show each from the front, three-quarter and side.
+
+## 3D build 14: the characters rebuilt as real 3D models (graphics overhaul, stages 1-2)
+- **What changed and why:** every character used to be a stack of separate balls and capsules moved one by one. That's why limbs could look detached and faces looked painted on.
+  - Now each one is **one seamless sculpted body on a real skeleton**.
+  - Arms, legs, ears, tails, star points and feelers bend smoothly and always stay attached.
+- **How the models are made** (`src/sculpt.js`), with no model files to download, because this setup can't reach asset sites:
+  - Each body is described as smooth shapes that melt together like clay (signed distance fields with smooth union).
+  - It is turned into one mesh with Surface Nets, with every point snapped exactly onto the surface.
+  - Normals come from the field, and colour regions are soft (tummies, inner ears, paw pads, blush, smile lines).
+  - **Skin weights** bind the mesh to the bones.
+  - Friends and animals are sculpted in a background **Web Worker**, so loading never stutters.
+- **Real eyes everywhere:** a white eyeball, a patterned iris with a pupil, a glossy see-through cornea that catches the light, and upper and lower **eyelids** that blink and squint when happy. There's also an open laughing mouth with a tongue.
+- **Pip, Zuzu and Jelly** (`src/characters.js`):
+  - **Pip:** a plush fairy bunny with a defined head and neck, chubby cheeks, floppy-tipped ears (two bones each), round paws and padded feet. Goggles sit on her forehead, and she has veined fairy wings and a curled rainbow tail.
+  - **Zuzu:** a puffy 3D star whose lower points are its legs and side points its arms.
+  - **Jelly:** a glossy jelly with four little feet, springy two-part feelers and a glowing core.
+  - **Animation is bone by bone:** walking legs with flat feet, arms swinging the opposite way, hips and spine twist, breathing, head turns, springy ears, a wagging tail, waving, hopping, tucking up in the air, and a wiggly tickle.
+- **All the friends rebuilt the same way** (`src/critterkit.js`): Balloon Bear, Painter Bunny, Drummer Frog, Penguin, Sleepy Owl, Builder Beaver, Rainbow Unicorn, Hedgehog and Mechanic Fox.
+  - Also every pet design, Biscuit the puppy, Pom the woolly lamb, the baby dinos, Tops the triceratops, both princesses and the baby Fluffkins.
+  - They all blink, breathe, wiggle their ears and wag their tails, and they keep their accessories and everything they do when tapped.
+- Saves, customization (colours, pets) and every interaction are unchanged.
+
 ## 3D build 13: much more detailed, realistic graphics
 - **Soft natural shadows (ambient occlusion):** corners, the spots under creatures and the gaps between things get soft shading, like real light.
   - It reuses the depth picture the game already makes and runs at half size, so it stays light.

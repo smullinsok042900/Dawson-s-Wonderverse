@@ -12,6 +12,9 @@
 import * as THREE from 'three';
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { plushNormal } from './nature.js';
+import { plush, bipedSpec, quadSpec, personSpec, foxSpec, bearSpec, bunnySpec } from './critterkit.js';
+import { fabricMat, metalMatOf } from './nature.js';
+const capMat = () => fabricMat('#3d7bd8'), metalMat = () => metalMatOf('#c9ccd9');
 import { NOTES } from './audio.js';
 
 export const PET_COLS = ['#ff8fd0', '#8fd8ff', '#ffd45e', '#a98cff', '#7be08a', '#ff9a6b', '#ffffff'];
@@ -20,32 +23,14 @@ const BALLOON_COLS = ['#ff4f9a', '#ffd23f', '#3d9bff', '#3cc46e', '#a15cff'];
 
 // ---------- a pet built from its recipe ----------
 export function buildPet(rec, scale = 1) {
+  // build 14: a sculpted plush pet on a skeleton (critterkit.js)
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  const c = PET_COLS[rec.col % PET_COLS.length], fur = toy(c, { r: .6, cc: .3, sheen: 1, sheenColor: '#ffffff' });
-  const light = toy('#fff6ee', { r: .6, sheen: .8 });
-  body.add(ball(fur, .3, 0, .32, 0, 1.05, .95, .95));
-  const head = new THREE.Group(); head.position.set(0, .68, .05); body.add(head);
-  head.add(ball(fur, .27));
-  if (rec.pat === 1) for (let i = 0; i < 5; i++) { const a = i * 1.3; const s = ball(toy('#ffffff', { r: .6, opacity: .85 }), .06, Math.cos(a) * .24, .3 + Math.sin(a * 1.7) * .1, Math.sin(a) * .24, 1, 1, .4); s.castShadow = false; body.add(s); }
-  if (rec.pat === 2) body.add(ball(light, .2, 0, .3, .16, 1, 1.1, .6));
-  face(head, { y: .03, z: .22, spread: .1, eyeR: .085, mouthY: -.1 });
-  const ears = [];
-  const e = EARS[rec.ears % EARS.length];
-  for (const s of [-1, 1]) {
-    const piv = new THREE.Group(); piv.position.set(s * .13, .2, 0); head.add(piv); ears.push(piv);
-    if (e === 'bunny') { const m = new THREE.Mesh(new THREE.CapsuleGeometry(.06, .26, 4, 10), fur); m.position.y = .18; m.castShadow = true; piv.add(m); piv.rotation.z = -s * .2; }
-    else if (e === 'cat') { const m = new THREE.Mesh(new THREE.ConeGeometry(.09, .2, 10), fur); m.position.y = .08; m.castShadow = true; piv.add(m); piv.rotation.z = -s * .35; }
-    else if (e === 'bear') { piv.add(ball(fur, .08, s * .02, .04, 0)); }
-    else { const st = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .22, 6), fur); st.position.y = .11; piv.add(st); piv.add(ball(toy('#ffd84a', { em: '#ffd84a', ei: .5 }), .045, 0, .24, 0)); piv.rotation.z = -s * .25; }
-  }
-  const tail = new THREE.Group(); tail.position.set(0, .3, -.28); body.add(tail);
-  const t = TAILS[rec.tail % TAILS.length];
-  if (t === 'puff') tail.add(ball(light, .12));
-  else if (t === 'curly') for (let i = 0; i < 5; i++) tail.add(ball(fur, .08 - i * .008, 0, i * .06, -Math.sin(i * .8) * .08));
-  else { const st = new THREE.Mesh(starGeometry(.14, .07, .05, .03, 2), toy('#ffd84a', { em: '#ffb000', ei: .4 })); tail.add(st); }
-  const feet = [-1, 1].map(s => { const f = ball(light, .07, s * .13, .05, .08, 1, .7, 1.3); root.add(f); return f; });
-  root.scale.setScalar(scale);
-  return { root, body, ears, tail, feet };
+  const c = PET_COLS[rec.col % PET_COLS.length], e = EARS[rec.ears % EARS.length], t = TAILS[rec.tail % TAILS.length], pat = PATS[rec.pat % PATS.length];
+  const spots = pat === 'spots' ? (s2, hy) => [[.18, .7, .2], [-.2, .55, .18], [.1, .45, -.25], [-.15, .75, -.2], [.12, hy + .15, .2]].map(([x, y, z]) => ({ type: 'sphere', c: s2([x, y, z]), r: .07 * .55, color: '#ffffff', soft: .01 })) : null;
+  const k = plush(body, bipedSpec({ scale: .55, body: c, belly: pat === 'belly' ? '#fff6ee' : c, muzzle: '#fff6ee', ears: { bunny: 'long', cat: 'cat', bear: 'round', antennae: 'antennae' }[e], snout: 0, nose: '#ff6fae', tail: t === 'star' ? 'none' : t, tailCol: '#fff6ee', iris: '#7a3fd0', voxel: .03, extraPaints: spots }),
+    { lid: c, iris: '#7a3fd0', accessories: (B, at) => { if (t === 'star') { const st = new THREE.Mesh(starGeometry(.08, .04, .03, .02, 2), toy('#ffd84a', { em: '#ffb000', ei: .4 })); at(B.tail, st, 0, .3, -.2); } } });
+  root.scale.setScalar(scale / .9 * 1.0);
+  return { root, body, ears: [k.B.earL, k.B.earR], tail: k.B.tail, feet: [k.B.footL, k.B.footR], tick: k.tick };
 }
 
 export const MAXPETS = 5;
@@ -119,7 +104,7 @@ export function initFriends(G, api) {
     const p = buildPet(rec, .9); add(p.root);
     const f = addFollower({ kind: 'pet', root: p.root, pet: p }); if (x != null) f.pos.set(x, y, z);
     pets.push(f); const idx = pets.length - 1;
-    p.root.traverse(o => { if (o.isMesh) o.userData.tap = () => { world.petStay = world.petStay || []; if (f.waiting) { comeAlong(f); world.petStay[idx] = false; followerTrick(f); } else { waveBye(f); world.petStay[idx] = true; } discover('pettrick', 'Your pet does a trick!'); api.saveSoon(); }; }); G.taps.push(p.root);
+    p.root.userData.tap = () => p.root.children[0].userData.tapFn(); p.root.children[0].userData.tapFn = () => { world.petStay = world.petStay || []; if (f.waiting) { comeAlong(f); world.petStay[idx] = false; followerTrick(f); } else { waveBye(f); world.petStay[idx] = true; } discover('pettrick', 'Your pet does a trick!'); api.saveSoon(); }; G.taps.push(p.root);
     return f;
   }
   api.petTap = () => { if (pets[0]) followerTrick(pets[0]); };
@@ -136,31 +121,24 @@ export function initFriends(G, api) {
       if (!b.f) { world.buddies[id] = true; follow(b); Sound.chime(); Sound.giggle(); burst(root.position.x, root.position.y + 1.2, root.position.z, ['#ff6fae', '#fff', '#ffd84a'], 18, 2.4); toast(emoji + '💖 ' + o.name + ' wants to come with you!'); discover('buddy_' + id, o.name + ' follows you now!'); discover('buddy'); api.saveSoon(); }
       else { waveBye(b.f); b.baseY = b.f.pos.y; b.f = null; world.buddies[id] = false; api.saveSoon(); }
     };
-    root.traverse(m => { if (m.isMesh) m.userData.tap = tapB; }); G.taps.push(root);
+    root.userData.tap = tapB; root.traverse(m => { if (m.isMesh) m.userData.tap = tapB; }); G.taps.push(root);
     G.interact.push({ x, y: 0, layer: '', disc: 'buddy_' + id, run: tapB, hintY: 2, need: () => !b.f });
     buddies[id] = b; return b;
   }
   function follow(b) { b.f = addFollower({ kind: b.id, root: b.root, fly: b.fly, anim: b.parts.anim }); b.f.pos.copy(b.root.position); }
   // Biscuit the puppy (near the start, by the slide)
   buddy('biscuit', 30, -1.6, '🐶', r => {
-    const fur = fluffy('#e8b07a'), light = fluffy('#fff1dc'), dark = fluffy('#8a5a3a');
-    r.add(ball(fur, .3, 0, .34, 0, 1.25, .9, .9)); r.add(ball(light, .2, .05, .3, .18, 1, .9, .6));
-    const head = new THREE.Group(); head.position.set(.22, .72, .05); r.add(head); head.add(ball(fur, .26)); head.add(ball(light, .13, .02, -.08, .2, 1.1, .8, .8)); head.add(ball(M('#3a2030'), .045, .02, -.02, .31));
-    const ears = [-1, 1].map(s => { const e = ball(dark, .1, s * .2, .02, -.02, .7, 1.5, .5); head.add(e); return e; });
-    face(head, { y: .07, z: .22, spread: .1, eyeR: .075, mouthY: -.14 });
-    const tail = ball(fur, .07, -.38, .5, 0, 1, 2.2, 1); tail.rotation.z = .6; r.add(tail);
-    for (const [x, zz] of [[.2, .15], [.2, -.15], [-.2, .15], [-.2, -.15]]) r.add(ball(light, .08, x, .07, zz, 1, .8, 1.2));
-    return { anim: (t, moving) => { tail.rotation.x = Math.sin(t * 16) * .6; ears.forEach((e, i) => { e.rotation.z = Math.sin(t * 8 + i) * (moving ? .4 : .12); }); } };
+    const k = plush(r, quadSpec({ scale: .55, body: '#e8b07a', belly: '#fff1dc', snoutCol: '#fff1dc', hoof: '#fff1dc', ears: false, tail: 'long', legLen: .42, long: .8, neck: .8, iris: '#8a5a2a', voxel: .032,
+      extraParts: (s2, hx2, hyy) => [[.14, 'earL'], [-.14, 'earR']].map(([z, b]) => ({ type: 'limb', a: s2([hx2 - .08, hyy + .12, z]), b: s2([hx2 - .12, hyy - .14, z * 1.5]), ra: .06 * .55, rb: .09 * .55, bone: b, color: '#8a5a3a', k: .03 })) }),
+      { lid: '#e8b07a', iris: '#8a5a2a' });
+    return { anim: (t, moving) => { k.tick(1 / 60, t, moving); k.B.tail.rotation.y = Math.sin(t * 16) * .6; } };
   }, { name: 'Biscuit' });
   // Pom the fluffy lamb (in the park)
   buddy('pom', 176, -1.8, '🐑', r => {
-    const wool = fluffy('#ffffff', { sheen: 1, r: .9 }), skin = toy('#ffd9e6', { r: .5, cc: .3 }), hoof = toy('#6a5470', { r: .4 });
-    for (let k = 0; k < 9; k++) { const a = k * 2.3; r.add(ball(wool, .2 + (k % 3) * .03, Math.cos(a) * .2, .42 + Math.sin(k * 1.7) * .1, Math.sin(a) * .16)); }
-    const head = new THREE.Group(); head.position.set(.32, .66, .05); r.add(head); head.add(ball(skin, .2, 0, 0, 0, 1, 1.1, 1)); head.add(ball(wool, .14, 0, .18, 0, 1.3, .7, 1.2));
-    for (const s of [-1, 1]) head.add(ball(skin, .07, 0, .02, s * .2, .6, 1, 1.6));
-    face(head, { y: .02, z: .17, spread: .08, eyeR: .06, mouthY: -.1 });
-    for (const [x, zz] of [[.18, .12], [.18, -.12], [-.18, .12], [-.18, -.12]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.045, .05, .22, 8), hoof); l.position.set(x, .11, zz); r.add(l); }
-    return { anim: (t, moving) => { head.rotation.z = Math.sin(t * (moving ? 9 : 2)) * .1; } };
+    const k = plush(r, quadSpec({ scale: .55, body: '#ffffff', belly: '#ffffff', headCol: '#ffd9e6', snoutCol: '#ffe6ee', legCol: '#6a5470', hoof: '#4a3a50', tail: 'none', legLen: .4, long: .75, neck: .7, fat: 1.25, iris: '#6a4a8a', voxel: .03,
+      extraParts: (s2, hx2, hyy, by, hx) => Array.from({ length: 16 }, (_, i) => { const a = i * 2.4; return { type: 'sphere', c: s2([Math.cos(a) * hx * .8, by + .12 + Math.sin(i * 1.7) * .14, Math.sin(a) * .24]), r: .14 * .55, bone: Math.cos(a) > 0 ? 'chest' : 'hips', color: '#ffffff', k: .03 }; }).concat([{ type: 'sphere', c: s2([hx2 - .02, hyy + .17, 0]), r: .12 * .55, bone: 'head', color: '#ffffff', k: .03 }]) }),
+      { sheen: '#ffffff', lid: '#ffd9e6', iris: '#6a4a8a' });
+    return { anim: (t, moving) => { k.tick(1 / 60, t, moving); k.B.head.rotation.z = Math.sin(t * (moving ? 9 : 2)) * .1; } };
   }, { name: 'Pom' });
   // Twinkle the little glowing fairy (by the Fluffkin House); she flies beside you
   buddy('twinkle', 199, -1.6, '🧚', r => {
@@ -182,7 +160,7 @@ export function initFriends(G, api) {
     const root = new THREE.Group(); root.position.set(x, y, z); add(root);
     const parts = build(root);
     const c = { kind, root, parts, x, y, z, t: Math.random() * 6, act: 0, near: 0, onTap, disc, msg };
-    root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => tapCritter(c); } }); G.taps.push(root);
+    root.userData.tap = () => tapCritter(c); root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => tapCritter(c); } }); G.taps.push(root);
     G.interact.push({ x, y, layer: '', disc, run: () => tapCritter(c), hintY: 2.6 });
     critters.push(c); return c;
   }
@@ -203,96 +181,63 @@ export function initFriends(G, api) {
   function tapCritter(c) { c.act = 1.6; c.onTap(c); discover(c.disc, c.msg); const lines = TALK[c.kind] || ['😊']; c.line = ((c.line ?? -1) + 1) % lines.length; say(c, lines[c.line]); }
   // Balloon Bear (park entrance)
   critter('bear', 137.6, 0, -2.4, r => {
-    const fur = fluffy('#d9a06a'), light = fluffy('#f3d6b0');
-    r.add(ball(fur, .55, 0, .6, 0, 1, 1.05, .9)); r.add(ball(light, .35, 0, .55, .32, 1, 1, .5));
-    const head = new THREE.Group(); head.position.y = 1.35; r.add(head); head.add(ball(fur, .42)); head.add(ball(light, .17, 0, -.08, .36, 1.2, .9, .7));
-    head.add(ball(M('#3a2030'), .06, 0, -.02, .5)); for (const s of [-1, 1]) head.add(ball(fur, .14, s * .3, .32, 0));
-    face(head, { y: .08, z: .34, spread: .15, eyeR: .09, mouthY: -.16 });
-    const arm = new THREE.Group(); arm.position.set(.5, .85, 0); r.add(arm); arm.add(ball(fur, .16, .1, .2, 0, 1, 1.6, 1));
-    const bunch = new THREE.Group(); bunch.position.set(.45, 2.6, 0); r.add(bunch);
+    const k = plush(r, bearSpec({ scale: 1.25 }), { lid: '#a86a3c', iris: '#a06a32', lidOpen: .85, furShells: 8, furLength: .026, furDensity: 210 }); // build 15: a real bear shape
+    const bunch = new THREE.Group(); bunch.position.set(.55, 2.75, 0); r.add(bunch);
     BALLOON_COLS.forEach((c, i) => { const b = ball(M(c, { r: .15, cc: 1 }), .3, (i - 2) * .32, Math.abs(i - 2) * -.15, 0, 1, 1.15, 1); bunch.add(b); });
-    const str = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 1.5, 4), M('#ffffff')); str.position.set(.5, 1.75, 0); r.add(str);
-    return { head, arm, bunch };
+    const str = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 1.7, 4), M('#ffffff')); str.position.set(.52, 1.75, .1); r.add(str);
+    return { head: k.B.head, arm: k.B.armL, bunch, tick: k.tick };
   }, c => { const B = world.balloons; if (B.length >= MAXBALLOONS) { letGo(); toast('🎈🎈🎈 Wheee! Up, up and away!'); } else { B.push(BALLOON_COLS[B.length % BALLOON_COLS.length]); Sound.giggle(); burst(c.x, 3, c.z, [B[B.length - 1], '#fff'], 14, 2); toast('🎈'.repeat(B.length) + (B.length === 1 ? ' A balloon for you! Tap the bear for more.' : '')); } api.saveSoon(); }, 'balloon', null);
   // Painter Bunny (studio, by the paint wall)
   critter('bunny', 52.4, 0, -2.4, r => {
-    const fur = fluffy('#ffffff'), pink = fluffy('#ffb8dc');
-    r.add(ball(fur, .45, 0, .5, 0, 1, 1.1, .9)); const head = new THREE.Group(); head.position.y = 1.15; r.add(head); head.add(ball(fur, .36));
-    for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.CapsuleGeometry(.09, .4, 4, 10), fur); e.position.set(s * .14, .5, 0); e.rotation.z = -s * .15; head.add(e); const i2 = new THREE.Mesh(new THREE.CapsuleGeometry(.05, .3, 4, 8), pink); i2.position.set(s * .14, .5, .05); i2.rotation.z = -s * .15; head.add(i2); }
-    face(head, { y: .05, z: .3, spread: .13, eyeR: .08, mouthY: -.12 });
-    const beret = ball(M('#ff4f9a'), .22, .05, .3, 0, 1.2, .4, 1.2); head.add(beret);
-    const arm = new THREE.Group(); arm.position.set(.45, .75, .1); r.add(arm); arm.add(ball(fur, .12, 0, .15, 0, 1, 1.5, 1));
-    const brush = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .6, 6), M('#b06a32')); brush.position.set(0, .45, 0); arm.add(brush); arm.add(ball(M('#3d9bff'), .07, 0, .78, 0));
-    return { head, arm };
+    const k = plush(r, bunnySpec({ scale: 1.15 }), { lid: '#fbf7f4', iris: '#8a6ad0', lidOpen: .9, furShells: 8, furLength: .02, furDensity: 260, // build 15: a real bunny shape
+      accessories: (B, at) => { const beret = new THREE.Mesh(new THREE.SphereGeometry(.17, 32, 16), fabricMat('#ff4f9a')); beret.scale.set(1.2, .36, 1.2); beret.rotation.z = -.25; at(B.head, beret, .05, 1.37, 0); at(B.head, ball(M('#ff4f9a'), .025, 0, 0, 0), .08, 1.43, 0);
+        const brush = new THREE.Group(); const h = new THREE.Mesh(new THREE.CylinderGeometry(.025, .03, .55, 8), M('#b06a32')); h.position.y = .2; brush.add(h); brush.add(ball(M('#3d9bff'), .055, 0, .5, 0, 1, 1.4, 1)); brush.rotation.z = -.3; at(B.handL, brush, .25, .7, .16); } });
+    return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { api.paintStamp(); Sound.tone(600, .2, 'sine', .05, 1.4); burst(c.x, 1.6, c.z, ['#ff4f9a', '#3d9bff', '#ffd23f'], 14, 2); }, 'painter', 'The painter bunny paints a picture for you!');
   // Drummer Frog (end of the studio)
   critter('frog', 89.6, 0, -2.4, r => {
-    const skin = toy('#6fd36f', { r: .35, cc: .8 }), belly = toy('#d8f7c0', { r: .4 });
-    const drum = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .55, 24), M('#ff6fae')); drum.position.set(.7, .28, .3); r.add(drum); const top = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .04, 24), M('#fff8ea')); top.position.set(.7, .57, .3); r.add(top);
-    r.add(ball(skin, .45, 0, .45, 0, 1.1, .85, 1)); r.add(ball(belly, .3, 0, .4, .25, 1, .9, .5));
-    const head = new THREE.Group(); head.position.y = .95; r.add(head); head.add(ball(skin, .38, 0, 0, 0, 1.15, .8, 1));
-    for (const s of [-1, 1]) head.add(ball(skin, .14, s * .2, .26, .05));
-    face(head, { y: .26, z: .17, spread: .2, eyeR: .09, mouthY: -.08, cheeks: true });
-    const arm = new THREE.Group(); arm.position.set(.4, .6, .2); r.add(arm); arm.add(ball(skin, .1, .1, 0, 0, 1.6, 1, 1));
-    return { head, arm, drumTop: top };
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .55, 32), M('#ff6fae')); drum.position.set(.85, .28, .3); r.add(drum); const top = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .04, 32), M('#fff8ea')); top.position.set(.85, .57, .3); r.add(top);
+    for (const y2 of [.08, .5]) { const rim = new THREE.Mesh(new THREE.TorusGeometry(.56, .03, 8, 32), M('#ffd23f', { m: .5 })); rim.rotation.x = Math.PI / 2; rim.position.set(.85, y2, .3); r.add(rim); }
+    const k = plush(r, bipedSpec({ scale: 1, body: '#5fcf6a', belly: '#d8f7c0', headW: 1.35, headH: .82, headY: 1.0, ears: 'none', eyeBumps: true, snout: false, tail: 'none', bodyR: [.38, .34, .32], footCol: '#4fbf5a', iris: '#c8a020', eyeR: .085 }),
+      { fur: false, rough: .35, lid: '#5fcf6a', iris: '#c8a020', mouth: false, accessories: (B, at) => { const sm = new THREE.Mesh(new THREE.TorusGeometry(.13, .018, 8, 24, Math.PI), new THREE.MeshStandardMaterial({ color: '#2a5a1a' })); sm.rotation.z = Math.PI; at(B.head, sm, 0, .92, .27); } });
+    return { head: k.B.head, arm: k.B.armL, drumTop: top, tick: k.tick };
   }, c => { [0, .18, .36, .54].forEach((d, i) => { Sound.tone(110 + i * 20, .2, 'sine', .08, .5, d); }); burst(c.x + .7, .8, c.z + .3, ['#fff', '#ff6fae'], 12, 2); }, 'frog', 'Boom boom! The drummer frog plays for you!');
   // Dancing Penguin (lab)
   critter('penguin', 109.2, 0, -2.4, r => {
-    const black = toy('#2c2c4a', { r: .3, cc: .9 }), white = toy('#ffffff', { r: .35 });
-    r.add(ball(black, .42, 0, .6, 0, 1, 1.3, .9)); r.add(ball(white, .3, 0, .55, .22, 1, 1.3, .55));
-    const head = new THREE.Group(); head.position.y = 1.3; r.add(head); head.add(ball(black, .3)); head.add(ball(white, .2, 0, -.02, .16, 1.2, 1, .6));
-    face(head, { y: .05, z: .26, spread: .1, eyeR: .07, mouthY: -.25, cheeks: true });
-    const beak = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 10), M('#ffb000')); beak.position.set(0, -.04, .33); beak.rotation.x = Math.PI / 2; head.add(beak);
-    const arm = new THREE.Group(); arm.position.set(.4, .8, 0); r.add(arm); arm.add(ball(black, .12, .05, -.15, 0, .6, 1.6, .9));
-    for (const s of [-1, 1]) r.add(ball(M('#ffb000'), .1, s * .15, .05, .12, 1.2, .5, 1.6));
-    const bow = ball(M('#ff4f9a'), .08, 0, .95, .33); r.add(bow);
-    return { head, arm };
+    const k = plush(r, bipedSpec({ scale: 1.1, body: '#2c2c4a', belly: '#ffffff', headCol: '#2c2c4a', muzzle: '#ffffff', beak: '#ffb000', ears: 'none', flippers: true, tail: 'feathers', footCol: '#ffb000', legCol: '#2c2c4a', bodyR: [.36, .44, .32], iris: '#4a6ad0',
+      extraPaints: (s, hy) => [{ type: 'ellipsoid', c: s([0, hy - .02, .2]), r: s([.2, .2, .12]), color: '#ffffff', soft: .02 }] }), { fur: false, rough: .45, clearcoat: .5, lid: '#2c2c4a', iris: '#4a6ad0',
+      accessories: (B, at) => { const bow = new THREE.Group(); bow.add(ball(M('#ff4f9a'), .06, 0, 0, 0)); for (const x of [-.09, .09]) bow.add(ball(M('#ff4f9a'), .07, x, 0, 0, 1.2, .8, .5)); at(B.spine, bow, 0, .98, .3); } });
+    return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { [0, 2, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n], .04, i * .16)); burst(c.x, 1.5, c.z, ['#9fe6ff', '#fff'], 12, 2); }, 'penguin', 'The penguin does a happy dance!');
   // Sleepy Owl (on a tree in the park)
   critter('owl', 152, 2.1, -3.2, r => {
-    const brown = fluffy('#b98a5a'), light = fluffy('#f3e0c0');
-    r.add(ball(brown, .38, 0, .4, 0, 1, 1.15, .9)); r.add(ball(light, .25, 0, .35, .2, 1, 1.2, .5));
-    const head = new THREE.Group(); head.position.y = .9; r.add(head); head.add(ball(brown, .32, 0, 0, 0, 1.15, 1, 1));
-    for (const s of [-1, 1]) { const t = new THREE.Mesh(new THREE.ConeGeometry(.07, .18, 8), brown); t.position.set(s * .2, .3, 0); t.rotation.z = -s * .4; head.add(t); }
-    const f = face(head, { y: .04, z: .26, spread: .13, eyeR: .1, mouthY: -.14, cheeks: false });
-    const arm = new THREE.Group(); arm.position.set(.32, .5, 0); r.add(arm); arm.add(ball(brown, .14, .05, -.1, 0, .6, 1.3, .9));
-    const branch = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 1.6, 8), M('#8a5a2a')); branch.rotation.z = Math.PI / 2; branch.position.y = -.02; r.add(branch);
-    return { head, arm, eyes: f.eyes };
+    const k = plush(r, bipedSpec({ scale: .95, body: '#b98a5a', belly: '#f3e0c0', headCol: '#b98a5a', beak: '#ffb347', ears: 'tufts', tail: 'feathers', bodyR: [.36, .36, .32], headW: 1.15, iris: '#c97a10', eyeR: .1,
+      extraPaints: (s, hy) => [{ type: 'sphere', c: s([.13, hy + .03, .22]), r: .12, color: '#f3e0c0', soft: .02 }, { type: 'sphere', c: s([-.13, hy + .03, .22]), r: .12, color: '#f3e0c0', soft: .02 }] }), { lid: '#b98a5a', iris: '#c97a10' });
+    const branch = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 1.6, 10), M('#8a5a2a')); branch.rotation.z = Math.PI / 2; branch.position.y = -.02; r.add(branch);
+    return { head: k.B.head, arm: k.B.armL, eyes: k.eyes, tick: k.tick };
   }, c => { Sound.tone(420, .35, 'sine', .05, .8); Sound.tone(360, .45, 'sine', .05, .8, .4); burst(c.x, c.y + 1.2, c.z, ['#fff3a6', '#fff'], 12, 2); }, 'owl', 'Hoo hoo! The sleepy owl woke up!');
 
   // ----- the Creative Meadow friends -----
   critter('beaver', 205.6, 0, -2.4, r => {
-    const fur = fluffy('#b07a4a'), light = fluffy('#f0d0a8');
-    r.add(ball(fur, .45, 0, .5, 0, 1, 1.1, .9)); r.add(ball(light, .3, 0, .48, .22, 1, 1, .5));
-    const head = new THREE.Group(); head.position.y = 1.15; r.add(head); head.add(ball(fur, .36)); head.add(ball(light, .16, 0, -.1, .3, 1.3, .8, .7));
-    head.add(ball(M('#ffffff'), .06, 0, -.24, .36, 1.3, 1, .5)); for (const s2 of [-1, 1]) head.add(ball(fur, .1, s2 * .26, .28, 0));
-    face(head, { y: .06, z: .3, spread: .13, eyeR: .08, mouthY: -.14 });
-    const hat = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#ffd23f')); hat.position.y = .22; head.add(hat);
-    const tail = ball(M('#7a4a2a', { r: .6 }), .25, 0, .25, -.4, 1.3, .3, 1.4); r.add(tail);
-    const arm = new THREE.Group(); arm.position.set(.42, .7, .15); r.add(arm); arm.add(ball(fur, .11, 0, .12, 0, 1, 1.5, 1));
-    const blk = new THREE.Mesh(new THREE.BoxGeometry(.3, .3, .3), M('#ff4f9a')); blk.position.set(0, .4, .1); arm.add(blk);
-    return { head, arm };
+    const k = plush(r, bipedSpec({ scale: 1.05, body: '#b07a4a', belly: '#f0d0a8', muzzle: '#f0d0a8', ears: 'small', snout: .02, teeth: true, tail: 'paddle', iris: '#a06a32' }), { lid: '#b07a4a', iris: '#a06a32',
+      accessories: (B, at) => { const hat = new THREE.Mesh(new THREE.SphereGeometry(.3, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M('#ffd23f', { r: .3 })); at(B.head, hat, 0, 1.4, 0); const brim = new THREE.Mesh(new THREE.CylinderGeometry(.36, .36, .03, 24), M('#ffd23f', { r: .3 })); at(B.head, brim, 0, 1.41, .04);
+        const blk = new THREE.Mesh(new THREE.BoxGeometry(.28, .28, .28), M('#ff4f9a')); at(B.handL, blk, .45, .8, .16); } });
+    return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { Sound.tone(500, .1, 'square', .03, 1); burst(c.x, 1.6, c.z, ['#ff4f9a', '#ffd23f', '#3d9bff'], 12, 2); }, 'beaver', 'The builder beaver says: build something!');
   critter('unicorn', 240, 0, -2.4, r => {
-    const coat = fluffy('#ffffff'), pink = toy('#ffb8dc');
-    r.add(ball(coat, .6, 0, .95, 0, 1.4, .9, .8));
-    for (const [x, z] of [[-.5, -.25], [-.5, .25], [.5, -.25], [.5, .25]]) { const l = new THREE.Mesh(new THREE.CapsuleGeometry(.11, .5, 4, 8), coat); l.position.set(x, .35, z); r.add(l); r.add(ball(M('#c9a6ff'), .12, x, .08, z, 1, .6, 1.1)); }
-    const head = new THREE.Group(); head.position.set(.85, 1.5, 0); r.add(head); head.add(ball(coat, .36, 0, 0, 0, 1.2, 1, .9)); head.add(ball(pink, .17, .3, -.12, 0, 1, .8, 1));
-    const horn = new THREE.Mesh(new THREE.ConeGeometry(.08, .45, 12), toy('#ffd84a', { em: '#ffd84a', ei: .4 })); horn.position.set(.12, .45, 0); horn.rotation.z = -.3; head.add(horn);
-    const fh = new THREE.Group(); fh.rotation.y = Math.PI / 2; fh.position.set(.1, .05, 0); head.add(fh); face(fh, { y: .02, z: .3, spread: .13, eyeR: .08, mouthY: -.14 });
-    ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'].forEach((c2, i) => { r.add(ball(toy(c2), .14, .55 - i * .12, 1.55 + Math.sin(i) * .05, -.12, 1, 1.3, .7)); r.add(ball(toy(c2), .13, -.85, 1.05 - i * .1, 0, 1, 1, .7)); });
-    const arm = new THREE.Group(); r.add(arm);
-    return { head, arm };
+    const k = plush(r, quadSpec({ scale: 1.15, body: '#ffffff', belly: '#fff4fa', snoutCol: '#ffd6ea', hoof: '#c9a6ff', horn: '#ffd84a', tail: 'none', legLen: .55, iris: '#7a3fd0' }), { lid: '#ffffff', iris: '#7a3fd0',
+      accessories: (B, at) => { const cols = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'];
+        cols.forEach((c2, i) => { const m = ball(M(c2, { r: .6, sheen: 1 }), .1, 0, 0, 0, 1, 1.4, .7); at(B.neck, m, .55 + i * .07, 1.25 - i * .05 + .25, 0); });
+        cols.forEach((c2, i) => { const m = ball(M(c2, { r: .6, sheen: 1 }), .11, 0, 0, 0, 1, 1, .7); at(B.tail, m, -.78 - i * .05, .8 - i * .1, 0); }); } });
+    return { head: k.B.head, arm: k.B.earL, tick: k.tick };
   }, c => { for (let i = 0; i < 4; i++) burst(c.x + .8, 2.2, c.z, ['#ff4f9a', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff'], 14, 3.5); Sound.chime(); }, 'unicorn', 'The rainbow unicorn sprinkles rainbow sparkles!');
   critter('hedgehog', 246, 0, -2.4, r => {
-    const face1 = fluffy('#f3d6b0'), spikes = toy('#8a5a3a', { r: .7 });
-    r.add(ball(face1, .38, 0, .42, .05, 1, .95, .95));
-    for (let i = 0; i < 16; i++) { const a = -1.1 + (i % 8) * .3, b = i < 8 ? .2 : -.3; const sp = new THREE.Mesh(new THREE.ConeGeometry(.08, .32, 6), spikes); sp.position.set(Math.sin(a) * .4, .5 + Math.cos(a) * .35, b - .1); sp.lookAt(sp.position.clone().multiplyScalar(2).add(new THREE.Vector3(0, -.5, -.6))); sp.rotateX(Math.PI / 2); r.add(sp); }
-    const head = new THREE.Group(); head.position.set(0, .55, .3); r.add(head); face(head, { y: .05, z: .06, spread: .1, eyeR: .07, mouthY: -.08 });
-    head.add(ball(M('#3a2030'), .05, 0, -.02, .16));
-    const arm = new THREE.Group(); arm.position.set(.1, .35, .4); r.add(arm);
-    const guitar = new THREE.Group(); guitar.rotation.z = .6; arm.add(guitar); guitar.add(ball(M('#ff9a2e'), .18, 0, 0, 0, 1, 1.2, .4)); const neck = new THREE.Mesh(new THREE.BoxGeometry(.06, .45, .04), M('#7a4a2a')); neck.position.y = .3; guitar.add(neck);
-    return { head, arm };
+    const k = plush(r, bipedSpec({ scale: .95, body: '#f3d6b0', belly: '#fff0dc', headCol: '#f3d6b0', ears: 'small', snout: .06, nose: '#3a2030', tail: 'none', iris: '#8a5a32' }), { lid: '#f3d6b0', iris: '#8a5a32',
+      accessories: (B, at) => { const spines = new THREE.InstancedMesh(new THREE.ConeGeometry(.045, .24, 6), toy('#8a5a3a', { r: .7 }), 46), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), d = new THREE.Vector3();
+        for (let i = 0; i < 46; i++) { const a = (i * 2.399) % (Math.PI * 2), h = -.2 + (i / 46) * 1.0; d.set(Math.cos(a) * .9, h, -Math.abs(Math.sin(a)) - .4).normalize(); q.setFromUnitVectors(up, d); m4.compose(new THREE.Vector3(d.x * .3, .6 + d.y * .35, d.z * .3 - .02), q, new THREE.Vector3(1, 1, 1)); spines.setMatrixAt(i, m4); }
+        spines.castShadow = true; at(B.spine, spines, 0, .66, 0);
+        const guitar = new THREE.Group(); guitar.rotation.z = .6; guitar.add(ball(M('#ff9a2e'), .17, 0, 0, 0, 1, 1.2, .4)); const neck = new THREE.Mesh(new THREE.BoxGeometry(.06, .45, .04), M('#7a4a2a')); neck.position.y = .3; guitar.add(neck); at(B.handR, guitar, -.2, .55, .3); } });
+    return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { [0, 2, 4, 5, 4, 2, 0].forEach((n, i) => Sound.tone([262, 294, 330, 349, 392, 440, 494][n] * 2, .25, 'triangle', .05, 1, i * .14)); burst(c.x, 1.2, c.z, ['#ffd23f', '#fff'], 10, 2); }, 'hedgehog', 'The hedgehog plays a song on the guitar!');
   critter('snail', 251, 0, -2.0, r => {
     const body = new THREE.Group(); r.add(body);
@@ -305,16 +250,11 @@ export function initFriends(G, api) {
   }, c => { Sound.tone(900, .3, 'sine', .03, .5); }, 'snail', 'The little snail hides in its shell!');
 
   critter('fox', 260.8, 0, -2.4, r => {
-    const fur = fluffy('#ff9a5a'), white = fluffy('#ffffff');
-    r.add(ball(fur, .42, 0, .5, 0, 1, 1.1, .9)); r.add(ball(white, .26, 0, .48, .22, 1, 1.1, .5));
-    const head = new THREE.Group(); head.position.y = 1.12; r.add(head); head.add(ball(fur, .34)); head.add(ball(white, .15, 0, -.1, .28, 1.4, .8, .8)); head.add(ball(M('#3a2030'), .05, 0, -.06, .42));
-    for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.ConeGeometry(.12, .3, 10), fur); e.position.set(s2 * .18, .32, 0); e.rotation.z = -s2 * .25; head.add(e); }
-    face(head, { y: .06, z: .28, spread: .12, eyeR: .08, mouthY: -.14 });
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#3d9bff')); cap.position.y = .2; head.add(cap);
-    const tail = ball(fur, .2, 0, .4, -.42, .8, .8, 1.6); r.add(tail); r.add(ball(white, .1, 0, .45, -.68));
-    const arm = new THREE.Group(); arm.position.set(.42, .7, .12); r.add(arm); arm.add(ball(fur, .1, 0, .12, 0, 1, 1.5, 1));
-    const wrench = new THREE.Mesh(new THREE.BoxGeometry(.06, .45, .05), M('#c9c9d9', { m: .6, r: .3 })); wrench.position.set(0, .4, .05); arm.add(wrench);
-    return { head, arm };
+    // build 15: the benchmark fox (fox anatomy + real fur)
+    const k = plush(r, foxSpec({ scale: 1.25 }), { lid: '#e2692a', iris: '#e0901a', lidOpen: .78, furShells: 10, furLength: .022, furDensity: 260,
+      accessories: (B, at) => { const cap = new THREE.Mesh(new THREE.SphereGeometry(.17, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), capMat()); cap.scale.set(1.05, .7, 1.1); at(B.head, cap, 0, 1.7, .08); const brim = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .012, 24, 1, false, -Math.PI / 2, Math.PI), capMat()); brim.rotation.y = Math.PI; at(B.head, brim, 0, 1.67, .25);
+        const wrench = new THREE.Group(); const sh = new THREE.Mesh(new THREE.BoxGeometry(.035, .32, .02), metalMat()); sh.position.y = .12; wrench.add(sh); const hd = new THREE.Mesh(new THREE.TorusGeometry(.04, .014, 8, 16, 4.5), metalMat()); hd.position.y = .3; wrench.add(hd); at(B.handL, wrench, .2 * 1.25, .6 * 1.25, .17 * 1.25); } });
+    return { head: k.B.head, arm: k.B.armL, tick: k.tick };
   }, c => { Sound.tone(700, .08, 'square', .03, 1); Sound.tone(900, .08, 'square', .03, 1, .1); burst(c.x, 1.6, c.z, ['#ff9a5a', '#fff'], 10, 2); }, 'fox', 'The mechanic fox fixed up your kart!');
 
   // =================== balloons that float with you (up to 6) ===================
@@ -365,6 +305,7 @@ export function initFriends(G, api) {
       f.root.position.set(f.pos.x, f.pos.y + hop + (f.trick > 0 ? Math.sin((1.2 - f.trick) / 1.2 * Math.PI) * .9 : 0), f.pos.z);
       const dir = Math.sign(P.x - f.pos.x) || 1;
       f.root.rotation.y = (f.trick > 0 ? (1.2 - f.trick) * 6 : 0) + (f.orient === 'x' || f.kind === 'biscuit' || f.kind === 'pom' ? (dir > 0 ? -.25 : Math.PI + .25) : dir * .7);
+      if (f.pet && f.pet.tick) f.pet.tick(dt, t, f.trick > 0);
       if (f.pet) { f.pet.ears.forEach((e, n) => { e.rotation.x = Math.sin(t * 8 + n) * (moving ? .25 : .08); }); f.pet.tail.rotation.y = Math.sin(t * 10) * .5; }
       if (f.anim) f.anim(t, moving);
     });
@@ -383,6 +324,7 @@ export function initFriends(G, api) {
       c.root.rotation.y = Math.sin(c.t * .7) * .2 + (c.near > .5 ? Math.sign(P.x - c.x) * .4 : 0) + ((c.kind === 'penguin' || c.kind === 'rosie' || c.kind === 'luna') && a > 0 ? (1.6 - a) * 8 : 0);
       if (p.arm) p.arm.rotation.z = c.near > .5 || a > 0 ? 1.8 + Math.sin(c.t * 12) * .5 : .2;
       if (p.head) p.head.rotation.z = Math.sin(c.t * 1.5) * .08;
+      if (p.tick) p.tick(dt, c.t, c.near > .5 || a > 0);
       if (c.kind === 'owl' && p.eyes) p.eyes.forEach(e => { e.scale.y = c.near > .5 || a > 0 ? 1 : .12; });
       if (c.kind === 'frog' && p.drumTop) p.drumTop.position.y = .57 - (a > 0 ? Math.abs(Math.sin(a * 22)) * .05 : 0);
       if (c.kind === 'bear') p.bunch.position.y = 2.6 + Math.sin(c.t * 1.6) * .08;

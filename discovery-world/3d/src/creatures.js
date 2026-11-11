@@ -7,6 +7,8 @@
 // ===================================================================
 import * as THREE from 'three';
 import { plushNormal } from './nature.js';
+import { buildCharacter, animateCharacter, setLids } from './characters.js';
+import { plush, bipedSpec } from './critterkit.js';
 
 export const CREATURES = {
   pip: { name: 'Pip', jump: [9.4, 8.2], body: '#f2c2ff' },
@@ -132,22 +134,18 @@ function buildJelly(st) {
 }
 
 export function makeCreature(kind, style = {}) {
-  const P = kind === 'pip' ? buildPip(style) : kind === 'zuzu' ? buildZuzu(style) : buildJelly(style);
-  // furry parts get a soft velvety surface (tiny fibres catch the light)
-  P.root.traverse(o => { if (o.isMesh && o.material && o.material.sheen > .5 && !o.material.normalMap) { o.material.normalMap = plushNormal(); o.material.normalScale.set(.35, .35); o.material.needsUpdate = true; } });
-  const A = { t: Math.random() * 9, phase: 0, run: 0, squash: spring(), turn: 0, blink: 2, earS: spring(), tailS: spring(), react: 0, prevGround: true, prevVy: 0, idle: 0, act: null, actT: 0, lastStep: 0, hop: 0 };
-  // how squishy each creature is (Jelly is VERY squishy)
+  // build 14: a sculpted, skinned character on a real skeleton (characters.js)
+  const P = buildCharacter(kind, style);
+  const A = { t: Math.random() * 9, phase: 0, run: 0, squash: spring(), turn: 0, blink: 2, earS: spring(), ear2: spring(), tailS: spring(), react: 0, prevGround: true, prevVy: 0, idle: 0, act: null, actT: 0, lastStep: 0 };
   const SQ = { pip: .2, zuzu: .16, jelly: .5 }[kind], SQX = SQ * .6;
-  P.root.traverse(o => { if (o.isMesh) o.userData.creature = true; });
   function update(dt, s) {
     A.t += dt; const speed = Math.abs(s.vx || 0);
     A.run += ((s.grounded && !s.seated ? Math.min(1, speed / 5) : 0) - A.run) * Math.min(1, dt * 10);
-    A.phase += dt * (kind === 'jelly' ? 9 : 11) * (s.grounded ? Math.min(1.2, speed / 5) : 0);
+    A.phase += dt * (kind === 'jelly' ? 9 : 10) * (s.grounded ? Math.min(1.2, speed / 5) : 0);
     // landing squash (bigger fall = bigger squish) and take-off stretch
     if (!A.prevGround && s.grounded && A.prevVy < -2) A.squash.v -= Math.min(18, -A.prevVy * 1.4);
     if (A.prevGround && !s.grounded && (s.vy || 0) > 3) A.squash.v += 9;
     A.prevGround = s.grounded; A.prevVy = s.vy || 0;
-    // Jelly bounces along when it walks: a little squish on every step
     if (kind === 'jelly' && A.run > .2) { const st = Math.floor(A.phase / Math.PI); if (st !== A.lastStep) { A.lastStep = st; A.squash.v -= 4.5 * A.run; } }
     // idle actions after standing still for a while
     if (A.run < .05 && s.grounded && !s.seated && !A.act) { A.idle += dt; if (A.idle > 4.5) { A.idle = 0; A.act = { pip: ['wave', 'look', 'hop'], zuzu: ['twirl', 'look', 'hop'], jelly: ['jiggle', 'look', 'hop'] }[kind][Math.floor(Math.random() * 3)]; A.actT = 0; } } else if (A.run > .05 || !s.grounded) A.idle = 0;
@@ -156,47 +154,15 @@ export function makeCreature(kind, style = {}) {
     if (act === 'hop' && ak < .05) A.squash.v += 7;
     if (act === 'jiggle' && Math.floor(ak * 8) !== Math.floor((ak - dt) * 8)) A.squash.v += (Math.floor(ak * 8) % 2 ? 6 : -6);
     const sq = stepSpring(A.squash, 0, kind === 'jelly' ? 120 : 170, kind === 'jelly' ? 5 : 8, dt);
-    const breathe = Math.sin(A.t * 2.4) * (kind === 'jelly' ? .04 : .02);
-    const sy = 1 + sq * SQ + breathe, sx = 1 - sq * SQX - breathe * .5;
+    const sy = 1 + sq * SQ, sx = 1 - sq * SQX;
     P.body.scale.set(Math.max(.5, sx), Math.max(.35, sy), Math.max(.5, sx));
-    // tickle / react: a happy hop (and a spin for Zuzu)
-    const r = A.react, hopY = r > 0 ? Math.sin((1 - r) * Math.PI) * .55 : 0;
-    const actHop = act === 'hop' ? Math.max(0, Math.sin(ak * 4)) * .35 : 0;
+    const r = A.react, hopY = r > 0 ? Math.sin((1 - r) * Math.PI) * .55 : 0, actHop = act === 'hop' ? Math.max(0, Math.sin(ak * 4)) * .35 : 0;
     // face the way you walk, but keep the face toward the camera
     const look = act === 'look' ? 0 : null;
     const target = look ?? ((s.facing || 1) * (A.run > .15 || !s.grounded ? 1.05 : .5)) + (r > 0 && kind !== 'jelly' ? (1 - r) * Math.PI * 2 : 0) + (act === 'twirl' ? ak / 1.6 * Math.PI * 2 : 0);
     A.turn += (target - A.turn) * Math.min(1, dt * (r > 0 || act === 'twirl' ? 20 : 9)); P.root.rotation.y = A.turn;
-    // walk bob + lean
-    const bob = Math.abs(Math.sin(A.phase)) * (kind === 'jelly' ? .16 : .09) * A.run;
-    P.body.position.y = bob + hopY + actHop; P.body.rotation.z = -Math.sin(A.phase) * (kind === 'jelly' ? .1 : .05) * A.run + (r > 0 ? Math.sin(A.t * 30) * .12 * r : 0);
-    P.body.rotation.x = A.run * .12 + (s.grounded ? 0 : -.14);
-    P.feet.forEach((f, i) => { const ph = A.phase + i * Math.PI; f.position.z = .06 + Math.sin(ph) * .2 * A.run; f.position.y = (kind === 'pip' ? .1 : .09) + Math.max(0, Math.cos(ph)) * .14 * A.run + (s.grounded ? 0 : .06); });
-    P.arms.forEach((a, i) => {
-      a.position.z = .12 - Math.sin(A.phase + i * Math.PI) * .12 * A.run;
-      const wave = act === 'wave' && i === 1 ? .35 + Math.sin(ak * 14) * .08 : 0;
-      a.position.y = .62 + (s.grounded ? 0 : .14) + (r > 0 ? .25 : 0) + wave; a.position.x = (i ? 1 : -1) * (.4 + (wave ? .08 : 0));
-    });
-    // springy ears / antennae / tail
-    const ear = stepSpring(A.earS, -(s.vy || 0) * .035 - sq * .5 + (r > 0 ? Math.sin(A.t * 25) * .5 : 0), 120, 6, dt);
-    P.ears.forEach((e, i) => { const sgn = i ? 1 : -1; e.rotation.x = ear * .6 + Math.sin(A.t * 3 + i) * .04; if (kind !== 'zuzu') e.rotation.z = -sgn * (kind === 'pip' ? .28 : .3) + sgn * ear * .3; });
-    if (P.tail) { const tw = stepSpring(A.tailS, -(s.vx || 0) * .06 * (s.facing || 1) + (r > 0 ? Math.sin(A.t * 20) : 0), 90, 5, dt); P.puffs.forEach((p, i) => { const a = i * .55 + tw * .3 + Math.sin(A.t * 4 + i * .5) * .1; p.position.set(Math.sin(a * .6) * .1 * i, Math.sin(a) * .1 * i + i * .06, -Math.cos(a) * .09 * i); }); }
-    P.wings.forEach((w, i) => { const fast = !s.grounded || r > 0; w.rotation.y = (i ? 1 : -1) * (.3 + Math.sin(A.t * (fast ? 24 : 4)) * (fast ? .55 : .12)); });
-    if (P.babies) P.babies.forEach((b, i) => { const a = A.t * (r > 0 ? 7 : 2) + i * 2.1; b.position.set(Math.cos(a) * .75, 1.05 + Math.sin(a * 1.3) * .25, Math.sin(a) * .55); b.rotation.z = A.t * 3; });
-    if (P.starM) P.starM.rotation.z = Math.sin(A.t * 2) * .06 + (r > 0 ? Math.sin(A.t * 20) * .2 : 0);
-    if (P.blob) { // soft-body wobble for Jelly: waves run through it, bigger when it moves or squishes
-      const pos = P.blob.geometry.attributes.position, b = P.base, w = .05 + Math.min(.16, Math.abs(sq) * .25 + A.run * .05 + r * .15), lean = -(s.vx || 0) * .025;
-      for (let i = 0; i < pos.count; i++) {
-        const x = b[i * 3], y = b[i * 3 + 1], z = b[i * 3 + 2];
-        const k = 1 + Math.sin(A.t * 7 + y * 6 + x * 3) * w * (y + .62) * .7;
-        pos.array[i * 3] = x * k + lean * Math.max(0, y + .3) * (s.facing || 1) * -1; pos.array[i * 3 + 1] = y < 0 ? y * .45 : y; pos.array[i * 3 + 2] = z * k;
-      }
-      pos.needsUpdate = true; P.blob.geometry.computeVertexNormals();
-      P.frill.forEach((f, i) => { f.position.y = 1.16 + Math.sin(A.t * 6 + i) * .05 + sq * .08; });
-    }
-    // blinking; happy squinty eyes and a big smile when happy or tickled
-    A.blink -= dt; const closed = A.blink < .12; if (A.blink < 0) A.blink = 2 + Math.random() * 3;
-    P.F.eyes.forEach(e => { e.scale.y = closed ? .1 : (s.happy > 0 || r > 0 ? .55 : 1); });
-    P.F.mouth.scale.setScalar(s.happy > 0 || r > 0 ? 1.6 : act ? 1.2 : 1);
+    P.body.position.y = hopY + actHop; P.body.rotation.z = -Math.sin(A.phase) * (kind === 'jelly' ? .08 : .03) * A.run;
+    animateCharacter(kind, P, A, s, dt, { run: A.run, phase: A.phase, sq, r, act, ak, air: !s.grounded });
     A.react = Math.max(0, A.react - dt * 1.1);
   }
   return {
@@ -213,20 +179,18 @@ const fluffGeo = (() => {
   g.computeVertexNormals(); return g;
 })();
 export function makeFluff(color) {
+  // build 14: a sculpted baby Fluffkin (round, fluffy, long ears) on a skeleton
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  const fur = toy(color, { r: .7, cc: .2, sheen: 1, sheenColor: '#ffffff' });
-  const b = new THREE.Mesh(fluffGeo, fur); b.position.y = .3; b.castShadow = true; body.add(b);
-  const ears = [-1, 1].map(s => { const e = new THREE.Mesh(new THREE.CapsuleGeometry(.06, .2, 4, 10), fur); e.position.set(s * .12, .62, 0); e.rotation.z = -s * .35; e.castShadow = true; body.add(e); return e; });
-  const head = new THREE.Group(); head.position.set(0, .34, .26); body.add(head);
-  const F = face(head, { y: .02, z: 0, spread: .1, eyeR: .07, mouthY: -.08 });
+  const k = plush(body, bipedSpec({ scale: .42, body: color, belly: '#fff6ee', headW: 1.1, ears: 'long', snout: 0, nose: '#ff6fae', tail: 'puff', bodyR: [.38, .36, .34], iris: '#7a3fd0', voxel: .035 }), { lid: color, iris: '#7a3fd0' });
   let t = Math.random() * 9;
   return {
     root, update(dt, mood = 'wait', facing = 0) {
       t += dt; const hop = Math.abs(Math.sin(t * (mood === 'follow' ? 9 : mood === 'sleep' ? 0 : 5))) * (mood === 'wait' ? .1 : mood === 'sleep' ? 0 : .22);
       body.position.y = hop; body.scale.set(1 + (mood === 'sleep' ? Math.sin(t * 2) * .03 : 0), 1 - hop * .3, 1);
-      ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (-.35 - Math.sin(t * 6) * .12); });
+      k.tick(dt, t, mood === 'follow');
+      if (mood === 'sleep') k.eyes.forEach(e => setLids(e, 0, 0));
+      k.B.earL.rotation.z = -.2 - Math.sin(t * 6) * .12; k.B.earR.rotation.z = .2 + Math.sin(t * 6) * .12;
       root.rotation.y += ((facing ? facing * .8 : Math.sin(t * .7) * .4) - root.rotation.y) * Math.min(1, dt * 6);
-      F.eyes.forEach(e => { e.scale.y = mood === 'sleep' ? .08 : 1; });
     },
   };
 }
