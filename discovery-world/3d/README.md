@@ -37,6 +37,17 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 6: the Cloud Kingdom (the world goes up)
+- **A rope ladder** next to the climbing blocks climbs into the sky. Slide a finger up or down to climb, or tap JUMP to climb a step. Slide hard sideways to let go. There are star bits on the way up.
+- **The Cloud Kingdom** above the Playhouse and Studio:
+  - A long fluffy cloud path, with **bouncy cloud puffs** (pink and blue) that bounce you up to two high clouds.
+  - A **rainbow castle** with towers, flags and glowing windows.
+  - A giant friendly **sky whale** that sings and sprays sparkles when tapped.
+  - Star bits everywhere.
+- **The giant corkscrew rainbow slide:** walk off the end of the cloud path, or tap the slide. You spiral down inside a see-through rainbow tube and land on the xylophone.
+- The sun's shadows follow you up into the sky.
+- The Painter Bunny moved to the start of the paint wall, to make room for the slide.
+
 ## 3D build 5: Pet Workshop, friendly critters, balloons, sparkles
 - **Pet Workshop** in the underground Cave Hall:
   - Tap the four big buttons to choose colour, ears, tail and pattern. The pet spins in the glass dome so you can see it.
@@ -110,7 +121,7 @@ npm test             # 48 automated checks in headless Chromium
 `?test` runs a light mode (lower resolution, no shadows) that is used only by the automated tests, because the test browser has no graphics card. `?hq` turns off the automatic quality lowering, for screenshots.
 
 ## Test report (3D build 1)
-**Result:** 79/79 checks passed (3D build 5). New checks cover the Pet Workshop buttons, hatching a pet, the pet following you, the pet's trick, the Balloon Bear, the Painter Bunny, the frog, penguin and owl, and reloading with your pet and balloon still there. Earlier: 69/69 (3D build 4). Movement now uses finger slides, plus checks for a slide up to jump, a gentle slide walking slowly, and a slide down to dive. Earlier: 66/66 (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
+**Result:** 84/84 checks passed (3D build 6). New checks: climbing the rope ladder, bouncing on the cloud puffs, the sky whale, and the giant rainbow slide. One real bug was caught and fixed: when two surfaces overlapped, you landed on the lower one, so the cloud puffs didn't bounce. Earlier: 79/79 (3D build 5). New checks cover the Pet Workshop buttons, hatching a pet, the pet following you, the pet's trick, the Balloon Bear, the Painter Bunny, the frog, penguin and owl, and reloading with your pet and balloon still there. Earlier: 69/69 (3D build 4). Movement now uses finger slides, plus checks for a slide up to jump, a gentle slide walking slowly, and a slide down to dive. Earlier: 66/66 (3D build 3). It includes checks for walking back past the slide tower and for Jelly squishing on landing. Earlier: 65/65 (3D build 2), with no console errors or warnings. New checks cover diving, swimming, sinking to the underground, the bounce mushroom, swimming back out, the singing crystals, crawling through the tunnel, the underground Fluffkin, the glass lift both ways, and the solid objects.
 
 **Setup:** Playwright headless Chromium at 844×390 with touch input. WebGL ran in software (SwiftShader), so it was very slow (about 2–3 frames per second). That speed says nothing about a real iPhone.
 

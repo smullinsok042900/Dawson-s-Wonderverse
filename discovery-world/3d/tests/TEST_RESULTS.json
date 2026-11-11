@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10T23:55:00.452Z",
+  "date": "2026-11-11T00:57:53.577Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 79,
-  "total": 79,
+  "passed": 84,
+  "total": 84,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 7.1"
+      "detail": "x 1.2 → 7.4"
     },
     {
       "name": "let go and the creature stops",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 1.6→3.9, y 0.00"
+      "detail": "x 5.2→9.2, y 2.42"
     },
     {
       "name": "slide a finger up to jump",
       "ok": true,
-      "detail": "rose to y=1.71"
+      "detail": "rose to y=1.60"
     },
     {
       "name": "a small slide walks slowly; walking is never faster than normal",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 55% height"
+      "detail": "body squashed to 69% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.69\",\"creature\",\"0.1\"]] P=6.21,0.00,0.00"
+      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"creature\",\"0.0\"],[\"Mesh\",\"9.69\",\"creature\",\"0.1\"]] P=4.86,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,17 +112,17 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.63"
+      "detail": "highest y=2.01"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.7 y=3.30"
+      "detail": "x=43.1 y=2.90"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.6 (ok)"
+      "detail": "got to x=16.9 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -3.40 → -1.70"
+      "detail": "y -2.20 → -0.96"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-0.25"
+      "detail": "y=-0.74"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=9.7 y=0.00"
+      "detail": "x=9.3 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.9"
+      "detail": "x=37.6"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -212,7 +212,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 1.7 away"
+      "detail": "pet is 1.3 away"
     },
     {
       "name": "tap your pet: it does a trick",
@@ -245,6 +245,31 @@
       "detail": ""
     },
     {
+      "name": "slide up at the rope ladder: climb all the way up into the Cloud Kingdom",
+      "ok": true,
+      "detail": "y=9.50"
+    },
+    {
+      "name": "the Cloud Kingdom is a new discovery",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bouncy cloud puffs bounce you up to the high clouds",
+      "ok": true,
+      "detail": "highest y=13.0"
+    },
+    {
+      "name": "tap the sky whale: it sings",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "walk off the clouds onto the giant rainbow slide, all the way down to the floor",
+      "ok": true,
+      "detail": "slid=true landed x=73.9 y=0.00"
+    },
+    {
       "name": "paint palette appears by the paint wall",
       "ok": true,
       "detail": ""
@@ -272,7 +297,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=4.43"
+      "detail": "y=4.53"
     },
     {
       "name": "tap the carousel to ride",
@@ -292,12 +317,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=2.8"
+      "detail": "y=2.5"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "41 → 44"
+      "detail": "46 → 49"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -332,7 +357,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.9360932605028801"
+      "detail": "k=0.8237620692425346"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -342,7 +367,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=4.55"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -382,7 +407,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":44,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":49,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",
