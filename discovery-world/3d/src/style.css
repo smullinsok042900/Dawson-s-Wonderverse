@@ -70,8 +70,9 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #dragHint svg{position:absolute;width:110px;height:56px;fill:#fff;filter:drop-shadow(0 2px 2px #3b2370)}
 @keyframes nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(22px)}60%{transform:translateX(-22px)}}
 .controls.hintOnly{pointer-events:none}
-#buildTools{position:fixed;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 96px);left:50%;transform:translateX(-50%) translateY(10px);display:flex;gap:6px;padding:6px 10px;border:2px solid rgba(255,255,255,.9);border-radius:24px;background:rgba(83,52,144,.8);pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;z-index:9;max-width:96vw;overflow-x:auto}
-#buildTools.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+/* the block tray sits on the right side (a 3-wide grid) so it never covers the building wall */
+#buildTools{position:fixed;top:calc(max(8px,env(safe-area-inset-top)) + 62px);right:max(10px,env(safe-area-inset-right));display:grid;grid-template-columns:repeat(3,42px);gap:5px;padding:7px;border:2px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(83,52,144,.8);pointer-events:none;opacity:0;transform:translateX(12px);transition:opacity .2s,transform .2s;z-index:9}
+#buildTools.show{opacity:1;pointer-events:auto;transform:translateX(0)}
 .blk{flex:none;width:42px;height:42px;border-radius:10px;border:3px solid #fff;padding:0;font-size:22px;display:grid;place-items:center;background:#fff8ea;transform:scale(.92)}
 .blk.selected{outline:4px solid #ffdc6b;outline-offset:1px;transform:scale(1.08)}
 #styleBtn svg{width:30px;height:30px}
