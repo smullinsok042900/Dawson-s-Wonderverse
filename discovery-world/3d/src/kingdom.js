@@ -100,7 +100,7 @@ export function initKingdom(G, api) {
     return e;
   });
   function showHatched(e) { e.egg.visible = false; e.baby.visible = true; e.shellBits.forEach(s => { s.visible = true; }); }
-  function tapEgg(e) { if (world.dinoEggs[e.i] || e.wob > 0) return; e.wob = 1.3; Sound.tone(520, .1, 'triangle', .04, 1.2); Sound.tone(560, .1, 'triangle', .04, 1.2, .3); Sound.tone(600, .1, 'triangle', .04, 1.2, .6); discover('dinoegg', 'A dino egg! Tap it to see what is inside!'); }
+  function tapEgg(e) { if (world.dinoEggs[e.i]) { tapBaby(e); return; } /* (the hidden egg still catches taps once hatched) */ if (e.wob > 0) return; e.wob = 1.3; Sound.tone(520, .1, 'triangle', .04, 1.2); Sound.tone(560, .1, 'triangle', .04, 1.2, .3); Sound.tone(600, .1, 'triangle', .04, 1.2, .6); discover('dinoegg', 'A dino egg! Tap it to see what is inside!'); }
   world.dinoFollow = Array.isArray(world.dinoFollow) && world.dinoFollow.length === 3 ? world.dinoFollow : [false, false, false];
   function followBaby(e) { e.f = friends.addFollower({ kind: 'dino', root: e.baby, orient: 'x' }); e.f.pos.copy(e.baby.position); }
   function tapBaby(e) {
