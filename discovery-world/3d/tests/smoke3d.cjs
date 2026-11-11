@@ -189,7 +189,7 @@ const UG_F = -6;
   await press('#pawBtn'); c = await waitFor(s => s.ride === 'train', 90000); // (PAW at a station calls the train; the signs sit low on screen with the closer camera)
   check('tap a station sign: the train chugs in and you hop aboard', c.ride === 'train' && Math.abs(c.z - 3.2) < .3 && c.disc.includes('train'), `ride=${c.ride} z=${c.z.toFixed(2)}`);
   await press('#jumpBtn'); await sleep(200); check('JUMP on the train toots the whistle (and you stay on)', (await S()).disc.includes('toot') && (await S()).ride === 'train');
-  { const x0 = (await S()).x; await holdBtn('#rightBtn', 900); c = await S(); check('hold ▶ to drive the train yourself', c.ride === 'train' && c.x > x0 + .5, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`); }
+  { const x0 = (await S()).x; await holdBtn('#rightBtn', 2500); /* (the software-graphics browser runs only a few frames a second) */ c = await S(); check('hold ▶ to drive the train yourself', c.ride === 'train' && c.x > x0 + .5, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`); }
   c = await waitFor(s => Math.abs(s.vx) < .01, 20000); check('let go and the train stops', Math.abs(c.vx) < .01 && c.ride === 'train');
   await shot('22_train.jpg');
   await press('#pawBtn'); await sleep(400); c = await S(); check('PAW: hop off the train (anywhere)', !c.ride && c.y < .1, `ride=${c.ride} x=${c.x.toFixed(1)}`);

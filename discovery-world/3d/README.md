@@ -50,6 +50,8 @@ This build improves how everything already in the game is drawn. It adds no new 
 - **iPhone performance:** if frames drop, the game first lowers resolution a little, then turns off the extra effects, then lowers resolution further (60fps target, 30fps floor).
 - Before/after: `screenshots/compare_b17.jpg`.
 - Saves, controls and all gameplay are unchanged.
+- **Fixed during testing:** a code comment had swallowed the shadow bias settings (now restored). The camera was lagging when frames dropped (it now uses frame-rate-independent smoothing).
+- **Test report:** full smoke test 135/136 in headless Chromium with software WebGL. The miss was "hold ▶ to drive the train": the train moved 0.3 instead of 0.5 in 0.9 s because the test browser runs only a few frames a second. Build 16 drives the train the same distance over the same number of frames. With a 2.5 s hold, the train section passes 6/6. Not tested on a physical iPhone.
 
 ## 3D build 16: a softer, more magical look (benchmark: the park, Pip and the castle)
 - **Sparkly eyes on every character:**
