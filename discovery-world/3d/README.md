@@ -37,6 +37,17 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 6: the Cloud Kingdom (the world goes up)
+- **A rope ladder** next to the climbing blocks climbs into the sky. Slide a finger up or down to climb, or tap JUMP to climb a step. Slide hard sideways to let go. There are star bits on the way up.
+- **The Cloud Kingdom** above the Playhouse and Studio:
+  - A long fluffy cloud path, with **bouncy cloud puffs** (pink and blue) that bounce you up to two high clouds.
+  - A **rainbow castle** with towers, flags and glowing windows.
+  - A giant friendly **sky whale** that sings and sprays sparkles when tapped.
+  - Star bits everywhere.
+- **The giant corkscrew rainbow slide:** walk off the end of the cloud path, or tap the slide. You spiral down inside a see-through rainbow tube and land on the xylophone.
+- The sun's shadows follow you up into the sky.
+- The Painter Bunny moved to the start of the paint wall, to make room for the slide.
+
 ## 3D build 5: Pet Workshop, friendly critters, balloons, sparkles
 - **Pet Workshop** in the underground Cave Hall:
   - Tap the four big buttons to choose colour, ears, tail and pattern. The pet spins in the glass dome so you can see it.

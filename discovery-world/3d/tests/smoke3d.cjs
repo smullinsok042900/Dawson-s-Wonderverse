@@ -124,10 +124,22 @@ const UG_F = -6;
   await sleep(1200); { const pp = await page.evaluate(() => __DDW3.friends.petPos.toArray()); await tapWorld(pp[0], pp[1] + .5, pp[2]); await sleep(200); check('tap your pet: it does a trick', (await S()).disc.includes('pettrick')); }
   await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => !!__DDW3.world.balloon));
   await shot('17_balloon_bear.jpg');
-  await teleport(72); { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapWorld(70.2, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
+  await teleport(54.6); { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapWorld(52.4, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
   await teleport(87.8); await tapWorld(89.6, .9, -2.4); await sleep(200); check('the Drummer Frog plays when tapped', (await S()).disc.includes('frog'));
   await teleport(107.4); await tapWorld(109.2, 1.2, -2.4); await sleep(200); check('the penguin dances when tapped', (await S()).disc.includes('penguin'));
   await teleport(150.4); await tapWorld(152, 3.0, -3.2); await sleep(200); check('the sleepy owl wakes up when tapped', (await S()).disc.includes('owl'));
+  // ---------- build 6: the Cloud Kingdom ----------
+  await teleport(46.9); // next to the rope ladder (left of here are the climbing blocks)
+  { const top = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if ((!P.ride && P.y > 9.4) || ++n > 900) return r([P.y, P.ride && P.ride.type]); requestAnimationFrame(f); }; f(); }));
+    await touch('touchStart', [DRAG0]); await touch('touchMove', [{ ...DRAG0, y: DRAG0.y - 45 }]); await touch('touchMove', [{ ...DRAG0, y: DRAG0.y - 90 }]);
+    const r = await top; await touch('touchEnd', []); check('slide up at the rope ladder: climb all the way up into the Cloud Kingdom', r[0] > 9.4, `y=${r[0].toFixed(2)}`); }
+  check('the Cloud Kingdom is a new discovery', (await S()).disc.includes('sky'));
+  await shot('18_cloud_kingdom.jpg');
+  await teleport(50.6, 9.5); { const m = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (m > 13 || ++n > 400) return r(m); requestAnimationFrame(f); }; f(); })); await holdBtn('#rightBtn', 500); const my = await m; check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
+  await teleport(54.5, 9.5); await tapWorld(56, 14.1, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
+  await teleport(65.8, 9.5);
+  { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
+    await holdBtn('#rightBtn', 600); const r = await sl; check('walk off the clouds onto the giant rainbow slide, all the way down to the floor', r[0] && r[2] < .6 && r[1] > 71, `slid=${r[0]} landed x=${r[1].toFixed(1)} y=${r[2].toFixed(2)}`); }
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));

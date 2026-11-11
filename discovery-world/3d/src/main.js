@@ -12,6 +12,7 @@ import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatur
 import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
+import { SKY, buildSky } from './sky.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -56,6 +57,7 @@ const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#
 let started = false;
 buildWorld(G);
 buildUnderground(G);
+buildSky(G);
 const IN = G.inside;
 G.xylo.forEach(k => { k.key.userData.y0 = k.key.position.y; });
 G.platforms.forEach(z => { if (z.top) z.top.userData.s0 = z.top.scale.y; });
@@ -234,7 +236,8 @@ G.tapMobile = () => { world.mobileT = 4; [4, 2, 0, 2, 4, 4, 4].forEach((n, i) =>
 G.tapBed = j => { const f = fluffs[j]; if (f.state === 'home') { world.wake[j] = 2; Sound.giggle(); discover('fluffbed', 'Wake up, little Fluffkin! Bounce!'); } else { Sound.click(); burst(G.beds[j].x, IN.f2 + 1, -2.8, ['#fff', '#e3b0ee'], 8, 2); discover('emptybed', 'This bed is waiting for a lost Fluffkin.'); } };
 
 // ---------------- rides: slide, carousel, Ferris wheel ----------------
-function startSlide() { const P = player; P.ride = { type: 'slide', u: 0, v: .12 }; P.vx = P.vy = 0; Sound.whoosh(); discover('slide', 'Wheee! The twisty slide!'); }
+function startSlide(path = G.slidePath) { const P = player; P.ride = { type: 'slide', u: 0, v: 1.5, path, len: path.getLength() }; P.vx = P.vy = 0; Sound.whoosh(); if (path === G.skySlide) discover('skyslide', 'The GIANT rainbow slide! Wheee!'); else discover('slide', 'Wheee! The twisty slide!'); }
+G.startSkySlide = () => { const P = player; if (P.ride || Math.abs(P.x - SKY.b) > 3 || Math.abs(P.y - SKY.y) > 1) { Sound.click(); return; } P.x = SKY.b - .1; P.y = SKY.y; startSlide(G.skySlide); };
 G.startSlideTap = () => { const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 25) > 9) { Sound.click(); return; } P.x = 23.2; P.y = 3.8; P.z = -1.9; startSlide(); };
 G.rideCarousel = () => {
   const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 144) > 8) { Sound.click(); return; }
@@ -251,10 +254,21 @@ function updateRide(dt) {
   const P = player, R = P.ride;
   if (R.type === 'slide') {
     // inside the tube: speed up as you go, sit on the bottom of the tube, face the way you slide
-    R.v = Math.min(.42, R.v + dt * .3); R.u += R.v * dt;
-    if (R.u >= 1) { const e = G.slidePath.getPointAt(1); P.x = e.x + .5; P.y = Math.max(0, e.y - .55); P.z = e.z; endRide(4.5, 3); P.facing = 1; burst(P.x, .5, P.z, ['#fff', '#ffe36e', '#9fe6ff'], 16, 2.5); Sound.boing(); return; }
-    G.slidePath.getPointAt(R.u, V); P.x = V.x; P.y = V.y - .62; P.z = V.z; const tg = G.slidePath.getTangentAt(R.u); P.facing = tg.x >= 0 ? 1 : -1; P.vx = 6 * P.facing;
+    const path = R.path || G.slidePath; R.v = Math.min(8.5, R.v + dt * 5); R.u += R.v / R.len * dt;
+    if (R.u >= 1) { const e = path.getPointAt(1); P.x = e.x + .5; P.y = Math.max(0, e.y - .55); P.z = e.z; endRide(4.5, 3); P.facing = 1; burst(P.x, .5, P.z, ['#fff', '#ffe36e', '#9fe6ff'], 16, 2.5); Sound.boing(); return; }
+    path.getPointAt(R.u, V); P.x = V.x; P.y = V.y - .62; P.z = V.z; const tg = path.getTangentAt(R.u); P.facing = tg.x >= 0 ? 1 : -1; P.vx = 6 * P.facing;
     if (Math.random() < dt * 25) burst(P.x - tg.x * .6, P.y + .3, P.z - tg.z * .6, ['#fff', '#ffe36e', '#9fe6ff'], 1, .6);
+  } else if (R.type === 'climb') {
+    // climbing the rope ladder: slide your finger up/down (or arrow keys), or tap JUMP to climb a step
+    const L = SKY.ladder; let v = 0;
+    if (stick && stick.active) { if (stick.dy < -28) v = 3; else if (stick.dy > 28) v = -3; }
+    if (keys.up) v = 3; if (keys.down) v = -3;
+    if (R.boost > 0) { v = Math.max(v, 4.2); R.boost -= dt; }
+    P.y += v * dt; P.x += (L.x - P.x) * Math.min(1, dt * 10); P.z += (L.z - P.z) * Math.min(1, dt * 10); P.vx = 0; P.vy = v;
+    if (v) { R.t = (R.t || 0) + dt; if (R.t > .3) { R.t = 0; Sound.tone(v > 0 ? 500 + P.y * 40 : 700 - (L.top - P.y) * 30, .08, 'triangle', .03, 1.2); } }
+    if (stick && stick.active && Math.abs(stick.dx) > 50 && Math.abs(stick.dx) > Math.abs(stick.dy) * 1.5) { endRide(Math.sign(stick.dx) * 3, 2); return; } // let go sideways
+    if (P.y >= L.top) { P.y = L.top; P.x = L.x + .8; P.ride = null; P.vy = 0; P.grounded = true; P.groundZ = SKY.z; discover('sky', 'The Cloud Kingdom! Bounce on the cloud puffs!'); burst(P.x, P.y + .5, P.z, ['#fff', '#ffe6fb', '#9fe6ff'], 16, 2); return; }
+    if (P.y <= 0) { P.y = 0; P.ride = null; P.vy = 0; P.grounded = true; return; }
   } else if (R.type === 'carousel') {
     R.t += dt; const m = G.carousel.mounts[R.i]; m.seat.getWorldPosition(V); P.x = V.x; P.y = V.y; P.z = V.z; P.vx = 3;
     P.facing = Math.cos(G.carousel.spin.rotation.y + R.i / 6 * Math.PI * 2) > 0 ? 1 : -1;
@@ -313,7 +327,9 @@ const DOORS = [
   { kind: 'out', layer: 'in', x: IN.exit, y: 0, z: -2, go: leaveHouse },
   { kind: 'up', layer: 'in', x: IN.stair.x0, y: 0, z: -1.2, go: () => startStairs(true) },
   { kind: 'down', layer: 'in', x: IN.stair.x1, y: IN.f2, z: -1.2, go: () => startStairs(false) },
-  { kind: 'down', layer: '', x: 10.2, y: 0, z: .6, go: () => dive() },                 // the deep part of the ball pit
+  { kind: 'down', layer: '', x: 10.2, y: 0, z: .6, go: () => dive() },
+  { kind: 'up', layer: '', x: SKY.ladder.x, y: 0, z: .6, go: () => G.startClimb(true) },             // rope ladder up to the sky
+  { kind: 'down', layer: '', x: SKY.ladder.x + .6, y: SKY.y, z: .6, go: () => G.startClimb(false) }, // and back down                 // the deep part of the ball pit
   { kind: 'down', layer: '', x: UG.lift, y: 0, z: .6, go: () => G.useLift() },         // glass lift down
   { kind: 'up', layer: '', x: UG.lift, y: UG.floor, z: .6, go: () => G.useLift() },    // glass lift up
 ];
@@ -324,6 +340,8 @@ G.useLift = () => {
   P.ride = { type: 'lift', to: down ? UG.floor : 0 }; P.vx = P.vy = 0; Sound.tone(down ? 520 : 400, .5, 'sine', .04, down ? .6 : 1.6);
   discover(down ? 'liftdown' : 'liftup', down ? 'Down, down in the glass lift!' : 'Up, up in the glass lift!');
 };
+G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Slide up to climb.'); };
+G.tapWhale = () => { const W = G.whale; W.spout = 2.4; [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22)); discover('whale', 'The sky whale sings you a song!'); };
 G.bounceUp = () => { const P = player; if (P.ride || Math.abs(P.x - (UG.shaft[0] + UG.shaft[1]) / 2) > 2.5 || P.y > UG.floor + 1.5) return; P.x = (UG.shaft[0] + UG.shaft[1]) / 2; P.y = UG.floor + 1; P.vy = 13.5; P.grounded = false; Sound.boing(); discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); };
 G.singCrystal = k => { k.lit = 1; k.cd = 1; Sound.bell(NOTES[k.i % 8] / 2, .06); Sound.bell(NOTES[(k.i + 2) % 8], .025, .08); burst(k.x, UG.floor + 1.5, -1.4, [k.c, '#fff'], 10, 2); discover('crystal', 'Singing crystals! Tap them or walk past them.'); };
 G.tapGem = k => { k.spin = 1.5; Sound.twinkle(); Sound.bell(NOTES[(k.i * 2) % 8], .04); burst(k.x, k.y + .5, -.6, [RAINBOW[k.i], '#fff'], 14, 2.5); discover('gem', 'Sparkly gems!'); };
@@ -375,12 +393,13 @@ function downAction() {
 }
 const press = (id, fn) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; $(id).classList.add('pressed'); setTimeout(() => $(id).classList.remove('pressed'), 140); fn(); });
 press('jumpBtn', jump); press('pawBtn', doAction);
-addEventListener('keydown', e => { if (e.repeat) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ') jump(); if (e.key === 'ArrowUp') upAction(); if (e.key === 'ArrowDown') downAction(); if (e.key === 'e' || e.key === 'Enter') doAction(); });
-addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.left = false; if (e.key === 'ArrowRight') keys.right = false; });
+addEventListener('keydown', e => { if (e.repeat) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ') jump(); if (e.key === 'ArrowUp') { keys.up = true; upAction(); } if (e.key === 'ArrowDown') { keys.down = true; downAction(); } if (e.key === 'e' || e.key === 'Enter') doAction(); });
+addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.left = false; if (e.key === 'ArrowRight') keys.right = false; if (e.key === 'ArrowUp') keys.up = false; if (e.key === 'ArrowDown') keys.down = false; });
 addEventListener('blur', () => { if (stick) stickEnd(); keys.left = keys.right = false; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); });
 
 function jump() {
   const P = player; if (!started || P.stair) return;
+  if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
   if (P.ride) { if (P.ride.type === 'slide') return; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = z; Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
   if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps]; P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
@@ -398,7 +417,7 @@ function doAction() {
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 let painting = null;
 function pointerRay(e) { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, camera); }
-function nearPaint() { const P = player; return P.layer === '' && P.y > -.5 && P.x > G.paint.x1 && P.x < G.paint.x2 && !P.ride; }
+function nearPaint() { const P = player; return P.layer === '' && P.y > -.5 && P.y < 3 && P.x > G.paint.x1 && P.x < G.paint.x2 && !P.ride; }
 canvas.addEventListener('pointerdown', e => {
   if (!started) return; Sound.unlocked = true; pointerRay(e);
   if (nearPaint()) { const h = ray.intersectObject(G.paint.mesh)[0]; if (h && !ray.intersectObjects(DOORS.map(d => d.sprite).filter(s => s.visible)).length) { painting = { id: e.pointerId, last: h.uv.clone() }; paintAt(h.uv, h.uv); canvas.setPointerCapture(e.pointerId); discover('paint', 'Paint with your finger! Pick a colour below.'); return; } }
@@ -496,6 +515,7 @@ function updatePlayer(dt) {
   if (P.grounded) { P.jumps = 0; P.fromShaft = false; }
   // walk off the top of the slide tower onto the slide
   if (P.layer === '' && P.grounded && Math.abs(P.y - 3.8) < .01 && P.x > 23.2 && P.vx > .5) startSlide();
+  if (P.layer === '' && P.grounded && Math.abs(P.y - SKY.y) < .01 && P.x > SKY.b - .15 && P.vx > .5) startSlide(G.skySlide);
   // secret star
   if (!world.secret && P.layer === '' && Math.hypot(P.x - G.secretStar[0], P.y + .8 - G.secretStar[1]) < 1.1) { world.secret = true; Sound.chime(); toast('🌟 You found the secret star!'); burst(G.secretStar[0], G.secretStar[1], 0, ['#ffd84a', '#fff'], 40, 4); save(); }
 }
@@ -517,7 +537,7 @@ function updateCamera(dt) {
   camT.y += (P.y - camT.y) * Math.min(1, dt * (P.grounded ? 4 : 2));
   const y = camT.y;
   camera.position.set(camT.x, y + 2.5, CAM_DIST); camera.lookAt(camT.x, y + 1.3, 0);
-  sun.position.set(camT.x - 7, 16, 10); sun.target.position.set(camT.x, 0, 0);
+  sun.position.set(camT.x - 7, 16 + Math.max(0, camT.y), 10); sun.target.position.set(camT.x, Math.max(0, camT.y), 0);
 }
 
 // ---------------- world animation ----------------
@@ -539,6 +559,9 @@ function updateWorldAnim(dt, t) {
   for (const k of G.crystals) { if (P0.y < UG.ceil && Math.abs(P0.x - k.x) < .45 && k.cd <= 0 && P0.grounded) G.singCrystal(k); k.cd = Math.max(0, k.cd - dt); k.lit = Math.max(0, k.lit - dt * 1.5); k.m.material.emissiveIntensity = .25 + k.lit * 1.2; k.m.rotation.y += dt * (.3 + k.lit * 6); }
   for (const g of G.gems) { g.spin = Math.max(0, g.spin - dt); g.g.rotation.y += dt * (1 + g.spin * 10); g.g.position.y = g.y + .45 + Math.sin(t * 2 + g.i) * .08 + g.spin * .3; }
   if (!(P0.ride && P0.ride.type === 'lift')) { const target = P0.y < -1 ? UG.floor : 0; G.liftPad.position.y += (target - .07 - G.liftPad.position.y) * Math.min(1, dt * 3); } else G.liftPad.position.y = P0.y - .07;
+  { const W = G.whale; W.spout = Math.max(0, W.spout - dt); W.g.position.y = W.y + Math.sin(t * .8) * .35; W.g.position.x = W.x + Math.sin(t * .23) * 2; W.g.rotation.z = Math.sin(t * .8) * .05; W.tail.rotation.y = Math.sin(t * 2.2) * .4;
+    if (W.spout > 0 && Math.random() < dt * 30) burst(W.g.position.x + 1.4, W.g.position.y + 1.8, W.g.position.z, ['#bfe8ff', '#ffffff', '#9fe6ff'], 3, 2.5); }
+  G.skyPuffs.forEach(m => { m.position.y = SKY.y + .25 + Math.sin(t * 2 + m.position.x) * .04; });
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
   bigStar.visible = !world.secret; bigStar.rotation.y = t * 1.6; bigStar.position.y = G.secretStar[1] + Math.sin(t * 2) * .12;
   // door/stair bubbles

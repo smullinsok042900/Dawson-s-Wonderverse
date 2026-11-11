@@ -138,7 +138,7 @@ export function initFriends(G, api) {
     return { head, arm, bunch };
   }, c => { world.balloon = BALLOON_COLS[(BALLOON_COLS.indexOf(world.balloon) + 1) % BALLOON_COLS.length]; Sound.giggle(); burst(c.x, 3, c.z, [world.balloon, '#fff'], 14, 2); toast('🎈 A balloon for you! Tap the bear again for a new colour.'); api.saveSoon(); }, 'balloon', null);
   // Painter Bunny (studio, by the paint wall)
-  critter('bunny', 70.2, 0, -2.4, r => {
+  critter('bunny', 52.4, 0, -2.4, r => {
     const fur = fluffy('#ffffff'), pink = fluffy('#ffb8dc');
     r.add(ball(fur, .45, 0, .5, 0, 1, 1.1, .9)); const head = new THREE.Group(); head.position.y = 1.15; r.add(head); head.add(ball(fur, .36));
     for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.CapsuleGeometry(.09, .4, 4, 10), fur); e.position.set(s * .14, .5, 0); e.rotation.z = -s * .15; head.add(e); const i2 = new THREE.Mesh(new THREE.CapsuleGeometry(.05, .3, 4, 8), pink); i2.position.set(s * .14, .5, .05); i2.rotation.z = -s * .15; head.add(i2); }
