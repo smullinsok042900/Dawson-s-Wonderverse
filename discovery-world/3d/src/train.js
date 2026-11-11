@@ -10,10 +10,10 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { toy, ball } from './creatures.js';
 
-export const TRAIN = { z: 3.2, x0: -2, x1: 352, seat: 2.25 };
+export const TRAIN = { z: 3.2, x0: -2, x1: 422, seat: 2.25 };
 export const STATIONS = [
   { x: 1.2, e: '🏠' }, { x: 61, e: '🎨' }, { x: 113, e: '🧪' }, { x: 170, e: '🎠' },
-  { x: 222, e: '🧱' }, { x: 277, e: '🏎️' }, { x: 320, e: '🔮' },
+  { x: 222, e: '🧱' }, { x: 277, e: '🏎️' }, { x: 320, e: '🔮' }, { x: 366.5, e: '🦕' }, { x: 397, e: '👑' },
 ];
 
 const emojiTex = (e, bg) => {
@@ -86,10 +86,10 @@ export function initTrain(G, api) {
     // a picture sign with a bell at both ends of the platform (so one is always on screen)
     st.bells = [];
     for (const sx of [-2.4, 2.4]) {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(.06, .08, 1.1, 10), toy('#ffffff')); post.position.set(sx, .55, TRAIN.z + .9); post.castShadow = true; g.add(post);
-      const sign = new THREE.Mesh(new THREE.CircleGeometry(.42, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
-      sign.position.set(sx, 1.35, TRAIN.z + .95); g.add(sign);
-      const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(sx, .95, TRAIN.z + 1.05); bell.rotation.x = Math.PI; g.add(bell);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .6, 10), toy('#ffffff')); post.position.set(sx, .3, TRAIN.z + .9); post.castShadow = true; g.add(post);
+      const sign = new THREE.Mesh(new THREE.CircleGeometry(.32, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
+      sign.position.set(sx, .82, TRAIN.z + .95); /* low, so it never hides your creature */ g.add(sign);
+      const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(sx + .42, .55, TRAIN.z + .95); bell.rotation.x = Math.PI; g.add(bell);
       st.bells.push(bell);
     }
     api.tap(g, () => call(i));

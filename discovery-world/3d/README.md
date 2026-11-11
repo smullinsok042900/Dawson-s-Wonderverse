@@ -37,6 +37,24 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 10: Dino Valley and the Princess Castle
+The world now goes past the Marble Machine into two new areas, and the train has two new stations (🦕 and 👑).
+- **Dino Valley** (dinosaurs added by request; all characters are original):
+  - **Dottie, the giant long-neck dinosaur:** she's grazing on flowers.
+    - Walk right and you climb her tail by yourself, cross her back, and slide down her long neck.
+    - Tap her and she hums.
+  - **Dino egg nest:** tap an egg and it wobbles and hatches a baby dino that hops about and squeaks. They stay hatched.
+  - **Tops the little horned dino** talks with picture bubbles. Tap him and he stomps (the screen gives a little shake).
+- **Princess Castle** (princesses added by request):
+  - A pink castle with towers, waving flags, glowing windows and a big door that swings open.
+  - **Princess Rosie** gives your creature a floating golden crown. It's saved.
+  - **Princess Luna** waves her wand and the royal fountain sprays sparkles.
+  - **Light-up dance floor:** every tile you step on glows and plays a note, and the princesses dance while you're on it.
+- **Fixes:**
+  - The sky now moves with you, so it never goes black at the far end.
+  - Station signs are lower, so they never hide your creature.
+  - The Marble Machine is lower, so its top ramps aren't under the buttons at the top of the screen.
+
 ## 3D build 9: arrow buttons are back, the Wonder Express train, the Marble Machine
 - **Arrow buttons are back** (by request): a ◀ ▶ ▲ ▼ arrow pad at the bottom left replaces drag-to-move.
   - Hold ◀ ▶ to walk at a normal speed.

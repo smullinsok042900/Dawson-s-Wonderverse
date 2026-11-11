@@ -307,7 +307,7 @@ export function initFriends(G, api) {
       const p = c.parts, a = c.act;
       if (c.kind === 'snail') { c.x += (c.dir || (c.dir = 1)) * dt * .25; if (c.x > 254 || c.x < 249.5) c.dir *= -1; c.root.position.x = c.x; c.root.scale.x = c.dir > 0 ? 1 : -1; if (p.body) p.body.scale.setScalar(a > 0 ? Math.max(.05, 1 - Math.sin(a / 1.6 * Math.PI) ) : 1); }
       c.root.position.y = c.y + Math.abs(Math.sin(c.t * 2)) * .03 + (a > 0 && c.kind !== 'owl' ? Math.abs(Math.sin(a * 8)) * .35 : 0);
-      c.root.rotation.y = Math.sin(c.t * .7) * .2 + (c.near > .5 ? Math.sign(P.x - c.x) * .4 : 0) + (c.kind === 'penguin' && a > 0 ? (1.6 - a) * 8 : 0);
+      c.root.rotation.y = Math.sin(c.t * .7) * .2 + (c.near > .5 ? Math.sign(P.x - c.x) * .4 : 0) + ((c.kind === 'penguin' || c.kind === 'rosie' || c.kind === 'luna') && a > 0 ? (1.6 - a) * 8 : 0);
       if (p.arm) p.arm.rotation.z = c.near > .5 || a > 0 ? 1.8 + Math.sin(c.t * 12) * .5 : .2;
       if (p.head) p.head.rotation.z = Math.sin(c.t * 1.5) * .08;
       if (c.kind === 'owl' && p.eyes) p.eyes.forEach(e => { e.scale.y = c.near > .5 || a > 0 ? 1 : .12; });
@@ -331,5 +331,5 @@ export function initFriends(G, api) {
     mGeo.attributes.position.needsUpdate = true;
   }
   function restored() { world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 }; rebuildPreview(); if (world.pet) spawnPet(player.x - 1.2, player.y, 0); }
-  return { update, restored, hasPet: () => !!pet, petPos, critters, bubbleCount: () => bubbles.length };
+  return { update, restored, hasPet: () => !!pet, petPos, critters, bubbleCount: () => bubbles.length, critter, say, TALK, VOICE };
 }

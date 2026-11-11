@@ -12,7 +12,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { toy } from './creatures.js';
 import { NOTES } from './audio.js';
 
-export const MARBLE = { cx: 332, w: 10, top: 4.3, floor: .32, z: -2.05 };
+export const MARBLE = { cx: 332, w: 10, top: 3.75, floor: .32, z: -2.05 };
 const BIN_COLS = ['#ff4f6e', '#ff9a2e', '#ffd23f', '#3cc46e', '#35c9d8', '#3d9bff', '#8a6cff', '#ff6fd0'];
 const MARBLE_COLS = ['#ff4f9a', '#3d9bff', '#ffd23f', '#3cc46e', '#a15cff', '#ff9a2e', '#5be0ff', '#ffffff'];
 
@@ -21,20 +21,20 @@ export function initMarbles(G, api) {
   const M = MARBLE, X0 = M.cx - M.w / 2, X1 = M.cx + M.w / 2;
   const root = new THREE.Group(); scene.add(root);
   // ---------- the board ----------
-  const board = new THREE.Mesh(new RoundedBoxGeometry(M.w + .8, 4.9, .3, 3, .14), toy('#fff6e8', { r: .55, cc: .5 })); board.position.set(M.cx, 2.45, M.z - .4); board.receiveShadow = true; root.add(board);
+  const board = new THREE.Mesh(new RoundedBoxGeometry(M.w + .8, 4.2, .3, 3, .14), toy('#fff6e8', { r: .55, cc: .5 })); board.position.set(M.cx, 2.1, M.z - .4); board.receiveShadow = true; root.add(board);
   // a soft dotted pattern on the board
   { const c = document.createElement('canvas'); c.width = 512; c.height = 300; const g = c.getContext('2d'); const gr = g.createLinearGradient(0, 0, 0, 300); gr.addColorStop(0, '#d9ecff'); gr.addColorStop(1, '#ffe3f3'); g.fillStyle = gr; g.fillRect(0, 0, 512, 300);
     for (let i = 0; i < 140; i++) { g.fillStyle = `rgba(255,255,255,${.25 + (i % 4) * .1})`; g.beginPath(); g.arc((i * 89) % 512, (i * 53) % 300, 3 + (i % 3) * 2, 0, 7); g.fill(); }
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(M.w, 4.6), new THREE.MeshPhysicalMaterial({ map: t, roughness: .4, clearcoat: .6 })); face.position.set(M.cx, 2.45, M.z - .24); face.receiveShadow = true; root.add(face); }
-  for (const x of [X0 - .25, X1 + .25]) { const s = new THREE.Mesh(new RoundedBoxGeometry(.5, 5.2, .8, 2, .18), toy('#ff8fc8')); s.position.set(x, 2.6, M.z - .1); s.castShadow = true; root.add(s); }
-  const crown = new THREE.Mesh(new RoundedBoxGeometry(M.w + 1.4, .45, .9, 2, .18), toy('#a15cff')); crown.position.set(M.cx, 5.1, M.z - .1); crown.castShadow = true; root.add(crown);
-  for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 8), toy(MARBLE_COLS[i % 8], { em: MARBLE_COLS[i % 8], ei: .5 })); b.position.set(X0 + .1 + i * (M.w - .2) / 8, 5.4, M.z + .2); root.add(b); }
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(M.w, 3.9), new THREE.MeshPhysicalMaterial({ map: t, roughness: .4, clearcoat: .6 })); face.position.set(M.cx, 2.1, M.z - .24); face.receiveShadow = true; root.add(face); }
+  for (const x of [X0 - .25, X1 + .25]) { const s = new THREE.Mesh(new RoundedBoxGeometry(.5, 4.5, .8, 2, .18), toy('#ff8fc8')); s.position.set(x, 2.25, M.z - .1); s.castShadow = true; root.add(s); }
+  const crown = new THREE.Mesh(new RoundedBoxGeometry(M.w + 1.4, .45, .9, 2, .18), toy('#a15cff')); crown.position.set(M.cx, 4.4, M.z - .1); crown.castShadow = true; root.add(crown);
+  for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 8), toy(MARBLE_COLS[i % 8], { em: MARBLE_COLS[i % 8], ei: .5 })); b.position.set(X0 + .1 + i * (M.w - .2) / 8, 4.7, M.z + .2); root.add(b); }
 
   // ---------- pieces: ramps (tap to flip), pegs, bins ----------
   const segs = [];   // {ax,ay,bx,by,th,e,kind}
   const ramps = [];
-  const rampDef = [[-3.1, 3.6], [0.2, 3.7], [3.3, 3.55], [-1.7, 2.7], [1.8, 2.65], [-3.5, 1.8], [0, 1.75], [3.5, 1.8]];
+  const rampDef = [[-3.1, 3.1], [0.2, 3.2], [3.3, 3.05], [-1.7, 2.35], [1.8, 2.3], [-3.5, 1.6], [0, 1.55], [3.5, 1.6]];
   rampDef.forEach(([u, v], i) => {
     const ang = (i % 2 ? -1 : 1) * .3, len = 2.2;
     const m = new THREE.Mesh(new RoundedBoxGeometry(len, .14, .55, 2, .06), toy(MARBLE_COLS[(i + 2) % 7], { r: .25, cc: 1 })); m.castShadow = true;
@@ -43,7 +43,7 @@ export function initMarbles(G, api) {
     m.userData.tap = () => { r.target = -r.target; Sound.click(); Sound.tone(520 + i * 40, .1, 'triangle', .04, 1.5); burst(m.position.x, v + .2, M.z + .3, ['#fff', MARBLE_COLS[(i + 2) % 7]], 6, 1.4); discover('ramp', 'Flip the ramps to make the marbles go a new way!'); };
   });
   const pegs = [];
-  for (const [u, v] of [[-4.3, 3.05], [-1.6, 3.25], [1.8, 3.2], [4.3, 3.05], [-1.75, 2.2], [1.75, 2.2], [-4.3, 1.25], [-3.0, 1.12], [-1.7, 1.25], [-.5, 1.12], [.7, 1.25], [1.95, 1.12], [3.2, 1.25], [4.4, 1.12]]) {
+  for (const [u, v] of [[-4.3, 2.65], [-1.6, 2.8], [1.8, 2.75], [4.3, 2.65], [-1.75, 1.95], [1.75, 1.95], [-4.3, 1.08], [-3.0, .98], [-1.7, 1.08], [-.5, .98], [.7, 1.08], [1.95, .98], [3.2, 1.08], [4.4, .98]]) {
     const m = new THREE.Mesh(new THREE.CylinderGeometry(.11, .11, .55, 14), toy('#ffd23f', { m: .7, r: .18, cc: 1 })); m.rotation.x = Math.PI / 2; m.position.set(M.cx + u, v, M.z); m.castShadow = true; root.add(m);
     pegs.push({ x: M.cx + u, y: v, r: .11, m, glow: 0 });
   }

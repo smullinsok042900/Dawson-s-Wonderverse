@@ -173,7 +173,7 @@ const UG_F = -6;
     check('Kart Garage: tap a big button to change your kart', k0 !== k1 && (await S()).disc.includes('kartmaker'), `${k0} → ${k1}`); }
   await teleport(268.2); await tapWorld(269.4, 1.2, -1.4); await sleep(300);
   check('tap the checkered flag: drive your kart', (await S()).ride === 'kart');
-  { const r = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, u0 = P.ride.u; let n = 0; const f = () => { if (++n > 40) return res([u0, P.ride ? P.ride.u : -1, P.z]); requestAnimationFrame(f); }; f(); })); check('the kart drives round the track', r[1] > r[0], `u ${r[0].toFixed(3)} → ${r[1].toFixed(3)}, z=${r[2].toFixed(1)}`); }
+  { const r = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, u0 = P.ride.u + P.ride.lap; let n = 0; const f = () => { if (++n > 40) return res([u0, P.ride ? P.ride.u + P.ride.lap : -1, P.z]); /* (laps counted: the slow test browser can run a whole lap in 40 frames) */ requestAnimationFrame(f); }; f(); })); check('the kart drives round the track', r[1] > r[0], `u ${r[0].toFixed(3)} → ${r[1].toFixed(3)}, z=${r[2].toFixed(1)}`); }
   await page.evaluate(() => new Promise(r => requestAnimationFrame(() => { document.getElementById('jumpBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); r(); })));
   { const h = await page.evaluate(() => new Promise(res => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.ride ? __DDW3.player.ride.hop : 0); if (++n > 30) return res(m); requestAnimationFrame(f); }; f(); })); check('JUMP makes the kart hop', h > .2, `hop ${h.toFixed(2)}`); }
   await page.evaluate(() => { __DDW3.player.ride.u = .985; });
@@ -182,7 +182,7 @@ const UG_F = -6;
   await press('#pawBtn'); await sleep(300); c = await S(); check('PAW parks the kart and you hop out', !c.ride && c.y < .1);
   // ---------- build 9: the Wonder Express train ----------
   await teleport(170);
-  await tapWorld(172.4, 1.35, 4.15); c = await waitFor(s => s.ride === 'train', 90000);
+  await tapWorld(172.4, .82, 4.15); c = await waitFor(s => s.ride === 'train', 90000);
   check('tap a station sign: the train chugs in and you hop aboard', c.ride === 'train' && Math.abs(c.z - 3.2) < .3 && c.disc.includes('train'), `ride=${c.ride} z=${c.z.toFixed(2)}`);
   await press('#jumpBtn'); await sleep(200); check('JUMP on the train toots the whistle (and you stay on)', (await S()).disc.includes('toot') && (await S()).ride === 'train');
   c = await waitFor(s => s.ride === 'train' && Math.abs(s.x - 222) < .05 && Math.abs(s.vx) < .01, 120000);
@@ -193,11 +193,23 @@ const UG_F = -6;
   await teleport(332);
   { const n0 = await page.evaluate(() => __DDW3.marbles.marbles.length); await tapWorld(327.6, 2.3, -2.2); const n1 = await page.evaluate(() => __DDW3.marbles.marbles.length);
     check('tap the Marble Machine board: a marble drops', n1 === n0 + 1 && (await S()).disc.includes('marbles'), `${n0} → ${n1}`); }
-  { const a0 = await page.evaluate(() => __DDW3.marbles.ramps[1].target); await tapWorld(332.2, 3.7, -1.8); const a1 = await page.evaluate(() => __DDW3.marbles.ramps[1].target);
+  { const a0 = await page.evaluate(() => __DDW3.marbles.ramps[1].target); await tapWorld(332.2, 3.2, -1.8); const a1 = await page.evaluate(() => __DDW3.marbles.ramps[1].target);
     check('tap a ramp: it flips the other way', Math.sign(a0) === -Math.sign(a1), `${a0.toFixed(2)} → ${a1.toFixed(2)}`); }
   c = await waitFor(s => s.disc.includes('marblemusic'), 90000); check('marbles roll down and ring the music bins', c.disc.includes('marblemusic'));
   await press('#pawBtn'); await sleep(200); check('PAW by the machine drops a marble too', await page.evaluate(() => __DDW3.marbles.marbles.length) >= 1);
   await shot('23_marbles.jpg');
+  // ---------- build 10: Dino Valley and the Princess Castle ----------
+  await teleport(367);
+  { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let top = 0, slid = false, n = 0; const f = () => { top = Math.max(top, P.y); if (P.ride && P.ride.type === 'slide') slid = true; if (++n > 1500 || P.x > 388) { D.keys.right = false; return res([top, slid]); } requestAnimationFrame(f); }; f(); }));
+    c = await S(); check('walk right: climb up Dottie the dinosaur\'s tail, across her back, and slide down her neck', r[0] > 3.3 && r[1] && c.disc.includes('dinoclimb') && c.disc.includes('dinoslide'), `top y=${r[0].toFixed(2)} slid=${r[1]}`); }
+  await teleport(363.4); await tapWorld(362.8, .55, -2.05);
+  c = await waitFor(s => s.disc.includes('hatch'), 60000); check('tap a dino egg: it wobbles and a baby dino hatches', c.disc.includes('hatch') && await page.evaluate(() => __DDW3.world.dinoEggs[0] === true));
+  await shot('24_dino_valley.jpg');
+  await teleport(389); await tapWorld(390, .9, -2.4); await sleep(300); check('tap Tops the little dino: stomp stomp!', (await S()).disc.includes('tops'));
+  await teleport(401); await tapWorld(402.8, 1.4, -2.3); await sleep(400); check('tap Princess Rosie: she gives you a golden crown', await page.evaluate(() => __DDW3.world.crown === true && __DDW3.kingdom().crown.visible));
+  await teleport(408); await holdBtn('#rightBtn', 500); c = await S(); check('walk on the castle dance floor: the tiles light up and play music', c.disc.includes('dance'));
+  await teleport(412); await tapWorld(413.6, 1.4, -2.3); await sleep(300); check('tap Princess Luna: the royal fountain sprays sparkles', (await S()).disc.includes('fountain'));
+  await shot('25_princess_castle.jpg');
   await teleport(259.2); await tapWorld(260.8, 1.2, -2.4); await sleep(200); check('the mechanic fox talks', (await S()).disc.includes('fox'));
   // ---------- studio ----------
   await teleport(61); await sleep(300);
@@ -252,6 +264,7 @@ const UG_F = -6;
   { const pb = await page.evaluate(() => ({ pet: __DDW3.friends.hasPet(), bal: !!__DDW3.world.balloon })); check('reload keeps your pet and your balloon', pb.pet && pb.bal, JSON.stringify(pb)); }
   { const k = await page.evaluate(() => ({ b: __DDW3.world.build.filter(v => v >= 0).length, c: __DDW3.world.colorings[0].some(x => x !== '#ffffff'), s: Object.keys(__DDW3.world.styles || {}).length, sp: __DDW3.world.sparkle })); check('reload keeps your building, colouring, colours and sparkles', k.b === 2 && k.c && k.s > 0 && k.sp, JSON.stringify(k)); }
   { const kk = await page.evaluate(() => JSON.stringify(__DDW3.world.kart)); check('reload keeps your kart design', kk !== JSON.stringify({ col: 0, shape: 0, wheels: 0 }), kk); }
+  { const k = await page.evaluate(() => ({ crown: __DDW3.world.crown, eggs: __DDW3.world.dinoEggs })); check('reload keeps your crown and your hatched baby dino', k.crown === true && k.eggs[0] === true, JSON.stringify(k)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
   await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
