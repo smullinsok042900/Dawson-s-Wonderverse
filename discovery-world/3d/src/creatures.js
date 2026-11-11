@@ -6,7 +6,7 @@
 // Also the baby Fluffkins.
 // ===================================================================
 import * as THREE from 'three';
-import { plushNormal } from './nature.js';
+import { plushNormal, microNormal } from './nature.js';
 import { buildCharacter, animateCharacter, setLids } from './characters.js';
 import { plush, bipedSpec } from './critterkit.js';
 
@@ -15,8 +15,10 @@ export const CREATURES = {
   zuzu: { name: 'Zuzu', jump: [9.6, 8.4], body: '#ffd84a' },
   jelly: { name: 'Jelly', jump: [9.8, 8.6], body: '#7ef0c8' },
 };
+// build 17: softer, less glassy "toy" surfaces with a fine grain (painted wood / soft vinyl, not wet plastic)
 const toy = (color, o = {}) => new THREE.MeshPhysicalMaterial({
-  color, roughness: o.r ?? .42, metalness: o.m ?? 0, clearcoat: o.cc ?? .7, clearcoatRoughness: o.ccr ?? .22,
+  normalMap: o.opacity != null || o.ei > .6 ? null : microNormal(), normalScale: new THREE.Vector2(.22, .22),
+  color, roughness: Math.max(o.r ?? .5, .3), metalness: o.m ?? 0, clearcoat: (o.cc ?? .7) * .45, clearcoatRoughness: Math.max(o.ccr ?? .3, .3),
   sheen: o.sheen ?? 0, sheenColor: new THREE.Color(o.sheenColor ?? '#ffffff'), sheenRoughness: .5,
   emissive: new THREE.Color(o.em ?? '#000000'), emissiveIntensity: o.ei ?? 1,
   transparent: o.opacity != null, opacity: o.opacity ?? 1, iridescence: o.irid ?? 0, iridescenceIOR: 1.3,

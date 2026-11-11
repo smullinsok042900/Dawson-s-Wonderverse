@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-11T14:32:00.880Z",
+  "date": "2026-11-11T16:12:19.739Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 132,
+  "passed": 135,
   "total": 136,
   "results": [
     {
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 3.4"
+      "detail": "x 1.2 → 5.2"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.60"
+      "detail": "y=1.55"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,7 +57,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 0.4→3.2, y 0.80"
+      "detail": "x 2.0→4.3, y 0.00"
     },
     {
       "name": "tap ▲ to jump",
@@ -112,12 +112,12 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.77"
+      "detail": "highest y=2.90"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=40.1 y=3.66"
+      "detail": "x=39.8 y=2.52"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
@@ -127,7 +127,7 @@
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=9.5"
+      "detail": "x=9.2"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -4.87 → -3.32"
+      "detail": "y -4.85 → -3.30"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-0.42"
+      "detail": "y=-0.80"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=10.8 y=0.00"
+      "detail": "x=10.2 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -217,7 +217,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 2.0 away"
+      "detail": "pet is 2.1 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.051 → 1.047, z=-3.4"
+      "detail": "u 0.049 → 1.056, z=-3.4"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -371,28 +371,28 @@
     },
     {
       "name": "tap a station sign: the train chugs in and you hop aboard",
-      "ok": false,
-      "detail": "ride=null z=-0.00"
+      "ok": true,
+      "detail": "ride=train z=3.20"
     },
     {
       "name": "JUMP on the train toots the whistle (and you stay on)",
-      "ok": false,
+      "ok": true,
       "detail": ""
     },
     {
       "name": "hold ▶ to drive the train yourself",
       "ok": false,
-      "detail": "x 170.0 → 172.6"
+      "detail": "x 170.0 → 170.3"
     },
     {
       "name": "let go and the train stops",
-      "ok": false,
+      "ok": true,
       "detail": ""
     },
     {
       "name": "PAW: hop off the train (anywhere)",
       "ok": true,
-      "detail": "ride=null x=172.6"
+      "detail": "ride=null x=170.0"
     },
     {
       "name": "tap the Marble Machine board: a marble drops",
@@ -557,7 +557,7 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=1.6"
+      "detail": "y=2.3"
     },
     {
       "name": "walk through star bits to collect them",
@@ -597,7 +597,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.5616559563017284"
+      "detail": "k=0.4212419672262964"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -607,7 +607,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=5.95"
+      "detail": "y=4.83"
     },
     {
       "name": "stair bubble at the top of the stairs",

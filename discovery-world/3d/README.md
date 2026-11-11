@@ -37,6 +37,22 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 17: professional picture pipeline (rendering overhaul)
+This build improves how everything already in the game is drawn. It adds no new content.
+- **HDR rendering:** the world is drawn into a high-range picture with 4x anti-aliasing, then tone-mapped (Neutral) and colour-managed in one final pass.
+- **Bloom:** sparkles, glowing windows and sunlit highlights get a soft glow. Only the brightest things glow, blurred at quarter size so it stays cheap.
+- **Colour grade:** slightly richer colour, a soft contrast curve, warm highlights, cool shadows and a gentle vignette.
+- **Ambient occlusion:** soft shading where things meet the ground or each other (GTAO at half size). It reuses the depth picture, so the world is not drawn twice.
+- **Shadows:** 2048px shadow maps with a tighter shadow box around the player, so shadows are sharper. The sun is snapped to shadow texels so shadow edges no longer shimmer as you walk.
+- **Materials:** every toy-like material gets a fine surface-detail normal map and slightly rougher, softer clearcoat. That makes things look less like shiny plastic.
+- **Atmosphere:** softer, deeper pink-lilac distance haze.
+- **Smoother motion:** the character and camera are interpolated between physics steps, and the camera uses frame-rate-independent smoothing. Movement looks smooth on 60Hz and 120Hz screens, and the camera keeps up when frames drop.
+- **iPhone performance:** if frames drop, the game first lowers resolution a little, then turns off the extra effects, then lowers resolution further (60fps target, 30fps floor).
+- Before/after: `screenshots/compare_b17.jpg`.
+- Saves, controls and all gameplay are unchanged.
+- **Fixed during testing:** a code comment had swallowed the shadow bias settings (now restored). The camera was lagging when frames dropped (it now uses frame-rate-independent smoothing).
+- **Test report:** full smoke test 135/136 in headless Chromium with software WebGL. The miss was "hold ▶ to drive the train": the train moved 0.3 instead of 0.5 in 0.9 s because the test browser runs only a few frames a second. Build 16 drives the train the same distance over the same number of frames. With a 2.5 s hold, the train section passes 6/6. Not tested on a physical iPhone.
+
 ## 3D build 16: a softer, more magical look (benchmark: the park, Pip and the castle)
 - **Sparkly eyes on every character:**
   - Big patterned irises with fine fibres, a dark rim and a soft inner glow.

@@ -267,3 +267,12 @@ export function makeRock(scene, x, z, s = 1) {
   geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, stoneMat); m.scale.set(s * (1 + rnd() * .4), s * (.55 + rnd() * .3), s); m.rotation.y = rnd() * 6; m.position.set(x, s * .12 + terrainH(x, z), z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
 }
+
+// ---------- build 17: a very fine surface grain for painted and moulded things (no more glassy plastic) ----------
+let microCache = null;
+export function microNormal() {
+  if (microCache) return microCache;
+  const N = 128, [c, g] = canvas(N); g.fillStyle = '#808080'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 1800; i++) { g.fillStyle = `rgba(${rnd() < .5 ? '255,255,255' : '0,0,0'},${.05 + rnd() * .07})`; g.beginPath(); g.arc(rnd() * N, rnd() * N, .6 + rnd() * 1.8, 0, 7); g.fill(); }
+  microCache = tex(normalFromCanvas(c, 1.6), false); microCache.repeat.set(4, 4); return microCache;
+}
