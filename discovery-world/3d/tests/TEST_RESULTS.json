@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-11T01:53:34.767Z",
+  "date": "2026-11-11T02:20:24.302Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 90,
+  "passed": 96,
   "total": 96,
   "results": [
     {
@@ -27,11 +27,11 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 7.4"
+      "detail": "x 1.2 → 6.5"
     },
     {
       "name": "let go and the creature stops",
-      "ok": false,
+      "ok": true,
       "detail": ""
     },
     {
@@ -57,7 +57,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 4.8→8.8, y 2.28"
+      "detail": "x 0.8→4.4, y 1.55"
     },
     {
       "name": "slide a finger up to jump",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 64% height"
+      "detail": "body squashed to 73% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.67\",\"creature\",\"0.1\"]] P=5.75,0.00,0.00"
+      "detail": "tap at 311,229 lands on: game [[\"Mesh\",\"9.00\",\"creature\",\"0.0\"],[\"Mesh\",\"9.01\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"creature\",\"0.0\"],[\"Mesh\",\"9.69\",\"creature\",\"0.1\"]] P=6.21,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,17 +112,17 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.63"
+      "detail": "highest y=3.14"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.7 y=3.30"
+      "detail": "x=40.2 y=3.66"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.8 (ok)"
+      "detail": "got to x=16.6 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -3.17 → -1.38"
+      "detail": "y -4.96 → -3.41"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-1.57"
+      "detail": "y=-1.68"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=5.3 y=0.00"
+      "detail": "x=0.9 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -261,7 +261,7 @@
     },
     {
       "name": "tap the sky whale: it sings",
-      "ok": false,
+      "ok": true,
       "detail": ""
     },
     {
@@ -301,7 +301,7 @@
     },
     {
       "name": "tap part of a colouring picture: it fills with your colour",
-      "ok": false,
+      "ok": true,
       "detail": ""
     },
     {
@@ -322,7 +322,7 @@
     {
       "name": "pick a new colour for your creature and turn on the sparkle trail",
       "ok": true,
-      "detail": "{\"s\":{\"zuzu\":\"#9fe6ff\"},\"sp\":true,\"k\":\"zuzu\"}"
+      "detail": "{\"s\":{\"pip\":\"#9fe6ff\"},\"sp\":true,\"k\":\"pip\"}"
     },
     {
       "name": "paint palette appears by the paint wall",
@@ -352,7 +352,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=3.68"
+      "detail": "y=4.32"
     },
     {
       "name": "tap the carousel to ride",
@@ -372,12 +372,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=5.1"
+      "detail": "y=2.5"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "45 → 48"
+      "detail": "48 → 51"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -412,7 +412,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.8237620692425346"
+      "detail": "k=0.8144011366375058"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -422,7 +422,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=4.48"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -441,12 +441,12 @@
     },
     {
       "name": "sound button turns sound off",
-      "ok": false,
-      "detail": "was false, top element at the button: [object Object]"
+      "ok": true,
+      "detail": "was true, top element at the button: [object Object]"
     },
     {
       "name": "sound button turns sound back on",
-      "ok": false,
+      "ok": true,
       "detail": ""
     },
     {
@@ -461,13 +461,13 @@
     },
     {
       "name": "reload keeps your building, colouring, colours and sparkles",
-      "ok": false,
-      "detail": "{\"b\":2,\"c\":false,\"s\":1,\"sp\":true}"
+      "ok": true,
+      "detail": "{\"b\":2,\"c\":true,\"s\":1,\"sp\":true}"
     },
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":49,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":51,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",
