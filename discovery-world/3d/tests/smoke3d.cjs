@@ -182,7 +182,7 @@ const UG_F = -6;
   await press('#pawBtn'); await sleep(300); c = await S(); check('PAW parks the kart and you hop out', !c.ride && c.y < .1);
   // ---------- build 9: the Wonder Express train ----------
   await teleport(170);
-  await tapWorld(167.6, 1.35, 4.15); c = await waitFor(s => s.ride === 'train', 90000);
+  await tapWorld(172.4, 1.35, 4.15); c = await waitFor(s => s.ride === 'train', 90000);
   check('tap a station sign: the train chugs in and you hop aboard', c.ride === 'train' && Math.abs(c.z - 3.2) < .3 && c.disc.includes('train'), `ride=${c.ride} z=${c.z.toFixed(2)}`);
   await press('#jumpBtn'); await sleep(200); check('JUMP on the train toots the whistle (and you stay on)', (await S()).disc.includes('toot') && (await S()).ride === 'train');
   c = await waitFor(s => s.ride === 'train' && Math.abs(s.x - 222) < .05 && Math.abs(s.vx) < .01, 120000);
