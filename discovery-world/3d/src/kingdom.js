@@ -20,9 +20,14 @@ import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
 import { fabricMat, normalFromCanvas, leafDetail } from './nature.js';
+import { USE_ASSETS, brickSet } from './assets.js';
 
 // pastel stone bricks with soft bumps (castle walls), and scalloped roof tiles
 function brickMat() {
+  if (USE_ASSETS) { // build 19: the tool-made brick set (rose bricks, recessed mortar, worn edges, AO)
+    const B = brickSet(); for (const t of [B.map, B.normal, B.rough]) t.repeat.set(3, 3);
+    return new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(1, 1), roughnessMap: B.rough, roughness: 1 });
+  }
   const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
   g.fillStyle = '#f4d4e6'; g.fillRect(0, 0, W, W);
   for (let r = 0; r < 8; r++) for (let k = 0; k < 4; k++) { const x = k * 64 + (r % 2) * 32, y = r * 32; const shade = 228 + Math.floor(Math.random() * 22); g.fillStyle = `rgb(255,${shade - 14},${shade})`; g.beginPath(); g.roundRect(x + 3, y + 3, 58, 26, 7); g.fill(); if (x + 64 > W) { g.beginPath(); g.roundRect(x + 3 - W, y + 3, 58, 26, 7); g.fill(); } }
@@ -250,7 +255,7 @@ export function initKingdom(G, api) {
   // the dance floor in front of the castle (on the path)
   const tiles = [], TW = 1.5, T0 = K.castle - 7.5, TN = 11, TCOL = ['#ff6fae', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ff9a2e'];
   for (let i = 0; i < TN; i++) for (let j = 0; j < 2; j++) {
-    const m = new THREE.Mesh(new RoundedBoxGeometry(TW - .08, .06, 1.4, 1, .03), new THREE.MeshPhysicalMaterial({ color: '#fff2fb', roughness: .15, clearcoat: 1, emissive: TCOL[(i + j) % TCOL.length], emissiveIntensity: .05 }));
+    const m = new THREE.Mesh(new RoundedBoxGeometry(TW - .08, .06, 1.4, 1, .03), new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#eadbe6').lerp(new THREE.Color(TCOL[(i + j) % TCOL.length]), .22), roughness: .3, clearcoat: .5, clearcoatRoughness: .15, emissive: TCOL[(i + j) % TCOL.length], emissiveIntensity: .05 }) /* (build 19: pearly tinted tiles, not glare-white) */);
     m.position.set(T0 + TW * (i + .5), .03, -.75 + j * 1.5); m.receiveShadow = true; add(m); tiles.push({ m, i, j, glow: 0 });
   }
   let lastTile = -1, danceT = 0;

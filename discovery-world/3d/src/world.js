@@ -14,6 +14,7 @@ import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
+import { USE_ASSETS, cobbleSet } from './assets.js';
 import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
@@ -93,8 +94,9 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // a cobblestone path through the park, the meadow and the valley (where you walk)
-  { const C = cobbleTextures(), x0 = LAWN_FROM, x1 = LAWN_TO, map = C.map, nm = C.normal; for (const t of [map, nm]) t.repeat.set((x1 - x0) / 3, 1);
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1.1, 1.1), roughness: .82 }));
+  { const x0 = LAWN_FROM, x1 = LAWN_TO; // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
+    const C = USE_ASSETS ? cobbleSet() : cobbleTextures(), map = C.map, nm = C.normal, rm = C.rough || null; for (const t of [map, nm, rm]) if (t) t.repeat.set((x1 - x0) / 3, 1);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1, 1), roughness: rm ? 1 : .82, roughnessMap: rm }));
     path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);
     for (const z of [-1.55, 1.55]) { const edge = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .07, .14), M('#fff6ea', { r: .6, cc: .2 })); edge.position.set((x0 + x1) / 2, .035, z); edge.receiveShadow = true; add(edge); } }
   // front edge of the floor (a rounded rail, so the world has a nice edge)

@@ -6,6 +6,7 @@
 //   • Scattered flowers and bushes (instanced, so they are cheap to draw).
 // ===================================================================
 import * as THREE from 'three';
+import { USE_ASSETS, assetsReady } from './assets.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const canvas = (w, h = w) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
@@ -137,7 +138,18 @@ export function scatterNature(scene, { ok, x0, x1, count = 520, bushes = 80 }) {
     const x = x0 + rnd() * (x1 - x0), z = -10.8 + rnd() * 5; if (!ok(x, z) || !ok(x + .8, z) || !ok(x - .8, z)) continue;
     e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const s = .8 + rnd() * .9; m4.compose(V.set(x, 0, z), q, S.set(s, s * (.8 + rnd() * .4), s)); m4.elements[13] += terrainH(x, z); bush.setMatrixAt(b, m4); bush.setColorAt(b, cl.setHSL(.26 + rnd() * .06, .36 + rnd() * .14, .42 + rnd() * .1)); b++;
   }
-  bush.count = b; bush.castShadow = true; bush.receiveShadow = true; scene.add(bush);
+  bush.count = b; bush.castShadow = true; bush.receiveShadow = true;
+  if (!USE_ASSETS) scene.add(bush);
+  else assetsReady.then(A => {
+    if (!A) { scene.add(bush); return; }
+    // the Blender bushes, in chunks along the world so off-screen ones aren't drawn
+    const chunks = new Map(), M = new THREE.Matrix4(), P = new THREE.Vector3(), BUSH_FIT = new THREE.Matrix4().makeScale(1.6, 1.5, 1.6); // (the Blender bush is a little smaller than the old clump)
+    for (let i = 0; i < b; i++) { bush.getMatrixAt(i, M); P.setFromMatrixPosition(M); const key = Math.floor(P.x / 24) * 2 + (i % 2); if (!chunks.has(key)) chunks.set(key, []); chunks.get(key).push(M.clone().multiply(BUSH_FIT)); }
+    for (const [key, list] of chunks) for (const p of A.bushes[((key % 2) + 2) % 2]) {
+      const im = new THREE.InstancedMesh(p.geo, p.mat, list.length); list.forEach((m, k) => im.setMatrixAt(k, m));
+      im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im);
+    }
+  });
   return { flowers: n, bushes: b };
 }
 
@@ -240,7 +252,19 @@ function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.
   // (build 18) soften: lean every normal toward the round crown, so the lumps read as soft clusters, not facets
   { const nn = g.attributes.normal, w = new THREE.Vector3(); for (let i = 0; i < nn.count; i++) { w.fromBufferAttribute(p, i).normalize().multiplyScalar(.65); v.fromBufferAttribute(nn, i).multiplyScalar(.35).add(w).normalize(); nn.setXYZ(i, v.x, v.y, v.z); } }
   canopyCache = g; return g; }
+// build 19: trees and bushes come from the Blender asset pipeline (real model files); the
+// procedural versions below stay as the light test mode and as a fallback
 export function makeTree(scene, x, z, s = 1) {
+  if (!USE_ASSETS) return makeTreeProc(scene, x, z, s);
+  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g);
+  const v = Math.abs(Math.round(x * 7.3)) % 3, sc = s * (.9 + rnd() * .18);
+  assetsReady.then(A => {
+    if (!A) { scene.remove(g); makeTreeProc(scene, x, z, s); return; }
+    for (const p of A.trees[v]) { const m = new THREE.Mesh(p.geo, p.mat); m.scale.setScalar(sc); m.castShadow = true; m.receiveShadow = true; g.add(m); }
+  });
+  return g;
+}
+function makeTreeProc(scene, x, z, s = 1) {
   if (!barkMatCache) { const B = barkTextures(); B.map.repeat.set(1, 2); B.normal.repeat.set(1, 2); barkMatCache = new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(1.5, 1.5), roughness: .92 }); }
   if (!leafMatCache) { leafMatCache = new THREE.MeshStandardMaterial({ map: leafTexture(), alphaTest: .5, side: THREE.DoubleSide, roughness: .75, color: '#ffffff' });
     // (build 18) each leaf card is lit as part of a round crown: its normal points out from the middle of the tree, never flipped

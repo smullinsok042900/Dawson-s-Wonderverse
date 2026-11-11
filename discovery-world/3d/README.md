@@ -37,6 +37,62 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 19: a real asset pipeline (Blender-modelled trees and bushes, tool-made texture sets)
+Nothing new was added to play. What's already there now uses real model and texture files instead of shapes generated in game code. The backup of build 17 is `backups/3D_build17_index.html`; build 18 is in git.
+
+**Environment investigation**
+- **Engine:** Three.js r187 (WebGL 2), bundled by esbuild into one offline `index.html`.
+- **glTF/GLB:** three.js includes `GLTFLoader` and the meshopt decoder, and the bundler now embeds `.glb` and `.jpg` files. The game loads real GLB models in build 19.
+- **Blender: available.** The Blender 5.3 Python module (`pip install bpy==5.3.0`, from PyPI, which this environment can reach) runs headless, including Cycles baking and the glTF exporter. Python 3.13 with numpy and Pillow is available for texture tools. `@gltf-transform/cli` (npm) compresses the GLBs.
+- **Reachable sources:** npm, PyPI and raw GitHub. Poly Haven, ambientCG, Kenney and Quaternius are blocked. The CC0 package `@pmndrs/assets` (npm) contains 18 Poly Haven HDRIs. I tried its "park" HDRI as the environment light and measured it against the tuned sky environment. It made the castle brighter (near-white 14% to 21%), so it was not used.
+- **Local assets:** there were no model or texture files in the project before this build. Everything was generated in game code.
+- **What was limiting quality:** every model was assembled at run time from primitives (spheres, cylinders, cards), and every texture was drawn on a small canvas. There was no offline modelling, no baking, and no real texture sets.
+
+**What build 19 adds**
+- **`tools/blender/build_assets.py`** models and bakes, with a fixed seed so rebuilds are identical:
+  - **3 trees.** Each trunk and branch system is a single smooth organic mesh (a branching skeleton through Blender's Skin and Subdivision modifiers, with root flare). It is UV-unwrapped, with bark colour and a bark normal map baked from procedural bark shaders, plus Cycles ambient occlusion baked into the bark (the leaves shade it).
+  - **Tree crowns:** 4,200 individual curved leaf meshes per tree (real leaf shapes with a midrib fold, no cut-out cards). Path-traced AO and per-leaf colour are baked into the vertex colours, and "foliage normals" make light wrap around the crown.
+  - **2 bushes** made the same way (1,100 leaves each), with AO baked against the ground.
+- **`tools/textures/make_cobble.py`** makes a seamless cobblestone set (exact periodic Voronoi with domain warping): colour, normal and roughness at 1024px. Stones have rounded worn rims, a gentle dome, per-stone colour, grain and mortar AO. It replaces the "bubble" path.
+- **`tools/textures/make_bricks.py`** makes a seamless castle-brick set: rose bricks with per-brick tone, worn rounded edges, chips, recessed mortar and AO, as colour, normal and roughness maps. It replaces the almost-white canvas bricks.
+- **`src/assets.js`** loads and decodes the files (meshopt). Leaves get a shared material with gentle wind sway and double-sided lighting without dark flipped backs. Bushes are instanced in chunks, so off-screen ones aren't drawn. The old procedural versions remain for the light test mode (`?test`) and as a fallback if loading fails.
+- **Castle dance floor:** the tiles are a pearly tint of their own light-up colour instead of glare-white.
+- **Size:** the GLBs total 3.3 MB (meshopt-compressed from 10.7 MB) and the textures 0.8 MB. `index.html` is about 6.4 MB.
+- **Rendering cost** (triangles in view, same camera; build 19 vs the same build with the old procedural trees):
+
+| view | triangles | draw calls |
+|---|---|---|
+| park | 1.92M vs 1.63M | 278 vs 363 |
+| carousel | 1.70M vs 1.69M | 339 vs 394 |
+| dinosaur | 1.35M vs 1.36M | 296 vs 290 |
+| castle | 1.05M vs 1.33M | 608 vs 610 |
+
+Most triangles are the grass, as before.
+
+**Measured** (same camera positions, HUD excluded)
+
+| view | near-white (17 → 18 → 19) | contrast (std) | detail |
+|---|---|---|---|
+| park | 26% → 4% → 3% | 0.17 → 0.21 → 0.21 | 8.6 → 10.6 → 11.1 |
+| castle | 38% → 15% → 8% | 0.12 → 0.19 → 0.22 | 4.0 → 6.4 → 8.9 |
+
+Pictures: `screenshots/compare_b19_1.jpg`, `screenshots/compare_b19_2.jpg` (17 / 18 / 19 side by side) and `screenshots/compare_b19_closeups.jpg`.
+
+**Rebuilding the assets**
+```
+pip install bpy==5.3.0
+python3 tools/blender/build_assets.py /tmp/assets            # trees + bushes (about 1 minute)
+npx @gltf-transform/cli meshopt /tmp/assets/tree_0.glb src/assets/tree_0.glb   # (each GLB)
+python3 tools/textures/make_cobble.py src/assets && python3 tools/textures/make_bricks.py src/assets
+node build.mjs
+```
+
+**Limits that remain (honest)**
+- The characters (Pip, Zuzu, Jelly, critters, princesses) are still sculpted in game code (SDF sculpting, about 2 cm detail). Rebuilding them in Blender with their bones, fur and animations is a bigger job, and the next candidate.
+- Other props (rides, castle trim, dinosaurs, kart, train) are still built from shapes in game code. The same Blender pipeline can now be used for them, one at a time.
+- Professional asset libraries are blocked here, so these assets are made by me with Blender and tools rather than downloaded.
+- Not tested on a physical iPhone. Load and frame time on a real phone, with a 6.4 MB page and about 1.5–1.9M triangles in view, still need checking. `adapt()` lowers resolution and then turns effects off if frames drop.
+
 ## 3D build 18: lighting pipeline correction and fidelity upgrade (audit first, then fixes)
 Nothing new was added; this build makes what's already there render properly. The backup of build 17 is `backups/3D_build17_index.html`.
 
