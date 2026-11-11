@@ -46,7 +46,7 @@ This build improves how everything already in the game is drawn. It adds no new 
 - **Shadows:** 2048px shadow maps with a tighter shadow box around the player, so shadows are sharper. The sun is snapped to shadow texels so shadow edges no longer shimmer as you walk.
 - **Materials:** every toy-like material gets a fine surface-detail normal map and slightly rougher, softer clearcoat. That makes things look less like shiny plastic.
 - **Atmosphere:** softer, deeper pink-lilac distance haze.
-- **Smoother motion:** the character and camera are interpolated between physics steps, so movement looks smooth on 60Hz and 120Hz screens (no judder).
+- **Smoother motion:** the character and camera are interpolated between physics steps, and the camera uses frame-rate-independent smoothing. Movement looks smooth on 60Hz and 120Hz screens, and the camera keeps up when frames drop.
 - **iPhone performance:** if frames drop, the game first lowers resolution a little, then turns off the extra effects, then lowers resolution further (60fps target, 30fps floor).
 - Before/after: `screenshots/compare_b17.jpg`.
 - Saves, controls and all gameplay are unchanged.

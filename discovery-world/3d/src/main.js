@@ -54,7 +54,7 @@ scene.fog = new THREE.Fog('#f2d4f4', 26, 150); // build 17: atmospheric perspect
 const camera = new THREE.PerspectiveCamera(38, 2, .1, 600);
 const hemi = new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .85); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff1dc', 2.1); sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 10, bottom: -5, near: 1, far: 50 }); // build 17: a tighter box = sharper shadows sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 10, bottom: -5, near: 1, far: 50 }); /* build 17: a tighter box = sharper shadows */ sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 // a soft cool light from behind: it outlines everything with a gentle rim, so shapes look rounder and more real
 const rim = new THREE.DirectionalLight('#d6e4ff', .6); rim.position.set(-6, 7, -12); scene.add(rim);
@@ -621,16 +621,18 @@ function camTargetX() {
   return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, 423 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
+// build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
+const ease = (dt, rate) => 1 - Math.exp(-dt * rate);
 function updateCamera(dt) {
   const P = player;
-  camT.look += ((P.ride ? (P.ride.type === 'train' ? P.facing * 2.6 : 0) : P.facing * 1.8) - camT.look) * Math.min(1, dt * 1.6);
-  camT.x += (camTargetX() - camT.x) * Math.min(1, dt * 5);
-  camT.y += (P.y - camT.y) * Math.min(1, dt * (P.grounded ? 4 : 2));
+  camT.look += ((P.ride ? (P.ride.type === 'train' ? P.facing * 2.6 : 0) : P.facing * 1.8) - camT.look) * ease(dt, 1.6);
+  camT.x += (camTargetX() - camT.x) * ease(dt, 5);
+  camT.y += (P.y - camT.y) * ease(dt, (P.grounded ? 4 : 2));
   const y = camT.y;
   // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
   // (also a little at the Marble Machine, so its top ramps stay clear of the buttons)
-  const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45) : 0; camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * Math.min(1, dt * 1.5);
-  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * Math.min(1, dt * 3);
+  const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45) : 0; camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * ease(dt, 1.5);
+  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2, CAM_DIST + camT.z + camT.cz * 3.2); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4, camT.z - camT.cz * 2);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
@@ -775,7 +777,7 @@ function frame() {
   // build 17: draw the creature between the last two physics steps (smooth on 60/90/120 Hz screens), and move the camera every frame
   const a = Math.min(1, acc * 60), far = Math.abs(P.x - prevP.x) > 2 || Math.abs(P.y - prevP.y) > 2; // (no blending across teleports)
   const ix = far ? P.x : prevP.x + (P.x - prevP.x) * a, iy = far ? P.y : prevP.y + (P.y - prevP.y) * a, iz = far ? P.z : prevP.z + (P.z - prevP.z) * a;
-  { const sx = P.x, sy = P.y, sz = P.z; P.x = ix; P.y = iy; P.z = iz; updateCamera(Math.min(raw, .05)); P.x = sx; P.y = sy; P.z = sz; }
+  { const sx = P.x, sy = P.y, sz = P.z; P.x = ix; P.y = iy; P.z = iz; updateCamera(raw); P.x = sx; P.y = sy; P.z = sz; }
   creature.root.position.set(ix, iy, iz);
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide')) && !P.swim; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); }
