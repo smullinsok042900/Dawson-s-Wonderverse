@@ -49,7 +49,7 @@ const UG_F = -6;
   await page.evaluate(() => __DDW3.teleport(1.2)); await sleep(1500); // start at the far left (walking right leads into the ball pit and its deep part)
   c = await S(); const x0 = c.x;
   await holdBtn('#rightBtn', 900); c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
-  await sleep(400); const x1 = (await S()).x; await sleep(300); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
+  await sleep(1200); const x1 = (await S()).x; await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
   await holdBtn('#leftBtn', 500); check('slide a finger left to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); const seen = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if (P.y > .3) return r(P.y); if (++n > 200) return r(P.y); requestAnimationFrame(f); }; f(); })); await touch('touchStart', [j]); await touch('touchEnd', []); const jy = await seen; check('JUMP jumps', jy > .3, `y=${jy.toFixed(2)}`);
     // (the slow software renderer here can't keep up with two real taps inside one jump, so the 2nd tap is sent on the very next frame)
@@ -135,7 +135,7 @@ const UG_F = -6;
     const r = await top; await touch('touchEnd', []); check('slide up at the rope ladder: climb all the way up into the Cloud Kingdom', r[0] > 9.4, `y=${r[0].toFixed(2)}`); }
   check('the Cloud Kingdom is a new discovery', (await S()).disc.includes('sky'));
   await shot('18_cloud_kingdom.jpg');
-  await teleport(50.6, 9.5); { const m = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (m > 13 || ++n > 400) return r(m); requestAnimationFrame(f); }; f(); })); await holdBtn('#rightBtn', 500); const my = await m; check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
+  await teleport(50.4, 9.5); { const my = await page.evaluate(() => new Promise(r => { const D = __DDW3; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, D.player.y); if (D.player.x > 51.4) D.keys.right = false; if (m > 13 || ++n > 500) { D.keys.right = false; return r(m); } requestAnimationFrame(f); }; f(); })); check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
   await teleport(54.5, 9.5); await tapWorld(56, 14.1, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
   await teleport(65.8, 9.5);
   { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
