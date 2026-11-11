@@ -101,7 +101,12 @@ export function initKingdom(G, api) {
   });
   function showHatched(e) { e.egg.visible = false; e.baby.visible = true; e.shellBits.forEach(s => { s.visible = true; }); }
   function tapEgg(e) { if (world.dinoEggs[e.i] || e.wob > 0) return; e.wob = 1.3; Sound.tone(520, .1, 'triangle', .04, 1.2); Sound.tone(560, .1, 'triangle', .04, 1.2, .3); Sound.tone(600, .1, 'triangle', .04, 1.2, .6); discover('dinoegg', 'A dino egg! Tap it to see what is inside!'); }
-  function tapBaby(e) { e.hop = .7; Sound.tone(900 + e.i * 120, .12, 'sine', .05, 1.5); Sound.tone(1100 + e.i * 120, .1, 'sine', .04, 1.4, .12); burst(e.baby.position.x, 1.1, e.baby.position.z, ['#ff8fc8', '#fff'], 6, 1.2); discover('babydino', 'Baby dinos! They squeak when you tap them.'); }
+  world.dinoFollow = Array.isArray(world.dinoFollow) && world.dinoFollow.length === 3 ? world.dinoFollow : [false, false, false];
+  function followBaby(e) { e.f = friends.addFollower({ kind: 'dino', root: e.baby, orient: 'x' }); e.f.pos.copy(e.baby.position); }
+  function tapBaby(e) {
+    if (!e.f) { world.dinoFollow[e.i] = true; followBaby(e); Sound.chime(); toast('🦕💖 A baby dino wants to come with you!'); discover('dinofollow', 'Baby dinos follow you when you tap them!'); api.saveSoon(); }
+    else friends.followerTrick(e.f);
+    e.hop = .7; Sound.tone(900 + e.i * 120, .12, 'sine', .05, 1.5); Sound.tone(1100 + e.i * 120, .1, 'sine', .04, 1.4, .12); burst(e.baby.position.x, 1.1, e.baby.position.z, ['#ff8fc8', '#fff'], 6, 1.2); discover('babydino', 'Baby dinos! They squeak when you tap them.'); }
   G.interact.push({ x: K.nest, y: 0, layer: '', disc: 'dinoegg', run: () => { const e = eggs.find(e2 => !world.dinoEggs[e2.i]); if (e) tapEgg(e); else tapBaby(eggs[Math.floor(Math.random() * 3)]); }, hintY: 1.6 });
 
   // Tops, a little horned dino (a talking friend)
@@ -225,7 +230,8 @@ export function initKingdom(G, api) {
       e.t += dt;
       if (world.dinoEggs[e.i]) { if (!e.baby.visible) showHatched(e); }
       else if (e.wob > 0) { e.wob -= dt; e.egg.rotation.z = Math.sin(e.wob * 30) * .25 * Math.min(1, e.wob * 2); if (e.wob <= 0) { world.dinoEggs[e.i] = true; showHatched(e); e.hop = .6; Sound.chime(); Sound.giggle(); burst(e.x, .7, e.z, ['#fff', '#ffd23f', '#ff8fc8', '#9ff7c8'], 22, 2.5); toast('🦕 A baby dino hatched!'); discover('hatch'); api.saveSoon(); } }
-      if (e.baby.visible) { e.hop = Math.max(0, e.hop - dt); const bob = Math.abs(Math.sin(e.t * 2.4 + e.i)) * .06 + (e.hop > 0 ? Math.sin(e.hop / .7 * Math.PI) * .6 : 0); e.baby.position.y = .05 + bob; e.baby.rotation.y = Math.sin(e.t * .9 + e.i * 2) * .6 + (Math.sign(P.x - e.x) || 1) * .4; }
+      if (e.baby.visible && world.dinoFollow[e.i] && !e.f) followBaby(e);
+      if (e.baby.visible && !e.f) { e.hop = Math.max(0, e.hop - dt); const bob = Math.abs(Math.sin(e.t * 2.4 + e.i)) * .06 + (e.hop > 0 ? Math.sin(e.hop / .7 * Math.PI) * .6 : 0); e.baby.position.y = .05 + bob; e.baby.rotation.y = Math.sin(e.t * .9 + e.i * 2) * .6 + (Math.sign(P.x - e.x) || 1) * .4; }
     }
     // the castle door swings open when tapped
     if (G.castleDoor) { const o = G.castleDoor.userData.open || 0; G.castleDoor.userData.open = Math.max(0, o - dt * .6); G.castleDoor.scale.x = 1 - Math.sin(Math.min(1, o) * Math.PI / 2) * .6; }

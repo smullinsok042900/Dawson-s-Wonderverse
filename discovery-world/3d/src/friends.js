@@ -47,11 +47,13 @@ export function buildPet(rec, scale = 1) {
   return { root, body, ears, tail, feet };
 }
 
+export const MAXPETS = 5;
 export function initFriends(G, api) {
   const { scene, Sound, burst, discover, toast, player, world } = api;
   const add = o => { scene.add(o); return o; };
   const M = (c, o) => toy(c, o);
   const UGF = api.UG.floor;
+  const fluffy = (c, o) => toy(c, { r: .6, cc: .2, sheen: 1, sheenColor: '#ffffff', ...o });
 
   // =================== PET WORKSHOP (underground, left end of the Cave Hall) ===================
   const PM = { x: 6.2, z: -2.6 };
@@ -82,7 +84,7 @@ export function initFriends(G, api) {
   arm.rotation.z = .5;
   api.tap(lever, () => pullLever());
   G.interact.push({ x: PM.x, y: UGF, layer: '', disc: 'petmaker', run: () => tapButton(btns[0]), hintY: 3.4 });
-  G.interact.push({ x: PM.x + 2.4, y: UGF, layer: '', disc: 'pet', run: () => pullLever(), hintY: 2.2, need: () => !world.pet && world.disc.has('petmaker') });
+  G.interact.push({ x: PM.x + 2.4, y: UGF, layer: '', disc: 'pet', run: () => pullLever(), hintY: 2.2, need: () => (world.pets || []).length < MAXPETS && world.disc.has('petmaker') });
   world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 };
   let previewPet = null;
   function rebuildPreview() { if (previewPet) preview.remove(previewPet.root); previewPet = buildPet(world.petDraft, 1.15); preview.add(previewPet.root); }
@@ -96,21 +98,78 @@ export function initFriends(G, api) {
   }
   let egg = null;
   function pullLever() {
-    const P = player; if (egg || Math.abs(P.x - PM.x) > 7 || P.y > UGF + 2) { Sound.click(); return; }
+    const P = player; if (egg || Math.abs(P.x - PM.x) > 7 || P.y > UGF + 2 || world.pets.length >= MAXPETS) { Sound.click(); return; }
     arm.rotation.z = -.5; Sound.tone(300, .4, 'sawtooth', .03, 2); Sound.whoosh();
     const e = new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 18), M('#fff8ea', { cc: 1 })); e.scale.y = 1.25; e.position.set(PM.x + .2, UGF + 1.5, PM.z + 1.9); e.castShadow = true; add(e);
     for (let i = 0; i < 6; i++) { const sp = ball(M(['#ff9fd2', '#9fe6ff', '#ffd45e'][i % 3]), .07, Math.cos(i) * .3, Math.sin(i * 2) * .3, .34); sp.castShadow = false; e.add(sp); }
     egg = { m: e, t: 0 };
   }
-  // ---------- the pet that follows you ----------
-  let pet = null; const petPos = new THREE.Vector3(), petState = { trick: 0, hop: 0 };
-  function spawnPet(x, y, z) {
-    if (pet) scene.remove(pet.root);
-    pet = buildPet(world.pet, .9); add(pet.root); petPos.set(x, y, z); pet.root.position.copy(petPos);
-    pet.root.traverse(o => { if (o.isMesh) o.userData.tap = () => petTrick(); }); G.taps.push(pet.root);
+  // ---------- your pets (up to 5) and every friend who follows you ----------
+  // Everyone who follows you walks along your trail, one behind the other.
+  const followers = [], pets = [], petPos = new THREE.Vector3();
+  world.pets = world.pets || [];
+  function addFollower(f) { f.pos = new THREE.Vector3(player.x - 1.2 - followers.length * .6, player.y, player.z + .7); f.trick = 0; f.root.position.copy(f.pos); followers.push(f); return f; }
+  function removeFollower(f) { const i = followers.indexOf(f); if (i >= 0) followers.splice(i, 1); }
+  function followerTrick(f) { f.trick = 1.2; Sound.giggle(); burst(f.pos.x, f.pos.y + 1, f.pos.z, ['#ff8fc8', '#ffd84a'], 12, 2); }
+  function spawnPet(rec, x, y, z) {
+    const p = buildPet(rec, .9); add(p.root);
+    const f = addFollower({ kind: 'pet', root: p.root, pet: p }); if (x != null) f.pos.set(x, y, z);
+    p.root.traverse(o => { if (o.isMesh) o.userData.tap = () => { followerTrick(f); discover('pettrick', 'Your pet does a trick!'); }; }); G.taps.push(p.root);
+    pets.push(f); return f;
   }
-  function petTrick() { petState.trick = 1.2; Sound.giggle(); burst(petPos.x, petPos.y + 1, petPos.z, ['#ff8fc8', '#ffd84a'], 12, 2); discover('pettrick', 'Your pet does a trick!'); }
-  api.petTap = petTrick;
+  api.petTap = () => { if (pets[0]) followerTrick(pets[0]); };
+
+  // ---------- new friends you can meet: tap them and they follow you everywhere (saved) ----------
+  world.buddies = world.buddies || {};
+  const buddies = {};
+  function buddy(id, x, z, emoji, build, o = {}) {
+    const root = new THREE.Group(); add(root); const parts = build(root) || {};
+    root.traverse(m => { if (m.isMesh) m.castShadow = true; });
+    const b = { id, home: new THREE.Vector3(x, 0, z), root, parts, emoji, fly: !!o.fly, f: null, t: Math.random() * 6 };
+    root.position.copy(b.home);
+    const tapB = () => {
+      if (!b.f) { world.buddies[id] = true; follow(b); Sound.chime(); Sound.giggle(); burst(root.position.x, root.position.y + 1.2, root.position.z, ['#ff6fae', '#fff', '#ffd84a'], 18, 2.4); toast(emoji + '💖 ' + o.name + ' wants to come with you!'); discover('buddy_' + id, o.name + ' follows you now!'); discover('buddy'); api.saveSoon(); }
+      else { followerTrick(b.f); }
+    };
+    root.traverse(m => { if (m.isMesh) m.userData.tap = tapB; }); G.taps.push(root);
+    G.interact.push({ x, y: 0, layer: '', disc: 'buddy_' + id, run: tapB, hintY: 2, need: () => !b.f });
+    buddies[id] = b; return b;
+  }
+  function follow(b) { b.f = addFollower({ kind: b.id, root: b.root, fly: b.fly, anim: b.parts.anim }); b.f.pos.copy(b.root.position); }
+  // Biscuit the puppy (near the start, by the slide)
+  buddy('biscuit', 30, -1.6, '🐶', r => {
+    const fur = fluffy('#e8b07a'), light = fluffy('#fff1dc'), dark = fluffy('#8a5a3a');
+    r.add(ball(fur, .3, 0, .34, 0, 1.25, .9, .9)); r.add(ball(light, .2, .05, .3, .18, 1, .9, .6));
+    const head = new THREE.Group(); head.position.set(.22, .72, .05); r.add(head); head.add(ball(fur, .26)); head.add(ball(light, .13, .02, -.08, .2, 1.1, .8, .8)); head.add(ball(M('#3a2030'), .045, .02, -.02, .31));
+    const ears = [-1, 1].map(s => { const e = ball(dark, .1, s * .2, .02, -.02, .7, 1.5, .5); head.add(e); return e; });
+    face(head, { y: .07, z: .22, spread: .1, eyeR: .075, mouthY: -.14 });
+    const tail = ball(fur, .07, -.38, .5, 0, 1, 2.2, 1); tail.rotation.z = .6; r.add(tail);
+    for (const [x, zz] of [[.2, .15], [.2, -.15], [-.2, .15], [-.2, -.15]]) r.add(ball(light, .08, x, .07, zz, 1, .8, 1.2));
+    return { anim: (t, moving) => { tail.rotation.x = Math.sin(t * 16) * .6; ears.forEach((e, i) => { e.rotation.z = Math.sin(t * 8 + i) * (moving ? .4 : .12); }); } };
+  }, { name: 'Biscuit' });
+  // Pom the fluffy lamb (in the park)
+  buddy('pom', 176, -1.8, '🐑', r => {
+    const wool = fluffy('#ffffff', { sheen: 1, r: .9 }), skin = toy('#ffd9e6', { r: .5, cc: .3 }), hoof = toy('#6a5470', { r: .4 });
+    for (let k = 0; k < 9; k++) { const a = k * 2.3; r.add(ball(wool, .2 + (k % 3) * .03, Math.cos(a) * .2, .42 + Math.sin(k * 1.7) * .1, Math.sin(a) * .16)); }
+    const head = new THREE.Group(); head.position.set(.32, .66, .05); r.add(head); head.add(ball(skin, .2, 0, 0, 0, 1, 1.1, 1)); head.add(ball(wool, .14, 0, .18, 0, 1.3, .7, 1.2));
+    for (const s of [-1, 1]) head.add(ball(skin, .07, 0, .02, s * .2, .6, 1, 1.6));
+    face(head, { y: .02, z: .17, spread: .08, eyeR: .06, mouthY: -.1 });
+    for (const [x, zz] of [[.18, .12], [.18, -.12], [-.18, .12], [-.18, -.12]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.045, .05, .22, 8), hoof); l.position.set(x, .11, zz); r.add(l); }
+    return { anim: (t, moving) => { head.rotation.z = Math.sin(t * (moving ? 9 : 2)) * .1; } };
+  }, { name: 'Pom' });
+  // Twinkle the little glowing fairy (by the Fluffkin House); she flies beside you
+  buddy('twinkle', 199, -1.6, '🧚', r => {
+    const glow = toy('#fff3a6', { em: '#ffd84a', ei: .9, r: .3 }), skin = toy('#ffe6d4', { r: .5 });
+    r.position.y = 1.2;
+    const body = new THREE.Group(); r.add(body); body.position.y = 1.1;
+    body.add(ball(toy('#ff9fd2', { r: .3, cc: .8, sheen: .6 }), .14, 0, -.05, 0, 1, 1.4, 1));
+    const head = new THREE.Group(); head.position.y = .22; body.add(head); head.add(ball(skin, .13)); head.add(ball(toy('#ffd23f', { r: .4, sheen: .6 }), .14, 0, .05, -.03, 1.05, 1, 1));
+    face(head, { y: 0, z: .12, spread: .05, eyeR: .035, mouthY: -.06 });
+    const halo = ball(glow, .07, 0, .26, 0); head.add(halo);
+    const wingM = new THREE.MeshPhysicalMaterial({ color: '#dff6ff', transparent: true, opacity: .55, roughness: .05, iridescence: 1, side: THREE.DoubleSide, depthWrite: false });
+    const wings = [-1, 1].map(s => { const w = new THREE.Mesh(new THREE.CircleGeometry(.22, 20), wingM); w.scale.set(1, 1.5, 1); w.position.set(s * .17, .05, -.08); w.rotation.y = s * .6; body.add(w); return w; });
+    return { anim: t => { wings.forEach((w, i) => { w.rotation.y = (i ? 1 : -1) * (.6 + Math.sin(t * 30) * .5); }); body.position.y = Math.sin(t * 3) * .12; } };
+  }, { name: 'Twinkle', fly: true });
 
   // =================== FRIENDLY CRITTERS ===================
   const critters = [];
@@ -137,7 +196,6 @@ export function initFriends(G, api) {
     const base = VOICE[c.kind] || 500; for (let i = 0; i < 4 + Math.floor(Math.random() * 3); i++) Sound.tone(base * (.85 + Math.random() * .4), .08, i % 2 ? 'triangle' : 'sine', .045, .9 + Math.random() * .4, i * .1);
   }
   function tapCritter(c) { c.act = 1.6; c.onTap(c); discover(c.disc, c.msg); const lines = TALK[c.kind] || ['😊']; c.line = ((c.line ?? -1) + 1) % lines.length; say(c, lines[c.line]); }
-  const fluffy = (c, o) => toy(c, { r: .6, cc: .2, sheen: 1, sheenColor: '#ffffff', ...o });
   // Balloon Bear (park entrance)
   critter('bear', 137.6, 0, -2.4, r => {
     const fur = fluffy('#d9a06a'), light = fluffy('#f3d6b0');
@@ -281,24 +339,28 @@ export function initFriends(G, api) {
       egg.t += dt; const e = egg.m;
       e.position.y = Math.max(UGF + .5, e.position.y - dt * 2.5); e.rotation.z = Math.sin(egg.t * 18) * .25 * Math.min(1, egg.t);
       if (egg.t > 2.2) {
-        scene.remove(e); world.pet = { ...world.petDraft }; spawnPet(e.position.x, UGF, e.position.z);
+        scene.remove(e); world.pets.push({ ...world.petDraft }); spawnPet(world.pets[world.pets.length - 1], e.position.x, UGF, e.position.z);
         burst(e.position.x, UGF + .8, e.position.z, ['#ff8fc8', '#ffd84a', '#9fe6ff', '#fff'], 30, 3); Sound.chime(); Sound.giggle();
-        toast('🐾 Your very own pet! It will follow you everywhere. Tap it for a trick!'); discover('pet'); api.save(); egg = null;
+        toast(world.pets.length === 1 ? '🐾 Your very own pet! It will follow you everywhere. Tap it for a trick!' : '🐾'.repeat(world.pets.length) + ' Another pet! Make up to 5.'); discover('pet'); if (world.pets.length > 1) discover('pets2'); api.save(); egg = null;
       }
     }
-    // pet follows along the trail
-    if (pet) {
-      const tp = trail[Math.min(trail.length - 1, 10)] || [P.x, P.y, P.z];
-      if (Math.abs(tp[0] - petPos.x) > 15 || Math.abs(tp[1] - petPos.y) > 6) petPos.set(tp[0], tp[1], tp[2]);
-      const tx = tp[0] - P.facing * .9, k = Math.min(1, dt * 6);
-      petPos.x += (tx - petPos.x) * k; petPos.y += (tp[1] - petPos.y) * k; petPos.z += (tp[2] + .7 - petPos.z) * k;
-      petState.trick = Math.max(0, petState.trick - dt);
-      const moving = Math.abs(tx - petPos.x) > .2, hop = moving ? Math.abs(Math.sin(t * 10)) * .15 : 0;
-      pet.root.position.set(petPos.x, petPos.y + hop + (petState.trick > 0 ? Math.sin((1.2 - petState.trick) / 1.2 * Math.PI) * .9 : 0), petPos.z);
-      pet.root.rotation.y = (petState.trick > 0 ? (1.2 - petState.trick) * 6 : 0) + (Math.sign(P.x - petPos.x) || 1) * .7;
-      pet.ears.forEach((e, i) => { e.rotation.x = Math.sin(t * 8 + i) * (moving ? .25 : .08); });
-      pet.tail.rotation.y = Math.sin(t * 10) * .5;
-    }
+    // everyone who follows you walks along your trail, one behind the other
+    followers.forEach((f, i) => {
+      const tp = trail[Math.min(trail.length - 1, 5 + i * 4)] || [P.x, P.y, P.z];
+      if (Math.abs(tp[0] - f.pos.x) > 15 || Math.abs(tp[1] - f.pos.y) > 6) f.pos.set(tp[0], tp[1], tp[2]);
+      const tx = tp[0] - P.facing * (.9 + i * .5), k = Math.min(1, dt * 6), side = i % 2 ? .4 : -.1; // a little line of friends behind you
+      f.pos.x += (tx - f.pos.x) * k; f.pos.y += (tp[1] - f.pos.y) * k; f.pos.z += (tp[2] + .7 + side - f.pos.z) * k;
+      f.trick = Math.max(0, f.trick - dt);
+      const moving = Math.abs(tx - f.pos.x) > .2, hop = f.fly ? 1.2 + Math.sin(t * 2.5 + i) * .15 : moving ? Math.abs(Math.sin(t * 10 + i)) * .15 : 0;
+      f.root.position.set(f.pos.x, f.pos.y + hop + (f.trick > 0 ? Math.sin((1.2 - f.trick) / 1.2 * Math.PI) * .9 : 0), f.pos.z);
+      const dir = Math.sign(P.x - f.pos.x) || 1;
+      f.root.rotation.y = (f.trick > 0 ? (1.2 - f.trick) * 6 : 0) + (f.orient === 'x' || f.kind === 'biscuit' || f.kind === 'pom' ? (dir > 0 ? -.25 : Math.PI + .25) : dir * .7);
+      if (f.pet) { f.pet.ears.forEach((e, n) => { e.rotation.x = Math.sin(t * 8 + n) * (moving ? .25 : .08); }); f.pet.tail.rotation.y = Math.sin(t * 10) * .5; }
+      if (f.anim) f.anim(t, moving);
+    });
+    if (pets[0]) petPos.copy(pets[0].pos);
+    // friends waiting to be met bob about at home
+    for (const b of Object.values(buddies)) if (!b.f) { b.t += dt; b.root.position.y = (b.fly ? 1.2 + Math.sin(b.t * 2) * .2 : Math.abs(Math.sin(b.t * 2)) * .05); b.root.rotation.y = Math.sin(b.t * .7) * .4; if (b.parts.anim) b.parts.anim(b.t, false); }
     // critters: bob, wave when you're near, act when tapped
     for (const c of critters) {
       c.t += dt; c.act = Math.max(0, c.act - dt);
@@ -330,6 +392,6 @@ export function initFriends(G, api) {
     for (let i = 0; i < MN; i++) { const s = mSeed[i]; let x = s[0] + Math.sin(t * .3 + s[3]) * 1.5, y = s[1] + ((t * .25 + s[3]) % 7); x = ((x - cx) % 30 + 45) % 30 - 15 + cx; mPos[i * 3] = x; mPos[i * 3 + 1] = cy + y - 1; mPos[i * 3 + 2] = s[2] + Math.cos(t * .4 + s[3]); }
     mGeo.attributes.position.needsUpdate = true;
   }
-  function restored() { world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 }; rebuildPreview(); if (world.pet) spawnPet(player.x - 1.2, player.y, 0); }
-  return { update, restored, hasPet: () => !!pet, petPos, critters, bubbleCount: () => bubbles.length, critter, say, TALK, VOICE };
+  function restored() { world.petDraft = world.petDraft || { col: 0, ears: 0, tail: 0, pat: 0 }; rebuildPreview(); world.pets.forEach((rec, i) => spawnPet(rec, player.x - 1.2 - i * .6, player.y, 0)); for (const [id, b] of Object.entries(buddies)) if (world.buddies[id] && !b.f) { b.root.position.set(player.x - 1, player.y, .7); follow(b); } }
+  return { update, restored, hasPet: () => pets.length > 0, petCount: () => pets.length, petPos, addFollower, removeFollower, followerTrick, followers, buddies, critters, bubbleCount: () => bubbles.length, critter, say, TALK, VOICE };
 }

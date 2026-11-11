@@ -37,6 +37,16 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 11: more pets, and friends who follow you
+- **More than one pet:** the Pet Workshop lever now makes up to **5 pets**, each one designed with the buttons. They all follow you.
+- **New friends you can meet.** Tap them and they come with you everywhere (saved):
+  - **Biscuit the puppy:** near the start, by the slide.
+  - **Pom the fluffy lamb:** in the Adventure Park.
+  - **Twinkle the glowing fairy:** by the Fluffkin House. She flies beside you.
+  - **Baby dinos:** once hatched, tap one and it follows you too.
+- Everyone who follows you walks in a little line behind you. Tap any of them for a trick.
+- Older saves with one pet keep their pet.
+
 ## 3D build 10: Dino Valley and the Princess Castle
 The world now goes past the Marble Machine into two new areas, and the train has two new stations (🦕 and 👑).
 - **Dino Valley** (dinosaurs added by request; all characters are original):
