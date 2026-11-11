@@ -49,7 +49,7 @@ const UG_F = -6;
   await page.evaluate(() => __DDW3.teleport(1.2)); await sleep(1500); // start at the far left (walking right leads into the ball pit and its deep part)
   c = await S(); const x0 = c.x;
   await holdBtn('#rightBtn', 600); c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
-  await sleep(1200); const x1 = (await S()).x; await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
+  const x1 = await page.evaluate(() => new Promise(r => { let still = 0, n = 0; const f = () => { const P = __DDW3.player; still = Math.abs(P.vx) < .01 ? still + 1 : 0; if (still > 4 || ++n > 300) return r(P.x); requestAnimationFrame(f); }; f(); })); await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
   await holdBtn('#leftBtn', 500); check('slide a finger left to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); const seen = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if (P.y > .3) return r(P.y); if (++n > 200) return r(P.y); requestAnimationFrame(f); }; f(); })); await touch('touchStart', [j]); await touch('touchEnd', []); const jy = await seen; check('JUMP jumps', jy > .3, `y=${jy.toFixed(2)}`);
     // (the slow software renderer here can't keep up with two real taps inside one jump, so the 2nd tap is sent on the very next frame)
@@ -136,7 +136,7 @@ const UG_F = -6;
   check('the Cloud Kingdom is a new discovery', (await S()).disc.includes('sky'));
   await shot('18_cloud_kingdom.jpg');
   await teleport(50.4, 9.5); { const my = await page.evaluate(() => new Promise(r => { const D = __DDW3; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, D.player.y); if (D.player.x > 51.4) D.keys.right = false; if (m > 13 || ++n > 500) { D.keys.right = false; return r(m); } requestAnimationFrame(f); }; f(); })); check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
-  await teleport(54.5, 9.5); await tapWorld(56, 14.1, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
+  await teleport(54.5, 9.5); await tapWorld(56, 13.2, -7.5); await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
   await teleport(65.8, 9.5);
   { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
     await holdBtn('#rightBtn', 600); const r = await sl; check('walk off the clouds onto the giant rainbow slide, all the way down to the floor', r[0] && r[2] < .6 && r[1] > 71, `slid=${r[0]} landed x=${r[1].toFixed(1)} y=${r[2].toFixed(2)}`); }
@@ -157,7 +157,7 @@ const UG_F = -6;
   await teleport(229.6);
   check('the colour palette appears by the Colouring Corner', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
   await page.locator('.swatch').nth(1).tap(); await sleep(150);
-  { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(227.4 + .9, 3.9, -2.3); await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
+  { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(228.17, 2.18, -2.3); // the castle in the middle of the picture (well clear of the buttons) await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
     check('tap part of a colouring picture: it fills with your colour', before !== after && (await S()).disc.includes('coloring')); }
   await shot('20_colouring.jpg');
   await teleport(238); await tapWorld(240, 1.2, -2.4); await sleep(300);
