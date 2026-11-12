@@ -92,6 +92,7 @@ These are planned for later 3D builds:
 **Measured here (desktop, software rendering, not an iPhone):**
 - The test runs from start to finish, restores the position and discoveries exactly, and leaves the save unchanged.
 - Copying works.
+- Full smoke test: **136/136 checks passed**, no console errors.
 - A quick tap doesn't open the panel; holding does.
 
 The FPS numbers here (1–3 fps) come from CPU-only rendering and say nothing about the phone. **The iPhone report is what counts.**
