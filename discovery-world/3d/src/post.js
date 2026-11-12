@@ -21,6 +21,9 @@ export function makePost(renderer, scene, camera, { mobile }) {
   const depth = new THREE.DepthTexture(1, 1); depth.type = THREE.UnsignedIntType;
   const rtScene = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4, depthTexture: depth, depthBuffer: true });
   const rtAO = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+  // (build 26) LITE mode for slower devices: no 4x anti-aliasing buffer, no AO, no glow, but the SAME final pass, so the
+  // shaders stay valid (switching post-processing fully off would recompile every material: a freeze)
+  const rtLite = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
   const rtB1 = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }), rtB2 = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
   const gtao = new GTAOPass(scene, camera, 1, 1, { depthTexture: depth });
   gtao.output = GTAOPass.OUTPUT.Default; gtao.blendIntensity = 1;
@@ -59,14 +62,18 @@ export function makePost(renderer, scene, camera, { mobile }) {
       }` });
   const fin = new FullScreenQuad(finalMat);
   const post = {
-    enabled: true, ao: !mobile,
+    enabled: true, ao: !mobile, lite: false,
     setSize(w, h, dpr) {
       const W = Math.max(1, Math.floor(w * dpr)), H = Math.max(1, Math.floor(h * dpr));
-      rtScene.setSize(W, H); rtAO.setSize(W, H);
+      rtScene.setSize(W, H); rtAO.setSize(W, H); rtLite.setSize(W, H);
       gtao.setSize(Math.max(1, W >> 1), Math.max(1, H >> 1)); // AO at half size
       finalMat.uniforms.uTexel.value.set(1 / W, 1 / H); const bw = Math.max(1, W >> 2), bh = Math.max(1, H >> 2); rtB1.setSize(bw, bh); rtB2.setSize(bw, bh); post.bt = [1 / bw, 1 / bh];
     },
     render() {
+      if (post.lite) { renderer.setRenderTarget(rtLite); renderer.clear(); renderer.render(scene, camera);
+        finalMat.uniforms.tIn.value = rtLite.texture; finalMat.uniforms.uBloom.value = 0; finalMat.uniforms.toneMappingExposure.value = renderer.toneMappingExposure;
+        renderer.setRenderTarget(null); fin.render(renderer); return; }
+      finalMat.uniforms.uBloom.value = .16;
       renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
       if (post.ao) gtao.render(renderer, rtAO, rtScene); const src = post.ao ? rtAO : rtScene; // (build 22: no screen-space AO on phones; the assets carry baked AO)
       // bloom at quarter size: bright pass, then a horizontal and a vertical blur, twice

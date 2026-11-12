@@ -106,7 +106,7 @@ export function initFriends(G, api) {
   // Everyone who follows you walks along your trail, one behind the other.
   const followers = [], pets = [], petPos = new THREE.Vector3();
   world.pets = world.pets || [];
-  function addFollower(f) { f.pos = new THREE.Vector3(player.x - 1.2 - followers.length * .6, player.y, player.z + .7); f.trick = 0; f.root.position.copy(f.pos); followers.push(f);
+  function addFollower(f) { if (G.unslice) G.unslice(f.root); f.pos = new THREE.Vector3(player.x - 1.2 - followers.length * .6, player.y, player.z + .7); f.trick = 0; f.root.position.copy(f.pos); followers.push(f);
     f.agent = f.agent || life.add({ root: f.root, B: f.B, species: f.species || 'pet', baseY: f.pos.y }); f.agent.x = f.pos.x; f.agent.z = f.pos.z; f.agent.baseY = f.pos.y; life.setFollower(f.agent, true, followers.length - 1); return f; }
   function removeFollower(f) { const i = followers.indexOf(f); if (i >= 0) followers.splice(i, 1); if (f.agent) life.setFollower(f.agent, false); }
   // tap a friend who follows you and they stay put (they wave bye-bye); tap again and they come along

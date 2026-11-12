@@ -37,6 +37,113 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 26: iPhone performance tools and automatic graphics
+
+**Why:** the game is played on an iPhone, but it can only be tested here in a desktop browser with software rendering. This build adds tools that measure the game on the real phone and produce a report to paste back into the chat.
+
+**Grown-ups' settings (⚙️ at the top right):**
+- **Hold the ⚙️ for one second** to open it, so a quick tap from a child does nothing.
+- **📊 Monitor:** a small box in the bottom-left corner. It shows:
+  - FPS now, average and 1% low, plus the worst frame.
+  - Frames over 50 ms, and freezes over 250 ms.
+  - The last loading time between areas.
+  - Render size in pixels, device pixel ratio, render scale and graphics level.
+  - Draw calls and triangles.
+  - JS memory, only where the browser reports it. Safari doesn't.
+- **▶ Performance Test (about 30 s):** the game plays itself through seven parts:
+  1. Walking in the park.
+  2. The busy creature area.
+  3. Walking at the castle.
+  4. Going into the house.
+  5. Walking inside the house.
+  6. Leaving the house.
+  7. Walking in the studio.
+
+  Sound is muted while it runs, and taps are blocked so they can't disturb it. It never saves. Afterwards it puts you back where you were, with the same discoveries, star bits and Fluffkins.
+- **📋 Copy Test Results:** copies a readable report. If copying is blocked, the report is selected in a text box so it can be copied by hand. The report includes:
+  - The browser and device.
+  - Screen size, pixel ratio and render size.
+  - The GPU name, where available.
+  - Start-up time.
+  - For each part of the test: average FPS, 1% low, worst frame, number of slow frames, draw calls and triangles.
+  - Loading times between areas, freezes, and any automatic graphics changes.
+- **↺ Reset automatic graphics** goes back to full quality.
+
+**Cost of the monitor:** a few numbers per frame are written into a fixed buffer, with no allocations. The text box is redrawn twice a second, and only while it is switched on.
+
+**Automatic graphics (6 levels, remembered on the device):**
+
+| Level | What changes |
+|---|---|
+| 0 | Full quality |
+| 1 | Lighter shadows (1024 px, redrawn every 3rd frame) |
+| 2 | Lite effects (no 4× anti-aliasing buffer, no glow) |
+| 3 | Resolution −12% |
+| 4 | Resolution −24% |
+| 5 | Smallest shadows, resolution −30% |
+
+- It steps down only after sustained slowness: about 2.5 s under ~48 fps, with at least 4 s between changes.
+- It steps back up after 30 s of smooth play, and never retries a level that failed within the last minute.
+- It ignores a steady 30 fps cap (iPhone Low Power Mode), which is not lag.
+- Measured: changing level compiles **no** new shaders (97 programs before and after every level), so a change can't cause a freeze.
+
+**Faster drawing:** 520 flowers, 490 party lights and 471 train-track sleepers were each one instanced group spread over the whole world. An instanced group is shown or hidden as a whole, so all of them were drawn every frame, on screen or not. They are now cut into 24 m chunks that are hidden when off screen. In the park view that is about 260k fewer triangles per frame (1.15M → 0.89M); in the creature area about 230k fewer (1.52M → 1.29M).
+
+**Measured here (desktop, software rendering, not an iPhone):**
+- The test runs from start to finish, restores the position and discoveries exactly, and leaves the save unchanged.
+- Copying works.
+- Full smoke test: **136/136 checks passed**, no console errors.
+- A quick tap doesn't open the panel; holding does.
+
+The FPS numbers here (1–3 fps) come from CPU-only rendering and say nothing about the phone. **The iPhone report is what counts.**
+
+## 3D build 25: lighter every frame, snappier controls, and the Learning Corners
+Backup of build 24: `backups/3D_build24_index.html`. Measurements come from desktop Chromium with software WebGL, emulating a phone screen. That is not a physical iPhone.
+
+**Performance: what the profiles showed, and the fixes**
+- **CPU-side per-frame cost:** three.js walked about 3,650 objects every frame (positions, culling, shadow pass), most of them far off-screen.
+  - **Scenery slices:** still scenery is grouped into 24 m slices along the world, and slices out of view are taken off the scene, so they are not walked at all. Anything that moves about is never sliced: the train, the baby Fluffkins, followers and creatures.
+  - **Far creatures:** creatures far from the camera (more than 60 m) leave the scene, so their skeletons (about 50 bones each) are not updated. They come back when you approach, and a creature that starts following you always stays.
+
+| | build 24 | build 25 |
+|---|---|---|
+| objects walked per frame (park) | 3,654 | 1,360 |
+| objects walked per frame (castle) | 3,655 | 1,174 |
+| scene matrix update | 0.83 ms | 0.29 ms |
+| game JavaScript over 8 s of play | 226 ms | 136 ms |
+| frustum/projection work over 8 s | 168 ms | 68 ms |
+
+- **Controls that felt sluggish:**
+  - Snappier start and stop: ground acceleration 40 → 62, air 22 → 30, top speed 5.2 → 5.8.
+  - The camera follows more tightly (rate 5 → 8), and its look-ahead swings faster after a turn (1.6 → 3), so the controls don't feel delayed.
+  - Touch input had no browser delay to remove: the viewport and `touch-action` were already right.
+- **Remembered quality:** the automatic quality steps are now remembered on the device. A phone that needed lighter graphics starts with them next time instead of lagging until it adapts again. A device that runs smoothly for 25 s steps quality back up.
+- **The bottleneck (honest):** drawing (GPU work), not game logic. JavaScript is about 4–5 ms per frame in the test browser, and creatures cost 0.03 ms. On a slow phone the adaptive quality is the safety net.
+
+**The Learning Corners (`src/learn.js`)**
+- **Where:** seven signposts in the park and the valley: 🔢 numbers, 🔤 letters, 🎨 colors & shapes, 🧠 thinking, 🔬 science, 🎵 music & art, 😊 feelings & me. Tap a sign, or press PAW beside it.
+- **How it stays light:**
+  - Each game is a 2D layer of big buttons over the game; there are no new 3D scenes or renderers.
+  - The 3D world pauses completely while a game is open, so it costs almost nothing.
+  - A game is built when opened and cleared when closed. Measured opening times are 2–19 ms.
+- **Made for a 5-year-old:**
+  - Every instruction is spoken, and the 🔊 button says it again. There are pictures, not words.
+  - Big tap targets and one-tap answers, with no timers and no failure screens.
+  - A wrong tap gets a gentle wiggle and a spoken hint; after two tries the right answer glows.
+  - Rounds of 5 steps; each finished round gives a ⭐ and makes the next round a little harder.
+  - Progress is saved with the game.
+- **The 33 activities:**
+  - Numbers: count by tapping each thing, find the number, more or fewer, the missing number on the train, add and take away.
+  - Letters: big and small letters, find the letter, first sounds, rhyme time, build a three-letter word.
+  - Colors & shapes: find the color, mix the paint (discover new colors), find the shape, what comes next (patterns), which is different.
+  - Thinking: memory cards, small to big, what belongs.
+  - Science: sink or float (an experiment), magnet magic, heavy or light, dress for the weather, day and night, animal homes, grow a flower (water and sunshine).
+  - Music & art: copy the music (rhythm), play music (four instruments), paint a picture.
+  - Feelings & me: how do they feel, being kind, what do we use, safe choices, what comes first (routines).
+- **Tested** (automated, through the real touch interface):
+  - Tapping a 3D sign opens its corner and pauses the world; closing resumes it.
+  - All 33 activities were played through: every round finished and gave its star, the free-play ones respond, progress was saved, and there were no errors.
+
 ## 3D build 24: the house freeze fixed at its cause, plus measured performance repairs
 Backup of build 23: `backups/3D_build23_index.html`. Every number below is from desktop Chromium with software WebGL (SwiftShader), emulating a phone-sized touch screen. That is not a physical iPhone, and real-device frame rates were not measured.
 
