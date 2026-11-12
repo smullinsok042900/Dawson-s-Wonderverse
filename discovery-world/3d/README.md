@@ -119,7 +119,7 @@ These are planned for later 3D builds:
 - no more than 3 choices at Level 1;
 - no words to read.
 
-The tests play every game at all three levels with a recording speech engine.
+The tests play every game at all three levels with a recording speech engine: 97 play-throughs, every game completed (each earns its star, except Paint, which has none by design), with no words on screen and no errors. The full game test passed 140/140, including 4 new learning-game checks.
 
 **Speed:** the games are an overlay with the 3D world paused, CSS animations and tiny inline drawings; there are no new files to download.
 
