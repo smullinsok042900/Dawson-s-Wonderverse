@@ -130,7 +130,7 @@ export function initFriends(G, api) {
     root.traverse(m => { if (m.isMesh) m.castShadow = true; });
     const b = { id, home: new THREE.Vector3(x, 0, z), root, parts, emoji, fly: !!o.fly, f: null, t: Math.random() * 6 };
     root.position.copy(b.home);
-    b.agent = life.add({ root, B: parts.B, species: SPEC[id] || 'pet', home: b.home, baseY: 0, zMax: z + .4 }); b.agent.who = null;
+    b.agent = life.add({ root, B: parts.B, species: SPEC[id] || 'pet', home: b.home, baseY: 0, zMax: z + .4, radius: 1.0 }); // (stays near its meeting spot) b.agent.who = null;
     const tapB = () => {
       if (!b.f) { world.buddies[id] = true; follow(b); Sound.chime(); Sound.giggle(); burst(root.position.x, root.position.y + 1.2, root.position.z, ['#ff6fae', '#fff', '#ffd84a'], 18, 2.4); toast(emoji + '💖 ' + o.name + ' wants to come with you!'); discover('buddy_' + id, o.name + ' follows you now!'); discover('buddy'); api.saveSoon(); }
       else { waveBye(b.f); b.baseY = b.f.pos.y; b.f = null; world.buddies[id] = false; api.saveSoon(); }

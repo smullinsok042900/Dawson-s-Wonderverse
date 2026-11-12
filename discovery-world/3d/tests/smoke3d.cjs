@@ -215,9 +215,9 @@ const UG_F = -6;
   await teleport(412); await tapWorld(413.6, 1.4, -2.3); await sleep(300); check('tap Princess Luna: the royal fountain sprays sparkles', (await S()).disc.includes('fountain'));
   await shot('25_princess_castle.jpg');
   // ---------- new friends who follow you ----------
-  { const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await teleport(29); await tapWorld(30.1, .35, -1.6); await sleep(300);
+  { const n0 = await page.evaluate(() => __DDW3.friends.followers.length); await teleport(29); { /* (creatures now walk about: tap Biscuit where he is, like a child would) */ const bp = await page.evaluate(() => __DDW3.friends.buddies.biscuit.root.position.toArray()); await tapWorld(bp[0], bp[1] + .35, bp[2]); } await sleep(300);
     const r = await page.evaluate(() => [__DDW3.friends.followers.length, __DDW3.world.buddies.biscuit]); check('tap Biscuit the puppy: he follows you everywhere', r[0] === n0 + 1 && r[1] === true, `followers ${n0} → ${r[0]}`); }
-  await teleport(198); await tapWorld(199, 1.35, -1.6); await sleep(300); check('tap Twinkle the fairy: she flies along with you', await page.evaluate(() => __DDW3.world.buddies.twinkle === true));
+  await teleport(198); { const tp = await page.evaluate(() => __DDW3.friends.buddies.twinkle.root.position.toArray()); await tapWorld(tp[0], tp[1] + .15, tp[2]); } await sleep(300); check('tap Twinkle the fairy: she flies along with you', await page.evaluate(() => __DDW3.world.buddies.twinkle === true));
   await teleport(365.6); { await page.evaluate(() => { let done = false; __DDW3.kingdom().eggs[0].baby.traverse(o => { if (!done && o.userData.tap) { done = true; o.userData.tap(); } }); }); await sleep(300); /* (tapped directly: friends following you can stand in front of the baby) */ check('tap a hatched baby dino: it follows you too', await page.evaluate(() => __DDW3.world.dinoFollow[0] === true)); }
   { await teleport(300); const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 308 || ++n > 600) { D.keys.right = false; return res(D.friends.followers.map(f => Math.abs(f.pos.x - P.x))); } requestAnimationFrame(f); }; f(); }));
     check('all your pets and friends follow you in a line', r.length >= 5 && r.every(d => d < 8), r.map(d => d.toFixed(1)).join(' ')); }

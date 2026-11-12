@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-12T10:07:17.275Z",
+  "date": "2026-11-12T12:00:30.413Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 136,
+  "passed": 132,
   "total": 136,
   "results": [
     {
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 5.6"
+      "detail": "x 1.2 → 5.1"
     },
     {
       "name": "let go and the creature stops",
@@ -57,7 +57,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 2.5→6.2, y 1.60"
+      "detail": "x 0.8→5.7, y 1.60"
     },
     {
       "name": "tap ▲ to jump",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 68% height"
+      "detail": "body squashed to 57% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=5.69,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=5.60,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,7 +112,7 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=3.02"
+      "detail": "highest y=3.14"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
@@ -122,7 +122,7 @@
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=17.0 (ok)"
+      "detail": "got to x=16.6 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=0.23"
+      "detail": "y=-1.46"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=1.5 y=0.00"
+      "detail": "x=0.4 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.3"
+      "detail": "x=37.9"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -217,7 +217,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 2.0 away"
+      "detail": "pet is 2.8 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.051 → 0.963, z=-3.4"
+      "detail": "u 0.046 → 1.017, z=-3.3"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -421,7 +421,7 @@
     },
     {
       "name": "tap a dino egg: it wobbles and a baby dino hatches",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
@@ -447,7 +447,7 @@
     {
       "name": "tap Biscuit the puppy: he follows you everywhere",
       "ok": true,
-      "detail": "followers 2 → 3"
+      "detail": "followers 1 → 2"
     },
     {
       "name": "tap Twinkle the fairy: she flies along with you",
@@ -456,23 +456,23 @@
     },
     {
       "name": "tap a hatched baby dino: it follows you too",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "all your pets and friends follow you in a line",
-      "ok": true,
-      "detail": "2.1 3.0 3.8 4.7 5.5"
+      "ok": false,
+      "detail": "3.5 4.5 5.7"
     },
     {
       "name": "tap a friend who follows you: they stay (tap again to bring them)",
       "ok": true,
-      "detail": "followers 5 → 4"
+      "detail": "followers 3 → 2"
     },
     {
       "name": "tap the sky whale: ride on its back",
       "ok": true,
-      "detail": "ride=whale y=14.5"
+      "detail": "ride=whale y=14.6"
     },
     {
       "name": "JUMP hops off the whale onto the clouds",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=4.76"
+      "detail": "y=3.13"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=2.4"
+      "detail": "y=4.3"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "44 → 47"
+      "detail": "42 → 45"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,7 +597,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.7020699453771603"
+      "detail": "k=0.2901889107558933"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -607,7 +607,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.55"
+      "detail": "y=4.40"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -656,8 +656,8 @@
     },
     {
       "name": "reload keeps all your pets and the friends who follow you",
-      "ok": true,
-      "detail": "{\"pets\":2,\"f\":4}"
+      "ok": false,
+      "detail": "{\"pets\":2,\"f\":2}"
     },
     {
       "name": "reload keeps your crown and your hatched baby dino",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":47,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":45,\"fl\":3,\"p\":true}"
     },
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",
