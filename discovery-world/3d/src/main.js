@@ -781,8 +781,8 @@ function step(dt) {
 function frame() {
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
   timer.update(); const raw = Math.min(timer.getDelta(), .25); acc += raw;
-  let n = 0; while (acc >= 1 / 60 && n < 4) { step(1 / 60); acc -= 1 / 60; n++; }
-  if (n === 4) acc = 0; // (build 22: at most 4 catch-up steps, so one slow frame can't snowball into a lag spiral)
+  let n = 0; while (acc >= 1 / 60 && n < 15) { step(1 / 60); acc -= 1 / 60; n++; }
+  if (n === 15) acc = 0; // (a physics step costs ~0.2-0.4 ms, so catching up keeps the game at real speed even when frames drop)
   const dt = Math.max(1 / 60, n / 60);
   if (started) updateBits(T); updateHint(T);
   const P = player;

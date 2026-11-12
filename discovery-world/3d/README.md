@@ -41,7 +41,6 @@ These are planned for later 3D builds:
 Backup of build 21: `backups/3D_build21_index.html`.
 
 **Lag and slowness: what was costing the most, and the fixes**
-- **Lag spiral:** after one slow frame, the game ran up to 15 physics catch-up steps, which made the next frame slower still. It now runs at most 4.
 - **Render size:** phones rendered at 1.7x (about 950k pixels per frame). They now render at 1.5x (about 740k). `adapt()` still lowers it further if frames drop.
 - **Point lights:** 10 underground and indoor point lights were evaluated for every lit pixel everywhere in the world. Each is now switched on only in its own area (underground or the indoor room).
 - **Screen-space AO:** on phones the GTAO pass is off. The new Blender assets carry baked ambient occlusion instead. Desktop keeps GTAO.
