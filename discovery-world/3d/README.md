@@ -37,6 +37,74 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 23: living creatures, kid-friendly controls, faster start-up
+Backup of build 22: `backups/3D_build22_index.html`.
+
+**Creatures (`src/life.js`, a shared behaviour system)**
+- **Species profiles:** each creature moves in its own way:
+  - hop: pets, bunny, frog
+  - trot: puppy, unicorn, baby Tops
+  - skip: lamb
+  - walk: fox, hedgehog, princesses
+  - waddle: bear, penguin, beaver
+  - fly: fairy
+  - perch: owl
+  - slide: snail
+- **Personalities:** every creature has its own speed, bounce, turn rate, stride and personality (curiosity, energy, sleepiness), randomised a little per creature.
+- **States:** one small state machine for every creature: idle, look around, wander, investigate, sit, sleep (💤, waking up with a stretch when you come close), come over curious (❓😊👋), play, react, get tapped, and follow you.
+- **Steering:**
+  - Smooth acceleration and arrival.
+  - Separation, so creatures never bunch up or walk through each other or you.
+  - Trees are obstacles, and creatures turn gradually instead of snapping.
+- **Gaits:**
+  - Driven by the distance actually travelled, so feet don't slide.
+  - They move the real leg bones: quadruped diagonal trot, biped walk, skip and hop.
+  - Head turns to look at you or at points of interest, the tail wags when happy, hops land with a squash, and waddlers rock.
+  - Contact shadows stay on the ground while creatures hop.
+- **Reactions:**
+  - When you jump nearby, nearby creatures hop too (your followers one after another).
+  - Tapping a creature makes it face you, jump for joy, and penguins and princesses spin.
+- **Followers:**
+  - They walk in a loose, staggered line behind you and catch up when you run (speed scales with distance and your speed).
+  - When you stop, they settle and each one does its own thing (sit, look around, a happy hop, a 💖).
+  - A friend you ask to stay wanders around the place where you left it.
+  - If you run far ahead of a follower, it pops back to you with a ✨ instead of sliding.
+- **Cost:** 0.02–0.03 ms per frame for all 15 creatures (measured). Creatures near the camera update every frame, further ones every third frame, and far ones not at all. Nothing is allocated per frame.
+- **Measured** (test browser, about 21 s of play):
+  - Nearby creatures cycled through idle, look, wander, play, sit and sleep, and stayed within their home radius, with no invalid positions.
+  - Followers kept at least 0.83 m apart with no teleporting, and settled (sit, look) when the player stopped.
+
+**Controls for a 5-year-old**
+- **Arrow pad:** it keeps the 4-way arrows asked for in build 9, but now steers like a joystick. Put a thumb on any arrow and slide it around the pad to change direction without lifting.
+  - The middle of the pad is a small dead zone.
+  - "Up" (go in / stairs) needs a clearly upward thumb, so a sideways slide never goes through a door by accident.
+- **Tap to walk:** tap the ground and you walk there. It stops on arrival, if something is in the way, or when an arrow is pressed.
+- **Forgiving taps:** if a tap misses, the game checks a ring around the finger (22 and 44 px) for something to tap. A tap 34 px beside the Balloon Bear still gets a balloon (tested).
+- **Tap feedback:** every successful tap gives a little bounce, a sparkle where you tapped, and a soft pop.
+- **Spoken messages:** every message is also spoken with the phone's built-in voice (emoji removed), so a child who can't read yet hears what happened. It's silent when the sound button is off.
+- **Already forgiving:** double jump (a second jump in the air), jumping just after walking off an edge, and no failure screens.
+
+**Start-up (measured, desktop Chromium with software WebGL emulating a phone; relative only)**
+- **Cause 1:** a profile showed 8.5 s spent reading back procedural texture canvases from the GPU (`getImageData`). These canvases now live in CPU memory (`willReadFrequently`), so the read-back cost is gone, and the normal-map loop is a tight typed-array loop.
+- **Cause 2:** the title-screen pictures were rendered at every start (about 2–4 s, including sculpting two characters you aren't playing). They are now drawn once, saved on the device, and shown instantly at every later start. On the very first start they are drawn just after the game becomes playable.
+- **Cause 3:** procedural textures drew every shape 5–9 times for wrap-around. The extra copies are now drawn only near tile edges.
+- **Results:**
+
+| measure | build 22 | build 23 |
+|---|---|---|
+| page ready (DOMContentLoaded) | 15.4 s | 7.0 s |
+| playable, first start | 17.4 s | 13.1 s |
+| longest main-thread block, first start | 10.2 s | 4.0 s |
+| total main-thread blocking, second start | 10.9 s | 5.1 s |
+
+- **Frame time:** unchanged from build 22 within noise.
+
+**Not done yet (honest)**
+- **Fluffkins:** the baby Fluffkins (the six you rescue) still use their own simple follow code. They are not yet on the new behaviour system.
+- **Camera:** it was not changed in this build. It already follows smoothly with frame-rate-independent easing, steps back at the castle, and the game is a side view with no walls between the camera and the player.
+- **Shader compiling:** about 3.8 s in the test browser, 58 programs. It is the largest remaining start-up cost.
+- **Not tested on a physical iPhone:** frame rate, the spoken voice and start-up time there still need checking.
+
 ## 3D build 22: smoother on phones, plus a Blender-modelled castle and carousel
 Backup of build 21: `backups/3D_build21_index.html`.
 

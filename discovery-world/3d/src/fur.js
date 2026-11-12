@@ -21,7 +21,7 @@ function fiberTexture() {
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < 2600; i++) {
     const x = rnd() * N, y = rnd() * N, r = 1.6 + rnd() * 1.6, h = Math.floor((.45 + rnd() * .55) * 255);
-    for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) {
+    for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) { if ((ox && Math.min(x, N - x) > r) || (oy && Math.min(y, N - y) > r)) continue; // (build 23: wrap copies only where a strand crosses the edge)
       const gr = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r); gr.addColorStop(0, `rgb(${h},${h},${h})`); gr.addColorStop(1, 'rgb(0,0,0)');
       g.fillStyle = gr; g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill();
     }

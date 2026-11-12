@@ -29,7 +29,7 @@ function brickMat(world) {
     const B0 = brickSet(), B = world ? { map: B0.map.clone(), normal: B0.normal.clone(), rough: B0.rough.clone() } : B0; for (const t of [B.map, B.normal, B.rough]) { t.repeat.set(world ? 1 : 3, world ? 1 : 3); t.needsUpdate = true; }
     return macroVariation(new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(.8, .8), roughnessMap: B.rough, roughness: 1 }), { scale: .2, amount: .07 });
   }
-  const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
+  const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d', { willReadFrequently: true });
   g.fillStyle = '#f4d4e6'; g.fillRect(0, 0, W, W);
   for (let r = 0; r < 8; r++) for (let k = 0; k < 4; k++) { const x = k * 64 + (r % 2) * 32, y = r * 32; const shade = 228 + Math.floor(Math.random() * 22); g.fillStyle = `rgb(255,${shade - 14},${shade})`; g.beginPath(); g.roundRect(x + 3, y + 3, 58, 26, 7); g.fill(); if (x + 64 > W) { g.beginPath(); g.roundRect(x + 3 - W, y + 3, 58, 26, 7); g.fill(); } }
   const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(3, 3);
@@ -37,7 +37,7 @@ function brickMat(world) {
   return new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1, 1), roughness: .8 });
 }
 function roofTileMat(cA = '#9a76e8', cB = '#c9b0ff') {
-  const W = 128, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
+  const W = 128, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d', { willReadFrequently: true });
   g.fillStyle = cA; g.fillRect(0, 0, W, W);
   for (let r = 0; r < 8; r++) for (let k = 0; k < 9; k++) { const x = k * 16 + (r % 2) * 8, y = r * 16; const gr = g.createRadialGradient(x, y + 4, 1, x, y + 8, 10); gr.addColorStop(0, cB); gr.addColorStop(1, cA); g.fillStyle = gr; g.beginPath(); g.arc(x, y + 8, 8, 0, Math.PI); g.fill(); }
   const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(6, 3);
@@ -136,7 +136,7 @@ export function initKingdom(G, api) {
   friends.TALK.tops = ['🦖💚', '🌿😋', '🦕🎶', '💪😄']; friends.VOICE.tops = 240;
   friends.critter('tops', K.tops, 0, -2.4, r => {
     const k2 = plush(r, quadSpec({ scale: .95, body: '#ffb35c', belly: '#ffe2b8', snoutCol: '#ffd09a', hoof: '#e8904a', ears: false, tail: 'long', legLen: .32, long: .9, neck: .55, fat: 1.25, frill: '#ff7a9a', horns: '#fff6e0', iris: '#3a7ad0' }), { fur: false, rough: .45, clearcoat: .6, lid: '#ffb35c', iris: '#3a7ad0' });
-    return { head: k2.B.head, tick: k2.tick };
+    return { head: k2.B.head, tick: k2.tick, B: k2.B };
   }, c => { [0, .25].forEach(d => Sound.tone(70, .25, 'sine', .1, .6, d)); burst(c.x, .2, c.z + .4, ['#e8d2a8', '#fff'], 16, 2.5); G.shake = .35; }, 'tops', 'Stomp stomp! Tops the little dino says hi!');
 
   // a few palm-ish ferns and rocks to make it a valley

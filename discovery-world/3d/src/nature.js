@@ -9,7 +9,8 @@ import * as THREE from 'three';
 import { USE_ASSETS, assetsReady } from './assets.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-const canvas = (w, h = w) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+// (build 23) texture canvases are read back (normal maps), so they live in CPU memory: no slow GPU read-back stalls at start-up
+const canvas = (w, h = w) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d', { willReadFrequently: true })]; };
 let seed = 12345; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const pick = a => a[Math.floor(rnd() * a.length)];
 // (build 18) for grass and leaves: light both sides of a blade or leaf the same (three.js normally flips the
@@ -23,6 +24,7 @@ export function leafDetail() {
   for (let i = 0; i < 1100; i++) {
     const x = rnd() * N, y = rnd() * N, L = 6 + rnd() * 6, a = rnd() * Math.PI * 2;
     for (const [ox, oy] of [[0, 0], [N, 0], [-N, 0], [0, N], [0, -N]]) {
+      if ((ox && Math.min(x, N - x) > L + 2) || (oy && Math.min(y, N - y) > L + 2)) continue; // (build 23: wrap copies only near the edge)
       g.save(); g.translate(x + ox, y + oy); g.rotate(a);
       const gr = g.createLinearGradient(0, -L * .5, 0, L * .5); const v = 200 + Math.floor(rnd() * 55); gr.addColorStop(0, `rgb(${v},${v},${v})`); gr.addColorStop(1, `rgb(${v - 70},${v - 70},${v - 70})`);
       g.fillStyle = gr; g.strokeStyle = 'rgba(40,40,40,.45)'; g.lineWidth = 1;
@@ -37,12 +39,17 @@ const NO_FLIP = THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceD
 
 // turn a picture's brightness into bumps (a normal map)
 export function normalFromCanvas(src, strength = 2) {
-  const w = src.width, h = src.height, d = src.getContext('2d').getImageData(0, 0, w, h).data, H = new Float32Array(w * h);
-  for (let i = 0; i < w * h; i++) H[i] = (d[i * 4] * .3 + d[i * 4 + 1] * .59 + d[i * 4 + 2] * .11) / 255;
-  const [c, g] = canvas(w, h), img = g.createImageData(w, h), at = (x, y) => H[((y + h) % h) * w + ((x + w) % w)];
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const dx = (at(x + 1, y) - at(x - 1, y)) * strength, dy = (at(x, y + 1) - at(x, y - 1)) * strength, l = Math.hypot(dx, dy, 1), k = (y * w + x) * 4;
-    img.data[k] = (-dx / l * .5 + .5) * 255; img.data[k + 1] = (dy / l * .5 + .5) * 255; img.data[k + 2] = (1 / l * .5 + .5) * 255; img.data[k + 3] = 255;
+  // (build 23: a tight typed-array loop; the old version spent ~8 s of start-up in Math.hypot and wrap-around arithmetic)
+  const w = src.width, h = src.height, d = src.getContext('2d').getImageData(0, 0, w, h).data, n = w * h, H = new Float32Array(n);
+  for (let i = 0, k = 0; i < n; i++, k += 4) H[i] = (d[k] * .3 + d[k + 1] * .59 + d[k + 2] * .11) * (strength / 255);
+  const [c, g] = canvas(w, h), img = g.createImageData(w, h), o = img.data;
+  for (let y = 0; y < h; y++) {
+    const row = y * w, up = (y === 0 ? h - 1 : y - 1) * w, dn = (y === h - 1 ? 0 : y + 1) * w;
+    for (let x = 0; x < w; x++) {
+      const xl = x === 0 ? w - 1 : x - 1, xr = x === w - 1 ? 0 : x + 1;
+      const dx = H[row + xr] - H[row + xl], dy = H[dn + x] - H[up + x], il = 1 / Math.sqrt(dx * dx + dy * dy + 1), k = (row + x) << 2;
+      o[k] = (.5 - dx * il * .5) * 255; o[k + 1] = (dy * il * .5 + .5) * 255; o[k + 2] = (il * .5 + .5) * 255; o[k + 3] = 255;
+    }
   }
   g.putImageData(img, 0, 0); return c;
 }
@@ -66,7 +73,7 @@ export function lawnTextures() {
   if (lawnCache) return lawnCache;
   const N = 512, [c, g] = canvas(N);
   g.fillStyle = '#74ad5f'; g.fillRect(0, 0, N, N);
-  for (let i = 0; i < 260; i++) { g.fillStyle = pick(['#5f9b52', '#7cb565', '#679f58', '#8bbf6e', '#71a95e']); g.globalAlpha = .18; const r = 12 + rnd() * 46, x = rnd() * N, y = rnd() * N; for (const [ox, oy] of [[0, 0], [N, 0], [-N, 0], [0, N], [0, -N]]) { g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill(); } }
+  for (let i = 0; i < 260; i++) { g.fillStyle = pick(['#5f9b52', '#7cb565', '#679f58', '#8bbf6e', '#71a95e']); g.globalAlpha = .18; const r = 12 + rnd() * 46, x = rnd() * N, y = rnd() * N; for (const [ox, oy] of [[0, 0], [N, 0], [-N, 0], [0, N], [0, -N]]) { if ((ox && Math.min(x, N - x) > r) || (oy && Math.min(y, N - y) > r)) continue; g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill(); } }
   g.globalAlpha = 1; g.lineCap = 'round';
   for (let i = 0; i < 9000; i++) { const x = rnd() * N, y = rnd() * N, l = 3 + rnd() * 7, a = -Math.PI / 2 + (rnd() - .5) * .9; g.strokeStyle = pick(['#4d8a48', '#5f9b55', '#8ec275', '#a3cf86', '#457d43', '#6eaa5f']); g.lineWidth = 1 + rnd() * 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }
   for (let i = 0; i < 40; i++) { g.fillStyle = pick(['#ffffff', '#fff3a6', '#ffd1ec']); g.beginPath(); g.arc(rnd() * N, rnd() * N, 1.6, 0, 7); g.fill(); }
@@ -259,7 +266,7 @@ function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.
 // procedural versions below stay as the light test mode and as a fallback
 export function makeTree(scene, x, z, s = 1) {
   if (!USE_ASSETS) return makeTreeProc(scene, x, z, s);
-  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g); LOD.push({ o: g, x, r: 60 });
+  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g); LOD.push({ o: g, x, z, r: 60, tree: true });
   const v = Math.abs(Math.round(x * 7.3)) % 3, sc = s * (.9 + rnd() * .18);
   assetsReady.then(A => {
     if (!A) { scene.remove(g); makeTreeProc(scene, x, z, s); return; }
