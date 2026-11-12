@@ -91,6 +91,9 @@ node build.mjs
 - The characters (Pip, Zuzu, Jelly, critters, princesses) are still sculpted in game code (SDF sculpting, about 2 cm detail). Rebuilding them in Blender with their bones, fur and animations is a bigger job, and the next candidate.
 - Other props (rides, castle trim, dinosaurs, kart, train) are still built from shapes in game code. The same Blender pipeline can now be used for them, one at a time.
 - Professional asset libraries are blocked here, so these assets are made by me with Blender and tools rather than downloaded.
+- **Test report:** full smoke test 134/136 (headless Chromium, software WebGL, no console errors). The two misses:
+  - "Tap the sky whale" also fails on build 17 when the test browser is busy.
+  - "The Ferris wheel lifts you up" is a 2.5-second wall-clock check. Run on its own, it passes on build 19 (y=1.8, needs more than 1.5) and on build 17 (y=2.0).
 - Not tested on a physical iPhone. Load and frame time on a real phone, with a 6.4 MB page and about 1.5–1.9M triangles in view, still need checking. `adapt()` lowers resolution and then turns effects off if frames drop.
 
 ## 3D build 18: lighting pipeline correction and fidelity upgrade (audit first, then fixes)
