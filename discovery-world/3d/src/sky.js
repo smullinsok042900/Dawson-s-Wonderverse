@@ -62,7 +62,7 @@ export function buildSky(G) {
   for (let i = 0; i < 6; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(3.4 - i * .22, .1, 10, 40, Math.PI), toy(RAINBOW[i], { em: RAINBOW[i], ei: .2 })); arc.position.set(65.2, SKY.y, cz - 1.2); add(arc); }
 
   // ---------- the friendly sky whale ----------
-  const whale = new THREE.Group(); whale.position.set(56, SKY.y + 4.6, -7.5); add(whale);
+  const whale = new THREE.Group(); whale.position.set(56, SKY.y + 1.9, -7.5); /* (build 21: lower, between the cloud floor and the high clouds, so the whale swims in view instead of hiding behind the top of the screen) */ add(whale);
   const wm = toy('#8fb8ff', { r: .4, cc: .8 }), wb = toy('#e6f0ff', { r: .45 });
   whale.add(ball(wm, 2, 0, 0, 0, 1.6, .9, .9)); whale.add(ball(wb, 1.6, .3, -.45, .5, 1.5, .6, .6));
   const tail = new THREE.Group(); tail.position.set(-3.1, .2, 0); whale.add(tail);
@@ -71,7 +71,7 @@ export function buildSky(G) {
   const head = new THREE.Group(); head.position.set(2.2, .15, 1.1); whale.add(head);
   face(head, { y: .2, z: 0, spread: .45, eyeR: .22, mouthY: -.35 });
   whale.traverse(o => { if (o.isMesh) o.castShadow = true; });
-  G.whale = { g: whale, tail, spout: 0, x: 56, y: SKY.y + 4.6 };
+  G.whale = { g: whale, tail, spout: 0, x: 56, y: SKY.y + 1.9 };
   whale.traverse(o => { if (o.isMesh) o.userData.tap = () => G.tapWhale(); }); G.taps.push(whale);
   G.interact.push({ x: 56, y: SKY.y, layer: '', disc: 'whale', run: () => G.tapWhale(), hintY: 3.2 });
 

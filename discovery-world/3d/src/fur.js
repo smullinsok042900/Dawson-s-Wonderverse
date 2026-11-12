@@ -8,33 +8,49 @@
 // ===================================================================
 import * as THREE from 'three';
 
-const furProgramCache = new Map();
+// (build 21) PLUSH FUR, texture-based. A tileable "fibre height" map (thousands of round strands, each
+// tallest in its middle) is sampled in 3D (triplanar) on the creature's rest-pose surface. Each shell keeps
+// only the strands taller than its own height, so strands taper towards the tips. Because the fibres come
+// from a mipmapped texture, they average out smoothly with distance (no sparkle, no grain), and the edges
+// are smoothed by alpha-to-coverage on the 4x anti-aliased picture (no sorting problems, no dark halos).
+let fiberTex = null;
+function fiberTexture() {
+  if (fiberTex) return fiberTex;
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, N, N); g.globalCompositeOperation = 'lighten';
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 2600; i++) {
+    const x = rnd() * N, y = rnd() * N, r = 1.6 + rnd() * 1.6, h = Math.floor((.45 + rnd() * .55) * 255);
+    for (const ox of [-N, 0, N]) for (const oy of [-N, 0, N]) {
+      const gr = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r); gr.addColorStop(0, `rgb(${h},${h},${h})`); gr.addColorStop(1, 'rgb(0,0,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill();
+    }
+  }
+  fiberTex = new THREE.CanvasTexture(c); fiberTex.wrapS = fiberTex.wrapT = THREE.RepeatWrapping; fiberTex.colorSpace = THREE.NoColorSpace;
+  fiberTex.minFilter = THREE.LinearMipmapLinearFilter; fiberTex.magFilter = THREE.LinearFilter; fiberTex.anisotropy = 4; fiberTex.generateMipmaps = true;
+  return fiberTex;
+}
 function furMaterial(base, layer, o) {
-  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .92, metalness: 0, color: o.tint || '#ffffff' });
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, metalness: 0, color: o.tint || '#ffffff', alphaToCoverage: true });
   m.userData.layer = layer;
   m.onBeforeCompile = sh => {
-    sh.uniforms.uOff = { value: layer * o.length }; sh.uniforms.uLayer = { value: layer }; sh.uniforms.uDensity = { value: o.density }; sh.uniforms.uDroop = { value: o.droop ?? .35 };
-    sh.vertexShader = 'uniform float uOff; uniform float uDroop; varying vec3 vFurP; attribute float furAmt; varying float vFurAmt;\n' + sh.vertexShader.replace('#include <skinning_vertex>', '#include <skinning_vertex>\n  vFurP = position; vFurAmt = furAmt;\n  transformed += normalize(objectNormal) * uOff * furAmt; transformed.y -= uOff * uOff * uDroop * 40.0;');
-    sh.fragmentShader = 'uniform float uLayer; uniform float uDensity; varying vec3 vFurP; varying float vFurAmt;\nfloat furHash(vec3 p){ p = fract(p * 0.3183099 + .1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }\n' + sh.fragmentShader
-      .replace('#include <clipping_planes_fragment>', `#include <clipping_planes_fragment>
-  vec3 fp = vFurP * uDensity + vec3(sin(vFurP.y * 37.0), sin(vFurP.z * 41.0), sin(vFurP.x * 43.0)) * .35; vec3 cell = floor(fp);
-  vec3 jit = vec3(furHash(cell + 7.1), furHash(cell + 13.7), furHash(cell + 21.3)) - .5; vec3 f = fract(fp) - .5 - jit * .5; // hairs scattered, not on a grid
-  float h = furHash(cell), thick = (1.0 - uLayer) * (.55 + .35 * h);
-  // (build 20) anti-aliased fur: how big is one hair cell on screen? When hairs get close to pixel size
-  // they are drawn thicker and softer (like a texture's mipmap), so fur never turns into speckle or shimmer
-  float px = length(fwidth(fp)), furFar = smoothstep(.1, .45, px);
-  float rad = mix(thick * .55 + .03, thick * .7 + .12, furFar);
-  if (h < uLayer * mix(.92, .7, furFar) || length(f) > rad) discard;`)
-      .replace('#include <color_fragment>', '#include <color_fragment>\n  if (vFurAmt < .5) discard; // (no fur on bare parts: noses, paw pads)\n  diffuseColor.rgb *= mix(mix(.84, 1.05, uLayer) * (.96 + .08 * furHash(cell + 3.1)), mix(.93, 1.02, uLayer), furFar); // (gentle root-to-tip shading; flatter when far, so no grain)');
+    sh.uniforms.uOff = { value: layer * o.length }; sh.uniforms.uLayer = { value: layer }; sh.uniforms.uScale = { value: o.density / 30 }; sh.uniforms.uDroop = { value: o.droop ?? .35 }; sh.uniforms.uFiber = { value: fiberTexture() };
+    sh.vertexShader = 'uniform float uOff; uniform float uDroop; varying vec3 vFurP; varying vec3 vFurN; attribute float furAmt; varying float vFurAmt;\n' + sh.vertexShader.replace('#include <skinning_vertex>', '#include <skinning_vertex>\n  vFurP = position; vFurN = normal; vFurAmt = furAmt;\n  transformed += normalize(objectNormal) * uOff * furAmt; transformed.y -= uOff * uOff * uDroop * 40.0;');
+    sh.fragmentShader = 'uniform float uLayer; uniform float uScale; uniform sampler2D uFiber; varying vec3 vFurP; varying vec3 vFurN; varying float vFurAmt;\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', `#include <color_fragment>
+  { vec3 bw = pow(abs(normalize(vFurN)), vec3(4.)); bw /= dot(bw, vec3(1.)); vec3 q = vFurP * uScale;
+    float f = texture2D(uFiber, q.yz).r * bw.x + texture2D(uFiber, q.xz + .37).r * bw.y + texture2D(uFiber, q.xy + .71).r * bw.z;
+    float a = smoothstep(uLayer * .9 - .05, uLayer * .9 + .05, f) * step(.5, vFurAmt);
+    diffuseColor.a = a; diffuseColor.rgb *= mix(.9, 1.04, uLayer); }`);
   };
-  m.customProgramCacheKey = () => 'fur';
+  m.customProgramCacheKey = () => 'fur21';
   return m;
 }
 // add fur shells to a skinned mesh (shares its geometry and skeleton)
 const LIGHT_TEST = typeof location !== 'undefined' && /[?&]test/.test(location.search); // (the automated tests' light mode skips fur)
 export function addFur(mesh, o = {}) {
   if (LIGHT_TEST) return [];
-  const n = o.shells ?? 10, opts = { length: o.length ?? .03, density: o.density ?? 260, droop: o.droop, tint: o.tint }, shells = [];
+  const n = o.shells ?? 8, opts = { length: o.length ?? .03, density: o.density ?? 260, droop: o.droop, tint: o.tint }, shells = [];
   for (let i = 1; i <= n; i++) {
     const s = new THREE.SkinnedMesh(mesh.geometry, furMaterial(mesh.material, i / n, opts));
     s.bind(mesh.skeleton, mesh.bindMatrix); s.frustumCulled = true; s.castShadow = false; s.receiveShadow = true; s.renderOrder = 1;

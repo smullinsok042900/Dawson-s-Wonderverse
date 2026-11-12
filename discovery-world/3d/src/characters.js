@@ -227,7 +227,7 @@ export function buildCharacter(kind, style = {}) {
   const lidMat = new THREE.MeshPhysicalMaterial({ color: kind === 'jelly' ? shade(body, .9) : body, roughness: kind === 'pip' ? .8 : .3, sheen: kind === 'pip' ? 1 : 0, clearcoat: kind === 'pip' ? 0 : .8, transparent: kind === 'jelly', opacity: kind === 'jelly' ? .95 : 1 });
   const P = { root, body: bodyG, mesh, B, eyes: [], extras: {} };
   if (kind === 'pip') {
-    P.eyes = [1, -1].map(s => attach(B.head, makeEye(.128, '#8a4ae0', lidMat), s * .165, 1.345, .305));
+    P.eyes = [1, -1].map(s => attach(B.head, makeEye(.128, '#8a4ae0', lidMat), s * .162, 1.345, .282)); // (build 21: seated into sockets, not stuck on)
     P.eyes.forEach((e, i) => { e.rotation.y = (i ? -1 : 1) * .28; e.rotation.x = -.05; });
     P.mouth = attach(B.head, makeMouth(.07), 0, 1.125, .375);
     // flying goggles on the forehead
