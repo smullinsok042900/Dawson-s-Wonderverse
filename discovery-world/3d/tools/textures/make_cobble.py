@@ -39,11 +39,11 @@ cx, cy = pts[idx, 0], pts[idx, 1]; ddx = x - cx; ddx -= np.round(ddx); ddy = y -
 H = top * bump[idx] * (1 + (tilt[idx, 0] * ddx + tilt[idx, 1] * ddy) * G * .6) + fine * .05 * (shape > 0)
 H = np.clip(H, 0, None)
 # colour (sRGB): warm pastel stones in a few families, each stone slightly different
-fam = np.array([[224, 207, 192], [216, 202, 200], [228, 214, 194], [206, 194, 182], [220, 204, 204], [234, 222, 208]], float) / 255
+fam = np.array([[236, 214, 200], [230, 210, 214], [238, 220, 200], [226, 206, 196], [234, 212, 216], [242, 226, 212]], float) / 255
 sc = fam[rng.integers(0, len(fam), G * G)] * rng.uniform(.95, 1.04, (G * G, 1)); sc = sc * .7 + sc.mean(0) * .3   # (build 20: calmer stone-to-stone variation)
 C = sc[idx] * (1 + fine[..., None] * .035)
 speck = rng.random((R, R)) < .004; C[speck] *= .92   # (build 20: far fewer, fainter specks: no sparkly noise)
-mortar = np.array([196, 182, 170]) / 255 * (1 + fine[..., None] * .2)
+mortar = np.array([214, 198, 186]) / 255 * (1 + fine[..., None] * .2)
 mk = np.clip(1 - (edge - .02) / mortar_w, 0, 1)[..., None]
 C = C * (1 - mk) + mortar * mk
 ao = .8 + .2 * np.clip(shape * 1.6, 0, 1) ** .7; C *= ao[..., None]

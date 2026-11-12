@@ -22,10 +22,10 @@ function furMaterial(base, layer, o) {
   float h = furHash(cell), thick = (1.0 - uLayer) * (.55 + .35 * h);
   // (build 20) anti-aliased fur: how big is one hair cell on screen? When hairs get close to pixel size
   // they are drawn thicker and softer (like a texture's mipmap), so fur never turns into speckle or shimmer
-  float px = length(fwidth(fp)), furFar = smoothstep(.22, .75, px);
+  float px = length(fwidth(fp)), furFar = smoothstep(.1, .45, px);
   float rad = mix(thick * .55 + .03, thick * .7 + .12, furFar);
   if (h < uLayer * mix(.92, .7, furFar) || length(f) > rad) discard;`)
-      .replace('#include <color_fragment>', '#include <color_fragment>\n  if (vFurAmt < .5) discard; // (no fur on bare parts: noses, paw pads)\n  diffuseColor.rgb *= mix(mix(.78, 1.07, uLayer) * (.96 + .08 * furHash(cell + 3.1)), mix(.93, 1.02, uLayer), furFar); // (gentle root-to-tip shading; flatter when far, so no grain)');
+      .replace('#include <color_fragment>', '#include <color_fragment>\n  if (vFurAmt < .5) discard; // (no fur on bare parts: noses, paw pads)\n  diffuseColor.rgb *= mix(mix(.84, 1.05, uLayer) * (.96 + .08 * furHash(cell + 3.1)), mix(.93, 1.02, uLayer), furFar); // (gentle root-to-tip shading; flatter when far, so no grain)');
   };
   m.customProgramCacheKey = () => 'fur';
   return m;

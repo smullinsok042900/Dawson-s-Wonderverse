@@ -30,7 +30,7 @@ const SAVE_KEY = 'dawsons-discovery-world-3d-v1';
 const TEST = /[?&]test/.test(location.search);
 // build 18: one balanced light rig (key : fill about 3 : 1, so things have form and shadows, and
 // sunlit pastels stay below white instead of clipping). Values were tuned against measured screenshots.
-const LIGHT = { env: .5, hemi: .55, sun: 3.1, rim: .55, exposure: .95 };
+const LIGHT = { env: .55, hemi: .7, sun: 2.85, rim: .55, exposure: .95 };
 
 // ---------------- renderer, scene, camera, light ----------------
 const canvas = $('game');
