@@ -37,6 +37,92 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 27: learning games rebuilt as simple toys, with three learning levels
+
+**Why:** the learning games still felt like a school quiz. They had too many choices, several rules at once, spelling, and categories, and one screen showed a happy face beside a question about a grumpy one. They are rebuilt around the way young children play: tap, drag, match, count, discover. There is one skill and one action at a time, and every question has a right answer that is on screen.
+
+**Three learning levels (a grown-up chooses: hold ⚙️):**
+
+| Level | For | What it includes |
+|---|---|---|
+| 1 Super Easy (default) | ages 3–4 | Two big choices; matching identical things; counting 1–3; colors **or** shapes, never both; letters only as "find the same one"; no reading or spelling |
+| 2 Learning More | developing preschool skills | 3 choices; counting to 5 and number cards; two-color patterns; letter names and sounds; easy sorting |
+| 3 Kindergarten Ready | getting ready for school | Bigger counting; phonics; three-letter words; adding with pictures; harder patterns; feelings stories |
+
+- The game **never moves her up a level by itself**.
+- Inside a level each game ramps very gently, for example from 1–2 things to 1–3.
+- Each corner shows only the games for the chosen level.
+- Stars and progress are kept.
+
+**How every game behaves:**
+- **Instructions:** one short spoken instruction, such as "Let's count! Tap each one.", "Find blue!", "Match it!" or "Feed me!". 🔊 repeats it.
+- **"Watch me" hand:**
+  - It plays the first two times a game is opened at each level.
+  - It only ever touches the right thing.
+  - It sits below what it points at, so it never hides it.
+  - A tap skips it; 👆 replays it.
+- **Help when she's quiet:** after 8 s the instruction is repeated and the right thing wiggles; after 15 s the hand points; after 28 s the demo plays again.
+- **Gentle mistakes:** a wrong tap gets a wiggle and a kind spoken hint, with unlimited tries. After two tries the right one glows; after three the hand points.
+- **Reactions:** things bounce, pop, glow and make sounds; each turn ends with confetti, and each round with a dancing critter and a star. A round is 3 short turns at Level 1 (4 at Levels 2 and 3), about 10–30 seconds each.
+- **Pictures:** original pictures are drawn in code: critters, animated faces, balls, bubbles, buckets, cups, shapes and puzzle pictures.
+
+**The games at Level 1:**
+- **Numbers:**
+  - **Let's count:** tap 1–3 critters; each one bounces and the voice counts.
+  - **Same number:** find the group with the same amount.
+  - **Cookies for the critter:** "Give me two cookies!" Drag cookies to its mouth and it counts them.
+- **Letters:**
+  - **Find the same letter**, with two big letters to choose from.
+  - **Letter puzzle:** drag the letter onto its outline.
+- **Colors and shapes:**
+  - **Find the color:** a big sample ball and two balls to choose from.
+  - **Shape sorter:** drag each shape into its hole.
+  - **Pop the bubbles.**
+  - **Color buckets:** drag balls into the bucket of the same color.
+  - **Mix the paint.**
+- **Puzzles:**
+  - **Match it:** drag the duck onto the duck.
+  - **Find mommy:** the baby animal's big mommy.
+  - **Where is it?** A toy goes under one of two cups.
+  - **Picture puzzle** in 2 pieces.
+  - **Match the cards:** 2 pairs, shown face up first.
+- **Science:** Tap and see (lamp, cloud, ball, egg, present, seed), sink or float, magnet, grow a flower.
+- **Music:**
+  - **Animal sounds:** tap animals to hear them.
+  - **Music band:** drum, bell, trumpet, guitar, shaker, piano.
+  - **Copy me:** one note, two pads.
+  - **Paint.**
+- **Feelings and me:**
+  - **Feelings:** "This face is happy. Find happy!", with the same face among two.
+  - **Feed the critter:** it shows the food it wants in a thought bubble.
+
+**Levels 2 and 3 add:**
+- Number cards.
+- Number train and adding with pictures.
+- Letter names, sounds and phonics; rhymes; building three-letter words with guide letters.
+- Patterns and the odd one out.
+- Sorting into categories; small to big.
+- Weather, day and night, heavy and light, animal homes.
+- Things we use; being kind; staying safe; first, next, last.
+
+**The voice (`src/voice.js`)** is shared by the whole game. It is fixed for mobile Safari:
+- The first tap unlocks it.
+- It waits a moment after cancelling a sentence before speaking.
+- It keeps sentences from being cut off and resumes after the app was in the background.
+- It picks a natural voice.
+- If sound was off, 🔊 turns it back on.
+- The grown-ups' panel has **🗣️ Test the voice**, and the performance report has a **Voice** line (voices found, the one used, sentences started and finished, errors).
+
+**Checks:** `learning.audit()` checks every game at every level it is offered:
+- a spoken instruction, short at Level 1;
+- something to do with a right answer on screen;
+- no more than 3 choices at Level 1;
+- no words to read.
+
+The tests play every game at all three levels with a recording speech engine.
+
+**Speed:** the games are an overlay with the 3D world paused, CSS animations and tiny inline drawings; there are no new files to download.
+
 ## 3D build 26: iPhone performance tools and automatic graphics
 
 **Why:** the game is played on an iPhone, but it can only be tested here in a desktop browser with software rendering. This build adds tools that measure the game on the real phone and produce a report to paste back into the chat.
