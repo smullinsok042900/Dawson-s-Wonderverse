@@ -56,7 +56,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(envScene, .02).texture; scene.environmentIntensity = LIGHT.env;
 }
 scene.fog = new THREE.Fog('#e6d2f2', 55, 190); // build 18: atmospheric perspective only in the far distance (no haze over the play area)
-const camera = new THREE.PerspectiveCamera(38, 2, .1, 600);
+const camera = new THREE.PerspectiveCamera(38, 2, .3, 600); // (build 20: near .3 instead of .1 = 3x the depth precision, no z-fighting on wall details)
 const hemi = new THREE.HemisphereLight('#e4ecff', '#8f8a6a', LIGHT.hemi); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff0d8', LIGHT.sun); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 10, bottom: -5, near: 1, far: 50 }); /* build 17: a tighter box = sharper shadows */ sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;

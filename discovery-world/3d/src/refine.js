@@ -105,3 +105,26 @@ export function refineScene(scene, renderer, { exclude = new Set(), budget = 400
   }
   return stats;
 }
+
+// -------------------------------------------------------------------
+// (build 20) anti-tiling: a slow, soft change of tone across the world (two octaves of smooth
+// value noise in world space), so a repeated texture never shows its repeat. amount = +/- tone.
+// -------------------------------------------------------------------
+export function macroVariation(mat, { scale = .11, amount = .1 } = {}) {
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = (sh, r) => {
+    prev && prev.call(mat, sh, r);
+    sh.uniforms.uMacro = { value: new THREE.Vector2(scale, amount) };
+    sh.vertexShader = 'varying vec3 vMacroP;\n' + sh.vertexShader.replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\n  vMacroP = (modelMatrix * vec4(transformed, 1.)).xyz;');
+    sh.fragmentShader = `uniform vec2 uMacro; varying vec3 vMacroP;
+float mHash(vec3 p){ p = fract(p * .3183099 + .1); p *= 17.; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float mNoise(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
+  return mix(mix(mix(mHash(i), mHash(i + vec3(1,0,0)), f.x), mix(mHash(i + vec3(0,1,0)), mHash(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(mHash(i + vec3(0,0,1)), mHash(i + vec3(1,0,1)), f.x), mix(mHash(i + vec3(0,1,1)), mHash(i + vec3(1,1,1)), f.x), f.y), f.z); }
+` + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+  { float mn = mNoise(vMacroP * uMacro.x) * .65 + mNoise(vMacroP * uMacro.x * 3.7 + 11.) * .35;
+    diffuseColor.rgb *= 1. + (mn - .5) * 2. * uMacro.y; }`);
+  };
+  mat.customProgramCacheKey = () => 'macro' + scale + '|' + amount;
+  return mat;
+}

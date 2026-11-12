@@ -15,6 +15,7 @@ import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet } from './assets.js';
+import { macroVariation } from './refine.js';
 import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
@@ -77,7 +78,7 @@ export function buildWorld(G) {
     // build 16: the lawn follows the rolling meadow (a gently curved surface, not a flat sheet)
     const geo = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil(x1 - x0), Math.ceil((z1 - z0) * 1.5)); geo.rotateX(-Math.PI / 2); geo.translate((x0 + x1) / 2, 0, (z0 + z1) / 2);
     { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) p.setY(i, terrainH(p.getX(i), p.getZ(i))); geo.computeVertexNormals(); }
-    const f = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .93 }));
+    const f = new THREE.Mesh(geo, macroVariation(new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.7, .7), roughness: .93 }), { scale: .09, amount: .09 }));
     f.receiveShadow = true; add(f);
   }
   function floorPiece(x0, x1, z0, z1, c1, c2) {
@@ -96,7 +97,7 @@ export function buildWorld(G) {
   // a cobblestone path through the park, the meadow and the valley (where you walk)
   { const x0 = LAWN_FROM, x1 = LAWN_TO; // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
     const C = USE_ASSETS ? cobbleSet() : cobbleTextures(), map = C.map, nm = C.normal, rm = C.rough || null; for (const t of [map, nm, rm]) if (t) t.repeat.set((x1 - x0) / 3, 1);
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1, 1), roughness: rm ? 1 : .82, roughnessMap: rm }));
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), macroVariation(new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.75, .75), roughness: rm ? 1 : .82, roughnessMap: rm }), { scale: .13, amount: .08 }));
     path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);
     for (const z of [-1.55, 1.55]) { const edge = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .07, .14), M('#fff6ea', { r: .6, cc: .2 })); edge.position.set((x0 + x1) / 2, .035, z); edge.receiveShadow = true; add(edge); } }
   // front edge of the floor (a rounded rail, so the world has a nice edge)

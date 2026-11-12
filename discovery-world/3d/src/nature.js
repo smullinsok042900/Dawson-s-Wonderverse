@@ -189,7 +189,7 @@ function bladeClump(n = 9) {
     const hue = rnd(); // some blades a little yellow, some a little blue-green
     for (let i = 0; i <= 3; i++) {
       const t = i / 3, y = t * h, off = bend * t * t, ww = w * Math.sin((1 - t * .85) * Math.PI / 2 + .2);
-      for (const sgn of [-1, 1]) { pos.push(x0 + dx * off + px * ww * sgn, y, z0 + dz * off + pz * ww * sgn); const k = .4 + t * .62; col.push(k * (.92 + hue * .14 + t * .06), k, k * (.74 + (1 - hue) * .1)); hh.push(t); }
+      for (const sgn of [-1, 1]) { pos.push(x0 + dx * off + px * ww * sgn, y, z0 + dz * off + pz * ww * sgn); const k = .6 + t * .4; col.push(k * (.94 + hue * .1 + t * .05), k, k * (.78 + (1 - hue) * .08)); hh.push(t); /* (build 20: softer root-to-tip shading) */ }
     }
     for (let i = 0; i < 3; i++) { const q = base + i * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
     base += 8;
@@ -209,7 +209,9 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
     sh.vertexShader = 'uniform float uTime; attribute float gh;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec4 gw = instanceMatrix * vec4(0., 0., 0., 1.);
       float wind = sin(uTime * 1.7 + gw.x * .45 + gw.z * .3) * .7 + sin(uTime * 3.1 + gw.x * 1.3) * .3;
-      transformed.x += wind * gh * gh * .11; transformed.z += wind * gh * gh * .04;`);
+      transformed.x += wind * gh * gh * .11; transformed.z += wind * gh * gh * .04;
+      // (build 20) far away, clumps sink smoothly into the lawn instead of becoming shimmering noise
+      float camD = distance(gw.xyz, cameraPosition); transformed.y *= 1. - smoothstep(26., 44., camD);`);
   };
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), V = new THREE.Vector3(), S = new THREE.Vector3(), cl = new THREE.Color();
   const area = bands.reduce((a, [z0, z1]) => a + (z1 - z0), 0), meshes = [];
@@ -219,7 +221,7 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
       let zr = rnd() * area, z = 0; for (const [z0, z1] of bands) { if (zr < z1 - z0) { z = z0 + zr; break; } zr -= z1 - z0; }
       const x = cx + rnd() * Math.min(chunk, x1 - cx); if (!ok(x, z)) continue;
       e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const near = z > -5.5 && z < 0 ? 1 : 0, s = (.8 + rnd() * .6) * (near ? .85 : 1.1); m4.compose(V.set(x, terrainH(x, z), z), q, S.set(s, s * (.8 + rnd() * .5), s));
-      im.setMatrixAt(n, m4); const dry = rnd() < .08; im.setColorAt(n, dry ? cl.setHSL(.15 + rnd() * .04, .42, .44) : cl.setHSL(.235 + rnd() * .07, .4 + rnd() * .14, .34 + rnd() * .1)); n++;
+      im.setMatrixAt(n, m4); const dry = rnd() < .05; im.setColorAt(n, dry ? cl.setHSL(.17 + rnd() * .03, .38, .42) : cl.setHSL(.25 + rnd() * .04, .36 + rnd() * .08, .37 + rnd() * .05)); n++; /* (build 20: close to the lawn colour, less clump-to-clump contrast) */
     }
     im.count = n; im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im);
   }

@@ -26,7 +26,7 @@ bid = r * cols + c
 wob = pnoise([9, 19], [.012, .006])
 ex = np.minimum(fu, 1 - fu) * (rows / cols) * 2; ey = np.minimum(fv, 1 - fv)
 e = np.minimum(ex, ey) + wob
-mort = .085
+mort = .065
 shape = np.clip((e - mort) / .16, 0, 1); shape = shape * shape * (3 - 2 * shape)
 grain = (fnoise(40, 1) * .6 + fnoise(160, 2) * .4) * .35
 bul = rng.uniform(.85, 1.1, rows * cols)
@@ -38,13 +38,13 @@ for _ in range(90):
     H -= np.clip(1 - d / rr, 0, 1) ** 2 * .35 * (e < .3)
 H = np.clip(H, 0, None)
 tones = np.array([[226, 170, 190], [234, 184, 200], [218, 162, 184], [240, 194, 206], [228, 176, 182], [222, 172, 200]], float) / 255
-bc = tones[rng.integers(0, len(tones), rows * cols)] * rng.uniform(.93, 1.05, (rows * cols, 1))
-C = bc[bid] * (1 + grain[..., None] * .07)
-mortar = np.array([236, 220, 214]) / 255 * (1 + grain[..., None] * .1)
+bc = tones[rng.integers(0, len(tones), rows * cols)] * rng.uniform(.96, 1.04, (rows * cols, 1)); bc = bc * .7 + bc.mean(0) * .3
+C = bc[bid] * (1 + grain[..., None] * .035)
+mortar = np.array([244, 232, 226]) / 255 * (1 + grain[..., None] * .1)
 mk = np.clip(1 - (e - .02) / mort, 0, 1)[..., None]
 C = C * (1 - mk) + mortar * mk
-ao = .62 + .38 * np.clip(shape * 1.4, 0, 1) ** .6; C *= ao[..., None]
-s = 4.0 * R / 256
+ao = .8 + .2 * np.clip(shape * 1.4, 0, 1) ** .6; C *= ao[..., None]
+s = 2.8 * R / 256
 hx = (np.roll(H, -1, 1) - np.roll(H, 1, 1)) * .5 * s; hy = (np.roll(H, -1, 0) - np.roll(H, 1, 0)) * .5 * s
 nz = 1 / np.sqrt(hx * hx + hy * hy + 1)
 N = np.stack([-hx * nz * .5 + .5, hy * nz * .5 + .5, nz * .5 + .5], -1)

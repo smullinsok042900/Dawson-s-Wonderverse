@@ -34,7 +34,7 @@ export function makePost(renderer, scene, camera, { mobile }) {
     fragmentShader: 'uniform sampler2D tIn; uniform vec2 uDir; varying vec2 vUv; void main(){ vec3 c = texture2D(tIn, vUv).rgb * .227; c += (texture2D(tIn, vUv + uDir * 1.385).rgb + texture2D(tIn, vUv - uDir * 1.385).rgb) * .316; c += (texture2D(tIn, vUv + uDir * 3.231).rgb + texture2D(tIn, vUv - uDir * 3.231).rgb) * .07; gl_FragColor = vec4(c, 1.); }' });
   const blur = new FullScreenQuad(blurMat);
 
-  // final: sharpen + tone mapping + colour grade + dithering, written straight to the screen
+  // final: tone mapping + colour grade + dithering, written straight to the screen
   // (build 18: no artificial saturation boost; contrast comes from the lighting now. A light
   //  contrast-adaptive sharpen keeps textures crisp, and a tiny dither removes banding in the sky.)
   const finalMat = new THREE.ShaderMaterial({
@@ -46,13 +46,7 @@ export function makePost(renderer, scene, camera, { mobile }) {
       vec3 tm(vec3 c){ return NeutralToneMapping(c); }
       float luma(vec3 c){ return dot(c, vec3(.2126, .7152, .0722)); }
       void main(){
-        vec3 c = tm(texture2D(tIn, vUv).rgb);
-        vec3 n = tm(texture2D(tIn, vUv + vec2(0., uTexel.y)).rgb), s = tm(texture2D(tIn, vUv - vec2(0., uTexel.y)).rgb);
-        vec3 e = tm(texture2D(tIn, vUv + vec2(uTexel.x, 0.)).rgb), w = tm(texture2D(tIn, vUv - vec2(uTexel.x, 0.)).rgb);
-        // contrast-adaptive sharpening: strong on soft detail, gentle on edges that are already hard
-        float mn = min(luma(c), min(min(luma(n), luma(s)), min(luma(e), luma(w)))), mx = max(luma(c), max(max(luma(n), luma(s)), max(luma(e), luma(w))));
-        float amt = uSharp * sqrt(clamp(min(mn, 1. - mx) / max(mx, 1e-3), 0., 1.));
-        c = clamp(c + (c * 4. - n - s - e - w) * amt * .25, 0., 1.);
+        vec3 c = tm(texture2D(tIn, vUv).rgb); // (build 20: no sharpening: it amplified fur grain, leaf noise and texture shimmer)
         c += tm(texture2D(tBloom, vUv).rgb) * uBloom; // glow (only from truly bright things)
         float l = luma(c);
         vec3 g = sRGBTransferOETF(vec4(clamp(c, 0., 1.), 1.)).rgb;
