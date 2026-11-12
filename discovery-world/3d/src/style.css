@@ -190,3 +190,18 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @keyframes lstick{100%{left:70px}}
 @keyframes lfall{100%{top:110px;opacity:.6}}
 @media (max-height:420px){#learn .lletter{font-size:90px}#learn .lopt,#learn .lmenuitem{min-height:82px}}
+/* build 26: grown-ups' performance panel and monitor */
+#gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85}
+#perfbox{display:none;position:fixed;left:6px;bottom:calc(6px + env(safe-area-inset-bottom));z-index:60;background:rgba(20,10,40,.72);color:#e9ffe9;font:11px/1.35 ui-monospace,Menlo,monospace;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
+#perfPanel{display:none;position:fixed;inset:0;z-index:70;background:rgba(30,15,60,.45);align-items:center;justify-content:center}
+#perfPanel.show{display:flex}
+#perfPanel .pp{background:#fff;border-radius:18px;padding:12px;width:min(440px,92vw);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:8px;color:#3b2a66;font:600 15px system-ui,sans-serif;box-shadow:0 10px 30px #0006}
+#perfPanel .ppHead{display:flex;justify-content:space-between;align-items:center;font-weight:900}
+#perfPanel button{font:800 16px system-ui,sans-serif;min-height:46px;border-radius:12px;border:2px solid #d9c9f5;background:#f6f0ff;color:#4b2f8f}
+#perfPanel .ppHead button{min-height:40px;min-width:40px}
+#perfPanel button.small{font-size:13px;min-height:36px}
+#perfPanel textarea{font:11px ui-monospace,Menlo,monospace;width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #ccc;padding:6px;-webkit-user-select:text;user-select:text}
+#perfPanel .ppInfo{font-size:12px;color:#6a5a90}
+#perfBlock{display:none;position:fixed;inset:0;z-index:65;align-items:flex-start;justify-content:center;padding-top:calc(60px + env(safe-area-inset-top))}
+#perfBlock.show{display:flex}
+#perfBlock div{background:rgba(20,10,40,.8);color:#fff;font:800 15px system-ui,sans-serif;padding:8px 14px;border-radius:14px}

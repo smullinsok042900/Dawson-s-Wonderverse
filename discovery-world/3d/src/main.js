@@ -21,6 +21,7 @@ import { initKingdom, KINGDOM } from './kingdom.js';
 import { makePost } from './post.js';
 import { refineScene } from './refine.js';
 import { initLearning } from './learn.js';
+import { initPerf } from './perf.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD } from './nature.js';
 import { FUR } from './fur.js';
@@ -731,6 +732,7 @@ function updateWorldAnim(dt, t) {
 let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
+  if (G.perfTest) return; // (build 26: the performance test never saves)
   try {
     const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
@@ -812,17 +814,31 @@ try { portraits = JSON.parse(localStorage.getItem(PORTRAIT_KEY) || '{}'); } catc
 const applyPortraits = () => document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
 const needPortraits = Object.keys(CREATURES).some(k => !portraits[k]);
 if (!needPortraits) applyPortraits();
-// (build 25) the automatic quality steps are REMEMBERED on the device, so a phone that needed lighter graphics
-// starts with them next time instead of lagging until it adapts again; and if a device runs smoothly for a while,
-// quality is stepped back up.
-const GFX_KEY = 'ddw3-gfx-b25', QMAX = quality;
-let fast = 0;
-const saveGfx = () => { try { localStorage.setItem(GFX_KEY, JSON.stringify({ q: quality, post: post.enabled, sm: sun.shadow.mapSize.x })); } catch (e) { } };
-if (!TEST && !/[?&]hq/.test(location.search)) try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g) { quality = Math.min(QMAX, Math.max(.5, g.q)); post.enabled = post.enabled && g.post; if (g.sm && g.sm < sun.shadow.mapSize.x) sun.shadow.mapSize.set(g.sm, g.sm); resize(); } } catch (e) { }
+// (build 26) AUTOMATIC QUALITY, a ladder of steps. None of them recompiles shaders (no freeze when it changes):
+//   0 full  ·  1 lighter shadows (1024 px, drawn every 3rd frame)  ·  2 lite effects (no 4x AA buffer, no glow)
+//   3 resolution -12%  ·  4 resolution -24%  ·  5 smallest shadows (512 px, every 4th frame), resolution -30%
+// It only steps down after SUSTAINED slowness (about 2.5 s under ~48 fps, and at least 4 s between changes), steps
+// back up after 30 s of smooth play, never retries a level that failed in the last minute, and ignores a steady
+// 30 fps cap (iPhone Low Power Mode), which is not lag. The level is remembered on the device.
+const GFX_KEY = 'ddw3-gfx-b26', QMAX = quality, SM0 = sun.shadow.mapSize.x;
+const gfx = { level: 0, since: 0, slow: 0, fast: 0, failed: -1, failedAt: -1e9, var: 0, changes: [] }; G.gfx = gfx;
+let shadowEvery = 2;
+function applyGfx(L, why) {
+  L = Math.max(0, Math.min(5, L)); const prev = gfx.level; gfx.level = L; gfx.since = 0; gfx.slow = gfx.fast = 0;
+  shadowEvery = L >= 5 ? 4 : L >= 1 ? 3 : 2;
+  const sm = L >= 5 ? 512 : L >= 1 ? Math.min(1024, SM0) : SM0; if (sun.shadow.mapSize.x !== sm) { sun.shadow.mapSize.set(sm, sm); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+  post.lite = L >= 2; quality = QMAX - (L >= 5 ? .3 : L >= 4 ? .24 : L >= 3 ? .12 : 0); resize();
+  if (why) { gfx.changes.push(`${prev}→${L} (${why})`); if (gfx.changes.length > 12) gfx.changes.shift(); try { localStorage.setItem(GFX_KEY, JSON.stringify({ level: L })); } catch (e) { } }
+}
+if (!TEST && !/[?&]hq/.test(location.search)) { try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Number.isFinite(g.level)) applyGfx(g.level); } catch (e) { } }
+G.applyGfx = applyGfx; G.resetGfx = () => { applyGfx(0); gfx.changes.push('reset to 0'); gfx.failed = -1; };
 function adapt(dt) {
-  ema += (dt - ema) * .05;
-  if (ema > 1 / 45 && (quality > .55 || post.enabled)) { fast = 0; slow += dt; if (slow > 1.2 && post.enabled && quality > .76) { quality -= .1; slow = 0; ema = 1 / 60; resize(); saveGfx(); return; } /* first a little less resolution */ if (slow > 1.2 && post.enabled) { post.enabled = false; slow = 0; ema = 1 / 60; saveGfx(); return; } /* then the post effects */ if (slow > 1.2) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } saveGfx(); } }
-  else { slow = Math.max(0, slow - dt * .5); if (ema < 1 / 57) { fast += dt; if (fast > 25 && quality < QMAX - .01) { quality = Math.min(QMAX, quality + .1); fast = 0; resize(); saveGfx(); } } else fast = 0; }
+  ema += (dt - ema) * .05; gfx.var += ((dt - ema) * (dt - ema) - gfx.var) * .05; gfx.since += dt;
+  const capped30 = ema > .029 && ema < .037 && Math.sqrt(gfx.var) < .004; // a steady 30 fps cap is not lag
+  if (ema > 1 / 48 && !capped30) { gfx.fast = 0; gfx.slow += dt;
+    if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); } }
+  else { gfx.slow = Math.max(0, gfx.slow - dt * .5);
+    if (ema < 1 / 57) { gfx.fast += dt; if (gfx.fast > 30 && gfx.level > 0 && !(gfx.failed === gfx.level - 1 && performance.now() - gfx.failedAt < 60000)) applyGfx(gfx.level - 1, 'smooth'); } else gfx.fast = 0; }
 }
 
 // ---------------- main loop ----------------
@@ -838,6 +854,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
+  { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
   timer.update(); const raw = Math.min(timer.getDelta(), .25); acc += raw;
@@ -860,7 +877,8 @@ function frame() {
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
-  renderer.shadowMap.needsUpdate = (++shadowTick & 1) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
+  renderer.shadowMap.needsUpdate = (++shadowTick % shadowEvery) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
+  renderer.info.reset(); // (build 26: count every pass of the frame, not just the last one)
   if (post.enabled) post.render(); else renderer.render(scene, camera);
   if (!TEST && !/[?&]hq/.test(location.search)) adapt(raw);
   requestAnimationFrame(frame);
@@ -925,6 +943,26 @@ let begun = false;
 // away). Still scenery is grouped into 24 m slices, and slices out of view are taken off the scene, so three.js no
 // longer walks ~3,600 objects (positions, culling, shadows) every frame. Things that move about are never sliced.
 const slices = [];
+// (build 26) instanced groups spread over the WHOLE world (520 flowers, 490 party bulbs, 471 train sleepers) were
+// drawn in full every frame, off-screen or not (an instanced group is culled as one): about 300k triangles at the
+// park. They are cut into 24 m chunks (same geometry and material, so no new shaders) that are culled and sliced.
+function chunkInstanced() {
+  let made = 0; const M = new THREE.Matrix4(), P = new THREE.Vector3(), C = new THREE.Color();
+  for (const im of [...scene.children]) {
+    if (!im.isInstancedMesh || im.count < 40 || im === bitMesh || (im.morphTexture)) continue;
+    if (!im.boundingSphere) im.computeBoundingSphere(); if (im.boundingSphere.radius < 30) continue;
+    const groups = new Map();
+    for (let i = 0; i < im.count; i++) { im.getMatrixAt(i, M); P.setFromMatrixPosition(M); const k = Math.floor(P.x / 24); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); }
+    for (const list of groups.values()) {
+      const c = new THREE.InstancedMesh(im.geometry, im.material, list.length);
+      list.forEach((i, j) => { im.getMatrixAt(i, M); c.setMatrixAt(j, M); if (im.instanceColor) { im.getColorAt(i, C); c.setColorAt(j, C); } });
+      c.castShadow = im.castShadow; c.receiveShadow = im.receiveShadow; c.renderOrder = im.renderOrder; Object.assign(c.userData, im.userData); c.name = im.name;
+      c.computeBoundingSphere(); scene.add(c); made++;
+    }
+    scene.remove(im); im.dispose();
+  }
+  G.chunked = made;
+}
 function sliceScenery() {
   const skip = new Set([creature.root, ...LOD.map(i => i.o), ...(G.life ? G.life.agents.map(a => a.root) : [])]);
   const box = new THREE.Box3(), sph = new THREE.Sphere(), byKey = new Map();
@@ -939,7 +977,7 @@ function sliceScenery() {
 }
 G.unslice = o => { if (o && o.parent && o.parent.userData.slice) scene.attach(o); }; // (something that starts to follow you leaves its slice)
 function updateSlices() { for (const g of slices) { const near = Math.abs(g.userData.x - camT.x) < 52; if (near && !g.parent) scene.add(g); else if (!near && g.parent) scene.remove(g); } }
-const begin = () => { if (begun) return; begun = true; try { sliceScenery(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
+const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { chunkInstanced(); sliceScenery(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
 // (build 24) shaders: compile everything in the scene before play starts (the light count is now fixed, so these stay
 // valid), then compile the model files' materials as soon as they arrive (in the background where the phone supports
 // parallel compiling), so nothing compiles the first time it comes into view.
@@ -986,3 +1024,46 @@ window.__DDW3 = {
   bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, kingdom: () => kingdom, meadowRestore: () => meadow.restored(),
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), post, quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };
+
+// ---------------- build 26: grown-ups' settings (performance monitor and test) ----------------
+// The ⚙️ button must be HELD for a second (so little fingers don't open it by accident). The panel switches the small
+// monitor on/off, runs the repeatable Performance Test and copies its report to the clipboard.
+renderer.info.autoReset = false;
+let lastFrameAt = 0;
+G.doAction = doAction;
+const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction }); G.perfMon = perfMon;
+{
+  const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
+  $('soundBtn').after(btn);
+  const pan = document.createElement('div'); pan.id = 'perfPanel';
+  pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
+    <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button>
+    <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
+    <button data-a="reset" class="small">↺ Reset automatic graphics</button></div>`;
+  document.body.appendChild(pan);
+  const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
+  const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
+  const refresh = () => { monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; changes by itself if the game runs slowly)${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
+  let holdT = null;
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(holdT); holdT = setTimeout(() => { refresh(); pan.classList.add('show'); }, 900); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) btn.addEventListener(ev, () => clearTimeout(holdT));
+  pan.addEventListener('pointerdown', e => e.stopPropagation());
+  pan.addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a;
+    if (a === 'close') pan.classList.remove('show');
+    if (a === 'mon') { perfMon.show(!perfMon.isShown()); refresh(); }
+    if (a === 'reset') { try { localStorage.removeItem('ddw3-gfx-b26'); } catch (err) { } if (G.resetGfx) G.resetGfx(); refresh(); }
+    if (a === 'copy') {
+      const txt = perfMon.report() || 'No test has been run yet. Press ▶ Performance Test first.';
+      let ok = false; try { await navigator.clipboard.writeText(txt); ok = true; } catch (err) { }
+      if (!ok) { ta.value = txt; ta.focus(); ta.select(); ta.setSelectionRange(0, txt.length); try { ok = document.execCommand('copy'); } catch (err) { } }
+      b.textContent = ok ? '✅ Copied! Paste it into the chat' : '👆 Select the text below and copy it'; setTimeout(() => { b.textContent = '📋 Copy Test Results'; }, 3000);
+    }
+    if (a === 'test') {
+      pan.classList.remove('show'); block.classList.add('show'); const was = Sound.on; Sound.on = false; if (window.speechSynthesis) speechSynthesis.cancel();
+      const wasStarted = started; started = true;
+      let i = 0; try { await perfMon.runTest(name => { block.querySelector('span').textContent = `Performance test ${++i}/7: ${name}`; }); }
+      finally { Sound.on = was; started = wasStarted; block.classList.remove('show'); refresh(); pan.classList.add('show'); }
+    }
+  });
+}
