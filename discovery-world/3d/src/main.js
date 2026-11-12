@@ -6,7 +6,6 @@
 // No timers, no losing, no reading needed. Works offline (one HTML file).
 // ===================================================================
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 import { Sound, NOTES } from './audio.js';
 import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatures.js';
@@ -20,6 +19,8 @@ import { initTrain } from './train.js';
 import { initMarbles } from './marble.js';
 import { initKingdom, KINGDOM } from './kingdom.js';
 import { makePost } from './post.js';
+import { refineScene } from './refine.js';
+import { windTime } from './assets.js';
 
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -27,6 +28,9 @@ const lerp = (a, b, k) => a + (b - a) * k;
 const SAVE_KEY = 'dawsons-discovery-world-3d-v1';
 // ?test = light mode for the automated logic tests (software WebGL in the test browser is very slow)
 const TEST = /[?&]test/.test(location.search);
+// build 18: one balanced light rig (key : fill about 3 : 1, so things have form and shadows, and
+// sunlit pastels stay below white instead of clipping). Values were tuned against measured screenshots.
+const LIGHT = { env: .5, hemi: .55, sun: 3.1, rim: .55, exposure: .95 };
 
 // ---------------- renderer, scene, camera, light ----------------
 const canvas = $('game');
@@ -35,29 +39,30 @@ const MOBILE = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/.
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); window.__oops && window.__oops('The device reset the 3D graphics (it may be low on memory). Tap Try again.'); });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = LIGHT.exposure;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; // (filtered, with a blur radius below)
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
-// reflections come from a soft sky (blue above, pink at the horizon, a bright sun) mixed with a toy-studio light,
-// so shiny things reflect the world's own colours
+// build 18 (lighting audit): reflections and soft fill come from the SKY ONLY. (Before, a bright indoor
+// studio environment lit everything from every direction, brighter than the sun and with no shadows,
+// which flattened the picture and washed colours out to white.)
 {
-  const envScene = new RoomEnvironment();
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(40, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false,
+  const envScene = new THREE.Scene();
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(40, 48, 24), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false,
     vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
-    fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y; vec3 top = vec3(.45,.62,1.05), hor = vec3(1.1,.78,.95), bot = vec3(.55,.42,.7); vec3 c = h > 0. ? mix(hor, top, pow(h, .6)) : mix(hor, bot, -h); gl_FragColor = vec4(c, 1.); }' }));
+    fragmentShader: 'varying vec3 vP; void main(){ float h = vP.y; vec3 top = vec3(.36,.52,1.), hor = vec3(.95,.74,.92), bot = vec3(.30,.36,.22); vec3 c = h > 0. ? mix(hor, top, pow(h, .55)) : mix(hor, bot, pow(-h, .5)); gl_FragColor = vec4(c, 1.); }' }));
   envScene.add(dome);
-  const sunBall = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(5, 4.6, 4) })); sunBall.position.set(-14, 22, 18); envScene.add(sunBall);
-  scene.environment = pmrem.fromScene(envScene, .03).texture; scene.environmentIntensity = .62;
+  const sunBall = new THREE.Mesh(new THREE.SphereGeometry(2.6, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(9, 8, 6.6) })); sunBall.position.set(-14, 22, 18); envScene.add(sunBall);
+  scene.environment = pmrem.fromScene(envScene, .02).texture; scene.environmentIntensity = LIGHT.env;
 }
-scene.fog = new THREE.Fog('#f2d4f4', 26, 150); // build 17: atmospheric perspective (distance fades softly into the sky)
+scene.fog = new THREE.Fog('#e6d2f2', 55, 190); // build 18: atmospheric perspective only in the far distance (no haze over the play area)
 const camera = new THREE.PerspectiveCamera(38, 2, .1, 600);
-const hemi = new THREE.HemisphereLight('#fff0ff', '#9a6ad8', .85); scene.add(hemi);
-const sun = new THREE.DirectionalLight('#fff1dc', 2.1); sun.castShadow = true;
+const hemi = new THREE.HemisphereLight('#e4ecff', '#8f8a6a', LIGHT.hemi); scene.add(hemi);
+const sun = new THREE.DirectionalLight('#fff0d8', LIGHT.sun); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 10, bottom: -5, near: 1, far: 50 }); /* build 17: a tighter box = sharper shadows */ sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 // a soft cool light from behind: it outlines everything with a gentle rim, so shapes look rounder and more real
-const rim = new THREE.DirectionalLight('#d6e4ff', .6); rim.position.set(-6, 7, -12); scene.add(rim);
+const rim = new THREE.DirectionalLight('#d6e4ff', LIGHT.rim); rim.position.set(-6, 7, -12); scene.add(rim);
 // gradient sky dome + puffy clouds
 const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false, fog: false,
@@ -662,7 +667,7 @@ function updateWorldAnim(dt, t) {
   { const W = G.whale; W.spout = Math.max(0, W.spout - dt); if (!(player.ride && player.ride.type === 'whale')) { const k = Math.min(1, dt * 2); W.g.position.y += (W.y + Math.sin(t * .8) * .35 - W.g.position.y) * k; W.g.position.x += (W.x + Math.sin(t * .23) * 2 - W.g.position.x) * k; W.g.rotation.z = Math.sin(t * .8) * .05; W.g.rotation.y *= 1 - k; } W.tail.rotation.y = Math.sin(t * 2.2) * .4;
     if (W.spout > 0 && Math.random() < dt * 30) burst(W.g.position.x + 1.4, W.g.position.y + 1.8, W.g.position.z, ['#bfe8ff', '#ffffff', '#9fe6ff'], 3, 2.5); }
   G.skyPuffs.forEach(m => { m.position.y = SKY.y + .25 + Math.sin(t * 2 + m.position.x) * .04; });
-  G.grassTime.value = t;
+  G.grassTime.value = t; windTime.value = t;
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
   bigStar.visible = !world.secret; bigStar.rotation.y = t * 1.6; bigStar.position.y = G.secretStar[1] + Math.sin(t * 2) * .12;
   // door/stair bubbles
@@ -804,6 +809,8 @@ updateCounters(); snapCamera(); updateBits(0);
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
 addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+// build 18: one quality pass over the finished world (bevelled edges, round silhouettes, sharp textures, no wet-plastic gloss)
+try { const ex = new Set(); if (G.paint && G.paint.mesh) ex.add(G.paint.mesh); G.refine = refineScene(scene, renderer, { exclude: ex, budget: MOBILE ? 250000 : 400000 }); } catch (e) { console.log('refine skipped', e); }
 // compile all the shaders first (in the background where the browser allows it), then start
 let begun = false;
 const begin = () => { if (begun) return; begun = true; requestAnimationFrame(frame); setTimeout(() => $('loading').classList.add('done'), 250); };
@@ -812,7 +819,7 @@ setTimeout(begin, 8000);
 
 // debug/test hook (used by the automated tests only)
 window.__DDW3 = {
-  player, world, keys, fluffs, G, camera, Sound, save, IN,
+  player, world, keys, fluffs, G, camera, Sound, save, IN, renderer,
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 2000 ? 'castle' : x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },

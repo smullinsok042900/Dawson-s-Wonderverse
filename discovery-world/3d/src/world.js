@@ -14,7 +14,8 @@ import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
-import { lawnTextures, cobbleTextures, leafNormal, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
+import { USE_ASSETS, cobbleSet } from './assets.js';
+import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -93,8 +94,9 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // a cobblestone path through the park, the meadow and the valley (where you walk)
-  { const C = cobbleTextures(), x0 = LAWN_FROM, x1 = LAWN_TO, map = C.map, nm = C.normal; for (const t of [map, nm]) t.repeat.set((x1 - x0) / 3, 1);
-    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1.1, 1.1), roughness: .82 }));
+  { const x0 = LAWN_FROM, x1 = LAWN_TO; // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
+    const C = USE_ASSETS ? cobbleSet() : cobbleTextures(), map = C.map, nm = C.normal, rm = C.rough || null; for (const t of [map, nm, rm]) if (t) t.repeat.set((x1 - x0) / 3, 1);
+    const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1, 1), roughness: rm ? 1 : .82, roughnessMap: rm }));
     path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);
     for (const z of [-1.55, 1.55]) { const edge = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .07, .14), M('#fff6ea', { r: .6, cc: .2 })); edge.position.set((x0 + x1) / 2, .035, z); edge.receiveShadow = true; add(edge); } }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
@@ -228,9 +230,9 @@ export function buildWorld(G) {
 
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
-  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#9be7b0', '#7fd99a', '#b4f0c4'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
+  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#93cf9c', '#82c28e', '#a6dbb0'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
-  const leafMats = ['#5fc77e', '#7ed895', '#4fb86e', '#8fe0a0'].map(c => new THREE.MeshPhysicalMaterial({ color: c, roughness: .7, sheen: .7, sheenColor: new THREE.Color('#eaffd8'), normalMap: leafNormal(), normalScale: new THREE.Vector2(1.4, 1.4) }));
+  const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   const tree = (x, z, s = 1) => makeTree(scene, x, z, s); // build 15: real branching trees
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)

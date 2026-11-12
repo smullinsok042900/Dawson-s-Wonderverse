@@ -19,10 +19,15 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
-import { fabricMat, normalFromCanvas, leafNormal as leafNormalK } from './nature.js';
+import { fabricMat, normalFromCanvas, leafDetail } from './nature.js';
+import { USE_ASSETS, brickSet } from './assets.js';
 
 // pastel stone bricks with soft bumps (castle walls), and scalloped roof tiles
 function brickMat() {
+  if (USE_ASSETS) { // build 19: the tool-made brick set (rose bricks, recessed mortar, worn edges, AO)
+    const B = brickSet(); for (const t of [B.map, B.normal, B.rough]) t.repeat.set(3, 3);
+    return new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(1, 1), roughnessMap: B.rough, roughness: 1 });
+  }
   const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
   g.fillStyle = '#f4d4e6'; g.fillRect(0, 0, W, W);
   for (let r = 0; r < 8; r++) for (let k = 0; k < 4; k++) { const x = k * 64 + (r % 2) * 32, y = r * 32; const shade = 228 + Math.floor(Math.random() * 22); g.fillStyle = `rgb(255,${shade - 14},${shade})`; g.beginPath(); g.roundRect(x + 3, y + 3, 58, 26, 7); g.fill(); if (x + 64 > W) { g.beginPath(); g.roundRect(x + 3 - W, y + 3, 58, 26, 7); g.fill(); } }
@@ -194,7 +199,7 @@ export function initKingdom(G, api) {
     // climbing roses up the towers (leafy vines with flowers)
     for (const tx of [-6.6, 6.6]) for (let i = 0; i < 26; i++) { const a = (tx > 0 ? -1 : 1) * .5 + Math.sin(i * .7) * .5 + Math.PI / 2, y = .3 + i * .25; const v = add2(new THREE.Mesh(new THREE.SphereGeometry(i % 3 ? .12 : .1, 10, 8), i % 3 ? toy('#5fc06a', { r: .7, sheen: .5 }) : toy('#ff6f9f', { r: .5 })), tx + Math.cos(a) * 1.55, y, -4.9 + Math.sin(a) * 1.55); v.castShadow = false; }
     // trimmed hedges and topiary balls in front
-    const hedgeM = new THREE.MeshPhysicalMaterial({ color: '#6cc86a', roughness: .85, sheen: .8, sheenColor: new THREE.Color('#e8ffd0'), normalMap: leafNormalK(), normalScale: new THREE.Vector2(1.5, 1.5) });
+    const hedgeM = new THREE.MeshPhysicalMaterial({ color: '#7fbf68', map: leafDetail().map, roughness: .8, sheen: .5, sheenRoughness: .6, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }); // (build 18: leafy detail)
     for (const hx of [-4.7, 4.7]) { add2(new THREE.Mesh(new RoundedBoxGeometry(2.6, .8, .8, 3, .3), hedgeM), hx, .4, -3.3); }
     for (const tx of [-3.1, 3.1]) { add2(new THREE.Mesh(new THREE.CylinderGeometry(.22, .26, .4, 16), toy('#ffffff', { r: .5 })), tx, .2, -3.2); add2(new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .4, 8), toy('#8a5a3a')), tx, .6, -3.2); add2(new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 16), hedgeM), tx, 1.1, -3.2); }
   }
@@ -250,7 +255,7 @@ export function initKingdom(G, api) {
   // the dance floor in front of the castle (on the path)
   const tiles = [], TW = 1.5, T0 = K.castle - 7.5, TN = 11, TCOL = ['#ff6fae', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ff9a2e'];
   for (let i = 0; i < TN; i++) for (let j = 0; j < 2; j++) {
-    const m = new THREE.Mesh(new RoundedBoxGeometry(TW - .08, .06, 1.4, 1, .03), new THREE.MeshPhysicalMaterial({ color: '#fff2fb', roughness: .15, clearcoat: 1, emissive: TCOL[(i + j) % TCOL.length], emissiveIntensity: .05 }));
+    const m = new THREE.Mesh(new RoundedBoxGeometry(TW - .08, .06, 1.4, 1, .03), new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#eadbe6').lerp(new THREE.Color(TCOL[(i + j) % TCOL.length]), .22), roughness: .3, clearcoat: .5, clearcoatRoughness: .15, emissive: TCOL[(i + j) % TCOL.length], emissiveIntensity: .05 }) /* (build 19: pearly tinted tiles, not glare-white) */);
     m.position.set(T0 + TW * (i + .5), .03, -.75 + j * 1.5); m.receiveShadow = true; add(m); tiles.push({ m, i, j, glow: 0 });
   }
   let lastTile = -1, danceT = 0;
