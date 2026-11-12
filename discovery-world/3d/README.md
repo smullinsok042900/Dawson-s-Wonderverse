@@ -37,6 +37,51 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 29: the world more than doubles, with four new neighbourhoods and 23 new activities
+
+**What's new:** past the castle's rainbow gate (x 422), the outdoor world now continues to x 902, so it is more than twice as long. There are four new connected neighbourhoods, one extending each district:
+
+| Neighbourhood | Where (x) | Activities |
+|---|---|---|
+| 🌉 Adventure Trail (Adventure Park) | 428–548 | stream and wooden bridge (splash through the water) · climbing rocks up to a lookout with a telescope · 3 treasure chests with a random surprise · a crystal cave where you tap the crystals to make them glow |
+| 🧸 Toy Town (Mega Playhouse) | 548–668 | musical floor (every step plays a note) · block tower (press the button to drop blocks; too tall and it crashes) · bounce park (3 trampolines, each higher) · ball cannon into a hoop · seesaw that tips when you stand on it · catch the balloons floating up |
+| 🔬 Lab Gardens (Wonder Lab) | 668–788 | colour-changing pond with a jumping fish · bubble fountain · lamp that makes shadow animals on a wall · rocket launch · water fountains · magnet crane (the metal can sticks, the apple doesn't) |
+| 🖍️ Art Plaza (Imagination Studio) | 788–902 | sticker wall (stickers are saved and stay there) · spin art · drum, bells and rainbow xylophone · light mixer (red, green and blue lamps on a white statue) · a friend to pet and feed · hide and seek behind bushes · rainbow portal home |
+
+**Also:**
+- **Gem hunt:** 8 hidden 💎 gems across the new neighbourhoods. Some are on the path, some up high (the lookout, the trampolines, above the seesaw). Walk into one to collect it.
+- **Signposts** with each neighbourhood's picture.
+- **Scenery:** hills behind the outdoor neighbourhoods, trees, lawn, the cobblestone path and a floor rail all the way along.
+
+Each activity is one tap, one walk or one jump, with a spoken line, a big reaction and nothing to read. Most can also be used with the PAW button. There's no way to fail.
+
+**Easy to get around:**
+- **🗺️ map** (top left): big picture buttons for 10 places, each with its name spoken: 🏠 home, Playhouse, Studio, Wonder Lab, Adventure Park, castle, and the four new neighbourhoods. Tap one and you are there, and the place you're nearest is highlighted.
+- **🏠 home** (top left): one tap takes you to the Fluffkin House.
+
+**Streaming (no extra load at start-up or while playing):**
+- **Always present:** only the light parts (ground, path, hills, trees, signposts and gems).
+- **Built when you come near:** each neighbourhood's toys and activities, starting about 95 m away.
+  - At most about 3.5 ms of building per frame, so the game never stalls.
+  - Shaders are prepared in the background before it appears.
+  - When you travel straight into a neighbourhood with the map, it is built immediately.
+- **Taken down when you go far away** (more than 190 m): its own shapes and pictures are freed, and taps and PAW points are removed.
+- **Kept in the save, not the scene:** what you did there (gems, stickers, chests opened, balloons caught).
+- **Shared materials and shapes:** everything reuses the world's.
+
+**Measured (desktop, iPhone screen size and identity; not an iPhone):**
+- **Drawing cost:** the new neighbourhoods draw 108k–336k triangles and 69–85 draw calls per frame. The original park draws 567k–792k triangles and 189–272 calls, so the new areas are the lightest in the world.
+- **Shader programs:** 100 in the real (non-test) game, before and after visiting all four new neighbourhoods. No new shaders means no first-visit freeze.
+- **Streaming:** walking from x 436 to 902, each neighbourhood was ready before you reached it. The ones behind you were taken down 190 m later. Tapping 🏠 unloaded all four.
+- **Activities:** every one in all four neighbourhoods ran with no errors; 19 of their discoveries were triggered in the test.
+- **Saving:** gems, stickers and chests survived a reload.
+
+**Not done yet (honest list):**
+- **Interiors:** no new indoor spaces (hidden playrooms, multi-floor playhouse rooms) or secret tunnels between areas.
+- **Creatures:** no new cooperative creature games beyond pet, feed and hide and seek.
+- **Activity count:** this milestone adds 23 world activities. With the existing world toys and the 41 learning games, the game passes 50 distinct things to do. But the expansion's own target of 50 new activities is not reached.
+- **iPhone:** frame rate and loading on a real iPhone have not been measured.
+
 ## 3D build 28: about a third less drawing work every frame
 
 **Why:** the game was still laggy. A per-object count of what is drawn each frame, on an iPhone-sized screen, showed where the work goes:

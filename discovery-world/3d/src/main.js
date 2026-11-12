@@ -22,9 +22,10 @@ import { makePost } from './post.js';
 import { refineScene } from './refine.js';
 import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
+import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
-import { LOD } from './nature.js';
+import { LOD, makeTree } from './nature.js';
 import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
@@ -232,6 +233,9 @@ const friends = initFriends(G, {
   tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
 });
 const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
+// (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
+const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), goHome: () => travel(TRAVEL[0]) });
+G.expansion = expansion;
 
 // ---------------- bubbles ----------------
 const bubbles = [], bubbleGeo = new THREE.SphereGeometry(1, 24, 16);
@@ -596,7 +600,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 419]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -677,7 +681,7 @@ const CAM_DIST = 7.6; // build 16: a little closer, to show the characters
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, 423 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, EXP.x1 + 4 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
 // build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
@@ -727,6 +731,7 @@ function updateWorldAnim(dt, t) {
   // bushes and trees are not drawn at all
   poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
   updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
+  expansion.update(dt, t, player.layer === '' ? camT.x : -999); // (build 29: stream the new neighbourhoods)
   if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > 16; if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
@@ -741,7 +746,7 @@ function saveSoon() { saveTimer = 1.2; }
 function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -752,6 +757,7 @@ function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
+  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g[1-8]$/.test(g)).slice(0, 8) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons) }; } // (build 29)
   world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
@@ -771,7 +777,7 @@ function restore(d) {
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
   if (d.crown === true) world.crown = true;
   if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
-  if (typeof d.x === 'number' && isFinite(d.x)) player.x = clamp(d.x, .5, 301);
+  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, EXP.x1 - 2) : clamp(d.x, .5, 301); // (build 29: you can also wake up in the new neighbourhoods)
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
   world.secret = d.secret === true;
@@ -999,6 +1005,8 @@ const compileAll = () => {
   renderer.setRenderTarget(prevRT);
   for (const o of shown) o.visible = false; return r;
 };
+// (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
+function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target); let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(g, camera, scene) : Promise.resolve(renderer.compile(g, camera, scene)); } catch (e) { r = Promise.resolve(); } renderer.setRenderTarget(prev); return r; }
 // creatures are sculpted in the background and appear a moment later: compile their materials as they arrive
 let compileTimer = 0; globalThis.__ddwCompile = () => { clearTimeout(compileTimer); compileTimer = setTimeout(compileAll, 300); };
 // PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
@@ -1084,4 +1092,27 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
       finally { Sound.on = was; started = wasStarted; block.classList.remove('show'); refresh(); pan.classList.add('show'); }
     }
   });
+}
+
+// ---------------- build 29: the picture map (fast travel) and the one-tap home button ----------------
+// Big pictures only: tap one and you are there (with a sparkle and its name spoken). 🏠 always takes you home.
+const TRAVEL = [['🏠', 'home', 190], ['🎪', 'the Playhouse', 8], ['🎨', 'the Studio', 62], ['🔬', 'the Wonder Lab', 100], ['🎡', 'the Adventure Park', 160], ['🏰', 'the castle', 398], ...expansion.districts.map(d => [d.icon === '🔬' ? '🚀' : d.icon, d.name, d.home])];
+function travel([icon, name, x]) {
+  const P = player; if (P.ride && P.ride.type === 'kart') parkKart(); if (P.ride && P.ride.type === 'train') train.hopOff();
+  P.ride = null; P.stair = null; P.layer = ''; P.x = x; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.groundZ = 0; P.swim = false;
+  expansion.buildNow(x); snapCamera(); world.flash = 1; Sound.twinkle(); Sound.chime(); burst(x, 1.5, 0, ['#fff', '#ffe36e', '#9fe6ff'], 24, 3);
+  toast(`${icon} Welcome to ${name}!`); saveSoon();
+}
+{
+  const left = document.createElement('div'); left.id = 'upperLeft';
+  left.innerHTML = '<button class="pill" id="mapBtn" aria-label="map">🗺️</button><button class="pill" id="homeBtn" aria-label="go home">🏠</button>';
+  $('top').insertBefore(left, $('top').firstChild);
+  const mp = document.createElement('div'); mp.id = 'mapPanel';
+  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => `<button class="mpT" data-i="${i}">${t[0]}</button>`).join('')}</div></div>`;
+  document.body.appendChild(mp);
+  const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
+  tapEl($('mapBtn'), () => { if (G.activityOpen) return; const P = player, here = P.layer === '' ? TRAVEL.reduce((b, t, i) => Math.abs(t[2] - P.x) < Math.abs(TRAVEL[b][2] - P.x) ? i : b, 1) : -1; mp.querySelectorAll('.mpT').forEach((b, i) => b.classList.toggle('here', i === here)); mp.classList.add('show'); Sound.click(); voice.speak('Where do you want to go? Tap a picture!'); });
+  tapEl(mp.querySelector('.mpX'), () => { mp.classList.remove('show'); Sound.click(); });
+  mp.querySelectorAll('.mpT').forEach(b => tapEl(b, () => { mp.classList.remove('show'); travel(TRAVEL[+b.dataset.i]); }));
+  tapEl($('homeBtn'), () => { if (G.activityOpen) return; travel(TRAVEL[0]); });
 }
