@@ -70,6 +70,11 @@ These are planned for later 3D builds:
 
 **Not measured:** the real frame rate on an iPhone. The in-game Performance Test (hold ⚙️) measures that.
 
+**Also in build 28 (fixes):**
+- **The ⚙️ grown-ups' button opens on iPhone.** Holding a finger on it made Safari start its own long-press gesture, which cancels the touch, and the old code treated that as "finger lifted". Now only a real lift ends the hold, which takes 0.7 s. A quick tap shows a small "✋ Hold ⚙️ (grown-ups)" hint.
+- **🗑️ Start over (erase all progress)** in the grown-ups' panel. It needs two taps: the first changes it to "Tap again to erase everything", which resets after 4 s. The game then reloads fresh.
+- **Home Screen app updates arrive at once.** The offline helper now always asks whether the page has changed, instead of using a copy up to 10 minutes old.
+
 ## 3D build 27: learning games rebuilt as simple toys, with three learning levels
 
 **Why:** the learning games still felt like a school quiz. They had too many choices, several rules at once, spelling, and categories, and one screen showed a happy face beside a question about a grumpy one. They are rebuilt around the way young children play: tap, drag, match, count, discover. There is one skill and one action at a time, and every question has a right answer that is on screen.

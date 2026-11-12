@@ -739,7 +739,7 @@ function updateWorldAnim(dt, t) {
 let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
-  if (G.perfTest) return; // (build 26: the performance test never saves)
+  if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
     const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
@@ -1047,18 +1047,26 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
     <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
-    <button data-a="reset" class="small">↺ Reset automatic graphics</button></div>`;
+    <button data-a="reset" class="small">↺ Reset automatic graphics</button><button data-a="wipe" class="small danger">🗑️ Start over (erase all progress)</button></div>`;
   document.body.appendChild(pan);
   const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
   const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
   const refresh = () => { pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', +b.dataset.a[1] === learning.tier())); monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; changes by itself if the game runs slowly)${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
-  let holdT = null;
-  btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(holdT); holdT = setTimeout(() => { refresh(); pan.classList.add('show'); }, 900); });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) btn.addEventListener(ev, () => clearTimeout(holdT));
+  // (build 28) iPhone: a long press makes Safari start its own gesture, which CANCELS the touch (pointercancel) even
+  // though the finger is still down. So only a real lift ends the hold; a quick tap shows a small "hold me" hint.
+  let holdT = null, downAt = 0, opened = false;
+  const openPanel = () => { opened = true; refresh(); pan.classList.add('show'); Sound.click && Sound.click(); };
+  const hint = document.createElement('div'); hint.id = 'gearHint'; hint.textContent = '✋ Hold ⚙️ (grown-ups)'; document.body.appendChild(hint);
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(holdT); opened = false; downAt = performance.now(); holdT = setTimeout(openPanel, 700); });
+  btn.addEventListener('pointerup', () => { clearTimeout(holdT); if (!opened && performance.now() - downAt < 700) { hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 2200); } });
+  btn.addEventListener('contextmenu', e => e.preventDefault());
   pan.addEventListener('pointerdown', e => e.stopPropagation());
   pan.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a;
     if (a === 'close') pan.classList.remove('show');
+    if (a === 'wipe') { // two taps, so it can't happen by accident
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '⚠️ Tap again to erase everything'; setTimeout(() => { b.dataset.armed = ''; b.textContent = '🗑️ Start over (erase all progress)'; }, 4000); return; }
+      G.erasing = true; try { localStorage.removeItem(SAVE_KEY); } catch (err) { } location.reload(); return; }
     if (/^t[123]$/.test(a)) { learning.setTier(+a[1]); refresh(); }
     if (a === 'voice') { if (!Sound.on) setSound(true); voice.unlock(); voice.speak('Hello! Can you hear me? Let\'s play and learn!'); setTimeout(() => { info.textContent = 'Voice: ' + perfMon.voiceLine(); }, 2500); }
     if (a === 'mon') { perfMon.show(!perfMon.isShown()); refresh(); }

@@ -308,7 +308,10 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @keyframes lbounce{0%,100%{transform:translateY(0)}25%{transform:translateY(-50px)}50%{transform:translateY(0)}70%{transform:translateY(-20px)}}
 @keyframes ltear{0%{transform:translateY(0);opacity:1}100%{transform:translateY(16px);opacity:0}}
 /* build 26: grown-ups' performance panel and monitor */
-#gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85}
+#gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#gearHint{position:fixed;top:calc(64px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));z-index:61;background:#fff;color:#4b2f8f;font:800 14px system-ui,sans-serif;padding:8px 12px;border-radius:12px;box-shadow:0 4px 14px #0003;opacity:0;pointer-events:none;transition:opacity .2s}
+#gearHint.show{opacity:1}
+#perfPanel button.danger{color:#c0264f;border-color:#f3b6c6;background:#fff3f6}
 #perfbox{display:none;position:fixed;left:calc(6px + env(safe-area-inset-left));top:calc(64px + env(safe-area-inset-top));z-index:60;background:rgba(20,10,40,.72);color:#e9ffe9;font:11px/1.35 ui-monospace,Menlo,monospace;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
 #perfPanel{display:none;position:fixed;inset:0;z-index:70;background:rgba(30,15,60,.45);align-items:center;justify-content:center}
 #perfPanel.show{display:flex}
