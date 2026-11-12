@@ -78,7 +78,7 @@ export function makePost(renderer, scene, camera, { mobile }) {
       finalMat.uniforms.tIn.value = src.texture; finalMat.uniforms.tBloom.value = rtB1.texture; finalMat.uniforms.toneMappingExposure.value = renderer.toneMappingExposure;
       renderer.setRenderTarget(null); fin.render(renderer);
     },
-    gtao, finalMat,
+    gtao, finalMat, target: rtScene,
   };
   return post;
 }

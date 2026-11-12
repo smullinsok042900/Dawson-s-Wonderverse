@@ -317,7 +317,7 @@ export function plush(group, spec, opts = {}) {
     : [1, -1].map(sg => { const e = attach(B.head, makeEye(E.r, opts.iris || '#4a2a14', lidMat), sg * E.x, E.y, E.z); e.rotation.y = sg * .25; return e; });
   let mouth = null; if (spec.mouth && opts.mouth !== false) { mouth = attach(B.head, makeMouth(spec.eye.r * .65), 0, spec.mouth.y, spec.mouth.z); mouth.scale.setScalar(.001); }
   if (opts.accessories) opts.accessories(B, (bone, obj, x, y, z) => attach(bone, obj, x, y, z));
-  sculptAsync(spec).then(geo => { const mesh = skin(geo, mat, sk); holder.add(mesh); const shells = opts.furShells ?? (opts.fur !== false ? 6 : 0); if (shells) addFur(mesh, { shells, length: opts.furLength ?? .018 * (spec.furScale || 1), density: opts.furDensity ?? 240 / (spec.furScale || 1) }); mesh.traverse(o => { if (o.isMesh) o.userData.tap = group.userData.tapAll; }); if (group.userData.onReady) group.userData.onReady(mesh); });
+  sculptAsync(spec).then(geo => { setTimeout(() => globalThis.__ddwCompile && globalThis.__ddwCompile(), 0); const mesh = skin(geo, mat, sk); holder.add(mesh); const shells = opts.furShells ?? (opts.fur !== false ? 6 : 0); if (shells) addFur(mesh, { shells, length: opts.furLength ?? .018 * (spec.furScale || 1), density: opts.furDensity ?? 240 / (spec.furScale || 1) }); mesh.traverse(o => { if (o.isMesh) o.userData.tap = group.userData.tapAll; }); if (group.userData.onReady) group.userData.onReady(mesh); });
   // breathing, blinking, ears and tail
   let blink = 1 + Math.random() * 3, t0 = Math.random() * 10, happyT = 0;
   eyes.forEach(e => setLids(e, opts.lidOpen ?? 1, 0));

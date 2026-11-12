@@ -37,6 +37,48 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 24: the house freeze fixed at its cause, plus measured performance repairs
+Backup of build 23: `backups/3D_build23_index.html`. Every number below is from desktop Chromium with software WebGL (SwiftShader), emulating a phone-sized touch screen. That is not a physical iPhone, and real-device frame rates were not measured.
+
+**The freeze when entering the house: reproduced, found, fixed**
+- **Reproduced:** the first entry into the house compiled **20 shader programs at once** (a 3.5 s block in the test browser). The first trip underground compiled 22 (2.7 s), and first visits to other places compiled 8–15.
+- **Cause 1 (my build 22 change):** the house and underground lamps were switched on and off by area. In three.js, changing the number of lights forces every material to recompile its shader.
+  - **Fix:** a fixed pool of 3 lamps is always in the scene. It moves to the nearest lamps of the area you are in, fading smoothly, and is dark outdoors. The light count never changes, so nothing recompiles, and outdoors it costs 3 lights instead of the original 10.
+- **Cause 2:** shaders were compiled the first time something came into view. The start-up compile was also for the wrong target (straight to the screen instead of the post-processing picture), so it never matched.
+  - **Fix:** everything is now compiled for the real target, including far-away grass, trees and fur hidden by distance culling.
+  - Creatures sculpted a moment later are compiled as they arrive, and the model files are compiled as soon as they load.
+  - While the loading screen shows, each area (the house upstairs and downstairs, underground, the clouds, the castle and its interior) is drawn once into a tiny invisible picture. The graphics driver then finishes every shader and uploads every texture and mesh before play starts.
+- **Cause 3:** three.js's shader error check makes the browser wait for each shader on first use. It is now off in the real game and on in test mode, so errors are still caught.
+- **Result** (enter and exit the house 3 times, then underground):
+
+| | build 23 | build 24 |
+|---|---|---|
+| shaders compiled entering the house the first time | 20 (3.5 s block) | 0 (no long task) |
+| shaders compiled going underground the first time | 22 (2.7 s block) | 0 (no long task) |
+| long tasks during 6 house entries/exits | 4 | 0 |
+| shader programs after a full tour | 137 | 101 |
+
+**Other measured problems fixed**
+- **Leak:** every speech bubble created and uploaded a new texture that was never freed (creatures show more bubbles since build 23). Bubble pictures are now made once and reused, and bubble materials are disposed. In a 3-lap continuous-play test, textures now stay flat at 117 (build 23 kept climbing).
+- **Released balloons:** they were never freed and stayed in the list of tappable objects forever, so every tap got slower. They are now freed and removed.
+- **Shadows:** the sun never moves and most shadow casters stand still, so the shadow map is redrawn every other frame. Work per frame, all passes, averaged over 30 real frames:
+
+| view | calls (23 → 24) | triangles (23 → 24) |
+|---|---|---|
+| carousel | 349 → 304 | 1.60M → 1.38M |
+| park | 276 → 244 | 1.70M → 1.48M |
+| dinosaur | 301 → 225 | 1.34M → 1.16M |
+| castle | 608 → 479 | 0.98M → 0.90M |
+
+- **Phones only:** 571 materials had a faint clear-coat. That is a whole second gloss layer in the shader for very little visible difference, so on phones it is turned off and three.js compiles the cheaper shader. The trade-off is a little less gloss on toys; fluffy sheen materials are unchanged.
+- **Profiled JavaScript:** about 7.5 ms per frame during play in the test browser, with 3 ms of garbage collection over 8 s. The creature system costs 0.03 ms per frame. JavaScript is not the bottleneck; drawing is. The automatic quality system (`adapt()`) still lowers resolution and then switches post-processing off if a device can't keep 45 fps.
+
+**Start-up:** about the same as build 23 in the test browser (first start about 16 s, versus 13.8 s; second start about 15 s). The area pre-drawing adds a little on a CPU renderer; on a phone's GPU, eight tiny 32x16-pixel draws should be cheap.
+
+**Limits (honest)**
+- The test browser draws on the CPU. It can show stalls, shader compiles, leaks and the amount of work per frame, but not real iPhone frame rates. Median frame times there stayed within noise.
+- Frame rate, frame pacing and the house transition still need checking on a real iPhone.
+
 ## 3D build 23: living creatures, kid-friendly controls, faster start-up
 Backup of build 22: `backups/3D_build22_index.html`.
 
