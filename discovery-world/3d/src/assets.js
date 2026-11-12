@@ -60,6 +60,11 @@ function prep(gltf) {
     }
     if (o.geometry.index) geo.setIndex(new THREE.BufferAttribute(new Uint32Array(o.geometry.index.array), 1));
     geo.applyMatrix4(o.matrixWorld);
+    if (geo.attributes.color) { // (build 20) calmer foliage: pull each leaf 35% toward the crown's average colour (keeps the baked shading, removes confetti noise)
+      const c = geo.attributes.color, n = c.count, m = [0, 0, 0];
+      for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) m[k] += c.getComponent(i, k) / n;
+      for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) c.setComponent(i, k, c.getComponent(i, k) * .65 + m[k] * .35 * (.75 + .25 * (c.getComponent(i, 1) / Math.max(1e-3, m[1]))));
+    }
     let mat = o.material;
     if (geo.attributes.color) mat = leafMat;
     else { for (const k of ['map', 'normalMap']) if (mat[k]) mat[k].anisotropy = maxAniso.v; mat.roughness = .9; mat.metalness = 0; }

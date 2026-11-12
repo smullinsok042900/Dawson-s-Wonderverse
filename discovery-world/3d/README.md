@@ -37,6 +37,46 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 20: clean, cohesive, noise-free rendering (no new content)
+Backup of build 19: `backups/3D_build19_index.html`.
+
+**Audit: what was making the picture look noisy and inconsistent**
+- **Fur speckle:** each hair was a hard keep-or-discard dot about 4 mm wide. At play distance that is about one pixel, so pixels flipped randomly between bright tips and dark roots (60% to 112% brightness). That produced grain when still and shimmer when moving.
+- **Sharpening:** the build 18 sharpening pass amplified exactly that fur grain, plus leaf and texture noise.
+- **Two art styles at once:** the path and bricks were the most "photoreal" surfaces (deep grey mortar, strong relief, high stone-to-stone contrast), set next to soft toy-like objects.
+- **Confetti foliage:** grass roots at 40% vs tips at 102% brightness, clump colours far apart, and per-leaf colour jitter on the trees all read as noise at a distance.
+- **Visible tiling:** the path, lawn and walls repeated identical 3–4 m tiles.
+- **Depth precision:** the camera's near plane was 0.1 m with a far plane of 600 m, which risked z-fighting on wall details 2 cm apart.
+- **Shade:** with a strong 3.1 sun and weak fill, white objects in shade (the carousel ponies) went grey.
+
+**Fixes (code-level)**
+- **`src/fur.js`:** anti-aliased fur. The shader measures each hair's on-screen size (`fwidth`). As hairs approach pixel size they become thicker, softer and lower-contrast, like a texture's mipmap, so fur reads as plush instead of grain. Root-to-tip shading is gentler (84% to 105%).
+- **`src/post.js`:** sharpening removed; anti-aliasing and dithering kept.
+- **`tools/textures/make_cobble.py` and `make_bricks.py`:** regenerated softer. Lighter, narrower mortar, gentler relief and AO, stone and brick tones closer together, almost no specks. The path is now warm pastel stone.
+- **`src/refine.js` `macroVariation()`:** a world-space anti-tiling shader (two octaves of smooth noise) on the path, lawn and castle walls, so repeats don't line up visibly.
+- **`src/nature.js`:**
+  - Grass has gentler root-to-tip shading and colours close to the lawn.
+  - Distant grass sinks smoothly into the lawn (26–44 m) instead of shimmering.
+- **`src/assets.js`:** leaves are pulled 35% toward the crown's average colour. The baked shading stays and the confetti noise goes.
+- **`src/main.js`:**
+  - Camera near plane 0.3 (3x depth precision).
+  - Softer light balance: sun 2.85, hemisphere 0.7, environment 0.55. Shade is no longer grey, and nothing gets washed out.
+
+**Measured** (same camera positions; "detail" = high-frequency energy, which here is mostly noise)
+
+| view | detail (noise) | dark pixels | near-white |
+|---|---|---|---|
+| Pip close-up | 10.4 → 5.8 | 5.6% → 2.6% | 1.5% → 1.7% |
+| park | 11.9 → 9.3 | 4.2% → 2.7% | 13.0% → 13.3% |
+| carousel | 9.5 → 6.8 | 2.1% → 1.0% | 2.1% → 2.9% |
+| castle | 8.6 → 7.0 | 2.8% → 1.4% | 8.5% → 8.6% |
+
+Pictures: `screenshots/compare_b20.jpg` and `screenshots/compare_b20_fur.jpg` (fur at 1:1 pixels).
+
+**Test report:** full smoke test 133/136 in headless Chromium with software WebGL, no console errors. Not tested on a physical iPhone. The 3 misses:
+- "Tap the sky whale" also fails on build 17.
+- Two sound-button checks failed because an earlier world tap had already landed on the sound button in the HUD, so sound was off when they started. Run on their own, they pass. The test now checks that a tap flips the setting and a second tap flips it back.
+
 ## 3D build 19: a real asset pipeline (Blender-modelled trees and bushes, tool-made texture sets)
 Nothing new was added to play. What's already there now uses real model and texture files instead of shapes generated in game code. The backup of build 17 is `backups/3D_build17_index.html`; build 18 is in git.
 

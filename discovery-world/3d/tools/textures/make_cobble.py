@@ -30,7 +30,7 @@ for k, (px, py) in enumerate(pts):
     m = d < d1; d2 = np.where(m, d1, np.minimum(d2, d)); idx = np.where(m, k, idx); d1 = np.where(m, d, d1)
 edge = (d2 - d1) / 2 * G                          # distance to the stone edge, in stone units
 fine = (fnoise(40, 1) * .6 + fnoise(160, 2) * .4) * .35
-mortar_w = .05
+mortar_w = .04
 shape = np.clip((edge - mortar_w) / .14, 0, 1)
 shape = shape * shape * (3 - 2 * shape)            # rounded rim
 top = shape * (1 - .35 * np.clip(d1 * G / .62, 0, 1) ** 2)  # flat, gently domed worn top (no ridges)
@@ -39,16 +39,16 @@ cx, cy = pts[idx, 0], pts[idx, 1]; ddx = x - cx; ddx -= np.round(ddx); ddy = y -
 H = top * bump[idx] * (1 + (tilt[idx, 0] * ddx + tilt[idx, 1] * ddy) * G * .6) + fine * .05 * (shape > 0)
 H = np.clip(H, 0, None)
 # colour (sRGB): warm pastel stones in a few families, each stone slightly different
-fam = np.array([[224, 207, 192], [216, 202, 200], [228, 214, 194], [206, 194, 182], [220, 204, 204], [234, 222, 208]], float) / 255
-sc = fam[rng.integers(0, len(fam), G * G)] * rng.uniform(.92, 1.05, (G * G, 1))
-C = sc[idx] * (1 + fine[..., None] * .06)
-speck = rng.random((R, R)) < .015; C[speck] *= .82
-mortar = np.array([168, 150, 134]) / 255 * (1 + fine[..., None] * .2)
+fam = np.array([[236, 214, 200], [230, 210, 214], [238, 220, 200], [226, 206, 196], [234, 212, 216], [242, 226, 212]], float) / 255
+sc = fam[rng.integers(0, len(fam), G * G)] * rng.uniform(.95, 1.04, (G * G, 1)); sc = sc * .7 + sc.mean(0) * .3   # (build 20: calmer stone-to-stone variation)
+C = sc[idx] * (1 + fine[..., None] * .035)
+speck = rng.random((R, R)) < .004; C[speck] *= .92   # (build 20: far fewer, fainter specks: no sparkly noise)
+mortar = np.array([214, 198, 186]) / 255 * (1 + fine[..., None] * .2)
 mk = np.clip(1 - (edge - .02) / mortar_w, 0, 1)[..., None]
 C = C * (1 - mk) + mortar * mk
-ao = .68 + .32 * np.clip(shape * 1.6, 0, 1) ** .7; C *= ao[..., None]
+ao = .8 + .2 * np.clip(shape * 1.6, 0, 1) ** .7; C *= ao[..., None]
 # normal map from the periodic height
-s = 5.5
+s = 3.6
 hx = (np.roll(H, -1, 1) - np.roll(H, 1, 1)) * .5 * s; hy = (np.roll(H, -1, 0) - np.roll(H, 1, 0)) * .5 * s
 hx *= R / 256; hy *= R / 256
 nz = 1 / np.sqrt(hx * hx + hy * hy + 1)

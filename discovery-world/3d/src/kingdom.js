@@ -21,12 +21,13 @@ import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
 import { fabricMat, normalFromCanvas, leafDetail } from './nature.js';
 import { USE_ASSETS, brickSet } from './assets.js';
+import { macroVariation } from './refine.js';
 
 // pastel stone bricks with soft bumps (castle walls), and scalloped roof tiles
 function brickMat() {
   if (USE_ASSETS) { // build 19: the tool-made brick set (rose bricks, recessed mortar, worn edges, AO)
     const B = brickSet(); for (const t of [B.map, B.normal, B.rough]) t.repeat.set(3, 3);
-    return new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(1, 1), roughnessMap: B.rough, roughness: 1 });
+    return macroVariation(new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(.8, .8), roughnessMap: B.rough, roughness: 1 }), { scale: .2, amount: .07 });
   }
   const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
   g.fillStyle = '#f4d4e6'; g.fillRect(0, 0, W, W);

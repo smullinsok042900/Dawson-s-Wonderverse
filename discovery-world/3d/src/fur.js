@@ -20,8 +20,12 @@ function furMaterial(base, layer, o) {
   vec3 fp = vFurP * uDensity + vec3(sin(vFurP.y * 37.0), sin(vFurP.z * 41.0), sin(vFurP.x * 43.0)) * .35; vec3 cell = floor(fp);
   vec3 jit = vec3(furHash(cell + 7.1), furHash(cell + 13.7), furHash(cell + 21.3)) - .5; vec3 f = fract(fp) - .5 - jit * .5; // hairs scattered, not on a grid
   float h = furHash(cell), thick = (1.0 - uLayer) * (.55 + .35 * h);
-  if (h < uLayer * .92 || length(f) > thick * .55 + .03) discard;`)
-      .replace('#include <color_fragment>', '#include <color_fragment>\n  if (vFurAmt < .5) discard; // (no fur on bare parts: noses, paw pads)\n  diffuseColor.rgb *= mix(.62, 1.12, uLayer) * (.92 + .16 * furHash(cell + 3.1));');
+  // (build 20) anti-aliased fur: how big is one hair cell on screen? When hairs get close to pixel size
+  // they are drawn thicker and softer (like a texture's mipmap), so fur never turns into speckle or shimmer
+  float px = length(fwidth(fp)), furFar = smoothstep(.1, .45, px);
+  float rad = mix(thick * .55 + .03, thick * .7 + .12, furFar);
+  if (h < uLayer * mix(.92, .7, furFar) || length(f) > rad) discard;`)
+      .replace('#include <color_fragment>', '#include <color_fragment>\n  if (vFurAmt < .5) discard; // (no fur on bare parts: noses, paw pads)\n  diffuseColor.rgb *= mix(mix(.84, 1.05, uLayer) * (.96 + .08 * furHash(cell + 3.1)), mix(.93, 1.02, uLayer), furFar); // (gentle root-to-tip shading; flatter when far, so no grain)');
   };
   m.customProgramCacheKey = () => 'fur';
   return m;
