@@ -192,7 +192,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @media (max-height:420px){#learn .lletter{font-size:90px}#learn .lopt,#learn .lmenuitem{min-height:82px}}
 /* build 26: grown-ups' performance panel and monitor */
 #gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85}
-#perfbox{display:none;position:fixed;left:6px;bottom:calc(6px + env(safe-area-inset-bottom));z-index:60;background:rgba(20,10,40,.72);color:#e9ffe9;font:11px/1.35 ui-monospace,Menlo,monospace;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
+#perfbox{display:none;position:fixed;left:calc(6px + env(safe-area-inset-left));top:calc(64px + env(safe-area-inset-top));z-index:60;background:rgba(20,10,40,.72);color:#e9ffe9;font:11px/1.35 ui-monospace,Menlo,monospace;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
 #perfPanel{display:none;position:fixed;inset:0;z-index:70;background:rgba(30,15,60,.45);align-items:center;justify-content:center}
 #perfPanel.show{display:flex}
 #perfPanel .pp{background:#fff;border-radius:18px;padding:12px;width:min(440px,92vw);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:8px;color:#3b2a66;font:600 15px system-ui,sans-serif;box-shadow:0 10px 30px #0006}
