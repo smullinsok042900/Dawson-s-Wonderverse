@@ -77,6 +77,10 @@ Real-phone frame times will be far lower; only the relative change means somethi
 - **Fallback:** the old shapes remain for the light test mode and if loading fails.
 - **Size:** `index.html` is now 8.3 MB.
 
+**Tested and reverted:** I capped physics catch-up at 4 steps per frame to stop a "lag spiral". Measured, a physics step costs only about 0.2–0.4 ms, so the cap saved nothing. It also made the game run in slow motion whenever frames dropped (9 movement checks failed), so it was reverted.
+
+**Test report:** full smoke test **136/136** in headless Chromium with software WebGL, no console errors. The pet-tap check now aims only once the pet has stopped walking; it had failed intermittently because a moving pet could walk out from under the tap in the slow test browser. Not tested on a physical iPhone.
+
 Pictures: `screenshots/compare_b22.jpg` (castle wide, castle side angle, castle gameplay view, carousel close-up, carousel gameplay view).
 
 ## 3D build 21: plush fur, seated eyes, and the test failures fixed at the root
