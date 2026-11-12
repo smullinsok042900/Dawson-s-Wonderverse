@@ -111,7 +111,16 @@ function updateParticles(dt) {
 
 // ---------------- UI helpers ----------------
 let toastT = 0;
-function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('shown'); toastT = 3; }
+function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('shown'); toastT = 3; speak(msg); }
+// (build 23) every message is also SPOKEN (a friendly voice, emoji removed), so a child who can't read yet still knows
+// what happened and what to try. Uses the phone's own speech voice; silent when the sound button is off.
+let lastSpeak = 0;
+function speak(msg) {
+  if (TEST || !Sound.on || !Sound.unlocked || typeof speechSynthesis === 'undefined') return;
+  const text = msg.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
+  if (!text || performance.now() - lastSpeak < 900) return; lastSpeak = performance.now();
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = .95; u.pitch = 1.25; u.volume = .85; speechSynthesis.speak(u); } catch (e) { }
+}
 function discover(id, msg) { if (world.disc.has(id)) return false; world.disc.add(id); if (msg) toast('✨ ' + msg); Sound.chime(); player.happy = 1.4; if (creature) creature.cheer(); burst(player.x, player.y + 2.2, player.z, undefined, 18); save(); return true; }
 function updateCounters() {
   $('bitsCount').textContent = world.bits.size;
@@ -447,10 +456,20 @@ function downAction() {
   creature.cheer(); // a little squat
 }
 // arrow buttons: hold ◀ ▶ to walk; ▲ ▼ do up/down things (go in, stairs, ladder, lift, swim up, dive)
+// (build 23) the arrow pad steers like a joystick: put a thumb on any arrow and slide it around the pad to change
+// direction without lifting. "Up" (go in / stairs) needs a clearly upward thumb, so a sideways slide never goes through a door.
+const padSet = {}; let padPointer = null;
+function padSteer(e) {
+  const r = document.querySelector('.dpad').getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, dx = e.clientX - cx, dy = e.clientY - cy, dead = r.width * .11;
+  const H = Math.abs(dx) > dead && Math.abs(dx) > Math.abs(dy) * .6, V = Math.abs(dy) > dead && Math.abs(dy) > Math.abs(dx) * 1.2;
+  padSet.left(H && dx < 0); padSet.right(H && dx > 0); padSet.up(V && dy < 0); padSet.down(V && dy > 0);
+}
 function hold(id, key, onPress) {
-  const el = $(id); const set = v => { if (keys[key] === v) return; keys[key] = v; el.classList.toggle('pressed', v); if (v && onPress) onPress(); };
-  el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) { } Sound.unlocked = true; if (key === 'left' || key === 'right') keys.scale = 1; set(true); });
-  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => el.addEventListener(n, () => set(false)));
+  const el = $(id); const set = v => { if (keys[key] === v) return; keys[key] = v; el.classList.toggle('pressed', v); if (v && onPress) onPress(); if (v) G.walkTo = null; };
+  padSet[key] = set;
+  el.addEventListener('pointerdown', e => { e.preventDefault(); try { el.setPointerCapture(e.pointerId); } catch (_) { } Sound.unlocked = true; if (key === 'left' || key === 'right') keys.scale = 1; padPointer = e.pointerId; set(true); });
+  el.addEventListener('pointermove', e => { if (e.pointerId === padPointer) padSteer(e); }); // (follows the finger, even through the middle of the pad)
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(n => el.addEventListener(n, e => { if (e.pointerId !== padPointer) return; padPointer = null; for (const k of ['left', 'right', 'up', 'down']) padSet[k] && padSet[k](false); }));
 }
 hold('leftBtn', 'left'); hold('rightBtn', 'right'); hold('upBtn', 'up', () => upAction()); hold('downBtn', 'down', () => downAction());
 const press = (id, fn) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; $(id).classList.add('pressed'); setTimeout(() => $(id).classList.remove('pressed'), 140); fn(); });
@@ -490,18 +509,36 @@ canvas.addEventListener('pointerdown', e => {
   if (false && !stick && e.clientX < innerWidth * .5) { stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), active: false, dx: 0, dy: 0, cx: e.clientX, cy: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (_) { } return; }
   worldTap(e);
 });
-function worldTap(e) {
-  pointerRay(e);
+// (build 23) forgiving taps: if the finger misses, look around it (small fingers rarely hit the exact centre);
+// every successful tap gets a little bounce, a sparkle and a pop. Tapping empty ground walks you there.
+const bounces = [];
+function bounceObj(o) { if (!o || !o.scale || bounces.some(b => b.o === o) || (G.life && G.life.agents.some(a => a.root === o))) return; bounces.push({ o, t: 0, s0: o.scale.clone() }); }
+function tapAt(cx, cy, ring) {
+  pointerRay({ clientX: cx, clientY: cy });
   const targets = [creature.root, ...G.taps, ...bubbles.map(b => b.m), ...DOORS.filter(d => d.sprite.visible).map(d => d.sprite)];
   const hits = ray.intersectObjects(targets, true);
   // tapping your creature always tickles it, even when it stands behind balls or bubbles
-  if (hits.some(h => h.object.userData.creature) && !hits.some(h => h.object.isSprite)) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return; }
+  if (!ring && hits.some(h => h.object.userData.creature) && !hits.some(h => h.object.isSprite)) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return true; }
   for (const h of hits) {
     let o = h.object; while (o && !o.userData.tap && !o.userData.creature) o = o.parent;
-    if (!o) continue;
-    if (o.userData.creature) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return; }
-    o.userData.tap(h); return;
+    if (!o || (ring && o.userData.creature)) continue;
+    if (o.userData.creature) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return true; }
+    o.userData.tap(h); bounceObj(o); burst(h.point.x, h.point.y, h.point.z, ['#ffffff', '#ffe36e', '#ff9fd8'], 5, 1.2); Sound.tone(880, .06, 'sine', .035, 1.5); return true;
   }
+  return false;
+}
+function worldTap(e) {
+  if (tapAt(e.clientX, e.clientY)) return;
+  for (const r of [22, 44]) for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; if (tapAt(e.clientX + Math.cos(a) * r, e.clientY + Math.sin(a) * r, true)) return; }
+  walkToTap(e);
+}
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), GP = new THREE.Vector3();
+function walkToTap(e) {
+  const P = player; if (!started || P.ride || P.stair || P.swim) return;
+  pointerRay(e); groundPlane.constant = -(P.y + .05);
+  if (!ray.ray.intersectPlane(groundPlane, GP) || Math.abs(GP.x - P.x) < .6 || Math.abs(GP.x - P.x) > 22) return;
+  G.walkTo = GP.x; G.walkStuck = 0; G.walkLastX = P.x;
+  burst(GP.x, P.y + .15, P.z + .3, ['#ffffff', '#9fe6ff'], 6, 1); Sound.tone(660, .05, 'sine', .03, 1.3);
 }
 canvas.addEventListener('pointermove', e => { if (stick && e.pointerId === stick.id) { stickMove(e); return; } if (!painting || e.pointerId !== painting.id) return; pointerRay(e); const h = ray.intersectObject(G.paint.mesh)[0]; if (h) { paintAt(painting.last, h.uv); painting.last = h.uv.clone(); } });
 ['pointerup', 'pointercancel'].forEach(n => canvas.addEventListener(n, e => {
@@ -554,7 +591,12 @@ function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
   if (P.ride) { updateRide(dt); return; }
-  const h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0); if (h) P.facing = h;
+  let h = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+  if (!h && G.walkTo != null) { // tap-to-walk: head for the tapped spot; stop on arrival or if something is in the way
+    const d = G.walkTo - P.x; G.walkStuck = Math.abs(P.x - G.walkLastX) < dt * .5 ? G.walkStuck + dt : 0; G.walkLastX = P.x;
+    if (Math.abs(d) < .3 || G.walkStuck > .5 || P.ride || P.stair) G.walkTo = null; else h = Math.sign(d);
+  }
+  if (h) P.facing = h;
   // swimming in the deep part of the ball pit
   const swim = P.layer === '' && inShaftX(P.x) && P.y < .45 && P.y > UG.swimBottom;
   if (swim && !P.swim && P.vy <= 0) P.vy = -3.2; // plunge in with a splash
@@ -670,6 +712,7 @@ function updateWorldAnim(dt, t) {
     if (W.spout > 0 && Math.random() < dt * 30) burst(W.g.position.x + 1.4, W.g.position.y + 1.8, W.g.position.z, ['#bfe8ff', '#ffffff', '#9fe6ff'], 3, 2.5); }
   G.skyPuffs.forEach(m => { m.position.y = SKY.y + .25 + Math.sin(t * 2 + m.position.x) * .04; });
   G.grassTime.value = t; windTime.value = t;
+  for (let i = bounces.length - 1; i >= 0; i--) { const b = bounces[i]; b.t += dt; const k = b.t / .32; if (k >= 1) { b.o.scale.copy(b.s0); bounces.splice(i, 1); } else b.o.scale.copy(b.s0).multiplyScalar(1 + Math.sin(k * Math.PI) * .1 * (1 - k * .4)); } // (build 23: a little bounce on every tap)
   // (build 22) performance: lights only where you are (underground / indoor room), and far-away grass,
   // bushes and trees are not drawn at all
   { const z = player.layer === 'in' ? 'in' : player.y < -1.5 ? 'under' : ''; for (const l of zoneLights) l.visible = l.userData.zone === z; }
@@ -757,9 +800,14 @@ function resize() {
   post.setSize(w, h, renderer.getPixelRatio());
 }
 addEventListener('resize', resize); resize();
+// (build 23) the title pictures never change: they are drawn once, saved on the device, and shown instantly on
+// every later start. On the very first start they are drawn just after the game becomes playable.
+const PORTRAIT_KEY = 'ddw3-portraits-b23';
 let portraits = {};
-try { portraits = renderPortraits(); } catch (e) { }
-document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
+try { portraits = JSON.parse(localStorage.getItem(PORTRAIT_KEY) || '{}'); } catch (e) { portraits = {}; }
+const applyPortraits = () => document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
+const needPortraits = Object.keys(CREATURES).some(k => !portraits[k]);
+if (!needPortraits) applyPortraits();
 function adapt(dt) {
   ema += (dt - ema) * .05;
   if (ema > 1 / 45 && (quality > .55 || post.enabled)) { slow += dt; if (slow > 1.5 && post.enabled && quality > .76) { quality -= .1; slow = 0; ema = 1 / 60; resize(); return; } /* first a little less resolution */ if (slow > 1.5 && post.enabled) { post.enabled = false; slow = 0; ema = 1 / 60; return; } /* then the post effects */ if (slow > 1.5) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } } }
@@ -821,7 +869,7 @@ const zoneLights = []; scene.traverse(o => { if (o.isPointLight && o.userData.zo
 try { const ex = new Set(); if (G.paint && G.paint.mesh) ex.add(G.paint.mesh); G.refine = refineScene(scene, renderer, { exclude: ex, budget: MOBILE ? 120000 : 400000 }); } catch (e) { console.log('refine skipped', e); }
 // compile all the shaders first (in the background where the browser allows it), then start
 let begun = false;
-const begin = () => { if (begun) return; begun = true; requestAnimationFrame(frame); setTimeout(() => $('loading').classList.add('done'), 250); };
+const begin = () => { if (begun) return; begun = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
 try { if (renderer.extensions.has('KHR_parallel_shader_compile')) renderer.compileAsync(scene, camera).then(begin, begin); else begin(); } catch (e) { begin(); }
 setTimeout(begin, 8000);
 
