@@ -200,10 +200,13 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
     const cx = camera.position.x, cz = camera.position.z;
     for (const a of agents) {
       const d = Math.hypot(a.x - cx, a.z - cz);
-      if (!a.follower && d > 48) continue;                                 // far away: no work at all
+      // far away: no work at all, and (build 25) off the scene too, so its skeleton isn't updated every frame
+      if (!a.follower && d > 60) { if (a.root.parent && !a.detached) { a.detached = a.root.parent; a.detached.remove(a.root); } continue; }
+      if (a.detached) { a.detached.add(a.root); a.detached = null; }
+      if (!a.follower && d > 48) continue;
       if (!a.follower && d > 22) { a.accum += dt; if ((frameNo + (a.seed | 0)) % 3) continue; step(a, a.accum, t, P, ctx); a.accum = 0; continue; } // mid-distance: every 3rd frame
       step(a, dt, t, P, ctx);
     }
   }
-  return { add, remove, update, agents, tap(a, secs = 1.6, spin = 0) { a.tapped = secs; a.spin = spin; a.state = 'idle'; a.timer = secs + .5; a.sleep = 0; }, setFollower(a, on, slot = 0) { a.follower = on; a.slot = slot; a.state = 'idle'; a.timer = .5; if (!on) { a.home.set(a.x, a.baseY, a.z); a.radius = Math.min(a.sp.r, 1); } } };
+  return { add, remove, update, agents, tap(a, secs = 1.6, spin = 0) { a.tapped = secs; a.spin = spin; a.state = 'idle'; a.timer = secs + .5; a.sleep = 0; }, setFollower(a, on, slot = 0) { if (on && a.detached) { a.detached.add(a.root); a.detached = null; } a.follower = on; a.slot = slot; a.state = 'idle'; a.timer = .5; if (!on) { a.home.set(a.x, a.baseY, a.z); a.radius = Math.min(a.sp.r, 1); } } };
 }

@@ -68,7 +68,7 @@ function buildTrain() {
 
 export function initTrain(G, api) {
   const { scene, Sound, burst, discover, toast } = api;
-  const add = o => { scene.add(o); return o; };
+  const add = o => { scene.add(o); o.userData.dynamic = true; return o; }; // (moves along the whole track: never put in a scenery slice)
   // ---------- the rails along the front of the world ----------
   { const len = TRAIN.x1 - TRAIN.x0, mx = (TRAIN.x0 + TRAIN.x1) / 2, steel = toy('#d8d2f0', { r: .22, cc: .6, m: .85 });
     for (const dz of [-.5, .5]) { const r = new THREE.Mesh(new THREE.BoxGeometry(len, .07, .07), steel); r.position.set(mx, .1, TRAIN.z + dz); r.receiveShadow = true; add(r); }

@@ -20,6 +20,7 @@ import { initMarbles } from './marble.js';
 import { initKingdom, KINGDOM } from './kingdom.js';
 import { makePost } from './post.js';
 import { refineScene } from './refine.js';
+import { initLearning } from './learn.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD } from './nature.js';
 import { FUR } from './fur.js';
@@ -163,14 +164,14 @@ bigStar.position.set(G.secretStar[0], G.secretStar[1], 0); bigStar.castShadow = 
 
 // ---------------- the six baby Fluffkins ----------------
 const FLUFF_COLS = ['#ff8fd0', '#8fd8ff', '#ffd45e', '#a98cff', '#7be08a', '#ffa36b'];
-const fluffs = G.fluffSpots.map(([x, y, z = 0], i) => { const m = makeFluff(FLUFF_COLS[i]); scene.add(m.root); return { i, hx: x, hy: y, hz: z, state: 'wait', m, px: x, py: y, pz: z }; });
+const fluffs = G.fluffSpots.map(([x, y, z = 0], i) => { const m = makeFluff(FLUFF_COLS[i]); scene.add(m.root); m.root.userData.dynamic = true; return { i, hx: x, hy: y, hz: z, state: 'wait', m, px: x, py: y, pz: z }; });
 function updateFluffs(dt, t) {
   const P = player; world.trail.unshift([P.x, P.y, P.z]); if (world.trail.length > 200) world.trail.length = 200;
   let k = 0;
   for (const f of fluffs) {
     const m = f.m.root;
     if (f.state === 'wait') {
-      m.position.set(f.hx, f.hy, f.hz); m.visible = Math.abs(f.hx - P.x) < 30; f.m.update(dt, 'wait');
+      m.position.set(f.hx, f.hy, f.hz); const nearF = Math.abs(f.hx - P.x) < 30; if (nearF !== !!m.parent) { if (nearF) scene.add(m); else scene.remove(m); } /* (build 25: far-away waiting Fluffkins leave the scene) */ if (nearF) f.m.update(dt, 'wait');
       if (m.visible && t % 1 < dt * 2) burst(f.hx, f.hy + .9, f.hz, ['#fff', '#ffe36e'], 3, 1);
       if (P.layer === '' && Math.abs(P.x - f.hx) < 1 && Math.abs(P.y - f.hy) < 1.2) {
         f.state = 'follow'; f.px = f.hx; f.py = f.hy; Sound.giggle(); burst(f.hx, f.hy + .6, 0, RAINBOW, 24, 3);
@@ -606,7 +607,7 @@ function updatePlayer(dt) {
   const crawl = P.layer === '' && P.y < UG.ceil - .1 && P.x > UG.tunnel[0] - .3 && P.x < UG.tunnel[1] + .3 && P.y < UG.tunnelCeil - .5;
   if (crawl && !P.crawl) discover('crawl', 'A tiny tunnel! Crawl through it.');
   P.crawl = crawl;
-  const top = (swim ? 2.2 : crawl ? 3.4 : 5.2) * keys.scale, accel = P.grounded ? 40 : 22; if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
+  const top = (swim ? 2.2 : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
   // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
   for (const s of G.solids) {
@@ -675,8 +676,8 @@ function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.
 const ease = (dt, rate) => 1 - Math.exp(-dt * rate);
 function updateCamera(dt) {
   const P = player;
-  camT.look += ((P.ride ? (P.ride.type === 'train' ? P.facing * 2.6 : 0) : P.facing * 1.8) - camT.look) * ease(dt, 1.6);
-  camT.x += (camTargetX() - camT.x) * ease(dt, 5);
+  camT.look += ((P.ride ? (P.ride.type === 'train' ? P.facing * 2.6 : 0) : P.facing * 1.8) - camT.look) * ease(dt, 3);
+  camT.x += (camTargetX() - camT.x) * ease(dt, 8); // (build 25: the camera keeps up more tightly, so the controls don't feel delayed)
   camT.y += (P.y - camT.y) * ease(dt, (P.grounded ? 4 : 2));
   const y = camT.y;
   // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
@@ -717,6 +718,7 @@ function updateWorldAnim(dt, t) {
   // (build 22) performance: lights only where you are (underground / indoor room), and far-away grass,
   // bushes and trees are not drawn at all
   poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
+  updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
   if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) it.o.visible = Math.abs(it.x - camT.x) < it.r;
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
@@ -730,7 +732,7 @@ let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -740,6 +742,7 @@ function load() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '
 function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
+  if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; } // (build 25: learning progress)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
   if (Array.isArray(d.pets) && d.pets.length <= 5 && d.pets.every(okRec)) world.pets = d.pets.map(cleanRec);
@@ -809,10 +812,17 @@ try { portraits = JSON.parse(localStorage.getItem(PORTRAIT_KEY) || '{}'); } catc
 const applyPortraits = () => document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
 const needPortraits = Object.keys(CREATURES).some(k => !portraits[k]);
 if (!needPortraits) applyPortraits();
+// (build 25) the automatic quality steps are REMEMBERED on the device, so a phone that needed lighter graphics
+// starts with them next time instead of lagging until it adapts again; and if a device runs smoothly for a while,
+// quality is stepped back up.
+const GFX_KEY = 'ddw3-gfx-b25', QMAX = quality;
+let fast = 0;
+const saveGfx = () => { try { localStorage.setItem(GFX_KEY, JSON.stringify({ q: quality, post: post.enabled, sm: sun.shadow.mapSize.x })); } catch (e) { } };
+if (!TEST && !/[?&]hq/.test(location.search)) try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g) { quality = Math.min(QMAX, Math.max(.5, g.q)); post.enabled = post.enabled && g.post; if (g.sm && g.sm < sun.shadow.mapSize.x) sun.shadow.mapSize.set(g.sm, g.sm); resize(); } } catch (e) { }
 function adapt(dt) {
   ema += (dt - ema) * .05;
-  if (ema > 1 / 45 && (quality > .55 || post.enabled)) { slow += dt; if (slow > 1.5 && post.enabled && quality > .76) { quality -= .1; slow = 0; ema = 1 / 60; resize(); return; } /* first a little less resolution */ if (slow > 1.5 && post.enabled) { post.enabled = false; slow = 0; ema = 1 / 60; return; } /* then the post effects */ if (slow > 1.5) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } } }
-  else slow = Math.max(0, slow - dt * .5);
+  if (ema > 1 / 45 && (quality > .55 || post.enabled)) { fast = 0; slow += dt; if (slow > 1.2 && post.enabled && quality > .76) { quality -= .1; slow = 0; ema = 1 / 60; resize(); saveGfx(); return; } /* first a little less resolution */ if (slow > 1.2 && post.enabled) { post.enabled = false; slow = 0; ema = 1 / 60; saveGfx(); return; } /* then the post effects */ if (slow > 1.2) { quality -= .15; slow = 0; ema = 1 / 60; resize(); if (quality < .8 && sun.shadow.mapSize.x > 1024) { sun.shadow.mapSize.set(1024, 1024); sun.shadow.map?.dispose(); sun.shadow.map = null; } saveGfx(); } }
+  else { slow = Math.max(0, slow - dt * .5); if (ema < 1 / 57) { fast += dt; if (fast > 25 && quality < QMAX - .01) { quality = Math.min(QMAX, quality + .1); fast = 0; resize(); saveGfx(); } } else fast = 0; }
 }
 
 // ---------------- main loop ----------------
@@ -828,6 +838,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
+  if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
   timer.update(); const raw = Math.min(timer.getDelta(), .25); acc += raw;
   let n = 0; while (acc >= 1 / 60 && n < 15) { step(1 / 60); acc -= 1 / 60; n++; }
@@ -885,11 +896,50 @@ function updateLightPool(dt) {
   }
 }
 let lodTick = 0, poolTick = 0, poolDt = 0, shadowTick = 0;
+// ---------------- build 25: the Learning Corners ----------------
+// Seven signposts in the park and valley (numbers, letters, colors & shapes, thinking, science, music & art,
+// feelings). Tap one (or PAW next to it) to open its learning games; the games are a light 2D layer and the
+// 3D world pauses while they're open.
+const learning = initLearning({ Sound, world, save: () => save(), discover: id => { if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST });
+G.learning = learning;
+{ const signTex = e => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff6fb'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#c9a6ff'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const wood = toy('#c98a5a', { r: .7, cc: .1 }), glow = toy('#fff3a6', { em: '#ffd76a', ei: .9, r: .4 });
+  const PREF = { num: 118, abc: 158, art: 214, think: 236, sci: 306, music: 344, me: 384 };
+  const taken = () => [...G.interact.filter(i => (i.layer || '') === '' && (i.y || 0) < 2).map(i => i.x), ...DOORS.map(d => d.x)];
+  for (const [cat, [icon]] of Object.entries(learning.corners)) {
+    let x = PREF[cat]; const busy = taken(); for (let k = 0; k < 40 && busy.some(b => Math.abs(b - x) < 3.2); k++) x += (k % 2 ? -1 : 1) * (k + 1) * .8;
+    const g = new THREE.Group(), z = -1.95; g.position.set(x, 0, z); scene.add(g);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, 1.7, 12), wood); post.position.y = .85; g.add(post);
+    const sign = new THREE.Mesh(new THREE.CircleGeometry(.48, 40), new THREE.MeshStandardMaterial({ map: signTex(icon), roughness: .6 })); sign.position.set(0, 1.95, .06); g.add(sign);
+    const back = new THREE.Mesh(new THREE.CylinderGeometry(.53, .53, .08, 40), toy('#b28cff', { r: .5 })); back.rotation.x = Math.PI / 2; back.position.set(0, 1.95, 0); g.add(back);
+    const star = new THREE.Mesh(starGeometry(.16, .08, .05, .02, 5), glow); star.position.set(0, 2.62, 0); g.add(star); g.userData.star = star;
+    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => learning.showCorner(cat); } }); G.taps.push(g);
+    G.interact.push({ x, y: 0, layer: '', disc: 'corner_' + cat, run: () => learning.showCorner(cat), hintY: 2.9 });
+    (G.learnSigns = G.learnSigns || []).push(g);
+  } }
 // build 18: one quality pass over the finished world (bevelled edges, round silhouettes, sharp textures, no wet-plastic gloss)
 try { const ex = new Set(); if (G.paint && G.paint.mesh) ex.add(G.paint.mesh); G.refine = refineScene(scene, renderer, { exclude: ex, budget: MOBILE ? 120000 : 400000, phone: MOBILE }); } catch (e) { console.log('refine skipped', e); }
 // compile all the shaders first (in the background where the browser allows it), then start
 let begun = false;
-const begin = () => { if (begun) return; begun = true; renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
+// (build 25) SCENERY SLICES: the world is long (from the studio to the castle, plus the house and castle rooms far
+// away). Still scenery is grouped into 24 m slices, and slices out of view are taken off the scene, so three.js no
+// longer walks ~3,600 objects (positions, culling, shadows) every frame. Things that move about are never sliced.
+const slices = [];
+function sliceScenery() {
+  const skip = new Set([creature.root, ...LOD.map(i => i.o), ...(G.life ? G.life.agents.map(a => a.root) : [])]);
+  const box = new THREE.Box3(), sph = new THREE.Sphere(), byKey = new Map();
+  for (const o of [...scene.children]) {
+    if (o.isLight || o.isCamera || o.isPoints || o.isSprite || o.userData.dynamic || skip.has(o) || o === sky) continue;
+    box.setFromObject(o); if (box.isEmpty()) continue; box.getBoundingSphere(sph); if (sph.radius > 18) continue;
+    const key = Math.floor(sph.center.x / 24); let g = byKey.get(key);
+    if (!g) { g = new THREE.Group(); g.userData.slice = true; g.userData.x = key * 24 + 12; byKey.set(key, g); slices.push(g); scene.add(g); }
+    g.add(o); // (the scene has no transform, so the object stays exactly where it is)
+  }
+  G.sliced = slices.reduce((n, g) => n + g.children.length, 0);
+}
+G.unslice = o => { if (o && o.parent && o.parent.userData.slice) scene.attach(o); }; // (something that starts to follow you leaves its slice)
+function updateSlices() { for (const g of slices) { const near = Math.abs(g.userData.x - camT.x) < 52; if (near && !g.parent) scene.add(g); else if (!near && g.parent) scene.remove(g); } }
+const begin = () => { if (begun) return; begun = true; try { sliceScenery(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
 // (build 24) shaders: compile everything in the scene before play starts (the light count is now fixed, so these stay
 // valid), then compile the model files' materials as soon as they arrive (in the background where the phone supports
 // parallel compiling), so nothing compiles the first time it comes into view.

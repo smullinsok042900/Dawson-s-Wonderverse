@@ -37,6 +37,53 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 25: lighter every frame, snappier controls, and the Learning Corners
+Backup of build 24: `backups/3D_build24_index.html`. Measurements come from desktop Chromium with software WebGL, emulating a phone screen. That is not a physical iPhone.
+
+**Performance: what the profiles showed, and the fixes**
+- **CPU-side per-frame cost:** three.js walked about 3,650 objects every frame (positions, culling, shadow pass), most of them far off-screen.
+  - **Scenery slices:** still scenery is grouped into 24 m slices along the world, and slices out of view are taken off the scene, so they are not walked at all. Anything that moves about is never sliced: the train, the baby Fluffkins, followers and creatures.
+  - **Far creatures:** creatures far from the camera (more than 60 m) leave the scene, so their skeletons (about 50 bones each) are not updated. They come back when you approach, and a creature that starts following you always stays.
+
+| | build 24 | build 25 |
+|---|---|---|
+| objects walked per frame (park) | 3,654 | 1,360 |
+| objects walked per frame (castle) | 3,655 | 1,174 |
+| scene matrix update | 0.83 ms | 0.29 ms |
+| game JavaScript over 8 s of play | 226 ms | 136 ms |
+| frustum/projection work over 8 s | 168 ms | 68 ms |
+
+- **Controls that felt sluggish:**
+  - Snappier start and stop: ground acceleration 40 → 62, air 22 → 30, top speed 5.2 → 5.8.
+  - The camera follows more tightly (rate 5 → 8), and its look-ahead swings faster after a turn (1.6 → 3), so the controls don't feel delayed.
+  - Touch input had no browser delay to remove: the viewport and `touch-action` were already right.
+- **Remembered quality:** the automatic quality steps are now remembered on the device. A phone that needed lighter graphics starts with them next time instead of lagging until it adapts again. A device that runs smoothly for 25 s steps quality back up.
+- **The bottleneck (honest):** drawing (GPU work), not game logic. JavaScript is about 4–5 ms per frame in the test browser, and creatures cost 0.03 ms. On a slow phone the adaptive quality is the safety net.
+
+**The Learning Corners (`src/learn.js`)**
+- **Where:** seven signposts in the park and the valley: 🔢 numbers, 🔤 letters, 🎨 colors & shapes, 🧠 thinking, 🔬 science, 🎵 music & art, 😊 feelings & me. Tap a sign, or press PAW beside it.
+- **How it stays light:**
+  - Each game is a 2D layer of big buttons over the game; there are no new 3D scenes or renderers.
+  - The 3D world pauses completely while a game is open, so it costs almost nothing.
+  - A game is built when opened and cleared when closed. Measured opening times are 2–19 ms.
+- **Made for a 5-year-old:**
+  - Every instruction is spoken, and the 🔊 button says it again. There are pictures, not words.
+  - Big tap targets and one-tap answers, with no timers and no failure screens.
+  - A wrong tap gets a gentle wiggle and a spoken hint; after two tries the right answer glows.
+  - Rounds of 5 steps; each finished round gives a ⭐ and makes the next round a little harder.
+  - Progress is saved with the game.
+- **The 33 activities:**
+  - Numbers: count by tapping each thing, find the number, more or fewer, the missing number on the train, add and take away.
+  - Letters: big and small letters, find the letter, first sounds, rhyme time, build a three-letter word.
+  - Colors & shapes: find the color, mix the paint (discover new colors), find the shape, what comes next (patterns), which is different.
+  - Thinking: memory cards, small to big, what belongs.
+  - Science: sink or float (an experiment), magnet magic, heavy or light, dress for the weather, day and night, animal homes, grow a flower (water and sunshine).
+  - Music & art: copy the music (rhythm), play music (four instruments), paint a picture.
+  - Feelings & me: how do they feel, being kind, what do we use, safe choices, what comes first (routines).
+- **Tested** (automated, through the real touch interface):
+  - Tapping a 3D sign opens its corner and pauses the world; closing resumes it.
+  - All 33 activities were played through: every round finished and gave its star, the free-play ones respond, progress was saved, and there were no errors.
+
 ## 3D build 24: the house freeze fixed at its cause, plus measured performance repairs
 Backup of build 23: `backups/3D_build23_index.html`. Every number below is from desktop Chromium with software WebGL (SwiftShader), emulating a phone-sized touch screen. That is not a physical iPhone, and real-device frame rates were not measured.
 
