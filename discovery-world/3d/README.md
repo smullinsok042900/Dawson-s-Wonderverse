@@ -73,6 +73,10 @@ Backup of build 19: `backups/3D_build19_index.html`.
 
 Pictures: `screenshots/compare_b20.jpg` and `screenshots/compare_b20_fur.jpg` (fur at 1:1 pixels).
 
+**Test report:** full smoke test 133/136 in headless Chromium with software WebGL, no console errors. Not tested on a physical iPhone. The 3 misses:
+- "Tap the sky whale" also fails on build 17.
+- Two sound-button checks failed because an earlier world tap had already landed on the sound button in the HUD, so sound was off when they started. Run on their own, they pass. The test now checks that a tap flips the setting and a second tap flips it back.
+
 ## 3D build 19: a real asset pipeline (Blender-modelled trees and bushes, tool-made texture sets)
 Nothing new was added to play. What's already there now uses real model and texture files instead of shapes generated in game code. The backup of build 17 is `backups/3D_build17_index.html`; build 18 is in git.
 
