@@ -75,6 +75,8 @@ Backup of build 23: `backups/3D_build23_index.html`. Every number below is from 
 
 **Start-up:** about the same as build 23 in the test browser (first start about 16 s, versus 13.8 s; second start about 15 s). The area pre-drawing adds a little on a CPU renderer; on a phone's GPU, eight tiny 32x16-pixel draws should be cheap.
 
+**Test report:** full smoke test **136/136**, no console errors.
+
 **Limits (honest)**
 - The test browser draws on the CPU. It can show stalls, shader compiles, leaks and the amount of work per frame, but not real iPhone frame rates. Median frame times there stayed within noise.
 - Frame rate, frame pacing and the house transition still need checking on a real iPhone.
