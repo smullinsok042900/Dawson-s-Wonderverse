@@ -95,12 +95,12 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
     let tx = a.x, tz = a.z, speed = 0, maxV = a.sp.v;
     if (a.tapped > 0) { /* stay put and enjoy it */ }
     else if (a.follower) {
-      const tp = ctx.trailAt(4 + a.slot * 4);
+      const tp = ctx.trailAt(2 + a.slot * 3);
       const back = .85 + a.slot * .62, side = (a.slot % 2 ? .95 : .45);
       tx = tp[0] - P.facing * back; tz = tp[2] + side; a.baseY += (tp[1] - a.baseY) * Math.min(1, dt * 8);
       const far = Math.hypot(tx - a.x, tz - a.z);
       if (far > 16 || Math.abs(tp[1] - a.baseY) > 6) { a.x = tx; a.z = tz; a.baseY = tp[1]; emote(a, '✨'); }
-      maxV = a.sp.v * (far > 3 ? 2.2 : far > 1.2 ? 1.4 : 1) + Math.abs(P.vx || 0) * .9; // catch up when you run
+      maxV = a.sp.v * (far > 2.5 ? 2.6 : far > 1 ? 1.6 : 1) + Math.abs(P.vx || 0) * 1.05; // catch up when you run
       a.state = far > .35 ? 'follow' : (ctx.playerStill > 1.5 ? (a.state === 'follow' || a.state === 'wander' ? 'idle' : a.state) : 'idle');
       if (a.state !== 'follow' && a.timer <= 0) { decideFollowerIdle(a); }
     } else {
@@ -113,7 +113,7 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
     }
     // steer: arrive at the target, keep apart from everyone, never through the player
     let ax = tx - a.x, az = tz - a.z; const dist = Math.hypot(ax, az);
-    if (dist > a.arriveR) { const want = Math.min(maxV, dist * 2.2); ax = ax / dist * want; az = az / dist * want; speed = want; } else { ax = 0; az = 0; if (a.state === 'wander') { a.state = 'idle'; a.timer = .8 + Math.random() * 2; } }
+    if (dist > a.arriveR) { const want = Math.min(maxV, dist * (a.follower ? 3.2 : 2.2)); ax = ax / dist * want; az = az / dist * want; speed = want; } else { ax = 0; az = 0; if (a.state === 'wander') { a.state = 'idle'; a.timer = .8 + Math.random() * 2; } }
     for (const b of agents) { if (b === a) continue; const sx = a.x - b.x, sz = a.z - b.z, d2 = sx * sx + sz * sz; if (d2 < .64 && d2 > 1e-6) { const d = Math.sqrt(d2), push = (.8 - d) * 3.5; ax += sx / d * push; az += sz / d * push; } }
     { const sx = a.x - P.x, sz = a.z - (P.z ?? 0), d2 = sx * sx + sz * sz; if (d2 < .55 && d2 > 1e-6 && Math.abs(P.y - a.baseY) < 1.2) { const d = Math.sqrt(d2); ax += sx / d * (.75 - d) * 5; az += sz / d * (.75 - d) * 5; } }
     if (a.sp.gait === 'perch' || a.sp.gait === 'slide' || a.state === 'sit' || a.state === 'sleep' || a.tapped > 0) { ax = 0; az = 0; }

@@ -206,7 +206,7 @@ const UG_F = -6;
   await teleport(367);
   { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let top = 0, slid = false, n = 0; const f = () => { top = Math.max(top, P.y); if (P.ride && P.ride.type === 'slide') slid = true; if (++n > 1500 || P.x > 388) { D.keys.right = false; return res([top, slid]); } requestAnimationFrame(f); }; f(); }));
     c = await S(); check('walk right: climb up Dottie the dinosaur\'s tail, across her back, and slide down her neck', r[0] > 3.3 && r[1] && c.disc.includes('dinoclimb') && c.disc.includes('dinoslide'), `top y=${r[0].toFixed(2)} slid=${r[1]}`); }
-  await teleport(365.6); await tapWorld(362.8, .55, -2.05); // (stand aside so your creature isn't in front of the egg)
+  await teleport(360.6); await tapWorld(362.8, .55, -2.05); // (stand to the left: your creature isn't in front of the egg, and the friends who follow you trail away from it)
   c = await waitFor(s => s.disc.includes('hatch'), 60000); check('tap a dino egg: it wobbles and a baby dino hatches', c.disc.includes('hatch') && await page.evaluate(() => __DDW3.world.dinoEggs[0] === true));
   await shot('24_dino_valley.jpg');
   await teleport(389); await tapWorld(390.2, .55, -2.4); await sleep(300); check('tap Tops the little dino: stomp stomp!', (await S()).disc.includes('tops'));

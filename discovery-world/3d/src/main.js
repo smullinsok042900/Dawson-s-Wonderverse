@@ -519,17 +519,12 @@ function tapAt(cx, cy, ring) {
   const hits = ray.intersectObjects(targets, true);
   // tapping your creature always tickles it, even when it stands behind balls or bubbles
   if (!ring && hits.some(h => h.object.userData.creature) && !hits.some(h => h.object.isSprite)) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return true; }
-  // friends who follow you walk in front of things: a tap goes to what's behind them first (tap a friend directly when nothing else is there)
-  const isFollower = o => G.life && G.life.agents.some(a => a.follower && a.root === o);
-  let fallback = null;
   for (const h of hits) {
     let o = h.object; while (o && !o.userData.tap && !o.userData.creature) o = o.parent;
     if (!o || (ring && o.userData.creature)) continue;
-    if (!o.userData.creature && isFollower(o)) { if (!fallback) fallback = [o, h]; continue; }
     if (o.userData.creature) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return true; }
     o.userData.tap(h); bounceObj(o); burst(h.point.x, h.point.y, h.point.z, ['#ffffff', '#ffe36e', '#ff9fd8'], 5, 1.2); Sound.tone(880, .06, 'sine', .035, 1.5); return true;
   }
-  if (fallback) { const [o, h] = fallback; o.userData.tap(h); burst(h.point.x, h.point.y, h.point.z, ['#ffffff', '#ffe36e', '#ff9fd8'], 5, 1.2); Sound.tone(880, .06, 'sine', .035, 1.5); return true; }
   return false;
 }
 function worldTap(e) {
