@@ -293,6 +293,12 @@ const UG_F = -6;
   { const k = await page.evaluate(() => ({ pets: __DDW3.friends.petCount(), f: __DDW3.friends.followers.length })); check('reload keeps all your pets and the friends who follow you', k.pets === 2 && k.f >= 4, JSON.stringify(k)); }
   { const k = await page.evaluate(() => ({ crown: __DDW3.world.crown, eggs: __DDW3.world.dinoEggs })); check('reload keeps your crown and your hatched baby dino', k.crown === true && k.eggs[0] === true, JSON.stringify(k)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
+  // ---------- build 27: the learning games work for a child who can't read ----------
+  { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
+  await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);
+  { const d = await page.evaluate(() => __DDW3.G.learning.isDemo()); let ended = false; for (let i = 0; i < 80; i++) { if (!(await page.evaluate(() => __DDW3.G.learning.isDemo()))) { ended = true; break; } await sleep(250); } check('a learning game starts with a "watch me" demo that ends by itself', d && ended); }
+  { const w = await page.evaluate(() => (document.querySelector('#learn').innerText.match(/[A-Za-z]{2,}/g) || []).join(' ')); check('no words to read in a learning game', !w, w); }
+  await page.locator('#learn .lx').tap(); await sleep(300); check('closing a learning game returns to the world', !(await page.evaluate(() => __DDW3.G.activityOpen)));
   // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
   await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   await page.addInitScript(() => localStorage.setItem('dawsons-discovery-world-3d-v1', '{broken'));

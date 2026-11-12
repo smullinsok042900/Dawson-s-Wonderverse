@@ -41,6 +41,7 @@ export function initPerf(o) {
   function show(on) { shown = on; box.style.display = on ? 'block' : 'none'; if (on) ui(); try { localStorage.setItem('ddw3-perfbox', on ? '1' : '0'); } catch (e) { } }
   try { if (localStorage.getItem('ddw3-perfbox') === '1' || /[?&]perf/.test(location.search)) show(true); } catch (e) { }
 
+  function voiceLine() { const v = G.voice && G.voice.diag; if (!v) return 'n/a'; return `${v.supported ? 'supported' : 'NOT supported'}, ${v.voices} voices, using ${v.voice}, unlocked ${v.unlocked ? 'yes' : 'no'}, sentences started ${v.started} / finished ${v.ended}${v.errors.length ? ', errors: ' + v.errors.join(', ') : ''}`; }
   // ---------- the repeatable test ----------
   let report = '';
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -81,10 +82,11 @@ export function initPerf(o) {
       ...results.map(r => '• ' + r),
       `Whole session so far: ${all.fps} fps avg, 1% low ${all.low1} fps, worst frame ${Math.round(st.worst)} ms, frames over 100 ms: ${st.spikes100}, freezes over 250 ms: ${st.freezes.length ? st.freezes.join(', ') + ' ms' : 'none'}`,
       `Loading between areas (recent): ${st.trans.length ? st.trans.join('; ') : 'none measured'}`,
+      `Voice: ${voiceLine()}`,
       `Automatic quality changes: ${G.gfx && G.gfx.changes.length ? G.gfx.changes.join(', ') : 'none'}`,
       `Test took ${((performance.now() - t00) / 1000).toFixed(0)} s.`,
     ].join('\n');
     return report;
   }
-  return { frame, show, isShown: () => shown, runTest, report: () => report, stats: () => stats(recent(N)) };
+  return { voiceLine, frame, show, isShown: () => shown, runTest, report: () => report, stats: () => stats(recent(N)) };
 }

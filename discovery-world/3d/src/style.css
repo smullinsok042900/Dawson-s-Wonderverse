@@ -138,7 +138,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #learn .lcar{display:inline-grid;place-items:center;width:70px;height:62px;border-radius:14px;background:#ffd23f;color:#5b3a86;font-size:40px;font-weight:900;border:4px solid #fff}
 #learn .lsum{font-size:40px;display:flex;align-items:center;gap:10px}
 #learn .lsum b{font-size:44px;color:#7a4bd6}
-#learn .lgone{opacity:.3;filter:grayscale(1);margin-left:4px}
+#learn .lgone{margin-left:4px}
 #learn .lpattern{display:flex;gap:6px;align-items:center}
 #learn .lslots{display:flex;gap:10px;margin-top:8px}
 #learn .lslot{display:inline-grid;place-items:center;min-width:70px;height:74px;border-radius:16px;background:#fff;border:4px dashed #c9a6ff;font-size:46px;font-weight:900;color:#ff5fa8}
@@ -155,9 +155,9 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #learn .lmixname{font-size:32px;height:36px}
 #learn .ltank{position:relative;width:260px;height:150px;border-radius:18px;border:5px solid #fff;background:#e7f6ff;overflow:hidden}
 #learn .lwater{position:absolute;left:0;right:0;bottom:0;height:62%;background:linear-gradient(#8fd3ffcc,#3b82f6cc)}
-#learn .ldrop{position:absolute;left:50%;top:-60px;font-size:54px;transform:translateX(-50%)}
-#learn .ldrop.floats{animation:lfloat 1.4s forwards}
-#learn .ldrop.sinks{animation:lsink 1.4s forwards}
+#learn .ldropit{position:absolute;left:50%;top:-60px;font-size:54px;transform:translateX(-50%)}
+#learn .ldropit.floats{animation:lfloat 1.4s forwards}
+#learn .ldropit.sinks{animation:lsink 1.4s forwards}
 #learn .lmag{position:relative;width:300px;height:120px;display:flex;align-items:center}
 #learn .lpull{position:absolute;left:250px;top:30px;font-size:54px}
 #learn .lpull.stick{animation:lstick .7s forwards}
@@ -190,6 +190,123 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @keyframes lstick{100%{left:70px}}
 @keyframes lfall{100%{top:110px;opacity:.6}}
 @media (max-height:420px){#learn .lletter{font-size:90px}#learn .lopt,#learn .lmenuitem{min-height:82px}}
+
+/* build 27: pre-reader learning (demo hand, help, drag and sort, animated faces) */
+#learn .lshowme{background:#ffc94d;box-shadow:0 5px 0 #e0a21f,0 8px 16px #ffb00033}
+#learn .lsay.talk{animation:lpulse .3s 3}
+#learn .lhand{position:fixed;left:0;top:0;z-index:40;font-size:58px;line-height:1;pointer-events:none;opacity:0;transition-property:transform,opacity;transition-timing-function:ease-in-out;filter:drop-shadow(0 4px 6px #0004)}
+#learn .lhand.show{opacity:1}
+#learn .lhand.tapping{font-size:50px}
+#learn .lhand.point{animation:lhandbob .7s ease-in-out infinite}
+#learn.demo .lstage::before{content:'👀';position:absolute;top:4px;right:10px;font-size:34px;animation:lpulse 1s infinite}
+#learn .lnudge{animation:lpulse .4s 3}
+#learn .lopt,#learn .lmenuitem{flex-direction:column;gap:2px}
+#learn .ldotsn{display:flex;flex-wrap:wrap;gap:3px;max-width:86px;justify-content:center}
+#learn .ldotsn i{width:11px;height:11px;border-radius:50%;background:#ffc94d}
+#learn .ldotsn i.five{margin-right:5px}
+#learn .lgroup{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;font-size:36px;max-width:220px}
+#learn .lgrp{display:inline-flex;flex-wrap:wrap;gap:2px;max-width:190px;justify-content:center}
+#learn .lcome span{animation:lcome .8s ease-out both}
+#learn .lgone span{animation:lgoaway 1.6s .6s ease-in forwards}
+#learn .lghost{font-style:normal;opacity:.22;color:#7a4bd6}
+#learn .lnext{animation:lpulse 1s infinite;display:inline-block}
+#learn .lswatch.sm{display:inline-block;width:30px;height:30px;vertical-align:middle;margin-right:6px}
+#learn .lsort{display:flex;align-items:center;justify-content:space-around;width:100%;gap:10px}
+#learn .lbasket{position:relative;width:min(34vw,230px);min-height:170px;border-radius:30px;border:5px dashed #c9a6ff;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:8px}
+#learn .lbasket.right{background:#d8ffe0;border-color:#7fd99a;animation:lpop .5s}
+#learn .lbin{font-size:64px;line-height:1}
+#learn .lin{display:flex;flex-wrap:wrap;justify-content:center;font-size:26px;max-width:100%}
+#learn .lsortmid{min-width:120px;display:grid;place-items:center}
+#learn .lsortitem{width:110px;height:110px;border-radius:28px;background:#fff6c8;border:4px solid #ffd23f;display:grid;place-items:center;touch-action:none;animation:lcome .5s ease-out;box-shadow:0 6px 0 #e9c93f}
+#learn .lsortitem.drag{z-index:5;box-shadow:0 14px 24px #0003}
+#learn .lord{font-style:normal;font-size:22px;opacity:.35}
+#learn .lpot.grow{animation:lgrow .6s}
+#learn .lf-happy .le{display:inline-block;animation:lhappy 1s ease-in-out infinite}
+#learn .lf-sad .le{display:inline-block;animation:lsad 2.4s ease-in-out infinite}
+#learn .lf-grumpy .le{display:inline-block;animation:lgrumpy .6s ease-in-out infinite}
+#learn .lf-surprised .le{display:inline-block;animation:lsurp 1.4s ease-in-out infinite}
+#learn .lf-scared .le{display:inline-block;animation:lscared .25s linear infinite}
+#learn .lf-sleepy .le{display:inline-block;animation:lsleepy 3s ease-in-out infinite}
+#learn .lwx-rainy .le,#learn .lwx-snowy .le{display:inline-block;animation:lhappy 1.6s ease-in-out infinite}
+#learn .lwx-windy .le{display:inline-block;animation:lgrumpy 1.2s ease-in-out infinite}
+#learn .lwx-sunny .le{display:inline-block;animation:lspin 8s linear infinite}
+@keyframes lhandbob{50%{margin-top:-14px}}
+@keyframes lcome{from{transform:scale(.2);opacity:0}to{transform:none;opacity:1}}
+@keyframes lgoaway{to{transform:translate(60px,-160px) rotate(20deg);opacity:0}}
+@keyframes lgrow{0%{transform:scale(.7)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes lhappy{50%{transform:translateY(-10px)}}
+@keyframes lsad{50%{transform:translateY(6px) rotate(-6deg)}}
+@keyframes lgrumpy{25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+@keyframes lsurp{40%{transform:scale(1.18)}}
+@keyframes lscared{25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+@keyframes lsleepy{50%{transform:rotate(14deg) translateY(4px)}}
+@keyframes lspin{to{transform:rotate(360deg)}}
+
+/* build 27b: toy-like learning games */
+#learn .toy{transition:transform .12s}
+#learn .lthing{width:auto;height:auto;padding:4px 6px;border-radius:26px}
+#learn .lcount{gap:14px}
+#learn .boing{animation:lboing .45s ease-out}
+#learn .lopt{min-width:110px;min-height:104px;border-radius:28px}
+#learn .lopts{gap:22px}
+#learn .lsample{animation:lhappy 1.6s ease-in-out infinite}
+#learn .lframe{padding:6px 18px;border-radius:24px;background:#fff8;border:4px dashed #e1d2f7}
+#learn .lgrp{display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:220px}
+#learn .ldropg{display:flex;align-items:center;justify-content:center;gap:28px;width:100%;flex-wrap:wrap}
+#learn .ldropg.row{flex-direction:column;gap:18px}
+#learn .lholes{display:flex;gap:22px;justify-content:center;align-items:flex-end}
+#learn .lpieces{display:flex;gap:18px;justify-content:center;min-height:90px;align-items:center;flex-wrap:wrap}
+#learn .lhole{position:relative;min-width:100px;min-height:100px;border-radius:24px;display:grid;place-items:center;background:#fff7;border:4px dashed #d9c6f3}
+#learn .lhole>.lpiece{position:absolute;inset:0;display:grid;place-items:center;background:transparent;box-shadow:none;border:0}
+#learn .lhole.filled{border-style:solid;border-color:#7fd99a;background:#eafff0}
+#learn .lin{display:flex;flex-wrap:wrap;justify-content:center;max-width:150px}
+#learn .lin .lpiece{transform:scale(.6)!important;margin:-10px;box-shadow:none;background:transparent;border:0}
+#learn .lin.eaten{display:none}
+#learn .lpiece{touch-action:none;cursor:grab;border-radius:22px;padding:6px;background:#fff;border:4px solid #fff;box-shadow:0 6px 0 #d9c6f3,0 10px 18px #9b5cf62a;display:grid;place-items:center;min-width:84px;min-height:84px}
+#learn .lpiece.drag{z-index:20;box-shadow:0 16px 26px #0003}
+#learn .lpiece.sel{box-shadow:0 0 0 6px #ffe36e,0 6px 0 #d9c6f3}
+#learn .ldropg.feed{flex-direction:row;gap:40px}
+#learn .ldropg.feed .lhole{border:0;background:transparent;min-width:150px}
+#learn .ldropg.feed .lpieces{flex-direction:column;max-height:300px}
+#learn .ldropg.puzzle{flex-direction:row;gap:30px}
+#learn .ldropg.puzzle .lhole{min-width:0;min-height:0;border-radius:0;border:2px dashed #c9a6ff;background:#fff}
+#learn .ldropg.puzzle .lpiece{min-width:0;min-height:0;padding:3px;border-radius:8px}
+#learn .ldropg.puzzle .lhole>.lpiece{padding:0}
+#learn .lfaint{opacity:.28;filter:grayscale(.5)}
+#learn .lthink{position:absolute;top:-34px;right:-30px;background:#fff;border-radius:50%;padding:10px 12px;box-shadow:0 4px 12px #0002;display:grid;place-items:center;min-width:60px;min-height:60px;animation:lhappy 2s ease-in-out infinite}
+#learn .lcrit.nope{animation:lgrumpy .35s 3}
+#learn .lletter.ghost{color:transparent;-webkit-text-stroke:3px #b89be8;font-size:92px}
+#learn .lbubbles{position:relative;width:100%;height:100%;overflow:hidden}
+#learn .lbub{position:absolute;bottom:-130px;border:0;background:transparent;padding:0;animation:lrise 8s linear infinite;touch-action:none}
+#learn .lbub.popped{animation:none;opacity:0;transform:scale(1.6);transition:transform .2s,opacity .2s}
+#learn .lcups{position:relative;height:200px;margin:0 auto}
+#learn .lcup{position:absolute;bottom:0;width:120px;height:190px;border:0;background:transparent;padding:0;transition:left .8s ease-in-out}
+#learn .lcupc{position:absolute;left:0;bottom:0;transition:transform .45s ease-out;z-index:2}
+#learn .lcup.up .lcupc{transform:translateY(-78px)}
+#learn .lhid{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:1}
+#learn .lcause{display:grid;grid-template-columns:repeat(3,auto);gap:16px;justify-content:center}
+#learn .lcause .lopt{position:relative;min-width:120px;min-height:100px}
+#learn .lc-lamp.on{background:#fff6b0;box-shadow:0 0 30px 8px #ffe36e}
+#learn .lcfx{position:absolute;top:-6px;font-size:22px;animation:lrain 1.4s linear}
+#learn .bounce .le{display:inline-block;animation:lbounce 1.1s ease-out}
+#learn .lbaby{display:inline-block;animation:lhappy 1s ease-in-out infinite}
+#learn .lpads.p2{grid-template-columns:repeat(2,150px)}#learn .lpads.p3{grid-template-columns:repeat(3,130px)}
+#learn .lpads.p2 .lpad,#learn .lpads.p3 .lpad{height:140px}
+#learn .ldance{animation:lhappy .6s ease-in-out infinite}
+#learn .lanimal.right{background:#fff6c8}
+#learn .lface{display:inline-block}
+#learn .lf-happy{animation:lhappy 1s ease-in-out infinite}
+#learn .lf-sad{animation:lsad 2.4s ease-in-out infinite}
+#learn .lf-sad .tear{animation:ltear 1.6s ease-in infinite}
+#learn .lf-grumpy{animation:lgrumpy .6s ease-in-out infinite}
+#learn .lf-surprised{animation:lsurp 1.4s ease-in-out infinite}
+#learn .lf-scared{animation:lscared .25s linear infinite}
+#learn .lf-sleepy{animation:lsleepy 3s ease-in-out infinite}
+@keyframes lboing{0%{transform:scale(1)}30%{transform:scale(1.18,.86)}60%{transform:scale(.93,1.08)}100%{transform:scale(1)}}
+@keyframes lrise{from{transform:translateY(0)}to{transform:translateY(calc(-100vh - 160px))}}
+@keyframes lrain{from{transform:translateY(0);opacity:1}to{transform:translateY(60px);opacity:0}}
+@keyframes lbounce{0%,100%{transform:translateY(0)}25%{transform:translateY(-50px)}50%{transform:translateY(0)}70%{transform:translateY(-20px)}}
+@keyframes ltear{0%{transform:translateY(0);opacity:1}100%{transform:translateY(16px);opacity:0}}
 /* build 26: grown-ups' performance panel and monitor */
 #gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85}
 #perfbox{display:none;position:fixed;left:calc(6px + env(safe-area-inset-left));top:calc(64px + env(safe-area-inset-top));z-index:60;background:rgba(20,10,40,.72);color:#e9ffe9;font:11px/1.35 ui-monospace,Menlo,monospace;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
@@ -201,6 +318,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #perfPanel .ppHead button{min-height:40px;min-width:40px}
 #perfPanel button.small{font-size:13px;min-height:36px}
 #perfPanel textarea{font:11px ui-monospace,Menlo,monospace;width:100%;box-sizing:border-box;border-radius:8px;border:1px solid #ccc;padding:6px;-webkit-user-select:text;user-select:text}
+#perfPanel .ppTier{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px}#perfPanel .ppTier button{font-size:13px;min-height:40px;padding:0 8px}#perfPanel .ppTier button.on{background:#7fd99a;border-color:#4fae6c;color:#fff}
 #perfPanel .ppInfo{font-size:12px;color:#6a5a90}
 #perfBlock{display:none;position:fixed;inset:0;z-index:65;align-items:flex-start;justify-content:center;padding-top:calc(60px + env(safe-area-inset-top))}
 #perfBlock.show{display:flex}

@@ -22,8 +22,11 @@ import { makePost } from './post.js';
 import { refineScene } from './refine.js';
 import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
+import { makeVoice } from './voice.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD } from './nature.js';
+import { LOWSTATS } from './assets.js';
+import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
 
 const $ = id => document.getElementById(id);
@@ -64,7 +67,7 @@ scene.fog = new THREE.Fog('#e6d2f2', 55, 190); // build 18: atmospheric perspect
 const camera = new THREE.PerspectiveCamera(38, 2, .3, 600); // (build 20: near .3 instead of .1 = 3x the depth precision, no z-fighting on wall details)
 const hemi = new THREE.HemisphereLight('#e4ecff', '#8f8a6a', LIGHT.hemi); scene.add(hemi);
 const sun = new THREE.DirectionalLight('#fff0d8', LIGHT.sun); sun.castShadow = true;
-sun.shadow.mapSize.set(MOBILE ? 1536 : 2048, MOBILE ? 1536 : 2048); /* (build 22: lighter on phones) */ sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 10, bottom: -5, near: 1, far: 50 }); /* build 17: a tighter box = sharper shadows */ sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
+sun.shadow.camera.layers.enable(1); /* (build 28) layer 1 = low-detail copies that only cast shadows */ sun.shadow.mapSize.set(MOBILE ? 1536 : 2048, MOBILE ? 1536 : 2048); /* (build 22: lighter on phones) */ sun.shadow.radius = 4; /* soft shadow edges */ Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 10, bottom: -5, near: 1, far: 50 }); /* build 17: a tighter box = sharper shadows */ sun.shadow.bias = -.0004; sun.shadow.normalBias = .03;
 scene.add(sun, sun.target);
 // a soft cool light from behind: it outlines everything with a gentle rim, so shapes look rounder and more real
 const rim = new THREE.DirectionalLight('#d6e4ff', LIGHT.rim); rim.position.set(-6, 7, -12); scene.add(rim);
@@ -117,12 +120,16 @@ let toastT = 0;
 function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('shown'); toastT = 3; speak(msg); }
 // (build 23) every message is also SPOKEN (a friendly voice, emoji removed), so a child who can't read yet still knows
 // what happened and what to try. Uses the phone's own speech voice; silent when the sound button is off.
+// (build 27) one shared voice (voice.js) for the world and the learning games, unlocked by her first tap
 let lastSpeak = 0;
+const voice = makeVoice({ isOn: () => Sound.on, TEST: TEST && !/[?&]voice/.test(location.search) }); G.voice = voice;
+for (const ev of ['pointerdown', 'touchend', 'click']) addEventListener(ev, () => voice.unlock(), { capture: true, passive: true });
 function speak(msg) {
-  if (TEST || !Sound.on || !Sound.unlocked || typeof speechSynthesis === 'undefined') return;
-  const text = msg.replace(/[\u{1F000}-\u{1FAFF}\u{2190}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
-  if (!text || performance.now() - lastSpeak < 900) return; lastSpeak = performance.now();
-  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = .95; u.pitch = 1.25; u.volume = .85; speechSynthesis.speak(u); } catch (e) { }
+  if (TEST || !Sound.on) return;
+  const text = msg.replace(/\(.*?\)/g, '');
+  if (performance.now() - lastSpeak < 900) return; lastSpeak = performance.now();
+  if (G.learning && G.learning.isOpen()) return; // (the learning games do their own talking)
+  voice.speak(text);
 }
 function discover(id, msg) { if (world.disc.has(id)) return false; world.disc.add(id); if (msg) toast('✨ ' + msg); Sound.chime(); player.happy = 1.4; if (creature) creature.cheer(); burst(player.x, player.y + 2.2, player.z, undefined, 18); save(); return true; }
 function updateCounters() {
@@ -720,7 +727,7 @@ function updateWorldAnim(dt, t) {
   // bushes and trees are not drawn at all
   poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
   updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
-  if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) it.o.visible = Math.abs(it.x - camT.x) < it.r;
+  if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > 16; if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
   bigStar.visible = !world.secret; bigStar.rotation.y = t * 1.6; bigStar.position.y = G.secretStar[1] + Math.sin(t * 2) * .12;
@@ -734,7 +741,7 @@ function saveSoon() { saveTimer = 1.2; }
 function save() {
   if (G.perfTest) return; // (build 26: the performance test never saves)
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -744,7 +751,8 @@ function load() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '
 function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
-  if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; } // (build 25: learning progress)
+  if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
+  world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
   if (Array.isArray(d.pets) && d.pets.length <= 5 && d.pets.every(okRec)) world.pets = d.pets.map(cleanRec);
@@ -830,8 +838,8 @@ function applyGfx(L, why) {
   post.lite = L >= 2; quality = QMAX - (L >= 5 ? .3 : L >= 4 ? .24 : L >= 3 ? .12 : 0); resize();
   if (why) { gfx.changes.push(`${prev}→${L} (${why})`); if (gfx.changes.length > 12) gfx.changes.shift(); try { localStorage.setItem(GFX_KEY, JSON.stringify({ level: L })); } catch (e) { } }
 }
-if (!TEST && !/[?&]hq/.test(location.search)) { try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Number.isFinite(g.level)) applyGfx(g.level); } catch (e) { } }
-G.applyGfx = applyGfx; G.resetGfx = () => { applyGfx(0); gfx.changes.push('reset to 0'); gfx.failed = -1; };
+if (!TEST && !/[?&]hq/.test(location.search)) { try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Number.isFinite(g.level)) applyGfx(g.level); else if (MOBILE) applyGfx(1); } catch (e) { } } // (build 28: a phone starts on lighter shadows, so lag never comes first)
+G.applyGfx = applyGfx; G.resetGfx = () => { applyGfx(MOBILE ? 1 : 0); gfx.changes.push('reset'); gfx.failed = -1; };
 function adapt(dt) {
   ema += (dt - ema) * .05; gfx.var += ((dt - ema) * (dt - ema) - gfx.var) * .05; gfx.since += dt;
   const capped30 = ema > .029 && ema < .037 && Math.sqrt(gfx.var) < .004; // a steady 30 fps cap is not lag
@@ -918,7 +926,7 @@ let lodTick = 0, poolTick = 0, poolDt = 0, shadowTick = 0;
 // Seven signposts in the park and valley (numbers, letters, colors & shapes, thinking, science, music & art,
 // feelings). Tap one (or PAW next to it) to open its learning games; the games are a light 2D layer and the
 // 3D world pauses while they're open.
-const learning = initLearning({ Sound, world, save: () => save(), discover: id => { if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST });
+const learning = initLearning({ Sound, voice, setSound: on => { setSound(on); save(); }, world, save: () => save(), discover: id => { if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST });
 G.learning = learning;
 { const signTex = e => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff6fb'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#c9a6ff'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
   const wood = toy('#c98a5a', { r: .7, cc: .1 }), glow = toy('#fff3a6', { em: '#ffd76a', ei: .9, r: .4 });
@@ -1017,7 +1025,7 @@ setTimeout(begin, 15000);
 
 // debug/test hook (used by the automated tests only)
 window.__DDW3 = {
-  player, world, keys, fluffs, G, camera, Sound, save, IN, renderer, FR: THREE.Frustum,
+  player, world, keys, fluffs, G, camera, Sound, save, IN, renderer, FR: THREE.Frustum, LOWSTATS, SCULPT_STATS,
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 2000 ? 'castle' : x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
   pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1)]; }); },
@@ -1037,13 +1045,13 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   $('soundBtn').after(btn);
   const pan = document.createElement('div'); pan.id = 'perfPanel';
   pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
-    <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button>
+    <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
     <button data-a="reset" class="small">↺ Reset automatic graphics</button></div>`;
   document.body.appendChild(pan);
   const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
   const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
-  const refresh = () => { monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; changes by itself if the game runs slowly)${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
+  const refresh = () => { pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', +b.dataset.a[1] === learning.tier())); monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; changes by itself if the game runs slowly)${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
   let holdT = null;
   btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(holdT); holdT = setTimeout(() => { refresh(); pan.classList.add('show'); }, 900); });
   for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) btn.addEventListener(ev, () => clearTimeout(holdT));
@@ -1051,6 +1059,8 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   pan.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a;
     if (a === 'close') pan.classList.remove('show');
+    if (/^t[123]$/.test(a)) { learning.setTier(+a[1]); refresh(); }
+    if (a === 'voice') { if (!Sound.on) setSound(true); voice.unlock(); voice.speak('Hello! Can you hear me? Let\'s play and learn!'); setTimeout(() => { info.textContent = 'Voice: ' + perfMon.voiceLine(); }, 2500); }
     if (a === 'mon') { perfMon.show(!perfMon.isShown()); refresh(); }
     if (a === 'reset') { try { localStorage.removeItem('ddw3-gfx-b26'); } catch (err) { } if (G.resetGfx) G.resetGfx(); refresh(); }
     if (a === 'copy') {

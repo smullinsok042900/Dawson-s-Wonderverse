@@ -11,6 +11,19 @@
 // animals are sculpted in a background worker so the game never stutters.
 // ===================================================================
 import * as THREE from 'three';
+import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
+// (build 28) the sculpted creatures came out of the voxel mesher at ~28,000 triangles each, far more than their smooth,
+// rounded shapes need, and every furry one is drawn 5-6 more times as fur shells. Each body is simplified to about
+// 40% (the outline moves by less than half a percent of the creature's size); only the index list changes, so
+// colours, skinning, fur amounts and the materials stay exactly as they were.
+let simpReady = false; const early = []; // (shapes made before the simplifier finished loading, e.g. your own creature, are simplified as soon as it's ready)
+try { MeshoptSimplifier.ready.then(() => { simpReady = true; for (const g of early.splice(0)) { const a = g.index.array, idx = simplifyIndex(a, g.attributes.position.array); if (idx !== a) { SCULPT_STATS.after -= (a.length - idx.length) / 3; g.setIndex(new THREE.BufferAttribute(idx, 1)); } } }, () => { }); } catch (e) { }
+export const SCULPT_STATS = { before: 0, after: 0 };
+function simplifyIndex(index, position) {
+  if (!simpReady || index.length < 3000) return index;
+  try { const [idx] = MeshoptSimplifier.simplify(index, position, 3, Math.floor(index.length * .4 / 3) * 3, .005, ['LockBorder']); if (idx && idx.length >= 300 && idx.length < index.length) return idx; } catch (e) { }
+  return index;
+}
 
 // Self-contained (no outside references) so it can also run inside a Web Worker.
 export function sculptCore(spec) {
@@ -119,7 +132,8 @@ function toGeometry(r) {
   geo.setAttribute('position', new THREE.BufferAttribute(r.position, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(r.normal, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(r.color, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(r.uv, 2));
   geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(r.skinIndex, 4)); geo.setAttribute('skinWeight', new THREE.BufferAttribute(r.skinWeight, 4)); geo.setAttribute('furAmt', new THREE.BufferAttribute(r.furAmt, 1));
-  geo.setIndex(new THREE.BufferAttribute(r.index, 1)); geo.computeBoundingSphere(); return geo;
+  const idx = simplifyIndex(r.index, r.position); if (!simpReady) early.push(geo); SCULPT_STATS.before += r.index.length / 3; SCULPT_STATS.after += idx.length / 3;
+  geo.setIndex(new THREE.BufferAttribute(idx, 1)); geo.computeBoundingSphere(); return geo;
 }
 export function sculpt(spec) { return toGeometry(sculptCore(prepare(spec))); }
 
