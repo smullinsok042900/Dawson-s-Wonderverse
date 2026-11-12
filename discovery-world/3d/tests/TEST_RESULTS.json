@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-12T21:57:35.843Z",
+  "date": "2026-11-12T22:42:31.152Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 138,
+  "passed": 136,
   "total": 140,
   "results": [
     {
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 6.1"
+      "detail": "x 1.2 → 6.8"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.60"
+      "detail": "y=1.55"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,7 +57,7 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 1.9→6.3, y 0.00"
+      "detail": "x 2.6→6.8, y 1.60"
     },
     {
       "name": "tap ▲ to jump",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 62% height"
+      "detail": "body squashed to 70% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=7.35,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=5.90,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,22 +112,22 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=3.46"
+      "detail": "highest y=2.17"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=40.9 y=3.88"
+      "detail": "x=41.1 y=3.87"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.8 (ok)"
+      "detail": "got to x=16.6 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=10.8"
+      "detail": "x=10.7"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -5.17 → -3.62"
+      "detail": "y -6.00 → -4.45"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-2.07"
+      "detail": "y=-2.29"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=10.6 y=0.00"
+      "detail": "x=0.4 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.7"
+      "detail": "x=37.3"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -241,22 +241,22 @@
     },
     {
       "name": "the Painter Bunny paints a picture on the wall",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "the Drummer Frog plays when tapped",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "the penguin dances when tapped",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "the sleepy owl wakes up when tapped",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
@@ -321,8 +321,8 @@
     },
     {
       "name": "tap the unicorn: it talks in a picture speech bubble",
-      "ok": false,
-      "detail": "3 bubbles"
+      "ok": true,
+      "detail": "1 bubbles"
     },
     {
       "name": "the hedgehog plays a song",
@@ -352,12 +352,12 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.049 → 1.040, z=-3.4"
+      "detail": "u 0.033 → 1.017, z=-3.3"
     },
     {
       "name": "JUMP makes the kart hop",
       "ok": true,
-      "detail": "hop 1.22"
+      "detail": "hop 1.14"
     },
     {
       "name": "crossing the finish line counts a lap (with confetti)",
@@ -382,7 +382,7 @@
     {
       "name": "hold ▶ to drive the train yourself",
       "ok": true,
-      "detail": "x 170.0 → 171.0"
+      "detail": "x 170.0 → 177.0"
     },
     {
       "name": "let go and the train stops",
@@ -392,7 +392,7 @@
     {
       "name": "PAW: hop off the train (anywhere)",
       "ok": true,
-      "detail": "ride=null x=170.0"
+      "detail": "ride=null x=182.2"
     },
     {
       "name": "tap the Marble Machine board: a marble drops",
@@ -462,7 +462,7 @@
     {
       "name": "all your pets and friends follow you in a line",
       "ok": true,
-      "detail": "2.8 3.7 4.6 5.6 6.4"
+      "detail": "2.8 3.7 4.6 5.7 6.4"
     },
     {
       "name": "tap a friend who follows you: they stay (tap again to bring them)",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.20"
+      "detail": "y=5.25"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=2.1"
+      "detail": "y=1.9"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "47 → 51"
+      "detail": "55 → 59"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,12 +597,12 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.2808279781508645"
+      "detail": "k=0.6552652823520163"
     },
     {
       "name": "walk off the top onto the upstairs floor",
-      "ok": false,
-      "detail": "y=4.242374656599053"
+      "ok": true,
+      "detail": "y=4.4"
     },
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":51,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":59,\"fl\":3,\"p\":true}"
     },
     {
       "name": "every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)",

@@ -208,5 +208,8 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
       step(a, dt, t, P, ctx);
     }
   }
-  return { add, remove, update, agents, tap(a, secs = 1.6, spin = 0) { a.tapped = secs; a.spin = spin; a.state = 'idle'; a.timer = secs + .5; a.sleep = 0; }, setFollower(a, on, slot = 0) { if (on && a.detached) { a.detached.add(a.root); a.detached = null; } a.follower = on; a.slot = slot; a.state = 'idle'; a.timer = .5; if (!on) { a.home.set(a.x, a.baseY, a.z); a.radius = Math.min(a.sp.r, 1); } } };
+  // (build 29) after a jump to somewhere else (map travel, doors, teleports), put the characters there back at once,
+  // so a tap straight after arriving finds them (instead of waiting for the next update)
+  function wake(cx = camera.position.x) { const cz = camera.position.z; for (const a of agents) if (a.detached && Math.hypot(a.x - cx, a.z - cz) <= 60) { a.detached.add(a.root); a.detached = null; a.root.updateMatrixWorld(true); } }
+  return { add, remove, update, wake, agents, tap(a, secs = 1.6, spin = 0) { a.tapped = secs; a.spin = spin; a.state = 'idle'; a.timer = secs + .5; a.sleep = 0; }, setFollower(a, on, slot = 0) { if (on && a.detached) { a.detached.add(a.root); a.detached = null; } a.follower = on; a.slot = slot; a.state = 'idle'; a.timer = .5; if (!on) { a.home.set(a.x, a.baseY, a.z); a.radius = Math.min(a.sp.r, 1); } } };
 }
