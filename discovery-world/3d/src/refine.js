@@ -21,7 +21,7 @@ const same = (a, b) => {
   return true;
 };
 
-export function refineScene(scene, renderer, { exclude = new Set(), budget = 400000 } = {}) {
+export function refineScene(scene, renderer, { exclude = new Set(), budget = 400000, phone = false } = {}) {
   const stats = { boxes: 0, spheres: 0, cylinders: 0, textures: 0, srgbFixed: 0, materials: 0, extraTris: 0 };
   const maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const cache = new Map(), checked = new Map(), seenTex = new Set(), seenMat = new Set();
@@ -89,6 +89,9 @@ export function refineScene(scene, renderer, { exclude = new Set(), budget = 400
         if (m.roughness < .3 && m.metalness < .5) { m.roughness = .3; ch = true; }
         if (m.clearcoat > .5) { m.clearcoat = .5; ch = true; }
         if (m.clearcoat > 0 && m.clearcoatRoughness < .15) { m.clearcoatRoughness = .15; ch = true; }
+        // (build 24) phones: a faint clear-coat is a whole second gloss layer in the shader for very little visible
+        // difference; turn it off (three.js then compiles the cheaper shader). Fluffy sheen materials keep their look.
+        if (phone && m.isMeshPhysicalMaterial && m.clearcoat > 0 && m.clearcoat <= .4 && !(m.sheen > 0)) { m.clearcoat = 0; m.roughness = Math.max(.25, m.roughness - .05); stats.cheaper = (stats.cheaper || 0) + 1; ch = true; }
         if (ch) stats.materials++;
       }
     }

@@ -20,7 +20,7 @@ import { initMarbles } from './marble.js';
 import { initKingdom, KINGDOM } from './kingdom.js';
 import { makePost } from './post.js';
 import { refineScene } from './refine.js';
-import { windTime } from './assets.js';
+import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD } from './nature.js';
 import { FUR } from './fur.js';
 
@@ -41,6 +41,7 @@ const MOBILE = matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/.
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); window.__oops && window.__oops('The device reset the 3D graphics (it may be low on memory). Tap Try again.'); });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.debug.checkShaderErrors = TEST; // (build 24: the shader error check forces the browser to wait for each shader the first time it is used; on only in test mode)
 renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = LIGHT.exposure;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; // (filtered, with a blur radius below)
 const scene = new THREE.Scene();
@@ -715,7 +716,7 @@ function updateWorldAnim(dt, t) {
   for (let i = bounces.length - 1; i >= 0; i--) { const b = bounces[i]; b.t += dt; const k = b.t / .32; if (k >= 1) { b.o.scale.copy(b.s0); bounces.splice(i, 1); } else b.o.scale.copy(b.s0).multiplyScalar(1 + Math.sin(k * Math.PI) * .1 * (1 - k * .4)); } // (build 23: a little bounce on every tap)
   // (build 22) performance: lights only where you are (underground / indoor room), and far-away grass,
   // bushes and trees are not drawn at all
-  { const z = player.layer === 'in' ? 'in' : player.y < -1.5 ? 'under' : ''; for (const l of zoneLights) l.visible = l.userData.zone === z; }
+  poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
   if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) it.o.visible = Math.abs(it.x - camT.x) < it.r;
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
@@ -848,6 +849,7 @@ function frame() {
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
+  renderer.shadowMap.needsUpdate = (++shadowTick & 1) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
   if (post.enabled) post.render(); else renderer.render(scene, camera);
   if (!TEST && !/[?&]hq/.test(location.search)) adapt(raw);
   requestAnimationFrame(frame);
@@ -864,14 +866,66 @@ updateCounters(); snapCamera(); updateBits(0);
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
 addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-const zoneLights = []; scene.traverse(o => { if (o.isPointLight && o.userData.zone) { zoneLights.push(o); o.visible = false; } }); let lodTick = 0;
+// (build 24) the lamps of the house and the underground: a FIXED pool of 3 point lights that is always in the scene.
+// Switching lights on and off (build 22) changed the number of lights, which forces every material in the game to
+// recompile its shader: that was the freeze when entering the house. Now the light count never changes; the pool
+// moves to the nearest lamps of the area you are in (fading smoothly) and is dark outdoors.
+const zoneLights = [], lightPool = [];
+{ const P0 = new THREE.Vector3(); const found = []; scene.traverse(o => { if (o.isPointLight && o.userData.zone) found.push(o); });
+  for (const o of found) { o.updateWorldMatrix(true, false); o.getWorldPosition(P0); zoneLights.push({ zone: o.userData.zone, pos: P0.clone(), color: o.color.clone(), intensity: o.intensity, distance: o.distance, decay: o.decay }); o.parent.remove(o); }
+  for (let i = 0; i < 3; i++) { const l = new THREE.PointLight('#ffffff', 0, 10, 1.6); l.userData.src = null; l.userData.k = 0; scene.add(l); lightPool.push(l); } }
+function updateLightPool(dt) {
+  const P = player, z = P.layer === 'in' ? 'in' : P.y < -1.5 ? 'under' : '';
+  const want = zoneLights.filter(L => L.zone === z).sort((a, b) => Math.abs(a.pos.x - P.x) - Math.abs(b.pos.x - P.x)).slice(0, lightPool.length);
+  for (const l of lightPool) {
+    const keep = l.userData.src && want.includes(l.userData.src);
+    if (!keep) { l.userData.k = Math.max(0, l.userData.k - dt * 5); if (l.userData.k === 0) { const free = want.find(w => !lightPool.some(o => o.userData.src === w)); l.userData.src = free || null; if (free) { l.position.copy(free.pos); l.color.copy(free.color); l.distance = free.distance; l.decay = free.decay; } } }
+    else l.userData.k = Math.min(1, l.userData.k + dt * 4);
+    l.intensity = l.userData.src ? l.userData.src.intensity * l.userData.k : 0;
+  }
+}
+let lodTick = 0, poolTick = 0, poolDt = 0, shadowTick = 0;
 // build 18: one quality pass over the finished world (bevelled edges, round silhouettes, sharp textures, no wet-plastic gloss)
-try { const ex = new Set(); if (G.paint && G.paint.mesh) ex.add(G.paint.mesh); G.refine = refineScene(scene, renderer, { exclude: ex, budget: MOBILE ? 120000 : 400000 }); } catch (e) { console.log('refine skipped', e); }
+try { const ex = new Set(); if (G.paint && G.paint.mesh) ex.add(G.paint.mesh); G.refine = refineScene(scene, renderer, { exclude: ex, budget: MOBILE ? 120000 : 400000, phone: MOBILE }); } catch (e) { console.log('refine skipped', e); }
 // compile all the shaders first (in the background where the browser allows it), then start
 let begun = false;
-const begin = () => { if (begun) return; begun = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
-try { if (renderer.extensions.has('KHR_parallel_shader_compile')) renderer.compileAsync(scene, camera).then(begin, begin); else begin(); } catch (e) { begin(); }
-setTimeout(begin, 8000);
+const begin = () => { if (begun) return; begun = true; renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
+// (build 24) shaders: compile everything in the scene before play starts (the light count is now fixed, so these stay
+// valid), then compile the model files' materials as soon as they arrive (in the background where the phone supports
+// parallel compiling), so nothing compiles the first time it comes into view.
+const compileAll = () => {
+  // things hidden only because they are far away (grass, bushes, trees, fur) are compiled too
+  const shown = []; for (const it of LOD) if (!it.o.visible) { it.o.visible = true; shown.push(it.o); } for (const f of FUR) for (const sh of f.shells) if (!sh.visible) { sh.visible = true; shown.push(sh); }
+  // (compile for where the world is really drawn: into the post-processing picture, not straight to the screen;
+  //  the shader for each is different, so compiling for the wrong one did nothing)
+  const prevRT = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target);
+  let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera)); } catch (e) { r = Promise.resolve(); }
+  renderer.setRenderTarget(prevRT);
+  for (const o of shown) o.visible = false; return r;
+};
+// creatures are sculpted in the background and appear a moment later: compile their materials as they arrive
+let compileTimer = 0; globalThis.__ddwCompile = () => { clearTimeout(compileTimer); compileTimer = setTimeout(compileAll, 300); };
+// PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
+// upstairs and downstairs, the underground, the clouds, the castle, the park), with the sun's shadow over it. That
+// makes the graphics driver finish every shader and upload every texture and mesh NOW, not the first time you walk in.
+function warmAreas() {
+  const rt = new THREE.WebGLRenderTarget(32, 16, { type: THREE.HalfFloatType }), cam = camera.clone(), shadowAuto = renderer.shadowMap.autoUpdate;
+  const sp = sun.position.clone(), st = sun.target.position.clone();
+  try {
+    let first = true;
+    for (const [x, y] of [[1008, 0], [1012, 4.4], [1020, 0], [20, UG.floor], [45, UG.floor], [54, SKY.y], [406, 0], [2010, 0]]) {
+      cam.position.set(x, y + 2.15, CAM_DIST); cam.lookAt(x, y + 1.15, 0); cam.updateMatrixWorld();
+      sun.position.set(x - 7, y + 16, 10); sun.target.position.set(x, y, 0); sun.target.updateMatrixWorld();
+      renderer.setRenderTarget(rt); renderer.render(scene, cam); if (first) { renderer.shadowMap.autoUpdate = false; first = false; } // (shadow shaders only need one pass)
+    }
+    G.warmed = (G.warmed || 0) + 1;
+  } catch (e) { G.warmErr = String(e); }
+  renderer.shadowMap.autoUpdate = shadowAuto; renderer.shadowMap.needsUpdate = true;
+  renderer.setRenderTarget(null); rt.dispose(); sun.position.copy(sp); sun.target.position.copy(st); sun.target.updateMatrixWorld();
+}
+Promise.race([Promise.all([assetsReady, landmarksReady]), new Promise(r => setTimeout(r, 6000))])
+  .then(() => compileAll()).then(() => { warmAreas(); begin(); }, begin);
+setTimeout(begin, 15000);
 
 // debug/test hook (used by the automated tests only)
 window.__DDW3 = {

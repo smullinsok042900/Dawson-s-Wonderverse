@@ -187,9 +187,11 @@ export function initFriends(G, api) {
   const VOICE = { bear: 260, bunny: 620, frog: 300, penguin: 520, owl: 380, beaver: 340, unicorn: 700, hedgehog: 560, snail: 800, fox: 460 };
   const bubbles = [];
   function bubbleTex(text) { const c = document.createElement('canvas'); c.width = 256; c.height = 160; const g = c.getContext('2d'); g.fillStyle = 'rgba(255,255,255,.97)'; g.strokeStyle = '#c9a6ff'; g.lineWidth = 8; g.beginPath(); g.roundRect(8, 8, 240, 110, 46); g.fill(); g.stroke(); g.beginPath(); g.moveTo(100, 114); g.lineTo(128, 152); g.lineTo(150, 114); g.fill(); g.font = '64px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 128, 66); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+  const bubbleCache = new Map();
   function say(c, text, quiet) {
-    const old = bubbles.find(b => b.c === c); if (old) { scene.remove(old.s); bubbles.splice(bubbles.indexOf(old), 1); }
-    const s2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(text), depthTest: false })); s2.scale.set(1.8, 1.12, 1); s2.renderOrder = 11; add(s2);
+    const old = bubbles.find(b => b.c === c); if (old) { scene.remove(old.s); old.s.material.dispose(); bubbles.splice(bubbles.indexOf(old), 1); }
+    if (!bubbleCache.has(text)) bubbleCache.set(text, bubbleTex(text)); // (build 24: each picture is made once and reused; before, every bubble made and uploaded a new texture that was never freed)
+    const s2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleCache.get(text), depthTest: false })); s2.scale.set(1.8, 1.12, 1); s2.renderOrder = 11; add(s2);
     bubbles.push({ c, s: s2, life: 2.8 });
     if (quiet) return;
     const base = VOICE[c.kind] || 500; for (let i = 0; i < 4 + Math.floor(Math.random() * 3); i++) Sound.tone(base * (.85 + Math.random() * .4), .08, i % 2 ? 'triangle' : 'sine', .045, .9 + Math.random() * .4, i * .1);
@@ -338,7 +340,7 @@ export function initFriends(G, api) {
     followers.forEach(f => { if (f.agent) f.pos.set(f.agent.x, f.agent.baseY, f.agent.z); });
     for (const p of pets) if (p.waiting && p.agent) p.pos.set(p.agent.x, p.agent.baseY, p.agent.z);
     if (pets[0]) petPos.copy(pets[0].pos);
-    for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.life -= dt; b.s.position.set(b.c.root.position.x, b.c.y + (b.c.kind === 'unicorn' ? 3.3 : 2.7) + Math.sin(t * 3) * .05, b.c.root.position.z + .4); b.s.material.opacity = Math.min(1, b.life * 2); if (b.life <= 0) { scene.remove(b.s); bubbles.splice(i, 1); } }
+    for (let i = bubbles.length - 1; i >= 0; i--) { const b = bubbles[i]; b.life -= dt; b.s.position.set(b.c.root.position.x, b.c.y + (b.c.kind === 'unicorn' ? 3.3 : 2.7) + Math.sin(t * 3) * .05, b.c.root.position.z + .4); b.s.material.opacity = Math.min(1, b.life * 2); if (b.life <= 0) { scene.remove(b.s); b.s.material.dispose(); bubbles.splice(i, 1); } }
     // balloons float above you on strings, spread out like a bunch
     while (balloons.length < world.balloons.length) balloons.push(balloonMesh());
     const showB = !(P.ride && P.ride.type === 'slide');
@@ -351,7 +353,7 @@ export function initFriends(G, api) {
       b.g.position.copy(b.pos); b.g.rotation.z = -b.vel.x * .1;
       const pa = b.line.geometry.attributes.position; pa.setXYZ(0, hx, hy, P.z); pa.setXYZ(1, b.pos.x, b.pos.y - .45, b.pos.z); pa.needsUpdate = true;
     });
-    for (let i = flying.length - 1; i >= 0; i--) { const b = flying[i]; b.free -= dt; b.pos.y += dt * (2 + (4 - b.free)); b.pos.x += Math.sin(t * 2 + i) * dt; b.g.position.copy(b.pos); if (b.free <= 0) { scene.remove(b.g); scene.remove(b.line); flying.splice(i, 1); } }
+    for (let i = flying.length - 1; i >= 0; i--) { const b = flying[i]; b.free -= dt; b.pos.y += dt * (2 + (4 - b.free)); b.pos.x += Math.sin(t * 2 + i) * dt; b.g.position.copy(b.pos); if (b.free <= 0) { scene.remove(b.g); scene.remove(b.line); flying.splice(i, 1); /* (build 24: free it, and stop testing taps against it) */ const ti = G.taps.indexOf(b.g); if (ti >= 0) G.taps.splice(ti, 1); b.mat.dispose(); b.line.geometry.dispose(); b.g.traverse(o => { if (o.isMesh && o.geometry.type === 'ConeGeometry') o.geometry.dispose(); }); /* (the round part shares one sphere with every ball: kept) */ } }
     // floating sparkles drift around the camera view
     const cx = G.camera.position.x, cy = G.camera.position.y - 2.4;
     for (let i = 0; i < MN; i++) { const s = mSeed[i]; let x = s[0] + Math.sin(t * .3 + s[3]) * 1.5, y = s[1] + ((t * .25 + s[3]) % 7); x = ((x - cx) % 30 + 45) % 30 - 15 + cx; mPos[i * 3] = x; mPos[i * 3 + 1] = cy + y - 1; mPos[i * 3 + 2] = s[2] + Math.cos(t * .4 + s[3]); }
