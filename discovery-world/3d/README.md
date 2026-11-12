@@ -57,6 +57,8 @@ Backup of build 20: `backups/3D_build20_index.html`.
 - The whale now swims 2.7 m lower, between the cloud floor and the high clouds: fully in view, and easy for Dawson to tap.
 - The sound check now also verifies the toggle whatever the starting state.
 
+**Test report:** full smoke test **136/136** in headless Chromium with software WebGL, no console errors. Not tested on a physical iPhone.
+
 Pictures: `screenshots/compare_b21.jpg` (close-up, alternate angle, extreme close-up and gameplay view, build 20 vs 21) and `screenshots/compare_b21_fur.jpg`.
 
 ## 3D build 20: clean, cohesive, noise-free rendering (no new content)
