@@ -14,9 +14,9 @@ import { toy, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
-import { USE_ASSETS, cobbleSet } from './assets.js';
+import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
-import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH } from './nature.js';
+import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -256,11 +256,11 @@ export function buildWorld(G) {
     (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8))) });  // train platforms
   // CAROUSEL
   const car = new THREE.Group(); car.position.set(144, 0, -5.4); add(car); // behind the path: tap it to ride
-  cyl(0, 0, 0, 4.4, 4.6, .4, '#ff9fd2', { parent: car });
+  const carLeg = [cyl(0, 0, 0, 4.4, 4.6, .4, '#ff9fd2', { parent: car })]; // (build 22: the old shapes, replaced by the Blender carousel)
   const spin = new THREE.Group(); spin.position.y = .4; car.add(spin);
-  cyl(0, 0, 0, .35, .35, 4.6, '#ffd84a', { parent: spin });
-  const top = new THREE.Mesh(new THREE.ConeGeometry(5, 1.8, 32), M('#a15cff')); top.position.y = 5.5; top.castShadow = true; spin.add(top);
-  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; sph(Math.cos(a) * 4.8, 4.62, Math.sin(a) * 4.8, .15, ['#ffe36e', '#ff9fd8'][i % 2], { parent: spin, m: { em: '#ffe36e', ei: 1 }, cast: false }); }
+  carLeg.push(cyl(0, 0, 0, .35, .35, 4.6, '#ffd84a', { parent: spin }));
+  const top = new THREE.Mesh(new THREE.ConeGeometry(5, 1.8, 32), M('#a15cff')); top.position.y = 5.5; top.castShadow = true; spin.add(top); carLeg.push(top);
+  for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; carLeg.push(sph(Math.cos(a) * 4.8, 4.62, Math.sin(a) * 4.8, .15, ['#ffe36e', '#ff9fd8'][i % 2], { parent: spin, m: { em: '#ffe36e', ei: 1 }, cast: false })); }
   const mounts = [];
   for (let i = 0; i < 6; i++) {
     const a = i / 6 * Math.PI * 2, m = new THREE.Group(); m.position.set(Math.cos(a) * 3.2, 0, Math.sin(a) * 3.2); m.rotation.y = -a; spin.add(m);
@@ -276,6 +276,15 @@ export function buildWorld(G) {
     mounts.push({ m, ride, seat });
   }
   G.carousel = { group: car, spin, mounts, speed: .25 };
+  if (USE_ASSETS) landmarksReady.then(A => { if (!A || !A.carBase) return; // (build 22) the Blender carousel: stepped platform, fluted column with mirrors, striped scalloped canopy
+    const tapFn = top.userData.tap, gold = new THREE.MeshPhysicalMaterial({ color: '#ffd23f', metalness: .7, roughness: .28, clearcoat: .4 });
+    const mk = ao => ({ canopy: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .55, side: THREE.DoubleSide, aoMap: ao }), canopyA: new THREE.MeshStandardMaterial({ color: '#ff8fc8', roughness: .5, aoMap: ao }),
+      canopyB: new THREE.MeshStandardMaterial({ color: '#fff4fa', roughness: .5, aoMap: ao }), stone: new THREE.MeshStandardMaterial({ color: '#fff1f4', roughness: .6, aoMap: ao }), roofB: new THREE.MeshStandardMaterial({ color: '#c9a6ff', roughness: .5, aoMap: ao }), floor: new THREE.MeshStandardMaterial({ color: '#ff9fd2', roughness: .55, aoMap: ao }),
+      gold: Object.assign(gold.clone(), { aoMap: ao }), mirror: new THREE.MeshPhysicalMaterial({ color: '#ffe8f6', metalness: 1, roughness: .08, aoMap: ao }), flag: Object.assign(fabricMat('#ff6fb5'), { side: THREE.DoubleSide }) });
+    const put = (scene, mats, parent) => { scene.traverse(o => { if (!o.isMesh) return; o.material = mats[o.material.name] || mats.stone; o.castShadow = true; o.receiveShadow = true; o.userData.tap = tapFn; }); parent.add(scene); };
+    put(A.carBase, mk(A.carBaseAO), car); put(A.carSpin, mk(A.carSpinAO), spin);
+    for (const m of carLeg) m.visible = false;
+    for (const { m } of mounts) { const pole = m.children[0]; pole.scale.y = 5.55 / 4.6; pole.position.y = 5.55 / 2; pole.material = gold; } });
   tap(car, () => G.rideCarousel(), { paw: [144, 0], disc: 'carousel', hintY: 6.2 });
   // FERRIS WHEEL
   const fw = new THREE.Group(); fw.position.set(160, 7.5, -3.2); add(fw);
@@ -384,7 +393,7 @@ export function buildWorld(G) {
   // windows with a view outside
   for (const [x, y] of [[1007, 2.4], [1024, 6.6], [1008, 6.6]]) { block(x, y - 1, -4, 2.6, 2, .15, '#ffffff', { parent: room, r: .2, cast: false }); const g = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.6), new THREE.MeshBasicMaterial({ color: '#9fd8ff' })); g.position.set(x, y, -3.9); room.add(g); }
   // lamps: warm light inside
-  for (const [x, y] of [[1008, 3.6], [1020, 3.6], [1012, 8]]) { const l = new THREE.PointLight('#ffe2b0', 18, 14, 1.6); l.position.set(x, y, 0); room.add(l); sph(x, y + .1, -1, .3, '#fff3a6', { parent: room, m: { em: '#ffe36e', ei: 1.2 }, cast: false }); }
+  for (const [x, y] of [[1008, 3.6], [1020, 3.6], [1012, 8]]) { const l = new THREE.PointLight('#ffe2b0', 18, 14, 1.6); l.userData.zone = 'in'; l.position.set(x, y, 0); room.add(l); sph(x, y + .1, -1, .3, '#fff3a6', { parent: room, m: { em: '#ffe36e', ei: 1.2 }, cast: false }); }
   G.interiorGroup = room;
 
   // ---------- star bits ----------

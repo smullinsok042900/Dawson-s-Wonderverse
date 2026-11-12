@@ -20,13 +20,13 @@ import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
 import { fabricMat, normalFromCanvas, leafDetail } from './nature.js';
-import { USE_ASSETS, brickSet } from './assets.js';
+import { USE_ASSETS, brickSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 
 // pastel stone bricks with soft bumps (castle walls), and scalloped roof tiles
-function brickMat() {
+function brickMat(world) {
   if (USE_ASSETS) { // build 19: the tool-made brick set (rose bricks, recessed mortar, worn edges, AO)
-    const B = brickSet(); for (const t of [B.map, B.normal, B.rough]) t.repeat.set(3, 3);
+    const B0 = brickSet(), B = world ? { map: B0.map.clone(), normal: B0.normal.clone(), rough: B0.rough.clone() } : B0; for (const t of [B.map, B.normal, B.rough]) { t.repeat.set(world ? 1 : 3, world ? 1 : 3); t.needsUpdate = true; }
     return macroVariation(new THREE.MeshStandardMaterial({ map: B.map, normalMap: B.normal, normalScale: new THREE.Vector2(.8, .8), roughnessMap: B.rough, roughness: 1 }), { scale: .2, amount: .07 });
   }
   const W = 256, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
@@ -36,10 +36,10 @@ function brickMat() {
   const nm = new THREE.CanvasTexture(normalFromCanvas(c, 4)); nm.wrapS = nm.wrapT = THREE.RepeatWrapping; nm.repeat.set(3, 3);
   return new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(1, 1), roughness: .8 });
 }
-function roofTileMat() {
+function roofTileMat(cA = '#9a76e8', cB = '#c9b0ff') {
   const W = 128, c = document.createElement('canvas'); c.width = W; c.height = W; const g = c.getContext('2d');
-  g.fillStyle = '#9a76e8'; g.fillRect(0, 0, W, W);
-  for (let r = 0; r < 8; r++) for (let k = 0; k < 9; k++) { const x = k * 16 + (r % 2) * 8, y = r * 16; const gr = g.createRadialGradient(x, y + 4, 1, x, y + 8, 10); gr.addColorStop(0, '#c9b0ff'); gr.addColorStop(1, '#8a64dc'); g.fillStyle = gr; g.beginPath(); g.arc(x, y + 8, 8, 0, Math.PI); g.fill(); }
+  g.fillStyle = cA; g.fillRect(0, 0, W, W);
+  for (let r = 0; r < 8; r++) for (let k = 0; k < 9; k++) { const x = k * 16 + (r % 2) * 8, y = r * 16; const gr = g.createRadialGradient(x, y + 4, 1, x, y + 8, 10); gr.addColorStop(0, cB); gr.addColorStop(1, cA); g.fillStyle = gr; g.beginPath(); g.arc(x, y + 8, 8, 0, Math.PI); g.fill(); }
   const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace; map.wrapS = map.wrapT = THREE.RepeatWrapping; map.repeat.set(6, 3);
   const nm = new THREE.CanvasTexture(normalFromCanvas(c, 3)); nm.wrapS = nm.wrapT = THREE.RepeatWrapping; nm.repeat.set(6, 3);
   return new THREE.MeshPhysicalMaterial({ map, normalMap: nm, roughness: .4, clearcoat: .6 });
@@ -149,18 +149,19 @@ export function initKingdom(G, api) {
 
   // =================== PRINCESS CASTLE ===================
   const C = new THREE.Group(); C.position.set(K.castle, 0, 0); add(C);
+  const LEG = new THREE.Group(); C.add(LEG); // (build 22: the old castle structure: the light test mode and the fallback; the Blender castle replaces it)
   const wallM = brickMat(), roofTiles = roofTileMat(), trimM = toy('#ffffff', { r: .4, cc: .6 }), roofM = roofTiles, goldM = toy('#ffd23f', { r: .2, cc: 1, m: .6 });
-  { const keep = new THREE.Mesh(new RoundedBoxGeometry(12, 7, 3, 3, .25), wallM); keep.position.set(0, 3.5, -5.6); keep.receiveShadow = true; C.add(keep);
-    for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new RoundedBoxGeometry(.8, .7, 1, 2, .12), wallM); b.position.set(-5.4 + i * 1.35, 7.3, -4.6); b.castShadow = true; C.add(b); }
+  { const keep = new THREE.Mesh(new RoundedBoxGeometry(12, 7, 3, 3, .25), wallM); keep.position.set(0, 3.5, -5.6); keep.receiveShadow = true; LEG.add(keep);
+    for (let i = 0; i < 9; i++) { const b = new THREE.Mesh(new RoundedBoxGeometry(.8, .7, 1, 2, .12), wallM); b.position.set(-5.4 + i * 1.35, 7.3, -4.6); b.castShadow = true; LEG.add(b); }
     for (const tx of [-6.6, 6.6]) {
-      const tw = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.6, 9, 32), wallM); tw.position.set(tx, 4.5, -4.9); tw.castShadow = true; tw.receiveShadow = true; C.add(tw);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, .14, 10, 32), trimM); ring.rotation.x = Math.PI / 2; ring.position.set(tx, 9, -4.9); C.add(ring);
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.8, 3.4, 32), roofM); roof.position.set(tx, 10.7, -4.9); roof.castShadow = true; C.add(roof);
-      C.add(ball(goldM, .16, tx, 12.5, -4.9));
-      for (const wy of [3, 6]) { const w = new THREE.Mesh(new THREE.CircleGeometry(.42, 24), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .6 })); w.position.set(tx, wy, -3.4); C.add(w); }
+      const tw = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.6, 9, 32), wallM); tw.position.set(tx, 4.5, -4.9); tw.castShadow = true; tw.receiveShadow = true; LEG.add(tw);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, .14, 10, 32), trimM); ring.rotation.x = Math.PI / 2; ring.position.set(tx, 9, -4.9); LEG.add(ring);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.8, 3.4, 32), roofM); roof.position.set(tx, 10.7, -4.9); roof.castShadow = true; LEG.add(roof);
+      LEG.add(ball(goldM, .16, tx, 12.5, -4.9));
+      for (const wy of [3, 6]) { const w = new THREE.Mesh(new THREE.CircleGeometry(.42, 24), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .6 })); w.position.set(tx, wy, -3.4); LEG.add(w); }
     }
-    const mid = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 3, 28), wallM); mid.position.set(0, 8.4, -5.6); C.add(mid);
-    const mroof = new THREE.Mesh(new THREE.ConeGeometry(1.45, 2.8, 28), toy('#ff8fc8', { r: .3, cc: 1 })); mroof.position.set(0, 11.3, -5.6); mroof.castShadow = true; C.add(mroof);
+    const mid = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 3, 28), wallM); mid.position.set(0, 8.4, -5.6); LEG.add(mid);
+    const mroof = new THREE.Mesh(new THREE.ConeGeometry(1.45, 2.8, 28), toy('#ff8fc8', { r: .3, cc: 1 })); mroof.position.set(0, 11.3, -5.6); mroof.castShadow = true; LEG.add(mroof);
     // the big front door (an arch) and glowing windows
     const door = new THREE.Group(); door.position.set(0, 0, -4.05); C.add(door);
     const leaf = new THREE.Mesh(new RoundedBoxGeometry(2.4, 2.6, .25, 2, .1), toy('#c870b0', { r: .45, cc: .6 })); leaf.position.y = 1.3; door.add(leaf);
@@ -168,6 +169,14 @@ export function initKingdom(G, api) {
     door.add(ball(goldM, .1, .8, 1.3, .16)); const hrt = new THREE.Mesh(starGeometry(.35, .17, .06, .02, 1), goldM); hrt.position.set(0, 2.85, .14); door.add(hrt);
     for (const [wx, wy] of [[-3.4, 4.6], [3.4, 4.6], [-3.4, 2], [3.4, 2], [0, 5.4]]) { const w = new THREE.Mesh(new RoundedBoxGeometry(1.1, 1.4, .1, 2, .4), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .55 })); w.position.set(wx, wy, -4.08); C.add(w); }
     G.castleDoor = door;
+    if (USE_ASSETS) landmarksReady.then(A => { if (!A || !A.castle) return; // (build 22) the Blender-modelled castle
+      const ao = A.castleAO, roofTex = (a, b) => { const t = roofTileMat(a, b); for (const k of ['map', 'normalMap']) { t[k].repeat.set(.34, .55); } return t; };
+      const mats = { wall: (() => { const m = brickMat(true); m.aoMap = ao; return m; })(), stone: new THREE.MeshStandardMaterial({ color: '#fff1f4', roughness: .62, aoMap: ao }),
+        roofA: roofTex('#9a76e8', '#c9b0ff'), roofB: roofTex('#ff7fbf', '#ffc4e4'), gold: goldM.clone(), glass: new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .55, roughness: .4 }),
+        flag: fabricMat('#ff6fb5') };
+      for (const k of ['roofA', 'roofB', 'gold']) mats[k].aoMap = ao; mats.flag.side = THREE.DoubleSide;
+      A.castle.traverse(o => { if (!o.isMesh) return; const nm = (o.material && o.material.name) || ''; o.material = mats[nm] || mats.stone; o.castShadow = true; o.receiveShadow = true; });
+      C.add(A.castle); LEG.visible = false; });
     tapObj(door, () => { door.userData.open = 1.6; Sound.chime(); burst(K.castle, 2, -3.5, ['#ffd23f', '#ff8fc8', '#fff', '#b28cff'], 24, 3); discover('castle', 'The Princess Castle! Dance on the shiny floor!'); setTimeout(() => enterCastle(), 350); });
   }
   // ---------- build 16: a magical castle front ----------

@@ -54,7 +54,7 @@ export function initFriends(G, api) {
   const sign = new THREE.Mesh(new THREE.TorusGeometry(.35, .07, 10, 28), M('#ff6fae', { em: '#ff6fae', ei: .4 })); sign.position.set(0, 3.1, 0); mach.add(sign);
   const heartIn = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 12), M('#ff6fae', { em: '#ff6fae', ei: .6 })); heartIn.position.set(0, 3.1, 0); mach.add(heartIn);
   const preview = new THREE.Group(); preview.position.y = 1.15; mach.add(preview);
-  const glowL = new THREE.PointLight('#ffd9f4', 8, 6, 1.6); glowL.position.set(0, 2.2, .8); mach.add(glowL);
+  const glowL = new THREE.PointLight('#ffd9f4', 8, 6, 1.6); glowL.userData.zone = 'under'; glowL.position.set(0, 2.2, .8); mach.add(glowL);
   // four big buttons in front, each showing what it changes
   const BTN = [['col', '#ff6fae'], ['ears', '#7fd8ff'], ['tail', '#ffd84a'], ['pat', '#9ff7c8']];
   const btns = BTN.map(([part, c], i) => {

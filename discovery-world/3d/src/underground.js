@@ -61,7 +61,7 @@ export function buildUnderground(G) {
   add(dots);
   // warm lanterns + coloured lights
   for (const [x, c] of [[6, '#ffd9a0'], [16, '#ff9fd8'], [24, '#9fe6ff'], [33, '#ffe2a0'], [43, '#c9a6ff'], [53, '#9ff7e0']]) {
-    const l = new THREE.PointLight(c, 22, 13, 1.6); l.position.set(x, UG.floor + 3.2, 1); add(l);
+    const l = new THREE.PointLight(c, 22, 13, 1.6); l.userData.zone = 'under'; l.position.set(x, UG.floor + 3.2, 1); add(l);
     const lantern = sph(x, UG.ceil - .5, -1.5, .25, '#fff3a6', { m: { em: c, ei: 1.4 } });
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .4, 6), M('#5b2f8a')); cord.position.set(x, UG.ceil - .2, -1.5); add(cord);
     void lantern;

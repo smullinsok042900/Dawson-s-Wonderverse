@@ -32,6 +32,7 @@ export function leafDetail() {
   const map = tex(c), normal = tex(normalFromCanvas(c, 1.6), false); map.repeat.set(2, 2); normal.repeat.set(2, 2);
   leafDetailCache = { map, normal }; return leafDetailCache;
 }
+export const LOD = []; // (build 22) things that are only drawn near the camera: { o, x, r }
 const NO_FLIP = THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '');
 
 // turn a picture's brightness into bumps (a normal map)
@@ -147,7 +148,7 @@ export function scatterNature(scene, { ok, x0, x1, count = 520, bushes = 80 }) {
     for (let i = 0; i < b; i++) { bush.getMatrixAt(i, M); P.setFromMatrixPosition(M); const key = Math.floor(P.x / 24) * 2 + (i % 2); if (!chunks.has(key)) chunks.set(key, []); chunks.get(key).push(M.clone().multiply(BUSH_FIT)); }
     for (const [key, list] of chunks) for (const p of A.bushes[((key % 2) + 2) % 2]) {
       const im = new THREE.InstancedMesh(p.geo, p.mat, list.length); list.forEach((m, k) => im.setMatrixAt(k, m));
-      im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im);
+      im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); LOD.push({ o: im, x: Math.floor(key / 2) * 24 + 12, r: 52 });
     }
   });
   return { flowers: n, bushes: b };
@@ -201,7 +202,7 @@ function bladeClump(n = 9) {
   g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
   return g;
 }
-export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 60 : 1700, bands = [[-11, -2.2], [3.6, 4.45]] }) {
+export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (typeof location !== 'undefined' && /[?&]test/.test(location.search)) ? 60 : (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches) ? 1150 : 1700, bands = [[-11, -2.2], [3.6, 4.45]] }) {
   const geo = bladeClump(9);
   const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88, side: THREE.DoubleSide });
   mat.onBeforeCompile = sh => {
@@ -223,7 +224,7 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
       e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const near = z > -5.5 && z < 0 ? 1 : 0, s = (.8 + rnd() * .6) * (near ? .85 : 1.1); m4.compose(V.set(x, terrainH(x, z), z), q, S.set(s, s * (.8 + rnd() * .5), s));
       im.setMatrixAt(n, m4); const dry = rnd() < .05; im.setColorAt(n, dry ? cl.setHSL(.17 + rnd() * .03, .38, .42) : cl.setHSL(.25 + rnd() * .04, .36 + rnd() * .08, .37 + rnd() * .05)); n++; /* (build 20: close to the lawn colour, less clump-to-clump contrast) */
     }
-    im.count = n; im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im);
+    im.count = n; im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im); LOD.push({ o: im, x: cx + chunk / 2, r: 44 });
   }
   return meshes;
 }
@@ -258,7 +259,7 @@ function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.
 // procedural versions below stay as the light test mode and as a fallback
 export function makeTree(scene, x, z, s = 1) {
   if (!USE_ASSETS) return makeTreeProc(scene, x, z, s);
-  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g);
+  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g); LOD.push({ o: g, x, r: 60 });
   const v = Math.abs(Math.round(x * 7.3)) % 3, sc = s * (.9 + rnd() * .18);
   assetsReady.then(A => {
     if (!A) { scene.remove(g); makeTreeProc(scene, x, z, s); return; }
