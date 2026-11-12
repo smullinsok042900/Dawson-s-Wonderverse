@@ -21,6 +21,12 @@ import cobCol from './assets/cobble_col.jpg';
 import cobNrm from './assets/cobble_nrm.jpg';
 import cobRough from './assets/cobble_rough.jpg';
 import brCol from './assets/brick_col.jpg';
+import castleGlb from './assets/castle.glb';
+import castleAO from './assets/castle_ao.jpg';
+import carBaseGlb from './assets/carousel_base.glb';
+import carSpinGlb from './assets/carousel_spin.glb';
+import carBaseAO from './assets/carousel_base_ao.jpg';
+import carSpinAO from './assets/carousel_spin_ao.jpg';
 import brNrm from './assets/brick_nrm.jpg';
 import brRough from './assets/brick_rough.jpg';
 
@@ -86,3 +92,11 @@ const L = new THREE.TextureLoader(), mk = (u, srgb) => { const t = L.load(u); t.
 let cobCache = null, brCache = null;
 export function cobbleSet() { return cobCache || (cobCache = { map: mk(cobCol, true), normal: mk(cobNrm, false), rough: mk(cobRough, false) }); }
 export function brickSet() { return brCache || (brCache = { map: mk(brCol, true), normal: mk(brNrm, false), rough: mk(brRough, false) }); }
+
+// (build 22) landmark models: the Blender castle (and its baked ambient-occlusion lightmap, UV set 1)
+export const landmarksReady = USE_ASSETS
+  ? Promise.all([castleGlb, carBaseGlb, carSpinGlb].map(parse)).then(([c, cb, cs]) => {
+      const aoTex = u => { const t = new THREE.TextureLoader().load(u); t.flipY = false; t.channel = 1; t.colorSpace = THREE.NoColorSpace; return t; };
+      return { castle: c.scene, castleAO: aoTex(castleAO), carBase: cb.scene, carBaseAO: aoTex(carBaseAO), carSpin: cs.scene, carSpinAO: aoTex(carSpinAO) };
+    }).catch(e => { console.log('landmarks failed, using the procedural versions', e); return null; })
+  : Promise.resolve(null);

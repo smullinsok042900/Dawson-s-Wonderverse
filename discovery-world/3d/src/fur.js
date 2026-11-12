@@ -46,16 +46,19 @@ function furMaterial(base, layer, o) {
   m.customProgramCacheKey = () => 'fur21';
   return m;
 }
+export const FUR = []; // (build 22) every furry creature's shells: drawn only near the camera
 // add fur shells to a skinned mesh (shares its geometry and skeleton)
+const PHONE = typeof matchMedia !== 'undefined' && (matchMedia('(pointer: coarse)').matches || /iPhone|iPad|Android/.test(navigator.userAgent)); // (build 22: fewer fur layers on phones)
 const LIGHT_TEST = typeof location !== 'undefined' && /[?&]test/.test(location.search); // (the automated tests' light mode skips fur)
 export function addFur(mesh, o = {}) {
   if (LIGHT_TEST) return [];
-  const n = o.shells ?? 8, opts = { length: o.length ?? .03, density: o.density ?? 260, droop: o.droop, tint: o.tint }, shells = [];
+  const n = Math.min(o.shells ?? 8, PHONE ? 5 : 99), opts = { length: o.length ?? .03, density: o.density ?? 260, droop: o.droop, tint: o.tint }, shells = [];
   for (let i = 1; i <= n; i++) {
     const s = new THREE.SkinnedMesh(mesh.geometry, furMaterial(mesh.material, i / n, opts));
     s.bind(mesh.skeleton, mesh.bindMatrix); s.frustumCulled = true; s.castShadow = false; s.receiveShadow = true; s.renderOrder = 1;
     s.userData.creature = mesh.userData.creature; s.raycast = () => {}; // (taps go to the body underneath)
     mesh.parent.add(s); shells.push(s);
   }
+  FUR.push({ mesh, shells });
   return shells;
 }

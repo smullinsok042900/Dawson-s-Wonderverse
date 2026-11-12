@@ -37,6 +37,49 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 22: smoother on phones, plus a Blender-modelled castle and carousel
+Backup of build 21: `backups/3D_build21_index.html`.
+
+**Lag and slowness: what was costing the most, and the fixes**
+- **Lag spiral:** after one slow frame, the game ran up to 15 physics catch-up steps, which made the next frame slower still. It now runs at most 4.
+- **Render size:** phones rendered at 1.7x (about 950k pixels per frame). They now render at 1.5x (about 740k). `adapt()` still lowers it further if frames drop.
+- **Point lights:** 10 underground and indoor point lights were evaluated for every lit pixel everywhere in the world. Each is now switched on only in its own area (underground or the indoor room).
+- **Screen-space AO:** on phones the GTAO pass is off. The new Blender assets carry baked ambient occlusion instead. Desktop keeps GTAO.
+- **Distance culling:** grass chunks beyond 44 m, bush chunks beyond 52 m and trees beyond 60 m are no longer drawn.
+- **Fur:** fur shells are only drawn on creatures within 14 m of the camera. Phones use 5 shells instead of 8.
+- **Phone budgets:** grass is thinned to 1,150 clumps per chunk, the shadow map is 1536 px, and the shape-smoothing budget is 120k triangles.
+- **Measured frame time** (relative only: software WebGL emulating an iPhone at 844x390 @3x):
+
+| view | build 21 | build 22 | change |
+|---|---|---|---|
+| carousel | 3.13 s | 1.50 s | −52% |
+| park | 3.97 s | 2.26 s | −43% |
+| dinosaur | 4.85 s | 2.64 s | −46% |
+| castle | 4.25 s | 2.19 s | −48% |
+
+Real-phone frame times will be far lower; only the relative change means something.
+
+**Blender-modelled landmarks** (`tools/blender/build_landmarks.py`)
+- **Castle:**
+  - Keep: a brick keep on a stone plinth with a cornice, battlements front and back, and a gabled hall roof.
+  - Two great towers (same footprint, so the climbing roses still fit) with corbelled tops, flared tile spires, gold finials, pennants and glowing arched windows in stone frames.
+  - A central tower with a pink spire.
+  - Two tall back towers for depth.
+  - Side wings with battlements and turrets.
+  - Every hard edge is bevelled; towers and spires are lathe-turned profiles.
+  - UV set 0 is world-scale, so bricks and roof tiles are one size everywhere. UV set 1 carries a Cycles-baked AO lightmap.
+  - The door you tap, the balcony, windows, banners, princesses and dance floor are unchanged.
+- **Carousel:**
+  - A stepped platform with a scalloped skirt, a lilac step and a gold rim.
+  - A fluted centre column with mirror panels.
+  - A striped, gently domed canopy with a scalloped valance, gold trim, finial and flag.
+  - Gold poles now reach the canopy. The ponies, riding and spinning work as before.
+- **Materials:** these models are lit with the game's own material set (bricks, stone, roof tiles, gold), so they match everything else.
+- **Fallback:** the old shapes remain for the light test mode and if loading fails.
+- **Size:** `index.html` is now 8.3 MB.
+
+Pictures: `screenshots/compare_b22.jpg` (castle wide, castle side angle, castle gameplay view, carousel close-up, carousel gameplay view).
+
 ## 3D build 21: plush fur, seated eyes, and the test failures fixed at the root
 Backup of build 20: `backups/3D_build20_index.html`.
 

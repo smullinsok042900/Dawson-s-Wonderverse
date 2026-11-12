@@ -59,7 +59,7 @@ export function makePost(renderer, scene, camera, { mobile }) {
       }` });
   const fin = new FullScreenQuad(finalMat);
   const post = {
-    enabled: true,
+    enabled: true, ao: !mobile,
     setSize(w, h, dpr) {
       const W = Math.max(1, Math.floor(w * dpr)), H = Math.max(1, Math.floor(h * dpr));
       rtScene.setSize(W, H); rtAO.setSize(W, H);
@@ -68,14 +68,14 @@ export function makePost(renderer, scene, camera, { mobile }) {
     },
     render() {
       renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
-      gtao.render(renderer, rtAO, rtScene);
+      if (post.ao) gtao.render(renderer, rtAO, rtScene); const src = post.ao ? rtAO : rtScene; // (build 22: no screen-space AO on phones; the assets carry baked AO)
       // bloom at quarter size: bright pass, then a horizontal and a vertical blur, twice
-      bright.material.uniforms.tIn.value = rtAO.texture; renderer.setRenderTarget(rtB1); bright.render(renderer);
+      bright.material.uniforms.tIn.value = src.texture; renderer.setRenderTarget(rtB1); bright.render(renderer);
       for (let i = 0; i < 2; i++) {
         blurMat.uniforms.tIn.value = rtB1.texture; blurMat.uniforms.uDir.value.set(post.bt[0] * (1 + i), 0); renderer.setRenderTarget(rtB2); blur.render(renderer);
         blurMat.uniforms.tIn.value = rtB2.texture; blurMat.uniforms.uDir.value.set(0, post.bt[1] * (1 + i)); renderer.setRenderTarget(rtB1); blur.render(renderer);
       }
-      finalMat.uniforms.tIn.value = rtAO.texture; finalMat.uniforms.tBloom.value = rtB1.texture; finalMat.uniforms.toneMappingExposure.value = renderer.toneMappingExposure;
+      finalMat.uniforms.tIn.value = src.texture; finalMat.uniforms.tBloom.value = rtB1.texture; finalMat.uniforms.toneMappingExposure.value = renderer.toneMappingExposure;
       renderer.setRenderTarget(null); fin.render(renderer);
     },
     gtao, finalMat,
