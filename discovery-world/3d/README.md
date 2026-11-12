@@ -37,6 +37,28 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 21: plush fur, seated eyes, and the test failures fixed at the root
+Backup of build 20: `backups/3D_build20_index.html`.
+
+**Fur: the old technique had reached its limit, so it was replaced**
+- **Why:** shell fur that keeps or discards tiny procedural dots can't be anti-aliased. Each hair is about one pixel wide, so it either sparkles or, faded down as in build 20, still leaves speckle and a noisy bright fringe on the silhouette.
+- **`src/fur.js` is now texture-based plush fur:**
+  - A tileable "fibre height" map holds 2,600 round strands, each tallest in its middle. It is sampled in 3D (triplanar) on the creature's rest-pose surface, so there are no UV seams and fibres move with the body.
+  - Each shell keeps only strands taller than its own height, so strands taper towards the tips.
+  - Fibres come from a mipmapped texture, so they average out smoothly with distance instead of aliasing.
+  - Edges use alpha-to-coverage on the 4x anti-aliased picture: smooth, with no transparency-sorting problems and no dark overlaps.
+  - Gentle root-to-tip shading (90% to 104%), 8 shells instead of 10.
+- **Result:** clean, soft plush at every distance. Compare the fur at 1:1 pixels in `screenshots/compare_b21_fur.jpg`.
+
+**Eyes:** Pip's eyeballs are seated 2.3 cm deeper in the head, so the face surface wraps them like sockets. From the side they no longer stick out of the head's outline.
+
+**Test failures, root cause:** all three remaining failures came from one real game problem.
+- Since the closer camera (build 14), the sky whale floated at the very top edge of the screen. The tap aimed at it landed on the HUD, and it hit the sound button, which then made both sound checks start with sound off.
+- The whale now swims 2.7 m lower, between the cloud floor and the high clouds: fully in view, and easy for Dawson to tap.
+- The sound check now also verifies the toggle whatever the starting state.
+
+Pictures: `screenshots/compare_b21.jpg` (close-up, alternate angle, extreme close-up and gameplay view, build 20 vs 21) and `screenshots/compare_b21_fur.jpg`.
+
 ## 3D build 20: clean, cohesive, noise-free rendering (no new content)
 Backup of build 19: `backups/3D_build19_index.html`.
 
