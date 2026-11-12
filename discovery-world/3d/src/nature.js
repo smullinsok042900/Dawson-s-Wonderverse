@@ -34,6 +34,7 @@ export function leafDetail() {
   const map = tex(c), normal = tex(normalFromCanvas(c, 1.6), false); map.repeat.set(2, 2); normal.repeat.set(2, 2);
   leafDetailCache = { map, normal }; return leafDetailCache;
 }
+const PHONE_GRASS = typeof navigator !== 'undefined' && (/iPhone|iPad|Android/.test(navigator.userAgent) || (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches));
 export const LOD = []; // (build 22) things that are only drawn near the camera: { o, x, r }
 const NO_FLIP = THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '');
 
@@ -155,7 +156,8 @@ export function scatterNature(scene, { ok, x0, x1, count = 520, bushes = 80 }) {
     for (let i = 0; i < b; i++) { bush.getMatrixAt(i, M); P.setFromMatrixPosition(M); const key = Math.floor(P.x / 24) * 2 + (i % 2); if (!chunks.has(key)) chunks.set(key, []); chunks.get(key).push(M.clone().multiply(BUSH_FIT)); }
     for (const [key, list] of chunks) for (const p of A.bushes[((key % 2) + 2) % 2]) {
       const im = new THREE.InstancedMesh(p.geo, p.mat, list.length); list.forEach((m, k) => im.setMatrixAt(k, m));
-      im.castShadow = true; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); LOD.push({ o: im, x: Math.floor(key / 2) * 24 + 12, r: 52 });
+      im.castShadow = !p.lo; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); LOD.push({ o: im, x: Math.floor(key / 2) * 24 + 12, r: 52, parts: p.lo ? [{ m: im, hi: p.geo, lo: p.lo }] : null });
+      if (p.lo) { const sh = new THREE.InstancedMesh(p.lo, p.mat, list.length); sh.instanceMatrix = im.instanceMatrix; sh.castShadow = true; sh.layers.set(1); sh.computeBoundingSphere(); im.add(sh); } // (build 28) low-detail shadow
     }
   });
   return { flowers: n, bushes: b };
@@ -231,7 +233,7 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
       e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const near = z > -5.5 && z < 0 ? 1 : 0, s = (.8 + rnd() * .6) * (near ? .85 : 1.1); m4.compose(V.set(x, terrainH(x, z), z), q, S.set(s, s * (.8 + rnd() * .5), s));
       im.setMatrixAt(n, m4); const dry = rnd() < .05; im.setColorAt(n, dry ? cl.setHSL(.17 + rnd() * .03, .38, .42) : cl.setHSL(.25 + rnd() * .04, .36 + rnd() * .08, .37 + rnd() * .05)); n++; /* (build 20: close to the lawn colour, less clump-to-clump contrast) */
     }
-    im.count = n; im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im); LOD.push({ o: im, x: cx + chunk / 2, r: 44 });
+    im.count = PHONE_GRASS ? Math.round(n * .6) : n; /* (build 28) phones: 40% fewer grass clumps (they are in random order, so the rest stay evenly spread) */ im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im); LOD.push({ o: im, x: cx + chunk / 2, r: 44 });
   }
   return meshes;
 }
@@ -266,11 +268,15 @@ function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.
 // procedural versions below stay as the light test mode and as a fallback
 export function makeTree(scene, x, z, s = 1) {
   if (!USE_ASSETS) return makeTreeProc(scene, x, z, s);
-  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g); LOD.push({ o: g, x, z, r: 60, tree: true });
+  const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g); const entry = { o: g, x, z, r: 60, tree: true }; LOD.push(entry);
   const v = Math.abs(Math.round(x * 7.3)) % 3, sc = s * (.9 + rnd() * .18);
   assetsReady.then(A => {
     if (!A) { scene.remove(g); makeTreeProc(scene, x, z, s); return; }
-    for (const p of A.trees[v]) { const m = new THREE.Mesh(p.geo, p.mat); m.scale.setScalar(sc); m.castShadow = true; m.receiveShadow = true; g.add(m); }
+    const parts = [];
+    for (const p of A.trees[v]) { const m = new THREE.Mesh(p.geo, p.mat); m.scale.setScalar(sc); m.castShadow = !p.lo; m.receiveShadow = true; g.add(m);
+      // (build 28) the shadow comes from the low-detail copy, which is only drawn into the shadow map (layer 1)
+      if (p.lo) { const sh = new THREE.Mesh(p.lo, p.mat); sh.scale.setScalar(sc); sh.castShadow = true; sh.receiveShadow = false; sh.layers.set(1); g.add(sh); parts.push({ m, hi: p.geo, lo: p.lo }); } }
+    entry.parts = parts;
   });
   return g;
 }

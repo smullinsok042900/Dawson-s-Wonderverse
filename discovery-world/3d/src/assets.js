@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 import tree0 from './assets/tree_0.glb';
 import tree1 from './assets/tree_1.glb';
 import tree2 from './assets/tree_2.glb';
@@ -79,9 +80,29 @@ function prep(gltf) {
   return parts;
 }
 
+// (build 28) LOW-DETAIL copies of the trees and bushes, made while loading (meshoptimizer's simplifier, ~55 KB, no
+// extra model files). A tree is ~66,000 triangles and was drawn twice: once on screen, once again into the shadow map.
+// Shadows now come from the low-detail copy (about a fifth of the triangles; a shadow's soft outline looks the same),
+// and on phones trees further than ~22 m away are shown low-detail too. The copies share the vertex data and
+// differ only in their index list, so they cost little memory, and they use the same materials (no new shaders).
+function lowDetail(geo, ratio, err) {
+  if (!geo.index) return null;
+  const src = geo.index.array instanceof Uint32Array ? geo.index.array : new Uint32Array(geo.index.array), target = Math.max(3, Math.floor(src.length * ratio / 3) * 3);
+  const [idx] = MeshoptSimplifier.simplify(src, geo.attributes.position.array, 3, target, err);
+  if (!idx || idx.length < 3 || idx.length > src.length * .8) return null;
+  const g = new THREE.BufferGeometry(); for (const [k, a] of Object.entries(geo.attributes)) g.setAttribute(k, a);
+  g.setIndex(new THREE.BufferAttribute(idx, 1)); g.boundingSphere = geo.boundingSphere; g.boundingBox = geo.boundingBox; return g;
+}
+export const LOWSTATS = { hi: 0, lo: 0, ms: 0 };
+async function addLowDetail(A) {
+  try { const t0 = performance.now(); await MeshoptSimplifier.ready;
+    for (const set of [...A.trees, ...A.bushes]) for (const p of set) { p.lo = lowDetail(p.geo, p.leaves ? .3 : .12, p.leaves ? .03 : .02); LOWSTATS.hi += p.geo.index.count / 3; LOWSTATS.lo += (p.lo || p.geo).index.count / 3; }
+    LOWSTATS.ms = Math.round(performance.now() - t0);
+  } catch (e) { console.log('low-detail trees skipped', e); }
+}
 export const ASSETS = { trees: null, bushes: null };
 export const assetsReady = USE_ASSETS
-  ? Promise.all([tree0, tree1, tree2, bush0, bush1].map(parse)).then(g => { ASSETS.trees = g.slice(0, 3).map(prep); ASSETS.bushes = g.slice(3).map(prep); return ASSETS; })
+  ? Promise.all([tree0, tree1, tree2, bush0, bush1].map(parse)).then(async g => { ASSETS.trees = g.slice(0, 3).map(prep); ASSETS.bushes = g.slice(3).map(prep); await addLowDetail(ASSETS); return ASSETS; })
     .catch(e => { console.log('assets failed, using the procedural versions', e); return null; })
   : Promise.resolve(null);
 

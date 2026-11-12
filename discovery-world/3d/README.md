@@ -37,6 +37,39 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 28: about a third less drawing work every frame
+
+**Why:** the game was still laggy. A per-object count of what is drawn each frame, on an iPhone-sized screen, showed where the work goes:
+- **Trees:** each one is about 66,000 triangles, drawn twice (once on screen and once into the shadow map). The bushes, at 9,000 triangles, also cast shadows.
+- **Creatures:** every sculpted creature was about 28,000 triangles. Furry ones are drawn 5–6 extra times as fur layers, so your own creature alone was about 170,000 triangles per frame.
+- **Grass:** about 124,000 triangles.
+
+**Changes:**
+- **Trees and bushes get low-detail copies, made while loading** with meshoptimizer's simplifier (about 55 KB of code, no extra model files):
+  - Shadows always come from the low-detail copy, which has about a third of the triangles. A soft shadow looks the same.
+  - On phones, trees and bushes more than 16 m away are shown low-detail.
+  - The copies share the original vertex data and materials, so there are no new shaders and memory use barely changes.
+- **Creatures are simplified to about 40% of their triangles** as they are made. Their outline moves by less than half a percent of their size, and colours, skinning and fur are unchanged.
+  - Your own creature, which is made before the simplifier has loaded, is simplified as soon as the simplifier is ready.
+  - The fur layers share the body, so they shrink with it.
+- **Grass on phones:** 40% fewer clumps. They are in random order, so the rest stay evenly spread.
+- **Phones start on lighter shadows** (graphics level 1: 1024 px, redrawn every 3rd frame) instead of waiting to lag first. The automatic graphics still steps up after smooth play and down when the phone struggles. "Reset automatic graphics" returns a phone to level 1.
+
+**Measured (desktop, iPhone screen size and browser identity, software rendering; triangles per frame including shadows):**
+
+| Area | Build 27 | Build 28 | Change |
+|---|---|---|---|
+| Park | 924k | 568k | −39% |
+| Creature area | 1,146k | 796k | −31% |
+| Valley | 1,003k | 711k | −29% |
+| Castle | 835k | 604k | −28% |
+
+- Shader programs are unchanged: 99–100.
+- Side-by-side screenshots of the same views look the same.
+- Making the low-detail trees took 137–184 ms during loading on this machine; a phone will take longer.
+
+**Not measured:** the real frame rate on an iPhone. The in-game Performance Test (hold ⚙️) measures that.
+
 ## 3D build 27: learning games rebuilt as simple toys, with three learning levels
 
 **Why:** the learning games still felt like a school quiz. They had too many choices, several rules at once, spelling, and categories, and one screen showed a happy face beside a question about a grumpy one. They are rebuilt around the way young children play: tap, drag, match, count, discover. There is one skill and one action at a time, and every question has a right answer that is on screen.
