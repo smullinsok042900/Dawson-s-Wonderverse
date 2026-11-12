@@ -99,6 +99,13 @@ Backup of build 22: `backups/3D_build22_index.html`.
 
 - **Frame time:** unchanged from build 22 within noise.
 
+**Test report:** full smoke test **136/136** in headless Chromium with software WebGL, no console errors. Changes needed along the way:
+- Buddies waiting to be met now stay within 1 m of their meeting spot.
+- The tests tap moving creatures where they actually are, as a child would.
+- Followers keep up more closely when you run (the pet was 3.2 m behind while running, now 2.6 m).
+- The dino-egg check now stands on the side where your friends trail away from the egg.
+- Tried and reverted: a rule that let taps go past friends who follow you to whatever is behind them. It stopped you tapping your own pet in front of the Pet Workshop. The thing in front gets the tap; if a pet is in the way, tapping it just makes it wave and stay.
+
 **Not done yet (honest)**
 - **Fluffkins:** the baby Fluffkins (the six you rescue) still use their own simple follow code. They are not yet on the new behaviour system.
 - **Camera:** it was not changed in this build. It already follows smoothly with frame-rate-independent easing, steps back at the castle, and the game is a side view with no walls between the camera and the player.
