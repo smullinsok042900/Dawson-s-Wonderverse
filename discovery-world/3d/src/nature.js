@@ -77,6 +77,14 @@ export function sandTextures() {
   g.globalAlpha = .12; for (let i = 0; i < 30; i++) { g.fillStyle = pick(['#d6b97c', '#fff5d6']); g.beginPath(); g.ellipse(rnd() * N, rnd() * N, 20 + rnd() * 40, 6 + rnd() * 10, rnd() * 3, 0, 7); g.fill(); }
   g.globalAlpha = 1; sandCache = { map: tex(c), normal: tex(normalFromCanvas(c, 1.2), false) }; return sandCache;
 }
+let snowCache = null;
+export function snowTextures() { // (build 31) soft snow, drawn like the lawn (same shader)
+  if (snowCache) return snowCache;
+  const N = 256, [c, g] = canvas(N); g.fillStyle = '#f3f8ff'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 3000; i++) { g.fillStyle = pick(['#e3eefc', '#ffffff', '#d8e6f8', '#f9fcff']); g.globalAlpha = .6; g.fillRect(rnd() * N, rnd() * N, 1 + rnd() * 2, 1 + rnd() * 2); }
+  g.globalAlpha = .15; for (let i = 0; i < 24; i++) { g.fillStyle = pick(['#cfdff5', '#ffffff']); g.beginPath(); g.ellipse(rnd() * N, rnd() * N, 24 + rnd() * 40, 8 + rnd() * 12, rnd() * 3, 0, 7); g.fill(); }
+  g.globalAlpha = 1; snowCache = { map: tex(c), normal: tex(normalFromCanvas(c, .9), false) }; return snowCache;
+}
 // ---------- lawn grass (one 4x4 m tile, repeated) ----------
 let lawnCache = null;
 export function lawnTextures() {

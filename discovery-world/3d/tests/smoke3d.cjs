@@ -306,6 +306,8 @@ const UG_F = -6;
   await page.locator('.tsT').nth(4).tap(); c = await waitFor(s => !s.ride, 90000); check('pick a station picture: the train drives you there and you hop off', !c.ride && Math.abs(c.x - 61) < 1, `ride=${c.ride} x=${c.x.toFixed(1)}`);
   await teleport(-66); await page.evaluate(() => __DDW3.G.expansion.buildNow(-66)); await sleep(500);
   { const r = await page.evaluate(() => { const S = __DDW3.G.expansion._S.find(s => s.d.id === 'seaside'); const crab = S.taps.find(o => o.userData && o.userData.pal === 'crab'); if (!crab) return 'no crab'; let m = null; crab.traverse(q => { if (!m && q.userData.tap) m = q; }); for (let k = 0; k < 3; k++) m.userData.tap(); return JSON.stringify(__DDW3.world.exp.pals); }); check('befriend Pinchy the crab (three taps): Pinchy follows you', /crab.*follow":true/.test(r), r); }
+  await page.locator('#petsBtn').tap(); await sleep(300); { const t = await page.locator('#petsPanel .mpT').allTextContents(); check('🐾 My Pets shows your friends (Pinchy is there and following)', await page.locator('#petsPanel').evaluate(e => e.classList.contains('show')) && t.some(x => x.includes('🦀') && x.includes('💖')), t.join(' ')); }
+  await page.locator('#petsPanel .mpX').tap(); await sleep(200);
   // ---------- build 27: the learning games work for a child who can't read ----------
   { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
   await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);
