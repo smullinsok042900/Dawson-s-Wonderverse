@@ -16,7 +16,15 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 4. Desktop results are NOT iPhone results. The real numbers come from the in-game ⚙️ → Performance Test → Copy Test Results.
 5. Before a big change, keep a rollback copy in `../backups/3D_buildNN_index.html`.
 
-## Checkpoint: build 33 (current)
+## Checkpoint: build 34 (current)
+- **Express train:** picture trips longer than about 280 m speed up to 36 m/s (was always 20). The whole line takes about 42 s of game time, down from about 68 s. Short trips are unchanged.
+- **Verified (desktop, `train_test2.cjs`, before → after):**
+  - trip home → 🌈: top speed 20 → 36 m/s, long tasks 1 (50 ms) → 0;
+  - whole line 🌈 → ❄️: long tasks 0 → 0;
+  - frames where you were within 25 m of an area that had not finished building: 0 → 0, on both trips.
+  - On a phone each frame moves the train less and builds the same amount, so streaming has more margin there than on the test machine.
+
+## Checkpoint: build 33
 - **First real iPhone report (build 26):** no freezes, house about 134 ms, start-up 7 s. A flat 30 fps cap (most likely Low Power Mode), but the graphics were stuck at the lowest level.
   - **Fixed:** the stale level is forgotten (new key), and quality steps back up when capped with room to spare (frame work < 9 ms for 20 s).
 - **Crown bug (introduced in build 25):** the crown, your shadow and the PAW hint were filed into scenery slices and hidden far from where they were made.
@@ -73,7 +81,6 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 ## Known issues
 - **iPhone numbers:** frame rate, loading and memory on a real iPhone are not measured yet; waiting for the in-game report.
 - **Loading time:** about 22 s on the software-rendering test machine, because of the whole-world draw rehearsal. Expected to be much faster on an iPhone, but unverified.
-- **Long train trips:** the far end is about 1,300 m from the other end, about a minute at 20 m/s. A faster "express" between far stations might be nicer.
 - **The test browser is very slow** (software 3D), so a few checks are timing-sensitive. Run the test alone.
 
 ## Backlog (highest priority first)
