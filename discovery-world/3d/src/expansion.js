@@ -302,7 +302,7 @@ export function initExpansion(G, api) {
 
   // a pal waiting at home (inside its neighbourhood): tap it three times to make friends
   function palAtHome(c, kind) {
-    if (followers[kind]) return null; const m = makePalMesh(kind), [x, y, z] = PALS[kind].home; m.position.set(x, y, z); c.add(m); let taps = 0;
+    if (followers[kind]) return null; const m = makePalMesh(kind), [x, y, z] = PALS[kind].home; m.position.set(x, y, z); m.userData.pal = kind; c.add(m); let taps = 0;
     c.tap(m, () => { if (followers[kind]) return; taps++; boingIt(m); Sound.giggle(); if (X.pals[kind]) { c.g.remove(m); setFollow(kind, true); say(kind === 'crab' ? '🦀 Pinchy is coming with you!' : '🦊 Rusty is coming with you!'); return; }
       if (taps < 3) say(kind === 'crab' ? (taps === 1 ? '🦀 Snap snap! Hello!' : '🦀 Pinchy likes you! One more tap!') : (taps === 1 ? '🦊 Yip! Hello!' : '🦊 Rusty is getting brave! One more tap!'));
       else { c.g.remove(m); setFollow(kind, true); disc('pal_' + kind); say(PALS[kind].hello); c.burst(x, 1.5, z, ['#ff8fc8', '#fff', '#ffd23f'], 24, 3); Sound.chime(); } }, x);

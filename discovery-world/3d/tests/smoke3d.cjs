@@ -293,6 +293,16 @@ const UG_F = -6;
   { const k = await page.evaluate(() => ({ pets: __DDW3.friends.petCount(), f: __DDW3.friends.followers.length })); check('reload keeps all your pets and the friends who follow you', k.pets === 2 && k.f >= 4, JSON.stringify(k)); }
   { const k = await page.evaluate(() => ({ crown: __DDW3.world.crown, eggs: __DDW3.world.dinoEggs })); check('reload keeps your crown and your hatched baby dino', k.crown === true && k.eggs[0] === true, JSON.stringify(k)); }
   check('reload keeps creature, star bits, Fluffkins and painting', c.creature === 'jelly' && c.bits === before.bits && c.fl.join() === before.fl.join() && c.painted, JSON.stringify({ cr: c.creature, bits: c.bits, fl: c.fl.filter(f => f !== 'wait').length, p: c.painted }));
+  // ---------- build 29/30: travel (picture map, home button, train trips) and the new neighbourhoods ----------
+  await page.locator('#mapBtn').tap(); await sleep(300); check('🗺️ opens the picture map', await page.locator('#mapPanel').evaluate(e => e.classList.contains('show')));
+  await page.locator('.mpT').nth(8).tap(); await sleep(2500); c = await S(); check('a map picture takes you there (Adventure Trail)', Math.abs(c.x - 436) < 1 && c.layer === '', `x=${c.x.toFixed(1)}`);
+  { const st = await page.evaluate(() => { const E = __DDW3.G.expansion; E.buildNow(436); return E.stats(); }); check('the neighbourhood you travel to is built at once', /trail:ready/.test(st), st); }
+  await page.locator('#homeBtn').tap(); await sleep(2500); c = await S(); check('🏠 takes you home in one tap', Math.abs(c.x - 190) < 1, `x=${c.x.toFixed(1)}`);
+  await teleport(1.2); await page.evaluate(() => __DDW3.train.call(3)); c = await waitFor(s => s.ride === 'train', 60000); await sleep(800);
+  check('in the stopped train, the picture strip of stations appears', await page.locator('#trainStrip').evaluate(e => e.classList.contains('show')));
+  await page.locator('.tsT').nth(4).tap(); c = await waitFor(s => !s.ride, 90000); check('pick a station picture: the train drives you there and you hop off', !c.ride && Math.abs(c.x - 61) < 1, `ride=${c.ride} x=${c.x.toFixed(1)}`);
+  await teleport(-66); await page.evaluate(() => __DDW3.G.expansion.buildNow(-66)); await sleep(500);
+  { const r = await page.evaluate(() => { const S = __DDW3.G.expansion._S.find(s => s.d.id === 'seaside'); const crab = S.taps.find(o => o.userData && o.userData.pal === 'crab'); if (!crab) return 'no crab'; let m = null; crab.traverse(q => { if (!m && q.userData.tap) m = q; }); for (let k = 0; k < 3; k++) m.userData.tap(); return JSON.stringify(__DDW3.world.exp.pals); }); check('befriend Pinchy the crab (three taps): Pinchy follows you', /crab.*follow":true/.test(r), r); }
   // ---------- build 27: the learning games work for a child who can't read ----------
   { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
   await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);
