@@ -1242,9 +1242,12 @@ function trainArrived(i) {
   document.body.appendChild(strip);
   strip.querySelectorAll('.tsT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; train.goTo(+b.dataset.i); Sound.click(); }));
   let shown = false, lastAt = -1;
+  // (build 36) the strip starts just below the top buttons, however tall they are (on a narrow phone they wrap onto two rows)
+  const placeStrip = () => { let b = 0; for (const el of document.querySelectorAll('#upperLeft, #upperRight')) b = Math.max(b, el.getBoundingClientRect().bottom); strip.style.top = Math.round(b + 6) + 'px'; };
+  G.placeTrainStrip = placeStrip; addEventListener('resize', () => { if (shown) placeStrip(); });
   G.updateTrainStrip = () => {
     const P = player, T = train.state, show = !!(P.ride && P.ride.type === 'train' && T.mode === 'driving' && T.dest < 0 && Math.abs(T.vs) < .05);
-    if (show !== shown) { shown = show; strip.classList.toggle('show', show); if (show) voice.speak('Where shall we go? Tap a picture!'); }
+    if (show !== shown) { shown = show; if (show) placeStrip(); strip.classList.toggle('show', show); if (show) voice.speak('Where shall we go? Tap a picture!'); }
     if (show && T.at !== lastAt) { lastAt = T.at; strip.querySelectorAll('.tsT').forEach((b, i) => b.classList.toggle('here', i === T.at)); }
   };
 }

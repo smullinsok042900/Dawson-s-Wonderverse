@@ -390,3 +390,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #upperRight{flex-wrap:wrap;justify-content:flex-end;row-gap:6px;max-width:calc(100vw - 196px - env(safe-area-inset-left) - env(safe-area-inset-right))}
 @media (min-width:900px){#upperRight{max-width:none;flex-wrap:nowrap}}
 #trainStrip .tsT{min-width:46px;min-height:46px}
+/* (build 36c) the big title label is decoration (and can't be read by a pre-reader): touch screens hide it, so the
+   bigger tablet buttons never cover it; the station strip packs more pictures per row on small screens */
+@media (pointer:coarse){#brand{display:none}}
+#trainStrip{gap:4px;padding:5px 6px;max-width:min(98vw,1000px)}
