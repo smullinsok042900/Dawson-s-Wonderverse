@@ -65,6 +65,12 @@ Keep the previous build's file (`../backups/3D_buildNN_index.html`) to compare a
 - **Noise:** the same build 35 measured 11.4 ms (creatures) in one run and 16.1 ms in another, so only large, repeated differences mean anything. An earlier build 36 run measured creatures at 13.9 ms. Out of caution, the per-frame size check was replaced by a ResizeObserver, plus a check twice a second.
 - **Pixel budget (new):** drawn pixels are capped at 1.0 M (phones), 1.6 M (tablets) and 3 M (desktop). In emulation an iPad 7 draws 864×648 in test mode. A real iPad Pro would otherwise draw at about 2.0 × 0.75 of 2388×1668 ≈ 2.2 M pixels per frame, with post-processing on top.
 
+## Build 37 (castle merge) vs 36 (desktop, software rendering)
+- **Castle view:** 221 → 163 draw calls per frame (`calls.cjs`, real frames averaged over 6), and 562 → 319 in `ba.cjs`'s count.
+- **Script ms/frame:** park 13.2 → 11.2, creatures 10.6 → 8.9, castle 11.8 → 9.9.
+- **Long tasks:** 0. Build 36 had one 50 ms task walking into the Adventure Trail (the known x ≈ 460 one).
+- **Memory:** geometries 1514 → 1372; heap 122 MB; programs 101.
+
 ## Real iPhone reports
 - **Build 26:**
   - no freezes over 250 ms; worst frame 128 ms;

@@ -37,6 +37,11 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 37: a lighter castle
+
+- The decorated castle front was drawn as 213 separate little pieces. The ones that never move are now combined (the same look), so the castle view needs about a quarter fewer drawing commands every frame (221 → 163), measured on the test computer.
+- The game is otherwise unchanged: the full test (155 checks) passed.
+
 ## 3D build 36: fits every phone and tablet (Apple and Android)
 
 - The game **measures the screen** and adapts to it:

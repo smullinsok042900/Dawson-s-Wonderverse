@@ -4,6 +4,18 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 37 — the castle draws much less
+- **Castle front merged:** 162 still, untapped parts of the build 16 castle front (steps, railings, shutters, flower boxes, climbing roses, hedges, topiary, lanterns, rose window, banners) are merged into one shape per *look-alike* material.
+  - The code made a new material object for every part, so the parts are grouped by what the material looks like: type, colours, roughness, textures and so on.
+  - The castle group goes from 213 meshes to 67. No new shaders, because the materials are the same.
+- **Verified (desktop, software rendering):**
+  - `tests/perf/calls.cjs` at x 398: 221 → 163 draw calls per frame (castle group 89 → 31).
+  - `tests/perf/ba.cjs` 36 → 37:
+    - castle calls 562 → 319; script ms/frame park 13.2 → 11.2, creatures 10.6 → 8.9, castle 11.8 → 9.9;
+    - 0 long tasks; geometries 1514 → 1372; programs 101.
+  - Before/after screenshots of the castle front show the same parts.
+  - Full smoke test 155/155.
+
 ## Checkpoint: build 36 — one game for every phone and tablet (Apple and Android)
 - **Screen fitting:**
   - The picture is drawn at the canvas's real on-screen size: no stretching (build 34b), with a ResizeObserver plus a twice-a-second safety check.

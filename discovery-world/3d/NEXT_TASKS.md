@@ -16,7 +16,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
   - more instancing for repeated park props;
   - low-detail versions of far creatures;
   - fewer fur shells on far creatures.
-- **Castle:** the most draw calls (351–543, depending on what wanders into view). Run `tests/perf/calls.cjs index.html 396` to see which objects cost the most, then merge static castle parts that share a material.
+- **Draw calls, next targets** (the castle front is merged in build 37; run `tests/perf/calls.cjs index.html X` to find more): merge other static clusters the same way. In the castle view, the remaining big groups are at x 398 (39 meshes) and x 403 (30 meshes; probably characters, so check before merging).
 - **A 50–55 ms long task at x ≈ 460** on the train trip to 🌈 (Adventure Trail streaming?). Seen in builds 33 and 35.
 
 ## 2. World expansion (streamed districts in `src/expansion.js`)
