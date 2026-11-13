@@ -38,6 +38,22 @@ Keep the previous build's file (`../backups/3D_buildNN_index.html`) to compare a
 - **Memory:** heap 121 MB, 1518 geometries, 169 textures, 101 shader programs.
 - **Train (build 34):** 0 long tasks on both full trips; 0 frames near an unbuilt district.
 
+## Build 35 (Happy Farm) vs 34c (desktop, software rendering, `tests/perf/ba.cjs t34c.html t35.html`)
+| View | Script ms/frame 34c → 35 | Long tasks | Notes |
+|---|---|---|---|
+| Park | 13.5 → 13.7 | 0 → 0 | |
+| Creature area | 11.9 → 11.4 | 0 → 0 | |
+| Castle | 13.2 → 14.0 | 0 → 0 | |
+| Walk into the farm (new) | – | 0 | 90 calls, 270k triangles, shader programs 101 → 101 |
+
+- **Other measurements:**
+  - house in and out: 0 long tasks;
+  - map jump: 0;
+  - memory 121 → 122 MB; geometries 1514 → 1516; textures 170 → 172; programs 101 → 101.
+- **Loading:** 31.4 s → 26.5 s. The machine is noisy; this is not a real improvement.
+- **Measurement noise:** triangle and draw-call counts at a fixed spot vary a lot between runs, because creatures wander in and out of view. For example, the castle's calls were 543 in this 34c run but 351 in the build 34 baseline. Compare script ms and long tasks, and use `tests/perf/calls.cjs` for per-object breakdowns.
+- **Train (whole line to 🚜):** 0 unbuilt-district frames. On the trip to 🌈, one 55 ms long task at x 462 (build 33 had a 50 ms one at x 458), so it is not new; it is on the task list.
+
 ## Real iPhone reports
 - **Build 26:**
   - no freezes over 250 ms; worst frame 128 ms;

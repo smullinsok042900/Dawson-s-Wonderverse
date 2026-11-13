@@ -50,6 +50,9 @@ const UG_F = -6;
   await shot('02_start.jpg');
   // ---------- moving + jumping ----------
   await page.evaluate(() => __DDW3.teleport(1.2)); await sleep(1500); // start at the far left (walking right leads into the ball pit and its deep part)
+  // (build 35) the first seconds after start-up are the busiest on the slow test machine: wait (up to 10 s) for frames to settle,
+  // so a fixed 0.6 s hold measures walking, not start-up work
+  await page.evaluate(() => new Promise(res => { const t0 = performance.now(); let last = t0; const iv = []; const f = now => { iv.push(now - last); last = now; if (iv.length > 5) iv.shift(); if ((iv.length === 5 && iv.reduce((a, b) => a + b) / 5 < 120) || now - t0 > 10000) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }));
   c = await S(); const x0 = c.x;
   await holdBtn('#rightBtn', 600); c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
   const x1 = await page.evaluate(() => new Promise(r => { let still = 0, n = 0; const f = () => { const P = __DDW3.player; still = Math.abs(P.vx) < .01 ? still + 1 : 0; if (still > 4 || ++n > 300) return r(P.x); requestAnimationFrame(f); }; f(); })); await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
@@ -313,6 +316,15 @@ const UG_F = -6;
   { await teleport(412); await page.evaluate(() => { const L = __DDW3.kingdom().luna; let done = false; L.root.traverse(o => { if (!done && o.userData.tap) { done = true; o.userData.tap(); } }); }); await sleep(300); await teleport(150); await sleep(800);
     const r = await page.evaluate(() => ({ wand: __DDW3.world.wand === true, wv: __DDW3.kingdom().wand.visible, crown: __DDW3.world.crown === true, cv: __DDW3.kingdom().crown.visible, crownInScene: (() => { let o = __DDW3.kingdom().crown; while (o.parent) o = o.parent; return o.isScene; })(), dx: Math.abs(__DDW3.kingdom().crown.position.x - __DDW3.player.x) }));
     check('Princess Luna gives a magic wand; the crown and wand stay with you far from the castle', r.wand && r.wv && r.crown && r.cv && r.crownInScene && r.dx < 1, JSON.stringify(r)); }
+  // ---------- build 35: 🚜 Happy Farm (map, train, activities, Truffle the piglet) ----------
+  await page.locator('#mapBtn').tap(); await sleep(300); await page.locator('.mpT', { hasText: '🚜' }).tap(); await sleep(2500); c = await S();
+  { const st = await page.evaluate(() => __DDW3.G.expansion.stats()); check('🚜 the map takes you to the Happy Farm, built at once', Math.abs(c.x + 412) < 1.5 && /farm:ready/.test(st), `x=${c.x.toFixed(1)} ${st}`); }
+  await teleport(-433.2); await page.evaluate(() => { __DDW3.player.facing = 1; }); await sleep(600); await tapWorld(-431, .75, -2.6); await sleep(400);
+  { const r = await page.evaluate(() => { const S = __DDW3.G.expansion._S.find(s => s.d.id === 'farm'); const hen = S.inter.find(i => i.x === -431); for (let k = 0; k < 4; k++) hen.run(); return __DDW3.world.disc.has('eggs'); }); check('tap the hen: she lays eggs and you count them', r); }
+  { const r = await page.evaluate(() => { const S = __DDW3.G.expansion._S.find(s => s.d.id === 'farm'); const ok = []; for (const x of [-420, -457, -478, -492, -503, -514, -524]) { const it = S.inter.find(i => i.x === x); if (it) { it.run(); if (x === -478) { it.run(); it.run(); it.run(); } } } for (const d of ['barn', 'sheep', 'garden', 'apples', 'windmill', 'ducks', 'tractor']) if (__DDW3.world.disc.has(d)) ok.push(d); return ok; });
+    check('the farm activities work (barn animals, rainbow sheep, carrots, apples, windmill, ducks, tractor)', r.length === 7, r.join(' ')); }
+  { const r = await page.evaluate(() => { const S = __DDW3.G.expansion._S.find(s => s.d.id === 'farm'); const pig = S.taps.find(o => o.userData && o.userData.pal === 'pig'); if (!pig) return 'no pig'; let m = null; pig.traverse(q => { if (!m && q.userData.tap) m = q; }); for (let k = 0; k < 3; k++) m.userData.tap(); return JSON.stringify(__DDW3.world.exp.pals); }); check('befriend Truffle the piglet (three taps): Truffle follows you', /pig.*follow":true/.test(r), r); }
+  check('the train line reaches the farm (🚜 station)', await page.evaluate(() => __DDW3.train.STATIONS.some(s => s.e === '🚜' && s.x < -500)));
   // ---------- build 27: the learning games work for a child who can't read ----------
   { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
   await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);

@@ -4,6 +4,30 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 35 — 🚜 Happy Farm
+- **New region: 🚜 Happy Farm** (x -536 to -404, left of Frosty Peaks). Streamed like the other districts, with shared materials only. 11 picture-only activities:
+  - **Barn:** the doors open and an animal says hello (horse, cow, goat, sheep, rooster, with its sound and name).
+  - **Hen:** lays eggs; count to five and the chicks hatch.
+  - **Rainbow sheep:** her wool changes colour and she says the colour.
+  - **Haystack:** climb the bales and bounce on top; gem g15 floats above it.
+  - **Vegetable patch:** seed → sprout → carrot → pull it up, and count.
+  - **Apple tree:** apples drop into the basket; count to five.
+  - **Windmill:** tap it to make it spin.
+  - **Duck pond:** the ducklings follow their mother in a line.
+  - **Toy tractor:** drives across the field and back.
+  - **Mud puddle with piglets,** and cows mooing in the field.
+  - **Gem g16** at the end of the path.
+- **New pal: Truffle the piglet 🐷.** Three taps to befriend; follows you; appears in 🐾. The save accepts the new `pig` key.
+- **Train:** the line is extended to x -534 with a 🚜 station (19 stations). The map gets 🚜 automatically from `DISTRICTS`.
+- **Ground:** a lawn zone, the cobble path, the front rail and a few trees behind the fields.
+- **Bug fixed:** Frosty Peaks' falling snow followed you onto the farm. It now only falls in Frosty Peaks.
+- **Test fix:** the first walking check now waits for frames to settle. It failed once (1.9 m vs. more than 2) in the first seconds after start-up on the slow test machine.
+- **Verified (desktop, software rendering):**
+  - Walking into the farm from Frosty Peaks: 0 long tasks; shader programs 101 → 101; 90 draw calls, 270k triangles.
+  - `tests/perf/ba.cjs` 34c → 35: script ms/frame unchanged (park 13.5 → 13.7, creatures 11.9 → 11.4, castle 13.2 → 14.0, all within run-to-run noise); 0 long tasks everywhere; memory 121 → 122 MB, programs 101 → 101.
+  - Train to 🚜: whole line arrives, 19 picture tiles, 0 frames near an unbuilt district.
+  - Screenshots of the barn, pigs, sheep, windmill and tractor look right.
+
 ## Checkpoint: build 34c (user request)
 - **Removed the big pink wall** at x -1.5, by the train at the start of the playhouse (requested with a screenshot). It was the old left edge of the world. The world now continues left and the train runs through there, so it only blocked the view.
   - It was scenery only (no collision, nothing referenced it).

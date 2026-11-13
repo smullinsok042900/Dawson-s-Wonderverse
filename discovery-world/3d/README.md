@@ -37,6 +37,25 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 35: 🚜 Happy Farm
+
+- **A new area: the Happy Farm,** past Frosty Peaks at the far left end of the world. The train goes there (🚜 station), and it is on the 🗺️ map.
+- **11 things to do,** with no reading needed:
+  - a barn where animals pop out and say hello;
+  - a hen whose eggs you count (and chicks hatch);
+  - a rainbow sheep that says her colour;
+  - a haystack to climb and bounce on;
+  - carrots to plant, grow and pull up;
+  - an apple tree to count apples from;
+  - a spinning windmill;
+  - a duck family;
+  - a tractor that drives;
+  - muddy piglets;
+  - cows.
+- **2 more gems** (16 in all).
+- **A new pet: Truffle the piglet 🐷.** Tap her three times to make friends.
+- **Speed:** walking into the farm loads no new shaders and causes no stalls, and the rest of the game is as fast as before. Measured on a desktop test computer, not an iPhone.
+
 ## 3D build 34: the express train
 
 - Picture trips on the train to far-away stations now go **express**, up to 36 m/s instead of 20. End to end, the line takes about 42 s instead of about 68 s. Short hops are unchanged.
