@@ -84,7 +84,7 @@ export function initExpansion(G, api) {
   }
   function finishBuild(st) {
     st.onceDone = true; st.g.updateMatrixWorld(true); st.state = 'compiling';
-    Promise.resolve(api.compile(st.g)).catch(() => { }).then(() => { if (st.state !== 'compiling') return; scene.add(st.g); st.state = 'ready'; });
+    Promise.resolve(api.compile(st.g)).catch(() => { }).then(() => { if (st.state !== 'compiling') return; scene.add(st.g); st.state = 'ready'; if (api.warm) setTimeout(() => api.warm(st.g), 0); });
   }
   function unload(st) {
     // (shapes from the world's shared cache and sprite shapes are kept; this neighbourhood's own shapes and pictures are freed)

@@ -234,7 +234,7 @@ const friends = initFriends(G, {
 });
 const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
 // (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
-const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), goHome: () => travel(TRAVEL[0]) });
+const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]) });
 G.expansion = expansion;
 
 // ---------------- bubbles ----------------
@@ -998,22 +998,50 @@ const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(
 const compileAll = () => {
   // things hidden only because they are far away (grass, bushes, trees, fur) are compiled too
   const shown = []; for (const it of LOD) if (!it.o.visible) { it.o.visible = true; shown.push(it.o); } for (const f of FUR) for (const sh of f.shells) if (!sh.visible) { sh.visible = true; shown.push(sh); }
+  const back = []; if (G.life) for (const a of G.life.agents) if (a.detached) { a.detached.add(a.root); back.push(a); } // (build 29) far-away creatures (off the scene) are compiled too
   // (compile for where the world is really drawn: into the post-processing picture, not straight to the screen;
   //  the shader for each is different, so compiling for the wrong one did nothing)
   const prevRT = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target);
   let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera)); } catch (e) { r = Promise.resolve(); }
   renderer.setRenderTarget(prevRT);
-  for (const o of shown) o.visible = false; return r;
+  for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root); return r;
 };
 // (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
+function warmGroup(g) { // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
+  try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, 2.15, CAM_DIST); cam.lookAt(c.x, 1.15, 0); cam.updateMatrixWorld();
+    const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; if (post.enabled && !post.lite) { G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true }); renderer.setRenderTarget(G.warmRT); renderer.render(scene, cam); } renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm; } catch (e) { }
+}
+G.warmGroup = warmGroup;
 function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target); let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(g, camera, scene) : Promise.resolve(renderer.compile(g, camera, scene)); } catch (e) { r = Promise.resolve(); } renderer.setRenderTarget(prev); return r; }
 // creatures are sculpted in the background and appear a moment later: compile their materials as they arrive
-let compileTimer = 0; globalThis.__ddwCompile = () => { clearTimeout(compileTimer); compileTimer = setTimeout(compileAll, 300); };
+// (build 29) ...and then draw just those new creatures once, out of sight, into a tiny buffer of the real kind:
+// the graphics driver finishes a shader the first time it is used, so this moves that wait (2 s on the test machine,
+// in the middle of a walk into the Dino Kingdom) to a moment when nothing is on screen there.
+const WARM_LAYER = 5, warmCam = new THREE.PerspectiveCamera(45, 2, .1, 60); warmCam.layers.set(WARM_LAYER);
+scene.traverse(o => { if (o.isLight) o.layers.enable(WARM_LAYER); }); // (lights are seen on every layer, so the shaders are the real ones)
+function warmObjects(list) {
+  if (!list.length || !(post.enabled && !post.lite)) return;
+  G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true });
+  const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; const V0 = new THREE.Vector3();
+  for (const o of list) {
+    let root = o; while (root.parent && root.parent !== scene && !root.parent.isScene) root = root.parent;
+    const agent = G.life && G.life.agents.find(a => a.root === root && a.detached); if (agent) agent.detached.add(root);
+    o.traverse(q => q.layers.enable(WARM_LAYER)); o.getWorldPosition(V0); warmCam.position.set(V0.x, V0.y + 1, V0.z + 5); warmCam.lookAt(V0.x, V0.y + .6, V0.z); warmCam.updateMatrixWorld();
+    try { renderer.setRenderTarget(G.warmRT); renderer.render(scene, warmCam); } catch (e) { }
+    o.traverse(q => q.layers.disable(WARM_LAYER)); if (agent) agent.detached.remove(root);
+  }
+  renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm;
+}
+const fresh = [];
+let compileTimer = 0; globalThis.__ddwCompile = obj => { if (obj) fresh.push(obj); clearTimeout(compileTimer); compileTimer = setTimeout(() => { Promise.resolve(compileAll()).then(() => warmObjects(fresh.splice(0)), () => { }); }, 300); };
 // PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
 // upstairs and downstairs, the underground, the clouds, the castle, the park), with the sun's shadow over it. That
 // makes the graphics driver finish every shader and upload every texture and mesh NOW, not the first time you walk in.
-function warmAreas() {
-  const rt = new THREE.WebGLRenderTarget(32, 16, { type: THREE.HalfFloatType }), cam = camera.clone(), shadowAuto = renderer.shadowMap.autoUpdate;
+function warmAreas() { const warmT0 = performance.now();
+  // (build 29) rehearse into the SAME picture buffer the game really draws into (4x anti-aliased, with a depth texture,
+  // or the lite one). The graphics driver prepares a separate drawing setup for each kind of buffer; rehearsing into a
+  // plain small buffer (builds 24-28) left the real setups to be made on first sight: the stall when entering the house.
+  const full = post.enabled && !post.lite, rt = new THREE.WebGLRenderTarget(64, 32, full ? { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true } : { type: THREE.HalfFloatType }), /* (tiny, but exactly the same kind of buffer: the setups depend on the kind, not the size) */ cam = camera.clone(), shadowAuto = renderer.shadowMap.autoUpdate;
   const sp = sun.position.clone(), st = sun.target.position.clone();
   try {
     let first = true;
@@ -1022,10 +1050,29 @@ function warmAreas() {
       sun.position.set(x - 7, y + 16, 10); sun.target.position.set(x, y, 0); sun.target.updateMatrixWorld();
       renderer.setRenderTarget(rt); renderer.render(scene, cam); if (first) { renderer.shadowMap.autoUpdate = false; first = false; } // (shadow shaders only need one pass)
     }
-    G.warmed = (G.warmed || 0) + 1;
+    // (build 29) then draw EVERY object in the world once (things only shown when near, fur, far-away characters too),
+    // with wide straight-on cameras over the outdoor world, the house, the castle rooms and the underground, so no
+    // first-time drawing (driver setup, texture and shape uploads) is left for the middle of play
+    // (only ONE of each kind of hidden thing is shown for it: the driver's setups depend on the kind, not the number,
+    //  and drawing every far tree at once made loading much longer on slow devices)
+    const sig = o => { const k = []; o.traverse(q => { if (q.isMesh) k.push(q.material.uuid || '', q.geometry.attributes.uv ? 'u' : '', q.isSkinnedMesh ? 's' : '', q.isInstancedMesh ? 'i' : ''); }); return k.join(','); };
+    const shown = [], kinds = new Set(); for (const it of LOD) if (!it.o.visible) { const k = sig(it.o); if (kinds.has(k)) continue; kinds.add(k); it.o.visible = true; shown.push(it.o); } for (const f of FUR) for (const sh of f.shells) if (!sh.visible) { sh.visible = true; shown.push(sh); }
+    const back = []; if (G.life) for (const a of G.life.agents) if (a.detached) { a.detached.add(a.root); back.push(a); }
+    const oc = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 120);
+    for (const [x0, x1, y0, y1] of /[?&]noortho/.test(location.search) ? [] : [[-25, 120, -14, 16], [120, 260, -2, 16], [260, 430, -2, 22], [995, 1035, -1, 11], [1990, 2045, -1, 14]]) {
+      oc.left = -(x1 - x0) / 2; oc.right = (x1 - x0) / 2; oc.top = (y1 - y0) / 2; oc.bottom = -(y1 - y0) / 2; oc.position.set((x0 + x1) / 2, (y0 + y1) / 2, 40); oc.lookAt((x0 + x1) / 2, (y0 + y1) / 2, 0); oc.updateProjectionMatrix(); oc.updateMatrixWorld();
+      // (shadows too: each kind of shadow-casting thing has its own shadow shader; the sun's shadow box is stretched over the region for this one draw)
+      const sc = sun.shadow.camera, keep = [sc.left, sc.right, sc.top, sc.bottom, sc.far];
+      sun.position.set((x0 + x1) / 2 - 7, y1 + 16, 10); sun.target.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); sun.target.updateMatrixWorld();
+      Object.assign(sc, { left: -(x1 - x0) / 2 - 10, right: (x1 - x0) / 2 + 10, top: (y1 - y0) + 10, bottom: -(y1 - y0) - 10, far: 120 }); sc.updateProjectionMatrix();
+      renderer.shadowMap.needsUpdate = true; renderer.setRenderTarget(rt); renderer.render(scene, oc);
+      [sc.left, sc.right, sc.top, sc.bottom, sc.far] = keep; sc.updateProjectionMatrix();
+    }
+    for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root);
+    G.warmed = (G.warmed || 0) + 1; G.warmMs = Math.round(performance.now() - warmT0);
   } catch (e) { G.warmErr = String(e); }
   renderer.shadowMap.autoUpdate = shadowAuto; renderer.shadowMap.needsUpdate = true;
-  renderer.setRenderTarget(null); rt.dispose(); sun.position.copy(sp); sun.target.position.copy(st); sun.target.updateMatrixWorld();
+  renderer.setRenderTarget(null); if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); sun.position.copy(sp); sun.target.position.copy(st); sun.target.updateMatrixWorld();
 }
 Promise.race([Promise.all([assetsReady, landmarksReady]), new Promise(r => setTimeout(r, 6000))])
   .then(() => compileAll()).then(() => { warmAreas(); begin(); }, begin);
