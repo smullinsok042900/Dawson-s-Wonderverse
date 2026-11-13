@@ -246,16 +246,25 @@ export function initKingdom(G, api) {
     const head = k2.B.head, arm = k2.B.armL;
     r.userData.tick = k2.tick;
     return { head, arm, skirt, tick: k2.tick };
-  }, c => (kind === 'rosie' ? giveCrown(c) : (fountainSpray(), burst(c.x, 2, c.z + .4, ['#fff3a6', '#b28cff', '#fff'], 18, 2.5))), kind, kind === 'rosie' ? 'Princess Rosie gives you a golden crown!' : 'Princess Luna waves her magic wand!');
+  }, c => (kind === 'rosie' ? giveCrown(c) : (fountainSpray(), burst(c.x, 2, c.z + .4, ['#fff3a6', '#b28cff', '#fff'], 18, 2.5), giveWand())), kind, kind === 'rosie' ? 'Princess Rosie gives you a golden crown!' : 'Princess Luna waves her magic wand!');
   friends.TALK.rosie = ['👑✨', '💖😊', '🌹👋', '💃🎶']; friends.VOICE.rosie = 760;
   friends.TALK.luna = ['🌙⭐', '✨🪄', '⛲💦', '💃🎶']; friends.VOICE.luna = 660;
   const rosie = princess('rosie', K.castle - 4.2, '#ff8fc8', '#ffd23f', '#f6d0b4', '#8a5530', 'rose');
   const luna = princess('luna', K.castle + 6.6, '#a98bff', '#9fe6ff', '#b97f5c', '#2b1d2c', 'wand');
 
   // the crown she gives you floats above your head (saved)
-  const myCrown = new THREE.Group(); add(myCrown); myCrown.visible = false;
+  const myCrown = new THREE.Group(); myCrown.userData.dynamic = true; /* (build 33: it travels with you: never part of a scenery slice, which hid it once you were 50 m from the castle) */ add(myCrown); myCrown.visible = false;
   { const band = new THREE.Mesh(new THREE.CylinderGeometry(.26, .29, .14, 22, 1, true), goldM); band.castShadow = true; myCrown.add(band);
     for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(.06, .2, 8), goldM); sp.position.set(Math.cos(a) * .26, .15, Math.sin(a) * .26); myCrown.add(sp); myCrown.add(ball(toy(['#ff4f9a', '#3d9bff', '#3cc46e', '#a15cff', '#ff9a2e'][k], { r: .1, cc: 1, em: '#ffffff', ei: .1 }), .05, Math.cos(a) * .27, .27, Math.sin(a) * .27)); } }
+  // (build 33) the magic wand Princess Luna gives you floats beside you and sparkles (saved)
+  const myWand = new THREE.Group(); myWand.userData.dynamic = true; add(myWand); myWand.visible = false;
+  { const stick = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .7, 8), toy('#ffffff', { r: .3 })); stick.position.y = .35; myWand.add(stick);
+    const star = new THREE.Mesh(starGeometry(.17, .075, .05, .015, 1), toy('#fff3a6', { em: '#ffd23f', ei: .9 })); star.position.y = .78; myWand.add(star); myWand.userData.star = star; }
+  function giveWand() {
+    const first = !world.wand; world.wand = true;
+    Sound.twinkle(); burst(api.player.x, api.player.y + 1.6, api.player.z, ['#b28cff', '#fff3a6', '#9fe6ff', '#fff'], 24, 3);
+    if (first) { toast('🪄 A magic wand for you!'); api.saveSoon(); }
+  }
   function giveCrown(c) {
     const first = !world.crown; world.crown = true;
     Sound.chime(); burst(api.player.x, api.player.y + 2.4, api.player.z, ['#ffd23f', '#fff3a6', '#ff8fc8', '#fff'], 24, 3);
@@ -389,6 +398,10 @@ export function initKingdom(G, api) {
     // crown above your head
     myCrown.visible = !!world.crown;
     if (world.crown) { myCrown.position.set(P.x, P.y + (G.headTop || 2) + .22 + Math.sin(t * 3) * .05, P.z); myCrown.rotation.y = t * .8; }
+    // the wand floats at your side and sprinkles a little sparkle as you go
+    myWand.visible = !!world.wand;
+    if (world.wand) { const f = P.facing || 1; myWand.position.set(P.x - f * .7, P.y + 1 + Math.sin(t * 2.4) * .08, P.z + .35); myWand.rotation.z = f * .35 + Math.sin(t * 1.7) * .1; myWand.userData.star.rotation.y = t * 2;
+      if (Math.abs(P.vx) > 1 && Math.random() < dt * 6) burst(myWand.position.x, myWand.position.y + .8, myWand.position.z, ['#fff3a6', '#b28cff', '#9fe6ff'], 1, .6); }
     // dance floor: the tile under you glows and plays a note; the princesses dance
     let on = -1;
     if (P.layer === '' && P.y < .2 && P.x > T0 && P.x < T0 + TW * TN && Math.abs(P.z) < 1.5) on = Math.floor((P.x - T0) / TW);
@@ -397,5 +410,5 @@ export function initKingdom(G, api) {
     for (const tl of tiles) { tl.glow = Math.max(on === tl.i ? .6 : 0, tl.glow - dt * 1.5); tl.m.material.emissiveIntensity = .05 + tl.glow * 1.1 + (danceT > 0 ? (Math.sin(t * 6 + tl.i + tl.j * 2) * .5 + .5) * .25 : 0); }
     for (const c of [rosie, luna]) { if (danceT > 0 && c.act <= 0) { c.dance = (c.dance || 0) + dt; c.root.rotation.y = c.dance * 3; c.root.position.y = c.y + Math.abs(Math.sin(c.dance * 6)) * .12; } else c.dance = 0; if (c.parts.skirt) c.parts.skirt.scale.set(1 + (danceT > 0 ? .08 : 0), 1, 1 + (danceT > 0 ? .08 : 0)); }
   }
-  return { update, eggs, rosie, luna, tiles, giveCrown, tapEgg, neckPath, back, steps, crown: myCrown, enterCastle, leaveCastle, sitThrone, CI };
+  return { update, eggs, rosie, luna, tiles, giveCrown, giveWand, wand: myWand, tapEgg, neckPath, back, steps, crown: myCrown, enterCastle, leaveCastle, sitThrone, CI };
 }

@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-13T04:58:29.633Z",
+  "date": "2026-11-13T07:30:37.641Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 148,
-  "total": 148,
+  "passed": 150,
+  "total": 150,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 5.3"
+      "detail": "x 1.2 → 5.5"
     },
     {
       "name": "let go and the creature stops",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 2.6→6.9, y 1.60"
+      "detail": "x -0.7→3.4, y 1.60"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.76"
+      "detail": "rose to y=1.60"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 70% height"
+      "detail": "body squashed to 63% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"tap\",\"0.0\"]] P=8.82,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"Mesh\",\"6.70\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\",\"creature\",\"Group@8.8\"]] P=8.82,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,12 +112,12 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=3.25"
+      "detail": "highest y=3.55"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.9 y=2.40"
+      "detail": "x=41.2 y=3.85"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
@@ -127,7 +127,7 @@
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=9.8"
+      "detail": "x=10.6"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -6.00 → -4.45"
+      "detail": "y -5.11 → -3.56"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-2.29"
+      "detail": "y=-1.96"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=5.0 y=0.00"
+      "detail": "x=4.6 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.2"
+      "detail": "x=37.0"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -217,7 +217,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 2.7 away"
+      "detail": "pet is 2.6 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.054 → 1.047, z=-3.4"
+      "detail": "u 0.059 → 1.060, z=-3.4"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -382,7 +382,7 @@
     {
       "name": "hold ▶ to drive the train yourself",
       "ok": true,
-      "detail": "x 170.0 → 171.0"
+      "detail": "x 170.0 → 171.1"
     },
     {
       "name": "let go and the train stops",
@@ -447,7 +447,7 @@
     {
       "name": "tap Biscuit the puppy: he follows you everywhere",
       "ok": true,
-      "detail": "followers 2 → 3"
+      "detail": "followers 2 → 3; in front of him: Mesh@0.0 Mesh@0.0 buddy_biscuit "
     },
     {
       "name": "tap Twinkle the fairy: she flies along with you",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.23"
+      "detail": "y=5.15"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=1.66"
+      "detail": "y=1.55"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "46 → 50"
+      "detail": "45 → 49"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,7 +597,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.580377821511786"
+      "detail": "k=0.40252010201623883"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":50,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":49,\"fl\":3,\"p\":true}"
     },
     {
       "name": "🗺️ opens the picture map",
@@ -708,6 +708,16 @@
       "name": "🐾 My Pets shows your friends (Pinchy is there and following)",
       "ok": true,
       "detail": "🦀💖 ❓ ❓ ❓ ❓ ❓"
+    },
+    {
+      "name": "nothing that travels with you (crown, shadow, hints) is hidden away in a scenery chunk",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Princess Luna gives a magic wand; the crown and wand stay with you far from the castle",
+      "ok": true,
+      "detail": "{\"wand\":true,\"wv\":true,\"crown\":true,\"cv\":true,\"crownInScene\":true,\"dx\":0}"
     },
     {
       "name": "every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)",

@@ -126,7 +126,7 @@ export function initFriends(G, api) {
   world.buddies = world.buddies || {};
   const buddies = {};
   function buddy(id, x, z, emoji, build, o = {}) {
-    const root = new THREE.Group(); add(root); const parts = build(root) || {}; if (!o.fly) contactShadow(root, 1.1, .8);
+    const root = new THREE.Group(); root.name = 'buddy_' + id; add(root); const parts = build(root) || {}; if (!o.fly) contactShadow(root, 1.1, .8);
     root.traverse(m => { if (m.isMesh) m.castShadow = true; });
     const b = { id, home: new THREE.Vector3(x, 0, z), root, parts, emoji, fly: !!o.fly, f: null, t: Math.random() * 6 };
     root.position.copy(b.home);
