@@ -111,7 +111,7 @@ Also new:
 - **Sled:** slides from the top (4.5 m) to the ground.
 - **Ice:** you glide 2 m after letting go.
 
-**DEVLOG.md** now holds the verification routine, each checkpoint, the known issues and the backlog, so development can resume from the newest checkpoint.
+**DEVLOG.md** (since renamed DEVELOPMENT_LOG.md, with NEXT_TASKS.md, PERFORMANCE_LOG.md and CLAUDE.md) now holds the verification routine, each checkpoint, the known issues and the backlog, so development can resume from the newest checkpoint.
 
 ## 3D build 30: the train fixed and running the whole world, a seaside and a forest, and pets to befriend
 

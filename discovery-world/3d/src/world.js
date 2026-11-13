@@ -139,8 +139,8 @@ export function buildWorld(G) {
     for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(5.6 - i * .32, .17, 12, 48, Math.PI), M(RAINBOW[i])); t.position.set(x, 0, -3.8); add(t); }
     cyl(x - 5.6, 0, -3.8, .5, .6, 1, '#ffffff'); cyl(x + 5.6, 0, -3.8, .5, .6, 1, '#ffffff');
   }
-  // left boundary: a big playhouse wall
-  block(-1.5, 0, -1, 1, 9, 12, '#ff9fd2', { r: .3 });
+  // (build 34c: the old pink "left boundary" wall at x -1.5 was removed: the world now continues to the left, and the
+  //  train runs through here, so it only blocked the view)
 
   // =================== MEGA PLAYHOUSE ===================
   // BALL PIT
