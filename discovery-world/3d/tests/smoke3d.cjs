@@ -32,6 +32,9 @@ const UG_F = -6;
   const press = async sel => holdBtn(sel, 80);
   const teleport = async (x, y = 0) => { await page.evaluate(([x, y]) => __DDW3.teleport(x, y), [x, y]); await sleep(2200); }; // let the camera settle (slow software WebGL)
   const waitFor = async (fn, ms = 8000) => { ms *= 3; /* (the software-graphics test browser is slow) */ const t0 = Date.now(); let s; while (Date.now() - t0 < ms) { s = await S(); if (fn(s)) return s; await sleep(120); } return s; };
+  const tapChar = async (hx, y, z) => { await teleport(hx - 2.2); await page.evaluate(() => { __DDW3.player.facing = 1; }); await sleep(600);
+    const p = await page.evaluate(hx => { const L = __DDW3.G.life, a = L && L.agents.filter(q => !q.follower).reduce((b, q) => (!b || Math.abs(q.x - hx) < Math.abs(b.x - hx) ? q : b), null); return a && Math.abs(a.x - hx) < 4 ? [a.x, a.z] : [hx, null]; }, hx);
+    await tapWorld(p[0], y, p[1] ?? z); };
   const shot = n => page.screenshot({ path: path.join(SHOTS, n), type: 'jpeg', quality: 84, timeout: 240000 });
   let c;
 
@@ -128,10 +131,10 @@ const UG_F = -6;
   await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => __DDW3.world.balloons.length === 1));
   await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('tap the bear again: a second balloon (you can have lots)', await page.evaluate(() => __DDW3.world.balloons.length === 2));
   await shot('17_balloon_bear.jpg');
-  await teleport(54.6); { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapWorld(52.4, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
-  await teleport(87.8); await tapWorld(89.6, .9, -2.4); await sleep(200); check('the Drummer Frog plays when tapped', (await S()).disc.includes('frog'));
-  await teleport(107.4); await tapWorld(109.2, 1.2, -2.4); await sleep(200); check('the penguin dances when tapped', (await S()).disc.includes('penguin'));
-  await teleport(150.4); await tapWorld(152, 3.0, -3.2); await sleep(200); check('the sleepy owl wakes up when tapped', (await S()).disc.includes('owl'));
+  { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapChar(52.4, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
+  await tapChar(89.6, .9, -2.4); await sleep(200); check('the Drummer Frog plays when tapped', (await S()).disc.includes('frog'));
+  await tapChar(109.2, 1.2, -2.4); await sleep(200); check('the penguin dances when tapped', (await S()).disc.includes('penguin'));
+  await tapChar(152, 3.0, -3.2); await sleep(200); check('the sleepy owl wakes up when tapped', (await S()).disc.includes('owl'));
   // ---------- build 6: the Cloud Kingdom ----------
   await teleport(46.9); // next to the rope ladder (left of here are the climbing blocks)
   { const top = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if ((!P.ride && P.y > 9.4) || ++n > 900) return r([P.y, P.ride && P.ride.type]); requestAnimationFrame(f); }; f(); }));
