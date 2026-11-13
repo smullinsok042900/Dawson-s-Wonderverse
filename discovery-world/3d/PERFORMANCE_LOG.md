@@ -54,6 +54,17 @@ Keep the previous build's file (`../backups/3D_buildNN_index.html`) to compare a
 - **Measurement noise:** triangle and draw-call counts at a fixed spot vary a lot between runs, because creatures wander in and out of view. For example, the castle's calls were 543 in this 34c run but 351 in the build 34 baseline. Compare script ms and long tasks, and use `tests/perf/calls.cjs` for per-object breakdowns.
 - **Train (whole line to 🚜):** 0 unbuilt-district frames. On the trip to 🌈, one 55 ms long task at x 462 (build 33 had a 50 ms one at x 458), so it is not new; it is on the task list.
 
+## Build 36 (screen fitting) vs 35 (desktop, software rendering, `ba.cjs t35b.html t36b.html`, side by side)
+| View | Script ms/frame 35 → 36 | Long tasks |
+|---|---|---|
+| Park | 14.3 → 10.0 | 0 → 0 |
+| Creature area | 16.1 → 8.2 | 0 → 0 |
+| Castle | 12.9 → 12.2 | 0 → 0 |
+
+- House, walking into new areas, map jump: 0 long tasks. Memory 122 → 121 MB; programs 101 → 101.
+- **Noise:** the same build 35 measured 11.4 ms (creatures) in one run and 16.1 ms in another, so only large, repeated differences mean anything. An earlier build 36 run measured creatures at 13.9 ms. Out of caution, the per-frame size check was replaced by a ResizeObserver, plus a check twice a second.
+- **Pixel budget (new):** drawn pixels are capped at 1.0 M (phones), 1.6 M (tablets) and 3 M (desktop). In emulation an iPad 7 draws 864×648 in test mode. A real iPad Pro would otherwise draw at about 2.0 × 0.75 of 2388×1668 ≈ 2.2 M pixels per frame, with post-processing on top.
+
 ## Real iPhone reports
 - **Build 26:**
   - no freezes over 250 ms; worst frame 128 ms;

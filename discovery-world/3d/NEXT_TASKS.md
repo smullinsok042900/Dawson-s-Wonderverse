@@ -7,6 +7,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - **iPhone report #2:** ask for the in-game ⚙️ → Performance Test → Copy Test Results, with Low Power Mode off, after
   tapping "Test the voice". It shows whether the graphics level recovers (build 33), the real frame rate, and whether speech plays.
 - **Confirm the squish fix (build 34b)** on the iPhone Home Screen app after turning the phone.
+- **Real-device check of build 36** on the iPhone (and any iPad or Android device the family has): buttons, panels, framing, full screen on Android/iPad, the ⚙️ graphics modes. Emulation passed 10/10, but that is not a real device.
 
 ## 1. Performance first (the game must not get slower)
 - **Loading:** about 27 s on the software-rendering test machine (`tests/perf/ba.cjs`). Most of it is the whole-world draw

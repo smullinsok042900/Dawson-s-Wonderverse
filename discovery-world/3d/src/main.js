@@ -858,7 +858,11 @@ function resize() {
   post.setSize(w, h, renderer.getPixelRatio());
   document.documentElement.style.setProperty('--ui', uiScale(w, h).toFixed(3));
 }
-function checkSize() { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
+// (build 36) the browser tells us when the canvas changes size (ResizeObserver: no cost per frame); as a safety net the
+// size is also compared twice a second (reading it every frame could force the page layout to be redone each frame).
+let sizeCheckAt = 0;
+function checkSize(now) { if (now - sizeCheckAt < 500) return; sizeCheckAt = now; const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
+if (window.ResizeObserver) try { new ResizeObserver(() => { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }).observe(canvas); } catch (e) { }
 addEventListener('resize', resize); addEventListener('orientationchange', () => { resize(); setTimeout(resize, 300); setTimeout(resize, 1000); });
 if (window.visualViewport) visualViewport.addEventListener('resize', resize);
 resize();
@@ -927,7 +931,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
-  const frameT0 = performance.now(); checkSize();
+  const frameT0 = performance.now(); checkSize(frameT0);
   { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
