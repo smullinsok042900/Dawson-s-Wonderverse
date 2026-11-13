@@ -163,7 +163,7 @@ export function initTrain(G, api) {
       if (keys.right) d = 1; if (keys.left) d = -1;
       if (d) T.dest = -1; // (holding a direction always wins: you can take over at any time)
       if (T.dest >= 0) { // an automatic trip to the station you picked
-        if (toward(STATIONS[T.dest].x, 20)) { const k = T.dest; T.dest = -1; T.at = k; STATIONS[k].bells.forEach(b => { b.userData.sw = .6; }); Sound.chime(); api.arrived && api.arrived(k); }
+        if (toward(STATIONS[T.dest].x, T.vtrip || 20)) { const k = T.dest; T.dest = -1; T.at = k; STATIONS[k].bells.forEach(b => { b.userData.sw = .6; }); Sound.chime(); api.arrived && api.arrived(k); }
       } else if (d) { if (Math.sign(T.vs) === -d && Math.abs(T.vs) > .6) T.vs += d * ACC * 2 * dt; else T.vs = Math.max(-VMAX, Math.min(VMAX, T.vs + d * ACC * dt)); }
       else { const s = Math.max(0, Math.abs(T.vs) - ACC * 1.3 * dt); T.vs = Math.sign(T.vs) * s; }
       if (T.dest < 0) { const sx = seatX(); let nx = sx + T.vs * dt; if (nx < X0) { nx = X0; T.vs = 0; } if (nx > X1) { nx = X1; T.vs = 0; } seatAt(nx); }
@@ -182,6 +182,6 @@ export function initTrain(G, api) {
     if (riding) { train.updateMatrixWorld(true); train.userData.seat.getWorldPosition(V); P.x = V.x; P.y = V.y - .05; P.z = V.z; P.facing = T.vs > .3 ? 1 : T.vs < -.3 ? -1 : P.facing; P.vx = T.vs; P.grounded = true; }
   }
   // (build 30) ride to a station automatically (from the picture strip)
-  function goTo(i) { const P = api.player; if (!(P.ride && P.ride.type === 'train') || i < 0 || i >= STATIONS.length) return; if (Math.abs(seatX() - STATIONS[i].x) < .5) { api.arrived && api.arrived(i); return; } T.dest = i; whistle(); }
+  function goTo(i) { const P = api.player; if (!(P.ride && P.ride.type === 'train') || i < 0 || i >= STATIONS.length) return; if (Math.abs(seatX() - STATIONS[i].x) < .5) { api.arrived && api.arrived(i); return; } T.dest = i; T.vtrip = Math.min(36, Math.max(20, Math.abs(STATIONS[i].x - seatX()) / 14)); whistle(); } // (build 34: long trips go express, up to 36 m/s, so the far end is half a minute away, not a minute)
   return { update, call, hopOff, whistle, goTo, seatX, state: T, train, STATIONS };
 }

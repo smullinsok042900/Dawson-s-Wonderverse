@@ -37,6 +37,11 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 34: the express train
+
+- Picture trips on the train to far-away stations now go **express**, up to 36 m/s instead of 20. End to end, the line takes about 42 s instead of about 68 s. Short hops are unchanged.
+- Measured before and after on the test computer, both full trips: no long stalls (before: one of 50 ms). Every area was finished building before the train reached it.
+
 ## 3D build 33: the crown is back (plus a wand), and graphics that recover from a 30 fps cap
 
 **From the first real iPhone report (build 26, iPhone, iOS 18.7):**
