@@ -411,3 +411,6 @@ html.calm #learn .lbub svg{width:76px;height:76px}
 html.calm #learn .ldropit.floats{top:42%}html.calm #learn .ldropit.sinks{top:calc(100% - 64px)}
 html.calm #learn .lpull.stick{left:70px}html.calm #learn .lpull.fall{top:110px;opacity:.6}
 html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
+/* Creative tools take priority over the optional guide on narrow landscape phones. */
+#paintTools.show ~ #adventureObjective,#buildTools.show ~ #adventureObjective{display:none}
+#adventureObjective button,#objectiveHide{min-width:44px!important;min-height:44px}

@@ -22,6 +22,7 @@ const LIST = [
   D('Galaxy S9+ (Android phone)', 'Galaxy S9+ landscape'),
   D('Galaxy Tab S4 (Android tablet)', 'Galaxy Tab S4 landscape'),
   D('small Android 640×360', 'Galaxy S5 landscape'),
+  D('iPhone SE 2022 667x375', 'iPhone SE landscape', { viewport: { width: 667, height: 375 }, screen: { width: 667, height: 375 } }),
   D('extra-wide Android 21:9', 'Pixel 5 landscape', { viewport: { width: 960, height: 412 }, screen: { width: 960, height: 412 } }),
 ];
 const results = []; let fails = 0;
@@ -56,7 +57,7 @@ const results = []; let fails = 0;
       await p.evaluate(() => { const s = document.getElementById('trainStrip'); __DDW3.G.placeTrainStrip(); s.classList.add('show'); });
       const ts = await p.evaluate(() => { const ts = [...document.querySelectorAll('#trainStrip .tsT')].map(t => t.getBoundingClientRect()); return { n: ts.length, out: ts.filter(t => t.left < 0 || t.top < 0 || t.right > innerWidth || t.bottom > innerHeight).length, min: Math.min(...ts.map(t => t.width)), bottom: Math.max(...ts.map(t => t.bottom)) }; });
       if (ts.out) bad(`${ts.out} train stations off screen`); { const cover = await p.evaluate(() => { const s = document.getElementById('trainStrip').getBoundingClientRect(); return [...document.querySelectorAll('#upperLeft .pill, #upperRight > *, #brand')].filter(e => getComputedStyle(e).display !== 'none').filter(e => { const r = e.getBoundingClientRect(); return r.width && Math.min(r.right, s.right) - Math.max(r.left, s.left) > 2 && Math.min(r.bottom, s.bottom) - Math.max(r.top, s.top) > 2; }).map(e => e.id || e.className); }); if (cover.length) bad('the station strip covers ' + cover.join(', ')); } if (ts.min < 40) bad(`train stations too small (${Math.round(ts.min)} px)`); res.train = `${ts.n} stations all on screen: ${!ts.out}, reaching ${Math.round(ts.bottom / vh * 100)}% down`;
-      await p.screenshot({ path: path.join(SHOTS, name.replace(/[^a-z0-9]+/gi, '_') + '_train.jpg'), quality: 70 }); await p.evaluate(() => document.getElementById('trainStrip').classList.remove('show'));
+      await p.screenshot({ path: path.join(SHOTS, name.replace(/[^a-z0-9]+/gi, '_') + '_train.jpg'), quality: 70, timeout: 240000 }); await p.evaluate(() => document.getElementById('trainStrip').classList.remove('show'));
       // 5: touch: hold ▶ (a real touch on the arrow), then JUMP
       await p.evaluate(() => __DDW3.teleport(150)); await sleep(1500); const x0 = await p.evaluate(() => __DDW3.player.x); const rb = await p.locator('#rightBtn').boundingBox(); const cdp = await ctx.newCDPSession(p);
       const pt0 = { x: rb.x + rb.width / 2, y: rb.y + rb.height / 2, id: 1, radiusX: 8, radiusY: 8, force: 1 };
@@ -65,7 +66,7 @@ const results = []; let fails = 0;
       if (!(x1 > x0 + .5)) bad(`holding ▶ didn't walk (x ${x0.toFixed(1)} → ${x1.toFixed(1)}, held=${held})`); if (stuck) bad('▶ stayed pressed after letting go');
       await p.locator('#jumpBtn').tap(); /* (measured over 12 real frames, not a fixed time: a big tablet screen drawn in software can take most of a second per frame) */ const top = await p.evaluate(() => new Promise(res => { let n = 0, t = 0; const f = () => { t = Math.max(t, __DDW3.player.y); if (++n < 12) requestAnimationFrame(f); else res(t); }; requestAnimationFrame(f); })); if (top < .5) bad('JUMP did not jump (' + await p.evaluate(() => { const P = __DDW3.player; return JSON.stringify({ x: +P.x.toFixed(1), y: +P.y.toFixed(2), stair: !!P.stair, ride: P.ride && P.ride.type, jumps: P.jumps, grounded: P.grounded, layer: P.layer, swim: !!P.swim }); }) + ')');
       res.touch = `walked ${(x1 - x0).toFixed(1)} m, jumped to y ${top.toFixed(2)}`;
-      await p.screenshot({ path: path.join(SHOTS, name.replace(/[^a-z0-9]+/gi, '_') + '.jpg'), quality: 70 });
+      await p.screenshot({ path: path.join(SHOTS, name.replace(/[^a-z0-9]+/gi, '_') + '.jpg'), quality: 70, timeout: 240000 });
       // 6: upright
       await p.setViewportSize({ width: opts.viewport.height, height: opts.viewport.width }); await sleep(600);
       const rot = await p.evaluate(() => getComputedStyle(document.getElementById('rotate')).display !== 'none'); if (!rot) bad('held upright, no "turn sideways" picture');
@@ -76,7 +77,7 @@ const results = []; let fails = 0;
     console.log(`${res.problems.length ? 'FAIL' : 'PASS'}  ${name} ${res.size}\n      ${res.picture}\n      ${res.buttons} · map ${res.map} · pets ${res.pets}\n      train: ${res.train} · touch: ${res.touch}${res.problems.length ? '\n      PROBLEMS: ' + res.problems.join('; ') : ''}`);
     await ctx.close();
   }
-  console.log(`\n${LIST.length - fails}/${LIST.length} screens passed (desktop Chromium emulation; real devices still need testing)`);
+  console.log(`\n${results.length - fails}/${results.length} screens passed (desktop Chromium emulation; real devices still need testing)`);
   fs.writeFileSync(path.join(SHOTS, 'RESULTS.json'), JSON.stringify(results, null, 1));
   await b.close(); process.exit(fails ? 1 : 0);
 })();

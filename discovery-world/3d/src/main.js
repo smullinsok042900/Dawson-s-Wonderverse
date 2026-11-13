@@ -1335,8 +1335,8 @@ G.adventures=adventures;
   rewardObjects.set(id,item);
  }
  G.updateAdventureWorld=()=>{
-  if(player.layer==='in'){if(!group.parent)scene.add(group);const trainToy=rewardObjects.get('train');if(trainToy?.visible)trainToy.position.x=world.comfort?.calm?0:Math.sin(T*.8)*.35;}
-  else if(group.parent)scene.remove(group);
+  if(player.layer==='in'){if(!group.parent){scene.add(group);group.updateMatrixWorld(true);}if(!G.taps.includes(frame))G.taps.push(frame);const trainToy=rewardObjects.get('train');if(trainToy?.visible)trainToy.position.x=world.comfort?.calm?0:Math.sin(T*.8)*.35;}
+  else {if(group.parent)scene.remove(group);const tapIndex=G.taps.indexOf(frame);if(tapIndex>=0)G.taps.splice(tapIndex,1);}
  };
  G.refreshAdventureWorld=()=>{for(const[id,item]of rewardObjects)item.visible=world.adventures?.rewards.includes(id)||false;const cushion=rewardObjects.get('cushion');if(cushion?.children[0])cushion.children[0].material=W.M(({pink:'#ff9acb',blue:'#91cfff',green:'#a5e6b5'})[world.adventures?.cushion]||'#ff9acb');};
  // A permanent picture on the wall opens the saved gallery without needing to read.

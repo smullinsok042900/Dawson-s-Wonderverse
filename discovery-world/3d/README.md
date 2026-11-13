@@ -4,6 +4,19 @@ This is the full rebuild of Dawson's Discovery World in real 3D. It is a **separ
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 40: connected adventures and home treasures
+
+- Tap 🧭 for eleven optional picture adventures, the discovery book, home gallery and comfort settings. Every essential prompt is spoken and can be replayed; there is no reading required or forced progression.
+- The first adventure guides movement, finding a Fluffkin and taking it home. When every baby is already safe, replay tells their story through pictures without resetting them.
+- Explore with a companion, grow a learning garden, restore a rainbow decoration, and finish a pattern to start a little train at home. Earned home decorations stay saved.
+- Ocean Pier has varied catches, a reusable seaside shell clue, sea-creature discoveries and a treasure adventure. The woods have an owl search with sound and visible clues; the snow friend survives returning to the area.
+- Save small previews of your painting and building in the gallery at home or Art Plaza. Sea-creature book entries have replayable names and short facts.
+- The map has destination drawings and pictures of activities already discovered. The paw button and nearby indicator refer to the same usable target.
+- Comfort settings separately control voice, music and play sounds, with gentle controls and calm effects. Calm learning activities keep their outcomes visible without movement.
+- Existing save keys and progress remain compatible, including pets, gems, crown, wand, Fluffkins, paintings and building. The offline cache version is updated.
+
+Verification results for this release are recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Desktop software rendering and emulated screens are not actual iPhone testing.
+
 ## What's in 3D build 1
 It is one connected 3D world that you walk through from left to right. There are no levels and no loading screens.
 
