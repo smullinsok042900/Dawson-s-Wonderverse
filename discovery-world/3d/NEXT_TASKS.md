@@ -4,6 +4,8 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 ## Waiting for the user
+- **Build 40 on the real iPhone:** check the new compass menu, saved adventures/book/gallery, calm learning, voice/music/effect controls and the in-game performance report. Desktop tests passed; actual-device results are still needed.
+- **GitHub delivery:** this connection currently rejects repository writes (403). Enable write access to deliver the preserved combined release as one PR, or use the release package.
 - **iPhone report #2:** ask for the in-game ⚙️ → Performance Test → Copy Test Results, with Low Power Mode off, after
   tapping "Test the voice". It shows whether the graphics level recovers (build 33), the real frame rate, and whether speech plays.
 - **Confirm the squish fix (build 34b)** on the iPhone Home Screen app after turning the phone.
@@ -21,7 +23,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - **Occasional 50–60 ms long tasks on train trips** at varying places (x −317, 347, 458–463 in different runs). Investigated after build 37: no district building step takes more than 8.8 ms (measured with temporary per-step timing), and the rehearsal draw of a new district takes 1–7 ms. Likely garbage collection or test-machine noise. Next step: a CPU profile across a whole trip, looking for allocation spikes.
 
 ## 2. World expansion (streamed districts in `src/expansion.js`)
-- **New regions to the left** (x < -536; the 🚜 farm is done in build 35): an ocean pier, rainbow mountain, a dinosaur jungle. Each needs:
+- **New regions to the left** (x < -536; the 🚜 farm is done in build 35): rainbow mountain and a dinosaur jungle (Ocean Pier and connected adventures are complete). Each needs:
   - a train station (extend `TRAIN.x0` and `STATIONS`);
   - a map picture;
   - gems;

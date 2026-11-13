@@ -3,8 +3,9 @@ const {chromium}=require('playwright');const path=require('path');
 (async()=>{const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  for(const file of process.argv.slice(2)){
   const context=await browser.newContext({viewport:{width:844,height:390},deviceScaleFactor:1,hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1'});const p=await context.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));const cdp=await context.newCDPSession(p);await cdp.send('Performance.enable');
+  await p.addInitScript(()=>{let seed=123456;Math.random=()=>{seed=(Math.imul(1664525,seed)+1013904223)>>>0;return seed/4294967296;};});
   await p.goto('file://'+path.resolve(file)+'?hq');await p.waitForFunction(()=>window.__DDW3&&document.querySelector('#loading.done'),null,{timeout:600000});await p.locator('#playBtn').tap();
-  const results={file,views:{}};
+  const results={file,seed:123456,views:{}};
   for(const [name,x]of [['park',150],['creatures',238],['castle',398],['home',1012]]){
    await p.evaluate(x=>{__DDW3.teleport(x);__DDW3.keys.left=__DDW3.keys.right=false;},x);
    await p.evaluate(()=>new Promise(resolve=>{let n=0;function f(){if(++n===4)resolve();else requestAnimationFrame(f);}requestAnimationFrame(f);}));

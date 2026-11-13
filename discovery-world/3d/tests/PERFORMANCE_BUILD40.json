@@ -1,0 +1,227 @@
+{
+  "environment": "Desktop Chromium SwiftShader software rendering, not a real iPhone",
+  "walkComparison": [
+    {
+      "load": "31.7s",
+      "bootLongMax": 12719,
+      "bootLongSum": 29942,
+      "park": {
+        "scriptMsPerFrame": 13.2,
+        "frames": 8,
+        "longTasks": 0,
+        "longestTask": 0,
+        "tris": "766k",
+        "calls": 278
+      },
+      "creatures": {
+        "scriptMsPerFrame": 19.7,
+        "frames": 5,
+        "longTasks": 0,
+        "longestTask": 0,
+        "tris": "807k",
+        "calls": 236
+      },
+      "castle": {
+        "scriptMsPerFrame": 12.4,
+        "frames": 7,
+        "longTasks": 0,
+        "longestTask": 0,
+        "tris": "475k",
+        "calls": 327
+      },
+      "enter house": {
+        "longTasks": 0,
+        "longestTask": 0,
+        "layer": "in"
+      },
+      "leave house": {
+        "longTasks": 0,
+        "longestTask": 0,
+        "layer": ""
+      },
+      "walk into new area": {
+        "reachedX": 438,
+        "longTasks": 0,
+        "longestTask": 0,
+        "streaming": "pier:none farm:none frosty:none woods:none seaside:none trail:ready toytown:none labgarden:none artplaza:none"
+      },
+      "map jump to Art Plaza": {
+        "longestTask": 0,
+        "longTasks": 0
+      },
+      "new: trail": {
+        "tris": "332k",
+        "calls": 74
+      },
+      "new: toytown": {
+        "tris": "168k",
+        "calls": 123
+      },
+      "new: labgarden": {
+        "tris": "369k",
+        "calls": 96
+      },
+      "new: artplaza": {
+        "tris": "106k",
+        "calls": 76
+      },
+      "memory": {
+        "heapMB": 121,
+        "geos": 1367,
+        "tex": 170,
+        "progs": 101
+      }
+    },
+    {
+      "load": "27.4s",
+      "bootLongMax": 11162,
+      "bootLongSum": 25151,
+      "park": {
+        "scriptMsPerFrame": 17.3,
+        "frames": 6,
+        "longTasks": 0,
+        "longestTask": 0,
+        "tris": "780k",
+        "calls": 254
+      },
+      "creatures": {
+        "scriptMsPerFrame": 10.7,
+        "frames": 10,
+        "longTasks": 0,
+        "longestTask": 0,
+        "tris": "611k",
+        "calls": 166
+      },
+      "castle": {
+        "scriptMsPerFrame": 18.2,
+        "frames": 6,
+        "longTasks": 1,
+        "longestTask": 53,
+        "tris": "302k",
+        "calls": 175
+      },
+      "enter house": {
+        "longTasks": 0,
+        "longestTask": 0,
+        "layer": "in"
+      },
+      "leave house": {
+        "longTasks": 0,
+        "longestTask": 0,
+        "layer": ""
+      },
+      "walk into new area": {
+        "reachedX": 430,
+        "longTasks": 0,
+        "longestTask": 0,
+        "streaming": "pier:none farm:none frosty:none woods:none seaside:none trail:ready toytown:none labgarden:none artplaza:none"
+      },
+      "map jump to Art Plaza": {
+        "longestTask": 62,
+        "longTasks": 1
+      },
+      "new: trail": {
+        "tris": "358k",
+        "calls": 89
+      },
+      "new: toytown": {
+        "tris": "106k",
+        "calls": 74
+      },
+      "new: labgarden": {
+        "tris": "319k",
+        "calls": 81
+      },
+      "new: artplaza": {
+        "tris": "106k",
+        "calls": 76
+      },
+      "memory": {
+        "heapMB": 121,
+        "geos": 1360,
+        "tex": 170,
+        "progs": 101
+      }
+    }
+  ],
+  "fixedSeedComparison": [
+    {
+      "file": "../backups/3D_build40_before_connected_adventures.html",
+      "seed": 123456,
+      "views": {
+        "park": {
+          "scriptMsPerFrame": 10.96,
+          "calls": 221,
+          "tris": 449998,
+          "geos": 1291,
+          "progs": 101
+        },
+        "creatures": {
+          "scriptMsPerFrame": 11.18,
+          "calls": 168,
+          "tris": 613852,
+          "geos": 1289,
+          "progs": 101
+        },
+        "castle": {
+          "scriptMsPerFrame": 11.26,
+          "calls": 172,
+          "tris": 307530,
+          "geos": 1293,
+          "progs": 101
+        },
+        "home": {
+          "scriptMsPerFrame": 8.48,
+          "calls": 96,
+          "tris": 105738,
+          "geos": 1293,
+          "progs": 101
+        }
+      },
+      "errors": []
+    },
+    {
+      "file": "index.html",
+      "seed": 123456,
+      "views": {
+        "park": {
+          "scriptMsPerFrame": 12.42,
+          "calls": 217,
+          "tris": 446282,
+          "geos": 1292,
+          "progs": 101
+        },
+        "creatures": {
+          "scriptMsPerFrame": 11.97,
+          "calls": 168,
+          "tris": 613852,
+          "geos": 1290,
+          "progs": 101
+        },
+        "castle": {
+          "scriptMsPerFrame": 8.83,
+          "calls": 172,
+          "tris": 307530,
+          "geos": 1294,
+          "progs": 101
+        },
+        "home": {
+          "scriptMsPerFrame": 8.81,
+          "calls": 99,
+          "tris": 106846,
+          "geos": 1295,
+          "progs": 101
+        }
+      },
+      "earnedHome": {
+        "programsBefore": 101,
+        "calls": 131,
+        "tris": 125662,
+        "geos": 1303,
+        "progs": 101
+      },
+      "farHomeDetached": true,
+      "errors": []
+    }
+  ]
+}
