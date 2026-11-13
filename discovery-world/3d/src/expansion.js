@@ -115,14 +115,25 @@ export function initExpansion(G, api) {
 
   // ---------- (build 30) PALS: creatures you befriend and keep (a crab at the seaside, a fox cub in the woods) ----------
   X.pals = X.pals || {};
-  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' } };
-  const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow' };
+  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' } };
+  const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza' };
   function makePalMesh(kind) {
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
     if (kind === 'crab') { const sh = new THREE.Mesh(new THREE.SphereGeometry(.38, 18, 12), mat('#ff5a3c', { r: .5 })); sh.scale.set(1.25, .62, 1); sh.position.y = .32; sh.castShadow = true; body.add(sh);
       for (const s2 of [-1, 1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .26, 6), mat('#ff5a3c')); st.position.set(s2 * .14, .62, .18); body.add(st); const e = new THREE.Mesh(new THREE.SphereGeometry(.08, 10, 8), mat('#ffffff')); e.position.set(s2 * .14, .77, .18); body.add(e); const pp = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), mat('#2b1d3d')); pp.position.set(s2 * .14, .78, .25); body.add(pp);
         const cl = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 8), mat('#ff7a5c', { r: .5 })); cl.scale.set(1, .7, .7); cl.position.set(s2 * .58, .38, .18); body.add(cl); g.userData['claw' + s2] = cl;
         for (let k = 0; k < 3; k++) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.03, .025, .32, 6), mat('#e0432a')); leg.position.set(s2 * .42, .14, -.15 + k * .15); leg.rotation.z = s2 * .9; body.add(leg); } } }
+    else if (kind === 'robot') { const b = new THREE.Mesh(W.rbox(.55, .5, .45, .1), mat('#9fb8d8', { r: .35, m: .4 })); b.position.y = .45; b.castShadow = true; body.add(b);
+      const h = new THREE.Mesh(W.rbox(.45, .35, .4, .1), mat('#c9d8ec', { r: .35, m: .4 })); h.position.y = .9; body.add(h); const scr = new THREE.Mesh(W.rbox(.04, .2, .3, .03), mat('#3b82f6', { em: '#7fd3ff', ei: .8 })); scr.position.set(.23, .9, 0); body.add(scr);
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .25, 6), mat('#666')); ant.position.y = 1.18; body.add(ant); const bulb = new THREE.Mesh(new THREE.SphereGeometry(.07, 10, 8), mat('#ff4f6a', { em: '#ff4f6a', ei: .8 })); bulb.position.y = 1.32; body.add(bulb); g.userData.bulb = bulb;
+      for (const s2 of [-1, 1]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, .08, 14), mat('#2b2d42')); w.rotation.x = Math.PI / 2; w.position.set(0, .14, s2 * .24); body.add(w); } }
+    else if (kind === 'frog') { const b = new THREE.Mesh(new THREE.SphereGeometry(.32, 18, 12), mat('#4caf50', { r: .5 })); b.scale.set(1.2, .75, 1); b.position.y = .26; b.castShadow = true; body.add(b);
+      for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.11, 12, 8), mat('#ffffff')); e.position.set(.16, .52, s2 * .16); body.add(e); const pp = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), mat('#2b1d3d')); pp.position.set(.24, .54, s2 * .16); body.add(pp); const lg = new THREE.Mesh(new THREE.SphereGeometry(.12, 10, 8), mat('#3e9142')); lg.scale.set(1.4, .5, .8); lg.position.set(-.18, .07, s2 * .26); body.add(lg); }
+      const mouth = new THREE.Mesh(new THREE.TorusGeometry(.12, .02, 6, 16, Math.PI), mat('#2b1d3d')); mouth.rotation.set(Math.PI / 2, 0, Math.PI / 2); mouth.position.set(.37, .27, 0); body.add(mouth); }
+    else if (kind === 'parrot') { const b = new THREE.Mesh(new THREE.SphereGeometry(.26, 16, 12), mat('#2fbf4f', { r: .5 })); b.scale.set(1, 1.3, .9); b.position.y = .55; b.castShadow = true; body.add(b);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 12), mat('#ff4f4f', { r: .5 })); h.position.set(.08, .93, 0); body.add(h); const bk = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 10), mat('#ffd23f')); bk.rotation.z = -Math.PI / 2; bk.position.set(.26, .9, 0); body.add(bk);
+      for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), mat('#2b1d3d')); e.position.set(.18, .98, s2 * .1); body.add(e); const wg = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 8), mat('#3b82f6', { r: .5 })); wg.scale.set(.5, 1.2, .3); wg.position.set(-.04, .58, s2 * .24); body.add(wg); g.userData['wing' + s2] = wg; }
+      const tl = new THREE.Mesh(new THREE.ConeGeometry(.08, .5, 8), mat('#ffd23f')); tl.rotation.z = Math.PI * .75; tl.position.set(-.25, .3, 0); body.add(tl); }
     else if (kind === 'penguin') { const b = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 12), mat('#2b2d42', { r: .6 })); b.scale.set(.9, 1.25, .9); b.position.y = .48; b.castShadow = true; body.add(b);
       const belly = new THREE.Mesh(new THREE.SphereGeometry(.27, 16, 12), mat('#ffffff', { r: .7 })); belly.scale.set(.75, 1.15, .6); belly.position.set(.13, .44, 0); body.add(belly);
       const beak = new THREE.Mesh(new THREE.ConeGeometry(.07, .2, 10), mat('#ff9a1f')); beak.rotation.z = -Math.PI / 2; beak.position.set(.36, .74, 0); body.add(beak);
@@ -151,7 +162,7 @@ export function initExpansion(G, api) {
       if (Math.abs(tx - m.position.x) > 25) m.position.x = tx; // (after a jump somewhere else, it arrives with you)
       const dx = tx - m.position.x; m.position.x += dx * Math.min(1, dt * 3); m.position.y += (ty - m.position.y) * Math.min(1, dt * 6); m.position.z += (1.5 + slot * .45 - m.position.z) * Math.min(1, dt * 3);
       const moving = Math.abs(dx) > .3; m.userData.body.position.y = moving ? Math.abs(Math.sin(t * 12 + slot)) * .12 : 0;
-      if (k === 'crab') m.rotation.y = 0; else m.rotation.y = dx >= 0 ? 0 : Math.PI; if (k === 'penguin') { m.userData.body.rotation.z = moving ? Math.sin(t * 10) * .12 : 0; }
+      if (k === 'crab') m.rotation.y = 0; else m.rotation.y = dx >= 0 ? 0 : Math.PI; if (k === 'penguin') { m.userData.body.rotation.z = moving ? Math.sin(t * 10) * .12 : 0; } if (k === 'parrot') { m.userData.body.position.y = .7 + Math.sin(t * 5) * .15; if (m.userData.wing1) { m.userData.wing1.rotation.x = Math.sin(t * 18) * .6; m.userData['wing-1'].rotation.x = -Math.sin(t * 18) * .6; } } if (k === 'robot' && m.userData.bulb) m.userData.bulb.material.emissiveIntensity = .5 + Math.abs(Math.sin(t * 4)) * .8;
       if (m.userData.tail) m.userData.tail.rotation.y = Math.sin(t * 6) * .4; m.visible = P.layer === '' || P.layer === 'in'; }
   }
 
@@ -199,6 +210,8 @@ export function initExpansion(G, api) {
 
   // =================== 🧸 TOY TOWN ===================
   builders.toytown = c => [
+    () => palAtHome(c, 'robot'), // (build 32) Bolt the toy robot waits here
+    () => tunnelMouth(c, 612, -3.6, 'woods'), // (build 32) a secret tunnel to the Whispering Woods
     // toy houses behind
     () => { for (let i = 0; i < 9; i++) { const x = 554 + i * 13; const col = RB[i % 8]; c.block(x, 0, -8.5, 5, 4 + (i % 3), 4, col, { r: .4 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(3.6, 2.4, 4), mat(RB[(i + 3) % 8])); roof.position.set(x, 4 + (i % 3) + 1.2, -8.5); roof.rotation.y = Math.PI / 4; roof.castShadow = true; c.add(roof); } },
     // a musical floor: every tile plays a note
@@ -232,6 +245,7 @@ export function initExpansion(G, api) {
 
   // =================== 🔬 LAB GARDENS ===================
   builders.labgarden = c => [
+    () => palAtHome(c, 'frog'), // (build 32) Hoppy the frog waits by the pond
     // greenhouse domes behind
     () => { for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#d9f6ff', { r: .1, cc: .6 })); d.position.set(x, 0, -11); d.scale.y = .8; c.add(d); } },
     // a colour-changing pond: tap the water, it changes colour, a fish jumps
@@ -302,6 +316,8 @@ export function initExpansion(G, api) {
     () => { const bushes = [888, 891.5, 895].map(x => { const b = c.sph(x, .9, -2.6, 1, '#4caf50', { m: { r: .9 } }); b.scale.set(1.1, .9, .8); return b; }); const kid = c.sprite('🐣', 1.1, 888, -2, -3.4); let hide = rnd(3), found = 0;
       bushes.forEach((b, i) => c.tap(b, () => { b.userData.w = 1; Sound.tone(300 + i * 80, .1, 'sine', .04, 1); if (found) return; if (i === hide) { found = 1; kid.position.set(bushes[i].position.x, 2.2, -3); Sound.giggle(); c.say('🐣 Peekaboo! You found me!'); c.disc('hideseek', '🐣 Hide and seek! Tap the bushes to find the chick!'); setTimeout(() => { found = 0; hide = rnd(3); kid.position.y = -2; c.say('🙈 I am hiding again!'); }, 3000); } else c.say(pick(['🌿 Not here!', '🌿 Rustle rustle... nobody!'])); }));
       return (dt, t) => { for (const b of bushes) { b.userData.w = Math.max(0, (b.userData.w || 0) - dt * 2); b.rotation.z = Math.sin(t * 25) * .1 * b.userData.w; } if (found) kid.position.y = 2.2 + Math.abs(Math.sin(t * 6)) * .3; }; },
+    // Kiwi the parrot waits here to be befriended
+    () => palAtHome(c, 'parrot'),
     // the rainbow portal home
     () => { for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(2.2 - i * .22, .14, 10, 36), mat(RB[i], { em: RB[i], ei: .2 })); r.position.set(900, 2.2, -1.5); r.rotation.y = Math.PI / 2; c.add(r); }
       const hm = c.sprite('🏠', 1.2, 900, 2.2, -1.4); c.tap(hm, () => api.goHome(), 900); },
@@ -311,11 +327,23 @@ export function initExpansion(G, api) {
   function palAtHome(c, kind) {
     if (followers[kind]) return null; const m = makePalMesh(kind), [x, y, z] = PALS[kind].home; m.position.set(x, y, z); m.userData.pal = kind; c.add(m); let taps = 0;
     c.tap(m, () => { if (followers[kind]) return; taps++; boingIt(m); Sound.giggle(); if (X.pals[kind]) { c.g.remove(m); setFollow(kind, true); say(`${PAL_EMOJI[kind]} ${PAL_NAME[kind]} is coming with you!`); return; }
-      if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
+      if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak', robot: 'Beep boop', frog: 'Ribbit', parrot: 'Squawk' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
       else { c.g.remove(m); setFollow(kind, true); disc('pal_' + kind); say(PALS[kind].hello); c.burst(x, 1.5, z, ['#ff8fc8', '#fff', '#ffd23f'], 24, 3); Sound.chime(); } }, x);
     return (dt, t) => { if (!m.parent) return; m.position.x = x + Math.sin(t * .9) * (kind === 'crab' ? 1.5 : .6); m.userData.body.position.y = Math.abs(Math.sin(t * 5)) * .05; if (kind === 'fox') m.rotation.y = Math.cos(t * .9) > 0 ? 0 : Math.PI; };
   }
   const boingIt = o => { o.userData.bt = 1; };
+  // (build 32) SECRET TUNNELS: a cave mouth half-hidden behind bushes; tap it (or PAW next to it) and you whoosh through
+  // the hill to the tunnel at the other side of the world (a shortcut; the place you arrive at is built at once)
+  const TUNNELS = { woods: { x: -232, back: 'toytown' }, toytown: { x: 612, back: 'woods' } };
+  function tunnelMouth(c, x, z, to) {
+    const rock = c.sph(x, 0, z, 1.9, '#8a7f74', { m: { r: .95, cc: 0 } }); rock.scale.set(1.2, .9, .7);
+    const hole = c.sph(x, .6, z + 1.25, .95, '#1c1520', { m: { r: 1, cc: 0 } }); hole.scale.set(1, 1, .2);
+    for (const dx of [-1.6, 1.6]) { const b = c.sph(x + dx, .5, z + 1.1, .7, '#3f8f4a', { m: { r: .9 } }); b.scale.y = .8; }
+    const sign = c.sprite('🕳️', .8, x, 2.2, z + 1.3);
+    const go = () => { const dest = TUNNELS[to]; c.disc('tunnel', '🕳️ A secret tunnel! It is a shortcut across the world!'); api.travelTo(dest.x + 2, '🕳️', 'the other end of the secret tunnel'); };
+    c.tap(rock, go, x); c.tap(hole, go); c.tap(sign, go);
+    return (dt, t) => { sign.position.y = 2.2 + Math.sin(t * 2) * .12; };
+  }
 
   // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
   builders.seaside = c => [
@@ -361,6 +389,7 @@ export function initExpansion(G, api) {
 
   // =================== 🌲 WHISPERING WOODS (x -272 to -150) ===================
   builders.woods = c => [
+    () => tunnelMouth(c, -232, -4.4, 'toytown'), // (build 32) a secret tunnel to Toy Town
     // the campfire: tap the fire for flames; tap the marshmallow to toast it golden
     () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const st = c.sph(-165 + Math.cos(a) * .9, .15, -2.6 + Math.sin(a) * .9, .25, '#9a9a9a', { m: { r: .9 } }); st.scale.y = .6; } const logs = [0, 1.2].map(r => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.4, 8), mat('#7a4a2a')); lg.rotation.set(Math.PI / 2, r, 0); lg.position.set(-165, .15, -2.6); c.add(lg); return lg; });
       const fire = c.sprite('🔥', 1.4, -165, .9, -2.6); fire.visible = false; let lit = 0, toast2 = 0;
