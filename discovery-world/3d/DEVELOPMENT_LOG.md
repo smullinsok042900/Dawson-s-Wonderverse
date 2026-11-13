@@ -1,20 +1,8 @@
-# Dawson's Discovery World 3D — development log and backlog
+# Dawson's Discovery World 3D — development log
 
-This file lets any future session resume from the newest verified checkpoint. Newest entries come first. Every
-checkpoint lists what was verified, and how, and what is still known to be wrong.
-
-## How to verify a checkpoint (the routine)
-
-1. `node build.mjs`: builds the single offline `index.html`.
-2. `NODE_PATH=$(npm root -g) node tests/smoke3d.cjs`: the full game test (about 35 min). Run it ALONE on the machine; other browser work makes its timing-sensitive checks flaky.
-3. Performance, before and after, on identical scenarios (scratch scripts kept in the session scratchpad; recreate as needed):
-   - `ba.cjs`: loading; per-frame script time, triangles, calls and long tasks in the park, the creature area and the castle; house in and out; walking into new areas; map jump; memory.
-   - `walknew.cjs`: long tasks on a walk from the valley through the Dino Kingdom.
-   - `train_test.cjs`: the full train route both ways (jumps per frame, long tasks, streaming).
-   - `soak.cjs`: 60 map trips; geometry, program, texture, tap and heap counts must stay flat.
-   - `sweep.cjs`: walks the whole outdoor world both ways; reports stuck spots and console errors.
-4. Desktop results are NOT iPhone results. The real numbers come from the in-game ⚙️ → Performance Test → Copy Test Results.
-5. Before a big change, keep a rollback copy in `../backups/3D_buildNN_index.html`.
+Completed changes and how each was tested, newest first. Each checkpoint says what was verified, how, and on what (desktop
+browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
+are in `PERFORMANCE_LOG.md`.
 
 ## Checkpoint: build 34b (urgent fix)
 - **"Squished" picture on iPhone (reported with a screenshot):** when the phone turned, Safari could still report the upright size. The game then drew a tall picture and stretched it across the wide screen, so it looked blocky, zoomed in and too wide.
@@ -24,7 +12,7 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 
 ## Checkpoint: build 34
 - **Express train:** picture trips longer than about 280 m speed up to 36 m/s (was always 20). The whole line takes about 42 s of game time, down from about 68 s. Short trips are unchanged.
-- **Verified (desktop, `train_test2.cjs`, before → after):**
+- **Verified (desktop, `tests/perf/train.cjs`, before → after):**
   - trip home → 🌈: top speed 20 → 36 m/s, long tasks 1 (50 ms) → 0;
   - whole line 🌈 → ❄️: long tasks 0 → 0;
   - frames where you were within 25 m of an area that had not finished building: 0 → 0, on both trips.
@@ -83,18 +71,3 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 ## Checkpoint: build 29b (merged as #36)
 - **Freezes fixed:** entering the house (2.9 s → 0), the Dino Kingdom and the castle (four 1–2.7 s stalls → 0). Causes: shader and driver rehearsal into the wrong kind of buffer, too few rehearsal spots, and late creatures.
 - **New neighbourhoods:** four streamed neighbourhoods to the right with 23 activities, the 🗺️ map and 🏠 home.
-
-## Known issues
-- **iPhone numbers:** frame rate, loading and memory on a real iPhone are not measured yet; waiting for the in-game report.
-- **Loading time:** about 22 s on the software-rendering test machine, because of the whole-world draw rehearsal. Expected to be much faster on an iPhone, but unverified.
-- **The test browser is very slow** (software 3D), so a few checks are timing-sensitive. Run the test alone.
-
-## Backlog (highest priority first)
-1. **iPhone report #2 (after build 33):** check that the graphics level recovers, read the frame work time, and ask for a run with Low Power Mode off to see real headroom.
-2. **Indoor spaces:** a hidden playroom and a toy workshop interior (new layer) with a door in the world, built when entered.
-3. **Shortcuts:** the first secret tunnel (Woods ↔ Toy Town) is done. Next: more tunnels, and a hidden "tunnel map" picture once one is found.
-4. ~~More pets on the right side~~ (done in build 32). Next: a pal in the Adventure Trail, and pals reacting to each other.
-5. **Creature polish:** idle variety (sitting, sniffing, looking at you), and followers stepping aside when you turn round.
-6. **More regions to the left:** ocean pier, farm, rainbow mountain. Each needs a train station, a map picture, gems and its own unique activities.
-7. **Graphics:** low-detail trees for the far background hills, softer sea shading, nicer station platforms.
-8. **Loading:** spread the whole-world rehearsal across the first seconds of play, in small pieces, instead of all before the start.
