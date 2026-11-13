@@ -16,6 +16,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { NOTES } from './audio.js';
 import { plush, quadSpec, personSpec } from './critterkit.js';
@@ -180,7 +181,8 @@ export function initKingdom(G, api) {
     tapObj(door, () => { door.userData.open = 1.6; Sound.chime(); burst(K.castle, 2, -3.5, ['#ffd23f', '#ff8fc8', '#fff', '#b28cff'], 24, 3); discover('castle', 'The Princess Castle! Dance on the shiny floor!'); setTimeout(() => enterCastle(), 350); });
   }
   // ---------- build 16: a magical castle front ----------
-  { const add2 = (m, x, y, z) => { m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; C.add(m); return m; };
+  const FRONT = []; // (build 37: every still part of the castle front, merged below)
+  { const add2 = (m, x, y, z) => { m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; C.add(m); FRONT.push(m); return m; };
     // steps up to the door, and a golden arch around it
     for (let i = 0; i < 3; i++) add2(new THREE.Mesh(new RoundedBoxGeometry(3.6 - i * .4, .14, .9 - i * .25, 2, .05), toy('#fff4fa', { r: .6, cc: .2 })), 0, .07 + i * .14, -3.5 - i * .2);
     const archT = new THREE.Mesh(new THREE.TorusGeometry(1.38, .1, 12, 40, Math.PI), goldM); add2(archT, 0, 2.6, -3.98);
@@ -217,6 +219,22 @@ export function initKingdom(G, api) {
   const flags = [];
   for (const tx of [-6.6, 6.6, 0]) { const f = new THREE.Mesh(new THREE.PlaneGeometry(.9, .5, 6, 1), new THREE.MeshStandardMaterial({ color: tx ? '#ff6fae' : '#ffd23f', side: THREE.DoubleSide })); const y = tx ? 13.1 : 13.4, z = tx ? -4.9 : -5.6; const pole = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 1.2, 6), trimM); pole.position.set(tx, y - .3, z); C.add(pole); f.position.set(tx + .45, y, z); C.add(f); flags.push(f); f.userData.p0 = f.geometry.attributes.position.array.slice(); }
   C.traverse(o => { if (o.isMesh && o.castShadow === false && o.geometry.type !== 'CircleGeometry') o.castShadow = true; });
+  // (build 37) FEWER DRAW CALLS: the castle front was about 175 separate little parts (steps, railings, flower boxes,
+  // climbing roses, hedges...), each drawn on its own, twice when shadows update. None of them moves or is tapped, so the
+  // parts that share a material are merged into ONE shape per material: the same picture, the same materials (no new
+  // shaders), about 160 fewer draw calls whenever the castle is in view.
+  // (materials made separately but looking exactly the same count as the same material)
+  const matLook = M => { const c = v => v && v.isColor ? v.getHexString() : v && v.isVector2 ? v.x + '/' + v.y : v && v.uuid ? v.uuid : v; return [M.type, ...['color', 'emissive', 'emissiveIntensity', 'roughness', 'metalness', 'clearcoat', 'clearcoatRoughness', 'sheen', 'sheenRoughness', 'sheenColor', 'map', 'normalMap', 'normalScale', 'emissiveMap', 'alphaMap', 'metalnessMap', 'aoMap', 'roughnessMap', 'transparent', 'opacity', 'side', 'vertexColors', 'flatShading', 'transmission', 'iridescence', 'envMapIntensity'].map(k => String(c(M[k])))].join(','); };
+  { const groups = new Map();
+    for (const m of FRONT) { if (!m.isMesh || m.children.length || m.parent !== C) continue; const g = m.geometry, key = matLook(m.material) + '|' + (g.index ? 'i' : 'n') + '|' + Object.keys(g.attributes).sort().join(',') + '|' + m.castShadow;
+      if (!groups.has(key)) groups.set(key, []); groups.get(key).push(m); }
+    let merged = 0;
+    for (const list of groups.values()) { if (list.length < 2) continue;
+      const geos = list.map(m => { m.updateMatrix(); const g = m.geometry.clone(); g.applyMatrix4(m.matrix); for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k); return g; });
+      let one = null; try { one = mergeGeometries(geos, false); } catch (e) { one = null; } geos.forEach(g => g.dispose()); if (!one) continue;
+      const mm = new THREE.Mesh(one, list[0].material); mm.castShadow = list[0].castShadow; mm.receiveShadow = true; C.add(mm);
+      for (const m of list) { C.remove(m); m.geometry.dispose(); } merged += list.length; }
+    G.castleMerged = merged; }
 
   // the royal fountain
   const fx = K.castle + 9.5, fz = -2.6;

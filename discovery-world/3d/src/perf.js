@@ -74,7 +74,7 @@ export function initPerf(o) {
     const e = env(), all = stats(recent(N)), ua = navigator.userAgent;
     let gpu = 'unknown'; try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (err) { }
     report = [
-      `Dawson's World performance test (build 26) — ${new Date().toLocaleString()}`,
+      `Dawson's World performance test (build ${o.build || '?'}) — ${new Date().toLocaleString()}`,
       `Device: ${ua}`,
       `Screen: ${e.css} CSS px, device pixel ratio ${e.dpr}; rendering ${e.res} px (scale ${e.pr}); GPU: ${gpu}; CPU cores: ${navigator.hardwareConcurrency || '?'}`,
       `Graphics: level ${e.level} of 5${e.lite ? ' (lite effects)' : ''}, frame work ${G.gfx ? G.gfx.work.toFixed(1) : '?'} ms, shadows ${e.shadow} px, post-processing ${e.post ? 'on' : 'off'}; JS memory: ${e.mem}`,

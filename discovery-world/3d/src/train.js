@@ -10,8 +10,9 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { toy, ball } from './creatures.js';
 
-export const TRAIN = { z: 3.2, x0: -534, x1: 904, seat: 2.25 }; // (build 30: the line now runs the whole world)
+export const TRAIN = { z: 3.2, x0: -666, x1: 904, seat: 2.25 }; // (build 30: the line now runs the whole world)
 export const STATIONS = [
+  { x: -656, e: '🌊' }, // (build 38: Ocean Pier)
   { x: -524, e: '🚜' }, // (build 35: Happy Farm)
   { x: -392, e: '❄️' }, // (build 31: Frosty Peaks)
   { x: -262, e: '🦊' }, { x: -160, e: '🌲' }, { x: -40, e: '🏖️' }, // (build 30: the seaside and the woods, to the left)

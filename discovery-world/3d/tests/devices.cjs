@@ -27,7 +27,7 @@ const LIST = [
 const results = []; let fails = 0;
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  for (const dev of LIST) {
+  for (const dev of LIST.filter(d => !process.env.ONLY || d.name.includes(process.env.ONLY))) {
     const { name, defaultBrowserType, ...opts } = dev; const ctx = await b.newContext(opts); const p = await ctx.newPage(); const errs = [];
     p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text().slice(0, 120)); });
     const res = { name, size: `${opts.viewport.width}×${opts.viewport.height} @${opts.deviceScaleFactor}x`, problems: [] }; const bad = m => res.problems.push(m);
@@ -63,7 +63,7 @@ const results = []; let fails = 0;
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [pt0] }); await sleep(1200); const held = await p.evaluate(() => __DDW3.keys.right); await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await sleep(300);
       const x1 = await p.evaluate(() => __DDW3.player.x), stuck = await p.evaluate(() => __DDW3.keys.right);
       if (!(x1 > x0 + .5)) bad(`holding ▶ didn't walk (x ${x0.toFixed(1)} → ${x1.toFixed(1)}, held=${held})`); if (stuck) bad('▶ stayed pressed after letting go');
-      await p.locator('#jumpBtn').tap(); let top = 0; for (let i = 0; i < 12; i++) { top = Math.max(top, await p.evaluate(() => __DDW3.player.y)); await sleep(100); } if (top < .5) bad('JUMP did not jump');
+      await p.locator('#jumpBtn').tap(); /* (measured over 12 real frames, not a fixed time: a big tablet screen drawn in software can take most of a second per frame) */ const top = await p.evaluate(() => new Promise(res => { let n = 0, t = 0; const f = () => { t = Math.max(t, __DDW3.player.y); if (++n < 12) requestAnimationFrame(f); else res(t); }; requestAnimationFrame(f); })); if (top < .5) bad('JUMP did not jump (' + await p.evaluate(() => { const P = __DDW3.player; return JSON.stringify({ x: +P.x.toFixed(1), y: +P.y.toFixed(2), stair: !!P.stair, ride: P.ride && P.ride.type, jumps: P.jumps, grounded: P.grounded, layer: P.layer, swim: !!P.swim }); }) + ')');
       res.touch = `walked ${(x1 - x0).toFixed(1)} m, jumped to y ${top.toFixed(2)}`;
       await p.screenshot({ path: path.join(SHOTS, name.replace(/[^a-z0-9]+/gi, '_') + '.jpg'), quality: 70 });
       // 6: upright

@@ -16,8 +16,9 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
   - more instancing for repeated park props;
   - low-detail versions of far creatures;
   - fewer fur shells on far creatures.
-- **Castle:** the most draw calls (351–543, depending on what wanders into view). Run `tests/perf/calls.cjs index.html 396` to see which objects cost the most, then merge static castle parts that share a material.
-- **A 50–55 ms long task at x ≈ 460** on the train trip to 🌈 (Adventure Trail streaming?). Seen in builds 33 and 35.
+- **Draw calls:** checked after build 37. The park's biggest group is the carousel: sculpted ponies that blink and breathe on skeletons, plus the Blender carousel, so it can't be merged cheaply. The creature area's cost is the creatures. Your own creature costs about 39 draw calls everywhere (body parts, eyes, fur shells): a candidate for a lighter far-camera version.
+- **Draw calls, next targets** (the castle front is merged in build 37; run `tests/perf/calls.cjs index.html X` to find more): merge other static clusters the same way. In the castle view, the remaining big groups are at x 398 (39 meshes) and x 403 (30 meshes; probably characters, so check before merging).
+- **Occasional 50–60 ms long tasks on train trips** at varying places (x −317, 347, 458–463 in different runs). Investigated after build 37: no district building step takes more than 8.8 ms (measured with temporary per-step timing), and the rehearsal draw of a new district takes 1–7 ms. Likely garbage collection or test-machine noise. Next step: a CPU profile across a whole trip, looking for allocation spikes.
 
 ## 2. World expansion (streamed districts in `src/expansion.js`)
 - **New regions to the left** (x < -536; the 🚜 farm is done in build 35): an ocean pier, rainbow mountain, a dinosaur jungle. Each needs:
