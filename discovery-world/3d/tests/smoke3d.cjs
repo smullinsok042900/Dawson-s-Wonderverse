@@ -212,7 +212,7 @@ const UG_F = -6;
   await teleport(360.6); await tapWorld(362.8, .55, -2.05); // (stand to the left: your creature isn't in front of the egg, and the friends who follow you trail away from it)
   c = await waitFor(s => s.disc.includes('hatch'), 60000); check('tap a dino egg: it wobbles and a baby dino hatches', c.disc.includes('hatch') && await page.evaluate(() => __DDW3.world.dinoEggs[0] === true));
   await shot('24_dino_valley.jpg');
-  await teleport(389); await tapWorld(390.2, .55, -2.4); await sleep(300); check('tap Tops the little dino: stomp stomp!', (await S()).disc.includes('tops'));
+  for (let k = 0; k < 3 && !(await S()).disc.includes('tops'); k++) { /* Tops walks about: tap him where he is */ await tapChar(390.2, .55, -2.4); await sleep(300); } check('tap Tops the little dino: stomp stomp!', (await S()).disc.includes('tops'));
   await teleport(401); await tapWorld(402.8, 1.4, -2.3); await sleep(400); check('tap Princess Rosie: she gives you a golden crown', await page.evaluate(() => __DDW3.world.crown === true && __DDW3.kingdom().crown.visible));
   await teleport(408); await holdBtn('#rightBtn', 500); c = await S(); check('walk on the castle dance floor: the tiles light up and play music', c.disc.includes('dance'));
   await teleport(412); await tapWorld(413.6, 1.4, -2.3); await sleep(300); check('tap Princess Luna: the royal fountain sprays sparkles', (await S()).disc.includes('fountain'));
