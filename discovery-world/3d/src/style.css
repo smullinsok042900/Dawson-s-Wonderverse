@@ -9,6 +9,16 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #brand small{display:block;color:#ffe19c;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
 #brand b{font-size:clamp(12px,2vw,16px);white-space:nowrap}
 #upperRight{display:flex;gap:7px;align-items:center;pointer-events:auto}
+#upperLeft{display:flex;gap:7px;align-items:center;pointer-events:auto;font-size:22px}
+#upperLeft .pill{font-size:24px;padding:4px 9px}
+#mapPanel{display:none;position:fixed;inset:0;z-index:40;background:rgba(40,20,80,.45);align-items:center;justify-content:center}
+#mapPanel.show{display:flex}
+#mapPanel .mpIn{position:relative;background:linear-gradient(160deg,#fff8fd,#e8f6ff);border:5px solid #fff;border-radius:28px;padding:16px 18px;box-shadow:0 12px 30px #0005;max-width:94vw}
+#mapPanel .mpGrid{display:grid;grid-template-columns:repeat(5,auto);gap:12px}
+#mapPanel .mpT{width:min(17vw,92px);height:min(17vw,92px);font-size:min(10vw,52px);border-radius:24px;border:4px solid #fff;background:#fff;box-shadow:0 6px 0 #d9c6f3,0 10px 18px #9b5cf62a}
+#mapPanel .mpT:first-child{background:#fff3c4}
+#mapPanel .mpT.here{box-shadow:0 0 0 6px #ffd23f,0 6px 0 #d9c6f3}
+#mapPanel .mpX{position:absolute;top:-16px;right:-16px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;background:#ff8fc8;color:#fff;font-size:24px;font-weight:900}
 .pill{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.94);border:2px solid #fff;border-bottom:4px solid #e1d2f6;border-radius:16px;color:#55408b;box-shadow:0 5px 14px #3b217744;font-weight:900;font-size:17px;padding:5px 11px;min-height:48px;min-width:48px;justify-content:center}
 .pill svg{width:24px;height:24px;fill:#ffc531;stroke:#e98c1f;stroke-width:1}
 .fluffIcon{width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff 0 12%,#ff8fd0 13% 100%);box-shadow:-7px -9px 0 -6px #ff8fd0,7px -9px 0 -6px #ff8fd0}
@@ -308,7 +318,10 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @keyframes lbounce{0%,100%{transform:translateY(0)}25%{transform:translateY(-50px)}50%{transform:translateY(0)}70%{transform:translateY(-20px)}}
 @keyframes ltear{0%{transform:translateY(0);opacity:1}100%{transform:translateY(16px);opacity:0}}
 /* build 26: grown-ups' performance panel and monitor */
-#gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85}
+#gearBtn{font-size:20px;min-width:44px;padding:4px 8px;opacity:.85;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:none}
+#gearHint{position:fixed;top:calc(64px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));z-index:61;background:#fff;color:#4b2f8f;font:800 14px system-ui,sans-serif;padding:8px 12px;border-radius:12px;box-shadow:0 4px 14px #0003;opacity:0;pointer-events:none;transition:opacity .2s}
+#gearHint.show{opacity:1}
+#perfPanel button.danger{color:#c0264f;border-color:#f3b6c6;background:#fff3f6}
 #perfbox{display:none;position:fixed;left:calc(6px + env(safe-area-inset-left));top:calc(64px + env(safe-area-inset-top));z-index:60;background:rgba(20,10,40,.72);color:#e9ffe9;font:11px/1.35 ui-monospace,Menlo,monospace;padding:5px 7px;border-radius:8px;white-space:pre;pointer-events:none}
 #perfPanel{display:none;position:fixed;inset:0;z-index:70;background:rgba(30,15,60,.45);align-items:center;justify-content:center}
 #perfPanel.show{display:flex}

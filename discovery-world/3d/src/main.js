@@ -22,9 +22,10 @@ import { makePost } from './post.js';
 import { refineScene } from './refine.js';
 import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
+import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
-import { LOD } from './nature.js';
+import { LOD, makeTree } from './nature.js';
 import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
@@ -232,6 +233,9 @@ const friends = initFriends(G, {
   tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); }, save: () => save(), saveSoon: () => saveSoon(), paintStamp,
 });
 const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
+// (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
+const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]) });
+G.expansion = expansion;
 
 // ---------------- bubbles ----------------
 const bubbles = [], bubbleGeo = new THREE.SphereGeometry(1, 24, 16);
@@ -596,7 +600,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, 419]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -677,9 +681,9 @@ const CAM_DIST = 7.6; // build 16: a little closer, to show the characters
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, 423 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, EXP.x1 + 4 - hw);
 }
-function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; }
+function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
 // build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
 const ease = (dt, rate) => 1 - Math.exp(-dt * rate);
 function updateCamera(dt) {
@@ -727,6 +731,7 @@ function updateWorldAnim(dt, t) {
   // bushes and trees are not drawn at all
   poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
   updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
+  expansion.update(dt, t, player.layer === '' ? camT.x : -999); // (build 29: stream the new neighbourhoods)
   if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > 16; if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
@@ -739,9 +744,9 @@ function updateWorldAnim(dt, t) {
 let saveTimer = 0;
 function saveSoon() { saveTimer = 1.2; }
 function save() {
-  if (G.perfTest) return; // (build 26: the performance test never saves)
+  if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -752,6 +757,7 @@ function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
+  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g[1-8]$/.test(g)).slice(0, 8) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons) }; } // (build 29)
   world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
@@ -771,7 +777,7 @@ function restore(d) {
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
   if (d.crown === true) world.crown = true;
   if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
-  if (typeof d.x === 'number' && isFinite(d.x)) player.x = clamp(d.x, .5, 301);
+  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, EXP.x1 - 2) : clamp(d.x, .5, 301); // (build 29: you can also wake up in the new neighbourhoods)
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
   world.secret = d.secret === true;
@@ -992,20 +998,50 @@ const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(
 const compileAll = () => {
   // things hidden only because they are far away (grass, bushes, trees, fur) are compiled too
   const shown = []; for (const it of LOD) if (!it.o.visible) { it.o.visible = true; shown.push(it.o); } for (const f of FUR) for (const sh of f.shells) if (!sh.visible) { sh.visible = true; shown.push(sh); }
+  const back = []; if (G.life) for (const a of G.life.agents) if (a.detached) { a.detached.add(a.root); back.push(a); } // (build 29) far-away creatures (off the scene) are compiled too
   // (compile for where the world is really drawn: into the post-processing picture, not straight to the screen;
   //  the shader for each is different, so compiling for the wrong one did nothing)
   const prevRT = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target);
   let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera)); } catch (e) { r = Promise.resolve(); }
   renderer.setRenderTarget(prevRT);
-  for (const o of shown) o.visible = false; return r;
+  for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root); return r;
 };
+// (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
+function warmGroup(g) { // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
+  try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, 2.15, CAM_DIST); cam.lookAt(c.x, 1.15, 0); cam.updateMatrixWorld();
+    const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; if (post.enabled && !post.lite) { G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true }); renderer.setRenderTarget(G.warmRT); renderer.render(scene, cam); } renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm; } catch (e) { }
+}
+G.warmGroup = warmGroup;
+function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target); let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(g, camera, scene) : Promise.resolve(renderer.compile(g, camera, scene)); } catch (e) { r = Promise.resolve(); } renderer.setRenderTarget(prev); return r; }
 // creatures are sculpted in the background and appear a moment later: compile their materials as they arrive
-let compileTimer = 0; globalThis.__ddwCompile = () => { clearTimeout(compileTimer); compileTimer = setTimeout(compileAll, 300); };
+// (build 29) ...and then draw just those new creatures once, out of sight, into a tiny buffer of the real kind:
+// the graphics driver finishes a shader the first time it is used, so this moves that wait (2 s on the test machine,
+// in the middle of a walk into the Dino Kingdom) to a moment when nothing is on screen there.
+const WARM_LAYER = 5, warmCam = new THREE.PerspectiveCamera(45, 2, .1, 60); warmCam.layers.set(WARM_LAYER);
+scene.traverse(o => { if (o.isLight) o.layers.enable(WARM_LAYER); }); // (lights are seen on every layer, so the shaders are the real ones)
+function warmObjects(list) {
+  if (!list.length || !(post.enabled && !post.lite)) return;
+  G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true });
+  const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; const V0 = new THREE.Vector3();
+  for (const o of list) {
+    let root = o; while (root.parent && root.parent !== scene && !root.parent.isScene) root = root.parent;
+    const agent = G.life && G.life.agents.find(a => a.root === root && a.detached); if (agent) agent.detached.add(root);
+    o.traverse(q => q.layers.enable(WARM_LAYER)); o.getWorldPosition(V0); warmCam.position.set(V0.x, V0.y + 1, V0.z + 5); warmCam.lookAt(V0.x, V0.y + .6, V0.z); warmCam.updateMatrixWorld();
+    try { renderer.setRenderTarget(G.warmRT); renderer.render(scene, warmCam); } catch (e) { }
+    o.traverse(q => q.layers.disable(WARM_LAYER)); if (agent) agent.detached.remove(root);
+  }
+  renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm;
+}
+const fresh = [];
+let compileTimer = 0; globalThis.__ddwCompile = obj => { if (obj) fresh.push(obj); clearTimeout(compileTimer); compileTimer = setTimeout(() => { Promise.resolve(compileAll()).then(() => warmObjects(fresh.splice(0)), () => { }); }, 300); };
 // PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
 // upstairs and downstairs, the underground, the clouds, the castle, the park), with the sun's shadow over it. That
 // makes the graphics driver finish every shader and upload every texture and mesh NOW, not the first time you walk in.
-function warmAreas() {
-  const rt = new THREE.WebGLRenderTarget(32, 16, { type: THREE.HalfFloatType }), cam = camera.clone(), shadowAuto = renderer.shadowMap.autoUpdate;
+function warmAreas() { const warmT0 = performance.now();
+  // (build 29) rehearse into the SAME picture buffer the game really draws into (4x anti-aliased, with a depth texture,
+  // or the lite one). The graphics driver prepares a separate drawing setup for each kind of buffer; rehearsing into a
+  // plain small buffer (builds 24-28) left the real setups to be made on first sight: the stall when entering the house.
+  const full = post.enabled && !post.lite, rt = new THREE.WebGLRenderTarget(64, 32, full ? { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true } : { type: THREE.HalfFloatType }), /* (tiny, but exactly the same kind of buffer: the setups depend on the kind, not the size) */ cam = camera.clone(), shadowAuto = renderer.shadowMap.autoUpdate;
   const sp = sun.position.clone(), st = sun.target.position.clone();
   try {
     let first = true;
@@ -1014,10 +1050,29 @@ function warmAreas() {
       sun.position.set(x - 7, y + 16, 10); sun.target.position.set(x, y, 0); sun.target.updateMatrixWorld();
       renderer.setRenderTarget(rt); renderer.render(scene, cam); if (first) { renderer.shadowMap.autoUpdate = false; first = false; } // (shadow shaders only need one pass)
     }
-    G.warmed = (G.warmed || 0) + 1;
+    // (build 29) then draw EVERY object in the world once (things only shown when near, fur, far-away characters too),
+    // with wide straight-on cameras over the outdoor world, the house, the castle rooms and the underground, so no
+    // first-time drawing (driver setup, texture and shape uploads) is left for the middle of play
+    // (only ONE of each kind of hidden thing is shown for it: the driver's setups depend on the kind, not the number,
+    //  and drawing every far tree at once made loading much longer on slow devices)
+    const sig = o => { const k = []; o.traverse(q => { if (q.isMesh) k.push(q.material.uuid || '', q.geometry.attributes.uv ? 'u' : '', q.isSkinnedMesh ? 's' : '', q.isInstancedMesh ? 'i' : ''); }); return k.join(','); };
+    const shown = [], kinds = new Set(); for (const it of LOD) if (!it.o.visible) { const k = sig(it.o); if (kinds.has(k)) continue; kinds.add(k); it.o.visible = true; shown.push(it.o); } for (const f of FUR) for (const sh of f.shells) if (!sh.visible) { sh.visible = true; shown.push(sh); }
+    const back = []; if (G.life) for (const a of G.life.agents) if (a.detached) { a.detached.add(a.root); back.push(a); }
+    const oc = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 120);
+    for (const [x0, x1, y0, y1] of /[?&]noortho/.test(location.search) ? [] : [[-25, 120, -14, 16], [120, 260, -2, 16], [260, 430, -2, 22], [995, 1035, -1, 11], [1990, 2045, -1, 14]]) {
+      oc.left = -(x1 - x0) / 2; oc.right = (x1 - x0) / 2; oc.top = (y1 - y0) / 2; oc.bottom = -(y1 - y0) / 2; oc.position.set((x0 + x1) / 2, (y0 + y1) / 2, 40); oc.lookAt((x0 + x1) / 2, (y0 + y1) / 2, 0); oc.updateProjectionMatrix(); oc.updateMatrixWorld();
+      // (shadows too: each kind of shadow-casting thing has its own shadow shader; the sun's shadow box is stretched over the region for this one draw)
+      const sc = sun.shadow.camera, keep = [sc.left, sc.right, sc.top, sc.bottom, sc.far];
+      sun.position.set((x0 + x1) / 2 - 7, y1 + 16, 10); sun.target.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); sun.target.updateMatrixWorld();
+      Object.assign(sc, { left: -(x1 - x0) / 2 - 10, right: (x1 - x0) / 2 + 10, top: (y1 - y0) + 10, bottom: -(y1 - y0) - 10, far: 120 }); sc.updateProjectionMatrix();
+      renderer.shadowMap.needsUpdate = true; renderer.setRenderTarget(rt); renderer.render(scene, oc);
+      [sc.left, sc.right, sc.top, sc.bottom, sc.far] = keep; sc.updateProjectionMatrix();
+    }
+    for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root);
+    G.warmed = (G.warmed || 0) + 1; G.warmMs = Math.round(performance.now() - warmT0);
   } catch (e) { G.warmErr = String(e); }
   renderer.shadowMap.autoUpdate = shadowAuto; renderer.shadowMap.needsUpdate = true;
-  renderer.setRenderTarget(null); rt.dispose(); sun.position.copy(sp); sun.target.position.copy(st); sun.target.updateMatrixWorld();
+  renderer.setRenderTarget(null); if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); sun.position.copy(sp); sun.target.position.copy(st); sun.target.updateMatrixWorld();
 }
 Promise.race([Promise.all([assetsReady, landmarksReady]), new Promise(r => setTimeout(r, 6000))])
   .then(() => compileAll()).then(() => { warmAreas(); begin(); }, begin);
@@ -1047,18 +1102,26 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
     <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
-    <button data-a="reset" class="small">↺ Reset automatic graphics</button></div>`;
+    <button data-a="reset" class="small">↺ Reset automatic graphics</button><button data-a="wipe" class="small danger">🗑️ Start over (erase all progress)</button></div>`;
   document.body.appendChild(pan);
   const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
   const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
   const refresh = () => { pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', +b.dataset.a[1] === learning.tier())); monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; changes by itself if the game runs slowly)${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
-  let holdT = null;
-  btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(holdT); holdT = setTimeout(() => { refresh(); pan.classList.add('show'); }, 900); });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) btn.addEventListener(ev, () => clearTimeout(holdT));
+  // (build 28) iPhone: a long press makes Safari start its own gesture, which CANCELS the touch (pointercancel) even
+  // though the finger is still down. So only a real lift ends the hold; a quick tap shows a small "hold me" hint.
+  let holdT = null, downAt = 0, opened = false;
+  const openPanel = () => { opened = true; refresh(); pan.classList.add('show'); Sound.click && Sound.click(); };
+  const hint = document.createElement('div'); hint.id = 'gearHint'; hint.textContent = '✋ Hold ⚙️ (grown-ups)'; document.body.appendChild(hint);
+  btn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); clearTimeout(holdT); opened = false; downAt = performance.now(); holdT = setTimeout(openPanel, 700); });
+  btn.addEventListener('pointerup', () => { clearTimeout(holdT); if (!opened && performance.now() - downAt < 700) { hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 2200); } });
+  btn.addEventListener('contextmenu', e => e.preventDefault());
   pan.addEventListener('pointerdown', e => e.stopPropagation());
   pan.addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return; const a = b.dataset.a;
     if (a === 'close') pan.classList.remove('show');
+    if (a === 'wipe') { // two taps, so it can't happen by accident
+      if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '⚠️ Tap again to erase everything'; setTimeout(() => { b.dataset.armed = ''; b.textContent = '🗑️ Start over (erase all progress)'; }, 4000); return; }
+      G.erasing = true; try { localStorage.removeItem(SAVE_KEY); } catch (err) { } location.reload(); return; }
     if (/^t[123]$/.test(a)) { learning.setTier(+a[1]); refresh(); }
     if (a === 'voice') { if (!Sound.on) setSound(true); voice.unlock(); voice.speak('Hello! Can you hear me? Let\'s play and learn!'); setTimeout(() => { info.textContent = 'Voice: ' + perfMon.voiceLine(); }, 2500); }
     if (a === 'mon') { perfMon.show(!perfMon.isShown()); refresh(); }
@@ -1076,4 +1139,27 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
       finally { Sound.on = was; started = wasStarted; block.classList.remove('show'); refresh(); pan.classList.add('show'); }
     }
   });
+}
+
+// ---------------- build 29: the picture map (fast travel) and the one-tap home button ----------------
+// Big pictures only: tap one and you are there (with a sparkle and its name spoken). 🏠 always takes you home.
+const TRAVEL = [['🏠', 'home', 190], ['🎪', 'the Playhouse', 8], ['🎨', 'the Studio', 62], ['🔬', 'the Wonder Lab', 100], ['🎡', 'the Adventure Park', 160], ['🏰', 'the castle', 398], ...expansion.districts.map(d => [d.icon === '🔬' ? '🚀' : d.icon, d.name, d.home])];
+function travel([icon, name, x]) {
+  const P = player; if (P.ride && P.ride.type === 'kart') parkKart(); if (P.ride && P.ride.type === 'train') train.hopOff();
+  P.ride = null; P.stair = null; P.layer = ''; P.x = x; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.groundZ = 0; P.swim = false;
+  expansion.buildNow(x); snapCamera(); world.flash = 1; Sound.twinkle(); Sound.chime(); burst(x, 1.5, 0, ['#fff', '#ffe36e', '#9fe6ff'], 24, 3);
+  toast(`${icon} Welcome to ${name}!`); saveSoon();
+}
+{
+  const left = document.createElement('div'); left.id = 'upperLeft';
+  left.innerHTML = '<button class="pill" id="mapBtn" aria-label="map">🗺️</button><button class="pill" id="homeBtn" aria-label="go home">🏠</button>';
+  $('top').insertBefore(left, $('top').firstChild);
+  const mp = document.createElement('div'); mp.id = 'mapPanel';
+  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => `<button class="mpT" data-i="${i}">${t[0]}</button>`).join('')}</div></div>`;
+  document.body.appendChild(mp);
+  const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
+  tapEl($('mapBtn'), () => { if (G.activityOpen) return; const P = player, here = P.layer === '' ? TRAVEL.reduce((b, t, i) => Math.abs(t[2] - P.x) < Math.abs(TRAVEL[b][2] - P.x) ? i : b, 1) : -1; mp.querySelectorAll('.mpT').forEach((b, i) => b.classList.toggle('here', i === here)); mp.classList.add('show'); Sound.click(); voice.speak('Where do you want to go? Tap a picture!'); });
+  tapEl(mp.querySelector('.mpX'), () => { mp.classList.remove('show'); Sound.click(); });
+  mp.querySelectorAll('.mpT').forEach(b => tapEl(b, () => { mp.classList.remove('show'); travel(TRAVEL[+b.dataset.i]); }));
+  tapEl($('homeBtn'), () => { if (G.activityOpen) return; travel(TRAVEL[0]); });
 }
