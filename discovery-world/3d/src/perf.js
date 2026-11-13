@@ -41,7 +41,7 @@ export function initPerf(o) {
   function show(on) { shown = on; box.style.display = on ? 'block' : 'none'; if (on) ui(); try { localStorage.setItem('ddw3-perfbox', on ? '1' : '0'); } catch (e) { } }
   try { if (localStorage.getItem('ddw3-perfbox') === '1' || /[?&]perf/.test(location.search)) show(true); } catch (e) { }
 
-  function voiceLine() { const v = G.voice && G.voice.diag; if (!v) return 'n/a'; return `${v.supported ? 'supported' : 'NOT supported'}, ${v.voices} voices, using ${v.voice}, unlocked ${v.unlocked ? 'yes' : 'no'}, sentences started ${v.started} / finished ${v.ended}${v.errors.length ? ', errors: ' + v.errors.join(', ') : ''}`; }
+  function voiceLine() { const v = G.voice && G.voice.diag; if (!v) return 'n/a'; return `${v.supported ? 'supported' : 'NOT supported'}, sound ${G.soundOn && G.soundOn() ? 'on' : 'OFF'}, ${v.voices} voices, using ${v.voice}, unlocked ${v.unlocked ? 'yes' : 'no'}, sentences started ${v.started} / finished ${v.ended}${v.errors.length ? ', errors: ' + v.errors.join(', ') : ''}`; }
   // ---------- the repeatable test ----------
   let report = '';
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -77,7 +77,7 @@ export function initPerf(o) {
       `Dawson's World performance test (build 26) — ${new Date().toLocaleString()}`,
       `Device: ${ua}`,
       `Screen: ${e.css} CSS px, device pixel ratio ${e.dpr}; rendering ${e.res} px (scale ${e.pr}); GPU: ${gpu}; CPU cores: ${navigator.hardwareConcurrency || '?'}`,
-      `Graphics: level ${e.level} of 5${e.lite ? ' (lite effects)' : ''}, shadows ${e.shadow} px, post-processing ${e.post ? 'on' : 'off'}; JS memory: ${e.mem}`,
+      `Graphics: level ${e.level} of 5${e.lite ? ' (lite effects)' : ''}, frame work ${G.gfx ? G.gfx.work.toFixed(1) : '?'} ms, shadows ${e.shadow} px, post-processing ${e.post ? 'on' : 'off'}; JS memory: ${e.mem}`,
       `Start-up: playable after ${G.startupMs ? (G.startupMs / 1000).toFixed(1) + ' s' : '?'}`,
       ...results.map(r => '• ' + r),
       `Whole session so far: ${all.fps} fps avg, 1% low ${all.low1} fps, worst frame ${Math.round(st.worst)} ms, frames over 100 ms: ${st.spikes100}, freezes over 250 ms: ${st.freezes.length ? st.freezes.join(', ') + ' ms' : 'none'}`,

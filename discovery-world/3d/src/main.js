@@ -142,7 +142,7 @@ function updateCounters() {
 let creature = null;
 // soft contact shadow on the ground under the creature (shrinks and fades as it jumps)
 const shadowMat = new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true, depthWrite: false, opacity: 1, polygonOffset: true, polygonOffsetFactor: -4 });
-const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; scene.add(blob);
+const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; blob.userData.dynamic = true; /* (build 33: it follows you; never part of a scenery slice) */ scene.add(blob);
 function groundUnder(x, y) { let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
@@ -424,7 +424,7 @@ DOORS.forEach(d => { d.sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map:
 function nearDoor() { const P = player; if (P.ride || P.stair) return null; return DOORS.find(d => d.layer === P.layer && Math.abs(P.x - d.x) < 1.6 && Math.abs(P.y - d.y) < .3); }
 
 // ---------------- hint arrow (picture-only guidance) ----------------
-const hint = new THREE.Group(); scene.add(hint);
+const hint = new THREE.Group(); hint.userData.dynamic = true; scene.add(hint); // (build 33: it moves to whatever you can use; never part of a scenery slice)
 { const c = new THREE.Mesh(new THREE.ConeGeometry(.28, .55, 20), toy('#ffd84a', { em: '#ffb000', ei: .5 })); c.rotation.x = Math.PI; hint.add(c); const r = new THREE.Mesh(new THREE.TorusGeometry(.3, .07, 10, 24), toy('#ff6fae', { em: '#ff6fae', ei: .4 })); r.position.y = .45; r.rotation.x = Math.PI / 2; hint.add(r); }
 function updateHint(t) {
   const P = player; let best = null, bd = 13;
@@ -747,7 +747,7 @@ function saveSoon() { saveTimer = 1.2; }
 function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, dinoEggs: world.dinoEggs };
+    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -777,6 +777,7 @@ function restore(d) {
   world.sparkle = d.sparkle === true;
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
   if (d.crown === true) world.crown = true;
+  if (d.wand === true) world.wand = true; // (build 33)
   if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
   if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, EXP.x1 - 2) : d.x < -6 ? clamp(d.x, EXP.xMin + 2, -6) : clamp(d.x, .5, 301); // (build 29: you can also wake up in the new neighbourhoods)
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
@@ -835,8 +836,8 @@ if (!needPortraits) applyPortraits();
 // It only steps down after SUSTAINED slowness (about 2.5 s under ~48 fps, and at least 4 s between changes), steps
 // back up after 30 s of smooth play, never retries a level that failed in the last minute, and ignores a steady
 // 30 fps cap (iPhone Low Power Mode), which is not lag. The level is remembered on the device.
-const GFX_KEY = 'ddw3-gfx-b26', QMAX = quality, SM0 = sun.shadow.mapSize.x;
-const gfx = { level: 0, since: 0, slow: 0, fast: 0, failed: -1, failedAt: -1e9, var: 0, changes: [] }; G.gfx = gfx;
+const GFX_KEY = 'ddw3-gfx-b33', /* (build 33: a new key, so a level that got stuck at the lowest in an older build is forgotten) */ QMAX = quality, SM0 = sun.shadow.mapSize.x;
+const gfx = { level: 0, since: 0, slow: 0, fast: 0, cap: 0, work: 4, failed: -1, failedAt: -1e9, var: 0, changes: [] }; G.gfx = gfx;
 let shadowEvery = 2;
 function applyGfx(L, why) {
   L = Math.max(0, Math.min(5, L)); const prev = gfx.level; gfx.level = L; gfx.since = 0; gfx.slow = gfx.fast = 0;
@@ -853,6 +854,10 @@ function adapt(dt) {
   if (ema > 1 / 48 && !capped30) { gfx.fast = 0; gfx.slow += dt;
     if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); } }
   else { gfx.slow = Math.max(0, gfx.slow - dt * .5);
+    // (build 33) a steady 30 fps cap (iPhone Low Power Mode) hides how much headroom there is. If each frame's own work is
+    // small (well under the 33 ms the cap allows) for 20 s, step the picture quality back UP a level. A level that then
+    // makes frames uneven is caught by the slow check above, which steps back down and won't retry it for a minute.
+    if (capped30 && gfx.work < 9 && gfx.level > 0 && !(gfx.failed === gfx.level - 1 && performance.now() - gfx.failedAt < 60000)) { gfx.cap += dt; if (gfx.cap > 20) { gfx.cap = 0; applyGfx(gfx.level - 1, 'room to spare at 30 fps'); } } else gfx.cap = 0;
     if (ema < 1 / 57) { gfx.fast += dt; if (gfx.fast > 30 && gfx.level > 0 && !(gfx.failed === gfx.level - 1 && performance.now() - gfx.failedAt < 60000)) applyGfx(gfx.level - 1, 'smooth'); } else gfx.fast = 0; }
 }
 
@@ -869,6 +874,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
+  const frameT0 = performance.now();
   { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
@@ -895,7 +901,7 @@ function frame() {
   renderer.shadowMap.needsUpdate = (++shadowTick % shadowEvery) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
   renderer.info.reset(); // (build 26: count every pass of the frame, not just the last one)
   if (post.enabled) post.render(); else renderer.render(scene, camera);
-  if (!TEST && !/[?&]hq/.test(location.search)) adapt(raw);
+  if (!TEST && !/[?&]hq/.test(location.search)) { gfx.work += (performance.now() - frameT0 - gfx.work) * .05; adapt(raw); }
   requestAnimationFrame(frame);
 }
 
@@ -989,6 +995,7 @@ function sliceScenery() {
     g.add(o); // (the scene has no transform, so the object stays exactly where it is)
   }
   G.sliced = slices.reduce((n, g) => n + g.children.length, 0);
+  G.slices = slices;
 }
 G.unslice = o => { if (o && o.parent && o.parent.userData.slice) scene.attach(o); }; // (something that starts to follow you leaves its slice)
 function updateSlices() { for (const g of slices) { const near = Math.abs(g.userData.x - camT.x) < 52; if (near && !g.parent) scene.add(g); else if (!near && g.parent) scene.remove(g); } }
@@ -1094,7 +1101,7 @@ window.__DDW3 = {
 // monitor on/off, runs the repeatable Performance Test and copies its report to the clipboard.
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
-G.doAction = doAction;
+G.doAction = doAction; G.soundOn = () => Sound.on;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
