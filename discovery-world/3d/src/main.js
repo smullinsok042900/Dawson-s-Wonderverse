@@ -758,7 +758,7 @@ function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
-  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
+  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
   world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
@@ -820,13 +820,49 @@ const post = makePost(renderer, scene, camera, { mobile: MOBILE }); post.enabled
 // stretched it sideways ("squished"). A cheap check every frame also catches any size change that sent no event.
 let sizeW = 0, sizeH = 0;
 function screenSize() { const r = canvas.getBoundingClientRect(); return [Math.round(r.width) || innerWidth, Math.round(r.height) || innerHeight]; }
-function resize() {
-  const [w, h] = screenSize(), dpr = Math.min(devicePixelRatio || 1, 2) * quality; sizeW = w; sizeH = h;
-  renderer.setPixelRatio(Math.max(.75, dpr)); renderer.setSize(w, h, false);
-  camera.aspect = w / h; camera.updateProjectionMatrix();
-  post.setSize(w, h, renderer.getPixelRatio());
+// (build 36) ONE GAME FOR EVERY SCREEN. What kind of device this is (for sensible defaults only; the measured frame
+// times still decide the quality): iPadOS reports itself as a Mac, so a Mac with a touch screen is an iPad.
+const DEV = (() => { const ua = navigator.userAgent, ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1), ios = /iPhone|iPod/.test(ua) || ipad, android = /Android/.test(ua);
+  const short = Math.min(screen.width || innerWidth, screen.height || innerHeight), tablet = ipad || (android && !/Mobile/.test(ua)) || (MOBILE && short >= 600);
+  const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches));
+  return { ios, android, ipad, tablet, phone: MOBILE && !tablet, standalone, kind: tablet ? 'tablet' : MOBILE ? 'phone' : 'desktop' }; })();
+G.DEV = DEV;
+// FULL SCREEN where the browser allows it (Android Chrome, iPad Safari, desktop). An iPhone's Safari does not allow it
+// for a game (only for videos): there the Home Screen app is the full-screen way to play. Never needed when already
+// running as an installed app. Turning the screen sideways is locked only where the browser allows that (in full screen).
+function fsAvailable() { const d = document; return !DEV.standalone && !!(d.fullscreenEnabled || d.webkitFullscreenEnabled) && !(d.fullscreenElement || d.webkitFullscreenElement); }
+function goFullscreen() {
+  const el = document.documentElement, rq = el.requestFullscreen || el.webkitRequestFullscreen; if (!rq) return;
+  const lock = () => { try { const o = screen.orientation; if (o && o.lock) o.lock('landscape').catch(() => { }); } catch (e) { } };
+  try { const p = rq.call(el, { navigationUI: 'hide' }); if (p && p.then) p.then(lock, () => { }); else lock(); } catch (e) { }
 }
-function checkSize() { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
+G.goFullscreen = goFullscreen;
+// A PIXEL BUDGET: high-density screens (an iPad is about 2700×2000 real pixels) would make the graphics chip draw several
+// times more pixels than a phone for a picture nobody can tell apart at arm's length. The picture is drawn at most at this
+// many pixels and scaled up smoothly; phones are already under it, so they look exactly as before.
+const PIX_BUDGET = TEST ? 1e9 : DEV.phone ? 1.0e6 : DEV.tablet ? 1.6e6 : 3.0e6;
+let budgetScale = 1; // (the Performance mode lowers it)
+// The 3D CAMERA follows the screen's shape: the view was tuned for a wide phone (about 2:1). On a squarer screen
+// (an iPad is 4:3) a fixed vertical angle would show much less of the world to the sides, so it would look zoomed in.
+// The angle opens up (part of the way) to keep the sides in view, so the framing feels the same on every device.
+const FOV0 = 38, ASPECT0 = 1.95;
+function fovFor(a) { return a >= ASPECT0 ? FOV0 : THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(FOV0 / 2)) * Math.pow(ASPECT0 / Math.max(.5, a), .75))); }
+// The buttons scale with the screen: bigger on a tablet (up to 1.35×), but NEVER smaller than normal on a phone, so every
+// button stays at least 44 px for small fingers. (A narrow phone wraps the top buttons onto two rows instead: style.css.)
+function uiScale(w, h) { return Math.max(1, Math.min(1.35, Math.min(h / 390, w / 720))); }
+function resize() {
+  const [w, h] = screenSize(); sizeW = w; sizeH = h;
+  const want = Math.min(devicePixelRatio || 1, 2) * quality, cap = Math.sqrt(PIX_BUDGET * budgetScale / Math.max(1, w * h));
+  renderer.setPixelRatio(Math.max(.6, Math.min(want, cap))); renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.fov = fovFor(camera.aspect); camera.updateProjectionMatrix();
+  post.setSize(w, h, renderer.getPixelRatio());
+  document.documentElement.style.setProperty('--ui', uiScale(w, h).toFixed(3));
+}
+// (build 36) the browser tells us when the canvas changes size (ResizeObserver: no cost per frame); as a safety net the
+// size is also compared twice a second (reading it every frame could force the page layout to be redone each frame).
+let sizeCheckAt = 0;
+function checkSize(now) { if (now - sizeCheckAt < 500) return; sizeCheckAt = now; const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
+if (window.ResizeObserver) try { new ResizeObserver(() => { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }).observe(canvas); } catch (e) { }
 addEventListener('resize', resize); addEventListener('orientationchange', () => { resize(); setTimeout(resize, 300); setTimeout(resize, 1000); });
 if (window.visualViewport) visualViewport.addEventListener('resize', resize);
 resize();
@@ -856,8 +892,21 @@ function applyGfx(L, why) {
 }
 if (!TEST && !/[?&]hq/.test(location.search)) { try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Number.isFinite(g.level)) applyGfx(g.level); else if (MOBILE) applyGfx(1); } catch (e) { } } // (build 28: a phone starts on lighter shadows, so lag never comes first)
 G.applyGfx = applyGfx; G.resetGfx = () => { applyGfx(MOBILE ? 1 : 0); gfx.changes.push('reset'); gfx.failed = -1; };
+// (build 36) GRAPHICS MODE for grown-ups (⚙️): Auto (the measured frame times choose, as before), or a fixed choice:
+// Quality (best picture), Balanced, Performance (smallest picture and shadows, for older or warm devices).
+const GFX_MODES = { auto: null, quality: 0, balanced: 2, performance: 5 }, MODE_KEY = 'ddw3-gfxmode';
+gfx.mode = 'auto';
+function setGfxMode(m, save = true) {
+  if (!(m in GFX_MODES)) m = 'auto'; gfx.mode = m; budgetScale = m === 'performance' ? .6 : 1;
+  if (m === 'auto') { let L = MOBILE ? 1 : 0; try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Number.isFinite(g.level)) L = g.level; } catch (e) { } applyGfx(L); }
+  else applyGfx(GFX_MODES[m]);
+  gfx.changes.push('mode ' + m); if (save) try { localStorage.setItem(MODE_KEY, m); } catch (e) { }
+}
+if (!TEST && !/[?&]hq/.test(location.search)) { try { const m = localStorage.getItem(MODE_KEY); if (m && m !== 'auto') setGfxMode(m, false); } catch (e) { } }
+G.setGfxMode = setGfxMode;
 function adapt(dt) {
   ema += (dt - ema) * .05; gfx.var += ((dt - ema) * (dt - ema) - gfx.var) * .05; gfx.since += dt;
+  if (gfx.mode !== 'auto') return; // (a fixed graphics mode chosen by a grown-up)
   const capped30 = ema > .029 && ema < .037 && Math.sqrt(gfx.var) < .004; // a steady 30 fps cap is not lag
   if (ema > 1 / 48 && !capped30) { gfx.fast = 0; gfx.slow += dt;
     if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); } }
@@ -882,7 +931,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
-  const frameT0 = performance.now(); checkSize();
+  const frameT0 = performance.now(); checkSize(frameT0);
   { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
@@ -922,8 +971,8 @@ friends.restored(); meadow.restored(); karts.rebuildPreview(); expansion.restore
 updateCounters(); snapCamera(); updateBits(0);
 // (build 9: arrow buttons are back, so there is no drag hint)
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
-$('playBtn').addEventListener('click', () => { Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
-addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+$('playBtn').addEventListener('click', () => { if (MOBILE && !TEST && fsAvailable()) goFullscreen(); /* (build 36: a phone or tablet in the browser plays full screen where allowed) */ Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
+addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); /* (build 36: iPhone may not send 'blur' when the app is switched away: let go of every button, so nothing is stuck when she comes back) */ if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; padPointer = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); } else resize(); });
 // (build 24) the lamps of the house and the underground: a FIXED pool of 3 point lights that is always in the scene.
 // Switching lights on and off (build 22) changed the number of lights, which forces every material in the game to
 // recompile its shader: that was the freeze when entering the house. Now the light count never changes; the pool
@@ -1118,11 +1167,13 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
     <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
+    <div class="ppTier ppMode">Graphics: <button data-a="m-auto">Auto</button><button data-a="m-quality">Quality</button><button data-a="m-balanced">Balanced</button><button data-a="m-performance">Performance</button></div>
+    <button data-a="full" class="small fsOnly">⛶ Full screen</button>
     <button data-a="reset" class="small">↺ Reset automatic graphics</button><button data-a="wipe" class="small danger">🗑️ Start over (erase all progress)</button></div>`;
   document.body.appendChild(pan);
   const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
   const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
-  const refresh = () => { pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', +b.dataset.a[1] === learning.tier())); monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; changes by itself if the game runs slowly)${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
+  const refresh = () => { pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', /^m-/.test(b.dataset.a) ? b.dataset.a === 'm-' + (G.gfx || {}).mode : +b.dataset.a[1] === learning.tier())); pan.querySelector('.fsOnly').style.display = fsAvailable() ? '' : 'none'; monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; ${g.mode === 'auto' ? 'changes by itself if the game runs slowly' : 'fixed: ' + g.mode}) · ${DEV.kind}${DEV.ios ? ' (Apple)' : DEV.android ? ' (Android)' : ''}${DEV.standalone ? ', Home Screen app' : ''} · picture ${canvas.width}×${canvas.height}${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
   // (build 28) iPhone: a long press makes Safari start its own gesture, which CANCELS the touch (pointercancel) even
   // though the finger is still down. So only a real lift ends the hold; a quick tap shows a small "hold me" hint.
   let holdT = null, downAt = 0, opened = false;
@@ -1139,9 +1190,11 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
       if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = '⚠️ Tap again to erase everything'; setTimeout(() => { b.dataset.armed = ''; b.textContent = '🗑️ Start over (erase all progress)'; }, 4000); return; }
       G.erasing = true; try { localStorage.removeItem(SAVE_KEY); } catch (err) { } location.reload(); return; }
     if (/^t[123]$/.test(a)) { learning.setTier(+a[1]); refresh(); }
+    if (/^m-/.test(a)) { setGfxMode(a.slice(2)); refresh(); }
+    if (a === 'full') { goFullscreen(); pan.classList.remove('show'); }
     if (a === 'voice') { if (!Sound.on) setSound(true); voice.unlock(); voice.speak('Hello! Can you hear me? Let\'s play and learn!'); setTimeout(() => { info.textContent = 'Voice: ' + perfMon.voiceLine(); }, 2500); }
     if (a === 'mon') { perfMon.show(!perfMon.isShown()); refresh(); }
-    if (a === 'reset') { try { localStorage.removeItem('ddw3-gfx-b26'); } catch (err) { } if (G.resetGfx) G.resetGfx(); refresh(); }
+    if (a === 'reset') { try { localStorage.removeItem(GFX_KEY); localStorage.removeItem(MODE_KEY); } catch (err) { } gfx.mode = 'auto'; budgetScale = 1; if (G.resetGfx) G.resetGfx(); refresh(); }
     if (a === 'copy') {
       const txt = perfMon.report() || 'No test has been run yet. Press ▶ Performance Test first.';
       let ok = false; try { await navigator.clipboard.writeText(txt); ok = true; } catch (err) { }
@@ -1193,9 +1246,12 @@ function trainArrived(i) {
   document.body.appendChild(strip);
   strip.querySelectorAll('.tsT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; train.goTo(+b.dataset.i); Sound.click(); }));
   let shown = false, lastAt = -1;
+  // (build 36) the strip starts just below the top buttons, however tall they are (on a narrow phone they wrap onto two rows)
+  const placeStrip = () => { let b = 0; for (const el of document.querySelectorAll('#upperLeft, #upperRight')) b = Math.max(b, el.getBoundingClientRect().bottom); strip.style.top = Math.round(b + 6) + 'px'; };
+  G.placeTrainStrip = placeStrip; addEventListener('resize', () => { if (shown) placeStrip(); });
   G.updateTrainStrip = () => {
     const P = player, T = train.state, show = !!(P.ride && P.ride.type === 'train' && T.mode === 'driving' && T.dest < 0 && Math.abs(T.vs) < .05);
-    if (show !== shown) { shown = show; strip.classList.toggle('show', show); if (show) voice.speak('Where shall we go? Tap a picture!'); }
+    if (show !== shown) { shown = show; if (show) placeStrip(); strip.classList.toggle('show', show); if (show) voice.speak('Where shall we go? Tap a picture!'); }
     if (show && T.at !== lastAt) { lastAt = T.at; strip.querySelectorAll('.tsT').forEach((b, i) => b.classList.toggle('here', i === T.at)); }
   };
 }

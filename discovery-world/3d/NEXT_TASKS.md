@@ -7,6 +7,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - **iPhone report #2:** ask for the in-game ⚙️ → Performance Test → Copy Test Results, with Low Power Mode off, after
   tapping "Test the voice". It shows whether the graphics level recovers (build 33), the real frame rate, and whether speech plays.
 - **Confirm the squish fix (build 34b)** on the iPhone Home Screen app after turning the phone.
+- **Real-device check of build 36** on the iPhone (and any iPad or Android device the family has): buttons, panels, framing, full screen on Android/iPad, the ⚙️ graphics modes. Emulation passed 10/10, but that is not a real device.
 
 ## 1. Performance first (the game must not get slower)
 - **Loading:** about 27 s on the software-rendering test machine (`tests/perf/ba.cjs`). Most of it is the whole-world draw
@@ -15,10 +16,11 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
   - more instancing for repeated park props;
   - low-detail versions of far creatures;
   - fewer fur shells on far creatures.
-- **Castle:** 351 draw calls (the most); merge static castle parts that share a material.
+- **Castle:** the most draw calls (351–543, depending on what wanders into view). Run `tests/perf/calls.cjs index.html 396` to see which objects cost the most, then merge static castle parts that share a material.
+- **A 50–55 ms long task at x ≈ 460** on the train trip to 🌈 (Adventure Trail streaming?). Seen in builds 33 and 35.
 
 ## 2. World expansion (streamed districts in `src/expansion.js`)
-- **New regions to the left** (x < -404): an ocean pier, a farm, rainbow mountain. Each needs:
+- **New regions to the left** (x < -536; the 🚜 farm is done in build 35): an ocean pier, rainbow mountain, a dinosaur jungle. Each needs:
   - a train station (extend `TRAIN.x0` and `STATIONS`);
   - a map picture;
   - gems;

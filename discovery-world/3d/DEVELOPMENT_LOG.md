@@ -4,6 +4,58 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 36 — one game for every phone and tablet (Apple and Android)
+- **Screen fitting:**
+  - The picture is drawn at the canvas's real on-screen size: no stretching (build 34b), with a ResizeObserver plus a twice-a-second safety check.
+  - **Camera:** on screens squarer than about 2:1 (iPads are 4:3), the vertical view angle opens part of the way (38° → about 47–49°), so the sides stay in view instead of looking zoomed in. Phones are unchanged.
+  - **Pixel budget:** the picture is drawn at no more than 1.0 M pixels on phones, 1.6 M on tablets and 3 M on desktops (Performance mode: 60% of that). Phones are already under it; dense tablet screens no longer draw 2–3× a phone's pixels.
+- **Interface:**
+  - `--ui` scale: 1 on phones (never smaller), up to 1.35 on tablets. Controls use transforms, so the arrow pad's direction maths still works.
+  - Top buttons are at least 46 px. On narrow phones the right-hand group wraps onto a second row instead of running off the screen.
+  - The 🗺️ and 🐾 panels size their tiles from the screen's width and height and wrap; the grown-ups' panel, title card and memory cards fit short screens.
+  - The title label is hidden on touch screens (the bigger tablet buttons covered it).
+  - The station strip wraps instead of scrolling (pictures past the edge were unreachable by touch) and opens below the top buttons.
+  - The "turn me sideways" picture shows on every touch screen held upright, including tablets.
+- **Platform:**
+  - Full screen and a landscape lock where the browser allows them (Android Chrome, iPad Safari; not iPhone Safari, where the Home Screen app is the full-screen way). PLAY asks for full screen on touch devices in a browser tab; there is a ⛶ button in ⚙️.
+  - Sound resumes after a call or an app switch on iPhone (the 'interrupted' state).
+  - Every button is released when the app is hidden.
+  - Device detection: iPad (which reports itself as a Mac), Android tablet vs phone, Home Screen app.
+- **⚙️ Graphics:** Auto (measured frame times, as before) or a fixed Quality, Balanced or Performance mode, remembered on the device.
+- **Verified (desktop Chromium emulation only — real iPhones, iPads and Android devices still need testing):**
+  - `tests/devices.cjs` covers 10 screens: iPhone SE, iPhone 15, iPhone 15 Pro Max, iPad 7, iPad Pro 11, Pixel 5, Galaxy S9+, Galaxy Tab S4, a 640×360 Android and a 21:9 Android. **10/10 pass:**
+    - the picture fills the screen unstretched;
+    - every button is on screen, at least 45 px, with no overlaps;
+    - the map, pets and station panels fit, including next to the top buttons;
+    - holding ▶ walks, letting go stops, and JUMP jumps;
+    - held upright, the "turn sideways" picture shows.
+    - The first run found real phone problems (buttons 34–42 px, ⚙️ off screen on narrow phones); those were fixed. Looking at the screenshots found two more (the covered title label on tablets, the strip covering the second button row); those were fixed and the test now checks them.
+  - `tests/perf/ba.cjs` 35 → 36, side by side: script ms/frame park 14.3 → 10.0, creatures 16.1 → 8.2, castle 12.9 → 12.2 (run-to-run noise is about ±4 ms on this machine); 0 long tasks; programs 101; memory unchanged.
+
+## Checkpoint: build 35 — 🚜 Happy Farm
+- **New region: 🚜 Happy Farm** (x -536 to -404, left of Frosty Peaks). Streamed like the other districts, with shared materials only. 11 picture-only activities:
+  - **Barn:** the doors open and an animal says hello (horse, cow, goat, sheep, rooster, with its sound and name).
+  - **Hen:** lays eggs; count to five and the chicks hatch.
+  - **Rainbow sheep:** her wool changes colour and she says the colour.
+  - **Haystack:** climb the bales and bounce on top; gem g15 floats above it.
+  - **Vegetable patch:** seed → sprout → carrot → pull it up, and count.
+  - **Apple tree:** apples drop into the basket; count to five.
+  - **Windmill:** tap it to make it spin.
+  - **Duck pond:** the ducklings follow their mother in a line.
+  - **Toy tractor:** drives across the field and back.
+  - **Mud puddle with piglets,** and cows mooing in the field.
+  - **Gem g16** at the end of the path.
+- **New pal: Truffle the piglet 🐷.** Three taps to befriend; follows you; appears in 🐾. The save accepts the new `pig` key.
+- **Train:** the line is extended to x -534 with a 🚜 station (19 stations). The map gets 🚜 automatically from `DISTRICTS`.
+- **Ground:** a lawn zone, the cobble path, the front rail and a few trees behind the fields.
+- **Bug fixed:** Frosty Peaks' falling snow followed you onto the farm. It now only falls in Frosty Peaks.
+- **Test fix:** the first walking check now waits for frames to settle. It failed once (1.9 m vs. more than 2) in the first seconds after start-up on the slow test machine.
+- **Verified (desktop, software rendering):**
+  - Walking into the farm from Frosty Peaks: 0 long tasks; shader programs 101 → 101; 90 draw calls, 270k triangles.
+  - `tests/perf/ba.cjs` 34c → 35: script ms/frame unchanged (park 13.5 → 13.7, creatures 11.9 → 11.4, castle 13.2 → 14.0, all within run-to-run noise); 0 long tasks everywhere; memory 121 → 122 MB, programs 101 → 101.
+  - Train to 🚜: whole line arrives, 19 picture tiles, 0 frames near an unbuilt district.
+  - Screenshots of the barn, pigs, sheep, windmill and tractor look right.
+
 ## Checkpoint: build 34c (user request)
 - **Removed the big pink wall** at x -1.5, by the train at the start of the playhouse (requested with a screenshot). It was the old left edge of the world. The world now continues left and the train runs through there, so it only blocked the view.
   - It was scenery only (no collision, nothing referenced it).

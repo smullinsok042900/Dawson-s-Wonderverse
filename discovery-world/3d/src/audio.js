@@ -6,7 +6,7 @@ export const Sound = {
     if (!this.on || !this.unlocked) return null;
     try {
       this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)();
-      if (this.ac.state === 'suspended') this.ac.resume();
+      if (this.ac.state !== 'running' && this.ac.state !== 'closed') this.ac.resume(); // (build 36: iPhone uses 'interrupted' after a call or the app was in the background, not only 'suspended')
       if (!this.noiseBuf) {
         const len = this.ac.sampleRate * .6, buf = this.ac.createBuffer(1, len, this.ac.sampleRate), d = buf.getChannelData(0);
         for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;

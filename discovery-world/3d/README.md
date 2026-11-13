@@ -37,6 +37,43 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 36: fits every phone and tablet (Apple and Android)
+
+- The game **measures the screen** and adapts to it:
+  - the picture is never stretched or cut off;
+  - the camera keeps the same comfortable framing on a wide phone and a square-ish iPad;
+  - buttons are always at least finger-sized (bigger on tablets) and stay clear of notches and rounded corners;
+  - on a narrow phone, the top buttons use two rows instead of running off the screen.
+- **Panels fit every screen:** map, pets and train stations. The station pictures now all show at once; on a phone some used to be off the edge and unreachable.
+- **Hold it sideways:** every phone and tablet held upright shows the friendly "turn me" picture.
+- **Full screen:**
+  - On Android phones and tablets (Chrome) and on iPads, the game goes full screen when you press PLAY, where the browser allows it.
+  - On an iPhone, Safari doesn't allow that for games: add the game to the Home Screen to play full screen.
+- **Speed:**
+  - Very sharp tablet screens no longer make the graphics chip draw two to three times as many pixels as a phone.
+  - Grown-ups can choose Auto, Quality, Balanced or Performance in ⚙️.
+- **Sound and buttons:** sound comes back after a phone call, and no button stays stuck after switching apps.
+- **Tested:** on 10 emulated screens (small, typical and large iPhones, two iPads, three Android phones, an Android tablet, an extra-wide phone). This is not the same as real devices, which still need checking.
+
+## 3D build 35: 🚜 Happy Farm
+
+- **A new area: the Happy Farm,** past Frosty Peaks at the far left end of the world. The train goes there (🚜 station), and it is on the 🗺️ map.
+- **11 things to do,** with no reading needed:
+  - a barn where animals pop out and say hello;
+  - a hen whose eggs you count (and chicks hatch);
+  - a rainbow sheep that says her colour;
+  - a haystack to climb and bounce on;
+  - carrots to plant, grow and pull up;
+  - an apple tree to count apples from;
+  - a spinning windmill;
+  - a duck family;
+  - a tractor that drives;
+  - muddy piglets;
+  - cows.
+- **2 more gems** (16 in all).
+- **A new pet: Truffle the piglet 🐷.** Tap her three times to make friends.
+- **Speed:** walking into the farm loads no new shaders and causes no stalls, and the rest of the game is as fast as before. Measured on a desktop test computer, not an iPhone.
+
 ## 3D build 34: the express train
 
 - Picture trips on the train to far-away stations now go **express**, up to 36 m/s instead of 20. End to end, the line takes about 42 s instead of about 68 s. Short hops are unchanged.
