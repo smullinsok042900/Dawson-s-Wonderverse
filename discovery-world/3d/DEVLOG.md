@@ -16,7 +16,15 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 4. Desktop results are NOT iPhone results. The real numbers come from the in-game ⚙️ → Performance Test → Copy Test Results.
 5. Before a big change, keep a rollback copy in `../backups/3D_buildNN_index.html`.
 
-## Checkpoint: build 31 (current)
+## Checkpoint: build 32 (current)
+- **Added:**
+  - Bolt the robot, Hoppy the frog and Kiwi the parrot (6 pals in all).
+  - The secret tunnel Woods ↔ Toy Town.
+- **Verified (desktop):** all three befriend and follow; 0 new shaders; the tunnel works both ways and builds the destination on arrival.
+- **Tests:** map and station pictures are found by emoji; Biscuit is tapped from his left.
+- **Full test:** the result is recorded in the commit after this entry.
+
+## Checkpoint: build 31
 
 **Added**
 - **❄️ Frosty Peaks** (x -272 to -404) has 9 activities:
@@ -62,8 +70,8 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 ## Backlog (highest priority first)
 1. **Read the iPhone Performance Test report as soon as it comes in** and fix what it shows (this outranks content).
 2. **Indoor spaces:** a hidden playroom and a toy workshop interior (new layer) with a door in the world, built when entered.
-3. **Shortcuts:** secret tunnels between far regions (e.g. Woods ↔ Lab Gardens), using the streaming and travel code.
-4. **More pets:** one befriendable pal per neighbourhood on the right side (Toy Town, Lab Gardens, Art Plaza).
+3. **Shortcuts:** the first secret tunnel (Woods ↔ Toy Town) is done. Next: more tunnels, and a hidden "tunnel map" picture once one is found.
+4. ~~More pets on the right side~~ (done in build 32). Next: a pal in the Adventure Trail, and pals reacting to each other.
 5. **Creature polish:** idle variety (sitting, sniffing, looking at you), and followers stepping aside when you turn round.
 6. **More regions to the left:** ocean pier, farm, rainbow mountain. Each needs a train station, a map picture, gems and its own unique activities.
 7. **Graphics:** low-detail trees for the far background hills, softer sea shading, nicer station platforms.
