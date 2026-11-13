@@ -82,6 +82,47 @@ Each activity is one tap, one walk or one jump, with a spoken line, a big reacti
 - **Activity count:** this milestone adds 23 world activities. With the existing world toys and the 41 learning games, the game passes 50 distinct things to do. But the expansion's own target of 50 new activities is not reached.
 - **iPhone:** frame rate and loading on a real iPhone have not been measured.
 
+### Build 29b: the freezes found and fixed (before adding any more content)
+
+**Rule from here on:** each expansion is measured against the version before it in identical scenarios, and a regression is fixed before more content is added. The scripts are `ba.cjs` (before/after), `house2.cjs` (stalls at transitions), `walknew.cjs` (stalls on a walk from the valley through the Dino Kingdom and castle into the new area) and `soak.cjs` (60 trips around the whole world).
+
+**Expansion vs the build before it (identical scenarios):**
+- **Start-up:** 17.9 s vs 14.3 s.
+- **Shader programs:** 100 in both.
+- **New neighbourhoods:** 117k–342k triangles and 85–97 draw calls. That is the lightest part of the world; the park is 520k–750k triangles and 180–270 calls.
+- **Map jump into a new neighbourhood:** no stall.
+- **Streaming in while walking:** no stall after the fixes below.
+
+**The freezes were already there before the expansion, and are now fixed.** Long stalls are measured with the browser's long-task timer, on the iPhone screen size and identity, with software rendering:
+
+| Moment | Before | After |
+|---|---|---|
+| Entering the house | 2.8–3.5 s | **0** |
+| Leaving the house | 0.7–0.9 s | **0** |
+| Walking into the Dino Kingdom and past the castle | 4 stalls of 1.0–2.7 s (x 353, 381, 387, 405) | **0** |
+| Upstairs, castle inside, underground | 0 | 0 |
+
+**Causes:**
+1. **Loading rehearsed into the wrong kind of picture buffer.** Loading draws the world once so nothing is drawn for the first time during play. But that rehearsal drew into a small plain buffer, while the game draws into a 4× anti-aliased buffer with a depth texture. The graphics driver (also on iPhone, where WebGL runs on Metal) prepares a separate drawing setup for each kind of buffer. So the real setups were still made on first sight: entering the house froze.
+   - **Fix:** the rehearsal now draws into a tiny buffer of exactly the same kind.
+2. **Only a few spots were rehearsed.** Things that only appear near you (trees, bushes, grass, fur) and creatures that are off the scene because they are far away were drawn for the first time mid-walk, along with their shadow shaders.
+   - **Fix:** loading now draws one of every kind of thing, including its shadow, over the whole world, the house, the castle rooms and the underground.
+3. **Late creature shaders were finished on first draw.** Creatures sculpted in the background arrive after loading. Their shaders were prepared, but the driver only finishes a shader the first time it is used, which was 2 s in the middle of the walk into the Dino Kingdom.
+   - **Fix:** each newly arrived creature is drawn once right away, out of sight (camera layer 5, tiny buffer).
+   - Far-away creatures that are off the scene are now included when shaders are prepared.
+4. **A tap right after travelling could miss a character**, because far characters were only put back on the scene at the next update.
+   - **Fix:** they are put back the moment you arrive.
+
+**Cost:** the extra loading work made loading on the software-rendering test machine about 22–25 s instead of 14 s. That machine has no graphics chip, and an iPhone draws this much faster. The real loading time on the phone is in the in-game report.
+
+**Long session:**
+- **Test:** 6 rounds of travelling to all 10 map places and home (60 trips).
+- **Shapes in graphics memory:** exactly 1,441 every round.
+- **Shader programs:** 101 every round.
+- **Tappable things and PAW points:** constant (105 and 66). Unloaded neighbourhoods leave nothing behind.
+- **JS memory:** 107–117 MB with no upward trend.
+- **Textures:** 156 → 160. These are the shared emoji pictures, made once each, from a fixed set.
+
 ## 3D build 28: about a third less drawing work every frame
 
 **Why:** the game was still laggy. A per-object count of what is drawn each frame, on an iPhone-sized screen, showed where the work goes:
