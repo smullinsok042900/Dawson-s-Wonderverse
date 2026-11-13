@@ -68,6 +68,15 @@ export function terrainH(x, z) {
   return Math.max(0, n * .5 + .5) * 1.25 * zs * m * m;
 }
 
+// ---------- (build 30) beach sand (one 4x4 m tile, repeated; drawn like the lawn, so it shares the lawn's shader) ----------
+let sandCache = null;
+export function sandTextures() {
+  if (sandCache) return sandCache;
+  const N = 256, [c, g] = canvas(N); g.fillStyle = '#efd9a7'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 5000; i++) { g.fillStyle = pick(['#e3c98f', '#f7e6bd', '#d8bd84', '#fff1cf', '#e9cf98']); g.globalAlpha = .55; g.fillRect(rnd() * N, rnd() * N, 1 + rnd() * 2, 1 + rnd() * 2); }
+  g.globalAlpha = .12; for (let i = 0; i < 30; i++) { g.fillStyle = pick(['#d6b97c', '#fff5d6']); g.beginPath(); g.ellipse(rnd() * N, rnd() * N, 20 + rnd() * 40, 6 + rnd() * 10, rnd() * 3, 0, 7); g.fill(); }
+  g.globalAlpha = 1; sandCache = { map: tex(c), normal: tex(normalFromCanvas(c, 1.2), false) }; return sandCache;
+}
 // ---------- lawn grass (one 4x4 m tile, repeated) ----------
 let lawnCache = null;
 export function lawnTextures() {
