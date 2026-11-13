@@ -37,6 +37,64 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 30: the train fixed and running the whole world, a seaside and a forest, and pets to befriend
+
+**Train: problems found in the code and fixed**
+- **A sudden jump when turning round.** To change direction the train moved its whole body 4.5 m in one frame. It now simply drives backwards when it needs to, so it never teleports.
+- **It popped into existence.** When called, it appeared 26 m away even if that spot was on screen. Now, within 40 m it drives over to you; from further away it appears 26 m out, which is off screen.
+- **It didn't go everywhere.** The track ended at the castle (x 422). It now runs the whole world, from x -270 to 904. There are 17 stations, including 5 new ones for the new neighbourhoods (🌉 🧸 🚀 🖍️ 🌈) and 3 to the left (🏖️ 🌲 🦊).
+- **Too hard for a five-year-old.** You had to hold ▶ all the way. Now:
+  - When you sit in the stopped train, a **strip of station pictures** appears.
+  - Tap one and the train **drives itself there**, speeding up and slowing down smoothly at up to 20 m/s, then **you hop off by yourself** onto the platform.
+  - Holding ▶ or ◀ still lets you drive it yourself, and PAW still hops off anywhere.
+- **Wheels and facing.** The wheels turn the right way when going backwards. Your creature and the camera look the way the train is moving.
+- **Less work per frame.** Station bells are only updated while they are swinging.
+
+**Measured (desktop, iPhone screen size, software rendering):**
+- **Full route, home → 🌈 end and back home:** both trips arrived and dropped you off.
+- **Streaming:** the neighbourhoods were built ahead of the train and taken down behind it.
+- **Stalls:** two 50 ms long tasks on the whole route; none on the way back.
+- **No teleports:** the biggest move in one frame was 5 m, which is top speed during one slow test-machine frame.
+- **Calling from far away:** the train appeared 24 m from the camera (off screen).
+
+**The world grows to the LEFT too: two new regions (x -20 to -268)**
+
+| Region | Activities |
+|---|---|
+| 🏖️ Sunny Seaside | an ice cream stand (stack strawberry, vanilla, mint and chocolate scoops, then eat it) · a sandcastle that grows with each tap, until a wave washes it away to build again · dancing crabs · 6 seashells to collect (remembered) · a lighthouse with steps up to the balcony and a spinning light · a sailing boat (ring the bell on the pier) · a kite that flies high · seagulls · the sea, gently bobbing, with a foam line |
+| 🌲 Whispering Woods | a forest of trees behind the path · a campfire you light, with a marshmallow to toast · a hollow log where a different animal peeks out each time · a berry bush (pick and count six berries into a basket) · leaf piles that fly up when you run through · a creek with stepping logs to hop across · a jar of fireflies that dance · paw prints leading to the fox den · a 🏠 home sign at the end |
+
+- **Pets to befriend and keep:** **Pinchy the crab** at the seaside and **Rusty the fox cub** in the woods.
+  - Tap one three times to make friends.
+  - It joins your collection, which is saved, and follows you everywhere, including through map jumps.
+  - Tap it to send it home to wait; tap it at home to bring it again.
+- **4 more gems:** lighthouse balcony, pier, creek log and fox den, for 12 in all.
+- **Map and train:** the picture map now has 12 places, and both new regions have train stations.
+
+**Measured:**
+- **Walking from the Playhouse to the end of the woods:** 0 long tasks and 0 new shader programs.
+- **Activities:** all 32 tappable things in the two regions ran with no errors.
+- **Saving:** shells, gems and pets survive a reload.
+
+**Bugs found and fixed while testing:**
+- **Gems on the left side could never be collected.** The gem check only ran on the right side.
+- **The new areas' progress didn't survive a reload properly.** Loading a save replaced the data object the new areas were using, so after a reload, collected gems came back, followers were not restored, and new finds would not have been saved. Loading now fills in the same object, and the new areas refresh their gems and pets from the save.
+- **The hollow log would have needed a new double-sided shader.** It is now a closed log with a dark hole.
+
+**Tests:** 5 new checks in the full suite:
+- the 🗺️ map opens;
+- a map picture takes you there and builds the place at once;
+- 🏠 takes you home;
+- picking a station picture drives you there and you hop off;
+- befriending Pinchy.
+
+**Still to do:**
+- **Interiors:** new indoor spaces.
+- **Tunnels:** secret tunnels between regions.
+- **Pets:** more befriendable pets, and choosing which ones follow.
+- **Regions:** more regions (the left side can keep growing).
+- **iPhone measurements:** frame rate, loading time and memory need your phone's Performance Test report.
+
 ## 3D build 29: the world more than doubles, with four new neighbourhoods and 23 new activities
 
 **What's new:** past the castle's rainbow gate (x 422), the outdoor world now continues to x 902, so it is more than twice as long. There are four new connected neighbourhoods, one extending each district:
