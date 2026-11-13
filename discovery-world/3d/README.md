@@ -37,6 +37,32 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 33: the crown is back (plus a wand), and graphics that recover from a 30 fps cap
+
+**From the first real iPhone report (build 26, iPhone, iOS 18.7):**
+
+| What | Result | What it means |
+|---|---|---|
+| Freezes over 250 ms | none | the house freeze is gone on the phone |
+| Worst frame (whole session) | 128 ms | only one frame over 100 ms |
+| Moving between areas | 133–334 ms | entering and leaving the house about 134 ms each |
+| Start-up | 7.0 s | playable after 7 s |
+| Frame rate everywhere | a flat 30 fps (1% low 23–27) | the same in the heaviest view (926k triangles) and the lightest (239k), so the phone was capping the game at 30 fps (iPhone Low Power Mode does this). It was not running out of power. |
+| Graphics level | 5 of 5, the lowest; drawing 759×351 on a screen that can show about 2,500×1,170 | the automatic graphics had dropped to the lowest level in an earlier session and remembered it. Under a 30 fps cap nothing could ever bring it back up, so the picture was blurrier than it needed to be, with no speed gained. |
+
+**Fixes:**
+- **Old settings forgotten:** the saved graphics level uses a new key, so a level stuck in an older build is forgotten. Phones start at level 1 again.
+- **The game measures its own work per frame** (JavaScript and drawing commands).
+- **Stepping back up under the cap:** when frames are capped at a steady 30 fps and each frame needs well under its 33 ms (under 9 ms, for 20 s), quality steps back up one level, then again 20 s later.
+- **Stepping down if needed:** if a level makes frames uneven, the existing slow check steps back down and won't retry it for a minute.
+- **The performance report** now also shows that frame work time, and whether sound is on. The report's voice line showed 0 sentences spoken, which most likely means sound was off.
+
+**The princesses' crown, and a new wand.** You reported that the princesses no longer gave a crown and a wand.
+- **The crown (my bug, from build 25's scenery slices).** The crown floating over your head was created near the castle, so it was put into the castle's 24 m scenery slice. Slices more than 50 m away are taken off the screen, so the crown vanished as soon as you walked away. The same thing hid two other things that follow you: **your own soft shadow** (filed at the Playhouse) and **the bouncing PAW hint**. All three are now marked as moving things, never scenery.
+- **New check:** a test now looks for anything inside a scenery slice that is far from that slice, i.e. something that moved. Only things that bob in place remain (the dive ring, the secret star, the underground gems).
+- **The wand.** Princess Luna only ever waved her wand and made the fountain sparkle; she never gave one. **Now she gives you a magic wand**, which is saved, floats at your side, and sprinkles sparkles as you go.
+- **Checked with real taps on both princesses:** the crown and the wand show at the castle, the park, the Playhouse, the seaside and Toy Town, and after a reload.
+
 ## 3D build 32: three more pets and a secret tunnel
 
 - **Three new pals to befriend** (three taps each), one in each neighbourhood on the right. That makes 6 pals in all, shown in 🐾 My Pets.

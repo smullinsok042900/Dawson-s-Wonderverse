@@ -16,7 +16,16 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 4. Desktop results are NOT iPhone results. The real numbers come from the in-game ⚙️ → Performance Test → Copy Test Results.
 5. Before a big change, keep a rollback copy in `../backups/3D_buildNN_index.html`.
 
-## Checkpoint: build 32 (current)
+## Checkpoint: build 33 (current)
+- **First real iPhone report (build 26):** no freezes, house about 134 ms, start-up 7 s. A flat 30 fps cap (most likely Low Power Mode), but the graphics were stuck at the lowest level.
+  - **Fixed:** the stale level is forgotten (new key), and quality steps back up when capped with room to spare (frame work < 9 ms for 20 s).
+- **Crown bug (introduced in build 25):** the crown, your shadow and the PAW hint were filed into scenery slices and hidden far from where they were made.
+  - **Fixed:** they are marked dynamic.
+  - **New test:** checks that no mover sits in a slice.
+- **Luna gives a magic wand** (saved).
+- **To verify next:** the iPhone report after this build. Expect a graphics level below 5 and frame work in ms. Ask for Low Power Mode off, to see the uncapped fps.
+
+## Checkpoint: build 32
 - **Added:**
   - Bolt the robot, Hoppy the frog and Kiwi the parrot (6 pals in all).
   - The secret tunnel Woods ↔ Toy Town.
@@ -68,7 +77,7 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 - **The test browser is very slow** (software 3D), so a few checks are timing-sensitive. Run the test alone.
 
 ## Backlog (highest priority first)
-1. **Read the iPhone Performance Test report as soon as it comes in** and fix what it shows (this outranks content).
+1. **iPhone report #2 (after build 33):** check that the graphics level recovers, read the frame work time, and ask for a run with Low Power Mode off to see real headroom.
 2. **Indoor spaces:** a hidden playroom and a toy workshop interior (new layer) with a door in the world, built when entered.
 3. **Shortcuts:** the first secret tunnel (Woods ↔ Toy Town) is done. Next: more tunnels, and a hidden "tunnel map" picture once one is found.
 4. ~~More pets on the right side~~ (done in build 32). Next: a pal in the Adventure Trail, and pals reacting to each other.
