@@ -384,3 +384,9 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @media (max-height:420px){#intro{padding:10px 16px;border-radius:28px}#intro h1{font-size:clamp(22px,4.4vw,34px);margin:2px 0}.introPick img{width:min(84px,19vh);height:min(84px,19vh)}.previewCrew{margin:4px 0 6px}#playBtn{padding:9px 28px;font-size:20px}}
 @media (max-height:320px){#intro .eyebrow{display:none}.introPick b{font-size:13px}}
 @media (min-height:700px) and (pointer:coarse){#intro{transform:scale(1.2)}}
+/* (build 36b) every top button at least 46 px; on a narrow phone the right-hand group wraps onto a second row (right-aligned)
+   instead of being pushed off the screen */
+.pill{min-height:46px;min-width:46px}
+#upperRight{flex-wrap:wrap;justify-content:flex-end;row-gap:6px;max-width:calc(100vw - 196px - env(safe-area-inset-left) - env(safe-area-inset-right))}
+@media (min-width:900px){#upperRight{max-width:none;flex-wrap:nowrap}}
+#trainStrip .tsT{min-width:46px;min-height:46px}

@@ -847,8 +847,9 @@ let budgetScale = 1; // (the Performance mode lowers it)
 // The angle opens up (part of the way) to keep the sides in view, so the framing feels the same on every device.
 const FOV0 = 38, ASPECT0 = 1.95;
 function fovFor(a) { return a >= ASPECT0 ? FOV0 : THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(FOV0 / 2)) * Math.pow(ASPECT0 / Math.max(.5, a), .75))); }
-// The buttons scale with the screen: a little smaller on a small phone, bigger on a tablet (never tiny, never huge).
-function uiScale(w, h) { return Math.max(.8, Math.min(1.35, Math.min(h / 390, w / 720))); }
+// The buttons scale with the screen: bigger on a tablet (up to 1.35×), but NEVER smaller than normal on a phone, so every
+// button stays at least 44 px for small fingers. (A narrow phone wraps the top buttons onto two rows instead: style.css.)
+function uiScale(w, h) { return Math.max(1, Math.min(1.35, Math.min(h / 390, w / 720))); }
 function resize() {
   const [w, h] = screenSize(); sizeW = w; sizeH = h;
   const want = Math.min(devicePixelRatio || 1, 2) * quality, cap = Math.sqrt(PIX_BUDGET * budgetScale / Math.max(1, w * h));
