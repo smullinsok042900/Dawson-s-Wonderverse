@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-13T01:47:30.741Z",
+  "date": "2026-11-13T02:09:30.956Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 146,
+  "passed": 143,
   "total": 147,
   "results": [
     {
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 5.6"
+      "detail": "x 1.2 → 4.6"
     },
     {
       "name": "let go and the creature stops",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 2.6→7.3, y 1.60"
+      "detail": "x 0.4→6.0, y 1.60"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.68"
+      "detail": "rose to y=1.60"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 62% height"
+      "detail": "body squashed to 70% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"],[\"Mesh\",\"8.42\",\"creature\",\"0.0\"]] P=5.90,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=7.35,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,22 +112,22 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.01"
+      "detail": "highest y=3.46"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.6 y=2.40"
+      "detail": "x=43.5 y=2.40"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.9 (ok)"
+      "detail": "got to x=17.0 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=11.4"
+      "detail": "x=10.8"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-1.57"
+      "detail": "y=-1.18"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=9.9 y=0.00"
+      "detail": "x=5.4 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.0"
+      "detail": "x=37.3"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -217,7 +217,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 2.8 away"
+      "detail": "pet is 2.7 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
@@ -241,22 +241,22 @@
     },
     {
       "name": "the Painter Bunny paints a picture on the wall",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "the Drummer Frog plays when tapped",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "the penguin dances when tapped",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
       "name": "the sleepy owl wakes up when tapped",
-      "ok": true,
+      "ok": false,
       "detail": ""
     },
     {
@@ -322,7 +322,7 @@
     {
       "name": "tap the unicorn: it talks in a picture speech bubble",
       "ok": true,
-      "detail": "1 bubbles"
+      "detail": "2 bubbles"
     },
     {
       "name": "the hedgehog plays a song",
@@ -352,12 +352,12 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.057 → 1.051, z=-3.4"
+      "detail": "u 0.033 → 1.015, z=-3.3"
     },
     {
       "name": "JUMP makes the kart hop",
       "ok": true,
-      "detail": "hop 1.22"
+      "detail": "hop 1.14"
     },
     {
       "name": "crossing the finish line counts a lap (with confetti)",
@@ -382,7 +382,7 @@
     {
       "name": "hold ▶ to drive the train yourself",
       "ok": true,
-      "detail": "x 170.0 → 171.0"
+      "detail": "x 170.0 → 171.8"
     },
     {
       "name": "let go and the train stops",
@@ -392,7 +392,7 @@
     {
       "name": "PAW: hop off the train (anywhere)",
       "ok": true,
-      "detail": "ride=null x=170.0"
+      "detail": "ride=null x=173.1"
     },
     {
       "name": "tap the Marble Machine board: a marble drops",
@@ -462,7 +462,7 @@
     {
       "name": "all your pets and friends follow you in a line",
       "ok": true,
-      "detail": "2.8 3.7 4.6 5.5 6.4"
+      "detail": "2.8 3.7 4.6 5.6 6.4"
     },
     {
       "name": "tap a friend who follows you: they stay (tap again to bring them)",
@@ -472,7 +472,7 @@
     {
       "name": "tap the sky whale: ride on its back",
       "ok": true,
-      "detail": "ride=whale y=14.5"
+      "detail": "ride=whale y=14.6"
     },
     {
       "name": "JUMP hops off the whale onto the clouds",
@@ -556,13 +556,13 @@
     },
     {
       "name": "the Ferris wheel lifts you up",
-      "ok": false,
-      "detail": "y=1.5"
+      "ok": true,
+      "detail": "y=1.90"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "47 → 50"
+      "detail": "56 → 60"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,7 +597,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.5242122258816132"
+      "detail": "k=0.533573158486642"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":50,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":60,\"fl\":3,\"p\":true}"
     },
     {
       "name": "🗺️ opens the picture map",
