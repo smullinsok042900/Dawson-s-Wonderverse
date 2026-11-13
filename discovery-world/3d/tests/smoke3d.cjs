@@ -258,7 +258,7 @@ const UG_F = -6;
   await press('#jumpBtn'); await sleep(300); check('JUMP gets off the carousel', !(await S()).ride);
   await waitFor(s => s.grounded, 3000);
   await teleport(159); await page.evaluate(() => __DDW3.G.rideWheel()); c = await S(); check('ride the Ferris wheel', c.ride === 'wheel');
-  await sleep(2500); c = await S(); check('the Ferris wheel lifts you up', c.y > 1.5, `y=${c.y.toFixed(1)}`); await shot('11_ferris_wheel.jpg');
+  c = await waitFor(s => s.y > 1.5, 4000); /* (wait for it to rise: a fixed 2.5 s gave 1.48-1.8 m depending on how fast the test browser drew) */ check('the Ferris wheel lifts you up', c.y > 1.5, `y=${c.y.toFixed(2)}`); await shot('11_ferris_wheel.jpg');
   await press('#jumpBtn'); await waitFor(s => s.grounded, 5000);
   // ---------- star bits ----------
   const b0 = (await S()).bits; await teleport(151); await holdBtn('#rightBtn', 1200); c = await S(); check('walk through star bits to collect them', c.bits > b0, `${b0} → ${c.bits}`);
