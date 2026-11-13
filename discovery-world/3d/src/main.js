@@ -907,9 +907,15 @@ G.setGfxMode = setGfxMode;
 function adapt(dt) {
   ema += (dt - ema) * .05; gfx.var += ((dt - ema) * (dt - ema) - gfx.var) * .05; gfx.since += dt;
   if (gfx.mode !== 'auto') return; // (a fixed graphics mode chosen by a grown-up)
-  const capped30 = ema > .029 && ema < .037 && Math.sqrt(gfx.var) < .004; // a steady 30 fps cap is not lag
+  // (build 39) A 30 fps CAP (iPhone Low Power Mode) is not lag. A steady one is recognised at once; an uneven one (1% lows of
+  // 20-26 fps, seen on the real iPhone) is recognised by TRYING: after stepping down at about 30 fps, if 8 s later the frame
+  // rate hasn't improved, lowering the quality didn't help, so the step is undone and, while the cap lasts, the game stops
+  // lowering the picture at about 30 fps. (On the real iPhone it went 4→5→4 under the cap: a worse picture for nothing.)
+  const near30 = ema > .028 && ema < .038, capped30 = (near30 && Math.sqrt(gfx.var) < .004) || (gfx.capLock && near30);
+  if (gfx.capLock && ema < 1 / 50) gfx.capLock = false; // (the cap is gone: e.g. Low Power Mode was switched off)
+  if (gfx.probe) { gfx.probe.t += dt; if (gfx.probe.t > 8) { const p = gfx.probe; gfx.probe = null; if (ema > p.ema0 * .9 && near30) { gfx.capLock = true; applyGfx(p.from, '30 fps cap: lower quality didn\'t help'); gfx.since = 0; } } }
   if (ema > 1 / 48 && !capped30) { gfx.fast = 0; gfx.slow += dt;
-    if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); } }
+    if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5 && !gfx.probe) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } const from = gfx.level, e0 = ema; applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); if (near30) gfx.probe = { from, ema0: e0, t: 0 }; } }
   else { gfx.slow = Math.max(0, gfx.slow - dt * .5);
     // (build 33) a steady 30 fps cap (iPhone Low Power Mode) hides how much headroom there is. If each frame's own work is
     // small (well under the 33 ms the cap allows) for 20 s, step the picture quality back UP a level. A level that then
@@ -972,7 +978,7 @@ updateCounters(); snapCamera(); updateBits(0);
 // (build 9: arrow buttons are back, so there is no drag hint)
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { if (MOBILE && !TEST && fsAvailable()) goFullscreen(); /* (build 36: a phone or tablet in the browser plays full screen where allowed) */ Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
-addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); /* (build 36: iPhone may not send 'blur' when the app is switched away: let go of every button, so nothing is stuck when she comes back) */ if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; padPointer = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); } else resize(); });
+addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { lastFrameAt = 0; /* (build 39: time spent in the background, e.g. while copying the test results, is not a 10-second 'freeze') */ if (document.hidden) { save(); /* (build 36: iPhone may not send 'blur' when the app is switched away: let go of every button, so nothing is stuck when she comes back) */ if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; padPointer = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); } else resize(); });
 // (build 24) the lamps of the house and the underground: a FIXED pool of 3 point lights that is always in the scene.
 // Switching lights on and off (build 22) changed the number of lights, which forces every material in the game to
 // recompile its shader: that was the freeze when entering the house. Now the light count never changes; the pool
@@ -1159,7 +1165,8 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction }); G.perfMon = perfMon;
+const GAME_BUILD = '39'; G.build = GAME_BUILD;
+const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
   $('soundBtn').after(btn);
