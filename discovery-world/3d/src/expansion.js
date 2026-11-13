@@ -11,8 +11,9 @@
 // ===================================================================
 import * as THREE from 'three';
 
-export const EXP = { x0: 424, x1: 902, xMin: -530 }; // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
+export const EXP = { x0: 424, x1: 902, xMin: -662 }; // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
+  { id: 'pier', icon: '🌊', name: 'Ocean Pier', x0: -668, x1: -536, home: -544, enter: -540, arrow: '⬅️' }, // (build 38)
   { id: 'farm', icon: '🚜', name: 'Happy Farm', x0: -536, x1: -404, home: -412, enter: -408, arrow: '⬅️' }, // (build 35)
   { id: 'frosty', icon: '❄️', name: 'Frosty Peaks', x0: -404, x1: -272, home: -280, enter: -276, arrow: '⬅️' },
   { id: 'woods', icon: '🌲', name: 'Whispering Woods', x0: -272, x1: -150, home: -158, enter: -154, arrow: '⬅️' },
@@ -22,7 +23,7 @@ export const DISTRICTS = [
   { id: 'labgarden', icon: '🔬', name: 'Lab Gardens', x0: 668, x1: 788, home: 674 },
   { id: 'artplaza', icon: '🖍️', name: 'Art Plaza', x0: 788, x1: 904, home: 794 },
 ];
-const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -263, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9]];
+const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -263, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9], ['g17', -598, 3.4], ['g18', -652, .9]];
 const NOTE = [262, 294, 330, 349, 392, 440, 494, 523];
 const RB = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
 const rnd = n => Math.floor(Math.random() * n), pick = a => a[rnd(a.length)];
@@ -117,8 +118,8 @@ export function initExpansion(G, api) {
 
   // ---------- (build 30) PALS: creatures you befriend and keep (a crab at the seaside, a fox cub in the woods) ----------
   X.pals = X.pals || {};
-  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' } };
-  const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜', pig: '🐷' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi', pig: 'Truffle' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza', pig: 'on the farm' };
+  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' }, seal: { home: [-584, .36, -2.3], hello: '🦭 Splash the seal is your friend now! Ar ar!' } };
+  const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜', pig: '🐷', seal: '🦭' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi', pig: 'Truffle', seal: 'Splash' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza', pig: 'on the farm', seal: 'at the ocean pier' };
   function makePalMesh(kind) {
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
     if (kind === 'crab') { const sh = new THREE.Mesh(new THREE.SphereGeometry(.38, 18, 12), mat('#ff5a3c', { r: .5 })); sh.scale.set(1.25, .62, 1); sh.position.y = .32; sh.castShadow = true; body.add(sh);
@@ -141,6 +142,11 @@ export function initExpansion(G, api) {
       const beak = new THREE.Mesh(new THREE.ConeGeometry(.07, .2, 10), mat('#ff9a1f')); beak.rotation.z = -Math.PI / 2; beak.position.set(.36, .74, 0); body.add(beak);
       for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), mat('#ffffff')); e.position.set(.27, .82, s2 * .11); body.add(e); const pp = new THREE.Mesh(new THREE.SphereGeometry(.028, 8, 6), mat('#2b1d3d')); pp.position.set(.31, .82, s2 * .11); body.add(pp);
         const ft = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), mat('#ff9a1f')); ft.scale.set(1.4, .4, .9); ft.position.set(.1, .04, s2 * .13); body.add(ft); const fl = new THREE.Mesh(new THREE.SphereGeometry(.12, 10, 8), mat('#2b2d42')); fl.scale.set(.5, 1.4, .3); fl.position.set(0, .5, s2 * .3); body.add(fl); g.userData['fl' + s2] = fl; } }
+    else if (kind === 'seal') { const gy = '#8f9fb3'; const b = new THREE.Mesh(new THREE.SphereGeometry(.32, 18, 12), mat(gy, { r: .35, cc: .6 })); b.scale.set(1.6, .8, .9); b.position.y = .28; b.castShadow = true; body.add(b); // (build 38) Splash the seal
+      const h = new THREE.Mesh(new THREE.SphereGeometry(.24, 16, 12), mat(gy, { r: .35, cc: .6 })); h.position.set(.42, .58, 0); body.add(h); const sn = new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 8), mat('#c9d3df', { r: .5 })); sn.position.set(.62, .52, 0); body.add(sn);
+      const no = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), mat('#2b1d3d')); no.position.set(.71, .56, 0); body.add(no);
+      for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), mat('#2b1d3d')); e.position.set(.56, .68, s2 * .1); body.add(e); const fl = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 8), mat('#7a8a9e')); fl.scale.set(1.2, .3, .7); fl.position.set(.1, .12, s2 * .3); body.add(fl); g.userData['fl' + s2] = fl; }
+      const tail = new THREE.Mesh(new THREE.SphereGeometry(.13, 10, 8), mat('#7a8a9e')); tail.scale.set(.6, .3, 1.4); tail.position.set(-.55, .1, 0); body.add(tail); }
     else if (kind === 'pig') { const pk = '#ffa8c4'; const b = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 12), mat(pk, { r: .7 })); b.scale.set(1.3, 1, 1); b.position.y = .45; b.castShadow = true; body.add(b); // (build 35) Truffle the piglet
       const sn = new THREE.Mesh(new THREE.CylinderGeometry(.11, .12, .1, 14), mat('#ff86ac', { r: .6 })); sn.rotation.z = Math.PI / 2; sn.position.set(.47, .5, 0); body.add(sn);
       for (const s2 of [-1, 1]) { const ns = new THREE.Mesh(new THREE.SphereGeometry(.025, 8, 6), mat('#2b1d3d')); ns.position.set(.52, .5, s2 * .045); body.add(ns); const e = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), mat('#2b1d3d')); e.position.set(.38, .66, s2 * .13); body.add(e);
@@ -335,7 +341,7 @@ export function initExpansion(G, api) {
   function palAtHome(c, kind) {
     if (followers[kind]) return null; const m = makePalMesh(kind), [x, y, z] = PALS[kind].home; m.position.set(x, y, z); m.userData.pal = kind; c.add(m); let taps = 0;
     c.tap(m, () => { if (followers[kind]) return; taps++; boingIt(m); Sound.giggle(); if (X.pals[kind]) { c.g.remove(m); setFollow(kind, true); say(`${PAL_EMOJI[kind]} ${PAL_NAME[kind]} is coming with you!`); return; }
-      if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak', robot: 'Beep boop', frog: 'Ribbit', parrot: 'Squawk', pig: 'Oink oink' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
+      if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak', robot: 'Beep boop', frog: 'Ribbit', parrot: 'Squawk', pig: 'Oink oink', seal: 'Ar ar' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
       else { c.g.remove(m); setFollow(kind, true); disc('pal_' + kind); say(PALS[kind].hello); c.burst(x, 1.5, z, ['#ff8fc8', '#fff', '#ffd23f'], 24, 3); Sound.chime(); } }, x);
     return (dt, t) => { if (!m.parent) return; m.position.x = x + Math.sin(t * .9) * (kind === 'crab' ? 1.5 : .6); m.userData.body.position.y = Math.abs(Math.sin(t * 5)) * .05; if (kind === 'fox') m.rotation.y = Math.cos(t * .9) > 0 ? 0 : Math.PI; };
   }
@@ -544,6 +550,63 @@ export function initExpansion(G, api) {
       return (dt, t) => { for (const q of cows) q.s.position.x = q.x + Math.sin(t * .15 + q.x) * 1.5; }; },
     // the end of the line: a 🏠 sign that takes you home
     () => { const home = c.sprite('🏠', 1, -530, 2.2, -1.4); c.tap(home, () => api.goHome(), -530); },
+  ];
+
+  // =================== 🌊 OCEAN PIER (x -668 to -536) — build 38 ===================
+  // Picture + sound + voice only: counting (fish, coins), colours (fish), sea-creature names (tide pool), high and low
+  // notes (musical buoys), cause and effect (whistle → dolphin, dig → treasure, tap → whale spout).
+  const FISH = [['🐟', 'a blue fish'], ['🐠', 'a yellow fish'], ['🐡', 'a puffer fish'], ['🐟', 'another blue fish'], ['🐠', 'a stripy fish']];
+  builders.pier = c => [
+    // the sea behind the pier (one shared-material plane), a foam line and the wooden pier going out over the water
+    () => { const sea = new THREE.Mesh(new THREE.PlaneGeometry(134, 40, 1, 1), mat('#3fa9e8', { r: .12, cc: .7 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-602, .02, -26); sea.receiveShadow = true; c.add(sea);
+      const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
+      c.block(-560, .5, -11, 3, .25, 12, '#b07a4a', { r: .04 }); for (const z of [-6, -10, -14, -17]) for (const dx of [-1.3, 1.3]) c.cyl(-560 + dx, 0, z, .14, .14, .8, '#7a5236');
+      return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; }; },
+    // fishing: tap the rod, wait for the bobber to dip, and a fish jumps into the bucket (count to five, then let them go)
+    () => { c.cyl(-552, 0, -3.2, .06, .06, 1.6, '#7a5236'); const rod = new THREE.Mesh(new THREE.CylinderGeometry(.03, .04, 2.6, 8), mat('#3b2b30')); rod.position.set(-552, 2, -4); rod.rotation.x = -.7; c.add(rod);
+      const bob = c.sph(-552, .15, -6.8, .16, '#ff4f6a', { m: { r: .4 } }); const bucket = c.cyl(-550, 0, -2.2, .4, .32, .55, '#4fa8ff', { r: .5 }); let wait = 0, n = 0; const caught = [];
+      c.tap(rod, () => { if (wait) return; wait = 1.4; c.say('🎣 Shhh... wait for a fish!'); c.disc('fishing', '🎣 Tap the fishing rod and catch a fish!'); }, -552); c.tap(bob, () => { if (!wait) { wait = 1.4; c.say('🎣 Shhh... wait for a fish!'); } }); c.tap(bucket, () => { c.say(n ? `🪣 ${NUM[Math.min(6, n)]} fish in the bucket!` : '🪣 The bucket is empty. Catch a fish!'); });
+      return (dt, t) => { bob.position.y = .15 + Math.sin(t * 2) * .04; if (wait > 0) { wait -= dt; if (wait < .5) bob.position.y = -.05; if (wait <= 0) { const [e, name] = FISH[n % FISH.length]; n++; const f = c.sprite(e, .7, -552, .6, -6.8); caught.push({ f, t: 0 }); Sound.pop ? Sound.pop() : Sound.click(); c.say(`${e} ${NUM[Math.min(6, n)]}! It's ${name}!`); c.burst(-552, .4, -6.8, ['#9fdcff', '#fff'], 10, 2);
+            if (n >= 5) { setTimeout(() => { for (const q of caught) c.g.remove(q.f); caught.length = 0; n = 0; c.say('🌊 Bye bye, fishies! Back into the sea!'); }, 2500); } } }
+        for (const q of caught) { q.t += dt; const k = Math.min(1, q.t / .8); q.f.position.set(-552 + 2 * k, .6 + Math.sin(k * Math.PI) * 1.6 + .2 * k, -6.8 + 4.6 * k); } }; },
+    // the tide pool: tap the rocks and a sea creature appears (and is named)
+    () => { for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const r = c.sph(-566 + Math.cos(a) * 1.3, .1, -3 + Math.sin(a) * .8, .38, '#8a7f74', { m: { r: .9 } }); r.scale.y = .55; } const pool = c.cyl(-566, 0, -3, 1.05, 1.05, .08, '#5fc0f0', { r: .1, cc: .7 }); pool.scale.z = .62;
+      const who = c.sprite('⭐', .8, -566, .45, -3); who.visible = false; const SEA = [['⭐', 'a starfish'], ['🐌', 'a sea snail'], ['🦀', 'a little crab'], ['🐙', 'an octopus'], ['🦐', 'a shrimp'], ['🪼', 'a jellyfish']]; let k = -1, show = 0;
+      const peek = () => { k = (k + 1) % SEA.length; who.material = emojiMat(SEA[k][0]); who.visible = true; show = 3; Sound.twinkle(); c.say(`${SEA[k][0]} Look! It's ${SEA[k][1]}!`); c.disc('tidepool', '🌊 Tap the tide pool to find sea creatures!'); };
+      c.tap(pool, peek, -566); c.tap(who, peek);
+      return (dt, t) => { if (show > 0) { show -= dt; who.position.y = .45 + Math.min(1, (3 - show) * 3) * .4 + Math.sin(t * 4) * .05; if (show <= 0) who.visible = false; } }; },
+    // musical buoys: five floating buoys play low to high notes
+    () => { const buoys = RB.slice(0, 5).map((col, i) => { const x = -574 - i * 2.2; const b = c.sph(x, .35, -7.5, .45, col, { m: { r: .4, cc: .6 } }); b.scale.y = .8; const tp = c.cyl(x, .6, -7.5, .06, .06, .5, '#ffffff'); c.tap(b, () => { Sound.tone(NOTE[i * 1 + 1], .35, 'sine', .07, 1); b.userData.hop = .5; c.burst(x, .9, -7.5, [col, '#fff'], 6, 1.5); c.say(['🎵 Low!', '🎵', '🎵', '🎵', '🎵 High!'][i]); c.disc('buoys', '🎵 Tap the buoys to play music, from low to high!'); }, i === 2 ? -578.4 : undefined); return { b, tp, i }; });
+      return (dt, t) => { for (const q of buoys) { q.b.userData.hop = Math.max(0, (q.b.userData.hop || 0) - dt); const y = .35 + Math.sin(t * 1.6 + q.i) * .08 + q.b.userData.hop * .6; q.b.position.y = y; q.tp.position.y = y + .25; } }; },
+    // Splash the seal waits on a rock by the water
+    () => { const rock = c.sph(-584, 0, -2.4, .9, '#8a7f74', { m: { r: .9 } }); rock.scale.set(1.4, .45, .9); const pal = palAtHome(c, 'seal'); return (dt, t) => { pal && pal(dt, t); }; },
+    // stacked crates (a gem waits on top) next to the dolphin show
+    () => { for (const [x, y, w] of [[-594.5, 0, 2], [-596.5, 1, 2], [-598, 2, 1.6]]) c.block(x, y, -1.4, w, 1, 1.4, '#c8925a', { r: .06 }); c.plat(-595.5, -593.5, 1, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-597.5, -595.5, 2, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-598.8, -597.2, 2.98, { z: -1.2, onLand: () => c.disc('crates', '📦 You climbed the crates!') }); },
+    // the dolphin show: tap the whistle and a dolphin leaps through the hoop
+    () => { c.cyl(-606, 0, -3, .06, .06, 1.4, '#ffffff'); const wh = c.sprite('📯', .8, -606, 1.7, -3); const hoop = new THREE.Mesh(new THREE.TorusGeometry(1.2, .1, 10, 32), mat('#ff4f9a', { r: .4 })); hoop.position.set(-606, 2.6, -10); c.add(hoop);
+      const dol = c.sprite('🐬', 1.6, -611, -1, -10); dol.visible = false; let jump = 0, jumps = 0;
+      const go = () => { if (jump) return; jump = .001; jumps++; Sound.tone(1400, .15, 'sine', .04, 1.3); Sound.tone(1700, .12, 'sine', .04, 1.2, .15); c.say(jumps % 3 === 0 ? `🐬 ${NUM[Math.min(6, jumps)]} jumps! What a clever dolphin!` : '🐬 Wheee! The dolphin jumps through the hoop!'); c.disc('dolphin', '🐬 Tap the whistle and the dolphin jumps!'); };
+      c.tap(wh, go, -606); c.tap(hoop, go);
+      return dt => { if (!jump) return; jump += dt; const k = Math.min(1, jump / 1.8); dol.visible = true; dol.position.set(-611 + 10 * k, -1 + Math.sin(k * Math.PI) * 4.6, -10); dol.material.rotation = .9 - k * 1.8; if (k >= 1) { c.burst(-601, .2, -10, ['#9fdcff', '#fff'], 14, 2.6); jump = 0; dol.visible = false; } }; },
+    // treasure dig: tap the ✖ in the sand three times; a chest pops up full of coins (count them)
+    () => { const x0 = -620; const mark = c.sprite('❌', .7, x0, .05, -2.4); const mound = c.sph(x0, 0, -2.4, .6, '#e9cf98', { m: { r: .95, cc: 0 } }); mound.scale.y = .25; const chest = new THREE.Group(); chest.position.set(x0, -1, -2.4); c.add(chest);
+      const box = new THREE.Mesh(W.rbox(1, .6, .7, .08), mat('#8a5a2a', { r: .6 })); box.position.y = .3; chest.add(box); const lid = new THREE.Mesh(W.rbox(1.04, .2, .74, .08), mat('#ffd23f', { r: .3, m: .5 })); lid.position.y = .7; chest.add(lid); let digs = 0, up = 0;
+      const dig = () => { if (up) return; digs++; Sound.tone(220 + digs * 40, .1, 'triangle', .05, .8); c.burst(x0, .4, -2.4, ['#e9cf98', '#d9b878'], 8, 2); mound.scale.y = .25 + digs * .12; c.say(['', '⛏️ Dig!', '⛏️ Dig dig!', '💰 Treasure!'][digs]); c.disc('treasure', '❌ X marks the spot! Tap it to dig for treasure.');
+        if (digs >= 3) { up = .001; digs = 0; let k = 0; const coin = () => { k++; c.burst(x0, 1.2, -2.4, ['#ffd23f', '#fff3a6'], 6, 2); Sound.tone(900 + k * 80, .08, 'square', .025, 1.2); c.say(`🪙 ${NUM[k]}!`); if (k < 5) setTimeout(coin, 500); else setTimeout(() => c.say('🪙 Five gold coins! Hooray!'), 500); }; setTimeout(coin, 900); } };
+      c.tap(mark, dig, x0); c.tap(mound, dig); c.tap(box, dig); c.tap(lid, dig);
+      return dt => { if (!up) { chest.position.y += (-1 - chest.position.y) * Math.min(1, dt * 4); return; } up += dt; chest.position.y += (0 - chest.position.y) * Math.min(1, dt * 4); lid.rotation.x = -Math.min(1.1, up * 1.5); lid.position.z = -Math.min(.3, up * .4); if (up > 7) { up = 0; lid.rotation.x = 0; lid.position.z = 0; mound.scale.y = .25; } }; },
+    // the sailboat: tap it, toot toot, and it sails a loop on the sea
+    () => { const boat = new THREE.Group(); boat.position.set(-636, 0, -12); c.add(boat); const hull = new THREE.Mesh(W.rbox(3.4, .8, 1.4, .3), mat('#4fa8ff')); hull.position.y = .3; hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 2.8, 8), mat('#7a5236')); mast.position.y = 1.8; boat.add(mast);
+      const sail = new THREE.Mesh(new THREE.ConeGeometry(1, 2.2, 3), mat('#ffffff')); sail.position.set(.4, 1.9, 0); sail.scale.z = .1; boat.add(sail); const flag = new THREE.Mesh(W.rbox(.5, .3, .04, .02), mat('#ff4f9a')); flag.position.set(.25, 3.2, 0); boat.add(flag); let trip = 0;
+      const go = () => { if (trip) return; trip = .001; Sound.tone(300, .3, 'square', .03, 1); Sound.tone(300, .3, 'square', .03, 1, .4); c.say('⛵ Toot toot! Off we sail!'); c.disc('sailboat', '⛵ Tap the sailboat and it sails around!'); };
+      c.tap(boat, go, -636);
+      return (dt, t) => { boat.rotation.z = Math.sin(t * 1.3) * .05; flag.rotation.y = Math.sin(t * 6) * .3; if (!trip) return; trip += dt; const a = Math.min(1, trip / 10) * Math.PI * 2; boat.position.set(-636 + Math.sin(a) * 9, Math.sin(t * 1.1) * .08, -12 - (1 - Math.cos(a)) * 5); boat.rotation.y = -a; if (trip > 10) { trip = 0; boat.position.set(-636, 0, -12); boat.rotation.y = 0; } }; },
+    // the friendly whale: tap its back and a big water spout shoots up
+    () => { const back = c.sph(-650, -.6, -16, 2.6, '#5a6f8f', { m: { r: .5, cc: .3 } }); back.scale.set(1.8, .6, .9); const eye = c.sph(-646.2, .2, -15.2, .14, '#ffffff'); let spout = 0;
+      c.tap(back, () => { spout = 1.4; Sound.noise ? Sound.noise(.6, 300, 1400, .05) : Sound.whoosh(); c.say('🐳 Whoosh! The whale says hello!'); c.disc('whale', '🐳 Tap the whale and it spouts water!'); }, -650);
+      return (dt, t) => { back.position.y = -.6 + Math.sin(t * .7) * .12; if (spout > 0) { spout -= dt; if (Math.random() < dt * 30) c.burst(-650.6, 1 + Math.random() * 3, -16, ['#cfefff', '#ffffff'], 2, 1.2); } }; },
+    // the end of the line: a 🏠 sign that takes you home
+    () => { const home = c.sprite('🏠', 1, -662, 2.2, -1.4); c.tap(home, () => api.goHome(), -662); },
   ];
 
   // ---------- per frame ----------
