@@ -131,7 +131,7 @@ const UG_F = -6;
   await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => __DDW3.world.balloons.length === 1));
   await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('tap the bear again: a second balloon (you can have lots)', await page.evaluate(() => __DDW3.world.balloons.length === 2));
   await shot('17_balloon_bear.jpg');
-  { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapChar(52.4, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); check('the Painter Bunny paints a picture on the wall', after !== before && (await S()).disc.includes('painter')); }
+  { const before = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); await tapChar(52.4, 1.2, -2.4); await sleep(300); const after = await page.evaluate(() => __DDW3.G.paint.canvas.toDataURL().length); { const found = (await S()).disc.includes('painter'); check('the Painter Bunny paints a picture on the wall', after !== before && found, `picture changed=${after !== before} bunny found=${found}`); } }
   await tapChar(89.6, .9, -2.4); await sleep(200); check('the Drummer Frog plays when tapped', (await S()).disc.includes('frog'));
   await tapChar(109.2, 1.2, -2.4); await sleep(200); check('the penguin dances when tapped', (await S()).disc.includes('penguin'));
   await tapChar(152, 3.0, -3.2); await sleep(200); check('the sleepy owl wakes up when tapped', (await S()).disc.includes('owl'));
