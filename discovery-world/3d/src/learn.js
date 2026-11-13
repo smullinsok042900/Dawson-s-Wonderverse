@@ -83,7 +83,7 @@ export function initLearning(api) {
   function open(html) { delete stage.dataset.won; root.classList.add('on'); api.pause(true); stage.innerHTML = html || ''; starsEl.textContent = totalStars(); startIdle(); }
   function close() { root.classList.remove('on', 'demo'); demo = false; demoToken++; turnTok++; hideHand(); stage.innerHTML = ''; dots.innerHTML = ''; current = null; menuCat = null; voice && voice.stop(); clearInterval(idleTimer); idleTimer = 0; api.pause(false); onClose && onClose(); }
   const prompt = text => { lastSay = text; say(text); lastTouch = performance.now(); nudges = 0; };
-  function confetti(n = 16) { for (let i = 0; i < n; i++) { const c = document.createElement('i'); c.className = 'lconf'; c.textContent = pick(['⭐', '✨', '💖', '🎉', '🌈']); c.style.left = (8 + Math.random() * 84) + '%'; c.style.animationDelay = (Math.random() * .3) + 's'; stage.appendChild(c); setTimeout(() => c.remove(), 1600); } }
+  function confetti(n = 16) { if(world.comfort?.calm)n=Math.min(3,n); for (let i = 0; i < n; i++) { const c = document.createElement('i'); c.className = 'lconf'; c.textContent = pick(['⭐', '✨', '💖', '🎉', '🌈']); c.style.left = (8 + Math.random() * 84) + '%'; c.style.animationDelay = (Math.random() * .3) + 's'; stage.appendChild(c); setTimeout(() => c.remove(), 1600); } }
   const boing = el => { if (!el) return; el.classList.remove('boing'); void el.offsetWidth; el.classList.add('boing'); };
   const wiggle = el => { if (!el) return; el.classList.remove('lnudge'); void el.offsetWidth; el.classList.add('lnudge'); setTimeout(() => el.classList.remove('lnudge'), 1500); };
 
@@ -142,6 +142,7 @@ export function initLearning(api) {
     clearInterval(idleTimer); lastTouch = performance.now(); nudges = 0;
     idleTimer = setInterval(() => {
       if (!root.classList.contains('on') || demo || (voice && voice.speaking())) return;
+      if(world.comfort?.calm)return;
       const idle = performance.now() - lastTouch;
       if (!current) { if (menuCat && idle > 10000 && nudges === 0) { nudges = 1; say('Tap a picture to play!'); stage.querySelectorAll('.lmenuitem').forEach(wiggle); } return; }
       if (stage.querySelector('.ldone')) return;
@@ -183,7 +184,7 @@ export function initLearning(api) {
     tap(stage.querySelector('.again'), () => { current.turn = 0; startTurn(); });
     tap(stage.querySelector('.home'), () => showCorner(c.act.cat));
   }
-  function freeStar(id, text) { const pr = progOf(id); pr.stars++; save(); starsEl.textContent = totalStars(); confetti(24); chime(); say(text || 'Here is a star!', true); }
+  function freeStar(id, text) { api.event?.({type:'learn',id}); const pr = progOf(id); pr.stars++; save(); starsEl.textContent = totalStars(); confetti(24); chime(); say(text || 'Here is a star!', true); }
 
   // ---------- building blocks ----------
   // big choices: items [{html, ok, say}]; top = what to look at or match
@@ -482,14 +483,14 @@ export function initLearning(api) {
   act({ id: 'band', cat: 'music', icon: '🥁', name: 'Music band', tiers: ALL, demoSteps: 3, demoGap: 500, free(st, h) {
     const I = [['🥁', 'drum', () => { Sound.tone(110, .25, 'sine', .1, .5); Sound.noise && Sound.noise(.12, 200, 900, .05); }], ['🔔', 'bell', () => Sound.bell ? Sound.bell(880, .06) : Sound.tone(880, .8, 'sine', .05, 1)], ['🎺', 'trumpet', () => { Sound.tone(392, .35, 'square', .04, 1); Sound.tone(523, .3, 'square', .03, 1, .18); }], ['🎸', 'guitar', () => Sound.tone(pick([196, 247, 294, 330]), .6, 'triangle', .07, .99)], ['🪇', 'shaker', () => { if (Sound.noise) { Sound.noise(.12, 3000, 8000, .05); Sound.noise(.12, 3000, 8000, .05, .15); } }], ['🎹', 'piano', () => Sound.tone(pick([262, 330, 392, 523]), .5, 'sine', .07, 1)]], tried = new Set();
     st.innerHTML = `<div class="lcause">${I.map((x, i) => `<button class="lopt toy linst" data-i="${i}" ${i < 3 ? 'data-demo' : ''}>${big(x[0], 70)}</button>`).join('')}</div>`;
-    st.querySelectorAll('.lopt').forEach(b => tap(b, () => { const x = I[+b.dataset.i]; x[2](); boing(b); if (!tried.has(x[1])) { tried.add(x[1]); say(x[1]); }
+    st.querySelectorAll('.lopt').forEach(b => tap(b, () => { const x = I[+b.dataset.i]; Sound.withMusic(() => x[2]()); boing(b); if (!tried.has(x[1])) { tried.add(x[1]); say(x[1]); }
       if (!h.isDemo() && tried.size === I.length && !st.dataset.won) { st.dataset.won = '1'; setTimeout(() => h.freeStar('band', 'What a band! Here is a star!'), 800); } })); }, intro: 'Tap the instruments to play music!' });
   act({ id: 'rhythm', cat: 'music', icon: '🎵', name: 'Copy me', tiers: ALL, demoSteps: 2, make(c) {
     const pads = c.tier === 1 ? 2 : c.tier === 2 ? 3 : 4, len = c.demo ? 1 : c.tier === 1 ? 1 + (c.sub >= 2 ? 1 : 0) : c.tier === 2 ? 2 : 3 + (c.sub >= 2 ? 1 : 0), seq = range(1, len).map(() => rnd(pads)), NOTE = [262, 392, 330, 523], C = ['#ff6fae', '#3b82f6', '#ffd23f', '#3cc45a'];
     return { say: 'Listen! Then copy me.', hint: "Let's listen again.", praise: 'You copied the music!', build(st, t) {
       st.innerHTML = `<div class="lpads p${pads}">${range(0, pads - 1).map(i => `<button class="lpad" data-i="${i}" style="background:${C[i]}"></button>`).join('')}</div>`;
       const ps = [...st.querySelectorAll('.lpad')]; let k = 0, lock = true;
-      const flash = i => { ps[i].classList.add('lit'); Sound.tone(NOTE[i], .3, 'triangle', .06, 1); setTimeout(() => ps[i].classList.remove('lit'), 320); };
+      const flash = i => { ps[i].classList.add('lit'); Sound.withMusic(() => Sound.tone(NOTE[i], .3, 'triangle', .06, 1)); setTimeout(() => ps[i].classList.remove('lit'), 320); };
       const play = () => { lock = true; ps.forEach(p => p.removeAttribute('data-ok')); seq.forEach((i, n) => setTimeout(() => t.alive() && flash(i), 1500 + n * 700)); setTimeout(() => { if (!t.alive()) return; lock = false; k = 0; ps[seq[0]].dataset.ok = '1'; }, 1500 + seq.length * 700); };
       ps.forEach(p => tap(p, () => { if (lock) return; const i = +p.dataset.i; flash(i);
         if (i === seq[k]) { k++; ps.forEach(x => x.removeAttribute('data-ok')); if (k === seq.length) { lock = true; setTimeout(() => t.win(), 400); } else ps[seq[k]].dataset.ok = '1'; }

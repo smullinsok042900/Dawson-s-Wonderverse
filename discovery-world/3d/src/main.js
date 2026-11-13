@@ -8,6 +8,9 @@
 import * as THREE from 'three';
 
 import { Sound, NOTES } from './audio.js';
+import { initAdventures, destinationArt } from './adventures.js';
+import { initComfort } from './comfort.js';
+import { ADVENTURES } from './adventure-state.js';
 import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatures.js';
 import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
@@ -87,6 +90,7 @@ for (let i = 0; i < 16; i++) { const c = new THREE.Group(); for (let k = 0; k < 
 const G = { scene, platforms: [], solids: [], taps: [], interact: [], camera };
 const player = { groundZ: 0, x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
 const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#bfe8ff', lastBuckets: [], paintColor: '#ff4f9a', rainbowHue: 0, trail: [], flash: 0, drumT: 0, mobileT: 0, wake: [0, 0, 0, 0, 0, 0] };
+let adventures = null;
 let started = false;
 buildWorld(G);
 buildUnderground(G);
@@ -103,6 +107,7 @@ const pts = new THREE.Points(pGeo, new THREE.PointsMaterial({ size: .32, map: do
 pts.frustumCulled = false; scene.add(pts);
 const tmpC = new THREE.Color();
 function burst(x, y, z = 0, colors = ['#fff', '#ffe36e', '#ff9fd8'], n = 16, sp = 3) {
+  if (world.comfort?.calm) n = Math.min(3, n);
   for (let i = 0; i < n; i++) { if (parts.length >= PMAX) parts.shift(); const a = Math.random() * Math.PI * 2, u = Math.random() * 2 - 1; parts.push({ x, y, z, vx: Math.cos(a) * sp * Math.random(), vy: (Math.random() * 1.2 + .3) * sp, vz: Math.sin(a) * sp * Math.random() * .6, life: .6 + Math.random() * .6, c: tmpC.set(colors[i % colors.length]).toArray() }); }
 }
 function updateParticles(dt) {
@@ -123,16 +128,17 @@ function toast(msg) { const el = $('toast'); el.textContent = msg; el.classList.
 // what happened and what to try. Uses the phone's own speech voice; silent when the sound button is off.
 // (build 27) one shared voice (voice.js) for the world and the learning games, unlocked by her first tap
 let lastSpeak = 0;
-const voice = makeVoice({ isOn: () => Sound.on, TEST: TEST && !/[?&]voice/.test(location.search) }); G.voice = voice;
+const voice = makeVoice({ isOn: () => Sound.on && world.comfort?.speech !== false, TEST: TEST && !/[?&]voice/.test(location.search) }); G.voice = voice;
 for (const ev of ['pointerdown', 'touchend', 'click']) addEventListener(ev, () => voice.unlock(), { capture: true, passive: true });
 function speak(msg) {
-  if (TEST || !Sound.on) return;
+  if (TEST || !Sound.on || world.comfort?.speech === false) return;
+  if (world.comfort?.calm && performance.now() - lastSpeak < 6000) return;
   const text = msg.replace(/\(.*?\)/g, '');
   if (performance.now() - lastSpeak < 900) return; lastSpeak = performance.now();
   if (G.learning && G.learning.isOpen()) return; // (the learning games do their own talking)
   voice.speak(text);
 }
-function discover(id, msg) { if (world.disc.has(id)) return false; world.disc.add(id); if (msg) toast('✨ ' + msg); Sound.chime(); player.happy = 1.4; if (creature) creature.cheer(); burst(player.x, player.y + 2.2, player.z, undefined, 18); save(); return true; }
+function discover(id, msg) { if (id === 'fluffkin') adventures?.event({type:'activity',id:'fluff_found'}); if (id === 'fluffhome') adventures?.event({type:'activity',id:'fluff_home'}); if (world.disc.has(id)) return false; world.disc.add(id); if (msg) toast('✨ ' + msg); Sound.chime(); player.happy = 1.4; if (creature) creature.cheer(); burst(player.x, player.y + 2.2, player.z, undefined, 18); save(); return true; }
 function updateCounters() {
   $('bitsCount').textContent = world.bits.size;
   $('fluffCount').textContent = `${fluffs.filter(f => f.state === 'home').length}/6`;
@@ -234,7 +240,7 @@ const friends = initFriends(G, {
 });
 const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
 // (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
-const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
+const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
 G.expansion = expansion;
 
 // ---------------- bubbles ----------------
@@ -290,11 +296,11 @@ function updatePit(dt) {
 G.pit.balls.forEach((b, i) => { pitM.makeTranslation(b.x, b.y, b.z); G.pit.mesh.setMatrixAt(i, pitM); });
 
 // ---------------- music, trampoline, orbs, house toys ----------------
-G.playKey = k => { k.lit = 1; Sound.bell(NOTES[k.i], .06); burst(k.x, .5, 0, [RAINBOW[k.i], '#fff'], 8, 2); discover('xylophone', 'A giant xylophone! Walk and jump along it.'); };
+G.playKey = k => { k.lit = 1; Sound.withMusic(() => Sound.bell(NOTES[k.i], .06)); burst(k.x, .5, 0, [RAINBOW[k.i], '#fff'], 8, 2); discover('xylophone', 'A giant xylophone! Walk and jump along it.'); };
 G.tapTramp = () => { world.trampT = 1; Sound.boing(); const P = player; if (!P.ride && P.layer === '' && Math.abs(P.x - 34) < 3 && P.grounded) { P.vy = 13.5; P.grounded = false; P.jumps = 1; } discover('trampoline', 'Boing! Super bounce!'); };
 G.zapOrb = o => { o.zap = 1; Sound.tone(1400, .25, 'sawtooth', .02, .4); Sound.twinkle(); burst(o.x, 1.9, -.8, ['#c9a6ff', '#fff', '#9fe6ff'], 24, 4); discover('orb', 'Zap! Sparkly glow orb!'); };
-G.tapDrum = () => { world.drumT = 2; Sound.tone(110, .3, 'sine', .09, .4); Sound.tone(220, .15, 'triangle', .05, .5, .05); burst(1020, 1.2, -1.6, RAINBOW, 14, 3); discover('fluffdrum', 'Boom! Everybody jumps!'); };
-G.tapMobile = () => { world.mobileT = 4; [4, 2, 0, 2, 4, 4, 4].forEach((n, i) => Sound.bell(NOTES[n], .03, i * .3)); discover('mobile', 'The twinkly mobile spins round.'); };
+G.tapDrum = () => { world.drumT = 2; Sound.withMusic(() => { Sound.tone(110, .3, 'sine', .09, .4); Sound.tone(220, .15, 'triangle', .05, .5, .05); }); burst(1020, 1.2, -1.6, RAINBOW, 14, 3); discover('fluffdrum', 'Boom! Everybody jumps!'); };
+G.tapMobile = () => { world.mobileT = 4; Sound.withMusic(() => [4, 2, 0, 2, 4, 4, 4].forEach((n, i) => Sound.bell(NOTES[n], .03, i * .3))); discover('mobile', 'The twinkly mobile spins round.'); };
 G.tapBed = j => { const f = fluffs[j]; if (f.state === 'home') { world.wake[j] = 2; Sound.giggle(); discover('fluffbed', 'Wake up, little Fluffkin! Bounce!'); } else { Sound.click(); burst(G.beds[j].x, IN.f2 + 1, -2.8, ['#fff', '#e3b0ee'], 8, 2); discover('emptybed', 'This bed is waiting for a lost Fluffkin.'); } };
 
 // ---------------- rides: slide, carousel, Ferris wheel ----------------
@@ -416,12 +422,12 @@ G.useLift = () => {
   discover(down ? 'liftdown' : 'liftup', down ? 'Down, down in the glass lift!' : 'Up, up in the glass lift!');
 };
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
-G.tapWhale = () => { const W = G.whale, P = player; if (!P.ride && P.layer === '' && P.y > SKY.y - .6 && Math.abs(P.x - W.g.position.x) < 10) { P.ride = { type: 'whale', u: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('whaleride', 'You are riding the sky whale! JUMP to hop off.'); } W.spout = 2.4; [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22)); discover('whale', 'The sky whale sings you a song!'); };
+G.tapWhale = () => { const W = G.whale, P = player; if (!P.ride && P.layer === '' && P.y > SKY.y - .6 && Math.abs(P.x - W.g.position.x) < 10) { P.ride = { type: 'whale', u: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('whaleride', 'You are riding the sky whale! JUMP to hop off.'); } W.spout = 2.4; Sound.withMusic(() => [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22))); discover('whale', 'The sky whale sings you a song!'); };
 G.bounceUp = () => { const P = player; if (P.ride || Math.abs(P.x - (UG.shaft[0] + UG.shaft[1]) / 2) > 2.5 || P.y > UG.floor + 1.5) return; P.x = (UG.shaft[0] + UG.shaft[1]) / 2; P.y = UG.floor + 1; P.vy = 13.5; P.grounded = false; Sound.boing(); discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); };
-G.singCrystal = k => { k.lit = 1; k.cd = 1; Sound.bell(NOTES[k.i % 8] / 2, .06); Sound.bell(NOTES[(k.i + 2) % 8], .025, .08); burst(k.x, UG.floor + 1.5, -1.4, [k.c, '#fff'], 10, 2); discover('crystal', 'Singing crystals! Tap them or walk past them.'); };
+G.singCrystal = k => { k.lit = 1; k.cd = 1; Sound.withMusic(() => { Sound.bell(NOTES[k.i % 8] / 2, .06); Sound.bell(NOTES[(k.i + 2) % 8], .025, .08); }); burst(k.x, UG.floor + 1.5, -1.4, [k.c, '#fff'], 10, 2); discover('crystal', 'Singing crystals! Tap them or walk past them.'); };
 G.tapGem = k => { k.spin = 1.5; Sound.twinkle(); Sound.bell(NOTES[(k.i * 2) % 8], .04); burst(k.x, k.y + .5, -.6, [RAINBOW[k.i], '#fff'], 14, 2.5); discover('gem', 'Sparkly gems!'); };
 DOORS.forEach(d => { d.sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: bubbleTex(d.kind), depthTest: false })); d.sprite.scale.set(1.2, 1.2, 1); d.sprite.renderOrder = 10; d.sprite.userData.tap = d.go; d.sprite.visible = false; scene.add(d.sprite); });
-function nearDoor() { const P = player; if (P.ride || P.stair) return null; return DOORS.find(d => d.layer === P.layer && Math.abs(P.x - d.x) < 1.6 && Math.abs(P.y - d.y) < .3); }
+function nearDoor() { const P = player; if (P.ride || P.stair) return null; return DOORS.find(d => d.layer === P.layer && Math.abs(P.x - d.x) < (world.comfort?.relaxed ? 2.2 : 1.6) && Math.abs(P.y - d.y) < .3); }
 
 // ---------------- hint arrow (picture-only guidance) ----------------
 const hint = new THREE.Group(); hint.userData.dynamic = true; scene.add(hint); // (build 33: it moves to whatever you can use; never part of a scenery slice)
@@ -429,8 +435,10 @@ const hint = new THREE.Group(); hint.userData.dynamic = true; scene.add(hint); /
 function updateHint(t) {
   const P = player; let best = null, bd = 13;
   if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4 || (it.need && !it.need())) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
+  const actionable = actionTarget(); G.actionTarget=actionable; if (actionable) best = { ...actionable, hintY: actionable.hintY || 2.4 };
+  const door = nearDoor(); if (door) best = { x: door.x, y: door.y, hintY: 3.1 };
   hint.visible = !!best;
-  if (best) { hint.position.set(best.x, best.y + best.hintY + Math.sin(t * 4) * .15, .3); hint.rotation.y = t * 2; }
+  if (best) { hint.position.set(best.x, best.y + best.hintY + (world.comfort?.calm ? 0 : Math.sin(t * 4) * .15), .3); hint.rotation.y = world.comfort?.calm ? 0 : t * 2; }
 }
 
 // ---------------- input ----------------
@@ -457,7 +465,7 @@ function stickMove(e) {
 }
 function stickEnd() { keys.left = keys.right = false; keys.scale = 1; stickUI(false); $('knob').style.transform = ''; stick = null; }
 function upAction() {
-  const P = player; if (!started || P.stair) return;
+  const P = player; if (!started || G.activityOpen || P.stair) return;
   const d = nearDoor(); if (d && d.kind !== 'down') { d.go(); return; } // up at a door goes in/out; at the bottom of stairs or the lift goes up
   jump();
 }
@@ -488,29 +496,43 @@ function hold(id, key, onPress) {
 hold('leftBtn', 'left'); hold('rightBtn', 'right'); hold('upBtn', 'up', () => upAction()); hold('downBtn', 'down', () => downAction());
 const press = (id, fn) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; $(id).classList.add('pressed'); setTimeout(() => $(id).classList.remove('pressed'), 140); fn(); });
 press('jumpBtn', jump); press('pawBtn', doAction);
-addEventListener('keydown', e => { if (e.repeat) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ') jump(); if (e.key === 'ArrowUp') { keys.up = true; upAction(); } if (e.key === 'ArrowDown') { keys.down = true; downAction(); } if (e.key === 'e' || e.key === 'Enter') doAction(); });
+addEventListener('keydown', e => { if (e.repeat || G.activityOpen) return; if (e.key === 'ArrowLeft') keys.left = true; if (e.key === 'ArrowRight') keys.right = true; if (e.key === ' ') jump(); if (e.key === 'ArrowUp') { keys.up = true; upAction(); } if (e.key === 'ArrowDown') { keys.down = true; downAction(); } if (e.key === 'e' || e.key === 'Enter') doAction(); });
 addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.left = false; if (e.key === 'ArrowRight') keys.right = false; if (e.key === 'ArrowUp') keys.up = false; if (e.key === 'ArrowDown') keys.down = false; });
 addEventListener('blur', () => { if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); });
 
 function jump() {
-  const P = player; if (!started || P.stair) return;
+  const P = player; if (!started || G.activityOpen || P.stair) return;
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
   if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
   if (P.ride) { if (P.ride.type === 'slide') return; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = z; Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
-  if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps]; P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
+  if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps] * (world.comfort?.relaxed ? 1.08 : 1); P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
 }
 function doAction() {
-  const P = player; if (!started || P.stair) return;
+  const P = player; if (!started || G.activityOpen || P.stair) return;
   if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
   if (P.ride && P.ride.type === 'train') { train.hopOff(); return; }
   if (P.ride) { jump(); return; }
   const d = nearDoor(); if (d) { d.go(); return; }
-  let best = null, bd = 3.2;
-  for (const it of G.interact) { if (it.layer !== P.layer || (it.need && !it.need())) continue; const dd = Math.abs(it.x - P.x); if (dd < bd && Math.abs(it.y - P.y) < 3) { bd = dd; best = it; } }
+  const best = actionTarget();
   if (best) { best.run(); return; }
   creature.tickle(); Sound.giggle(); burst(P.x, P.y + 2, P.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2);
+}
+// The prompt and PAW share exactly the same target selection.
+function actionTarget() {
+ const P=player; let best=null, distance=world.comfort?.relaxed?4.4:3.2;
+ if(P.ride||P.stair)return null;
+ for(const it of G.interact){if(it.layer!==P.layer||(it.need&&!it.need()))continue;const d=Math.abs(it.x-P.x);if(d<distance&&Math.abs((it.y||0)-P.y)<3){distance=d;best=it;}}
+ return best;
+}
+let pawPrompt='';
+function updateActionPrompt(){
+ const d=nearDoor(),it=G.actionTarget,ride=!!player.ride;
+ const icon=ride?'⏏️':d?'🚪':it?.icon||(it?.disc?.startsWith('corner_')?'📖':it?.disc?.includes('pet')?'💖':it?.disc==='paint'?'🎨':'🐾');
+ const label=ride?'Hop off':d?'Enter or use doorway':it?.action||it?.label||(it?.disc?.startsWith('corner_')?'Play a learning game':'Play with the nearby toy');
+ if(pawPrompt!==label+icon){pawPrompt=label+icon;$('pawBtn').setAttribute('aria-label',label);$('pawLabel').textContent=icon;}
+ G.actionTarget=it;
 }
 // tapping / painting in the world
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
@@ -518,7 +540,7 @@ let painting = null;
 function pointerRay(e) { const r = canvas.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, camera); }
 function nearPaint() { const P = player; return P.layer === '' && P.y > -.5 && P.y < 3 && P.x > G.paint.x1 && P.x < G.paint.x2 && !P.ride; }
 canvas.addEventListener('pointerdown', e => {
-  if (!started) return; Sound.unlocked = true; pointerRay(e);
+  if (!started || G.activityOpen) return; Sound.unlocked = true; pointerRay(e);
   if (nearPaint()) { const h = ray.intersectObject(G.paint.mesh)[0]; if (h && !ray.intersectObjects(DOORS.map(d => d.sprite).filter(s => s.visible)).length) { painting = { id: e.pointerId, last: h.uv.clone() }; paintAt(h.uv, h.uv); canvas.setPointerCapture(e.pointerId); discover('paint', 'Paint with your finger! Pick a colour below.'); return; } }
   if (false && !stick && e.clientX < innerWidth * .5) { stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), active: false, dx: 0, dy: 0, cx: e.clientX, cy: e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch (_) { } return; }
   worldTap(e);
@@ -747,7 +769,7 @@ function saveSoon() { saveTimer = 1.2; }
 function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
-    const d = { v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
+    const d = { adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -756,6 +778,7 @@ function save() {
 function load() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return d && d.v === 1 ? d : null; } catch (e) { return null; } }
 function restore(d) {
   if (!d) return;
+  world.adventures = d.adventures; world.comfort = d.comfort;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
   if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig', 'seal'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
@@ -945,7 +968,8 @@ function frame() {
   let n = 0; while (acc >= 1 / 60 && n < 15) { step(1 / 60); acc -= 1 / 60; n++; }
   if (n === 15) acc = 0; // (a physics step costs ~0.2-0.4 ms, so catching up keeps the game at real speed even when frames drop)
   const dt = Math.max(1 / 60, n / 60);
-  if (started) updateBits(T); updateHint(T);
+  if (started) updateBits(T); updateHint(T); updateActionPrompt();
+  if (started) adventures?.update();
   const P = player;
   // build 17: draw the creature between the last two physics steps (smooth on 60/90/120 Hz screens), and move the camera every frame
   const a = Math.min(1, acc * 60), far = Math.abs(P.x - prevP.x) > 2 || Math.abs(P.y - prevP.y) > 2; // (no blending across teleports)
@@ -960,6 +984,7 @@ function frame() {
   $('buildTools').classList.toggle('show', started && meadow.nearBuild(player));
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
+  if (world.comfort?.calm) world.flash = 0;
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
   renderer.shadowMap.needsUpdate = (++shadowTick % shadowEvery) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
   renderer.info.reset(); // (build 26: count every pass of the frame, not just the last one)
@@ -977,7 +1002,7 @@ friends.restored(); meadow.restored(); karts.rebuildPreview(); expansion.restore
 updateCounters(); snapCamera(); updateBits(0);
 // (build 9: arrow buttons are back, so there is no drag hint)
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
-$('playBtn').addEventListener('click', () => { if (MOBILE && !TEST && fsAvailable()) goFullscreen(); /* (build 36: a phone or tablet in the browser plays full screen where allowed) */ Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
+$('playBtn').addEventListener('click', () => { if (MOBILE && !TEST && fsAvailable()) goFullscreen(); /* (build 36: a phone or tablet in the browser plays full screen where allowed) */ Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); adventures?.intro(); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
 addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { lastFrameAt = 0; /* (build 39: time spent in the background, e.g. while copying the test results, is not a 10-second 'freeze') */ if (document.hidden) { save(); /* (build 36: iPhone may not send 'blur' when the app is switched away: let go of every button, so nothing is stuck when she comes back) */ if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; padPointer = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); } else resize(); });
 // (build 24) the lamps of the house and the underground: a FIXED pool of 3 point lights that is always in the scene.
 // Switching lights on and off (build 22) changed the number of lights, which forces every material in the game to
@@ -1002,7 +1027,7 @@ let lodTick = 0, poolTick = 0, poolDt = 0, shadowTick = 0;
 // Seven signposts in the park and valley (numbers, letters, colors & shapes, thinking, science, music & art,
 // feelings). Tap one (or PAW next to it) to open its learning games; the games are a light 2D layer and the
 // 3D world pauses while they're open.
-const learning = initLearning({ Sound, voice, setSound: on => { setSound(on); save(); }, world, save: () => save(), discover: id => { if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST });
+const learning = initLearning({ Sound, voice, setSound: on => { setSound(on); save(); }, world, save: () => save(), discover: id => { if (id.startsWith('learn_')) adventures?.event({type:'learn',id:id.slice(6)}); if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.releaseInputs?.(); G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST, event: e => adventures?.event(e) });
 G.learning = learning;
 { const signTex = e => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff6fb'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#c9a6ff'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
   const wood = toy('#c98a5a', { r: .7, cc: .1 }), glow = toy('#fff3a6', { em: '#ffd76a', ei: .9, r: .4 });
@@ -1165,7 +1190,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '39'; G.build = GAME_BUILD;
+const GAME_BUILD = '40'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
@@ -1231,10 +1256,10 @@ function travel([icon, name, x]) {
   left.innerHTML = '<button class="pill" id="mapBtn" aria-label="map">🗺️</button><button class="pill" id="homeBtn" aria-label="go home">🏠</button>';
   $('top').insertBefore(left, $('top').firstChild);
   const mp = document.createElement('div'); mp.id = 'mapPanel';
-  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => `<button class="mpT" data-i="${i}">${t[0]}</button>`).join('')}</div></div>`;
+  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => `<button class="mpT" data-i="${i}">${destinationArt(t[0], i)}<small>${t[1]}</small><span class="mapDiscovery"></span></button>`).join('')}</div></div>`;
   document.body.appendChild(mp);
   const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
-  tapEl($('mapBtn'), () => { if (G.activityOpen) return; const P = player, here = P.layer === '' ? TRAVEL.reduce((b, t, i) => Math.abs(t[2] - P.x) < Math.abs(TRAVEL[b][2] - P.x) ? i : b, 1) : -1; mp.querySelectorAll('.mpT').forEach((b, i) => b.classList.toggle('here', i === here)); mp.classList.add('show'); Sound.click(); voice.speak('Where do you want to go? Tap a picture!'); });
+  tapEl($('mapBtn'), () => { if (G.activityOpen) return; const P = player, here = P.layer === '' ? TRAVEL.reduce((b, t, i) => Math.abs(t[2] - P.x) < Math.abs(TRAVEL[b][2] - P.x) ? i : b, 1) : -1; mp.querySelectorAll('.mpT').forEach((b, i) => { b.classList.toggle('here', i === here); b.setAttribute('aria-label','Visit '+TRAVEL[i][1]); const id=expansion.districts.find(d=>d.home===TRAVEL[i][2])?.id; const questId=({frosty:'snow',labgarden:'science',artplaza:'art'})[id]||id; const found=(ADVENTURES[questId]?.steps||[]).filter(st=>world.adventures?.events.includes(st.event)).map(st=>st.icon).slice(0,2).join(''); b.querySelector('.mapDiscovery').textContent=found||(world.adventures?.events.includes('visit_'+(id||['home','playhouse','studio','lab','park','castle'][i]))?'⭐':''); }); mp.classList.add('show'); Sound.click(); voice.speak('Where do you want to go? Tap a picture!'); });
   tapEl(mp.querySelector('.mpX'), () => { mp.classList.remove('show'); Sound.click(); });
   mp.querySelectorAll('.mpT').forEach(b => tapEl(b, () => { mp.classList.remove('show'); travel(TRAVEL[+b.dataset.i]); }));
   tapEl($('homeBtn'), () => { if (G.activityOpen) return; travel(TRAVEL[0]); });
@@ -1274,4 +1299,48 @@ function trainArrived(i) {
   const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   tapEl(btn, () => { if (G.activityOpen) return; draw(); pn.classList.add('show'); Sound.click(); voice.speak('Your pet friends! Tap one to bring it along, or to send it home.'); });
   tapEl(pn.querySelector('.mpX'), () => { pn.classList.remove('show'); Sound.click(); });
+}
+
+// ---------------- Build 40: connected adventures ----------------
+G.started = () => started;
+G.releaseInputs = () => {
+ keys.left=keys.right=keys.up=keys.down=false; keys.scale=1; G.walkTo=null; painting=null; padPointer=null;
+ if(stick)stickEnd(); document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed'));
+};
+G.setModalOpen = on => { G.activityOpen=on; G.releaseInputs(); if(!on){timer.update();acc=0;lastFrameAt=0;} };
+G.closePanels = () => { adventures?.close(); for(const id of ['mapPanel','petsPanel','stylePanel'])$(id)?.classList.remove('show'); };
+const comfort = initComfort({world,Sound,voice,G,save}); G.comfort=comfort;
+$('pawBtn').insertAdjacentHTML('beforeend','<span id="pawLabel" aria-hidden="true">🐾</span>');
+let reactionAt=0;
+G.reactCompanions = e => {
+ if(G.perfTest||performance.now()-reactionAt<1500)return;
+ if(!['sea','learn'].includes(e.type)&&!['fish_caught','fluff_home','treasure_dug','furnish','gallery_visit'].includes(e.id))return;
+ reactionAt=performance.now();for(const a of G.life?.agents||[])if(a.follower&&Math.abs(a.x-player.x)<15)G.life.tap(a,1.4,e.id==='whale'?1:0);
+};
+adventures=initAdventures({world,player,G,voice,Sound,save,saveSoon,travel,learning,fluffs,comfort,release:G.releaseInputs,pause:G.setModalOpen,cheer:()=>{creature.cheer();player.happy=1.4;}});
+G.adventures=adventures;
+// Shared-shape home decorations are only shown after earning them. No extra shaders or textures.
+{
+ const W=G.W,group=new THREE.Group();group.name='adventure-home';group.userData.dynamic=true;group.visible=true;group.position.set(0,0,0);scene.add(group);
+ const rewardObjects=new Map();
+ const shape=(parent,x,y,z,w,h,d,color)=>W.block(x,y,z,w,h,d,color,{parent,r:.08});
+ for(const [i,id]of ['nest','cushion','rainbow','garden','train','basket','owl','snow','flower','frame','pirate'].entries()){
+  const item=new THREE.Group();group.add(item);item.visible=false;
+  const x=1007+(i%6)*1.35,y=i<6?1.7:2.8;
+  shape(item,x,y,-4.35,.72,.3,.55,RAINBOW[i%RAINBOW.length]);
+  if(id==='pirate'){shape(item,x,y+.3,-4.35,.07,.9,.07,'#9a6a3a');shape(item,x+.2,y+.85,-4.35,.45,.3,.06,'#ff4f9a');}
+  if(id==='rainbow')for(let k=0;k<5;k++)shape(item,x-.3+k*.15,y+.25+Math.sin(k/4*Math.PI)*.4,-4.35,.13,.15,.15,RAINBOW[k]);
+  if(id==='garden'||id==='flower')for(let k=0;k<3;k++){shape(item,x-.25+k*.25,y+.25,-4.35,.06,.4,.06,'#36c96b');shape(item,x-.25+k*.25,y+.65,-4.35,.18,.15,.15,RAINBOW[k]);}
+  if(id==='train'){shape(item,x,y+.3,-4.35,.45,.4,.35,'#2fa8ff');shape(item,x+.3,y+.2,-4.35,.22,.24,.35,'#ff4f9a');}
+  rewardObjects.set(id,item);
+ }
+ G.updateAdventureWorld=()=>{
+  if(player.layer==='in'){if(!group.parent)scene.add(group);const trainToy=rewardObjects.get('train');if(trainToy?.visible)trainToy.position.x=world.comfort?.calm?0:Math.sin(T*.8)*.35;}
+  else if(group.parent)scene.remove(group);
+ };
+ G.refreshAdventureWorld=()=>{for(const[id,item]of rewardObjects)item.visible=world.adventures?.rewards.includes(id)||false;const cushion=rewardObjects.get('cushion');if(cushion?.children[0])cushion.children[0].material=W.M(({pink:'#ff9acb',blue:'#91cfff',green:'#a5e6b5'})[world.adventures?.cushion]||'#ff9acb');};
+ // A permanent picture on the wall opens the saved gallery without needing to read.
+ const frame=W.block(1015.7,2.2,-4.4,1,.8,.12,'#ffd23f',{parent:group,r:.1});
+ const openGallery=()=>adventures.gallery();frame.userData.tap=openGallery;G.taps.push(frame);G.interact.push({x:1015.7,y:0,layer:'in',icon:'🖼️',action:'Open home gallery',run:openGallery,hintY:2.5});
+ G.refreshAdventureWorld(); G.updateAdventureWorld();
 }

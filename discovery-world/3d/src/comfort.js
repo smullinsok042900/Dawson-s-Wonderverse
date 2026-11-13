@@ -66,7 +66,7 @@ export function initComfort({ world, Sound, voice, G = {}, save = () => {} }) {
       event.stopPropagation();
       if (event.key === 'Escape') { event.preventDefault(); close(); }
       if (event.key === 'Tab') {
-        const buttons = [...overlay.querySelectorAll('button')], first = buttons[0], last = buttons.at(-1);
+        const buttons = [...overlay.querySelectorAll('button')], first = buttons[0], last = buttons[buttons.length - 1];
         if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
