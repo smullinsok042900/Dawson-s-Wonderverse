@@ -1,0 +1,12 @@
+const { chromium } = require('playwright'); const sleep = ms => new Promise(r => setTimeout(r, ms));
+const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+(async () => { const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const f = process.argv[2]; const ctx = await b.newContext({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true, userAgent: UA }); const p = await ctx.newPage();
+await p.addInitScript(() => { window.__lt = []; new PerformanceObserver(l => { for (const e of l.getEntries()) __lt.push([window.__DDW3 ? Math.round(__DDW3.player.x) : -1, Math.round(e.duration)]); }).observe({ type: 'longtask', buffered: true }); });
+await p.goto('file://' + require('path').resolve(f) + '?hq'); await p.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await p.locator('#playBtn').tap(); await sleep(2000);
+await p.evaluate(() => __DDW3.teleport(330)); await sleep(2500);
+await p.evaluate(() => { __lt.length = 0; window.__log = []; const E = __DDW3.G.expansion || { stats: () => 'no expansion' }; let last = ''; const tick = () => { const s = E.stats(); if (!E) return; if (s !== last) { __log.push([Math.round(performance.now()), Math.round(__DDW3.player.x), s]); last = s; } if (window.__on) requestAnimationFrame(tick); }; window.__on = 1; tick(); __DDW3.keys.right = true; });
+await sleep(70000);
+const r = await p.evaluate(() => { __DDW3.keys.right = false; window.__on = 0; return { x: Math.round(__DDW3.player.x), lt: __lt, log: __log }; });
+console.log('reached x', r.x); for (const l of r.log) console.log('  t=' + l[0], 'x=' + l[1], l[2]); console.log('long tasks [x where it ended, ms]:', JSON.stringify(r.lt));
+await b.close(); })();

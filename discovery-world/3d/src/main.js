@@ -815,13 +815,21 @@ let quality = TEST ? .4 : MOBILE ? .75 : 1, slow = 0, ema = 1 / 60;
 if (TEST) renderer.shadowMap.enabled = false;
 // soft "ambient occlusion" shadows (post.js); off in the light test mode and with ?nopost
 const post = makePost(renderer, scene, camera, { mobile: MOBILE }); post.enabled = !TEST && !/[?&]nopost/.test(location.search);
+// (build 34b) the picture is sized from the canvas's REAL size on screen. On iPhone (especially the Home Screen app),
+// innerWidth/innerHeight can still hold the old, upright size when the phone turns, which drew a tall picture and
+// stretched it sideways ("squished"). A cheap check every frame also catches any size change that sent no event.
+let sizeW = 0, sizeH = 0;
+function screenSize() { const r = canvas.getBoundingClientRect(); return [Math.round(r.width) || innerWidth, Math.round(r.height) || innerHeight]; }
 function resize() {
-  const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2) * quality;
+  const [w, h] = screenSize(), dpr = Math.min(devicePixelRatio || 1, 2) * quality; sizeW = w; sizeH = h;
   renderer.setPixelRatio(Math.max(.75, dpr)); renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
   post.setSize(w, h, renderer.getPixelRatio());
 }
-addEventListener('resize', resize); resize();
+function checkSize() { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
+addEventListener('resize', resize); addEventListener('orientationchange', () => { resize(); setTimeout(resize, 300); setTimeout(resize, 1000); });
+if (window.visualViewport) visualViewport.addEventListener('resize', resize);
+resize();
 // (build 23) the title pictures never change: they are drawn once, saved on the device, and shown instantly on
 // every later start. On the very first start they are drawn just after the game becomes playable.
 const PORTRAIT_KEY = 'ddw3-portraits-b23';
@@ -874,7 +882,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
-  const frameT0 = performance.now();
+  const frameT0 = performance.now(); checkSize();
   { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices

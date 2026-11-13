@@ -16,7 +16,13 @@ checkpoint lists what was verified, and how, and what is still known to be wrong
 4. Desktop results are NOT iPhone results. The real numbers come from the in-game ⚙️ → Performance Test → Copy Test Results.
 5. Before a big change, keep a rollback copy in `../backups/3D_buildNN_index.html`.
 
-## Checkpoint: build 34 (current)
+## Checkpoint: build 34b (urgent fix)
+- **"Squished" picture on iPhone (reported with a screenshot):** when the phone turned, Safari could still report the upright size. The game then drew a tall picture and stretched it across the wide screen, so it looked blocky, zoomed in and too wide.
+  - **Fix:** the picture is now sized from the canvas's real size on screen. It is rechecked every frame (a cheap comparison) and on orientation and visual-viewport changes.
+  - **Reproduced and verified (desktop):** the browser was made to report the stale upright size after turning. Build 34 drew 292×633 onto an 844×390 screen; 34b draws 633×292.
+- **Measuring scripts** are now kept in `tests/perf/` (`ba`, `walknew`, `train`, `soak`, `sweep`, `house2`, `movers`, `chunkchk`), so later sessions can reuse them. Run them from `discovery-world/3d` with the html file as the argument.
+
+## Checkpoint: build 34
 - **Express train:** picture trips longer than about 280 m speed up to 36 m/s (was always 20). The whole line takes about 42 s of game time, down from about 68 s. Short trips are unchanged.
 - **Verified (desktop, `train_test2.cjs`, before → after):**
   - trip home → 🌈: top speed 20 → 36 m/s, long tasks 1 (50 ms) → 0;

@@ -1,0 +1,23 @@
+const { chromium } = require('playwright'); const sleep = ms => new Promise(r => setTimeout(r, ms));
+(async () => { const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const ctx = await b.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' }); const p = await ctx.newPage(); const errs = [];
+p.on('pageerror', e => errs.push('PE ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text().slice(0, 160)); });
+await p.addInitScript(() => { window.__lt = []; new PerformanceObserver(l => { for (const e of l.getEntries()) __lt.push([window.__DDW3 ? Math.round(__DDW3.player.x) : -1, Math.round(e.duration)]); }).observe({ type: 'longtask', buffered: true }); });
+await p.goto('file://' + require('path').resolve(process.argv[2]) + '?' + (process.argv[3] || 'hq')); await p.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await p.locator('#playBtn').tap(); await sleep(1500);
+// watch every frame: the train's seat must never jump
+await p.evaluate(() => { const tr = __DDW3.train; window.__mon = { maxJump: 0, maxV: 0, n: 0 }; let last = null; const f = () => { const s = tr.seatX(); if (last !== null) { const d = Math.abs(s - last); if (d > __mon.maxJump) { __mon.maxJump = d; __mon.at = Math.round(s); } } __mon.maxV = Math.max(__mon.maxV, Math.abs(tr.state.vs)); __mon.n++; { const cx = __DDW3.player.x; for (const st of __DDW3.G.expansion._S) if (cx > st.d.x0 - 25 && cx < st.d.x1 + 25 && st.state !== 'ready') { __mon.unbuilt = (__mon.unbuilt || 0) + 1; __mon.ub = st.d.id + '@' + Math.round(cx); } } last = s; requestAnimationFrame(f); }; f(); });
+await p.evaluate(() => { __DDW3.teleport(2); }); await sleep(2000); await p.evaluate(() => __DDW3.train.call(__DDW3.train.STATIONS.findIndex(q => q.e === '🏠'))); 
+for (let i = 0; i < 60 && !(await p.evaluate(() => __DDW3.player.ride && __DDW3.player.ride.type === 'train')); i++) await sleep(500);
+await sleep(1200); console.log('boarded:', await p.evaluate(() => !!__DDW3.player.ride), '| strip shown:', await p.evaluate(() => document.getElementById('trainStrip').classList.contains('show')), '| tiles:', await p.locator('.tsT').count());
+const t0 = Date.now(); await p.evaluate(() => { __lt.length = 0; }); await p.evaluate(() => __DDW3.train.goTo(__DDW3.train.STATIONS.findIndex(q => q.e === '🌈')));
+let last; for (let i = 0; i < 300; i++) { await sleep(1000); last = await p.evaluate(() => ({ x: Math.round(__DDW3.player.x), ride: !!__DDW3.player.ride, st: __DDW3.G.expansion.stats() })); if (!last.ride) break; if (i % 15 === 0) console.log('  ', Math.round((Date.now() - t0) / 1000) + 's', JSON.stringify(last)); }
+console.log('trip to 🌈: arrived at x', last.x, 'off the train:', !last.ride, 'in', Math.round((Date.now() - t0) / 1000), 's | jumps', JSON.stringify(await p.evaluate(() => __mon)), '| long tasks', JSON.stringify(await p.evaluate(() => __lt)));
+// back home: call the train here, pick 🏠
+await p.evaluate(() => { window.__mon.maxJump = 0; __DDW3.train.call(__DDW3.train.STATIONS.findIndex(q => q.e === '🌈')); }); for (let i = 0; i < 60 && !(await p.evaluate(() => __DDW3.player.ride && __DDW3.player.ride.type === 'train')); i++) await sleep(500); await sleep(1200);
+const t1 = Date.now(); await p.evaluate(() => { __lt.length = 0; }); await p.evaluate(() => __DDW3.train.goTo(__DDW3.train.STATIONS.findIndex(q => q.e === '❄️')));
+for (let i = 0; i < 300; i++) { await sleep(1000); last = await p.evaluate(() => ({ x: Math.round(__DDW3.player.x), ride: !!__DDW3.player.ride })); if (!last.ride) break; }
+console.log('trip to ❄️ (whole line): arrived at x', last.x, 'in', Math.round((Date.now() - t1) / 1000), 's | jumps', JSON.stringify(await p.evaluate(() => __mon)), '| long tasks', JSON.stringify(await p.evaluate(() => __lt)), '| districts', await p.evaluate(() => __DDW3.G.expansion.stats()));
+// calling it from far away: it must appear off-screen; from near: it drives over
+await p.evaluate(() => { __DDW3.teleport(561); }); await sleep(1500); const cx = await p.evaluate(() => __DDW3.camera.position.x); await p.evaluate(() => { window.__mon.maxJump = 0; __DDW3.train.call(10); }); await sleep(200);
+console.log('far call: train appeared', Math.round(Math.abs(await p.evaluate(() => __DDW3.train.seatX()) - cx)), 'm from the camera');
+console.log('errors', errs); await b.close(); })();
