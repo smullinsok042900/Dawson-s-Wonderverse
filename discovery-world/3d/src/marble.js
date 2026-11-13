@@ -100,7 +100,7 @@ export function initMarbles(G, api) {
   function step(b, h) {
     b.vy -= 9 * h;
     b.x += b.vx * h; b.y += b.vy * h;
-    for (const s of segs) { const imp = collideSeg(b, s); if (imp > 0 && s.kind === 'floor') { const i = Math.max(0, Math.min(7, Math.floor((b.x - X0) / bw))), bin = bins[i]; if (imp > .9 && !(b.cd.get(i) > 0)) { b.cd.set(i, .3); bin.glow = 1; Sound.bell(bin.note * 2, Math.min(.06, .02 + imp * .01)); discover('marblemusic', 'Ding! Every bin plays a different note.'); if (imp > 2) burst(bin.x, M.floor + .3, M.z + .3, ['#fff', BIN_COLS[i]], 6, 1.6); } } }
+    for (const s of segs) { const imp = collideSeg(b, s); if (imp > 0 && s.kind === 'floor') { const i = Math.max(0, Math.min(7, Math.floor((b.x - X0) / bw))), bin = bins[i]; if (imp > .9 && !(b.cd.get(i) > 0)) { b.cd.set(i, .3); bin.glow = 1; Sound.withMusic(() => Sound.bell(bin.note * 2, Math.min(.06, .02 + imp * .01))); discover('marblemusic', 'Ding! Every bin plays a different note.'); if (imp > 2) burst(bin.x, M.floor + .3, M.z + .3, ['#fff', BIN_COLS[i]], 6, 1.6); } } }
     for (const p of pegs) { let nx = b.x - p.x, ny = b.y - p.y; const d = Math.hypot(nx, ny), min = R + p.r; if (d < min && d > 1e-6) { nx /= d; ny /= d; b.x += nx * (min - d); b.y += ny * (min - d); const vn = b.vx * nx + b.vy * ny; if (vn < 0) { b.vx -= 1.55 * vn * nx; b.vy -= 1.55 * vn * ny; if (vn < -1.2) { p.glow = 1; Sound.tone(1300 + Math.random() * 300, .05, 'sine', .025, 1.1); } } } }
   }
   function update(dt) {

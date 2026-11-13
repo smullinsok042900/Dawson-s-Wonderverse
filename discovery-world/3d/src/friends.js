@@ -219,14 +219,14 @@ export function initFriends(G, api) {
     const k = plush(r, bipedSpec({ scale: 1, body: '#5fcf6a', belly: '#d8f7c0', headW: 1.35, headH: .82, headY: 1.0, ears: 'none', eyeBumps: true, snout: false, tail: 'none', bodyR: [.38, .34, .32], footCol: '#4fbf5a', iris: '#c8a020', eyeR: .085 }),
       { fur: false, rough: .35, lid: '#5fcf6a', iris: '#c8a020', mouth: false, accessories: (B, at) => { const sm = new THREE.Mesh(new THREE.TorusGeometry(.13, .018, 8, 24, Math.PI), new THREE.MeshStandardMaterial({ color: '#2a5a1a' })); sm.rotation.z = Math.PI; at(B.head, sm, 0, .92, .27); } });
     return { head: k.B.head, arm: k.B.armL, drumTop: top, tick: k.tick, B: k.B };
-  }, c => { [0, .18, .36, .54].forEach((d, i) => { Sound.tone(110 + i * 20, .2, 'sine', .08, .5, d); }); burst(c.x + .7, .8, c.z + .3, ['#fff', '#ff6fae'], 12, 2); }, 'frog', 'Boom boom! The drummer frog plays for you!');
+  }, c => { Sound.withMusic(() => [0, .18, .36, .54].forEach((d, i) => { Sound.tone(110 + i * 20, .2, 'sine', .08, .5, d); })); burst(c.x + .7, .8, c.z + .3, ['#fff', '#ff6fae'], 12, 2); }, 'frog', 'Boom boom! The drummer frog plays for you!');
   // Dancing Penguin (lab)
   critter('penguin', 109.2, 0, -2.4, r => {
     const k = plush(r, bipedSpec({ scale: 1.1, body: '#2c2c4a', belly: '#ffffff', headCol: '#2c2c4a', muzzle: '#ffffff', beak: '#ffb000', ears: 'none', flippers: true, tail: 'feathers', footCol: '#ffb000', legCol: '#2c2c4a', bodyR: [.36, .44, .32], iris: '#4a6ad0',
       extraPaints: (s, hy) => [{ type: 'ellipsoid', c: s([0, hy - .02, .2]), r: s([.2, .2, .12]), color: '#ffffff', soft: .02 }] }), { fur: false, rough: .45, clearcoat: .5, lid: '#2c2c4a', iris: '#4a6ad0',
       accessories: (B, at) => { const bow = new THREE.Group(); bow.add(ball(M('#ff4f9a'), .06, 0, 0, 0)); for (const x of [-.09, .09]) bow.add(ball(M('#ff4f9a'), .07, x, 0, 0, 1.2, .8, .5)); at(B.spine, bow, 0, .98, .3); } });
     return { head: k.B.head, arm: k.B.armL, tick: k.tick, B: k.B };
-  }, c => { [0, 2, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n], .04, i * .16)); burst(c.x, 1.5, c.z, ['#9fe6ff', '#fff'], 12, 2); }, 'penguin', 'The penguin does a happy dance!');
+  }, c => { Sound.withMusic(() => [0, 2, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n], .04, i * .16))); burst(c.x, 1.5, c.z, ['#9fe6ff', '#fff'], 12, 2); }, 'penguin', 'The penguin does a happy dance!');
   // Sleepy Owl (on a tree in the park)
   critter('owl', 152, 2.1, -3.2, r => {
     const k = plush(r, bipedSpec({ scale: .95, body: '#b98a5a', belly: '#f3e0c0', headCol: '#b98a5a', beak: '#ffb347', ears: 'tufts', tail: 'feathers', bodyR: [.36, .36, .32], headW: 1.15, iris: '#c97a10', eyeR: .1,
@@ -256,7 +256,7 @@ export function initFriends(G, api) {
         spines.castShadow = true; at(B.spine, spines, 0, .66, 0);
         const guitar = new THREE.Group(); guitar.rotation.z = .6; guitar.add(ball(M('#ff9a2e'), .17, 0, 0, 0, 1, 1.2, .4)); const neck = new THREE.Mesh(new THREE.BoxGeometry(.06, .45, .04), M('#7a4a2a')); neck.position.y = .3; guitar.add(neck); at(B.handR, guitar, -.2, .55, .3); } });
     return { head: k.B.head, arm: k.B.armL, tick: k.tick, B: k.B };
-  }, c => { [0, 2, 4, 5, 4, 2, 0].forEach((n, i) => Sound.tone([262, 294, 330, 349, 392, 440, 494][n] * 2, .25, 'triangle', .05, 1, i * .14)); burst(c.x, 1.2, c.z, ['#ffd23f', '#fff'], 10, 2); }, 'hedgehog', 'The hedgehog plays a song on the guitar!');
+  }, c => { Sound.withMusic(() => [0, 2, 4, 5, 4, 2, 0].forEach((n, i) => Sound.tone([262, 294, 330, 349, 392, 440, 494][n] * 2, .25, 'triangle', .05, 1, i * .14))); burst(c.x, 1.2, c.z, ['#ffd23f', '#fff'], 10, 2); }, 'hedgehog', 'The hedgehog plays a song on the guitar!');
   critter('snail', 251, 0, -2.0, r => {
     const body = new THREE.Group(); r.add(body);
     const skin = toy('#b9f0b0', { r: .3, cc: .9 }); const shell = new THREE.Mesh(new THREE.TorusGeometry(.25, .17, 12, 24), toy('#ff9fd2', { cc: 1 })); shell.position.set(-.05, .45, 0); body.add(shell);
