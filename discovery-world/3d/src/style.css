@@ -15,6 +15,15 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #trainStrip.show{display:flex}
 #trainStrip .tsT{flex:none;width:52px;height:52px;font-size:30px;border-radius:16px;border:3px solid #fff;background:#fff6c8;box-shadow:0 4px 0 #e9c93f}
 #trainStrip .tsT.here{background:#d8ffe0;box-shadow:0 0 0 4px #7fd99a}
+#petsPanel{display:none;position:fixed;inset:0;z-index:40;background:rgba(40,20,80,.45);align-items:center;justify-content:center}
+#petsPanel.show{display:flex}
+#petsPanel .mpIn{position:relative;background:linear-gradient(160deg,#fff8fd,#e8f6ff);border:5px solid #fff;border-radius:28px;padding:16px 18px;box-shadow:0 12px 30px #0005}
+#petsPanel .mpGrid{display:flex;gap:14px}
+#petsPanel .mpT{position:relative;width:104px;height:104px;font-size:58px;border-radius:26px;border:4px solid #fff;background:#fff;box-shadow:0 6px 0 #d9c6f3}
+#petsPanel .mpT.on{background:#ffe3f3;box-shadow:0 0 0 6px #ff8fc8,0 6px 0 #d9c6f3}
+#petsPanel .mpT.unknown{opacity:.55;filter:grayscale(1)}
+#petsPanel .pf{position:absolute;right:-6px;top:-8px;font-size:26px}
+#petsPanel .mpX{position:absolute;top:-16px;right:-16px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;background:#ff8fc8;color:#fff;font-size:24px;font-weight:900}
 #mapPanel{display:none;position:fixed;inset:0;z-index:40;background:rgba(40,20,80,.45);align-items:center;justify-content:center}
 #mapPanel.show{display:flex}
 #mapPanel .mpIn{position:relative;background:linear-gradient(160deg,#fff8fd,#e8f6ff);border:5px solid #fff;border-radius:28px;padding:16px 18px;box-shadow:0 12px 30px #0005;max-width:94vw}

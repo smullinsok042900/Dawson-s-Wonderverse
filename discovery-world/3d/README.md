@@ -37,6 +37,51 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 32: three more pets and a secret tunnel
+
+- **Three new pals to befriend** (three taps each), one in each neighbourhood on the right. That makes 6 pals in all, shown in 🐾 My Pets.
+  - **Bolt the toy robot** (Toy Town): rolls on wheels, with a blinking antenna light.
+  - **Hoppy the frog** (by the Lab Gardens pond).
+  - **Kiwi the parrot** (Art Plaza): flies along beside you, flapping.
+- **A secret tunnel:** a cave mouth half-hidden behind bushes in the Whispering Woods, with its other end in Toy Town. Tap it, or PAW next to it, and you whoosh right across the world. The place you arrive at is built at once.
+- **Checked:**
+  - all three pals befriend and follow;
+  - 0 new shader programs;
+  - the tunnel works both ways (Woods → Toy Town x 614, and back to x -230), and Toy Town is built on arrival.
+- **Test fixes:**
+  - **Map and train pictures:** the test now finds them by their picture instead of their position in the list. Adding Frosty Peaks had shifted the order.
+  - **Biscuit:** tapped from his left, so your following pets can't stand in front of him.
+
+## 3D build 31: Frosty Peaks, a My Pets panel, and a whole-world bug sweep
+
+**Bug sweep (automated, both directions over the whole outdoor world):** Dawson never got stuck and there were no console errors. The only detours were the intended rides (slides, lift, ball pit).
+
+**❄️ Frosty Peaks (x -272 to -404).** Still further left, past the woods:
+- a sledding hill: climb the snowy steps, tap the sled and whoosh down;
+- a snowman to build, one part per tap (three snowballs, a carrot nose, a hat), which melts away to build again;
+- a snowball toss at a target;
+- a frozen pond: run onto it and let go, and you glide;
+- an igloo that glows warm inside (and hot cocoa);
+- the northern lights: tap the star and coloured ribbons dance in the sky;
+- waddling penguins that flap when tapped;
+- Pebble the penguin, a new pal to befriend;
+- gently falling snow while you are there.
+
+Also new:
+- **Gems:** 2 more (14 in all).
+- **Train:** extended to a ❄️ station.
+- **Map:** a ❄️ picture.
+
+**🐾 My Pets** (top left): your befriended friends in big pictures. Tap one to bring it along (💖) or send it home to wait (🏠). Friends you haven't met yet show as ❓, and tapping one tells you where to find them. Following friends now walk in front of the path, each in its own spot, so they don't overlap the workshop pets or each other.
+
+**Measured (desktop, iPhone size):**
+- **Walking into Frosty Peaks:** 0 long tasks, 0 new shaders.
+- **Activities:** all 10 tappables work.
+- **Sled:** slides from the top (4.5 m) to the ground.
+- **Ice:** you glide 2 m after letting go.
+
+**DEVLOG.md** now holds the verification routine, each checkpoint, the known issues and the backlog, so development can resume from the newest checkpoint.
+
 ## 3D build 30: the train fixed and running the whole world, a seaside and a forest, and pets to befriend
 
 **Train: problems found in the code and fixed**
