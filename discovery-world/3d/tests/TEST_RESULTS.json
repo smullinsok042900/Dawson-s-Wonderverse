@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-13T04:58:29.633Z",
+  "date": "2026-11-13T06:33:13.264Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 148,
-  "total": 148,
+  "passed": 147,
+  "total": 150,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 5.3"
+      "detail": "x 1.2 → 5.5"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.55"
+      "detail": "y=0.68"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 2.6→6.9, y 1.60"
+      "detail": "x 2.0→6.1, y 1.55"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.76"
+      "detail": "rose to y=1.75"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -92,7 +92,7 @@
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"],[\"Mesh\",\"9.02\",\"tap\",\"0.0\"]] P=8.82,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\"]] P=7.35,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,12 +112,12 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=3.25"
+      "detail": "highest y=2.48"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.9 y=2.40"
+      "detail": "x=40.9 y=3.88"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
@@ -127,7 +127,7 @@
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=9.8"
+      "detail": "x=11.6"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-2.29"
+      "detail": "y=-1.85"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=5.0 y=0.00"
+      "detail": "x=5.8 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.2"
+      "detail": "x=37.9"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -322,7 +322,7 @@
     {
       "name": "tap the unicorn: it talks in a picture speech bubble",
       "ok": true,
-      "detail": "2 bubbles"
+      "detail": "1 bubbles"
     },
     {
       "name": "the hedgehog plays a song",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.054 → 1.047, z=-3.4"
+      "detail": "u 0.055 → 1.014, z=-3.3"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -446,8 +446,8 @@
     },
     {
       "name": "tap Biscuit the puppy: he follows you everywhere",
-      "ok": true,
-      "detail": "followers 2 → 3"
+      "ok": false,
+      "detail": "followers 2 → 2"
     },
     {
       "name": "tap Twinkle the fairy: she flies along with you",
@@ -461,13 +461,13 @@
     },
     {
       "name": "all your pets and friends follow you in a line",
-      "ok": true,
-      "detail": "2.8 3.7 4.6 5.6 6.4"
+      "ok": false,
+      "detail": "2.8 3.7 4.7 5.5"
     },
     {
       "name": "tap a friend who follows you: they stay (tap again to bring them)",
-      "ok": true,
-      "detail": "followers 5 → 4"
+      "ok": false,
+      "detail": "followers 4 → 5"
     },
     {
       "name": "tap the sky whale: ride on its back",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.23"
+      "detail": "y=5.13"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=1.66"
+      "detail": "y=1.63"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "46 → 50"
+      "detail": "47 → 51"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,7 +597,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.580377821511786"
+      "detail": "k=0.5429340910916708"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -607,7 +607,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=4.69"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -657,7 +657,7 @@
     {
       "name": "reload keeps all your pets and the friends who follow you",
       "ok": true,
-      "detail": "{\"pets\":2,\"f\":4}"
+      "detail": "{\"pets\":2,\"f\":5}"
     },
     {
       "name": "reload keeps your crown and your hatched baby dino",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":50,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":51,\"fl\":3,\"p\":true}"
     },
     {
       "name": "🗺️ opens the picture map",
@@ -708,6 +708,16 @@
       "name": "🐾 My Pets shows your friends (Pinchy is there and following)",
       "ok": true,
       "detail": "🦀💖 ❓ ❓ ❓ ❓ ❓"
+    },
+    {
+      "name": "nothing that travels with you (crown, shadow, hints) is hidden away in a scenery chunk",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Princess Luna gives a magic wand; the crown and wand stay with you far from the castle",
+      "ok": true,
+      "detail": "{\"wand\":true,\"wv\":true,\"crown\":true,\"cv\":true,\"crownInScene\":true,\"dx\":0}"
     },
     {
       "name": "every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)",
