@@ -226,7 +226,7 @@ G.startKart = () => {
 function parkKart() { const P = player; if (!P.ride || P.ride.type !== 'kart') return; karts.honk(); P.ride = null; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.groundZ = 0; burst(P.x, .5, P.z, ['#fff', '#ffd23f'], 10, 2); }
 const karts = initKarts(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), startKart: () => G.startKart(), tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
 const tapApi = (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); };
-const train = initTrain(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, tap: tapApi });
+const train = initTrain(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, tap: tapApi, arrived: i => trainArrived(i) });
 const marbles = initMarbles(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), player, tap: tapApi });
 const friends = initFriends(G, {
   scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), player, world, UG,
@@ -600,7 +600,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [.4, EXP.x1]; }
+function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -681,7 +681,7 @@ const CAM_DIST = 7.6; // build 16: a little closer, to show the characters
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, -1 + hw, EXP.x1 + 4 - hw);
+  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
 // build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
@@ -732,6 +732,7 @@ function updateWorldAnim(dt, t) {
   poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
   updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
   expansion.update(dt, t, player.layer === '' ? camT.x : -999); // (build 29: stream the new neighbourhoods)
+  if (G.updateTrainStrip) G.updateTrainStrip();
   if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > 16; if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
@@ -757,7 +758,7 @@ function restore(d) {
   if (!d) return;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
-  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g[1-8]$/.test(g)).slice(0, 8) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons) }; } // (build 29)
+  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
   world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
@@ -777,7 +778,7 @@ function restore(d) {
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
   if (d.crown === true) world.crown = true;
   if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
-  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, EXP.x1 - 2) : clamp(d.x, .5, 301); // (build 29: you can also wake up in the new neighbourhoods)
+  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, EXP.x1 - 2) : d.x < -6 ? clamp(d.x, EXP.xMin + 2, -6) : clamp(d.x, .5, 301); // (build 29: you can also wake up in the new neighbourhoods)
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
   world.secret = d.secret === true;
@@ -903,7 +904,7 @@ const saved = load();
 restore(saved);
 setCreature(player.creature);
 document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x.dataset.c === player.creature));
-friends.restored(); meadow.restored(); karts.rebuildPreview();
+friends.restored(); meadow.restored(); karts.rebuildPreview(); expansion.restored();
 updateCounters(); snapCamera(); updateBits(0);
 // (build 9: arrow buttons are back, so there is no drag hint)
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
@@ -1162,4 +1163,24 @@ function travel([icon, name, x]) {
   tapEl(mp.querySelector('.mpX'), () => { mp.classList.remove('show'); Sound.click(); });
   mp.querySelectorAll('.mpT').forEach(b => tapEl(b, () => { mp.classList.remove('show'); travel(TRAVEL[+b.dataset.i]); }));
   tapEl($('homeBtn'), () => { if (G.activityOpen) return; travel(TRAVEL[0]); });
+}
+
+// ---------------- build 30: the train's picture strip (pick a station, the train drives you there) ----------------
+// It appears at the top whenever you sit in the train and it isn't moving; tap a picture and off you go. When the
+// train arrives you hop off onto the platform by yourself. (Holding ▶ or ◀ still lets you drive it yourself.)
+function trainArrived(i) {
+  const P = player, st = train.STATIONS[i]; train.hopOff(); P.x = st.x; snapCamera(); Sound.chime(); burst(st.x, 1.4, 0, ['#fff', '#ffd23f', '#ff8fc8', '#9fe6ff'], 18, 2.5);
+  toast(`${st.e} We're here!`); discover('trainride', 'You rode the train to a new place!'); saveSoon();
+}
+{
+  const strip = document.createElement('div'); strip.id = 'trainStrip';
+  strip.innerHTML = train.STATIONS.map((s, i) => `<button class="tsT" data-i="${i}">${s.e}</button>`).join('');
+  document.body.appendChild(strip);
+  strip.querySelectorAll('.tsT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; train.goTo(+b.dataset.i); Sound.click(); }));
+  let shown = false, lastAt = -1;
+  G.updateTrainStrip = () => {
+    const P = player, T = train.state, show = !!(P.ride && P.ride.type === 'train' && T.mode === 'driving' && T.dest < 0 && Math.abs(T.vs) < .05);
+    if (show !== shown) { shown = show; strip.classList.toggle('show', show); if (show) voice.speak('Where shall we go? Tap a picture!'); }
+    if (show && T.at !== lastAt) { lastAt = T.at; strip.querySelectorAll('.tsT').forEach((b, i) => b.classList.toggle('here', i === T.at)); }
+  };
 }

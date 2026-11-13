@@ -16,7 +16,7 @@ import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
-import { lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
+import { sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -54,7 +54,7 @@ export function buildWorld(G) {
     g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
   };
-  const ZONES = [[-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 356, '#c4e2ff', '#a9d3ff'], [356, 394, '#d9f2b4', '#c5e89c'], [394, 432, '#ffdcef', '#ffc9e4'], [432, 548, 'lawn'], [548, 668, '#ffd6a5', '#ffc38a'], [668, 788, 'lawn'], [788, 906, '#c8f5e6', '#a8ecd4']];
+  const ZONES = [[-274, -150, 'lawn'], [-150, -20, 'sand'], [-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 356, '#c4e2ff', '#a9d3ff'], [356, 394, '#d9f2b4', '#c5e89c'], [394, 432, '#ffdcef', '#ffc9e4'], [432, 548, 'lawn'], [548, 668, '#ffd6a5', '#ffc38a'], [668, 788, 'lawn'], [788, 906, '#c8f5e6', '#a8ecd4']];
   // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
   const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.6, 54.2, -3.2, -1.6]];
   // a normal map so each tile has softly rounded edges and grout lines that catch the light (made once, shared)
@@ -73,8 +73,8 @@ export function buildWorld(G) {
     g.putImageData(img, 0, 0); const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; return t;
   })();
   const LAWN_FROM = 135, LAWN_TO = 394; // the outdoor part of the world is a real lawn (the castle courtyard keeps its tiles)
-  function lawnPiece(x0, x1, z0, z1) {
-    const L = lawnTextures(), map = L.map.clone(), nm = L.normal.clone();
+  function lawnPiece(x0, x1, z0, z1, kind) {
+    const L = kind === 'sand' ? sandTextures() : lawnTextures(), map = L.map.clone(), nm = L.normal.clone();
     for (const t of [map, nm]) { t.repeat.set((x1 - x0) / 4, (z1 - z0) / 4); t.offset.set(x0 / 4, -z1 / 4); t.needsUpdate = true; }
     // build 16: the lawn follows the rolling meadow (a gently curved surface, not a flat sheet)
     const geo = new THREE.PlaneGeometry(x1 - x0, z1 - z0, Math.ceil(x1 - x0), Math.ceil((z1 - z0) * 1.5)); geo.rotateX(-Math.PI / 2); geo.translate((x0 + x1) / 2, 0, (z0 + z1) / 2);
@@ -83,7 +83,7 @@ export function buildWorld(G) {
     f.receiveShadow = true; add(f);
   }
   function floorPiece(x0, x1, z0, z1, c1, c2) {
-    if ((x0 >= LAWN_FROM && x1 <= LAWN_TO) || c1 === 'lawn') return lawnPiece(x0, x1, z0, z1);
+    if ((x0 >= LAWN_FROM && x1 <= LAWN_TO) || c1 === 'lawn' || c1 === 'sand') return lawnPiece(x0, x1, z0, z1, c1);
     const t = tileTex(c1, c2); t.repeat.set((x1 - x0) / 2.4, (z1 - z0) / 2.4); t.offset.set(x0 / 2.4, -z1 / 2.4);
     const nm = tileNormal.clone(); nm.repeat.copy(t.repeat); nm.offset.copy(t.offset);
     const f = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), new THREE.MeshPhysicalMaterial({ map: t, normalMap: nm, normalScale: new THREE.Vector2(.9, .9), roughness: .35, clearcoat: .8, clearcoatRoughness: .15 }));
@@ -96,13 +96,13 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // a cobblestone path through the park, the meadow and the valley (where you walk)
-  for (const [x0, x1] of [[LAWN_FROM, LAWN_TO], [432, 906]]) { // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
+  for (const [x0, x1] of [[LAWN_FROM, LAWN_TO], [432, 906], [-274, -20]]) { // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
     const C = USE_ASSETS ? cobbleSet() : cobbleTextures(), cl = t => { if (!t) return null; const k = t.clone(); k.needsUpdate = true; return k; }, map = cl(C.map), nm = cl(C.normal), rm = cl(C.rough); for (const t of [map, nm, rm]) if (t) t.repeat.set((x1 - x0) / 3, 1); // (each path piece has its own tiling)
     const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), macroVariation(new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.75, .75), roughness: rm ? 1 : .82, roughnessMap: rm }), { scale: .13, amount: .08 }));
     path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);
     for (const z of [-1.55, 1.55]) { const edge = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .07, .14), M('#fff6ea', { r: .6, cc: .2 })); edge.position.set((x0 + x1) / 2, .035, z); edge.receiveShadow = true; add(edge); } }
   // front edge of the floor (a rounded rail, so the world has a nice edge)
-  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(370, -.6, 4.6, 124, .6, .8, '#ffb8de', { r: .3, cast: false }); block(669, -.6, 4.6, 474, .6, .8, '#ffb8de', { r: .3, cast: false }); // (build 29: on to the new neighbourhoods)
+  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(370, -.6, 4.6, 124, .6, .8, '#ffb8de', { r: .3, cast: false }); block(669, -.6, 4.6, 474, .6, .8, '#ffb8de', { r: .3, cast: false }); block(-147, -.6, 4.6, 254, .6, .8, '#ffb8de', { r: .3, cast: false }); // (build 30: and to the left) // (build 29: on to the new neighbourhoods)
 
   // ---------- back walls ----------
   const wallAO = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, map: (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(50,15,70,.32)'); gr.addColorStop(.45, 'rgba(50,15,70,.1)'); gr.addColorStop(1, 'rgba(50,15,70,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); return new THREE.CanvasTexture(c); })() });

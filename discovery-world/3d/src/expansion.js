@@ -11,14 +11,16 @@
 // ===================================================================
 import * as THREE from 'three';
 
-export const EXP = { x0: 424, x1: 902 };
+export const EXP = { x0: 424, x1: 902, xMin: -268 }; // (build 30: the world also grows to the LEFT of the Playhouse)
 export const DISTRICTS = [
+  { id: 'woods', icon: '🌲', name: 'Whispering Woods', x0: -272, x1: -150, home: -158, enter: -154, arrow: '⬅️' },
+  { id: 'seaside', icon: '🏖️', name: 'Sunny Seaside', x0: -150, x1: -18, home: -30, enter: -26, arrow: '⬅️' },
   { id: 'trail', icon: '🌉', name: 'Adventure Trail', x0: 428, x1: 548, home: 436 },
   { id: 'toytown', icon: '🧸', name: 'Toy Town', x0: 548, x1: 668, home: 554 },
   { id: 'labgarden', icon: '🔬', name: 'Lab Gardens', x0: 668, x1: 788, home: 674 },
   { id: 'artplaza', icon: '🖍️', name: 'Art Plaza', x0: 788, x1: 904, home: 794 },
 ];
-const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9]];
+const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -263, .9]];
 const NOTE = [262, 294, 330, 349, 392, 440, 494, 523];
 const RB = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
 const rnd = n => Math.floor(Math.random() * n), pick = a => a[rnd(a.length)];
@@ -47,13 +49,17 @@ export function initExpansion(G, api) {
   for (let x = 430; x < 910; x += 46) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), mat(pick(['#9fdc9a', '#8fd18f', '#b1e3a3']), { r: .95, cc: 0 })); h.scale.set(28 + rnd(10), 10 + rnd(8), 14); h.position.set(x + rnd(20), -3, -42 - rnd(10)); h.receiveShadow = true; scene.add(h); }
   // trees along the back of the outdoor neighbourhoods
   for (const [a, b] of [[432, 546], [672, 786]]) for (let x = a + 4; x < b; x += 9 + rnd(6)) api.makeTree(scene, x, -8.5 - rnd(3), .9 + Math.random() * .3);
+  for (let x = -268; x < -152; x += 6 + rnd(4)) api.makeTree(scene, x, -7.5 - rnd(4), 1 + Math.random() * .35); // (the woods: a real forest behind the path)
+  // the sea behind the beach (one big shared plane; it gently bobs)
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(140, 60, 1, 1), mat('#3fa9e8', { r: .12, cc: .7 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-86, .02, -38); sea.receiveShadow = true; scene.add(sea); G.sea = sea;
+  const foam = new THREE.Mesh(new THREE.PlaneGeometry(140, .9, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
   // signposts with each neighbourhood's picture (and an arrow to the next one)
   for (const d of DISTRICTS) {
-    const g = new THREE.Group(); g.position.set(d.x0 + 4, 0, -2.6); scene.add(g);
+    const g = new THREE.Group(); g.position.set(d.enter ?? d.x0 + 4, 0, -2.6); scene.add(g);
     const post = new THREE.Mesh(W.rbox(.22, 3.2, .22, .08), mat('#9a6a3a', { r: .8, cc: 0 })); post.position.y = 1.6; post.castShadow = true; g.add(post);
     const board = new THREE.Mesh(W.rbox(1.9, 1.5, .18, .2), mat('#ffffff', { r: .5, cc: .2 })); board.position.y = 3.1; board.castShadow = true; g.add(board);
     const pic = emoji(d.icon, 1.25); pic.position.set(0, 3.1, .2); g.add(pic);
-    const ar = emoji('➡️', .6); ar.position.set(0, 2.05, .2); g.add(ar);
+    const ar = emoji(d.arrow || '➡️', .6); ar.position.set(0, 2.05, .2); g.add(ar);
   }
   // the rainbow gate at 422 is now a gateway: a sign with the new places
   { const s = emoji('🌉', 1.1); s.position.set(426, 3.4, -1.5); scene.add(s); }
@@ -105,6 +111,42 @@ export function initExpansion(G, api) {
   }
   // build the nearest neighbourhood completely right now (when you travel straight into it)
   function buildNow(camX) { for (const st of S) { const d = st.d; if (camX >= d.x0 - 30 && camX <= d.x1 + 30 && st.state !== 'ready') { if (st.state === 'none') startBuild(st); while (st.state === 'building') { const part = st.parts[st.step++]; if (!part) { st.onceDone = true; st.g.updateMatrixWorld(true); scene.add(st.g); st.state = 'ready'; api.compile(st.g); break; } const u = part(st.ctx); if (typeof u === 'function') st.updates.push(u); } } } }
+
+  // ---------- (build 30) PALS: creatures you befriend and keep (a crab at the seaside, a fox cub in the woods) ----------
+  X.pals = X.pals || {};
+  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' } };
+  function makePalMesh(kind) {
+    const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+    if (kind === 'crab') { const sh = new THREE.Mesh(new THREE.SphereGeometry(.38, 18, 12), mat('#ff5a3c', { r: .5 })); sh.scale.set(1.25, .62, 1); sh.position.y = .32; sh.castShadow = true; body.add(sh);
+      for (const s2 of [-1, 1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .26, 6), mat('#ff5a3c')); st.position.set(s2 * .14, .62, .18); body.add(st); const e = new THREE.Mesh(new THREE.SphereGeometry(.08, 10, 8), mat('#ffffff')); e.position.set(s2 * .14, .77, .18); body.add(e); const pp = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), mat('#2b1d3d')); pp.position.set(s2 * .14, .78, .25); body.add(pp);
+        const cl = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 8), mat('#ff7a5c', { r: .5 })); cl.scale.set(1, .7, .7); cl.position.set(s2 * .58, .38, .18); body.add(cl); g.userData['claw' + s2] = cl;
+        for (let k = 0; k < 3; k++) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.03, .025, .32, 6), mat('#e0432a')); leg.position.set(s2 * .42, .14, -.15 + k * .15); leg.rotation.z = s2 * .9; body.add(leg); } } }
+    else { const b = new THREE.Mesh(new THREE.SphereGeometry(.32, 18, 12), mat('#ff8a3c', { r: .7 })); b.scale.set(1.35, .9, .9); b.position.y = .42; b.castShadow = true; body.add(b);
+      const h = new THREE.Mesh(new THREE.SphereGeometry(.25, 18, 12), mat('#ff8a3c', { r: .7 })); h.position.set(.42, .7, 0); body.add(h); const sn = new THREE.Mesh(new THREE.ConeGeometry(.12, .25, 12), mat('#fff3e6', { r: .7 })); sn.rotation.z = -Math.PI / 2; sn.position.set(.68, .66, 0); body.add(sn);
+      const no = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), mat('#2b1d3d')); no.position.set(.8, .67, 0); body.add(no);
+      for (const s2 of [-1, 1]) { const ear = new THREE.Mesh(new THREE.ConeGeometry(.09, .22, 10), mat('#ff8a3c')); ear.position.set(.38, .95, s2 * .13); body.add(ear); const e = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), mat('#2b1d3d')); e.position.set(.6, .76, s2 * .1); body.add(e); }
+      const tail = new THREE.Mesh(new THREE.SphereGeometry(.18, 14, 10), mat('#ff8a3c', { r: .7 })); tail.scale.set(1.6, .7, .7); tail.position.set(-.55, .55, 0); body.add(tail); g.userData.tail = tail;
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), mat('#fff3e6')); tip.position.set(-.82, .6, 0); body.add(tip);
+      for (const [x, z] of [[.25, .14], [.25, -.14], [-.25, .14], [-.25, -.14]]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .25, 6), mat('#4a2a1a')); leg.position.set(x, .13, z); body.add(leg); } }
+    g.userData.body = body; return g;
+  }
+  // a friend that follows you lives outside the streamed neighbourhoods (so it can travel everywhere with you)
+  const followers = {};
+  function setFollow(kind, on) {
+    if (on || X.pals[kind]) { X.pals[kind] = { follow: on }; api.saveSoon(); }
+    if (on && !followers[kind]) { const m = makePalMesh(kind); m.position.set(P.x - 2, 0, .9); scene.add(m); followers[kind] = { m, hop: 0 }; G.taps.push(m); m.traverse(o => { o.userData.tap = () => { setFollow(kind, false); say(kind === 'crab' ? '🦀 Pinchy will wait at the beach!' : '🦊 Rusty will wait in the woods!'); }; }); }
+    if (!on && followers[kind]) { scene.remove(followers[kind].m); const i = G.taps.indexOf(followers[kind].m); if (i >= 0) G.taps.splice(i, 1); delete followers[kind]; }
+  }
+  for (const k of Object.keys(PALS)) if (X.pals[k] && X.pals[k].follow) setFollow(k, true);
+  function updateFollowers(dt, t) {
+    let slot = 0; for (const k of Object.keys(followers)) { const f = followers[k], m = f.m; slot++;
+      const tx = P.layer === '' ? P.x - (P.facing || 1) * (1.6 + slot * 1.3) : m.position.x, ty = P.layer === '' ? Math.max(0, P.y - .1) : m.position.y;
+      if (Math.abs(tx - m.position.x) > 25) m.position.x = tx; // (after a jump somewhere else, it arrives with you)
+      const dx = tx - m.position.x; m.position.x += dx * Math.min(1, dt * 3); m.position.y += (ty - m.position.y) * Math.min(1, dt * 6); m.position.z += (.9 + slot * .2 - m.position.z) * Math.min(1, dt * 3);
+      const moving = Math.abs(dx) > .3; m.userData.body.position.y = moving ? Math.abs(Math.sin(t * 12 + slot)) * .12 : 0;
+      if (k === 'crab') m.rotation.y = 0; else m.rotation.y = dx >= 0 ? 0 : Math.PI;
+      if (m.userData.tail) m.userData.tail.rotation.y = Math.sin(t * 6) * .4; m.visible = P.layer === '' || P.layer === 'in'; }
+  }
 
   // ---------- gems (8 hidden around the new neighbourhoods; walk into one to collect it) ----------
   const gemObjs = [];
@@ -258,12 +300,109 @@ export function initExpansion(G, api) {
       const hm = c.sprite('🏠', 1.2, 900, 2.2, -1.4); c.tap(hm, () => api.goHome(), 900); },
   ];
 
+  // a pal waiting at home (inside its neighbourhood): tap it three times to make friends
+  function palAtHome(c, kind) {
+    if (followers[kind]) return null; const m = makePalMesh(kind), [x, y, z] = PALS[kind].home; m.position.set(x, y, z); m.userData.pal = kind; c.add(m); let taps = 0;
+    c.tap(m, () => { if (followers[kind]) return; taps++; boingIt(m); Sound.giggle(); if (X.pals[kind]) { c.g.remove(m); setFollow(kind, true); say(kind === 'crab' ? '🦀 Pinchy is coming with you!' : '🦊 Rusty is coming with you!'); return; }
+      if (taps < 3) say(kind === 'crab' ? (taps === 1 ? '🦀 Snap snap! Hello!' : '🦀 Pinchy likes you! One more tap!') : (taps === 1 ? '🦊 Yip! Hello!' : '🦊 Rusty is getting brave! One more tap!'));
+      else { c.g.remove(m); setFollow(kind, true); disc('pal_' + kind); say(PALS[kind].hello); c.burst(x, 1.5, z, ['#ff8fc8', '#fff', '#ffd23f'], 24, 3); Sound.chime(); } }, x);
+    return (dt, t) => { if (!m.parent) return; m.position.x = x + Math.sin(t * .9) * (kind === 'crab' ? 1.5 : .6); m.userData.body.position.y = Math.abs(Math.sin(t * 5)) * .05; if (kind === 'fox') m.rotation.y = Math.cos(t * .9) > 0 ? 0 : Math.PI; };
+  }
+  const boingIt = o => { o.userData.bt = 1; };
+
+  // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
+  builders.seaside = c => [
+    // the ice cream stand: tap the tubs to stack scoops, tap the cone to eat it
+    () => { c.block(-35, 0, -3.4, 3.4, 1.1, 1.2, '#ffffff', { r: .2 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.2, 4), mat('#ff7ac8')); roof.position.set(-35, 3.2, -3.4); roof.rotation.y = Math.PI / 4; roof.scale.z = .6; c.add(roof); for (const x of [-36.6, -33.4]) c.cyl(x, 0, -3.4, .07, .07, 2.6, '#ffffff');
+      const flav = [['strawberry', '#ff8fb8'], ['vanilla', '#fff3d6'], ['mint', '#9ff0c8'], ['chocolate', '#8a5a3a']]; const cone = new THREE.Mesh(new THREE.ConeGeometry(.28, .8, 16), mat('#e8b06a', { r: .7 })); cone.rotation.x = Math.PI; cone.position.set(-35, 1.6, -2.5); c.add(cone); const scoops = [];
+      flav.forEach(([n, col], i) => { const tub = c.cyl(-36.3 + i * .85, 1.1, -3.1, .3, .3, .3, col, { r: .6 }); c.tap(tub, () => { if (scoops.length >= 4) { c.say('🍦 That is a very tall ice cream! Tap the cone to eat it!'); return; } const sc = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 12), mat(col, { r: .7 })); sc.position.set(-35, 2.1 + scoops.length * .42, -2.5); c.add(sc); scoops.push(sc); c.say(`🍦 ${n}!`); Sound.pop ? Sound.pop() : Sound.click(); c.disc('icecream', '🍦 The ice cream stand! Tap the tubs to stack scoops.'); }); });
+      c.tap(cone, () => { if (!scoops.length) { c.say('🍦 Tap a tub to add a scoop!'); return; } for (const sc of scoops) c.g.remove(sc); c.say(`😋 Yum! ${scoops.length} scoops! Delicious!`); Sound.giggle(); c.burst(-35, 2.4, -2.5, ['#ff8fb8', '#fff', '#9ff0c8'], 16, 2.5); scoops.length = 0; }, -35); },
+    // the sandcastle: tap the sand pile and the castle grows; when it's finished a wave washes it away to build again
+    () => { const pile = c.sph(-50, 0, -2.6, 1.1, '#e9cf98', { m: { r: .95, cc: 0 } }); pile.scale.y = .45; const parts = []; let stage = 0, wash = 0;
+      const PART = [[0, .5, 0, 1.8, 1, 1.4], [-.9, .9, .6, .5, 1.8, .5], [.9, .9, .6, .5, 1.8, .5], [-.9, .9, -.6, .5, 1.8, .5], [.9, .9, -.6, .5, 1.8, .5], [0, 1.6, 0, .9, 1.2, .9]];
+      c.tap(pile, () => { if (wash) return; if (stage < PART.length) { const [x, y, z, w, h, d] = PART[stage]; const b = c.block(-50 + x, y - .5, -2.6 + z, w, h, d, '#e3c98f', { r: .08 }); parts.push(b); stage++; Sound.tone(300 + stage * 60, .12, 'triangle', .05, 1.1); c.burst(-50, 1, -2.6, ['#e3c98f', '#fff'], 6, 1.5); c.say(stage === PART.length ? '🏰 Your sandcastle is finished! Here comes a wave!' : '🪣 Pat pat! It is growing!'); c.disc('sandcastle', '🏰 Tap the sand to build a sandcastle!'); if (stage === PART.length) { const fl = c.sprite('🚩', .7, -50, 3.4, -2.6); parts.push(fl); wash = .001; } } }, -50);
+      return dt => { if (!wash) return; wash += dt; if (wash > 3) { for (const p2 of parts) { p2.position.y -= dt * 2; } if (wash > 4.5) { for (const p2 of parts) c.g.remove(p2); parts.length = 0; stage = 0; wash = 0; c.say('🌊 Whoosh! The wave washed it away. Build it again!'); } } }; },
+    // crabs scuttling sideways on the beach (tap them: they dance), and Pinchy, who wants to be your friend
+    () => { const crabs = [[-60, -1.6], [-70, -3.2], [-76, -1.8]].map(([x, z], i) => { const m = makePalMesh('crab'); m.scale.setScalar(.75); m.position.set(x, 0, z); c.add(m); c.tap(m, () => { m.userData.dance = 1.5; Sound.tone(900, .05, 'square', .03, 1); Sound.tone(900, .05, 'square', .03, 1, .1); c.say('🦀 Snap snap! A crab dance!'); c.disc('crabs', '🦀 Crabs! Tap them to see them dance.'); }); return { m, x, ph: i * 2 }; });
+      const pal = palAtHome(c, 'crab');
+      return (dt, t) => { for (const k of crabs) { k.m.position.x = k.x + Math.sin(t * .7 + k.ph) * 2.2; const d = k.m.userData.dance || 0; k.m.userData.dance = Math.max(0, d - dt); k.m.rotation.y = d > 0 ? Math.sin(t * 20) * .5 : 0; k.m.userData.body.position.y = d > 0 ? Math.abs(Math.sin(t * 14)) * .2 : 0; } pal && pal(dt, t); }; },
+    // seashells half-buried in the sand: tap to collect them (each is remembered)
+    () => { X.shells = X.shells || []; const SH = [['s1', -84, -1.2], ['s2', -91, -3], ['s3', -104, -1.6], ['s4', -122, -2.6], ['s5', -129, -1.3], ['s6', -140, -2.4]];
+      for (const [id, x, z] of SH) { if (X.shells.includes(id)) continue; const sp = c.sprite(pick(['🐚', '🐚', '🦪']), .7, x, .3, z); c.tap(sp, () => { if (!sp.parent) return; c.g.remove(sp); X.shells.push(id); Sound.twinkle(); c.burst(x, .5, z, ['#ffd1e0', '#fff'], 10, 2); c.say(X.shells.length === SH.length ? '🐚 You found all six shells!' : `🐚 A pretty shell! ${X.shells.length} of ${SH.length}!`); c.disc('shells', '🐚 Seashells! Find all six on the beach.'); api.saveSoon(); }); } },
+    // the lighthouse: steps up to the balcony (a gem waits there); tap the lamp to make the light spin
+    () => { c.cyl(-95, 0, -5.2, 1.5, 1.8, 7, '#ffffff', { seg: 28 }); for (let k = 0; k < 3; k++) c.cyl(-95, 1 + k * 2.2, -5.2, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 }); const top = c.cyl(-95, 7, -5.2, 1.1, 1.1, 1.2, '#fff6b0', { m: { em: '#ffe36e', ei: .6 } }); const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.2, 20), mat('#ff4f6a')); roof.position.set(-95, 8.8, -5.2); c.add(roof);
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(14, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(-95, 7.6, -5.2); beam.visible = false; c.add(beam);
+      for (const [a, b, y] of [[-89, -87.4, 1.1], [-91.4, -89.8, 2.2], [-93.8, -92.2, 3.3], [-97.6, -92.6, 4.4]]) { c.block((a + b) / 2, y - .25, -1.9, b - a, .3, 1.2, '#9a6a3a', { r: .06 }); c.plat(a, b, y, { z: -1.6 }); }
+      let spin = 0; c.tap(top, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The lighthouse light is shining for the boats!'); c.disc('lighthouse', '💡 Tap the lighthouse lamp! Climb the steps for a gem.'); }, -95);
+      return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
+    // the little boat: ring the bell on the pier and it sails across the sea and back
+    () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
+      const boat = new THREE.Group(); boat.position.set(-115, 0, -11); c.add(boat); const hull = new THREE.Mesh(W.rbox(3, .7, 1.3, .3), mat('#ff7a5c')); hull.position.y = .3; hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
+      const gull = c.sprite('🕊️', .8, -115, 4, -11); let trip = 0;
+      const go = () => { if (trip) return; trip = .001; Sound.bell ? Sound.bell(880, .06) : Sound.chime(); c.say('⛵ Ding ding! The boat is sailing!'); c.disc('boat', '⛵ Ring the bell on the pier and the boat sails away!'); };
+      c.tap(bell, go, -115); c.tap(boat, go);
+      return (dt, t) => { boat.rotation.z = Math.sin(t * 1.4) * .06; boat.position.y = Math.sin(t * 1.1) * .08; gull.position.set(boat.position.x + Math.sin(t) * 2, 4 + Math.sin(t * 2) * .3, boat.position.z - 1);
+        if (trip) { trip += dt; const k = trip < 6 ? trip / 6 : trip < 12 ? 1 - (trip - 6) / 6 : 0; boat.position.x = -115 - Math.sin(k * Math.PI / 2) * 22; boat.position.z = -11 - Math.sin(k * Math.PI) * 6; boat.rotation.y = trip < 6 ? Math.PI : 0; if (trip > 12) { trip = 0; boat.position.set(-115, 0, -11); boat.rotation.y = 0; } } }; },
+    // the kite: tap it and it flies up high, looping in the wind
+    () => { const kite = c.sprite('🪁', 1.2, -132, 1.2, -2.6); c.cyl(-132, 0, -2.6, .05, .05, .8, '#9a6a3a'); let fly = 0;
+      c.tap(kite, () => { fly = fly ? 0 : .001; c.say(fly ? '🪁 Whee! The kite is flying!' : '🪁 The kite comes down to rest.'); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('kite', '🪁 Tap the kite and it flies up into the sky!'); }, -132);
+      return (dt, t) => { const h = fly ? Math.min(1, (fly += dt) / 2) : 0; kite.position.set(-132 + Math.sin(t * 1.3) * 2.5 * h, 1.2 + h * (7 + Math.sin(t * 2.1) * 1.2), -2.6 - h * 3); kite.material.rotation = h ? Math.sin(t * 2) * .5 : 0; }; },
+    // seagulls flying over the beach (tap one: squawk!)
+    () => { const gulls = [0, 1, 2].map(i => { const g2 = c.sprite('🕊️', .9, -60 - i * 30, 6, -6); c.tap(g2, () => { Sound.tone(1200, .12, 'sawtooth', .02, .6); Sound.tone(1000, .12, 'sawtooth', .02, .6, .15); c.say('🕊️ Squawk! A seagull!'); c.disc('gulls'); }); return { g2, i }; });
+      return (dt, t) => { for (const { g2, i } of gulls) { g2.position.x = -85 + Math.sin(t * .25 + i * 2) * 55; g2.position.y = 6 + Math.sin(t * 1.7 + i) * .8; } }; },
+  ];
+
+  // =================== 🌲 WHISPERING WOODS (x -272 to -150) ===================
+  builders.woods = c => [
+    // the campfire: tap the fire for flames; tap the marshmallow to toast it golden
+    () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const st = c.sph(-165 + Math.cos(a) * .9, .15, -2.6 + Math.sin(a) * .9, .25, '#9a9a9a', { m: { r: .9 } }); st.scale.y = .6; } const logs = [0, 1.2].map(r => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.4, 8), mat('#7a4a2a')); lg.rotation.set(Math.PI / 2, r, 0); lg.position.set(-165, .15, -2.6); c.add(lg); return lg; });
+      const fire = c.sprite('🔥', 1.4, -165, .9, -2.6); fire.visible = false; let lit = 0, toast2 = 0;
+      const mm = c.sph(-163.6, 1.2, -2.2, .18, '#ffffff', { m: { r: .8 } }); mm.material = mm.material.clone(); c.cyl(-163.1, .6, -2.2, .02, .02, 1.6, '#9a6a3a');
+      for (const lg of logs) c.tap(lg, () => { lit = lit ? 0 : 1; fire.visible = !!lit; Sound.noise && Sound.noise(.6, 200, 900, .04); c.say(lit ? '🔥 Whoosh! A cosy campfire!' : '💨 The fire goes out.'); c.disc('campfire', '🔥 Tap the logs to light the campfire!'); }, -165);
+      c.tap(mm, () => { if (!lit) { c.say('🔥 Light the fire first, then toast the marshmallow!'); return; } toast2++; mm.material.color.set(toast2 === 1 ? '#f5d38a' : toast2 === 2 ? '#c98a3a' : '#ffffff'); c.say(toast2 === 1 ? '🍡 Toasty and golden!' : toast2 === 2 ? '😋 Yum! A perfect marshmallow!' : '🍡 A fresh marshmallow!'); if (toast2 > 2) toast2 = 0; Sound.giggle(); c.disc('marshmallow'); });
+      return (dt, t) => { if (lit) { fire.scale.setScalar(1.3 + Math.sin(t * 10) * .12); if (Math.random() < dt * 6) c.burst(-165, 1.4, -2.6, ['#ffb23f', '#ff6a2a'], 1, 1); } }; },
+    // the hollow log: tap it and a different woodland animal peeks out each time
+    () => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.7, .75, 3, 18), mat('#7a4a2a', { r: .9 })); lg.rotation.z = Math.PI / 2; lg.position.set(-180, .7, -2.8); c.add(lg); const holeEnd = new THREE.Mesh(new THREE.CircleGeometry(.5, 18), mat('#3a2a1a', { r: 1 })); holeEnd.rotation.y = Math.PI / 2; holeEnd.position.set(-178.48, .7, -2.8); c.add(holeEnd); // (a closed log with a dark hole: no double-sided shader needed)
+      const who = c.sprite('🦔', 1, -178.4, .7, -2.8); who.visible = false; const ANI = [['🦔', 'a hedgehog'], ['🐰', 'a bunny'], ['🐿️', 'a squirrel'], ['🦉', 'an owl'], ['🐸', 'a frog'], ['🦡', 'a badger']]; let k = -1, show = 0;
+      c.tap(lg, () => { k = (k + 1) % ANI.length; who.material = emojiMat(ANI[k][0]); who.visible = true; show = 2.5; Sound.giggle(); c.say(`🪵 Peekaboo! It's ${ANI[k][1]}!`); c.disc('log', '🪵 Who is in the hollow log? Tap it to see!'); }, -180);
+      return dt => { if (show > 0) { show -= dt; who.position.x = -178.4 + Math.min(1, (2.5 - show) * 3) * .9; if (show <= 0) who.visible = false; } }; },
+    // berry bushes: tap a bush, berries drop into the basket, and we count them
+    () => { const bush = c.sph(-195, .9, -3, 1.1, '#3f8f4a', { m: { r: .9 } }); bush.scale.set(1.3, .9, .9); const berries = []; for (let i = 0; i < 6; i++) berries.push(c.sph(-195.8 + (i % 3) * .8, 1.2 + Math.floor(i / 3) * .5, -2.2, .13, '#c2185b', { m: { r: .4 } }));
+      c.cyl(-192.4, 0, -2, .5, .4, .5, '#c8925a', { r: .8 }); let n = 0;
+      c.tap(bush, () => { const b = berries.find(q => q.visible); if (!b) { berries.forEach(q => { q.visible = true; q.position.set(q.userData.x0 ?? q.position.x, q.userData.y0 ?? q.position.y, -2.2); }); n = 0; c.say('🫐 The berries grew back!'); return; } b.userData.x0 = b.userData.x0 ?? b.position.x; b.userData.y0 = b.userData.y0 ?? b.position.y; b.visible = false; n++; c.say(['', 'one', 'two', 'three', 'four', 'five', 'six'][n] + '!'); Sound.tone(500 + n * 60, .1, 'triangle', .05, 1.2); c.burst(-192.4, .6, -2, ['#c2185b'], 4, 1); if (n === 6) c.say('🧺 Six berries in the basket! Yummy!'); c.disc('berries', '🧺 Pick berries! Tap the bush and count them.'); }, -195); },
+    // leaf piles on the path: run through them and the leaves fly everywhere
+    () => { const piles = [-207, -212, -217].map(x => { const p2 = c.sph(x, 0, 0, .9, pick(['#e8902a', '#d9682a', '#f2b23a']), { m: { r: .9 } }); p2.scale.y = .35; return { p2, x, t: 0 }; });
+      return (dt) => { for (const q of piles) { q.t = Math.max(0, q.t - dt); if (q.t <= 0 && P.layer === '' && Math.abs(P.x - q.x) < 1 && P.y < .8 && Math.abs(P.vx) > 1) { q.t = 2; c.burst(q.x, .5, 0, ['#e8902a', '#d9682a', '#f2b23a', '#8a5a2a'], 22, 3.5); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('leaves', '🍂 Crunch! Run through the leaf piles!'); } q.p2.scale.y = .35 * (q.t > 0 ? .4 + (2 - q.t) * .3 : 1); } }; },
+    // the creek: stepping logs across (jump from log to log), with a gem on the tall one
+    () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 16), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -3); c.add(w);
+      for (const [x, y] of [[-223.5, .5], [-226, 1.0], [-228.5, .5]]) { c.cyl(x, 0, -.4, .45, .5, y, '#8a5a2a', { r: .9 }); c.plat(x - .5, x + .5, y, { z: -.4, step: true, stepMax: .6, onLand: () => c.disc('logs', '🪵 Hop across the stepping logs!') }); } },
+    // a jar of fireflies: tap it and they swirl out, glowing
+    () => { const jar = c.cyl(-240, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); c.block(-240, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 }); const flies = []; let out = 0;
+      for (let i = 0; i < 10; i++) { const f = c.sph(-240, 1, -2.4, .06, '#fff58a', { m: { em: '#fff58a', ei: 2 } }); f.visible = false; flies.push({ f, ph: i * .7 }); }
+      c.tap(jar, () => { out = 8; flies.forEach(q => { q.f.visible = true; }); Sound.twinkle(); c.say('✨ The fireflies are dancing!'); c.disc('fireflies', '✨ Tap the jar to let the fireflies dance!'); }, -240);
+      return (dt, t) => { if (out <= 0) return; out -= dt; for (const q of flies) { const r = Math.min(1, (8 - out)) * 2.2; q.f.position.set(-240 + Math.cos(t * 1.5 + q.ph) * r, 1.6 + Math.sin(t * 2.3 + q.ph) * .8, -2.4 + Math.sin(t * 1.5 + q.ph) * r * .5); } if (out <= 0) flies.forEach(q => { q.f.visible = false; }); }; },
+    // paw prints on the path lead to the fox den, where Rusty the fox cub lives
+    () => { for (let i = 0; i < 8; i++) { const pr = c.sprite('🐾', .45, -247 - i * 1.6, .03, (i % 2) * .4 - .2); pr.material = emojiMat('🐾'); }
+      const den = c.sph(-263, 0, -4.4, 2, '#8a6a4a', { m: { r: .95 } }); den.scale.set(1.3, .7, 1); const hole = c.sph(-263, .4, -2.7, .7, '#3a2a1a', { m: { r: 1 } }); hole.scale.set(1, .8, .3);
+      const pal = palAtHome(c, 'fox'); c.tap(den, () => { c.say(X.pals.fox ? '🦊 This is Rusty\'s den!' : '🦊 Somebody lives here... tap the little fox to say hello!'); Sound.click(); });
+      const home = c.sprite('🏠', 1, -268, 2.2, -1.4); c.tap(home, () => api.goHome(), -268);
+      return (dt, t) => { pal && pal(dt, t); }; },
+  ];
+
   // ---------- per frame ----------
   function update(dt, t, camX) {
     stream(camX);
-    if (camX > EXP.x0 - 30) updateGems(t);
+    if (camX > EXP.x0 - 30 || camX < -10) updateGems(t); // (build 30: gems on both sides of the world)
     for (const st of S) if (st.state === 'ready' && st.updates) for (const u of st.updates) u(dt, t);
+    updateFollowers(dt, t);
+    if (G.sea && camX < 0) { G.sea.position.y = .02 + Math.sin(t * .8) * .04; G.foam.position.z = -8.2 + Math.sin(t * .8) * .35; }
+  }
+  // (build 30) after the save is loaded: hide the gems already found and bring back the friends who follow you
+  function restored() {
+    for (let i = gemObjs.length - 1; i >= 0; i--) if (X.gems.includes(gemObjs[i].id)) { scene.remove(gemObjs[i].s); gemObjs.splice(i, 1); }
+    for (const k of Object.keys(PALS)) setFollow(k, !!(X.pals[k] && X.pals[k].follow));
+    for (const k of Object.keys(PALS)) if (X.pals[k] && !X.pals[k].follow) X.pals[k] = { follow: false };
   }
   const stats = () => S.map(s => `${s.d.id}:${s.state}`).join(' ');
-  return { update, buildNow, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
+  return { _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
 }
