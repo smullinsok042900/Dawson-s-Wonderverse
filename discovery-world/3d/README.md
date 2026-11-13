@@ -81,12 +81,16 @@ These are planned for later 3D builds:
 - **The new areas' progress didn't survive a reload properly.** Loading a save replaced the data object the new areas were using, so after a reload, collected gems came back, followers were not restored, and new finds would not have been saved. Loading now fills in the same object, and the new areas refresh their gems and pets from the save.
 - **The hollow log would have needed a new double-sided shader.** It is now a closed log with a dark hole.
 
-**Tests:** 5 new checks in the full suite:
+**Tests:** full suite **147/147** (on the final build of this update). 5 new checks:
 - the 🗺️ map opens;
 - a map picture takes you there and builds the place at once;
 - 🏠 takes you home;
 - picking a station picture drives you there and you hop off;
 - befriending Pinchy.
+
+Test fixes:
+- **Ferris wheel:** the check now waits for the wheel to rise instead of a fixed 2.5 s. On the slow test browser it reached 1.48–1.8 m in that time; checked directly, the wheel lifts you to 11 m in 6 s.
+- **Character taps:** the Painter Bunny, Drummer Frog, penguin and owl are now tapped from their left side, aiming at where each character really is. Your following pets and balloons trail behind you, so they can't stand in front. They sometimes did, and the tap rightly went to the pet, which made these checks fail at random.
 
 **Still to do:**
 - **Interiors:** new indoor spaces.
