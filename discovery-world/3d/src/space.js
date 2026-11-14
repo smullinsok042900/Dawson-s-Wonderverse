@@ -17,8 +17,9 @@
 import * as THREE from 'three';
 import { toy } from './creatures.js';
 import * as K from './spacekit.js';
+import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 
-export const SPACE = { ox: 5000, gap: 200, w: 110 };
+export const SPACE = { ox: 5000, gap: 400, w: 110 }; // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
 // [id, picture colours for the menu, gravity m/s², gas giant?, what the voice says when you arrive]
 export const PLACES = [
   ['moon', ['#e8e8ec', '#9a9aa6'], 1.62, false, "The Moon! There's not much gravity here, so you can jump about six times higher. Look, there's Earth!"],
@@ -77,7 +78,7 @@ export function initSpace(G, api) {
   const T3 = new THREE.Color();
 
   function build(i) {
-    const [id, , , gas] = PLACES[i], X = placeX(i), MID = X + SPACE.w / 2, g = new THREE.Group(); g.name = 'space:' + id; g.userData.dynamic = true; groups[id] = g; built[id] = true;
+    const [id, , , gas] = PLACES[i], X = placeX(i), PW = placeWidth(id), MID = X + PW / 2, g = new THREE.Group(); g.name = 'space:' + id; g.userData.dynamic = true; groups[id] = g; built[id] = true;
     const U = ups[id] = [], SK = skies[id] = [];
     const add = o => { g.add(o); return o; };
     const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return add(m); };
@@ -90,7 +91,7 @@ export function initSpace(G, api) {
     const matte = K.makeBatch(), props = K.makeBatch(), soft = K.makeBatch();
     let H = () => 0;
     const R = (k, a = 0, b = 1) => a + K.hash2(k * 12.9898 + i * 3.7, k * 78.233 + 1.3) * (b - a); // repeatable "random"
-    const rocks = (n, { x0 = X - 30, x1 = X + SPACE.w + 30, z0 = -4, z1 = -32, s0 = .18, s1 = .7, colors, sharp = 0, seed = 0, batch = matte, sink = .25 }) => {
+    const rocks = (n, { x0 = X - 30, x1 = X + PW + 30, z0 = -4, z1 = -32, s0 = .18, s1 = .7, colors, sharp = 0, seed = 0, batch = matte, sink = .25 }) => {
       for (let k = 0; k < n; k++) { const x = R(k + seed, x0, x1), z = z0 + (z1 - z0) * Math.pow(R(k + seed + .5), 1.6), s = s0 + (s1 - s0) * Math.pow(R(k + seed + .25), 2.2) * (1 + (-z) * .03), sh = R(k + seed + .7, .75, 1.1);
         const c0 = K.ramp(colors, R(k + seed + .9), new THREE.Color());
         batch.put(K.rockGeo(k, sharp, s < .5 || z < -22), x, H(x, z) + s * (.45 - sink), z, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.62 + .5 * Math.max(0, ny) + .12 * K.noise3(px * 4, py * 4, pz * 4)); }, [s * R(k + seed + .3, .8, 1.4), s * sh, s], [0, R(k + seed + .1) * 6.28, 0]); }
@@ -102,7 +103,7 @@ export function initSpace(G, api) {
     if (id === 'moon') {
       const cr = []; for (let k = 0; k < 30; k++) { const z = -9 - Math.pow(R(k + 50), 1.4) * 105, r = 1.6 + R(k + 60) * 2.4 + (-z) * .06; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .34, rim: .13, peak: r > 6 }); }
       cr.push({ x: X + 61, z: -15, r: 6.5, depth: .3, rim: .15, peak: true }, { x: X + 24, z: -11, r: 3.4, depth: .3, rim: .14 }, { x: X + 88, z: -10.5, r: 3, depth: .32, rim: .14 });
-      H = K.terrain(matte, { cx: MID, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 1.3 + K.sstep(-60, -150, z) * (K.fbm2(x * .017 + 3, z * .017, 3) * 22 - 5); for (const c of cr) h += K.craterH(c, x, z); return h; },
+      H = K.terrain(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 1.3 + K.sstep(-60, -150, z) * (K.fbm2(x * .017 + 3, z * .017, 3) * 22 - 5); for (const c of cr) h += K.craterH(c, x, z); return h; },
         color: (x, z, h, ny, o) => { let s = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; }
           const mare = K.sstep(.5, .4, K.fbm2(x * .021 + 9, z * .021 + 2, 3)), n = K.fbm2(x * .9, z * .9, 3), pit = K.sstep(.74, .8, K.noise2(x * .8 + 5, z * .8)) * K.sstep(-5.5, -3, z);
           K.ramp(['#8d8d99', '#c3c3cc', '#e6e6ec'], .35 + n * .5 + s * .3, o).lerp(K.col('#6d6e7c'), mare * .55); o.multiplyScalar((.8 + .25 * ny) * Math.max(.45, Math.min(1.35, 1 + s * .3)) * (1 - pit * .13)); } });
@@ -132,7 +133,7 @@ export function initSpace(G, api) {
     if (id === 'mercury') {
       const cr = []; for (let k = 0; k < 40; k++) { const z = -8.5 - Math.pow(R(k + 50), 1.3) * 100, r = 1.3 + R(k + 60) * 2.2 + (-z) * .05; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .38, rim: .15, ray: R(k + 80) > .7 }); }
       cr.push({ x: X + 78, z: -12.5, r: 4.6, depth: .42, rim: .17 });
-      H = K.terrain(matte, { cx: MID, height: (x, z) => { let h = (K.fbm2(x * .07, z * .07, 4) - .5) * 3.6 + K.sstep(.47, .53, K.fbm2(x * .011 + 4, z * .034 + 5, 3)) * 2.6 * K.sstep(-14, -34, z) * K.sstep(-90, -60, z) + K.sstep(-70, -160, z) * K.ridge2(x * .016, z * .016, 4) * 9; for (const c of cr) h += K.craterH(c, x, z); return h; },
+      H = K.terrain(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .07, z * .07, 4) - .5) * 3.6 + K.sstep(.47, .53, K.fbm2(x * .011 + 4, z * .034 + 5, 3)) * 2.6 * K.sstep(-14, -34, z) * K.sstep(-90, -60, z) + K.sstep(-70, -160, z) * K.ridge2(x * .016, z * .016, 4) * 9; for (const c of cr) h += K.craterH(c, x, z); return h; },
         color: (x, z, h, ny, o) => { let s = 0, ray = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; if (c.ray) { const dx = x - c.x, dz = z - c.z, d = Math.hypot(dx, dz) / c.r; if (d > 1 && d < 5) ray += K.sstep(.62, .8, K.noise2(Math.atan2(dz, dx) * 5 + c.x, 1.5)) * (1 - (d - 1) / 4); } }
           const n = K.fbm2(x * .8, z * .8, 3); K.ramp(['#3b3632', '#72675b', '#a89b8a'], .3 + n * .5 + ray * .4, o); o.multiplyScalar((.72 + .34 * ny) * Math.max(.45, Math.min(1.35, 1 + s * .3))); } });
       rocks(80, { colors: ['#4f4439', '#a08a72'], sharp: 1, s1: .75 }); frontRocks(['#3f362e', '#75644f'], 7, 1);
@@ -154,7 +155,7 @@ export function initSpace(G, api) {
     if (id === 'venus') {
       const river = z => MID + 22 + Math.sin(z * .16) * 9 + Math.sin(z * .05 + 1) * 14; // a lava river winding down from the far volcano
       const VOL = [[MID + 10, -150, 80, 36], [X - 20, -95, 34, 16], [X + 128, -80, 30, 15]];
-      H = K.terrain(matte, { cx: MID, flatZ: -4.4, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 4 + K.ridge2(x * .11, z * .11, 3) * 1.1; for (const [vx, vz, r, hh] of VOL) { const d = Math.hypot(x - vx, z - vz) / r; if (d < 1) h += hh * Math.pow(1 - d, 1.5) - hh * .5 * Math.exp(-d * d / .004); }
+      H = K.terrain(matte, { cx: MID, wNear: PW + 100, flatZ: -4.4, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 4 + K.ridge2(x * .11, z * .11, 3) * 1.1; for (const [vx, vz, r, hh] of VOL) { const d = Math.hypot(x - vx, z - vz) / r; if (d < 1) h += hh * Math.pow(1 - d, 1.5) - hh * .5 * Math.exp(-d * d / .004); }
           const rd = Math.abs(x - river(z)); h -= Math.exp(-rd * rd / 5) * 1.1 * K.sstep(-9, -16, z); return h; },
         color: (x, z, h, ny, o) => { const n = K.fbm2(x * .7, z * .7, 3), crack = K.sstep(.86, .97, K.ridge2(x * .4, z * .4, 2)), rd = Math.abs(x - river(z)), hot = Math.exp(-rd * rd / 14) * K.sstep(-8, -15, z);
           K.ramp(['#33231c', '#6b4830', '#a8763f', '#d9a64e'], .22 + n * .5 + (1 - ny) * .2, o); o.multiplyScalar((.72 + .32 * ny) * (1 - crack * .35)); o.lerp(K.col('#ff7a1c'), hot * .5 + crack * .12); } });
@@ -180,7 +181,7 @@ export function initSpace(G, api) {
     }
     if (id === 'mars') {
       const mons = [MID + 40, -205, 120, 34];
-      H = K.terrain(matte, { cx: MID, zFar: -215, height: (x, z) => { const n = K.fbm2(x * .03, z * .03, 4), far = K.sstep(-5, -22, z); let h = (n - .5) * 5 * far + Math.pow(Math.sin(x * .33 + n * 9 + z * .12) * .5 + .5, 2.2) * .8 * far * K.sstep(-60, -30, z);
+      H = K.terrain(matte, { cx: MID, wNear: PW + 100, zFar: -215, height: (x, z) => { const n = K.fbm2(x * .03, z * .03, 4), far = K.sstep(-5, -22, z); let h = (n - .5) * 5 * far + Math.pow(Math.sin(x * .33 + n * 9 + z * .12) * .5 + .5, 2.2) * .8 * far * K.sstep(-60, -30, z);
           const m = K.fbm2(x * .021 + 7, z * .021 + 3, 3), mesa = K.sstep(.565, .6, m) * K.sstep(-20, -42, z) * K.sstep(-150, -110, z); h += mesa * (8 + m * 9 + K.noise2(x * .5, z * .5) * .5);
           const d = Math.hypot(x - mons[0], (z - mons[1]) * 1.6) / mons[2]; if (d < 1) h += mons[3] * Math.pow(1 - d, 1.2) * (1 - .3 * Math.exp(-d * d / .012)); return h; },
         color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), strata = Math.sin(h * 2.6 + K.noise2(x * .1, z * .1) * 2) * .5 + .5, steep = K.sstep(.86, .6, ny);
@@ -215,7 +216,7 @@ export function initSpace(G, api) {
       const BD = CLOUDS[id], amp = { jupiter: 1, saturn: .6, uranus: .34, neptune: .75 }[id];
       const bandAt = (x, z, o) => { const v = z * .085 + (K.fbm2(x * .028, z * .028, 3) - .5) * 5.5 + Math.sin(x * .045 + z * .02) * .7, t = ((v % BD.length) + BD.length) % BD.length, k = Math.floor(t); return o.copy(K.col(BD[k])).lerp(K.col(BD[(k + 1) % BD.length]), K.sstep(.25, .75, t - k)); };
       const spot = id === 'neptune' ? [MID + 14, -62, 26, 9] : null;
-      H = K.terrain(matte, { cx: MID, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : -4.8, blend: 6, nx: 120, nz: 50, height: (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
+      H = K.terrain(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : -4.8, blend: 6, nx: 120, nz: 50, height: (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
         color: (x, z, h, ny, o) => { bandAt(x, z, o); const streak = id === 'neptune' ? K.sstep(.66, .8, K.noise2(x * .035 + 2, z * .55)) : K.sstep(.7, .86, K.noise2(x * .05, z * .4)) * .4; o.lerp(K.col('#ffffff'), streak * .6);
           if (spot) { const d = Math.hypot((x - spot[0]) / spot[2], (z - spot[1]) / spot[3]); o.lerp(K.col('#101c5c'), K.sstep(1, .7, d) * .85); o.lerp(K.col('#ffffff'), K.sstep(.12, 0, Math.abs(d - 1.12)) * .7); }
           o.multiplyScalar(.78 + .16 * ny + .12 * K.sstep(-.5, 3 * amp, h)); } });
@@ -290,7 +291,7 @@ export function initSpace(G, api) {
       const links = []; let par = sock; for (let k = 0; k < 5; k++) { const lg = new THREE.Group(); lg.position.set(k ? .46 : .14, k ? 0 : 2.5, 0); par.add(lg); const r0 = .33 - k * .045, r1 = .33 - (k + 1) * .045, sg2 = new THREE.CylinderGeometry(r1, r0, .46, 14, 1, true); sg2.rotateZ(-Math.PI / 2); sg2.translate(.23, 0, 0); const m = new THREE.Mesh(sg2, toy(k % 2 ? '#ffffff' : '#ff7a2a', { r: .7 })); m.material.side = THREE.DoubleSide; lg.add(m); links.push(lg); par = lg; } let gust = 0;
       tapIt(sock, () => { gust = 3; Sound.noise && Sound.noise(1.5, 300, 1200, .05); fact('💨 Whoosh! Neptune has the fastest winds of any planet!', 'neptunewind'); }, X + 44, 'neptunewind');
       U.push((dt, t) => { links.forEach((l, k) => { l.rotation.z = (k ? 0 : -.1) + Math.sin(t * (7 + gust * 3) - k * .9) * (.07 + k * .02) - (k ? .05 : .22) * (1 - Math.min(1, .55 + gust)); l.rotation.y = Math.sin(t * 5 - k * 1.1) * .06; });
-        if (gust > 0) { gust -= dt; if (P.grounded) P.x = Math.min(X + SPACE.w - 2, P.x + dt * 2.5); if (Math.random() < dt * 20) api.burst(P.x - 3, 1 + Math.random() * 2, 0, ['#ffffff', '#cfe0ff'], 1, 2); } });
+        if (gust > 0) { gust -= dt; if (P.grounded) P.x = Math.min(X + PW - 2, P.x + dt * 2.5); if (Math.random() < dt * 20) api.burst(P.x - 3, 1 + Math.random() * 2, 0, ['#ffffff', '#cfe0ff'], 1, 2); } });
       // the icy geyser: a cracked mound of pinkish ice with a vent; tap it and a tall plume shoots up
       const gx = X + 64, gz = -3, gy = new THREE.Group(); gy.position.set(gx, 0, gz); add(gy); gy.add(model(b => { b.put(K.lathe([[0, .62], [.2, .66], [.34, .6], [.6, .36], [1.0, .14], [1.35, 0]], 20), 0, 0, 0, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#f2d6d6', '#e6f2ff', '#ffffff'], K.fbm3(px * 2, py * 2, pz * 2, 3) + py * .4, o); }); b.put(K.geo.cyl(12), 0, .62, 0, '#3a4a78', [.17, .06, .17]); for (let k = 0; k < 6; k++) b.put(K.rockGeo(k, 1), Math.cos(k * 1.1) * 1.25, .12, Math.sin(k * 1.1) * 1.0, k % 2 ? '#e6f2ff' : '#f2d6d6', [.22, .3, .22]); }));
       const plG = new THREE.CylinderGeometry(.5, .13, 1, 14, 1, true); plG.translate(0, .5, 0); const plume = new THREE.Mesh(plG, toy('#eaf6ff', { opacity: .42, r: 1 })); plume.material.depthWrite = false; plume.material.side = THREE.DoubleSide; plume.position.y = .64; plume.visible = false; gy.add(plume); let spout = 0;
@@ -299,7 +300,7 @@ export function initSpace(G, api) {
     }
     if (id === 'pluto') {
       const hc = X + 44, face = (x, z) => Math.min(10, Math.max(0, (-41 - z) * .72)) * Math.exp(-Math.pow((x - hc) / 21, 4)); // the broad smooth mountain face that carries the heart
-      H = K.terrain(matte, { cx: MID, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
+      H = K.terrain(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
           return (K.fbm2(x * .06, z * .06, 4) - .5) * 3 + jag * (1 - fm) + face(x, z) + K.sstep(-70, -150, z) * 10 * fm; },
         color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), dark = K.sstep(.52, .42, K.fbm2(x * .02 + 6, z * .02 + 1, 3)), ice = K.sstep(4, 11, h + n * 4) * K.sstep(.5, .85, ny + n * .2);
           K.ramp(['#a87660', '#cfa890', '#f0dcc8'], .2 + n * .6, o).lerp(K.col('#7a3a30'), dark * .55); o.lerp(K.ramp(['#bcd4f2', '#f4f8ff'], n, T3), ice);
@@ -351,9 +352,9 @@ export function initSpace(G, api) {
       neptune: { name: 'Windies', body: '#5a82f0', eye: 2, ant: 0, shape: 'wisp', move: 'swoosh', note: 450, hi: 'Whoosh! The wind is so fast on Neptune!', iris: '#12308a' },
       pluto: { name: 'Heartlings', body: '#ff9fd2', eye: 2, ant: 2, shape: 'heart', move: 'hop', note: 1000, hi: 'Hello, friend! We love our big icy heart!', iris: '#b02a7a' },
     }[id];
-    for (let k = 0; k < 3; k++) { const a = alien(AL, k); const x0 = X + 30 + k * 22, z0 = -2 - (k % 2) * 1.5; a.position.set(x0, 0, z0); add(a); let boing = 0, blink = 2 + k, px = x0, air = 0; const b = a.userData.body, lids = a.userData.lids, ants = a.userData.ants;
-      tapIt(a, () => { boing = 1; Sound.tone(AL.note, .12, 'sine', .05, 1.4); Sound.tone(AL.note * 1.25, .12, 'sine', .05, 1.3, .14); api.burst(a.position.x, a.position.y + 1.5, z0, ['#ffffff', '#ffe36e', AL.body], 6, 2); say(`👽 ${AL.hi}`, true); disc('alien_' + id, `Meet the aliens on every planet!`); }, x0, k === 0 ? 'alien_' + id : null);
-      U.push((dt, t) => { boing = Math.max(0, boing - dt * 1.5); const ph = t * 1.3 + k * 2; let sq = 0; // sq: squash (+) and stretch (-), so nothing moves like a stiff toy
+    const placeAlien = (x0, z0, k, interactId = null) => { const a = alien(AL, k); a.position.set(x0, 0, z0); add(a); let boing = 0, blink = 2 + k, px = x0, air = 0; const b = a.userData.body, lids = a.userData.lids, ants = a.userData.ants;
+      tapIt(a, () => { boing = 1; Sound.tone(AL.note, .12, 'sine', .05, 1.4); Sound.tone(AL.note * 1.25, .12, 'sine', .05, 1.3, .14); api.burst(a.position.x, a.position.y + 1.5, z0, ['#ffffff', '#ffe36e', AL.body], 6, 2); say(`👽 ${AL.hi}`, true); disc('alien_' + id, `Meet the aliens on every planet!`); }, x0, interactId);
+      U.push((dt, t) => { if (Math.abs(P.x - x0) > 45 && !boing) return; boing = Math.max(0, boing - dt * 1.5); const ph = t * 1.3 + k * 2; let sq = 0; // sq: squash (+) and stretch (-), so nothing moves like a stiff toy
         if (AL.move === 'hop') { const s = Math.sin(ph * 1.5), y = Math.abs(s) * (id === 'moon' ? 1.6 : 1.2); a.position.y = y; sq = y < .18 ? (.18 - y) * 1.6 : -Math.min(.14, Math.abs(Math.cos(ph * 1.5)) * .14); if (y < .05 && air > .3 && Math.random() < .5) api.burst(x0, .1, z0, id === 'moon' ? ['#c3c3cc', '#e6e6ec'] : ['#ffffff', '#dcecff'], 2, .7); air = y; }
         if (AL.move === 'float') { a.position.y = 1 + Math.sin(ph) * .4; sq = Math.cos(ph) * .07; a.position.x = x0 + Math.sin(ph * .37) * 1.2; b.rotation.z = Math.sin(ph * .8) * .08; }
         if (AL.move === 'walk' || AL.move === 'scurry') { a.position.x = x0 + Math.sin(ph * (AL.move === 'scurry' ? 1.6 : .5)) * 2.5; b.position.y = Math.abs(Math.sin(ph * 6)) * .08; b.rotation.z = Math.sin(ph * 6) * .06; }
@@ -363,7 +364,8 @@ export function initSpace(G, api) {
         const vx = (a.position.x - px) / Math.max(dt, .001); if (AL.move !== 'spin' && AL.move !== 'roll') { const want = Math.abs(vx) > .15 ? Math.sign(vx) * .7 : Math.max(-.6, Math.min(.6, (P.x - a.position.x) * .12)); a.rotation.y += (want - a.rotation.y) * Math.min(1, dt * 5); } px = a.position.x; // (they turn the way they walk, and look at you when they stand)
         const pop = 1 + Math.sin(boing * 12) * boing * .25; a.scale.set(pop * (1 + sq), pop * (1 - sq), pop * (1 + sq));
         if (lids) { blink -= dt; if (blink < 0) blink = 2.5 + Math.random() * 3; lids.visible = blink < .13; }
-        for (let q = 0; q < ants.length; q++) ants[q].rotation.z = (ants.length === 1 ? 0 : q ? -.25 : .25) + Math.sin(t * 3 + q * 2 + k) * .18 - Math.max(-.4, Math.min(.4, vx * .12)); }); }
+        for (let q = 0; q < ants.length; q++) ants[q].rotation.z = (ants.length === 1 ? 0 : q ? -.25 : .25) + Math.sin(t * 3 + q * 2 + k) * .18 - Math.max(-.4, Math.min(.4, vx * .12)); }); };
+    for (let k = 0; k < 3; k++) placeAlien(X + 30 + k * 22, -2 - (k % 2) * 1.5, k, k === 0 ? "alien_" + id : null);
 
     // ---------- put it together: three still meshes (matte ground, shiny things, soft clouds) ----------
     const ground = matte.mesh(K.paintMat()); ground.name = 'ground'; add(ground);
@@ -371,8 +373,50 @@ export function initSpace(G, api) {
     if (soft.count()) add(soft.mesh(K.softMat()));
     g.traverse(o => { o.userData.dynamic = true; });
     g.userData.tris = matte.count() + props.count() + soft.count();
+    // (build 50) the toolkit the new areas use (planets.js), and anything that spans the whole planet (Moon footprints)
+    kits[id] = { X, g, add, tapIt, fact, say, disc, Sound, U, P, G, api, setSkyColor: color => sky.set({ ...LOOK[id].sky, mid: "#" + color.getHexString(), hor: "#" + color.getHexString() }), placeAlien: (x, z, k) => placeAlien(x, z, k, null) };
+    secs[id] = [true]; if (PLANET_EXTRA[id] && PLANET_EXTRA[id].all) PLANET_EXTRA[id].all(areaKit(id, 0, g));
     scene.add(g); api.compile && api.compile(g);
   }
+  // ---------- (build 50) BIGGER PLANETS: each new area is built when you walk near it, and a whole planet is freed when
+  // you fly away (so only the place you are on is ever in memory). Shapes come from shared unit geometries. ----------
+  const kits = {}, secs = {}, UNIT_BALL = new THREE.SphereGeometry(1, 24, 16), UNIT_BOX = new THREE.BoxGeometry(1, 1, 1); UNIT_BALL.userData.shared = UNIT_BOX.userData.shared = true;
+  function areaKit(id, s, sub) {
+    const K = kits[id], X = K.X, add = o => { sub.add(o); return o; }, { tapIt, U, say, disc } = K;
+    const sball = (x, y, z, sx, sy, sz, c, o = {}) => { const m = new THREE.Mesh(UNIT_BALL, toy(c, o)); m.position.set(x, y, z); m.scale.set(sx, sy, sz); return add(m); };
+    const sbox = (x, y, z, w, h, d, c, o = {}) => { const m = new THREE.Mesh(UNIT_BOX, toy(c, o)); m.position.set(x, y + h / 2, z); m.scale.set(w, h, d); return add(m); };
+    const plat = (a, b, y, o = {}) => G.platforms.push({ a, b, y, layer: 'space', z: -1.2, ...o });
+    const rocketSign = x => { const g2 = new THREE.Group(); g2.position.set(x, 0, -1.8); add(g2); const post = new THREE.Mesh(UNIT_BOX, toy('#ffffff', { r: .5 })); post.scale.set(.12, 1.4, .12); post.position.y = .7; g2.add(post);
+      const mini = new THREE.Group(); mini.scale.setScalar(.22); mini.position.y = 1.4; g2.add(mini); rocketModel(mini); const back = () => { const r = G.rockets[id]; if (!r) return; api.flash(); P.x = r.x + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; api.snap(); Sound.whoosh(); say('🚀 Back to the rocket!', true); disc('rocketback', '🚀 Tap a little rocket sign to go back to your rocket.'); };
+      tapIt(g2, back); G.interact.push({ x, y: 0, layer: 'space', run: back, hintY: 2.4, icon: '🚀', action: 'Back to the rocket' }); U.push((dt, t) => { mini.rotation.y = t; mini.position.y = 1.4 + Math.sin(t * 2) * .08; }); };
+    return { ...K, s0: X + s * SECTION, g: sub, add, sball, sbox, plat, rocketSign };
+  }
+  function rocketModel(rk) {
+    const batch = K.makeBatch();
+    for (const [geometry, color, x, y, z, scale, rotation] of K.rocketParts()) batch.put(geometry, x, y - .42, z, color, scale, rotation);
+    rk.add(batch.mesh(K.shinyMat()));
+  }
+  const areaSteps = []; // (build 50: a new area is made over several frames, one small step each, never all at once)
+  function buildArea(id, s) {
+    const K = kits[id], sub = new THREE.Group(); sub.name = `space:${id}:${s}`; sub.userData.dynamic = true; const k = areaKit(id, s, sub), X0 = k.s0;
+    areaSteps.push(() => {
+    // the ground features every area shares (rocky places: soft craters and scattered rocks, from the shared shapes)
+    const [, [, c2], , gas] = PLACES[PLACES.findIndex(p => p[0] === id)];
+    if (!gas) { for (let j = 0; j < 9; j++) k.sball(X0 + 8 + j * 11.5 + (j % 3) * 2, -.15, -6 - (j % 3) * 2.6, 1.2 + (j % 3) * .6, .22, 1.2 + (j % 3) * .6, c2, { r: .95 }); for (let j = 0; j < 8; j++) k.sball(X0 + 12 + j * 12.5, .2, -7.5 - (j % 2) * 3, .35 + (j % 3) * .2, .28 + (j % 3) * .15, .35 + (j % 3) * .2, c2, { r: .9 }); }
+    }, () => PLANET_EXTRA[id].sections[s - 1](k),
+    () => { if (kits[id] !== K) return; sub.traverse(o => { if (o.isMesh) o.castShadow = false; }); api.compile && api.compile(sub); },
+    () => { if (kits[id] !== K) return; K.g.add(sub); });
+  }
+  function unbuild(id) {
+    const g = groups[id]; if (!g) return; if (g.userData.leave) g.userData.leave(); const i = PLACES.findIndex(p => p[0] === id), X = placeX(i), X2 = X + placeWidth(id);
+    const mine = new Set(); g.traverse(o => mine.add(o));
+    for (let k = G.taps.length - 1; k >= 0; k--) if (mine.has(G.taps[k])) G.taps.splice(k, 1);
+    for (let k = G.interact.length - 1; k >= 0; k--) { const it = G.interact[k]; if (it.layer === 'space' && it.x >= X - 30 && it.x <= X2 + 30) G.interact.splice(k, 1); }
+    for (let k = G.platforms.length - 1; k >= 0; k--) { const it = G.platforms[k]; if (it.layer === 'space' && it.a >= X - 30 && it.b <= X2 + 30) G.platforms.splice(k, 1); }
+    g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m !== K.paintMat() && m !== K.shinyMat() && m !== K.softMat()) m.dispose(); }); });
+    areaSteps.length = 0; delete groups[id]; delete ups[id]; delete skies[id]; delete kits[id]; delete secs[id]; built[id] = false; if (G.rockets) delete G.rockets[id];
+  }
+  const unbuildOthers = keep => { for (const k in groups) if (k !== keep) unbuild(k); };
 
   // an alien sculpted from smooth painted shapes (one mesh), with shiny eyes that blink and feelers that wobble.
   // Each planet's kind looks and moves differently.
@@ -409,15 +453,18 @@ export function initSpace(G, api) {
 
   // ---------- flying ----------
   function goTo(i) {
+    unbuildOthers(PLACES[i][0]); /* (build 50: only the place you are on stays in memory) */
     if (!built[PLACES[i][0]]) build(i);
     const [id, , grav, gas, hello] = PLACES[i]; if (here && here !== id && groups[here]?.userData.leave) groups[here].userData.leave();
     here = id; G.spaceG = grav / EARTH_G;
-    G.spaceBounds = [placeX(i) + 1, placeX(i) + SPACE.w - 1];
+    G.spaceBounds = [placeX(i) + 1, placeX(i) + placeWidth(id) - 1];
     api.flash(); P.ride = null; P.layer = 'space'; P.x = placeX(i) + 12; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; jumpTop = 0;
     show(); api.snap(); Sound.chime();
     say(`🚀 ${hello}`, true); disc('space_' + id); disc('space'); told = {};
   }
-  function goHome() { if (here && groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; api.home(); show(); }
+  // (build 50) build the place you are flying to during the countdown, so arriving does not stop the game
+  function prepare(id) { const i = PLACES.findIndex(p => p[0] === id); if (i < 0 || built[id]) return; build(i); if (groups[id]) groups[id].visible = false; }
+  function goHome() { if (here && groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; api.home(); unbuildOthers(null); show(); }
   let lit = null;
   function show() {
     const on = P.layer === 'space';
@@ -428,9 +475,9 @@ export function initSpace(G, api) {
   }
   // the jump report: after each big jump, how high you went (the real gravity makes the difference)
   function update(dt, t) {
-    if (P.layer !== 'space') { if (here) { if (groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; show(); } return; }
+    if (P.layer !== 'space') { if (here) { if (groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; show(); unbuildOthers(null); } return; }
     const i = PLACES.findIndex(p => p[0] === here); if (i < 0) return;
-    const X = placeX(i), MID = X + SPACE.w / 2, cx = api.camX(), cy = api.camY ? api.camY() : P.y;
+    const X = placeX(i), MID = X + placeWidth(here) / 2, cx = api.camX(), cy = api.camY ? api.camY() : P.y;
     sky.mesh.position.set(cx, cy, 0); sky.U.uTime.value = t;
     for (const s of skies[here] || []) { s[0].position.x = s[1] + (cx - MID) * .93 + (s[0].userData.off || 0); if (!s[0].userData.off) s[0].position.y = s[2] + cy * .9; }
     dust.update(dt, t, cx, cy);
@@ -438,6 +485,9 @@ export function initSpace(G, api) {
     if (!P.grounded) jumpTop = Math.max(jumpTop, P.y);
     else if (jumpTop > .05) { const h = jumpTop; jumpTop = 0; G.spaceLastJump = h; /* (measured every physics step: a Jupiter hop lasts a third of a second) */ if (h > 1.2) api.burst(P.x, .1, 0, ['#ffffff', '#e6e6ec'], Math.min(10, 3 + h), 1.6); /* (a puff of dust where you land) */ if (h < .3) return; if (!told[Math.round(h)]) { told[Math.round(h)] = 1; const m = Math.round(h * 10) / 10; say(m >= 1 ? `⭐ You jumped ${m >= 3 ? Math.round(m) : m} metres high!` : '⭐ A tiny hop! Gravity is very strong here!', true); disc('spacejump', 'Jump on each planet: the gravity is different everywhere!'); } }
     for (const u of ups[here] || []) u(dt, t);
+    // (build 50) build the next area of a big planet when you get within 70 m of it
+    if (areaSteps.length) areaSteps.shift()();
+    else if (PLANET_EXTRA[here] && secs[here]) for (let s = 1; s <= PLANET_EXTRA[here].sections.length; s++) if (!secs[here][s] && P.x > X + s * SECTION - 70) { secs[here][s] = true; buildArea(here, s); break; }
   }
-  return { goTo, goHome, update, places: PLACES, here: () => here, look: LOOK, groups };
+  return { goTo, goHome, update, prepare, places: PLACES, here: () => here, look: LOOK, groups };
 }

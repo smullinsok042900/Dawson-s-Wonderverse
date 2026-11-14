@@ -4,6 +4,53 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: PR #55 conflict resolution — graphics work remains unfinished
+- Merged main `02de466` into the planet graphics branch, preserving both the sculpted scenery and build 50's 330 m Moon/Mars, streamed areas, countdown preparation, distant-alien sleeping and departure cleanup.
+- Adapted expanded aliens and rocket signs to the sculpted models. Expanded terrain covers the longer worlds; Mars sunset changes the shader sky through an explicit color callback. Shared painted materials survive unloading, and per-planet sky references are released.
+- Regenerated the offline `index.html`; retained build number 50 from main. This checkpoint does not publish the graphics overhaul or merge PR #55 into main.
+- Verified: build; all six `tests/*.test.mjs` files; learning contracts (41 activities); saved-builder/creature world regressions; independent review; focused desktop software-rendered browser check of all nine planets, expanded activities, rocket signs and cleanup on Earth (no page errors).
+- Performance: before/after measurements are recorded in `PERFORMANCE_LOG.md`. Shader pauses and worse measured timings remain; this is not a performance-approved release or a physical iPhone result.
+- Full smoke suite attempted alone: 42 checks passed, two failed (slide landing and pet tap), then the test aborted at `tests/smoke3d.cjs:142` because no waiting pet was found before accessing its `root`. These checks and the pet implementation are unchanged from main; no claim is made that they pass on either baseline. This checkpoint has no full smoke-test clearance. The focused planet integration check passed separately.
+
+## Checkpoint: build 50 — bigger planets (the Moon and Mars first), only the current planet in memory
+- **The family asked** for much bigger planets with many more activities, and above all no extra lag. This build changes the system first, then expands two places.
+- **The planet system (`space.js`, new `planets.js`):**
+  - Places are now up to 330 m long instead of 110 (places are 400 m apart).
+  - Each new area is built only when she walks within 70 m of it, in small steps over several frames (terrain, then the activities, then shader compile, then shown).
+  - When she flies away, the whole planet is freed: meshes, materials, tap targets, PAW targets and floors. Only the planet she is on is ever in memory.
+  - The destination planet is built during the 3-2-1 countdown, not on arrival.
+  - Aliens far from her (over 45 m) rest and cost nothing.
+  - New scenery uses two shared unit shapes (a ball and a box), scaled.
+  - A little rocket sign at the start of each new area takes her back to her rocket.
+- **🌕 The Moon:**
+  - **Crater Valley:** a giant crater with a bouncy middle (low-gravity bounce), and a pretend explorer station with a dish that "calls Earth" (a radio message takes about 1 s).
+  - **Moon phases toy:** each tap moves the shadow: new, crescent, half, full.
+  - **Collecting:** moon rocks for a sample box, counted.
+  - **Moon Mountains:** big steps up to a star.
+  - **Hidden cave:** glowing crystals light up when she walks by and sing when tapped (said to be pretend).
+  - **Shape sorting:** round, square and triangle rocks into matching holes.
+  - **The moon buggy** (real astronauts drove one).
+  - **Footprints** stay in the moon dust wherever she walks (one instanced mesh of 40 prints; no wind on the Moon).
+  - More Moonbeam aliens.
+- **🔴 Mars:**
+  - **Canyon Country:** two mesas to climb, with a view and the Valles Marineris fact.
+  - **Five rocks that say what they are:** rust, layers, volcano, ice, river-rounded.
+  - **An ice cave** (real Mars has underground ice).
+  - **A blue sunset:** tap the sun and the sky turns blue (true on Mars).
+  - **The Explorer Station** (said to be pretend): a door that opens, and a greenhouse where tapping the pots grows plants up to a tomato.
+  - **The Ingenuity helicopter** flies.
+  - **Count Mars's two moons.**
+  - **A flag trail:** red, yellow, green, blue, in order, with unlimited retries.
+  - More Marslings.
+- **Verified (desktop, software rendering):**
+  - No page errors.
+  - Shader programs unchanged (138 in `?test`).
+  - Every new activity reports its discovery.
+  - She can walk up the Moon mountain (to 7 m) and the Mars mesa (6 m) by holding ▶.
+  - After flying to Mars, the Moon is gone from memory.
+  - New smoke checks: length, activities, one planet in memory, rocket signs.
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 49 — 🎈 Balloon Hills, a new region past the pier
 - **A new streamed district** (`builders.hills`, x −800 to −668). Map tile 🎈, train station 🎈 at x −788, gems g19 (hilltop) and g20.
 - **Activities (pictures, sounds and voice only):**

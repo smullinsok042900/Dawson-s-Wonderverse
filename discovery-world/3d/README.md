@@ -1,5 +1,7 @@
 # Dawson's Discovery World 3D (3D build 1)
 
+
+**PR #55 integration checkpoint (work in progress):** planet graphics now coexist with build 50's larger Moon/Mars areas and planet cleanup. The offline page is rebuilt, but first-use shader pauses remain unresolved. See `NEXT_TASKS.md` and `PERFORMANCE_LOG.md` before publishing this graphics work.
 This is the full rebuild of Dawson's Discovery World in real 3D. It is a **separate version**: the 2D game in `../` is untouched and still works. The last 2D build before the rebuild was saved as `../releases/DawsonsDiscoveryWorld_build11_SAVED.html`.
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
@@ -19,6 +21,17 @@ Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same 
 - Fixed saved builder erasing, hidden objects intercepting taps, temporary scenery cleanup, learning reward/cancellation issues, and several touch-layout problems. Removed duplicate scene clearing and unnecessary work for distant creatures.
 
 Desktop software-rendering verification is recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Real iPhone playtesting remains necessary.
+
+## 3D build 50: much bigger Moon and Mars
+
+- **The Moon and Mars are three times bigger,** each with two new areas:
+  - **The Moon:** a bouncy crater, a moon station that calls Earth, a moon-phases toy, collecting moon rocks, a mountain to climb, a hidden crystal cave, shape sorting, a moon buggy, and footprints that stay in the dust.
+  - **Mars:** mesas to climb, rocks that say what they are, an ice cave, a blue sunset, a pretend explorer base with a greenhouse, the little helicopter, Mars's two moons, and a flag trail.
+- **Faster where it counts:**
+  - Only the planet you are on is kept in memory.
+  - New areas are built bit by bit as you walk there.
+  - The planet you fly to is made during the countdown.
+- A little rocket sign in each new area takes you back to your rocket.
 
 ## 3D build 49: Balloon Hills
 

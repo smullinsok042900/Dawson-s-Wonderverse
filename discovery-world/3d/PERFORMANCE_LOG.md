@@ -4,6 +4,22 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## PR #55 conflict-resolution merge — work in progress (desktop, software rendering)
+
+Compared PR head `537497d` with its integration of main `02de466` using `tests/perf/space.cjs` on identical 844×390 touch viewports, Chromium/SwiftShader. This is a conflict-resolution checkpoint, not a performance-approved release or an iPhone result.
+
+| Measure | Original PR | Combined branch |
+|---|---:|---:|
+| Mean script ms/frame | 13.3 | 23.1 |
+| Largest arrival long task | 1126 ms | 2319 ms |
+| Largest walking long task | 53 ms | 654 ms |
+| Final geometries | 1451 | 1379 |
+| Final textures | 160 | 163 |
+| Final shader programs | 111 | 108 |
+| JavaScript page errors | 0 | 0 |
+
+The combined branch loads expanded Moon/Mars areas and frees other planets, which the original PR did not. Its first-use shader pauses remain unresolved and these measurements do not pass the performance gate. Keep the graphics overhaul work in progress; investigate and warm the new shader variants before publishing it. The merge preserves the existing task notes rather than claiming the graphics work is complete.
+
 ## Build 49 — Balloon Hills (desktop, software rendering; `ba.cjs 3D_build48_index.html index.html`, run twice)
 | View | Script ms/frame 48 → 49, run 1 | run 2 | Long tasks |
 |---|---|---|---|

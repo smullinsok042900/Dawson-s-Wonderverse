@@ -504,7 +504,7 @@ function showBlast(id) {
 G.blastOff = blastOff;
 function blastOff() {
   const R = seated(); if (!R || R.phase !== 'in' || !R.dest || launching) return;
-  hideBlast(); launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3;
+  hideBlast(); launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth') setTimeout(() => space.prepare(R.dest), 120); /* (build 50: the planet is made during the countdown) */
   Sound.click(); Sound.tone(180, .5, 'square', .03, .9); voice.speak('Three... two... one... blast off!'); toast('🚀 3');
   discover('blastoff', 'Press the big red button to blast off!');
 }
@@ -567,7 +567,7 @@ function showPicker() {
   rocketPanel.querySelectorAll('.rkT').forEach(b => b.classList.toggle('here', b.dataset.id === (player.layer === 'space' ? space.here() : 'earth')));
   rocketPanel.classList.add('show'); Sound.click(); voice.speak('Where shall we fly? Tap a planet!'); discover('rocketmenu');
 }
-G.openRocket = openRocket;
+G.openRocket = openRocket; G.spaceHere = () => space.here();
 // picking a planet: sitting in a rocket, the big red button comes up; (with no rocket nearby: straight off, as before)
 function launchTo(id, go) {
   if (launching) return; if (rocketPanel) rocketPanel.classList.remove('show');
@@ -1385,7 +1385,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '49'; G.build = GAME_BUILD;
+const GAME_BUILD = '50'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';

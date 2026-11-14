@@ -1,8 +1,10 @@
 {
-  "date": "2026-11-14T21:15:55.631Z",
-  "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 189,
-  "total": 189,
+  "date": "2026-11-14T23:46:54.115026+00:00",
+  "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport \u2014 NOT a physical iPhone; localhost mirror because file URLs are blocked",
+  "completed": false,
+  "status": "aborted",
+  "passed": 42,
+  "total": 44,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -15,19 +17,19 @@
       "detail": ""
     },
     {
-      "name": "four big arrow buttons (◀ ▶ ▲ ▼) at the bottom left",
+      "name": "four big arrow buttons (\u25c0 \u25b6 \u25b2 \u25bc) at the bottom left",
       "ok": true,
       "detail": "[[21,277,57,52],[104,277,57,52],[65,233,52,57],[65,316,52,57]]"
     },
     {
-      "name": "jump / paw buttons are big (≥ 60 px) and on screen",
+      "name": "jump / paw buttons are big (\u2265 60 px) and on screen",
       "ok": true,
       "detail": ""
     },
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 5.5"
+      "detail": "x 1.2 \u2192 6.8"
     },
     {
       "name": "let go and the creature stops",
@@ -57,15 +59,15 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 1.2→5.3, y 0.00"
+      "detail": "x 4.1\u21926.8, y 0.00"
     },
     {
-      "name": "tap ▲ to jump",
+      "name": "tap \u25b2 to jump",
       "ok": true,
       "detail": "rose to y=1.60"
     },
     {
-      "name": "holding ▶ walks at a normal speed (never too fast)",
+      "name": "holding \u25b6 walks at a normal speed (never too fast)",
       "ok": true,
       "detail": "speed 5.80 (normal walk 5.2)"
     },
@@ -92,7 +94,7 @@
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 310,220 lands on: game [[\"SkinnedMesh\",\"8.98\",\"creature\",\"0.0\",\"creature\",\"Group@7.4\"]] P=7.35,0.00,0.00"
+      "detail": "tap at 310,220 lands on: game [[\"SkinnedMesh\",\"8.98\",\"creature\",\"0.0\",\"creature\",\"Group@5.9\"]] P=5.90,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -106,18 +108,18 @@
     },
     {
       "name": "slide ends on the floor and you can move again",
-      "ok": true,
+      "ok": false,
       "detail": "x=32.2"
     },
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.17"
+      "detail": "highest y=3.36"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=39.1 y=2.66"
+      "detail": "x=40.1 y=2.41"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
@@ -127,7 +129,7 @@
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=11.4"
+      "detail": "x=9.7"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -135,14 +137,14 @@
       "detail": ""
     },
     {
-      "name": "tap ▼ in the ball pit: you dive into the deep part",
+      "name": "tap \u25bc in the ball pit: you dive into the deep part",
       "ok": true,
       "detail": ""
     },
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -5.05 → -3.50"
+      "detail": "y -2.20 \u2192 -0.96"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +159,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-0.20"
+      "detail": "y=0.52"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=4.1 y=0.00"
+      "detail": "x=10.2 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +179,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.0"
+      "detail": "x=37.4"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -202,7 +204,7 @@
     {
       "name": "Pet Workshop: tap a big button to change your pet design",
       "ok": true,
-      "detail": "{\"col\":0,\"ears\":0,\"tail\":0,\"pat\":0} → {\"col\":1,\"ears\":0,\"tail\":0,\"pat\":0}"
+      "detail": "{\"col\":0,\"ears\":0,\"tail\":0,\"pat\":0} \u2192 {\"col\":1,\"ears\":0,\"tail\":0,\"pat\":0}"
     },
     {
       "name": "pull the lever: an egg hatches your very own pet",
@@ -217,738 +219,16 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 2.8 away"
+      "detail": "pet is 2.7 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap it again: it does a trick and follows you again",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the Balloon Bear gives you a balloon",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap the bear again: a second balloon (you can have lots)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the Painter Bunny paints a picture on the wall",
-      "ok": true,
-      "detail": "picture changed=true bunny found=true"
-    },
-    {
-      "name": "the Drummer Frog plays when tapped",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the penguin dances when tapped",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the sleepy owl wakes up when tapped",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "hold ▲ at the rope ladder: climb all the way up into the Cloud Kingdom",
-      "ok": true,
-      "detail": "y=9.50"
-    },
-    {
-      "name": "the Cloud Kingdom is a new discovery",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "bouncy cloud puffs bounce you up to the high clouds",
-      "ok": true,
-      "detail": "highest y=13.0"
-    },
-    {
-      "name": "tap the sky whale: it sings",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk off the clouds onto the giant rainbow slide, all the way down to the floor",
-      "ok": true,
-      "detail": "slid=true landed x=73.8 y=0.00"
-    },
-    {
-      "name": "one bounce on the second spring pad lands you on the purple shelf",
-      "ok": true,
-      "detail": "ended at y=5.00 x=118.5"
-    },
-    {
-      "name": "the block tray appears by the Block Builder",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap the builder wall: a block appears",
-      "ok": true,
-      "detail": "1 blocks"
-    },
-    {
-      "name": "build more blocks; their tops are things you can stand on",
-      "ok": true,
-      "detail": "3 blocks, 2 standable tops"
-    },
-    {
-      "name": "the sponge erases a block",
-      "ok": true,
-      "detail": "2 blocks"
-    },
-    {
-      "name": "the colour palette appears by the Colouring Corner",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap part of a colouring picture: it fills with your colour",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap the unicorn: it talks in a picture speech bubble",
-      "ok": true,
-      "detail": "3 bubbles"
-    },
-    {
-      "name": "the hedgehog plays a song",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the paint-palette button opens the creature colours",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "pick a new colour for your creature and turn on the sparkle trail",
-      "ok": true,
-      "detail": "{\"s\":{\"pip\":\"#9fe6ff\"},\"sp\":true,\"k\":\"pip\"}"
-    },
-    {
-      "name": "Kart Garage: tap a big button to change your kart",
-      "ok": true,
-      "detail": "{\"col\":0,\"shape\":0,\"wheels\":0} → {\"col\":1,\"shape\":0,\"wheels\":0}"
-    },
-    {
-      "name": "tap the kart on the turntable: hop in and drive",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the kart drives round the track",
-      "ok": true,
-      "detail": "u 0.064 → 1.054, z=-3.4"
-    },
-    {
-      "name": "JUMP makes the kart hop",
-      "ok": true,
-      "detail": "hop 1.22"
-    },
-    {
-      "name": "crossing the finish line counts a lap (with confetti)",
-      "ok": true,
-      "detail": "lap 1"
-    },
-    {
-      "name": "PAW parks the kart and you hop out",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap a station sign: the train chugs in and you hop aboard",
-      "ok": true,
-      "detail": "ride=train z=3.20"
-    },
-    {
-      "name": "JUMP on the train toots the whistle (and you stay on)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "hold ▶ to drive the train yourself",
-      "ok": true,
-      "detail": "x 170.0 → 170.9"
-    },
-    {
-      "name": "let go and the train stops",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "PAW: hop off the train (anywhere)",
-      "ok": true,
-      "detail": "ride=null x=170.0"
-    },
-    {
-      "name": "tap the Marble Machine board: a marble drops",
-      "ok": true,
-      "detail": "0 → 1"
-    },
-    {
-      "name": "tap a ramp: it flips the other way",
-      "ok": true,
-      "detail": "-0.30 → 0.30"
-    },
-    {
-      "name": "marbles roll down and ring the music bins",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "PAW by the machine drops a marble too",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk right: climb up Dottie the dinosaur's tail, across her back, and slide down her neck",
-      "ok": true,
-      "detail": "top y=3.45 slid=true"
-    },
-    {
-      "name": "tap a dino egg: it wobbles and a baby dino hatches",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap Tops the little dino: stomp stomp!",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap Princess Rosie: she gives you a golden crown",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk on the castle dance floor: the tiles light up and play music",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap Princess Luna: the royal fountain sprays sparkles",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap Biscuit the puppy: he follows you everywhere",
-      "ok": true,
-      "detail": "followers 2 → 3; in front of him: buddy_biscuit "
-    },
-    {
-      "name": "tap Twinkle the fairy: she flies along with you",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap a hatched baby dino: it follows you too",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "all your pets and friends follow you in a line",
-      "ok": true,
-      "detail": "2.8 3.7 4.6 5.5 6.4"
-    },
-    {
-      "name": "tap a friend who follows you: they stay (tap again to bring them)",
-      "ok": true,
-      "detail": "followers 5 → 4"
-    },
-    {
-      "name": "tap the sky whale: ride on its back",
-      "ok": true,
-      "detail": "ride=whale y=12.7"
-    },
-    {
-      "name": "JUMP hops off the whale onto the clouds",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk up the steps by the ball pit to the little slide (no jumping needed)",
-      "ok": true,
-      "detail": "[3.8,\"slide\"]"
-    },
-    {
-      "name": "the paint wall has an eraser and a start-again button",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk into the Princess Castle",
-      "ok": true,
-      "detail": "layer=castle"
-    },
-    {
-      "name": "tap the throne inside the castle: sit on it",
-      "ok": true,
-      "detail": "y=0.95"
-    },
-    {
-      "name": "the castle door takes you back outside",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the mechanic fox talks",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "paint palette appears by the paint wall",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "finger-paint on the giant wall",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk along the giant xylophone and it plays",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap two paint buckets to mix a colour",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "tap the bubble machine: bubbles float out",
-      "ok": true,
-      "detail": "6 bubbles"
-    },
-    {
-      "name": "spring pad bounces you up high",
-      "ok": true,
-      "detail": "y=4.76"
-    },
-    {
-      "name": "tap the carousel to ride",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "JUMP gets off the carousel",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "ride the Ferris wheel",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the Ferris wheel lifts you up",
-      "ok": true,
-      "detail": "y=1.51"
-    },
-    {
-      "name": "walk through star bits to collect them",
-      "ok": true,
-      "detail": "45 → 49"
-    },
-    {
-      "name": "find a baby Fluffkin: it follows you",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "a door bubble pops up by the house door",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "PAW at the door: go inside the Fluffkin House",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the Fluffkins you brought are home (counter goes up)",
-      "ok": true,
-      "detail": "3 home"
-    },
-    {
-      "name": "stair bubble at the bottom of the stairs",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "PAW puts you on the first step (no automatic walking)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "hold ▶ to walk up part-way, let go to stop",
-      "ok": true,
-      "detail": "k=0.6927090127721315"
-    },
-    {
-      "name": "walk off the top onto the upstairs floor",
-      "ok": true,
-      "detail": "y=4.4"
-    },
-    {
-      "name": "the ceiling stops you upstairs (no flying through the roof)",
-      "ok": true,
-      "detail": "y=4.40"
-    },
-    {
-      "name": "stair bubble at the top of the stairs",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "walk back down the stairs",
-      "ok": true,
-      "detail": "y=0"
-    },
-    {
-      "name": "the front door inside takes you back outside",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "sound button turns sound off (flips the sound setting)",
-      "ok": true,
-      "detail": "was true, top element at the button: [object Object]"
-    },
-    {
-      "name": "sound button turns sound back on (flips it back)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "reload shows KEEP PLAYING",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "reload keeps your pet and your balloon",
-      "ok": true,
-      "detail": "{\"pet\":true,\"bal\":true}"
-    },
-    {
-      "name": "reload keeps your building, colouring, colours and sparkles",
-      "ok": true,
-      "detail": "{\"b\":2,\"c\":true,\"s\":1,\"sp\":true}"
-    },
-    {
-      "name": "reload keeps your kart design",
-      "ok": true,
-      "detail": "{\"col\":1,\"shape\":0,\"wheels\":0}"
-    },
-    {
-      "name": "reload keeps all your pets and the friends who follow you",
-      "ok": true,
-      "detail": "{\"pets\":2,\"f\":4}"
-    },
-    {
-      "name": "reload keeps your crown and your hatched baby dino",
-      "ok": true,
-      "detail": "{\"crown\":true,\"eggs\":[true,false,false]}"
-    },
-    {
-      "name": "reload keeps creature, star bits, Fluffkins and painting",
-      "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":49,\"fl\":3,\"p\":true}"
-    },
-    {
-      "name": "🗺️ opens the picture map",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "a map picture takes you there (Adventure Trail)",
-      "ok": true,
-      "detail": "x=436.0"
-    },
-    {
-      "name": "the neighbourhood you travel to is built at once",
-      "ok": true,
-      "detail": "hills:none pier:none farm:none frosty:none woods:none seaside:none trail:ready toytown:none labgarden:none artplaza:none"
-    },
-    {
-      "name": "🏠 takes you home in one tap",
-      "ok": true,
-      "detail": "x=190.0"
-    },
-    {
-      "name": "in the stopped train, the picture strip of stations appears",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "pick a station picture: the train drives you there and you hop off",
-      "ok": true,
-      "detail": "ride=null x=61.0"
-    },
-    {
-      "name": "befriend Pinchy the crab (three taps): Pinchy follows you",
-      "ok": true,
-      "detail": "{\"crab\":{\"follow\":true}}"
-    },
-    {
-      "name": "🐾 My Pets shows your friends (Pinchy is there and following)",
-      "ok": true,
-      "detail": "🦀💖 ❓ ❓ ❓ ❓ ❓ ❓ ❓ ❓"
-    },
-    {
-      "name": "nothing that travels with you (crown, shadow, hints) is hidden away in a scenery chunk",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "Princess Luna gives a magic wand; the crown and wand stay with you far from the castle",
-      "ok": true,
-      "detail": "{\"wand\":true,\"wv\":true,\"crown\":true,\"cv\":true,\"crownInScene\":true,\"dx\":0}"
-    },
-    {
-      "name": "🚜 the map takes you to the Happy Farm, built at once",
-      "ok": true,
-      "detail": "x=-412.0 hills:none pier:none farm:ready frosty:ready woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
-    },
-    {
-      "name": "tap the hen: she lays eggs and you count them",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the farm activities work (barn animals, rainbow sheep, carrots, apples, windmill, ducks, tractor)",
-      "ok": true,
-      "detail": "barn sheep garden apples windmill ducks tractor"
-    },
-    {
-      "name": "befriend Truffle the piglet (three taps): Truffle follows you",
-      "ok": true,
-      "detail": "{\"crab\":{\"follow\":true},\"pig\":{\"follow\":true}}"
-    },
-    {
-      "name": "the train line reaches the farm (🚜 station)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "🌊 the map takes you to the Ocean Pier, built at once",
-      "ok": true,
-      "detail": "x=-544.0 hills:none pier:ready farm:ready frosty:ready woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
-    },
-    {
-      "name": "the pier activities work (fishing, tide pool, buoys, dolphin, treasure, sailboat, whale)",
-      "ok": true,
-      "detail": "fishing tidepool buoys dolphin treasure sailboat whale"
-    },
-    {
-      "name": "befriend Splash the seal (three taps): Splash follows you",
-      "ok": true,
-      "detail": "{\"crab\":{\"follow\":true},\"pig\":{\"follow\":true},\"seal\":{\"follow\":true}}"
-    },
-    {
-      "name": "the train line reaches the pier (🌊 station)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "🎈 the map takes you to Balloon Hills, built at once",
-      "ok": true,
-      "detail": "x=-676.0 hills:ready pier:ready farm:ready frosty:none woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
-    },
-    {
-      "name": "the Balloon Hills activities work (balloon, kites, goats, echo, chimes, dandelions)",
-      "ok": true,
-      "detail": "balloon kites goats echo chimes dandelion"
-    },
-    {
-      "name": "PAW on top of the grassy hill: slide down",
-      "ok": true,
-      "detail": "ride=slide y=4.5"
-    },
-    {
-      "name": "the train line reaches Balloon Hills (🎈 station at the far left)",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "the rainbow stairs at the new far-left end still lead into the Sky Kingdom",
-      "ok": true,
-      "detail": "x=42.0 y=9.6"
-    },
-    {
-      "name": "befriend Clover the goat on the Adventure Trail (three taps): Clover follows you",
-      "ok": true,
-      "detail": "{\"crab\":{\"follow\":true},\"pig\":{\"follow\":true},\"seal\":{\"follow\":true},\"goat\":{\"follow\":true}}"
-    },
-    {
-      "name": "stand still with friends following: two of them play together (hearts and a giggle)",
-      "ok": true,
-      "detail": "crab pig seal goat"
-    },
-    {
-      "name": "the Block Builder wall fits on screen, top row included",
-      "ok": true,
-      "detail": "{\"top\":99,\"bot\":318,\"h\":390}"
-    },
-    {
-      "name": "the learning corners are play spots with a floating toy (no signposts)",
-      "ok": true,
-      "detail": "[true,true,true,true,true,true,true]"
-    },
-    {
-      "name": "the seesaw rocks you up and down",
-      "ok": true,
-      "detail": "highest y=1.91"
-    },
-    {
-      "name": "the rainbow stairs at the end of the world lead up into the Sky Kingdom",
-      "ok": true,
-      "detail": "x=42.4 y=9.5"
-    },
-    {
-      "name": "the bigger Sky Kingdom: moon and stars, cloud sheep, colour balloons",
-      "ok": true,
-      "detail": "skystars skysheep skyballoons"
-    },
-    {
-      "name": "steer the sky whale: it flies where you point (and stays visible: never in a scenery section)",
-      "ok": true,
-      "detail": "x 57.9 → 70.1, y 15.3, whale in the scene: true"
-    },
-    {
-      "name": "JUMP hops off the flying whale and you float gently down",
-      "ok": true,
-      "detail": "[null,-2.200000000000002]"
-    },
-    {
-      "name": "tap the Splash Pool: you dive into the deep pool and swim",
-      "ok": true,
-      "detail": "layer=sea"
-    },
-    {
-      "name": "swim down and through the tunnel at the bottom into the underwater world",
-      "ok": true,
-      "detail": "x=3012.6"
-    },
-    {
-      "name": "the sea creatures answer when tapped (coral, fish, turtle, octopus, jellyfish, treasure, clam, dolphins, sea floor)",
-      "ok": true,
-      "detail": "coral fishschool seaturtle octopus jellyfish seatreasure clam seadolphins seafloor"
-    },
-    {
-      "name": "swim up to the top of the pool to climb out",
-      "ok": true,
-      "detail": "layer= x=-8.0"
-    },
-    {
-      "name": "PAW at the rocket: she climbs inside it (not bubbles) and the planet pictures come up",
-      "ok": true,
-      "detail": "target=rocketmenu ride=rocket:in hidden=true"
-    },
-    {
-      "name": "the rocket shows a picture for Earth, the Moon, every planet and Pluto",
-      "ok": true,
-      "detail": "10 pictures"
-    },
-    {
-      "name": "picking the Moon shows the big red button (no flying yet)",
-      "ok": true,
-      "detail": "{\"btn\":true,\"layer\":\"\",\"ride\":\"in\"}"
-    },
-    {
-      "name": "the red button: countdown, then the rocket lifts off the pad with her inside",
-      "ok": true,
-      "detail": "phases in,count,lift,land, rose 26.0 m"
-    },
-    {
-      "name": "on the Moon the rocket lands on its pad and she climbs out",
-      "ok": true,
-      "detail": "{\"ride\":null,\"hidden\":false,\"x\":2.5}"
-    },
-    {
-      "name": "fly to the Moon: real Moon gravity (1.62 / 9.81 of Earth's)",
-      "ok": true,
-      "detail": "layer=space g=0.165"
-    },
-    {
-      "name": "on the Moon you jump about six times higher",
-      "ok": true,
-      "detail": "jumped to 12.0 m (Earth ≈ 1.8 m)"
-    },
-    {
-      "name": "on Jupiter the strong gravity allows only tiny hops",
-      "ok": true,
-      "detail": "jumped to 0.71 m"
-    },
-    {
-      "name": "Pluto has the weakest gravity of all (0.62 / 9.81)",
-      "ok": true,
-      "detail": "g=0.063"
-    },
-    {
-      "name": "every planet has its own aliens and at least 2 activities of its own",
-      "ok": true,
-      "detail": "moon:3 mercury:3 venus:3 mars:3 jupiter:4 saturn:3 uranus:3 neptune:3 pluto:3"
-    },
-    {
-      "name": "fly home to Earth: back at the launch pad",
-      "ok": true,
-      "detail": "layer= x=688.5"
-    },
-    {
-      "name": "the ⚙️ panel has a voice chooser",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)",
-      "ok": true,
-      "detail": "[]"
-    },
-    {
-      "name": "a learning game starts with a \"watch me\" demo that ends by itself",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "no words to read in a learning game",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "closing a learning game returns to the world",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "a broken save is ignored safely (fresh start, no crash)",
-      "ok": true,
-      "detail": "button=\"LET'S PLAY ▶\" save={\"nursery\":{\"v\":1,\"s"
-    },
-    {
-      "name": "portrait phone shows the turn-sideways tip",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "no errors or warnings in the console",
-      "ok": true,
+      "ok": false,
       "detail": ""
     }
   ],
-  "errors": []
+  "errors": [
+    "Smoke suite aborted at tests/smoke3d.cjs:142: Cannot read properties of undefined (reading 'root')"
+  ],
+  "note": "Captured from console log because the aborted suite did not reach its report-writing step. Focused nine-planet integration browser check passed separately."
 }
