@@ -62,7 +62,7 @@ export function buildSky(G) {
   for (let i = 0; i < 6; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(3.4 - i * .22, .1, 10, 40, Math.PI), toy(RAINBOW[i], { em: RAINBOW[i], ei: .2 })); arc.position.set(65.2, SKY.y, cz - 1.2); add(arc); }
 
   // ---------- the friendly sky whale ----------
-  const whale = new THREE.Group(); whale.position.set(56, SKY.y + 1.9, -7.5); /* (build 21: lower, between the cloud floor and the high clouds, so the whale swims in view instead of hiding behind the top of the screen) */ add(whale);
+  const whale = new THREE.Group(); whale.userData.dynamic = true; /* (build 46: it flies anywhere now, so it must never be filed into a scenery section: those are hidden far from the camera, and the whale vanished in flight) */ whale.position.set(56, SKY.y + 1.9, -7.5); /* (build 21: lower, between the cloud floor and the high clouds, so the whale swims in view instead of hiding behind the top of the screen) */ add(whale);
   const wm = toy('#8fb8ff', { r: .4, cc: .8 }), wb = toy('#e6f0ff', { r: .45 });
   whale.add(ball(wm, 2, 0, 0, 0, 1.6, .9, .9)); whale.add(ball(wb, 1.6, .3, -.45, .5, 1.5, .6, .6));
   const tail = new THREE.Group(); tail.position.set(-3.1, .2, 0); whale.add(tail);
