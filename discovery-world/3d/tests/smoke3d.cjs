@@ -180,7 +180,8 @@ const UG_F = -6;
   { const before = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0])); await tapWorld(228.17, 2.18, -2.3); await sleep(300); const after = await page.evaluate(() => JSON.stringify(__DDW3.world.colorings[0]));
     check('tap part of a colouring picture: it fills with your colour', before !== after && (await S()).disc.includes('coloring')); }
   await shot('20_colouring.jpg');
-  await teleport(238); await tapWorld(240, 1.2, -2.4); await sleep(300);
+  await teleport(238); /* (build 49: the unicorn walks about: tap it where it is, a few tries if something walks in front) */
+  for (let k = 0; k < 4 && !(await S()).disc.includes('unicorn'); k++) { const u = await page.evaluate(() => { const C = __DDW3.friends.critters, b = Array.isArray(C) ? C.find(q => q.kind === 'unicorn') : C && C.unicorn; return b && b.root ? b.root.position.toArray() : [240, 0, -2.4]; }); await tapWorld(u[0], u[1] + 1.2, u[2]); await sleep(500); }
   { const n = await page.evaluate(() => __DDW3.friends.bubbleCount()); check('tap the unicorn: it talks in a picture speech bubble', (await S()).disc.includes('unicorn') && n > 0, `${n} bubbles`); }
   await teleport(244.4); await tapWorld(246, .6, -2.4); await sleep(200); check('the hedgehog plays a song', (await S()).disc.includes('hedgehog'));
   await page.locator('#styleBtn').tap(); await sleep(300); check('the paint-palette button opens the creature colours', await page.locator('#stylePanel').evaluate(e => e.classList.contains('show')));
