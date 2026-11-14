@@ -29,12 +29,6 @@ This folder is separate from "Dawson's Wonderverse" (the rest of the repository)
 - **Still, before every build, `git fetch origin main` and merge it.** If anything new appeared there, keep it, resolve
   conflicts without removing it, and run its own tests too: `node --test tests/*.test.mjs`,
   `node tests/unit/learning-contract.cjs` and `node tests/world-regressions.cjs`.
-- **(2026-11-14) A second Claude chat is working on the game's graphics** at the user's request. Expect its work to arrive
-  through its own branch and PR. Before each build, fetch and merge `main`, keep its changes, and resolve conflicts without
-  undoing them (likely in `space.js`, `planets.js`, `world.js`). Tell that chat's work apart from yours by its commits.
-- **Planets (build 50+):** places are up to 330 m long. New areas live in `src/planets.js` (`PLANET_EXTRA`) and are built
-  as she walks near them; a planet is freed completely when she flies away. Anything added on a planet must go through
-  that system, or it will not load or unload correctly.
 - **Every emoji used in `src/expansion.js` or `src/learn.js` needs a 3D toy model** (`src/toy-models.js`;
   `tests/toy-models.test.mjs` checks it). Reuse an emoji that already has one, or add a model.
 

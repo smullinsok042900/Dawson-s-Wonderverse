@@ -16,9 +16,8 @@
 // ===================================================================
 import * as THREE from 'three';
 import { toy } from './creatures.js';
-import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 
-export const SPACE = { ox: 5000, gap: 400, w: 110 }; // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
+export const SPACE = { ox: 5000, gap: 200, w: 110 };
 // [id, picture colours for the menu, gravity m/s², gas giant?, what the voice says when you arrive]
 export const PLACES = [
   ['moon', ['#e8e8ec', '#9a9aa6'], 1.62, false, "The Moon! There's not much gravity here, so you can jump about six times higher. Look, there's Earth!"],
@@ -47,17 +46,17 @@ export function initSpace(G, api) {
   const ups = {}; // per place: little animations, run only while you're there
   const SKYCOL = { moon: '#06071a', mercury: '#0a0710', venus: '#c9922a', mars: '#b8794a', jupiter: '#2a1608', saturn: '#2a2410', uranus: '#0a2e34', neptune: '#06143d', pluto: '#05050f' };
   function build(i) {
-    const [id, [c1, c2], , gas] = PLACES[i], X = placeX(i), PW = placeWidth(id), MID = X + PW / 2, g = new THREE.Group(); g.name = 'space:' + id; g.userData.dynamic = true; groups[id] = g; built[id] = true; const U = ups[id] = [];
+    const [id, [c1, c2], , gas] = PLACES[i], X = placeX(i), MID = X + SPACE.w / 2, g = new THREE.Group(); g.name = 'space:' + id; g.userData.dynamic = true; groups[id] = g; built[id] = true; const U = ups[id] = [];
     const add = o => { g.add(o); return o; }, box = (x, y, z, w, h, d, c, o = {}) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), toy(c, o)); m.position.set(x, y + h / 2, z); return add(m); }, ball = (x, y, z, r, c, o = {}) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), toy(c, o)); m.position.set(x, y, z); return add(m); };
     const tapIt = (obj, fn, x, id2) => { obj.traverse(o => { if (o.isMesh) o.userData.tap = fn; }); G.taps.push(obj); if (id2) G.interact.push({ x, y: 0, layer: 'space', disc: id2, run: fn, hintY: 2.4 }); return obj; };
     // THE GROUND: rocky planets get craters and rocks; the gas giants get soft swirly cloud ground in their own colours
-    box(MID, -8, -6, PW + 60, 8, 40, c1, { r: .95 });
+    box(MID, -8, -6, SPACE.w + 60, 8, 40, c1, { r: .95 });
     if (!gas) {
       for (let k = 0; k < 14; k++) { const cr = ball(X + 6 + k * 7.7 + (k % 3), -.15, -3 - (k % 4) * 3.2, .9 + (k % 3) * .5, c2, { r: .95 }); cr.scale.y = .18; }
       for (let k = 0; k < 10; k++) { const r = ball(X + 10 + k * 10, .25, -5 - (k % 3) * 2.5, .35 + (k % 4) * .18, c2, { r: .9 }); r.scale.y = .7; }
     } else {
       const BANDS = { jupiter: ['#f0d2a8', '#c0763a', '#e8b07a', '#fff0dc'], saturn: ['#f5e2a8', '#e8c97a', '#fff3d0', '#d9b46a'], uranus: ['#b8f0f0', '#8fe0e8', '#d8fbfb', '#6fcfd8'], neptune: ['#7fa8ff', '#2f4fd0', '#5a82f0', '#a8c4ff'] }[id];
-      for (let k = 0; k < 8; k++) box(MID, -.05, 3 - k * 3.2, PW + 60, .1, 3.2, BANDS[k % 4], { r: .9 });
+      for (let k = 0; k < 8; k++) box(MID, -.05, 3 - k * 3.2, SPACE.w + 60, .1, 3.2, BANDS[k % 4], { r: .9 });
       for (let k = 0; k < 22; k++) { const puff = ball(X + 3 + k * 5, .1, -4 - (k % 4) * 3, 1 + (k % 3) * .5, BANDS[(k + 1) % 4], { r: .9 }); puff.scale.y = .35; U.push((dt, t) => { puff.position.x += Math.sin(t * .3 + k) * dt * .3; }); }
     }
     // the parked rocket (tap it to fly somewhere else, or home) and the striped metre pole
@@ -76,17 +75,16 @@ export function initSpace(G, api) {
       neptune: { name: 'Windies', body: '#5a82f0', eye: 2, ant: 0, shape: 'wisp', move: 'swoosh', note: 450, hi: 'Whoosh! The wind is so fast on Neptune!' },
       pluto: { name: 'Heartlings', body: '#ff9fd2', eye: 2, ant: 2, shape: 'heart', move: 'hop', note: 1000, hi: 'Hello, friend! We love our big icy heart!' },
     }[id];
-    const placeAlien = (x0, z0, k, interactId) => { const a = alien(AL); a.position.set(x0, 0, z0); add(a); let boing = 0;
-      tapIt(a, () => { boing = 1; Sound.tone(AL.note, .12, 'sine', .05, 1.4); Sound.tone(AL.note * 1.25, .12, 'sine', .05, 1.3, .14); say(`👽 ${AL.hi}`, true); disc('alien_' + id, `Meet the aliens on every planet!`); }, x0, interactId === undefined ? (k === 0 ? 'alien_' + id : null) : interactId);
-      U.push((dt, t) => { if (Math.abs(P.x - x0) > 45 && !boing) return; /* (build 50: aliens far away rest: no work for them) */ boing = Math.max(0, boing - dt * 1.5); const ph = t * 1.3 + k * 2, b = a.userData.body;
+    for (let k = 0; k < 3; k++) { const a = alien(AL); const x0 = X + 30 + k * 22, z0 = -2 - (k % 2) * 1.5; a.position.set(x0, 0, z0); add(a); let boing = 0;
+      tapIt(a, () => { boing = 1; Sound.tone(AL.note, .12, 'sine', .05, 1.4); Sound.tone(AL.note * 1.25, .12, 'sine', .05, 1.3, .14); say(`👽 ${AL.hi}`, true); disc('alien_' + id, `Meet the aliens on every planet!`); }, x0, k === 0 ? 'alien_' + id : null);
+      U.push((dt, t) => { boing = Math.max(0, boing - dt * 1.5); const ph = t * 1.3 + k * 2, b = a.userData.body;
         if (AL.move === 'hop') a.position.y = Math.abs(Math.sin(ph * 1.5)) * (id === 'moon' ? 1.6 : 1.2);
         if (AL.move === 'float') a.position.y = 1 + Math.sin(ph) * .4;
         if (AL.move === 'walk' || AL.move === 'scurry') { a.position.x = x0 + Math.sin(ph * (AL.move === 'scurry' ? 1.6 : .5)) * 2.5; b.position.y = Math.abs(Math.sin(ph * 6)) * .08; }
         if (AL.move === 'spin') a.rotation.y += dt * 3;
         if (AL.move === 'roll') { a.position.x = x0 + Math.sin(ph * .6) * 3; const r = -(a.position.x - x0) * 1.96; b.rotation.z = r; b.position.y = .4 * (Math.abs(Math.cos(r)) + Math.abs(Math.sin(r))) + .05; } // (build 48: it turns about its own middle and rises onto its corner, like a real box rolling; it used to swing half into the ground)
         if (AL.move === 'swoosh') { a.position.x = x0 + Math.sin(ph * .9) * 4; a.position.y = .8 + Math.sin(ph * 2) * .3; }
-        a.scale.setScalar(1 + Math.sin(boing * 12) * boing * .25); }); };
-    for (let k = 0; k < 3; k++) placeAlien(X + 30 + k * 22, -2 - (k % 2) * 1.5, k);
+        a.scale.setScalar(1 + Math.sin(boing * 12) * boing * .25); }); }
     // ---------- things to do that fit each planet ----------
     const fact = (m, d) => { say(m, true); disc(d); };
     if (id === 'moon') {
@@ -159,46 +157,9 @@ export function initSpace(G, api) {
       G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'plutoheart', run: () => fact('💗 Pluto\'s big heart is a giant plain of ice. Run across and slide!', 'plutoheart'), hintY: 1 });
       const charon = ball(X + 75, 20, -40, 3.5, '#9a9aa6', { r: .9 }); tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
     }
-    // (build 50) the toolkit the new areas use (planets.js), and anything that spans the whole planet (Moon footprints)
-    kits[id] = { X, g, add, ball, box, tapIt, fact, say, disc, Sound, U, P, G, api, sky, placeAlien: (x, z, k) => placeAlien(x, z, k, null) };
-    secs[id] = [true]; if (PLANET_EXTRA[id] && PLANET_EXTRA[id].all) PLANET_EXTRA[id].all(areaKit(id, 0, g));
     g.traverse(o => { if (o.isMesh) o.castShadow = false; });
     scene.add(g); api.compile && api.compile(g);
   }
-  // ---------- (build 50) BIGGER PLANETS: each new area is built when you walk near it, and a whole planet is freed when
-  // you fly away (so only the place you are on is ever in memory). Shapes come from shared unit geometries. ----------
-  const kits = {}, secs = {}, UNIT_BALL = new THREE.SphereGeometry(1, 24, 16), UNIT_BOX = new THREE.BoxGeometry(1, 1, 1); UNIT_BALL.userData.shared = UNIT_BOX.userData.shared = true;
-  function areaKit(id, s, sub) {
-    const K = kits[id], X = K.X, add = o => { sub.add(o); return o; }, { tapIt, U, say, disc } = K;
-    const sball = (x, y, z, sx, sy, sz, c, o = {}) => { const m = new THREE.Mesh(UNIT_BALL, toy(c, o)); m.position.set(x, y, z); m.scale.set(sx, sy, sz); return add(m); };
-    const sbox = (x, y, z, w, h, d, c, o = {}) => { const m = new THREE.Mesh(UNIT_BOX, toy(c, o)); m.position.set(x, y + h / 2, z); m.scale.set(w, h, d); return add(m); };
-    const plat = (a, b, y, o = {}) => G.platforms.push({ a, b, y, layer: 'space', z: -1.2, ...o });
-    const rocketSign = x => { const g2 = new THREE.Group(); g2.position.set(x, 0, -1.8); add(g2); const post = new THREE.Mesh(UNIT_BOX, toy('#ffffff', { r: .5 })); post.scale.set(.12, 1.4, .12); post.position.y = .7; g2.add(post);
-      const mini = new THREE.Group(); mini.scale.setScalar(.22); mini.position.y = 1.4; g2.add(mini); rocketModel(mini); const back = () => { const r = G.rockets[id]; if (!r) return; api.flash(); P.x = r.x + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; api.snap(); Sound.whoosh(); say('🚀 Back to the rocket!', true); disc('rocketback', '🚀 Tap a little rocket sign to go back to your rocket.'); };
-      tapIt(g2, back); G.interact.push({ x, y: 0, layer: 'space', run: back, hintY: 2.4, icon: '🚀', action: 'Back to the rocket' }); U.push((dt, t) => { mini.rotation.y = t; mini.position.y = 1.4 + Math.sin(t * 2) * .08; }); };
-    return { ...K, s0: X + s * SECTION, g: sub, add, sball, sbox, plat, rocketSign };
-  }
-  const areaSteps = []; // (build 50: a new area is made over several frames, one small step each, never all at once)
-  function buildArea(id, s) {
-    const K = kits[id], sub = new THREE.Group(); sub.name = `space:${id}:${s}`; sub.userData.dynamic = true; const k = areaKit(id, s, sub), X0 = k.s0;
-    areaSteps.push(() => {
-    // the ground features every area shares (rocky places: soft craters and scattered rocks, from the shared shapes)
-    const [, [, c2], , gas] = PLACES[PLACES.findIndex(p => p[0] === id)];
-    if (!gas) { for (let j = 0; j < 9; j++) k.sball(X0 + 8 + j * 11.5 + (j % 3) * 2, -.15, -6 - (j % 3) * 2.6, 1.2 + (j % 3) * .6, .22, 1.2 + (j % 3) * .6, c2, { r: .95 }); for (let j = 0; j < 8; j++) k.sball(X0 + 12 + j * 12.5, .2, -7.5 - (j % 2) * 3, .35 + (j % 3) * .2, .28 + (j % 3) * .15, .35 + (j % 3) * .2, c2, { r: .9 }); }
-    }, () => PLANET_EXTRA[id].sections[s - 1](k),
-    () => { if (kits[id] !== K) return; sub.traverse(o => { if (o.isMesh) o.castShadow = false; }); api.compile && api.compile(sub); },
-    () => { if (kits[id] !== K) return; K.g.add(sub); });
-  }
-  function unbuild(id) {
-    const g = groups[id]; if (!g) return; const i = PLACES.findIndex(p => p[0] === id), X = placeX(i), X2 = X + placeWidth(id);
-    const mine = new Set(); g.traverse(o => mine.add(o));
-    for (let k = G.taps.length - 1; k >= 0; k--) if (mine.has(G.taps[k])) G.taps.splice(k, 1);
-    for (let k = G.interact.length - 1; k >= 0; k--) { const it = G.interact[k]; if (it.layer === 'space' && it.x >= X - 30 && it.x <= X2 + 30) G.interact.splice(k, 1); }
-    for (let k = G.platforms.length - 1; k >= 0; k--) { const it = G.platforms[k]; if (it.layer === 'space' && it.a >= X - 30 && it.b <= X2 + 30) G.platforms.splice(k, 1); }
-    g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.dispose()); });
-    areaSteps.length = 0; delete groups[id]; delete ups[id]; delete kits[id]; delete secs[id]; built[id] = false; if (G.rockets) delete G.rockets[id];
-  }
-  const unbuildOthers = keep => { for (const k in groups) if (k !== keep) unbuild(k); };
   // an alien built from round toy shapes (each planet's kind looks and moves differently)
   function alien(A) {
     const a = new THREE.Group(), body = new THREE.Group(); a.add(body); a.userData.body = body; const m = toy(A.body, { r: .45, cc: .5 }), white = toy('#ffffff'), dark = toy('#2b1d3d');
@@ -231,17 +192,14 @@ export function initSpace(G, api) {
 
   // ---------- flying ----------
   function goTo(i) {
-    unbuildOthers(PLACES[i][0]); /* (build 50: only the place you are on stays in memory) */
     if (!built[PLACES[i][0]]) build(i);
     const [id, , grav, gas, hello] = PLACES[i]; here = id; G.spaceG = grav / EARTH_G;
-    G.spaceBounds = [placeX(i) + 1, placeX(i) + placeWidth(id) - 1];
+    G.spaceBounds = [placeX(i) + 1, placeX(i) + SPACE.w - 1];
     api.flash(); P.ride = null; P.layer = 'space'; P.x = placeX(i) + 12; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; jumpTop = 0;
     show(); api.snap(); Sound.chime();
     say(`🚀 ${hello}`, true); disc('space_' + id); disc('space'); told = {};
   }
-  // (build 50) build the place you are flying to during the countdown, so arriving does not stop the game
-  function prepare(id) { const i = PLACES.findIndex(p => p[0] === id); if (i < 0 || built[id]) return; build(i); if (groups[id]) groups[id].visible = false; }
-  function goHome() { here = null; G.spaceG = 1; api.home(); unbuildOthers(null); show(); }
+  function goHome() { here = null; G.spaceG = 1; api.home(); show(); }
   function show() {
     const on = P.layer === 'space';
     for (const k in groups) groups[k].visible = on && k === here;
@@ -250,16 +208,13 @@ export function initSpace(G, api) {
   }
   // the jump report: after each big jump, how high you went (the real gravity makes the difference)
   function update(dt, t) {
-    if (P.layer !== 'space') { if (here) { here = null; G.spaceG = 1; show(); unbuildOthers(null); } return; }
+    if (P.layer !== 'space') { if (here) { here = null; G.spaceG = 1; show(); } return; }
     const i = PLACES.findIndex(p => p[0] === here); if (i < 0) return;
     const [, , grav, gas] = PLACES[i], X = placeX(i);
     sky.position.set(api.camX(), P.y, -45); stars.position.set(api.camX() * .9, P.y * .9, -44);
     if (!P.grounded) jumpTop = Math.max(jumpTop, P.y);
     else if (jumpTop > .05) { const h = jumpTop; jumpTop = 0; G.spaceLastJump = h; /* (measured every physics step: a Jupiter hop lasts a third of a second) */ if (h < .3) return; if (!told[Math.round(h)]) { told[Math.round(h)] = 1; const m = Math.round(h * 10) / 10; say(m >= 1 ? `⭐ You jumped ${m >= 3 ? Math.round(m) : m} metres high!` : '⭐ A tiny hop! Gravity is very strong here!', true); disc('spacejump', 'Jump on each planet: the gravity is different everywhere!'); } }
     for (const u of ups[here] || []) u(dt, t);
-    // (build 50) build the next area of a big planet when you get within 70 m of it
-    if (areaSteps.length) areaSteps.shift()();
-    else if (PLANET_EXTRA[here] && secs[here]) for (let s = 1; s <= PLANET_EXTRA[here].sections.length; s++) if (!secs[here][s] && P.x > X + s * SECTION - 70) { secs[here][s] = true; buildArea(here, s); break; }
   }
-  return { goTo, goHome, update, prepare, places: PLACES, here: () => here };
+  return { goTo, goHome, update, places: PLACES, here: () => here };
 }
