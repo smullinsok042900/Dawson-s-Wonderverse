@@ -341,6 +341,14 @@ export function initExpansion(G, api) {
       const animals = [['🐰', 'bunny'], ['🐦', 'bird'], ['🐶', 'dog'], ['🦋', 'butterfly'], ['🐢', 'turtle'], ['🦖', 'dinosaur']]; let k = -1; const sh = c.sign('🐰', 2.6, 712.4, 2.2, -4.2, true); sh.visible = false;
       c.tap(lamp, () => { k = (k + 1) % animals.length; sh.material = emojiMat(animals[k][0], true); sh.visible = true; c.say(`🔦 A ${animals[k][1]} shadow!`); Sound.twinkle(); c.disc('shadow', '🔦 Tap the lamp to make shadow animals!'); }, 709);
       return (dt, t) => { if (sh.visible) sh.position.x = 712.4 + Math.sin(t * 1.5) * .3; }; },
+    // (build 45) THE SPACE ROCKET on its launch pad: tap it (or PAW) and pick a planet to fly to
+    () => { const X = 698, pad = c.cyl(X, 0, -3.2, 2.2, 2.4, .35, '#9a9aa6', { r: .6, m: .3 }); const rk = new THREE.Group(); rk.position.set(X, .35, -3.2); c.add(rk);
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1, 4.4, 28), mat('#ffffff', { r: .3 })); body.position.y = 2.6; body.castShadow = true; rk.add(body); const nose = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.7, 28), mat('#ff4f9a')); nose.position.y = 5.65; rk.add(nose);
+      for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(W.rbox(.18, 1.4, 1.1, .05), mat('#2fa8ff')); const a2 = i * 2.09 + .5; f.position.set(Math.cos(a2) * .95, .9, Math.sin(a2) * .95); f.rotation.y = -a2; rk.add(f); }
+      const win = new THREE.Mesh(new THREE.SphereGeometry(.36, 16, 10), mat('#9fe6ff', { em: '#9fe6ff', ei: .5 })); win.position.set(0, 3.6, .8); rk.add(win); const band = new THREE.Mesh(new THREE.CylinderGeometry(.96, .96, .3, 28), mat('#ffd23f')); band.position.y = 1.6; rk.add(band);
+      for (const s2 of [-1, 1]) c.cyl(X + s2 * 2.6, 0, -3.2, .12, .12, 4, '#ff9a2e');
+      c.tap(rk, () => api.rocket && api.rocket(), X, { icon: '🚀', label: 'Space rocket', action: 'Fly to space', disc: 'rocketmenu' }); c.tap(pad, () => api.rocket && api.rocket());
+      return (dt, t) => { win.material.emissiveIntensity = .4 + Math.sin(t * 3) * .2; }; },
     // the rocket: press the big button
     () => { const rk = new THREE.Group(); rk.position.set(730, 0, -2.6); c.add(rk); const body = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, 2.6, 24), mat('#ffffff', { r: .3 })); body.position.y = 1.7; body.castShadow = true; rk.add(body); const nose = new THREE.Mesh(new THREE.ConeGeometry(.5, 1, 24), mat('#ff4f9a')); nose.position.y = 3.5; rk.add(nose); for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(W.rbox(.12, .8, .7, .04), mat('#2fa8ff')); const a = i * 2.09; f.position.set(Math.cos(a) * .55, .6, Math.sin(a) * .55); f.rotation.y = -a; rk.add(f); } const win = new THREE.Mesh(new THREE.SphereGeometry(.22, 16, 10), mat('#9fe6ff', { em: '#9fe6ff', ei: .5 })); win.position.set(0, 2.2, .45); rk.add(win);
       c.cyl(730, 0, -2.6, 1.2, 1.3, .2, '#9a9a9a'); const btn = c.cyl(727, 0, -1.2, .45, .5, .5, '#ff4f9a', { m: { em: '#ff4f9a', ei: .3 } }); let flying = 0;
@@ -704,5 +712,5 @@ export function initExpansion(G, api) {
     for (const k of Object.keys(PALS)) if (X.pals[k] && !X.pals[k].follow) X.pals[k] = { follow: false };
   }
   const stats = () => S.map(s => `${s.d.id}:${s.state}`).join(' ');
-  return { palList, togglePal, palHint, _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
+  return { pictureSign, palList, togglePal, palHint, _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
 }

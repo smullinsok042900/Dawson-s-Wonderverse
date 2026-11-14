@@ -135,6 +135,15 @@ Keep the previous build's file (`../backups/3D_buildNN_index.html`) to compare a
   - Automatic graphics: 4→5 (30 fps) and 5→4 (room to spare): the bounce fixed in build 39.
   - The "10,412 ms freeze" was time in the background (fixed in build 39); real freezes in the session: 309 and 339 ms, place unknown.
 
+## Real iPhone report: build 43 (Home Screen app, 844×390 at 3×)
+- **Frame rates:**
+  - Park 44 fps (1% low 32), creature area 40 (30), castle 56 (42), house 59–60, studio 59.
+  - Graphics level 5; frame work 4.2 ms, so the GPU is the limit.
+- **Start-up:** 4.5 s.
+- **Moving between areas:** 59–108 ms.
+- **Freezes:** one 274 ms freeze "(Art Plaza)", fixed in build 44.
+- **Build 44 response:** less grass, earlier simple trees and no fur at levels 4–5 (park −22%, creatures −30% triangles on desktop at level 5).
+
 ## Known performance problems
 - Loading is long because of the whole-world rehearsal (see NEXT_TASKS).
 - The park and creature area are the heaviest views; the castle has the most draw calls.

@@ -20,6 +20,23 @@ Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same 
 
 Desktop software-rendering verification is recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Real iPhone playtesting remains necessary.
 
+## 3D build 45: a friendlier voice, and a rocket to the planets
+
+- **The voice sounds warmer and more natural:**
+  - It picks the best voice on the phone and speaks at a natural pitch and a calm pace.
+  - Grown-ups can choose a voice in ⚙️.
+  - Tip: download Ava or Zoe (Premium) in the iPhone's Settings → Accessibility → Spoken Content → Voices. They're free and much more natural.
+- **A space rocket in the Lab Gardens:**
+  - Fly to the Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune or Pluto, and back home to Earth.
+  - Each place has its **real gravity**: on the Moon she jumps about 6 times higher, on Pluto about 16 times higher and floats down slowly, and on Jupiter she can only do tiny hops.
+  - The gas giants have no ground, so there she stands on a floating space platform in the clouds.
+  - A striped pole shows how high she jumped, and the voice tells her.
+
+## 3D build 44: smoother in the park, no freeze in the Art Plaza
+
+- When the phone needs the lightest graphics, the park and creature area now draw much less (about a quarter fewer triangles), without looking different.
+- Fixed a short freeze at the end of the Art Plaza that came with build 43.
+
 ## 3D build 43: zoomed out, no signs, a real seesaw, stairs to the sky, fly the whale, an underwater world
 
 - **See more:** the camera is further out, and the whole Block Builder wall fits on screen.

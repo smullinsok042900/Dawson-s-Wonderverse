@@ -250,7 +250,7 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
       e.set(0, rnd() * 6.3, 0); q.setFromEuler(e); const near = z > -5.5 && z < 0 ? 1 : 0, s = (.8 + rnd() * .6) * (near ? .85 : 1.1); m4.compose(V.set(x, terrainH(x, z), z), q, S.set(s, s * (.8 + rnd() * .5), s));
       im.setMatrixAt(n, m4); const dry = rnd() < .05; im.setColorAt(n, dry ? cl.setHSL(.17 + rnd() * .03, .38, .42) : cl.setHSL(.25 + rnd() * .04, .36 + rnd() * .08, .37 + rnd() * .05)); n++; /* (build 20: close to the lawn colour, less clump-to-clump contrast) */
     }
-    im.count = PHONE_GRASS ? Math.round(n * .6) : n; /* (build 28) phones: 40% fewer grass clumps (they are in random order, so the rest stay evenly spread) */ im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im); LOD.push({ o: im, x: cx + chunk / 2, r: 44 });
+    im.count = PHONE_GRASS ? Math.round(n * .6) : n; im.userData.n0 = im.count; /* (build 44: the graphics level can show fewer) */ /* (build 28) phones: 40% fewer grass clumps (they are in random order, so the rest stay evenly spread) */ im.receiveShadow = true; im.castShadow = false; im.computeBoundingSphere(); scene.add(im); meshes.push(im); LOD.push({ o: im, x: cx + chunk / 2, r: 44 });
   }
   return meshes;
 }

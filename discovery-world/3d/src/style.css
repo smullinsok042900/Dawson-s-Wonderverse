@@ -476,3 +476,15 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 .nursery-pet-choice{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;font-size:28px;box-shadow:inset 0 -4px 0 #0001}
 @media(max-height:500px) and (min-width:601px){.nursery-hatch-room{min-height:210px}#nurseryPreview{height:150px}}
 @media(max-width:600px){#nurseryPreview{height:180px}.nursery-pet-choice{width:42px;height:42px}}
+/* (build 45) the rocket menu: big round planet pictures (Saturn with its rings, Earth first) */
+#rocketPanel{display:none;position:fixed;inset:0;z-index:40;background:rgba(10,8,40,.6);align-items:center;justify-content:center}
+#rocketPanel.show{display:flex}
+#rocketPanel .mpIn{position:relative;background:linear-gradient(160deg,#1b1f4a,#2b1d5c);border:5px solid #fff;border-radius:28px;padding:16px 18px;max-width:94vw;max-height:calc(100dvh - 24px)}
+#rocketPanel .rkGrid{display:grid;grid-template-columns:repeat(5,auto);gap:min(14px,2.4vh)}
+#rocketPanel .rkT{width:min(17vw,22vh,100px);height:min(17vw,22vh,100px);border-radius:50%;border:4px solid rgba(255,255,255,.9);background:#0b0d2a;display:grid;place-items:center;position:relative;padding:0}
+#rocketPanel .rkT i{display:block;width:72%;height:72%;border-radius:50%;box-shadow:inset -6px -6px 12px #0006}
+#rocketPanel .rkT.moon i,#rocketPanel .rkT.pluto i,#rocketPanel .rkT.mercury i{width:52%;height:52%}
+#rocketPanel .rkT.saturn::after{content:"";position:absolute;width:96%;height:22%;border-radius:50%;border:4px solid #e8d29a;transform:rotate(-18deg)}
+#rocketPanel .rkT.earth{border-color:#7fd99a;box-shadow:0 0 0 5px #7fd99a55}
+#rocketPanel .rkT.here{box-shadow:0 0 0 6px #ffd23f}
+#rocketPanel .mpX{position:absolute;top:-16px;right:-16px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;background:#ff8fc8;color:#fff;font-size:24px;font-weight:900}
