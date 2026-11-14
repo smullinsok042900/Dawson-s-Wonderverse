@@ -9,6 +9,7 @@
 // Everything reuses the world's shared materials and shapes (no new shader programs).
 // Every activity: one tap or one walk, a spoken line, a big reaction, nothing to read, no way to fail.
 // ===================================================================
+import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
 import { makeToyModel } from './toy-models.js';
 
@@ -343,9 +344,10 @@ export function initExpansion(G, api) {
       return (dt, t) => { if (sh.visible) sh.position.x = 712.4 + Math.sin(t * 1.5) * .3; }; },
     // (build 45) THE SPACE ROCKET on its launch pad: tap it (or PAW) and pick a planet to fly to
     () => { const X = 686, /* (build 48: it stood on top of the bubble fountain at 698, so PAW there blew bubbles instead) */ pad = c.cyl(X, 0, -3.2, 2.2, 2.4, .35, '#9a9aa6', { r: .6, m: .3 }); const rk = new THREE.Group(); rk.position.set(X, .35, -3.2); c.add(rk);
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(.9, 1, 4.4, 28), mat('#ffffff', { r: .3 })); body.position.y = 2.6; body.castShadow = true; rk.add(body); const nose = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.7, 28), mat('#ff4f9a')); nose.position.y = 5.65; rk.add(nose);
-      for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(W.rbox(.18, 1.4, 1.1, .05), mat('#2fa8ff')); const a2 = i * 2.09 + .5; f.position.set(Math.cos(a2) * .95, .9, Math.sin(a2) * .95); f.rotation.y = -a2; rk.add(f); }
-      const win = new THREE.Mesh(new THREE.SphereGeometry(.36, 16, 10), mat('#9fe6ff', { em: '#9fe6ff', ei: .5 })); win.position.set(0, 3.6, .8); rk.add(win); const band = new THREE.Mesh(new THREE.CylinderGeometry(.96, .96, .3, 28), mat('#ffd23f')); band.position.y = 1.6; rk.add(band);
+      // (build 49) the same smooth rocket as on the planets: a curved hull, swept fins, a framed window, an engine bell.
+      // It is merged into ONE mesh with painted colours (one draw call instead of seven).
+      { const b = makeBatch(); for (const [g2, c2, x, y, z, s3, rot] of rocketParts()) b.put(g2, x, y - .42, z, c2, s3, rot); const hull = b.mesh(shinyMat()); hull.castShadow = true; rk.add(hull); }
+      const win = new THREE.Mesh(rocketGlass(), mat('#9fe6ff', { em: '#9fe6ff', ei: .5 })); win.position.set(0, 3.18, .72); win.scale.z = .6; rk.add(win);
       for (const s2 of [-1, 1]) c.cyl(X + s2 * 2.6, 0, -3.2, .12, .12, 4, '#ff9a2e');
       api.registerRocket && api.registerRocket('earth', rk, win, X, '', .35);
       c.tap(rk, () => api.rocket && api.rocket(), X, { icon: '🚀', label: 'Space rocket', action: 'Get in the rocket', disc: 'rocketmenu' }); c.tap(pad, () => api.rocket && api.rocket());
