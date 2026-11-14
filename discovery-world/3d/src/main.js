@@ -494,7 +494,7 @@ function showBlast(id) {
 G.blastOff = blastOff;
 function blastOff() {
   const R = seated(); if (!R || R.phase !== 'in' || !R.dest || launching) return;
-  hideBlast(); launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3;
+  hideBlast(); launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth') setTimeout(() => space.prepare(R.dest), 120); /* (build 50: the planet is made during the countdown) */
   Sound.click(); Sound.tone(180, .5, 'square', .03, .9); voice.speak('Three... two... one... blast off!'); toast('🚀 3');
   discover('blastoff', 'Press the big red button to blast off!');
 }
