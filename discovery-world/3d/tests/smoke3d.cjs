@@ -54,7 +54,14 @@ const UG_F = -6;
   // so a fixed 0.6 s hold measures walking, not start-up work
   await page.evaluate(() => new Promise(res => { const t0 = performance.now(); let last = t0; const iv = []; const f = now => { iv.push(now - last); last = now; if (iv.length > 5) iv.shift(); if ((iv.length === 5 && iv.reduce((a, b) => a + b) / 5 < 120) || now - t0 > 10000) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }));
   c = await S(); const x0 = c.x;
-  await holdBtn('#rightBtn', 600); c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
+  // The software renderer often advances only one capped .25 s physics frame
+  // during a .6 s wall-clock hold. Keep the SAME >2 m requirement, and wait for
+  // the actual movement while the real touch stays down (bounded to 15 s).
+  { const right = await center('#rightBtn'); await touch('touchStart', [right]);
+    try { await page.waitForFunction(x => __DDW3.player.x > x + 2, x0, { timeout: 15000 }); }
+    catch (_) { /* Record the unchanged distance assertion below on timeout. */ }
+    finally { await touch('touchEnd', []); } }
+  c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
   const x1 = await page.evaluate(() => new Promise(r => { let still = 0, n = 0; const f = () => { const P = __DDW3.player; still = Math.abs(P.vx) < .01 ? still + 1 : 0; if (still > 4 || ++n > 300) return r(P.x); requestAnimationFrame(f); }; f(); })); await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
   await holdBtn('#leftBtn', 500); check('slide a finger left to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); const seen = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if (P.y > .3) return r(P.y); if (++n > 200) return r(P.y); requestAnimationFrame(f); }; f(); })); await touch('touchStart', [j]); await touch('touchEnd', []); const jy = await seen; check('JUMP jumps', jy > .3, `y=${jy.toFixed(2)}`);

@@ -103,7 +103,6 @@ export function initLearning3D(G, root, stage) {
       entry.model.position.set(r.left-rr.left+r.width/2-width/2,height/2-(r.top-rr.top+r.height/2), el.closest('.lpiece')?60:el.matches('.ltank')?-100:10);
       entry.model.scale.set(s,s,s*.65); entry.model.rotation.set(.10,-.14,0);
       if(parent?.classList.contains('lit'))entry.model.scale.multiplyScalar(1.12);
-      if(parent?.classList.contains('boing'))entry.model.position.z+=8*Math.sin(performance.now()*.02);
     }
   }
   function resize(w,h){width=w;height=h;camera.left=-w/2;camera.right=w/2;camera.top=h/2;camera.bottom=-h/2;camera.updateProjectionMatrix();dirty=true;}

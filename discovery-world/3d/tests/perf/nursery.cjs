@@ -16,9 +16,9 @@ const {chromium}=require('playwright');const path=require('path');
   });
   const started=Date.now();await p.goto('file://'+path.resolve(file)+'?hq');await p.waitForFunction(()=>window.__DDW3&&document.querySelector('#loading.done'),null,{timeout:600000});const loadMs=Date.now()-started;await p.locator('#playBtn').tap();
   const out={file,loadMs,views:{}};
-  for(const[name,x]of [['park',150],['creatures',238],['castle',398],['home',1012]]){
-   await p.evaluate(x=>{__DDW3.teleport(x);__DDW3.keys.left=__DDW3.keys.right=false;},x);
-   const r=await p.evaluate(()=>new Promise(resolve=>{let warm=0;function poll(){if(++warm===5){__sample=[];__longTasks=[];}if(__sample?.length>=16){const frames=__sample;__sample=null;resolve({frames,longTasks:__longTasks});return;}requestAnimationFrame(poll);}requestAnimationFrame(poll);}));
+  for(const[name,x]of [['park',150],['creatures',238],['castle',398],['home',1012],['woods',-220],['farm',-480],['pier',-580],['toyTown',600]]){
+   await p.evaluate(x=>{__DDW3.teleport(x);if(x<0||x>428&&x<1000)__DDW3.G.expansion.buildNow(x);__DDW3.keys.left=__DDW3.keys.right=false;},x);
+   const r=await p.evaluate(()=>new Promise(resolve=>{let warm=0;function poll(){if(++warm===9){__sample=[];__longTasks=[];}if(__sample?.length>=16){const frames=__sample;__sample=null;resolve({frames,longTasks:__longTasks});return;}requestAnimationFrame(poll);}requestAnimationFrame(poll);}));
    const frames=r.frames;out.views[name]={meanWorkMs:+(frames.reduce((n,f)=>n+f.ms,0)/frames.length).toFixed(2),maxWorkMs:+Math.max(...frames.map(f=>f.ms)).toFixed(2),calls:[...new Set(frames.map(f=>f.calls))].sort((a,b)=>a-b),triangles:[Math.min(...frames.map(f=>f.tris)),Math.max(...frames.map(f=>f.tris))],programs:[...new Set(frames.map(f=>f.progs))],longTasks:r.longTasks.map(Math.round),samples:frames};
   }
   if(await p.evaluate(()=>!!__DDW3.G.nursery)){
