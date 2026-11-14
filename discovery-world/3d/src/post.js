@@ -61,6 +61,13 @@ export function makePost(renderer, scene, camera, { mobile }) {
         gl_FragColor = vec4(clamp(g, 0., 1.), 1.);
       }` });
   const fin = new FullScreenQuad(finalMat);
+  // render() already clears its target with Three's default flags. Preserve the
+  // full explicit clear for callers that disable any automatic clear component.
+  function renderScene(target) {
+    renderer.setRenderTarget(target);
+    if (!(renderer.autoClear && renderer.autoClearColor && renderer.autoClearDepth && renderer.autoClearStencil)) renderer.clear();
+    renderer.render(scene, camera);
+  }
   const post = {
     enabled: true, ao: !mobile, lite: false,
     setSize(w, h, dpr) {
@@ -70,11 +77,11 @@ export function makePost(renderer, scene, camera, { mobile }) {
       finalMat.uniforms.uTexel.value.set(1 / W, 1 / H); const bw = Math.max(1, W >> 2), bh = Math.max(1, H >> 2); rtB1.setSize(bw, bh); rtB2.setSize(bw, bh); post.bt = [1 / bw, 1 / bh];
     },
     render() {
-      if (post.lite) { renderer.setRenderTarget(rtLite); renderer.clear(); renderer.render(scene, camera);
+      if (post.lite) { renderScene(rtLite);
         finalMat.uniforms.tIn.value = rtLite.texture; finalMat.uniforms.uBloom.value = 0; finalMat.uniforms.toneMappingExposure.value = renderer.toneMappingExposure;
         renderer.setRenderTarget(null); fin.render(renderer); return; }
       finalMat.uniforms.uBloom.value = .16;
-      renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
+      renderScene(rtScene);
       if (post.ao) gtao.render(renderer, rtAO, rtScene); const src = post.ao ? rtAO : rtScene; // (build 22: no screen-space AO on phones; the assets carry baked AO)
       // bloom at quarter size: bright pass, then a horizontal and a vertical blur, twice
       bright.material.uniforms.tIn.value = src.texture; renderer.setRenderTarget(rtB1); bright.render(renderer);

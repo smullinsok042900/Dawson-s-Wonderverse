@@ -6,13 +6,17 @@ Play: open `index.html`. It is one self-contained file and works offline. Once m
 
 ## 3D build 41: Pet Nursery & Creative Studio
 
-Tap **🥚** to open Little Wonders, or choose **🥚 🎨** in the home gallery.
+Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same sculpted pets and toy materials as the world, or choose **🥚 🎨** in the home gallery.
 
 - Hatch Pip, Moss and Twinkle with three taps. Feed, bathe, brush and play with a friend to discover the next egg. All activities can be repeated freely, with no waiting or declining needs.
 - Choose snacks and drag them to your friend, rub with the sponge or brush, play catch, and tuck your pet in. Tap to wake them whenever you like.
 - Open **🎨** to design a blanket or outfit using six colors, stamps and finger drawing. Undo, clear or fill the background, then tap **✅ 🎁** to apply it. Pets wear their outfits and sleep under their own blankets; the blanket also decorates the room.
 - Each pet keeps its own creations, room color, care and bedtime state. Original world pets, adventures and collections are preserved in the same device save.
-- Picture controls and replayable voice instructions work without reading. Calm effects and reduced-motion preferences are respected. The playroom pauses the 3D world and adds no new world meshes or shader programs.
+- Picture controls and replayable voice instructions work without reading. Calm effects and reduced-motion preferences are respected. The playroom pauses exploration and reuses the existing 3D renderer. Its pets and furnishings are drawn only while the room is open.
+
+- All 41 learning activities now use real 3D toys, including feeling faces, letter/number blocks, puzzle pieces, instruments and science objects. Existing levels, demonstrations, voice prompts and learning progress remain.
+- Streamed-world animals, fish, shells, flowers, gems, balloons and prizes are solid 3D models. They use one drawing batch each and the game's fine toy-surface texture. Picture signs, maps and editable artworks remain useful interfaces and surfaces.
+- Fixed saved builder erasing, hidden objects intercepting taps, temporary scenery cleanup, learning reward/cancellation issues, and several touch-layout problems. Removed duplicate scene clearing and unnecessary work for distant creatures.
 
 Desktop software-rendering verification is recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Real iPhone playtesting remains necessary.
 

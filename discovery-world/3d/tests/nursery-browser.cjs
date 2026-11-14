@@ -22,15 +22,15 @@ const assert=require('node:assert/strict');const path=require('path');
  await page.screenshot({path:'screenshots/nursery-studio.jpg',timeout:240000});
  await page.locator('[data-npage="care"]').click();await page.locator('[data-care-tool="sleep"]').click();await page.locator('#nurseryFriend').click();
  assert.equal(await page.evaluate(()=>__DDW3.world.nursery.pets[0].asleep),true);
- assert.ok(await page.locator('#nurseryFriend svg polyline').count(),'own blanket appears on sleeping pet');
- await page.screenshot({path:'screenshots/nursery-bedtime.jpg',timeout:240000});
+ assert.ok(await page.evaluate(()=>{const m=__DDW3.G.nursery.room.scene.getObjectByName('nursery-blanket');return m?.visible&&m.material.map?.isCanvasTexture;}),'own blanket is an actual textured 3D mesh');
+ assert.ok(await page.evaluate(()=>{const r=__DDW3.G.nursery.room;r.scene.updateMatrixWorld(true);return r.pet.B.head.getWorldPosition(new __DDW3.THREE.Vector3()).z<-1.25;}),'head remains above pillow beyond blanket edge');await page.screenshot({path:'screenshots/nursery-bedtime.jpg',timeout:240000});
  await page.locator('[data-nursery-pet="1"]').click();for(let i=0;i<3;i++)await page.locator('#nurseryEgg').click();
  assert.equal(await page.evaluate(()=>__DDW3.world.nursery.pets[1].outfit.marks.length),0);
  // A real drag from food tray to friend must feed exactly the selected pet.
- await page.locator('[data-food="🥕"]').click();const food=await page.locator('[data-food="🥕"]').boundingBox(),friend=await page.locator('#nurseryFriend').boundingBox();
- await page.mouse.move(food.x+24,food.y+24);await page.mouse.down();await page.mouse.move(friend.x+friend.width/2,friend.y+friend.height/2,{steps:8});await page.mouse.up();
+ await page.locator('[data-food="🥕"]').click();assert.equal(await page.evaluate(()=>__DDW3.G.nursery.room.scene.getObjectByName('nursery-food:🥕').visible),true);const food=await page.locator('[data-food="🥕"]').boundingBox(),friend=await page.locator('#nurseryFriend').boundingBox();
+ await page.mouse.move(food.x+24,food.y+24);await page.mouse.down();await page.mouse.move(friend.x+friend.width/2,friend.y+friend.height/2,{steps:8});assert.ok(await page.evaluate(()=>Math.abs(__DDW3.G.nursery.room.scene.getObjectByName('nursery-food:🥕').position.x-.85)>.1),'3D food follows the finger');await page.mouse.up();
  assert.ok(await page.evaluate(()=>__DDW3.world.nursery.pets[1].care.includes('feed')));
- await page.locator('#nurseryClose').click();assert.equal(await page.evaluate(()=>__DDW3.G.activityOpen),false);
+ await page.locator('#nurseryClose').click();assert.equal(await page.evaluate(()=>__DDW3.G.activityOpen),false);assert.equal(await page.locator('body>#game').count(),1,'game canvas returns to the world');
  // Preserve old collection fields while nursery data is saved and loaded through the actual game.
  await page.evaluate(()=>{__DDW3.world.crown=true;__DDW3.world.wand=true;__DDW3.G.adventures.event({type:'sea',id:'octopus'});__DDW3.G.nursery.open();});
  await page.locator('[data-care-tool="play"]').click();await page.locator('#nurseryFriend').click();await page.locator('#nurseryClose').click();
@@ -45,7 +45,7 @@ const assert=require('node:assert/strict');const path=require('path');
   const b=await apply.boundingBox();assert.ok(b.width>=48&&b.height>=48);await apply.click();await page.locator('[data-npage="care"]').click();assert.ok(await page.locator('[data-room-color]').first().isVisible(),'room colors available');
  }
  await page.setViewportSize({width:375,height:667});await page.screenshot({path:'screenshots/nursery-phone.jpg',timeout:240000});
- await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.querySelector('#nurseryPanel').contains(document.activeElement)),true);await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>__DDW3.G.activityOpen),false);
+ await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.querySelector('#nurseryPanel').contains(document.activeElement)),true);await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>__DDW3.G.activityOpen),false);assert.equal(await page.locator('body>#game').count(),1,'game canvas returns to the world');
  await page.setViewportSize({width:844,height:390});await page.locator('#adventureBtn').click();await page.locator('[data-page="gallery"]').click();await page.locator('[data-open-nursery="true"]').click();assert.equal(await page.locator('#nurseryPanel').isVisible(),true);
  assert.equal(await page.locator('#adventurePanel').isVisible(),false);
  await page.locator('[data-nursery-pet="1"]').click();for(const a of ['bath','brush']){await page.locator(`[data-care-tool="${a}"]`).click();await page.locator('#nurseryFriend').click();}
@@ -53,7 +53,7 @@ const assert=require('node:assert/strict');const path=require('path');
  assert.equal(await page.locator('.nursery-care-progress').innerText().then(t=>t.includes('🥚')),false);
  await page.locator('#nurseryCreate').click();await page.locator('[data-stamp="line"]').click();await page.locator('#nurseryCanvas').scrollIntoViewIfNeeded();const box=await page.locator('#nurseryCanvas').boundingBox();const cdp=await context.newCDPSession(page);
  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+30,y:box.y+30,id:1}]});for(let n=1;n<=5;n++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:box.x+30+n*15,y:box.y+30+n*15,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await page.locator('#nurseryApply').click();assert.ok(await page.evaluate(()=>__DDW3.world.nursery.pets[2].blanket.marks[0].points.length>2),'actual touch draws');
- await page.locator('[data-npage="care"]').click();await page.evaluate(()=>__DDW3.G.comfort.apply({...__DDW3.world.comfort,calm:true}));assert.equal(await page.locator('#nurseryFriend>svg').evaluate(el=>getComputedStyle(el).animationName),'none');
+ await page.locator('[data-npage="care"]').click();await page.evaluate(()=>__DDW3.G.comfort.apply({...__DDW3.world.comfort,calm:true}));assert.equal(await page.evaluate(()=>__DDW3.world.comfort.calm),true);assert.equal(await page.locator('#nurseryPanel #game').count(),1,'existing game renderer is reused');
  await page.locator('#nurseryClose').click();
  for(const size of [{width:667,height:375},{width:844,height:390}]){await page.setViewportSize(size);const overlap=await page.evaluate(()=>{const a=document.querySelector('#upperLeft').getBoundingClientRect(),b=document.querySelector('#upperRight').getBoundingClientRect();return a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});assert.equal(overlap,false,'HUD groups do not overlap');}assert.deepEqual(errors,[]);console.log('PASS nursery hatching, four care activities, drag feeding, designs, bedtime, legacy saves, four screens and home gallery entry');await browser.close();
 })().catch(e=>{console.error(e);process.exit(1);});

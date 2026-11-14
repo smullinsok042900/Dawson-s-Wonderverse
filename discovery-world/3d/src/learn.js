@@ -1,3 +1,4 @@
+import { initLearning3D } from './learning-3d.js';
 // ===================================================================
 // learn.js (build 27): the Learning Corners, rebuilt as TOYS for a 5-year-old who is just beginning to learn.
 // Design rules (checked by audit() and the tests):
@@ -22,22 +23,22 @@ const NUMW = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'ei
 const PRAISE = ['Yay!', 'Great job!', 'You did it!', 'Super!', 'Wonderful!', 'Hooray!'];
 const COLORS = { red: '#ff4a4a', blue: '#3b82f6', yellow: '#ffd23f', green: '#3cc45a', orange: '#ff9a1f', purple: '#9b5cf6', pink: '#ff7ac8' };
 const CN = Object.keys(COLORS);
-const LETTERS = { A: ['apple', '🍎'], B: ['bear', '🐻'], C: ['cat', '🐱'], D: ['dog', '🐶'], E: ['egg', '🥚'], F: ['fish', '🐟'], G: ['goat', '🐐'], H: ['hat', '🎩'], I: ['insect', '🐜'], J: ['juice', '🧃'], K: ['kite', '🪁'], L: ['lion', '🦁'], M: ['moon', '🌙'], N: ['nest', '🪺'], O: ['octopus', '🐙'], P: ['pig', '🐷'], Q: ['queen', '👸'], R: ['rainbow', '🌈'], S: ['sun', '☀️'], T: ['tree', '🌳'], U: ['umbrella', '☂️'], V: ['van', '🚐'], W: ['whale', '🐳'], Y: ['yo-yo', '🪀'], Z: ['zebra', '🦓'] };
+const LETTERS = { A: ['apple', '🍎'], B: ['bear', '🐻'], C: ['cat', '🐱'], D: ['dog', '🐶'], E: ['egg', '🥚'], F: ['fish', '🐟'], G: ['goat', '🐐'], H: ['hat', '🎩'], I: ['insect', '🐜'], J: ['juice', '🧃'], K: ['kite', '🪁'], L: ['lion', '🦁'], M: ['moon', '🌙'], N: ['nest', '🪺'], O: ['octopus', '🐙'], P: ['pig', '🐷'], Q: ['queen', '👸'], R: ['rainbow', '🌈'], S: ['sun', '☀️'], T: ['tree', '🌳'], U: ['umbrella', '☂️'], V: ['van', '🚐'], W: ['whale', '🐳'], Y: ['yo-yo', '🪀'], X: ['xylophone', '🎼'], Z: ['zebra', '🦓'] };
 const LNAME = { A: 'ay', B: 'bee', C: 'see', D: 'dee', E: 'ee', F: 'eff', G: 'jee', H: 'aitch', I: 'eye', J: 'jay', K: 'kay', L: 'ell', M: 'em', N: 'en', O: 'oh', P: 'pee', Q: 'cue', R: 'are', S: 'ess', T: 'tee', U: 'you', V: 'vee', W: 'double you', X: 'ex', Y: 'why', Z: 'zee' };
 const LSOUND = { A: 'ah', B: 'buh', C: 'kuh', D: 'duh', E: 'eh', F: 'fff', G: 'guh', H: 'huh', I: 'ih', J: 'juh', K: 'kuh', L: 'lll', M: 'mmm', N: 'nnn', O: 'aw', P: 'puh', Q: 'kwuh', R: 'rrr', S: 'sss', T: 'tuh', U: 'uh', V: 'vvv', W: 'wuh', Y: 'yuh', Z: 'zzz', X: 'ks' };
 const EASY_L = ['A', 'B', 'O', 'S', 'M', 'T', 'X', 'C'];
 const LK = Object.keys(LETTERS);
 
 // ---------- original illustrations (tiny inline SVGs) ----------
-const big = (e, px = 70) => `<span class="le" style="font-size:${px}px;line-height:1">${e}</span>`;
+const big = (e, px = 70) => `<span class="le" data-lmodel="${e}" style="font-size:${px}px;line-height:1">${e}</span>`;
 const critterG = (c, mouth = 'smile') => `<ellipse cx="50" cy="93" rx="26" ry="5" fill="#0002"/><path d="M50 13c13 0 21 6 25 13 9 1 15 10 13 20 7 8 5 23-6 29-4 11-18 16-32 16s-28-5-32-16c-11-6-13-21-6-29-2-10 4-19 13-20 4-7 12-13 25-13z" fill="${c}"/><path d="M50 13c13 0 21 6 25 13 9 1 15 10 13 20" fill="none" stroke="#fff8" stroke-width="3" stroke-linecap="round"/><ellipse cx="37" cy="45" rx="9" ry="11" fill="#fff"/><ellipse cx="63" cy="45" rx="9" ry="11" fill="#fff"/><circle cx="38" cy="47" r="5.5" fill="#2b1d3d"/><circle cx="64" cy="47" r="5.5" fill="#2b1d3d"/><circle cx="40" cy="44" r="2" fill="#fff"/><circle cx="66" cy="44" r="2" fill="#fff"/><ellipse cx="27" cy="61" rx="6" ry="4" fill="#ff4f8f55"/><ellipse cx="73" cy="61" rx="6" ry="4" fill="#ff4f8f55"/>${mouth === 'open' ? '<ellipse class="mouth" cx="50" cy="66" rx="9" ry="7" fill="#7a1d3d"/><ellipse cx="50" cy="69" rx="5" ry="2.5" fill="#ff7aa8"/>' : '<path d="M41 62q9 9 18 0" stroke="#2b1d3d" stroke-width="3.2" fill="none" stroke-linecap="round"/>'}`;
-const critter = (c = '#ff8fc8', s = 90, mouth) => `<svg class="lcrit" viewBox="0 0 100 100" width="${s}" height="${s}">${critterG(c, mouth)}</svg>`;
-const ball = (c, s = 70) => `<svg viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="52" r="42" fill="${c}"/><path d="M14 50q36 20 72 0" stroke="#fff6" stroke-width="6" fill="none"/><ellipse cx="36" cy="32" rx="12" ry="8" fill="#fff9" transform="rotate(-30 36 32)"/></svg>`;
-const bubble = (c, s = 84) => `<svg viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="50" r="44" fill="${c}55" stroke="${c}" stroke-width="5"/><ellipse cx="34" cy="32" rx="12" ry="7" fill="#fffc" transform="rotate(-35 34 32)"/><circle cx="66" cy="70" r="4" fill="#fff9"/></svg>`;
-const bucket = (c, s = 110) => `<svg viewBox="0 0 100 90" width="${s}" height="${s * .9}"><path d="M12 22h76l-9 62H21z" fill="${c}"/><rect x="8" y="14" width="84" height="12" rx="6" fill="${c}"/><rect x="8" y="14" width="84" height="12" rx="6" fill="#fff4"/><path d="M22 34h56" stroke="#fff5" stroke-width="4"/></svg>`;
-const cupSVG = (s = 110) => `<svg viewBox="0 0 100 100" width="${s}" height="${s}"><path d="M22 8h56l12 84H10z" fill="#ff5f8f"/><path d="M22 8h56l2 12H20z" fill="#ffd1e0"/><path d="M30 30l-6 52" stroke="#fff6" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="56" r="9" fill="#fff7"/></svg>`;
+const critter = (c = '#ff8fc8', s = 90, mouth) => `<svg class="lcrit" data-lmodel="critter${mouth === 'open' ? '-open' : ''}" data-lcolor="${c}" viewBox="0 0 100 100" width="${s}" height="${s}">${critterG(c, mouth)}</svg>`;
+const ball = (c, s = 70) => `<svg data-lmodel="ball" data-lcolor="${c}" viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="52" r="42" fill="${c}"/><path d="M14 50q36 20 72 0" stroke="#fff6" stroke-width="6" fill="none"/><ellipse cx="36" cy="32" rx="12" ry="8" fill="#fff9" transform="rotate(-30 36 32)"/></svg>`;
+const bubble = (c, s = 84) => `<svg data-lmodel="bubble" data-lcolor="${c}" viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="50" r="44" fill="${c}55" stroke="${c}" stroke-width="5"/><ellipse cx="34" cy="32" rx="12" ry="7" fill="#fffc" transform="rotate(-35 34 32)"/><circle cx="66" cy="70" r="4" fill="#fff9"/></svg>`;
+const bucket = (c, s = 110) => `<svg data-lmodel="bucket" data-lcolor="${c}" viewBox="0 0 100 90" width="${s}" height="${s * .9}"><path d="M12 22h76l-9 62H21z" fill="${c}"/><rect x="8" y="14" width="84" height="12" rx="6" fill="${c}"/><rect x="8" y="14" width="84" height="12" rx="6" fill="#fff4"/><path d="M22 34h56" stroke="#fff5" stroke-width="4"/></svg>`;
+const cupSVG = (s = 110) => `<svg data-lmodel="cup" viewBox="0 0 100 100" width="${s}" height="${s}"><path d="M22 8h56l12 84H10z" fill="#ff5f8f"/><path d="M22 8h56l2 12H20z" fill="#ffd1e0"/><path d="M30 30l-6 52" stroke="#fff6" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="56" r="9" fill="#fff7"/></svg>`;
 const SHAPES = { circle: '<circle cx="50" cy="50" r="40"/>', square: '<rect x="12" y="12" width="76" height="76" rx="6"/>', triangle: '<polygon points="50,8 94,90 6,90"/>', star: '<polygon points="50,5 61,38 96,38 68,58 79,92 50,72 21,92 32,58 4,38 39,38"/>', heart: '<path d="M50 88 C10 60 4 34 22 20 C36 10 48 18 50 28 C52 18 64 10 78 20 C96 34 90 60 50 88Z"/>', rectangle: '<rect x="4" y="26" width="92" height="48" rx="6"/>', oval: '<ellipse cx="50" cy="50" rx="44" ry="28"/>', diamond: '<polygon points="50,4 92,50 50,96 8,50"/>' };
-const shapeSVG = (n, col = '#9b5cf6', size = 84, hole) => `<svg viewBox="0 0 100 100" width="${size}" height="${size}"><g fill="${hole ? '#5b3a8626' : col}" stroke="${hole ? '#9b7bd6' : '#fff'}" stroke-width="${hole ? 4 : 5}" stroke-dasharray="${hole ? '8 6' : '0'}" stroke-linejoin="round">${SHAPES[n]}</g></svg>`;
+const shapeSVG = (n, col = '#9b5cf6', size = 84, hole) => `<svg data-lmodel="${n}" data-lcolor="${hole ? '#b89be8' : col}" viewBox="0 0 100 100" width="${size}" height="${size}"><g fill="${hole ? '#5b3a8626' : col}" stroke="${hole ? '#9b7bd6' : '#fff'}" stroke-width="${hole ? 4 : 5}" stroke-dasharray="${hole ? '8 6' : '0'}" stroke-linejoin="round">${SHAPES[n]}</g></svg>`;
 // faces: big, obvious, animated expressions
 const FACE = {
   happy: '<path d="M30 40q6-8 12 0M58 40q6-8 12 0" stroke="#4a2a12" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M28 58q22 26 44 0z" fill="#7a1d3d"/><ellipse cx="22" cy="58" rx="7" ry="5" fill="#ff7a8a88"/><ellipse cx="78" cy="58" rx="7" ry="5" fill="#ff7a8a88"/>',
@@ -47,7 +48,7 @@ const FACE = {
   scared: '<circle cx="36" cy="44" r="8" fill="#fff" stroke="#4a2a12" stroke-width="3"/><circle cx="64" cy="44" r="8" fill="#fff" stroke="#4a2a12" stroke-width="3"/><circle cx="36" cy="46" r="3" fill="#4a2a12"/><circle cx="64" cy="46" r="3" fill="#4a2a12"/><path d="M32 72q6-6 9 0t9 0t9 0t9 0" stroke="#4a2a12" stroke-width="4" fill="none"/><path d="M80 26q-5 9 0 12q5-3 0-12z" fill="#4fb3ff"/>',
   sleepy: '<path d="M28 46q8 6 16 0M56 46q8 6 16 0" stroke="#4a2a12" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="50" cy="70" rx="6" ry="5" fill="#7a1d3d"/><path d="M70 14h10l-10 12h10" stroke="#7a6ad6" stroke-width="3" fill="none" stroke-linejoin="round"/>',
 };
-const faceSVG = (m, s = 110) => `<svg class="lface lf-${m}" viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="52" r="44" fill="#ffd84a"/><circle cx="50" cy="52" r="44" fill="none" stroke="#f0b52a" stroke-width="3"/>${FACE[m]}</svg>`;
+const faceSVG = (m, s = 110) => `<svg data-lmodel="face-${m}" class="lface lf-${m}" viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="52" r="44" fill="#ffd84a"/><circle cx="50" cy="52" r="44" fill="none" stroke="#f0b52a" stroke-width="3"/>${FACE[m]}</svg>`;
 // pictures for the puzzles (200x200)
 const PICS = {
   critter: c => `<rect width="200" height="200" fill="#bfe8ff"/><circle cx="165" cy="38" r="22" fill="#ffd23f"/><rect y="150" width="200" height="50" fill="#7fd36e"/><g transform="translate(30 40) scale(1.4)">${critterG(c)}</g>`,
@@ -73,6 +74,9 @@ export function initLearning(api) {
     <div class="lstage"></div><div class="ldots"></div><div class="lhand" aria-hidden="true">👆</div>`;
   document.body.appendChild(root);
   const stage = root.querySelector('.lstage'), dots = root.querySelector('.ldots'), starsEl = root.querySelector('.lstars b'), hand = root.querySelector('.lhand');
+  const toys3d = initLearning3D(api.G, root, stage);
+  let freeSession = 0;
+  const liveHelpers = () => { const session = ++freeSession; return { ...helpers, freeStar: (...args) => { if (session === freeSession && root.classList.contains('on')) freeStar(...args); }, isDemo: () => demo }; };
   let current = null, lastSay = '', onClose = null, menuCat = null, lastTouch = performance.now(), nudges = 0, idleTimer = 0, demoToken = 0, turnTok = 0;
   const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   root.addEventListener('pointerdown', e => { if (!e.isTrusted) return; lastTouch = performance.now(); nudges = 0; voice && voice.unlock(); if (demo && !e.target.closest('.lbar')) { e.stopPropagation(); e.preventDefault(); skipDemo(); } }, true);
@@ -80,8 +84,8 @@ export function initLearning(api) {
   tap(root.querySelector('.lsay'), () => { if (!Sound.on && api.setSound) api.setSound(true); const b = root.querySelector('.lsay'); b.classList.add('talk'); setTimeout(() => b.classList.remove('talk'), 900); say(lastSay); });
   tap(root.querySelector('.lshowme'), () => { if (current) showMe(); else say(lastSay); });
   const totalStars = () => Object.values(world.learn).reduce((n, v) => n + (v.stars || 0), 0);
-  function open(html) { delete stage.dataset.won; root.classList.add('on'); api.pause(true); stage.innerHTML = html || ''; starsEl.textContent = totalStars(); startIdle(); }
-  function close() { root.classList.remove('on', 'demo'); demo = false; demoToken++; turnTok++; hideHand(); stage.innerHTML = ''; dots.innerHTML = ''; current = null; menuCat = null; voice && voice.stop(); clearInterval(idleTimer); idleTimer = 0; api.pause(false); onClose && onClose(); }
+  function open(html) { delete stage.dataset.won; root.classList.add('on'); api.pause(true); toys3d.mount(); stage.innerHTML = html || ''; starsEl.textContent = totalStars(); startIdle(); }
+  function close() { freeSession++; toys3d.close(); root.classList.remove('on', 'demo'); demo = false; demoToken++; turnTok++; hideHand(); stage.innerHTML = ''; dots.innerHTML = ''; current = null; menuCat = null; voice && voice.stop(); clearInterval(idleTimer); idleTimer = 0; api.pause(false); onClose && onClose(); }
   const prompt = text => { lastSay = text; say(text); lastTouch = performance.now(); nudges = 0; };
   function confetti(n = 16) { if(world.comfort?.calm)n=Math.min(3,n); for (let i = 0; i < n; i++) { const c = document.createElement('i'); c.className = 'lconf'; c.textContent = pick(['⭐', '✨', '💖', '🎉', '🌈']); c.style.left = (8 + Math.random() * 84) + '%'; c.style.animationDelay = (Math.random() * .3) + 's'; stage.appendChild(c); setTimeout(() => c.remove(), 1600); } }
   const boing = el => { if (!el) return; el.classList.remove('boing'); void el.offsetWidth; el.classList.add('boing'); };
@@ -158,9 +162,10 @@ export function initLearning(api) {
   // a turn's context: tier (1-3), sub (0-3: the gentle ramp inside the tier), demo (the "watch me" example is the easiest)
   const ctx = isDemo => { const T = tier(), p = progOf(current.act.id); return { tier: T, sub: isDemo ? 0 : Math.min(3, p['s' + T] || 0), demo: isDemo }; };
   function run(act) {
+    freeSession++;
     const p = progOf(act.id); current = { act, prog: p, turn: 0, turns: act.turns ? act.turns(tier()) : tier() === 1 ? 3 : 4, wrong: 0, q: null }; menuCat = null;
     open(''); progressDots();
-    if (act.free) act.free(stage, helpers);
+    if (act.free) act.free(stage, liveHelpers());
     const dk = 'd' + tier(); if ((p[dk] || 0) < 2) { p[dk] = (p[dk] || 0) + 1; showMe(true); } else if (act.free) prompt(act.intro); else startTurn();
   }
   function progressDots() { const c = current; if (!c || c.act.free) { dots.innerHTML = ''; return; } dots.innerHTML = range(1, c.turns).map(i => `<i class="${i <= c.turn ? 'on' : ''}"></i>`).join(''); }
@@ -200,6 +205,7 @@ export function initLearning(api) {
       e.preventDefault(); e.stopPropagation(); if (el.classList.contains('placed')) return; const sx = e.clientX, sy = e.clientY; let moved = false; el.classList.add('drag'); Sound.tone(520, .05, 'sine', .03, 1.3);
       const mv = ev => { const dx = ev.clientX - sx, dy = ev.clientY - sy; if (Math.abs(dx) + Math.abs(dy) > 10) moved = true; el.style.transform = `translate(${dx}px,${dy}px) scale(1.12)`; };
       const up = ev => { document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', up); document.removeEventListener('pointercancel', up); el.classList.remove('drag');
+        if (ev.type === 'pointercancel') { el.style.transform = ''; return; }
         if (!moved) { el.style.transform = ''; selectPiece(el); return; }
         if (!onDrop(ev.clientX, ev.clientY)) { el.style.transition = 'transform .3s'; el.style.transform = ''; setTimeout(() => { el.style.transition = ''; }, 320); } };
       document.addEventListener('pointermove', mv); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
@@ -216,10 +222,10 @@ export function initLearning(api) {
     const place = (el, h) => {
       if (h.dataset.key !== el.dataset.key || (!multi && h.classList.contains('filled'))) { boing(h); t.miss(el, wrongHint ? wrongHint(pieces[+el.dataset.i], h.dataset.key) : 'Hmm, not that one. Try the other!'); return false; }
       el.classList.add('placed'); el.classList.remove('sel'); el.style.transform = ''; selected = null; boingS(); boing(h);
-      if (multi) h.querySelector('.lin').appendChild(el); else { h.classList.add('filled'); h.appendChild(el); }
+      if (multi) h.querySelector('.lin').appendChild(el); else { h.classList.add('filled'); (h.querySelector('.lin.eaten') || h).appendChild(el); }
       placed++; mark(); onPlace && onPlace(pieces[+el.dataset.i], placed); if (placed === (winOn || pieces.length)) t.win(); return true;
     };
-    els.forEach(el => draggable(el, (x, y) => { const h = hs.find(h => hit(h, x, y)); return h ? place(el, h) : false; }));
+    els.forEach(el => draggable(el, (x, y) => { const candidates = hs.filter(h => hit(h, x, y)); const h = candidates.sort((a, b) => { const score = h => { const r = h.getBoundingClientRect(); return Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)); }; return score(a) - score(b); })[0]; return h ? place(el, h) : false; }));
     hs.forEach(h => tap(h, () => { if (selected && !selected.classList.contains('placed')) place(selected, h); }));
     mark();
   }
@@ -267,11 +273,11 @@ export function initLearning(api) {
   } });
   act({ id: 'missing', cat: 'num', icon: '🚂', name: 'Number train', tiers: [3], make(c) {
     const start = 1 + rnd(5), gap = 1 + rnd(2), seq = range(start, start + 3), ans = seq[gap], count = seq.map((x, i) => i === gap ? 'hmmm' : NUMW[x]).join(', ');
-    return { say: `${count}. Which number is missing?`, hint: `Count along: ${count}.`, praise: `Yes! ${NUMW[ans]}!`, build: (st, t) => choice(st, t, { top: `<div class="ltrain">🚂${seq.map((x, i) => `<span class="lcar">${i === gap ? '❓' : x}</span>`).join('')}</div>`, items: opts(ans, range(1, 10), 3).map(x => ({ html: numCard(x), ok: x === ans, say: NUMW[x] })) }) };
+    return { say: `${count}. Which number is missing?`, hint: `Count along: ${count}.`, praise: `Yes! ${NUMW[ans]}!`, build: (st, t) => choice(st, t, { top: `<div class="ltrain">${big('🚂',48)}${seq.map((x, i) => `<span class="lcar">${i === gap ? '❓' : x}</span>`).join('')}</div>`, items: opts(ans, range(1, 10), 3).map(x => ({ html: numCard(x), ok: x === ans, say: NUMW[x] })) }) };
   } });
   act({ id: 'addsub', cat: 'num', icon: '➕', name: 'Add them up', tiers: [3], make(c) {
     const [e] = pick(FOODS), a = 1 + rnd(3), b = 1 + rnd(3), n = a + b, row = k => `<span class="lgrp">${range(1, k).map(() => big(e, 40)).join('')}</span>`;
-    return { say: `${NUMW[a]}, and ${NUMW[b]} more. How many altogether?`, hint: 'Count them all, one by one.', praise: `Yes! ${NUMW[n]}!`, build: (st, t) => choice(st, t, { top: `<div class="lsum">${row(a)}<b>+</b>${row(b)}</div>`, items: opts(n, range(2, 9), 3).map(x => ({ html: numCard(x), ok: x === n, say: NUMW[x] })) }) };
+    return { say: `${NUMW[a]}, and ${NUMW[b]} more. How many altogether?`, hint: 'Count them all, one by one.', praise: `Yes! ${NUMW[n]}!`, build: (st, t) => choice(st, t, { top: `<div class="lsum">${row(a)}<b data-lmodel="+">+</b>${row(b)}</div>`, items: opts(n, range(2, 9), 3).map(x => ({ html: numCard(x), ok: x === n, say: NUMW[x] })) }) };
   } });
 
   // ===== LETTERS =====
@@ -357,12 +363,12 @@ export function initLearning(api) {
   act({ id: 'mix', cat: 'art', icon: '🎨', name: 'Mix the paint', tiers: ALL, demoSteps: 2, demoGap: 900, free(st, h) {
     const P = [['red', '#ff4a4a'], ['yellow', '#ffd23f'], ['blue', '#3b82f6'], ['white', '#ffffff']];
     const MIX = { 'red+yellow': ['orange', '#ff9a1f'], 'blue+yellow': ['green', '#3cc45a'], 'blue+red': ['purple', '#9b5cf6'], 'red+white': ['pink', '#ff9ccc'], 'blue+white': ['light blue', '#8fd3ff'], 'white+yellow': ['light yellow', '#fff3a0'] };
-    let sel = []; const seen = new Set();
+    let sel = [], rewarded = false; const seen = new Set();
     st.innerHTML = `<div class="lshow"><div class="lbowl"><span class="lmixc"></span></div></div><div class="lopts">${P.map((p, i) => `<button class="lopt toy" data-c="${p[0]}" ${i < 2 ? 'data-demo' : ''}>${ball(p[1], 76)}</button>`).join('')}</div>`;
     const bowl = st.querySelector('.lmixc');
     st.querySelectorAll('.lopt').forEach(b => tap(b, () => { const c = b.dataset.c; boing(b); say(c); sel.push(c); bowl.style.background = P.find(p => p[0] === c)[1];
       if (sel.length === 2) { const m = MIX[sel.slice().sort().join('+')];
-        if (m) { bowl.style.background = m[1]; boing(bowl.parentNode); say(`${sel[0]} and ${sel[1]} make ${m[0]}!`, true); h.confetti(8); chime(); if (!h.isDemo()) { seen.add(m[0]); if (seen.size === 3) h.freeStar('mix', 'Three new colors! Here is a star!'); } }
+        if (m) { bowl.style.background = m[1]; boing(bowl.parentNode); say(`${sel[0]} and ${sel[1]} make ${m[0]}!`, true); h.confetti(8); chime(); if (!h.isDemo()) { seen.add(m[0]); if (seen.size === 3 && !rewarded) { rewarded = true; h.freeStar('mix', 'Three new colors! Here is a star!'); } } }
         else say('Try two different colors!', true);
         sel = []; } })); }, intro: 'Tap two paints to mix them!' });
 
@@ -483,7 +489,7 @@ export function initLearning(api) {
   act({ id: 'band', cat: 'music', icon: '🥁', name: 'Music band', tiers: ALL, demoSteps: 3, demoGap: 500, free(st, h) {
     const I = [['🥁', 'drum', () => { Sound.tone(110, .25, 'sine', .1, .5); Sound.noise && Sound.noise(.12, 200, 900, .05); }], ['🔔', 'bell', () => Sound.bell ? Sound.bell(880, .06) : Sound.tone(880, .8, 'sine', .05, 1)], ['🎺', 'trumpet', () => { Sound.tone(392, .35, 'square', .04, 1); Sound.tone(523, .3, 'square', .03, 1, .18); }], ['🎸', 'guitar', () => Sound.tone(pick([196, 247, 294, 330]), .6, 'triangle', .07, .99)], ['🪇', 'shaker', () => { if (Sound.noise) { Sound.noise(.12, 3000, 8000, .05); Sound.noise(.12, 3000, 8000, .05, .15); } }], ['🎹', 'piano', () => Sound.tone(pick([262, 330, 392, 523]), .5, 'sine', .07, 1)]], tried = new Set();
     st.innerHTML = `<div class="lcause">${I.map((x, i) => `<button class="lopt toy linst" data-i="${i}" ${i < 3 ? 'data-demo' : ''}>${big(x[0], 70)}</button>`).join('')}</div>`;
-    st.querySelectorAll('.lopt').forEach(b => tap(b, () => { const x = I[+b.dataset.i]; Sound.withMusic(() => x[2]()); boing(b); if (!tried.has(x[1])) { tried.add(x[1]); say(x[1]); }
+    st.querySelectorAll('.lopt').forEach(b => tap(b, () => { const x = I[+b.dataset.i]; Sound.withMusic(() => x[2]()); boing(b); if (!tried.has(x[1])) { if (!h.isDemo()) tried.add(x[1]); say(x[1]); }
       if (!h.isDemo() && tried.size === I.length && !st.dataset.won) { st.dataset.won = '1'; setTimeout(() => h.freeStar('band', 'What a band! Here is a star!'), 800); } })); }, intro: 'Tap the instruments to play music!' });
   act({ id: 'rhythm', cat: 'music', icon: '🎵', name: 'Copy me', tiers: ALL, demoSteps: 2, make(c) {
     const pads = c.tier === 1 ? 2 : c.tier === 2 ? 3 : 4, len = c.demo ? 1 : c.tier === 1 ? 1 + (c.sub >= 2 ? 1 : 0) : c.tier === 2 ? 2 : 3 + (c.sub >= 2 ? 1 : 0), seq = range(1, len).map(() => rnd(pads)), NOTE = [262, 392, 330, 523], C = ['#ff6fae', '#3b82f6', '#ffd23f', '#3cc45a'];
@@ -500,11 +506,11 @@ export function initLearning(api) {
   act({ id: 'paint', cat: 'music', icon: '🖌️', name: 'Paint', tiers: ALL, demoSteps: 2, demoGap: 400, free(st, h) {
     const PC = Object.entries(COLORS);
     st.innerHTML = `<canvas class="lcanvas" width="900" height="420" data-demo="draw"></canvas><div class="lopts">${PC.map(([n, c], i) => `<button class="lopt lpaint" data-c="${c}" data-n="${n}" ${i === 1 ? 'data-demo' : ''}>${ball(c, 46)}</button>`).join('')}<button class="lopt lclear">${big('🧽', 40)}</button></div>`;
-    const cv = st.querySelector('canvas'), g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 420); g.lineCap = g.lineJoin = 'round'; g.lineWidth = 22; let col = COLORS.red, last = null;
+    const cv = st.querySelector('canvas'), g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 420); g.lineCap = g.lineJoin = 'round'; g.lineWidth = 22; let col = COLORS.red, last = null, activePointer = null;
     const pt = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 900, (e.clientY - r.top) / r.height * 420]; };
-    cv.addEventListener('pointerdown', e => { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) { } last = pt(e); g.fillStyle = col; g.beginPath(); g.arc(last[0], last[1], 11, 0, 7); g.fill(); });
-    cv.addEventListener('pointermove', e => { if (!last) return; const p = pt(e); g.strokeStyle = col; g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke(); last = p; });
-    cv.addEventListener('pointerup', () => { last = null; });
+    cv.addEventListener('pointerdown', e => { e.preventDefault(); if (activePointer !== null) return; activePointer = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (err) { } last = pt(e); g.fillStyle = col; g.beginPath(); g.arc(last[0], last[1], 11, 0, 7); g.fill(); });
+    cv.addEventListener('pointermove', e => { if (!last || e.pointerId !== activePointer) return; const p = pt(e); g.strokeStyle = col; g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(p[0], p[1]); g.stroke(); last = p; });
+    for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) cv.addEventListener(event, e => { if (e.pointerId === activePointer) { last = null; activePointer = null; } });
     st.querySelectorAll('.lpaint').forEach(b => tap(b, () => { col = b.dataset.c; say(b.dataset.n); boing(b); st.querySelectorAll('.lpaint').forEach(x => x.classList.toggle('right', x === b)); }));
     tap(st.querySelector('.lclear'), () => { g.fillStyle = '#fff'; g.fillRect(0, 0, 900, 420); say('All clean!'); }); }, intro: 'Draw with your finger!' });
 
@@ -551,7 +557,7 @@ export function initLearning(api) {
   const available = cat => A.filter(a => a.cat === cat && a.tiers.includes(tier()));
   function showCorner(cat) {
     const list = available(cat), [, nm] = CORNERS[cat];
-    current = null; demoToken++; turnTok++; demo = false; root.classList.remove('demo'); hideHand();
+    freeSession++; current = null; demoToken++; turnTok++; demo = false; root.classList.remove('demo'); hideHand();
     open(`<div class="lmenu">${list.map(a => { const st = (world.learn[a.id] || {}).stars || 0; return `<button class="lmenuitem toy" data-id="${a.id}">${big(a.icon, 58)}<span class="lms">${'⭐'.repeat(Math.min(3, st))}</span></button>`; }).join('')}</div>`);
     menuCat = cat; dots.innerHTML = '';
     stage.querySelectorAll('.lmenuitem').forEach(b => tap(b, () => { boing(b); run(A.find(x => x.id === b.dataset.id)); }));

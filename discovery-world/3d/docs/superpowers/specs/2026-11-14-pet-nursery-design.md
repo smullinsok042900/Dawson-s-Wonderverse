@@ -13,3 +13,12 @@ Studio: choose a blanket or outfit, choose one of six colors, place stars/hearts
 No new dependencies, WebGL objects, shaders or per-frame world updates. Honor calm/reduced-motion and existing sound settings. Large 48px targets, picture navigation, voice repeat, keyboard close/focus handling, touch and mouse drawing, portrait/landscape scrolling. Preserve all existing save fields and features.
 
 Verification: state tests for progression, independence, reload/malformed data and bounded art; browser tests for actual hatch/care/drawing/apply/sleep/reopen, modal guards, touch sizes and legacy saves; fixed-view before/after performance and full existing smoke suite on desktop software rendering. Real iPhone remains a follow-up.
+
+
+## User corrections and expanded release scope
+
+The user explicitly requires matching the existing **3D** game graphics. The initial illustrated prototype is superseded. Nursery pets are now actual sculpted buildPet models, with native 3D eggs, furniture, bed, fabric garments, care props and animation in a separate Three.js scene. The existing WebGL canvas/context moves into playrooms and returns to the world on close. Only picture controls and editable artwork surfaces remain flat interfaces.
+
+The user also requested an entire-game audit, conversion of other flat gameplay to 3D, bug fixes, and improved speed/detail with a realistic children's toy-world aesthetic. All 41 learning activities retain their behavior but use native modelled toys over original interaction targets. Streamed physical world emoji sprites are replaced by semantic cached one-draw models. Signs, HUD, maps, clues, shadows and surface artwork remain appropriate interfaces/decals. Model colors use vertex batching and existing toy micro-normal materials. Case-sensitive glyphs and distinct feeling faces must preserve answer meanings.
+
+Concrete bugs included: saved builder reparent/removal, hidden/detached tap targets, streamed temporary resource cleanup, feeding visibility, mixture reward repetition, free-game stale rewards, demo reward leakage, drag/paint cancellation, overlapping drop choice, X phonics and narrow layouts. Speed work removes redundant post clears and far-creature square roots/per-step allocations without changing appearance or movement. No unmeasured global speedup claims; compare complete frame callbacks including both shadow phases and review all results.

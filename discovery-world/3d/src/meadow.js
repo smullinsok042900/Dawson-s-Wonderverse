@@ -42,7 +42,7 @@ export function buildMeadow(G, api) {
   const mats = BLOCKS.map(b => toy(b.c, { r: .35, cc: .8 }));
   const blockMeshes = new Map(); world.build = world.build || new Array(B.cols * B.rows).fill(-1);
   function makeBlock(t) {
-    const b = BLOCKS[t], g = new THREE.Group();
+    const b = BLOCKS[t], g = new THREE.Group(); g.userData.dynamic = true;
     if (b.kind === 'roof') { const m = new THREE.Mesh(roofGeo, mats[t]); m.castShadow = true; m.receiveShadow = true; g.add(m); return g; }
     const m = new THREE.Mesh(geoCube, b.kind ? toy(b.kind === 'window' || b.kind === 'door' ? '#fff1d2' : b.c, { r: .35, cc: .8 }) : mats[t]); m.castShadow = true; m.receiveShadow = true; g.add(m);
     if (b.kind === 'window') { const w = new THREE.Mesh(new THREE.PlaneGeometry(.7, .6), new THREE.MeshStandardMaterial({ color: '#bfe8ff', emissive: '#9fd8ff', emissiveIntensity: .3 })); w.position.z = .71; g.add(w); const cr = new THREE.Mesh(new THREE.PlaneGeometry(.06, .6), new THREE.MeshBasicMaterial({ color: '#ffffff' })); cr.position.z = .72; g.add(cr); const cr2 = cr.clone(); cr2.rotation.z = Math.PI / 2; cr2.scale.x = 1.15; g.add(cr2); }
@@ -51,10 +51,17 @@ export function buildMeadow(G, api) {
     if (b.kind === 'heart') { const sh = new THREE.Shape(); sh.moveTo(0, -.25); sh.bezierCurveTo(-.45, .05, -.2, .38, 0, .15); sh.bezierCurveTo(.2, .38, .45, .05, 0, -.25); const h = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: .06, bevelEnabled: false }), toy('#ffffff', { em: '#ffd1ec', ei: .4 })); h.position.z = .7; g.add(h); }
     return g;
   }
+  function disposeBlock(group) {
+    group.traverse(o => {
+      if (!o.isMesh) return;
+      if (o.geometry !== geoCube && o.geometry !== roofGeo) o.geometry.dispose();
+      for (const material of [].concat(o.material || [])) if (!mats.includes(material)) material.dispose();
+    });
+  }
   function cellPos(i) { const col = i % B.cols, row = Math.floor(i / B.cols); return [B.x0 + (col + .5) * B.cw, (row + .5) * B.ch, B.z]; }
   function rebuildBlocks(popI) {
-    for (const [i, m] of blockMeshes) { scene.remove(m); blockMeshes.delete(i); }
-    world.build.forEach((t, i) => { if (t < 0 || !BLOCKS[t]) return; const m = makeBlock(t); const [x, y, z] = cellPos(i); m.position.set(x, y, z); if (i === popI) m.scale.setScalar(.2); add(m); blockMeshes.set(i, m); });
+    for (const [i, m] of blockMeshes) { if (world.build[i] === m.userData.blockType) continue; m.removeFromParent(); disposeBlock(m); blockMeshes.delete(i); }
+    world.build.forEach((t, i) => { if (t < 0 || !BLOCKS[t] || blockMeshes.has(i)) return; const m = makeBlock(t); m.userData.blockType = t; const [x, y, z] = cellPos(i); m.position.set(x, y, z); if (i === popI) m.scale.setScalar(.2); add(m); blockMeshes.set(i, m); });
     // the top of every block is something you can stand on
     for (let k = G.platforms.length - 1; k >= 0; k--) if (G.platforms[k].builder) G.platforms.splice(k, 1);
     world.build.forEach((t, i) => { if (t < 0) return; const col = i % B.cols, row = Math.floor(i / B.cols), above = world.build[i + B.cols]; if (row < B.rows - 1 && above >= 0) return; const x0 = B.x0 + col * B.cw; G.platforms.push({ a: x0 - .05, b: x0 + B.cw + .05, y: (row + 1) * B.ch - (BLOCKS[t].kind === 'roof' ? .45 : 0), layer: '', z: B.z + .3, builder: true }); });

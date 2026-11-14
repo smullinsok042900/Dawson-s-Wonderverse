@@ -17,3 +17,19 @@ Task 1 complete: seven state tests pass, including a red-to-green malformed lock
 Review: focus restoration, voice stop, landscape color access, palette target size, third-pet reward indicator and HUD reservation corrected. Canvas clipping traced using elementFromPoint and fixed with sticky paper/preview; pet framing corrected for landscape.
 
 Task 2 complete: actual browser checks pass for keyboard hatching, all three pets, care, drag feeding, mouse/touch drawing, designs on pet, sleep/wake, reload with existing crown/wand/discoveries, four nursery layouts, calm mode and home-gallery entry. Browser review screenshots inspected. Task 3 sequential validation is running; do not open another browser until it completes.
+
+
+## Expanded execution ledger
+
+User correction: replace illustrated nursery with native 3D matching existing game. User additions: audit/convert other flat gameplay, fix issues, and improve speed and toy-like realism. All remain one release.
+
+- Native shared renderer viewport: src/playroom3d.js, main pause/resize integration; no second context or screenshot facade.
+- Native furnished nursery scene: src/nursery-room3d.js; saved art is texture only on real fabric/frames.
+- All41 learning toys: src/learning-3d.js with semantic descriptors in learn.js; retain event targets and demos.
+- World physical props: expansion.js uses cached single-draw native models; sign sprites remain legitimate UI.
+- Model library: toy-models.js + permanent tests, original solid glyphs with distinct lowercase, semantic coverage, bounded cache, single vertex-color batch.
+- Core fixes: interaction-targets.js; meadow dynamic/incremental blocks; life and post exact-appearance work reductions.
+
+Initial3D nursery browser passed. Whole-learning browser revealed ❓ fallback; model author correcting placeholders + sad/scared face distinction from final review. Final review also found selected-food/drag feedback mismatch; root fixed room food selection and ray-projected 3D held tools, added actual browser checks. Current code requires rebuild and rerun focused3D+nursery suites, then performance baseline/current, all existing adventure suites, devices and full smoke. No browser tests may run concurrently. Old prototype commit29934db exists but has NOT been pushed; final3D changes still uncommitted. PR not created yet.
+
+Final native checks: 24 unit cases (7 nursery,8 adventure,3 audio,2 visible-target,4 render-work) passed, plus saved builder/model-swap regressions,337 bounded single-draw semantic models and58 distinctions (including all15 feeling pairs and26 letter cases), and41-activity source contracts. Review findings fixed: selected snack propagates to3Dmodel, 3D props ray-project under finger, scared/sad distinct and sleeping face closed. Browser release pipeline started from final8830KB build with pipefail; session68141. It runs nursery → all41learning → fullsmoke → adventure regressions/integration → capscenarios → pairedbefore/afterperformance →11devices sequentially. Logs /tmp/release41-*.log. Do not launch another browser while session68141 runs.
