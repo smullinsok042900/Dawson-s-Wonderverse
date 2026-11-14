@@ -336,6 +336,10 @@ const UG_F = -6;
   // ---------- build 40: Clover the goat on the Adventure Trail ----------
   await teleport(492); await page.evaluate(() => __DDW3.G.expansion.buildNow(492)); await sleep(500);
   { const r = await page.evaluate(() => { const S = __DDW3.G.expansion._S.find(s => s.d.id === 'trail'); const goat = S.taps.find(o => o.userData && o.userData.pal === 'goat'); if (!goat) return 'no goat'; let m = null; goat.traverse(q => { if (!m && q.userData.tap) m = q; }); for (let k = 0; k < 3; k++) m.userData.tap(); return JSON.stringify(__DDW3.world.exp.pals); }); check('befriend Clover the goat on the Adventure Trail (three taps): Clover follows you', /goat.*follow":true/.test(r), r); }
+  // ---------- build 41: friends who follow you play together when you stand still ----------
+  await teleport(150); await sleep(500);
+  { const ok = await page.evaluate(() => new Promise(res => { const t0 = performance.now(); const f = () => { if (__DDW3.world.disc.has('palsplay')) res(true); else if (performance.now() - t0 > 40000) res(false); else setTimeout(f, 250); }; f(); }));
+    check('stand still with friends following: two of them play together (hearts and a giggle)', ok, `${await page.evaluate(() => __DDW3.G.expansion._followers().join(' '))}`); }
   // ---------- build 27: the learning games work for a child who can't read ----------
   { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
   await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);

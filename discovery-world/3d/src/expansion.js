@@ -184,8 +184,16 @@ export function initExpansion(G, api) {
       const dx = tx - m.position.x; m.position.x += dx * Math.min(1, dt * 3); m.position.y += (ty - m.position.y) * Math.min(1, dt * 6); m.position.z += (1.5 + slot * .45 - m.position.z) * Math.min(1, dt * 3);
       const moving = Math.abs(dx) > .3; m.userData.body.position.y = moving ? Math.abs(Math.sin(t * 12 + slot)) * .12 : 0;
       if (k === 'crab') m.rotation.y = 0; else m.rotation.y = dx >= 0 ? 0 : Math.PI; if (k === 'penguin') { m.userData.body.rotation.z = moving ? Math.sin(t * 10) * .12 : 0; } if (k === 'parrot') { m.userData.body.position.y = .7 + Math.sin(t * 5) * .15; if (m.userData.wing1) { m.userData.wing1.rotation.x = Math.sin(t * 18) * .6; m.userData['wing-1'].rotation.x = -Math.sin(t * 18) * .6; } } if (m.userData.curl) m.userData.curl.rotation.y = t * 6; if (k === 'robot' && m.userData.bulb) m.userData.bulb.material.emissiveIntensity = .5 + Math.abs(Math.sin(t * 4)) * .8;
+      if (f.play > 0) { f.play -= dt; m.userData.body.position.y = Math.abs(Math.sin(t * 11)) * .3; m.rotation.y = f.face; } // (build 41: playing with a friend)
       if (m.userData.tail) m.userData.tail.rotation.y = Math.sin(t * 6) * .4; m.visible = P.layer === '' || P.layer === 'in'; }
+    // (build 41) PALS PLAY TOGETHER: when two or more friends follow you and you stand still for a moment, now and then two
+    // friends next to each other turn to face each other and hop about, with a little burst of hearts and a giggle.
+    const ks = Object.keys(followers); still = P.layer === '' && Math.abs(P.vx) < .3 && !P.ride ? still + dt : 0;
+    if (ks.length >= 2 && still > 2.5 && (playAt -= dt) <= 0) { playAt = 9 + Math.random() * 6; const i = rnd(ks.length - 1), a = followers[ks[i]], b = followers[ks[i + 1]];
+      const right = a.m.position.x < b.m.position.x; a.face = right ? 0 : Math.PI; b.face = right ? Math.PI : 0; a.play = b.play = 1.6;
+      api.burst((a.m.position.x + b.m.position.x) / 2, 1.1, (a.m.position.z + b.m.position.z) / 2, ['#ff8fc8', '#ffd1ec', '#fff'], 10, 1.6); Sound.giggle(); disc('palsplay', `💕 ${PAL_EMOJI[ks[i]]} and ${PAL_EMOJI[ks[i + 1]]} are playing together!`); }
   }
+  let still = 0, playAt = 4;
 
   // ---------- gems (8 hidden around the new neighbourhoods; walk into one to collect it) ----------
   const gemObjs = [];
