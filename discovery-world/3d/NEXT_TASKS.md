@@ -17,6 +17,10 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - **Real-device check of build 36** on the iPhone (and any iPad or Android device the family has): buttons, panels, framing, full screen on Android/iPad, the ⚙️ graphics modes. Emulation passed 10/10, but that is not a real device.
 
 ## 0. Bigger planets (the family's request, build 50 onward)
+- **RESUME HERE (session ended, 2026-11-14):**
+  1. **Build 50 is in this branch.** Its first full smoke run passed 194/195. The one failure ("moon: missing mooncave") is fixed: PAW at the moon cave now counts as finding it. Rerun `node tests/smoke3d.cjs` to confirm 195/195, then run devices and `tests/perf/planets.cjs 3D_build49_index.html index.html`. Update the PR and publish the artifact.
+  2. **Build 51 (bigger Mercury and Pluto) is written but untested.** It is saved as `docs/wip/build51_mercury_pluto.patch`. Apply it with `git am docs/wip/build51_mercury_pluto.patch` (from the repository root), then build, check in the browser, add smoke checks like build 50's, and test.
+  3. **The family asked a second Claude chat to do the graphics overhaul.** Do not do the graphics overhaul here (the user asked this chat to drop it).
 - Done: the system (areas built when near, planets freed when you leave), the Moon and Mars (two new areas each).
 - **Next, two per build, same pattern** (add to `PLANET_EXTRA` in `planets.js`; measure with `tests/perf/planets.cjs OLD NEW`):
   - **Mercury:** crater fields, light and shadow, a rock-shape matching game.
