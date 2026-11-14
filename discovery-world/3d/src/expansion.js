@@ -215,7 +215,7 @@ export function initExpansion(G, api) {
     const ks = Object.keys(followers); still = P.layer === '' && Math.abs(P.vx) < .3 && !P.ride ? still + dt : 0;
     if (ks.length >= 2 && still > 2.5 && (playAt -= dt) <= 0) { playAt = 9 + Math.random() * 6; const i = rnd(ks.length - 1), a = followers[ks[i]], b = followers[ks[i + 1]];
       const right = a.m.position.x < b.m.position.x; a.face = right ? 0 : Math.PI; b.face = right ? Math.PI : 0; a.play = b.play = 1.6;
-      api.burst((a.m.position.x + b.m.position.x) / 2, 1.1, (a.m.position.z + b.m.position.z) / 2, ['#ff8fc8', '#ffd1ec', '#fff'], 10, 1.6); Sound.giggle(); disc('palsplay', `💕 ${PAL_EMOJI[ks[i]]} and ${PAL_EMOJI[ks[i + 1]]} are playing together!`); }
+      api.burst((a.m.position.x + b.m.position.x) / 2, 1.1, (a.m.position.z + b.m.position.z) / 2, ['#ff8fc8', '#ffd1ec', '#fff'], 10, 1.6); Sound.giggle(); disc('palsplay', `💖 ${PAL_EMOJI[ks[i]]} and ${PAL_EMOJI[ks[i + 1]]} are playing together!`); }
   }
   let still = 0, playAt = 4;
 
