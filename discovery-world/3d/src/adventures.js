@@ -60,6 +60,7 @@ export function initAdventures({world,player,G,voice,Sound,save,saveSoon=save,tr
  }
  function renderGallery(){
   content.replaceChildren();
+  tile('🥚 🎨','Pet nursery and creative studio',()=>{close();G.nursery?.open();},{openNursery:'true'});
   for(const r of state().rewards)tile(`<span>${REWARDS[r][0]}</span><small>🔊</small>`,REWARDS[r][1],()=>say('You earned your '+REWARDS[r][1]+'!'),{reward:r});
   for(const g of state().gallery){const b=tile(g.kind==='paint'?'<img alt="Your saved painting">':`<span class="adv-block-preview">${(g.blocks.length?g.blocks:Array(20).fill(-1)).slice(0,180).map(v=>`<i style="background:${v<0?'#eee7fa':['#ff7ab8','#8fb9ff','#ffd46b','#8cdaa2'][v%4]}"></i>`).join('')}</span>`,g.kind==='paint'?'Your saved painting':'Your saved building',()=>say('You made this!'),{galleryKind:g.kind});if(g.kind==='paint')b.querySelector('img').src=g.image;}
   tile('🎨 ➕ 🖼️','Display my painting',()=>saveArt('paint'),{saveArt:'paint'});tile('🧱 ➕ 🖼️','Display my building',()=>saveArt('build'),{saveArt:'build'});
