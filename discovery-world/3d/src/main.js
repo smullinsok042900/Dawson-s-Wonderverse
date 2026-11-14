@@ -9,6 +9,9 @@ import * as THREE from 'three';
 
 import { Sound, NOTES } from './audio.js';
 import { initAdventures, destinationArt } from './adventures.js';
+import { isVisibleTarget } from './interaction-targets.js';
+import { createPlayroomViewport } from './playroom3d.js';
+import { initNursery } from './nursery.js';
 import { initComfort } from './comfort.js';
 import { ADVENTURES } from './adventure-state.js';
 import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatures.js';
@@ -87,7 +90,8 @@ const cloudMat = toy('#ffffff', { r: .9, cc: 0, em: '#fff4fb', ei: .35 });
 for (let i = 0; i < 16; i++) { const c = new THREE.Group(); for (let k = 0; k < 5; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), cloudMat); s.scale.setScalar(2 + (k % 3) * .8); s.position.set((k - 2) * 2.2, (k % 2) * 1.1, 0); c.add(s); } c.position.set(-20 + i * 16, 18 + (i % 3) * 4, -55 - (i % 2) * 15); scene.add(c); }
 
 // ---------------- game state ----------------
-const G = { scene, platforms: [], solids: [], taps: [], interact: [], camera };
+const G = { scene, renderer, platforms: [], solids: [], taps: [], interact: [], camera };
+G.playroom=createPlayroomViewport({renderer,G});
 const player = { groundZ: 0, x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
 const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#bfe8ff', lastBuckets: [], paintColor: '#ff4f9a', rainbowHue: 0, trail: [], flash: 0, drumT: 0, mobileT: 0, wake: [0, 0, 0, 0, 0, 0] };
 let adventures = null;
@@ -552,7 +556,7 @@ function bounceObj(o) { if (!o || !o.scale || bounces.some(b => b.o === o) || (G
 function tapAt(cx, cy, ring) {
   pointerRay({ clientX: cx, clientY: cy });
   const targets = [creature.root, ...G.taps, ...bubbles.map(b => b.m), ...DOORS.filter(d => d.sprite.visible).map(d => d.sprite)];
-  const hits = ray.intersectObjects(targets, true);
+  const hits = ray.intersectObjects(targets, true).filter(h=>isVisibleTarget(h.object,scene));
   // tapping your creature always tickles it, even when it stands behind balls or bubbles
   if (!ring && hits.some(h => h.object.userData.creature) && !hits.some(h => h.object.isSprite)) { creature.tickle(); Sound.giggle(); burst(player.x, player.y + 1.8, player.z, ['#ff8fc8', '#ffd84a', '#ff6fae'], 10, 2); discover('tickle', 'Hee hee! That tickles!'); return true; }
   for (const h of hits) {
@@ -769,7 +773,7 @@ function saveSoon() { saveTimer = 1.2; }
 function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
-    const d = { adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
+    const d = { nursery: world.nursery, adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -778,7 +782,7 @@ function save() {
 function load() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return d && d.v === 1 ? d : null; } catch (e) { return null; } }
 function restore(d) {
   if (!d) return;
-  world.adventures = d.adventures; world.comfort = d.comfort;
+  world.nursery = d.nursery; world.adventures = d.adventures; world.comfort = d.comfort;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
   if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig', 'seal'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
@@ -874,6 +878,7 @@ function fovFor(a) { return a >= ASPECT0 ? FOV0 : THREE.MathUtils.radToDeg(2 * M
 // button stays at least 44 px for small fingers. (A narrow phone wraps the top buttons onto two rows instead: style.css.)
 function uiScale(w, h) { return Math.max(1, Math.min(1.35, Math.min(h / 390, w / 720))); }
 function resize() {
+  if(G.playroom?.active())return;
   const [w, h] = screenSize(); sizeW = w; sizeH = h;
   const want = Math.min(devicePixelRatio || 1, 2) * quality, cap = Math.sqrt(PIX_BUDGET * budgetScale / Math.max(1, w * h));
   renderer.setPixelRatio(Math.max(.6, Math.min(want, cap))); renderer.setSize(w, h, false);
@@ -962,9 +967,10 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
-  const frameT0 = performance.now(); checkSize(frameT0);
+  const frameT0 = performance.now();
   { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
+  checkSize(frameT0);
   // fixed 1/60 s physics steps: the game runs at the same speed on fast and slow devices
   timer.update(); const raw = Math.min(timer.getDelta(), .25); acc += raw;
   let n = 0; while (acc >= 1 / 60 && n < 15) { step(1 / 60); acc -= 1 / 60; n++; }
@@ -1029,7 +1035,7 @@ let lodTick = 0, poolTick = 0, poolDt = 0, shadowTick = 0;
 // Seven signposts in the park and valley (numbers, letters, colors & shapes, thinking, science, music & art,
 // feelings). Tap one (or PAW next to it) to open its learning games; the games are a light 2D layer and the
 // 3D world pauses while they're open.
-const learning = initLearning({ Sound, voice, setSound: on => { setSound(on); save(); }, world, save: () => save(), discover: id => { if (id.startsWith('learn_')) adventures?.event({type:'learn',id:id.slice(6)}); if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.releaseInputs?.(); G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST, event: e => adventures?.event(e) });
+const learning = initLearning({ G, Sound, voice, setSound: on => { setSound(on); save(); }, world, save: () => save(), discover: id => { if (id.startsWith('learn_')) adventures?.event({type:'learn',id:id.slice(6)}); if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.releaseInputs?.(); G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST, event: e => adventures?.event(e) });
 G.learning = learning;
 { const signTex = e => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff6fb'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#c9a6ff'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
   const wood = toy('#c98a5a', { r: .7, cc: .1 }), glow = toy('#fff3a6', { em: '#ffd76a', ei: .9, r: .4 });
@@ -1181,7 +1187,7 @@ window.__DDW3 = { THREE,
   player, world, keys, fluffs, G, camera, Sound, save, IN, renderer, FR: THREE.Frustum, LOWSTATS, SCULPT_STATS,
   teleport(x, y = 0) { player.ride = null; player.stair = null; player.layer = x >= 2000 ? 'castle' : x >= 1000 ? 'in' : ''; player.x = x; player.y = y; player.vx = player.vy = 0; player.grounded = y === 0; snapCamera(); },
   toScreen(x, y, z = 0) { V.set(x, y, z).project(camera); const r = canvas.getBoundingClientRect(); return { x: (V.x + 1) / 2 * r.width + r.left, y: (1 - V.y) / 2 * r.height + r.top }; },
-  pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1), o ? (o.name || Object.keys(o.userData).join('/')) : '', (() => { let r = h.object; while (r.parent && r.parent !== scene && !r.parent.userData.slice) r = r.parent; return r.name || r.type + '@' + r.position.x.toFixed(1); })()]; }); },
+  pick(cx, cy) { pointerRay({ clientX: cx, clientY: cy }); return ray.intersectObjects([creature.root, ...G.taps], true).filter(h=>isVisibleTarget(h.object,scene)).slice(0, 4).map(h => { let o = h.object, n = 0; while (o && !o.userData.tap && !o.userData.creature) { o = o.parent; n++; } return [h.object.type, h.distance.toFixed(2), o ? (o.userData.creature ? 'creature' : 'tap') : 'none', h.object.position.x.toFixed(1), o ? (o.name || Object.keys(o.userData).join('/')) : '', (() => { let r = h.object; while (r.parent && r.parent !== scene && !r.parent.userData.slice) r = r.parent; return r.name || r.type + '@' + r.position.x.toFixed(1); })()]; }); },
   bodyScaleY: () => creature.parts.body.scale.y, friends, meadow, karts, train, marbles, kingdom: () => kingdom, meadowRestore: () => meadow.restored(),
   bubbles: () => bubbles.length, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries, progs: renderer.info.programs.length }), post, quality: () => quality, nearDoor: () => nearDoor() && nearDoor().kind,
 };
@@ -1192,7 +1198,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '40'; G.build = GAME_BUILD;
+const GAME_BUILD = '41'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
@@ -1310,7 +1316,7 @@ G.releaseInputs = () => {
  if(stick)stickEnd(); document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed'));
 };
 G.setModalOpen = on => { G.activityOpen=on; G.releaseInputs(); if(!on){timer.update();acc=0;lastFrameAt=0;} };
-G.closePanels = () => { adventures?.close(); for(const id of ['mapPanel','petsPanel','stylePanel'])$(id)?.classList.remove('show'); };
+G.closePanels = () => { G.nursery?.close(); adventures?.close(); for(const id of ['mapPanel','petsPanel','stylePanel'])$(id)?.classList.remove('show'); };
 const comfort = initComfort({world,Sound,voice,G,save}); G.comfort=comfort;
 $('pawBtn').insertAdjacentHTML('beforeend','<span id="pawLabel" aria-hidden="true">🐾</span>');
 let reactionAt=0;
@@ -1321,6 +1327,7 @@ G.reactCompanions = e => {
 };
 adventures=initAdventures({world,player,G,voice,Sound,save,saveSoon,travel,learning,fluffs,comfort,release:G.releaseInputs,pause:G.setModalOpen,cheer:()=>{creature.cheer();player.happy=1.4;}});
 G.adventures=adventures;
+G.nursery=initNursery({world,G,Sound,voice,save});
 // Shared-shape home decorations are only shown after earning them. No extra shaders or textures.
 {
  const W=G.W,group=new THREE.Group();group.name='adventure-home';group.userData.dynamic=true;group.visible=true;group.position.set(0,0,0);scene.add(group);

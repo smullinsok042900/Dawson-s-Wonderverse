@@ -4,6 +4,21 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build41 — 3D pet nursery, creative play and world improvements
+
+- Three original nursery pets hatch through picture-led play. Feeding, bathing, brushing, catch, optional bedtime, per-pet room colors, saved outfits and blankets use the same sculpted 3D pets, toy materials and real furnishings as the existing game. No declining needs, waiting or absence penalties.
+- A shared viewport moves the existing renderer into native playrooms and restores it on close. World simulation pauses; cache and input ownership remain separate. Artwork is saved compactly and applied to actual fabric and framed surfaces.
+- All41 learning activities use native 3D toys while retaining levels, demonstrations, voice, rewards and interaction targets. Physical world animals, fish, shells, gems, flowers and prizes are native cached single-draw models. Picture navigation, clues and editable artwork remain interfaces/surfaces.
+- Fixed saved-builder removal after scene reparenting, hidden/detached targets receiving taps, temporary-resource cleanup, feeding visibility, repeated/stale learning rewards, demo progress, drag/paint cancellation, overlapping drop targets, X phonics, calm toy motion and scaled tablet HUD overlap.
+- Core rendering/creature work reductions and eight-view performance measurements are recorded in PERFORMANCE_LOG.md. Results vary by view; no universal speedup or physical-iPhone result is claimed.
+- Verification on desktop software rendering:
+  - Full world sweep: **158/159 assertions passed**, with no console errors/warnings. The remaining fixed-duration stair hold stopped at k≈.992 before the top. A targeted real-touch rerun passed the exact null-stair/y=4.4 criterion, plus partway stop and downstairs checks, using bounded condition-based holds. Game JavaScript was unchanged; the subsequent HUD-only correction retained the identical compiled JavaScript hash. The original full report is retained honestly in tests/TEST_RESULTS.json; resolution is in tests/BUILD41_TARGETED_RESULTS.json.
+  - Native nursery browser checks passed for hatching, all care, 3D snack dragging, real mouse/touch drawing, blankets/outfits, sleep/wake, reload with old collections, four nursery layouts and home entry.
+  - All41 native learning scenes passed, including distinct model semantics, calm motion, actual hidden/detached raycasts and renderer restoration.
+  - Both existing adventure integration/regression suites passed.11 changed HUD viewport layouts passed; these were viewport resizing checks, not eleven separate device identities or physical-device results.
+  -24 state/audio/render-work unit cases passed, plus builder/model-swap regressions,337 one-draw model checks,58 distinctions and learning source contracts.
+- One offline build41 bundle, cachev41 and previous published backup retained. The user merges the single release PR; real-iPhone playtesting remains a follow-up.
+
 ## Checkpoint: build 40 — connected adventures, one release
 
 - Eleven optional picture adventures connect Fluffkin rescue, companions, learning, regional activities, art and Ocean Pier treasure. Progress and rewards are saved by stable event IDs; repeated/out-of-order discoveries cannot duplicate prizes.

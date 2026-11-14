@@ -4,6 +4,31 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 41 — native 3D pets, learning and world toys
+
+Paired desktop Chromium / SwiftShader measurements use `tests/perf/nursery.cjs`, fixed seed123456, identical touch viewport844×390 and HQ settings, and16 complete rendered callbacks per view. Both shadow phases are included: an earlier single-frame snapshot can compare a plain frame with a shadow frame and give misleading draw-count differences. No other browser ran concurrently.
+
+| View | Median callback work ms, previous →41 | Mean callback work ms, previous →41 |
+|---|---|---|
+| park | 13.75 → 12.45 | 17.36 → 12.17 |
+| creatures | 7.30 → 10.40 | 7.92 → 12.71 |
+| castle | 11.80 → 10.45 | 14.02 → 15.84 |
+| home | 5.25 → 5.25 | 6.99 → 5.41 |
+| woods | 5.45 → 5.25 | 5.67 → 7.89 |
+| farm | 7.10 → 6.30 | 10.64 → 8.19 |
+| pier | 7.95 → 5.35 | 7.92 → 5.38 |
+| toyTown | 5.35 → 5.55 | 5.45 → 7.17 |
+
+- Loading: **28.63 →28.35 seconds** on this software renderer. This small difference is within run-to-run variation.
+- Results are mixed by view. Creature-area median rose3.10ms and mean rose4.79ms, including a42.1ms sample; castle and woods also had higher means despite lower medians. Park, home, farm and pier means fell. These short measurements do not establish a uniform speedup or real iPhone FPS. Median changes across the eight views range from−2.60 to+3.10ms, within the previously documented roughly±4ms software-rendering variation.
+- Baseline shader count was101. The new shared vertex-color toy shader is warmed before play; the count stayed **102 across all eight views**, with no new programs appearing on travel between measured areas.
+- The new measurement recorded **zero long tasks** in all sampled views; the baseline recorded one51ms castle task. This does not prove every possible transition is stall-free.
+- Physical toys use one cached mesh batch each; native checks covered337 symbols and58 semantic/case distinctions. New 3D geometry adds detail compared with the previous picture sprites. Recorded call ranges and triangle counts are retained in `tests/PERFORMANCE_BUILD41.json`.
+- Nursery rendering pauses exploration and reuses the existing WebGL renderer; the benchmark confirmed the world stays paused while its scene is open. There is no second WebGL context or screenshot facade.
+- Appearance-preserving core work reductions: far-creature distance checks avoid square roots (1,000→0 calls in the native test), per-agent helper allocations are removed, and the post pipeline avoids duplicate scene clearing.15-species/300-frame behavior snapshots matched. Temporary world props release owned resources; shared toy resources are cached.
+
+The randomized graphics diagnostic returned A=0/cap-locked, B=5, C=0 on this run. C has returned3 on other runs. Its random frame-time fixture needs a deterministic follow-up; automatic-quality decision code is byte-for-byte unchanged from published main. No claim is made that this release fixes every GPU/cap distinction. Actual iPhone performance remains to be checked.
+
 ## Build 40 — connected adventures (desktop software rendering only)
 
 Final comparison used the previous published HTML retained at `../backups/3D_build40_before_connected_adventures.html` and the rebuilt release. No other browser tests ran during these measurements.

@@ -60,6 +60,7 @@ export function initAdventures({world,player,G,voice,Sound,save,saveSoon=save,tr
  }
  function renderGallery(){
   content.replaceChildren();
+  tile('🥚 🎨','Pet nursery and creative studio',()=>{close();G.nursery?.open();},{openNursery:'true'});
   for(const r of state().rewards)tile(`<span>${REWARDS[r][0]}</span><small>🔊</small>`,REWARDS[r][1],()=>say('You earned your '+REWARDS[r][1]+'!'),{reward:r});
   for(const g of state().gallery){const b=tile(g.kind==='paint'?'<img alt="Your saved painting">':`<span class="adv-block-preview">${(g.blocks.length?g.blocks:Array(20).fill(-1)).slice(0,180).map(v=>`<i style="background:${v<0?'#eee7fa':['#ff7ab8','#8fb9ff','#ffd46b','#8cdaa2'][v%4]}"></i>`).join('')}</span>`,g.kind==='paint'?'Your saved painting':'Your saved building',()=>say('You made this!'),{galleryKind:g.kind});if(g.kind==='paint')b.querySelector('img').src=g.image;}
   tile('🎨 ➕ 🖼️','Display my painting',()=>saveArt('paint'),{saveArt:'paint'});tile('🧱 ➕ 🖼️','Display my building',()=>saveArt('build'),{saveArt:'build'});
@@ -73,7 +74,8 @@ export function initAdventures({world,player,G,voice,Sound,save,saveSoon=save,tr
  let guideTimer;
  function showMe(){const st=nextStep();if(!st)return;say(st.say);clearTimeout(guideTimer);hand.hidden=false;const control=st.event==='walk'?document.querySelector('#rightBtn'):document.querySelector('#pawBtn');const rect=control.getBoundingClientRect();hand.style.left=rect.left+rect.width/2+'px';hand.style.top=Math.max(4,rect.top-42)+'px';guideTimer=setTimeout(()=>{hand.hidden=true;},3500);}
  function action(){const st=nextStep();if(!st)return;if(st.event==='fluff_found'){const f=fluffs.find(f=>f.state==='wait');if(f){travel(['🐣','a little friend',f.hx-2]);say('Walk close to the baby Fluffkin to say hello!');showMe();return;}}if(st.panel==='gallery'){if(st.event==='gallery_visit'&&player.layer!=='in'&&Math.abs(player.x-800)>=100)travel(['🏠','your home gallery',190]);open('gallery');if(player.layer==='in'||Math.abs(player.x-190)<15||Math.abs(player.x-800)<100)event({type:'activity',id:'gallery_visit'});return;}if(st.panel==='furnish'){if(player.layer!=='in'&&Math.abs(player.x-190)>15)travel(['🏠','your home nook',190]);open('gallery');renderFurnish();return;}if(st.panel==='pattern'){open('quests');renderPattern();return;}if(st.learn){if(G.activityOpen)return;release();learning.run(learning.activities.find(a=>a.id===st.learn));return;}if(st.event!=='walk')travel([st.icon,'your next adventure stop',st.x]);say(st.say);showMe();}
- function renderPattern(){content.replaceChildren();const strip=document.createElement('div');strip.className='adv-pattern';strip.textContent='🔴 🔵 🔴 ❔';content.appendChild(strip);for(const[icon,ok]of [['🔴',false],['🔵',true]])tile(icon,ok?'Blue circle':'Red circle',()=>{if(ok){event({type:'learn',id:'pattern'});say('Red, blue, red, blue! The toy train is ready at home!');strip.textContent='🔴 🔵 🔴 🔵';}else say('Look! Red, blue, red. Find blue!');});say('Red, blue, red. What comes next?');}
+ function renderPattern(){close();release();learning.run(learning.activities.find(a=>a.id==='pattern'));}
+
  function event(e){if(G.perfTest)return {changed:false,rewards:[]};const result=emitAdventure(state(),e);if(result.changed){saveSoon();if(!root.hidden&&currentPage==='book')render();refreshObjective();}if(result.rewards.length){Sound.chime();cheer?.();if(root.hidden)say('You did it! A new treasure is waiting at home!');}if(['activity','sea','learn'].includes(e.type))G.reactCompanions?.(e);return result;}
  function update(){
   if(!G.started?.())return;

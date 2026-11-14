@@ -414,3 +414,65 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 /* Creative tools take priority over the optional guide on narrow landscape phones. */
 #paintTools.show ~ #adventureObjective,#buildTools.show ~ #adventureObjective{display:none}
 #adventureObjective button,#objectiveHide{min-width:44px!important;min-height:44px}
+
+/* Build 41: an illustrated pet playroom; the 3D world sleeps behind it. */
+#nurseryPanel{position:fixed;inset:0;z-index:95;background:#372649b8;display:grid;place-items:center;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));touch-action:manipulation;color:#59476a;font-family:system-ui,sans-serif}
+#nurseryPanel[hidden]{display:none}
+.nursery-card{width:min(100%,1000px);height:min(100%,780px);display:flex;flex-direction:column;overflow:hidden;border:3px solid #fff7e9;border-radius:26px;background:#fff8ed;box-shadow:0 18px 70px #26173866}
+#nurseryPanel button{min-width:48px;min-height:48px;border:2px solid #eee1d7;border-bottom-width:4px;border-radius:16px;background:#fffdfa;color:#59476a;font-size:25px;cursor:pointer;touch-action:manipulation;flex-shrink:0;box-sizing:border-box}
+#nurseryPanel button:focus-visible,#nurseryCanvas:focus-visible{outline:4px solid #7354a6;outline-offset:2px}
+#nurseryPanel button[aria-pressed="true"]{border-color:#ad86c5;background:#eee1f6;box-shadow:0 0 0 2px #d7c3e7}
+.nursery-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;background:#f3e6d9;border-bottom:1px solid #e8d9cd}
+.nursery-title{display:grid;grid-template-columns:38px auto;align-items:center;column-gap:8px}.nursery-title>span{grid-row:span 2;font-size:32px}.nursery-title strong{font-size:19px;letter-spacing:.3px}.nursery-title small{font-size:11px;color:#8a7089}
+.nursery-header nav{display:flex;gap:6px}
+#nurseryPets{display:flex;justify-content:center;gap:12px;padding:8px;background:#fff2e2}
+#nurseryPets button{display:flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;font-size:14px;font-weight:700;width:135px;height:60px}
+#nurseryPets svg{width:54px;height:54px}.nursery-locked{font-size:30px;position:relative;opacity:.65}.nursery-locked small{font-size:15px;position:absolute;bottom:0;right:-8px}
+#nurseryContent{flex:1;min-height:0;overflow:auto;padding:12px;overscroll-behavior:contain}
+.nursery-care-layout{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(255px,1fr);gap:18px;min-height:100%;align-items:center}
+.nursery-room{position:relative;min-height:260px;height:100%;max-height:430px;background:linear-gradient(0deg,#ead3b3 0 22%,var(--room) 22% 100%);border:5px solid #fff;border-radius:23px;overflow:hidden}
+.nursery-window{position:absolute;left:9%;top:9%;width:64px;height:76px;border:6px solid #fff4df;border-radius:28px 28px 8px 8px;background:#c5e7ec;text-align:center;font-size:30px}.nursery-window span{position:absolute;right:-4px;bottom:0;font-size:25px}
+.nursery-room-art{position:absolute;right:9%;top:11%;width:61px;height:61px;border:5px solid #fff4df;transform:rotate(5deg);box-shadow:0 3px 0 #96785822}.nursery-room-art svg{width:100%;height:100%}
+.nursery-bed{position:absolute;bottom:8%;left:14%;width:72%;height:18%;border-radius:50%;background:#f8ecd5;border:7px solid #d6b69f}
+#nurseryPanel .nursery-friend{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:min(70%,240px);height:auto;aspect-ratio:1;background:none;border:0;touch-action:none}
+.nursery-friend svg{width:100%;height:100%;display:block}
+#nurseryReaction{position:absolute;left:50%;top:6%;transform:translateX(-50%);font-size:27px;pointer-events:none;white-space:nowrap}
+#nurseryHeld{position:absolute;left:78%;top:60%;font-size:38px;pointer-events:none;transform:translate(-50%,-50%)}
+.nursery-care-tools{display:flex;flex-direction:column;gap:14px;align-items:center}
+.nursery-tool-row{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;align-items:center}
+.nursery-tool-row button{width:49px;height:49px;padding:3px;touch-action:none!important}
+.nursery-care-progress{display:flex;gap:7px;flex-wrap:wrap;justify-content:center}.nursery-care-progress span{font-size:24px;opacity:.38}.nursery-care-progress .done{opacity:1}
+#nurseryPanel .nursery-create{background:#f2d5e1;border-color:#e2a8c1;width:100%;max-width:275px;font-size:30px;min-height:61px}
+#nurseryRoomColors button,#nurseryPalette button{border:3px solid #fff!important;box-shadow:0 2px 0 #d6bfae}#nurseryRoomColors button[aria-pressed="true"],#nurseryPalette button[aria-pressed="true"]{outline:3px solid #7f609b;outline-offset:-5px}
+.nursery-hatch-room{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;border-radius:20px;background:radial-gradient(ellipse at 50% 80%,#ffe6b6,#f2e4f3 75%)}
+#nurseryPanel #nurseryEgg{width:210px;height:210px;border:0;background:none}.nursery-cloud{font-size:26px;letter-spacing:20px}.nursery-dots{display:flex;gap:12px;font-size:24px;padding-bottom:8px}
+.nursery-studio-layout{display:grid;grid-template-columns:170px minmax(180px,1fr) 150px;gap:18px;align-items:center;min-height:100%}.nursery-studio-layout aside{display:flex;flex-direction:column;gap:14px}
+.nursery-art-paper{width:100%;max-width:360px;aspect-ratio:1;justify-self:center;border:9px solid #fff;border-radius:18px;box-shadow:0 4px 0 #dfccba;box-sizing:border-box;overflow:hidden}
+#nurseryCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.nursery-preview{text-align:center}.nursery-preview svg{width:100%;max-width:180px}#nurseryPanel #nurseryApply{width:100%;background:#d4ead8;border-color:#aacdb0;font-size:30px}
+#nurseryDesignStatus{height:24px;font-size:20px}
+.nursery-card footer{min-height:34px;padding:6px 16px;background:#f3e6d9;box-sizing:border-box;text-align:center;font-size:13px;line-height:1.4}
+@media(max-height:500px) and (min-width:601px){.nursery-header{padding:5px 12px}.nursery-title strong{font-size:16px}.nursery-title small{display:none}#nurseryPets{padding:4px;gap:8px}#nurseryPets button{height:50px}#nurseryPets svg{width:44px;height:44px}#nurseryContent{padding:7px}.nursery-care-layout{gap:12px}.nursery-room{min-height:190px;height:210px}.nursery-care-tools{gap:8px}.nursery-care-progress span{font-size:19px}#nurseryRoomColors{padding-bottom:4px}#nurseryPanel .nursery-create{min-height:48px;font-size:25px}.nursery-studio-layout{grid-template-columns:170px minmax(180px,1fr) 130px;gap:10px}.nursery-art-paper{max-width:210px}.nursery-studio-layout aside{gap:7px}.nursery-preview svg{max-height:140px}.nursery-card footer{font-size:11px;min-height:26px}.nursery-hatch-room{min-height:210px}#nurseryPanel #nurseryEgg{width:160px;height:160px}.nursery-cloud{display:none}}
+@media(max-width:600px){.nursery-header{padding:8px}.nursery-title{grid-template-columns:1fr}.nursery-title>span,.nursery-title small{display:none}.nursery-title strong{font-size:14px}.nursery-header nav{gap:4px}#nurseryPets{gap:6px;padding:6px}#nurseryPets button{width:30%;padding:0 4px;flex-direction:column;height:83px;gap:0}#nurseryPets svg{width:48px;height:48px}.nursery-care-layout{grid-template-columns:1fr;gap:12px}.nursery-room{min-height:235px;height:265px}.nursery-care-tools{gap:12px;padding:0 0 12px}.nursery-studio-layout{grid-template-columns:1fr 110px;gap:10px}.nursery-studio-layout aside{grid-column:1/-1;gap:9px}.nursery-studio-layout aside .nursery-tool-row{flex-wrap:wrap}.nursery-art-paper{border-width:5px}.nursery-card footer{font-size:11px}.nursery-preview svg{max-height:130px}}
+@media(prefers-reduced-motion:reduce){#nurseryPanel *{animation:none!important;transition:none!important}}
+
+/* Reserve enough space for all five left-hand shortcuts on small screens. */
+#upperRight{flex-wrap:wrap;max-width:calc((100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 20px) / var(--ui) - 280px)}
+@media(max-width:720px){#upperRight #chooser{order:2}}
+
+.nursery-studio-layout{align-items:start}.nursery-art-paper,.nursery-preview{position:sticky;top:0;align-self:start}
+@media(max-height:500px) and (min-width:601px){#nurseryPanel .nursery-friend{width:175px}}
+#nurseryFriend>svg{transform-origin:50% 85%;animation:nursery-breathe 3.4s ease-in-out infinite}
+#nurseryReaction{animation:nursery-hello .35s ease-out}
+@keyframes nursery-breathe{50%{transform:translateY(-3px) scale(1.018)}}
+@keyframes nursery-hello{from{opacity:0;transform:translate(-50%,8px) scale(.8)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+/* Nursery objects are rendered live with the same WebGL canvas as the world. */
+#nurseryPanel .nursery-3d-room{position:relative;overflow:hidden;isolation:isolate;background:#eadcf1}
+#nurseryPanel .nursery-3d-touch{position:absolute;inset:0;width:100%;height:100%;max-width:none;border:0;background:transparent;transform:none;left:0;bottom:0;z-index:1;touch-action:none}
+#nurseryPanel #nurseryEgg{width:100%;height:100%;position:absolute;inset:0;background:transparent;z-index:1}
+.nursery-hatch-room{min-height:250px;height:100%}.nursery-hatch-room .nursery-dots{position:absolute;bottom:0;z-index:2;pointer-events:none}
+#nurseryPreview{position:relative;width:100%;height:210px;border-radius:16px;overflow:hidden;isolation:isolate;background:#eadcf1}
+#nurseryReaction{z-index:2;top:4%;pointer-events:none}#nurseryHeld{z-index:2}
+.nursery-pet-choice{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;font-size:28px;box-shadow:inset 0 -4px 0 #0001}
+@media(max-height:500px) and (min-width:601px){.nursery-hatch-room{min-height:210px}#nurseryPreview{height:150px}}
+@media(max-width:600px){#nurseryPreview{height:180px}.nursery-pet-choice{width:42px;height:42px}}
