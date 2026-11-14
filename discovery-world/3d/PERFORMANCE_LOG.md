@@ -17,26 +17,28 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
   (**alpha 255 → 0**); deferred quality changes preserve **alpha 255**, coalesce
   repeated requests, and retain pending requests while a playroom is active.
 - Full native-game check passed at the reported portrait viewport and after
-  rotation: Pip/Zuzu/Jelly pictures contain 2219/1861/1670 distinct colours;
+  rotation: Pip/Zuzu/Jelly pictures contain 2355/1834/1656 distinct colours;
   exactly three reads on a cold cache and zero on reload. Selected creature and
   saved progress survive reload. Native PCF shadows and original 4x AA/depth
   buffers are preserved. An actual end-of-frame quality change causes zero
   immediate resizes, retains alpha 255, and resizes before the next drawn frame.
-- Before/after software-renderer timing, six callbacks per view, both run orders:
-
-  | View | Median script ms, before → after (forward order) | Before → after (reverse order) |
-  |---|---|---|
-  | Park | 22.9 → 37.1 | 19.7 → 19.2 |
-  | Creatures | 19.0 → 27.2 | 12.1 → 13.4 |
-  | Castle | 21.1 → 24.9 | 11.2 → 11.0 |
-
-  Startup before → after: 42.8 → 72.6 s forward, 43.5 → 41.4 s reverse.
-  These short software-GPU runs vary substantially with run order and do not
-  establish a performance improvement or a repeatable regression. No new
-  programs, errors or in-view resizes occurred; creature/castle draw calls and
-  triangles match. Park counts vary with wandering characters. No per-frame
-  GPU work was added; portrait readback is one-time cache work.
-- Full smoke suite is running. Pixel confirmation is required for remaining
+- Preliminary before/after runs on the earlier build 48 varied substantially
+  with run order (e.g. castle median script time 21.1 → 24.9 ms forward,
+  11.2 → 11.0 ms reverse). Static-view draw/triangle work matched outside
+  wandering actors, with no new programs, errors or in-view resizes.
+- Final build-50 comparison with `tests/perf/ba.cjs` (original → patch):
+  load **42.4 → 42.8 s**; script ms/frame park **16.7 → 18.8**, creatures
+  **19.9 → 18.7**, castle **23.5 → 19.2**. Both use 103 programs after travel;
+  heap **137 → 135 MB**. The short moving samples differ in frame/shadow phase
+  and character positions, so their last-frame triangle counts differ too.
+  No long tasks in the three walking views or entering the house. Leaving the
+  house reports **0 → 2** long tasks (185 ms maximum), the expansion walk
+  **0 → 6** (363 ms), and the map jump **4 → 9** (maximum 176 → 138 ms).
+  The expansion walk reaches different positions (444 → 403). These results
+  do not establish performance parity: timing and long-task variation require
+  confirmation, and the PR remains a draft. Original shadow/shader/buffer work
+  is unchanged; the patch adds no world geometry or rendering passes.
+- Full smoke verification is in progress. Pixel confirmation is required for remaining
   object flicker and device performance; software rendering cannot establish
   a device-driver fix or iPhone performance.
 
