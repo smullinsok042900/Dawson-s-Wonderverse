@@ -4,6 +4,7 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 ## Waiting for the user
+- **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
 - **Build 48 rocket ride on the real iPhone:** PAW at the rocket, pick a planet, press the red button. Is the lift-off smooth (no freeze when the flame first appears) and is the button easy to press? Is her face visible in the window?
 - **Build 41 native 3D nursery, learning and world props on the real iPhone:** try hatching, dragging snacks, sponge/brush rubs, finger drawing, applying a blanket/outfit, bedtime, closing and reopening. Check voice and calm mode. Desktop verification is recorded separately.
@@ -14,6 +15,18 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
   tapping "Test the voice". It shows whether the graphics level recovers (build 33), the real frame rate, and whether speech plays.
 - **Confirm the squish fix (build 34b)** on the iPhone Home Screen app after turning the phone.
 - **Real-device check of build 36** on the iPhone (and any iPad or Android device the family has): buttons, panels, framing, full screen on Android/iPad, the ⚙️ graphics modes. Emulation passed 10/10, but that is not a real device.
+
+## 0. Bigger planets (the family's request, build 50 onward)
+- Done: the system (areas built when near, planets freed when you leave), the Moon and Mars (two new areas each).
+- **Next, two per build, same pattern** (add to `PLANET_EXTRA` in `planets.js`; measure with `tests/perf/planets.cjs OLD NEW`):
+  - **Mercury:** crater fields, light and shadow, a rock-shape matching game.
+  - **Venus:** pretend floating cloud platforms and a cloud maze.
+  - **Jupiter:** pretend storm platforms, wind and pattern toys, size comparisons.
+  - **Saturn:** ring stations, ice sorting, an orbit toy.
+  - **Uranus:** a tilt toy, rotation games.
+  - **Neptune:** wind and air-current toys.
+  - **Pluto:** ice caves, texture matching, the heart as a landmark.
+- Later: a picture map for each planet (needs the user to try the big planets first).
 
 ## 1. Performance first (the game must not get slower)
 - Make the randomized30fps/GPU diagnostic deterministic and investigate its C=0 versus C=3 variation. The actual adaptation code is unchanged from published main; build41 does not claim to resolve that inherited ambiguity.
