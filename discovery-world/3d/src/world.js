@@ -334,7 +334,7 @@ export function buildWorld(G) {
   // =================== FLUFFKIN HOUSE (outside) ===================
   const H = new THREE.Group(); H.position.set(190, 0, -2.2); add(H);
   block(0, 0, 0, 11, 6.5, 4, '#fff1b0', { parent: H, r: .4, m: { r: .5, cc: .4 } });
-  const hroof = new THREE.Mesh(new THREE.ConeGeometry(7.6, 3.6, 4), M('#ff65b5')); hroof.position.y = 8.3; hroof.rotation.y = Math.PI / 4; hroof.scale.z = .5; hroof.castShadow = true; H.add(hroof);
+  const hroof = new THREE.Mesh(new THREE.ConeGeometry(11.8 / Math.SQRT2, 3.6, 4).rotateY(Math.PI / 4), M('#ff65b5')); hroof.position.y = 8.3; hroof.scale.z = 4.9 / 11.8; /* (build 46: the pyramid is turned in its SHAPE before it is squashed front-to-back, so the roof is a straight rectangle over the 11 x 4 m house with a small overhang; turning the object squashed it on the slant, and from the sky the roof looked crooked) */ hroof.castShadow = true; H.add(hroof);
   const door = block(0, 0, 2.05, 1.9, 3.2, .3, '#a15cff', { parent: H, r: .5 });
   sph(.6, 1.6, 2.25, .1, '#ffd84a', { parent: H });
   for (const [x, y] of [[-3.4, 3.8], [3.4, 3.8], [-3.4, 1.4], [3.4, 1.4]]) { block(x, y, 2.02, 1.6, 1.3, .2, '#ffffff', { parent: H, r: .3 }); const g = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1), new THREE.MeshStandardMaterial({ color: '#fff3a6', emissive: '#ffd76a', emissiveIntensity: .5 })); g.position.set(x, y + .65, 2.14); H.add(g); }
