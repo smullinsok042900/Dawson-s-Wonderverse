@@ -12,8 +12,9 @@
 import * as THREE from 'three';
 import { makeToyModel } from './toy-models.js';
 
-export const EXP = { x0: 424, x1: 940, xMin: -698 }; // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
+export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
+  { id: 'hills', icon: '🎈', name: 'Balloon Hills', x0: -800, x1: -668, home: -676, enter: -672, arrow: '⬅️' }, // (build 49)
   { id: 'pier', icon: '🌊', name: 'Ocean Pier', x0: -668, x1: -536, home: -544, enter: -540, arrow: '⬅️' }, // (build 38)
   { id: 'farm', icon: '🚜', name: 'Happy Farm', x0: -536, x1: -404, home: -412, enter: -408, arrow: '⬅️' }, // (build 35)
   { id: 'frosty', icon: '❄️', name: 'Frosty Peaks', x0: -404, x1: -272, home: -280, enter: -276, arrow: '⬅️' },
@@ -24,7 +25,7 @@ export const DISTRICTS = [
   { id: 'labgarden', icon: '🔬', name: 'Lab Gardens', x0: 668, x1: 788, home: 674 },
   { id: 'artplaza', icon: '🖍️', name: 'Art Plaza', x0: 788, x1: 904, home: 794 },
 ];
-const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -263, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9], ['g17', -598, 3.4], ['g18', -652, .9]];
+const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -263, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9], ['g17', -598, 3.4], ['g18', -652, .9], ['g19', -711, 6.1], ['g20', -771, .9]];
 const NOTE = [262, 294, 330, 349, 392, 440, 494, 523];
 const RB = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
 const rnd = n => Math.floor(Math.random() * n), pick = a => a[rnd(a.length)];
@@ -86,7 +87,7 @@ export function initExpansion(G, api) {
   // The world used to just stop. Now the path climbs a staircase of rainbow cloud steps (small enough to walk up, 0.4 m
   // each); at the top a rainbow arch takes you to the Sky Kingdom.
   const SKYGATE = [];
-  for (const [start, dir] of [[908, 1], [-666, -1]]) {
+  for (const [start, dir] of [[908, 1], [-798, -1]]) { // (build 49: the left stairs moved out past Balloon Hills)
     for (let i = 0; i < 24; i++) { const x = start + dir * (i + .5), y = (i + 1) * .4; W.block(x, 0, 0, 1, y, 2.2, RB[i % RB.length], { r: .3, cast: false }); G.platforms.push({ a: x - .5, b: x + .5, y, layer: '', step: true, stepMax: .45, z: 0 }); }
     const top = start + dir * 24, land = [Math.min(top, top + dir * 8), Math.max(top, top + dir * 8)];
     W.block((land[0] + land[1]) / 2, 0, 0, 8, 9.6, 2.6, '#ffffff', { r: .5, cast: false }); G.platforms.push({ a: land[0], b: land[1], y: 9.6, layer: '', z: 0 });
@@ -528,7 +529,7 @@ export function initExpansion(G, api) {
       for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#e8f1fd', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
       const sled = new THREE.Group(); sled.position.set(-330, 4.8, -1.2); c.add(sled); const base = new THREE.Mesh(W.rbox(1.3, .18, .7, .08), mat('#ff4f6a')); base.position.y = .25; sled.add(base); for (const z of [-.3, .3]) { const run = new THREE.Mesh(W.rbox(1.5, .06, .06, .03), mat('#ffd23f', { m: .5 })); run.position.set(0, .08, z); sled.add(run); }
       const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-331, 5.4, -1.2), new THREE.Vector3(-334, 4.6, -1), new THREE.Vector3(-338, 2.6, -.6), new THREE.Vector3(-342, 1, -.2), new THREE.Vector3(-346, .6, 0)]);
-      c.tap(sled, () => { if (P.y < 4.3) { c.say('🛷 Climb up the snowy steps to the sled!'); return; } api.startSlide(path); c.disc('sled', '🛷 Wheee! Sledding down the hill!'); c.say('🛷 Wheee!'); }, -330); },
+      c.tap(sled, () => { if (P.y < 4.3) { c.say('🛷 Climb up the snowy steps to the sled!'); return; } api.startSlide(path); c.disc('sled', '🛷 Wheee! Sledding down the hill!'); c.say('🛷 Wheee!'); }, -330, { y: 4.8, hintY: 1.4 }); }, // (build 49: PAW works at the top: the sled sits 4.8 m up, and PAW only reaches things near her height)
     // build a snowman: each tap adds a part, then a carrot nose and a hat
     () => { const pile = c.sph(-300, 0, -2.6, .9, '#ffffff', { m: { r: .9, cc: 0 } }); pile.scale.y = .4; const parts = []; let k = 0;
       const STEPS = [() => c.sph(-297, .8, -2.6, .8, '#ffffff', { m: { r: .9, cc: 0 } }), () => c.sph(-297, 2, -2.6, .6, '#ffffff', { m: { r: .9, cc: 0 } }), () => c.sph(-297, 2.95, -2.6, .45, '#ffffff', { m: { r: .9, cc: 0 } }),
@@ -692,6 +693,69 @@ export function initExpansion(G, api) {
       return (dt, t) => { back.position.y = -.6 + Math.sin(t * .7) * .12; if (spout > 0) { spout -= dt; if (Math.random() < dt * 30) c.burst(-650.6, 1 + Math.random() * 3, -16, ['#cfefff', '#ffffff'], 2, 1.2); } }; },
     // the end of the line: a 🏠 sign that takes you home
     () => { const home = c.sign('🏠', 1, -662, 2.2, -1.4); c.tap(home, () => api.goHome(), -662); },
+  ];
+
+  // =================== 🎈 BALLOON HILLS (x -800 to -668) — build 49 ===================
+  // Picture + sound + voice only: up and down (the balloon), loop the loop (kites), counting hops (goats), loud and soft
+  // (the echo), long tubes play low notes and short tubes high notes (wind chimes), blow and watch (dandelions), and a
+  // grassy hill to climb and slide down.
+  builders.hills = c => [
+    // rolling green hills behind (a few big shared-material bumps) and a soft lawn colour
+    () => { for (const [x, z, r, sy, col] of [[-690, -22, 16, .45, '#8fd88a'], [-722, -26, 20, .55, '#7fcf7a'], [-756, -21, 15, .5, '#9be096'], [-788, -25, 18, .5, '#86d482']]) { const h = c.sph(x, -3, z, r, col, { m: { r: .95, cc: 0 } }); h.scale.y = sy; h.castShadow = false; } },
+    // the hot-air balloon: tap the burner, the balloon puffs up into the sky and floats back down
+    () => { const X = -684, bal = new THREE.Group(); bal.position.set(X, 0, -4.2); c.add(bal);
+      const basket = new THREE.Mesh(W.rbox(1.4, 1, 1.4, .12), mat('#b5793c', { r: .8 })); basket.position.y = .5; basket.castShadow = true; bal.add(basket);
+      const env = new THREE.Mesh(new THREE.SphereGeometry(1.9, 24, 16), mat('#ff5a8a', { r: .35, cc: .6 })); env.position.y = 4.4; env.scale.y = 1.15; env.castShadow = true; bal.add(env);
+      RB.slice(1, 5).forEach((col, i) => { const band = new THREE.Mesh(new THREE.TorusGeometry(1.9 * Math.cos((i - 1.5) * .32), .14, 8, 32), mat(col)); band.rotation.x = Math.PI / 2; band.position.y = 4.4 + (i - 1.5) * .7; bal.add(band); });
+      for (const [dx, dz] of [[-.6, -.6], [.6, -.6], [-.6, .6], [.6, .6]]) { const rope = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 2.4, 6), mat('#7a5236')); rope.position.set(dx * 1.1, 2.1, dz * 1.1); rope.rotation.z = -dx * .35; rope.rotation.x = dz * .35; bal.add(rope); }
+      let up = 0, flights = 0;
+      const go = () => { if (up) return; up = .001; flights++; Sound.whoosh(); Sound.tone(160, .8, 'sawtooth', .03, 1.4); c.burst(X, 2.2, -4.2, ['#ffd23f', '#ff9a2e', '#ffffff'], 16, 2); c.say(flights % 2 ? '🎈 Whoosh! Up, up, up goes the balloon!' : '🎈 Up high! Now gently down again.'); c.disc('balloon', '🎈 Tap the hot-air balloon and it floats up into the sky!'); api.event?.({ type: 'activity', id: 'balloon_up' }); };
+      c.tap(bal, go, X, { icon: '🎈', label: 'Hot-air balloon', action: 'Fly it up', disc: 'balloon' });
+      return (dt, t) => { const bob = Math.sin(t * 1.2) * .08; if (!up) { bal.position.y = bob; return; } up += dt; const k = Math.min(1, up / 9), h = Math.sin(k * Math.PI) * 5.5; /* (stays on screen) */ bal.position.y = h + bob; bal.rotation.y = Math.sin(up * .6) * .4; { const near = Math.abs(P.x - X) < 10 && !P.ride && P.layer === ''; if (near) { G.camLift = h * .22; G.camPull = 1; G.balloonCam = true; } else if (G.balloonCam) { G.camLift = 0; G.camPull = 0; G.balloonCam = false; } } /* (the camera looks up with the balloon while you watch) */ if (up < 2.5 && Math.random() < dt * 12) c.burst(X, bal.position.y + 2.4, -4.2, ['#ffd23f', '#ff9a2e'], 2, 1.2); if (k >= 1) { up = 0; bal.rotation.y = 0; if (G.balloonCam) { G.camLift = 0; G.camPull = 0; G.balloonCam = false; } } }; },
+    // kites on long strings: tap one and it loops the loop
+    () => { const X = -696; c.cyl(X, 0, -2.6, .08, .1, 1.2, '#7a5236'); const kites = [['#ff4f9a', -1.4, 4.4], ['#2fa8ff', 1.4, 5.4]] /* (low enough to stay on screen) */.map(([col, dx, h], i) => { const k = new THREE.Group(); c.add(k); const sail = new THREE.Mesh(new THREE.ConeGeometry(.8, 1.6, 4), mat(col)); sail.scale.z = .12; k.add(sail); const cross = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 1.4, 6), mat('#ffffff')); cross.rotation.z = Math.PI / 2; k.add(cross);
+        for (let j = 0; j < 4; j++) { const bow = c.sph(0, 0, 0, .1, RB[(j + i * 2) % 8]); g2(bow, k, 0, -1 - j * .35); }
+        const str = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, 1, 4), mat('#ffffff')); c.add(str); return { k, str, dx, h, loop: 0, i }; });
+      function g2(m, parent, x, y) { m.parent && m.parent.remove(m); parent.add(m); m.position.set(x, y, 0); }
+      const loop = q => { if (q.loop) return; q.loop = .001; Sound.whoosh(); c.say(q.i ? '🪁 The blue kite loops the loop!' : '🪁 Whee! The pink kite does a loop!'); c.disc('kites', '🪁 Tap a kite and it loops the loop!'); api.event?.({ type: 'activity', id: 'kite_loop' }); };
+      kites.forEach(q => c.tap(q.k, () => loop(q))); // (the post below gets the PAW: it loops whichever kite is resting)
+      const post = c.cyl(X, 1.2, -2.6, .16, .16, .2, '#ffd23f'); c.tap(post, () => loop(kites.find(q => !q.loop) || kites[0]), X, { icon: '🪁', label: 'Kites', action: 'Loop a kite', disc: 'kites' });
+      const A = new THREE.Vector3(), B = new THREE.Vector3();
+      return (dt, t) => { for (const q of kites) { let x = X + q.dx + Math.sin(t * .8 + q.i * 2) * .8, y = q.h + Math.sin(t * 1.3 + q.i) * .4, rz = Math.sin(t * 1.1 + q.i) * .25; if (q.loop) { q.loop += dt; const a = Math.min(1, q.loop / 1.6) * Math.PI * 2; x += Math.sin(a) * 1.6; y += (1 - Math.cos(a)) * 1.6; rz = -a; if (q.loop > 1.6) q.loop = 0; }
+          q.k.position.set(x, y, -6); q.k.rotation.z = rz; A.set(X, 1.3, -2.6); B.set(x, y - .6, -6); q.str.position.copy(A).add(B).multiplyScalar(.5); q.str.scale.y = A.distanceTo(B); q.str.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.sub(A).normalize()); } }; },
+    // the grassy hill: climb the steps, tap the rainbow mat at the top and slide down the other side
+    () => { const hill = c.sph(-713, -3.2, -5.2, 8.5, '#86d482', { m: { r: .95, cc: 0 } }); hill.scale.set(1, .95, .55);
+      for (const [a, b, y] of [[-704.5, -706.5, 1.2], [-707, -709, 2.4], [-709.5, -711.5, 3.6], [-712, -716, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#9be096', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
+      const matG = new THREE.Group(); matG.position.set(-715, 4.8, -1.2); c.add(matG); RB.slice(0, 6).forEach((col, i) => { const st = new THREE.Mesh(W.rbox(1.4, .1, .16, .04), mat(col)); st.position.set(0, .06, -.4 + i * .16); matG.add(st); });
+      const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-716, 5.4, -1.2), new THREE.Vector3(-719, 4.6, -1), new THREE.Vector3(-723, 2.6, -.6), new THREE.Vector3(-727, 1, -.2), new THREE.Vector3(-731, .6, 0)]);
+      c.tap(matG, () => { if (P.y < 4.3) { c.say('🌈 Climb up the grassy steps to the rainbow mat!'); return; } api.startSlide(path); c.disc('hillslide', '🌈 Wheee! Sliding down the grassy hill!'); c.say('🌈 Wheee!'); api.event?.({ type: 'activity', id: 'hill_slide' }); }, -715, { y: 4.8, hintY: 1.4 }); },
+    // mountain goats: tap the goat and it hops up the rocks, counting each hop
+    () => { const X = -738, ROCKS = [[-736, .6], [-738.4, 1.4], [-740.8, 2.3], [-743, 3.3]]; for (const [x, h] of ROCKS) { const r = c.block(x, 0, -3.4, 2, h, 1.6, '#a39a8f', { r: .45 }); }
+      const goat = c.toy('🐐', 1.1, ROCKS[0][0], ROCKS[0][1] + .55, -3.4); let at = 0, hop = 0, from = 0;
+      const go = () => { if (hop) return; from = at; at = at >= ROCKS.length - 1 ? 0 : at + 1; hop = .001; Sound.boing(); c.say(at === 0 ? '🐐 Down we go! Again?' : `🐐 Hop! ${NUM[at][0].toUpperCase() + NUM[at].slice(1)}!`); if (at === ROCKS.length - 1) setTimeout(() => c.say('🐐 Three hops to the top! Clever goat!'), 700); c.disc('goats', '🐐 Tap the goat and count its hops up the rocks!'); api.event?.({ type: 'activity', id: 'goat_hop' }); };
+      c.tap(goat, go, X, { icon: '🐐', label: 'Mountain goat', action: 'Make it hop', disc: 'goats' });
+      return (dt, t) => { if (!hop) { goat.position.y = ROCKS[at][1] + .55 + Math.abs(Math.sin(t * 2)) * .05; return; } hop += dt; const k = Math.min(1, hop / .55), [x0, y0] = ROCKS[from], [x1, y1] = ROCKS[at]; goat.position.x = x0 + (x1 - x0) * k; goat.position.y = y0 + (y1 - y0) * k + .55 + Math.sin(k * Math.PI) * 1.2; goat.rotation.y = x1 < x0 ? -.6 : .6; if (k >= 1) hop = 0; }; },
+    // the echo rocks: tap the big rock and hear your hello come back, softer and softer
+    () => { const X = -752, rock = c.sph(X, 0, -4, 2.6, '#9a9087', { m: { r: .9 } }); rock.scale.set(1.3, 1, .8); const cave = c.sph(X, .2, -2.05, 1, '#3b3340', { m: { r: 1 } }); cave.scale.set(1, 1, .25);
+      let t0 = 0;
+      const go = () => { if (t0) return; t0 = .001; c.say('🪨 Hello! ...hello ...hello'); [0, .55, 1.1, 1.65].forEach((d, i) => Sound.tone(523 - i * 2, .32, 'sine', .07 * Math.pow(.5, i), 1.25, d)); c.disc('echo', '🪨 Tap the big rock and listen to the echo!'); api.event?.({ type: 'activity', id: 'echo' }); };
+      c.tap(rock, go, X, { icon: '🪨', label: 'Echo rock', action: 'Say hello', disc: 'echo' }); c.tap(cave, go);
+      return dt => { if (!t0) return; t0 += dt; cave.scale.x = 1 + Math.max(0, Math.sin(t0 * 11)) * .08 * Math.max(0, 1 - t0 / 2); if (t0 > 2.2) { t0 = 0; cave.scale.x = 1; } }; },
+    // wind chimes: long tubes sing low, short tubes sing high
+    () => { const X = -763; c.cyl(X - 2.2, 0, -3, .08, .08, 3.6, '#7a5236'); c.cyl(X + 2.2, 0, -3, .08, .08, 3.6, '#7a5236'); const bar = c.block(X, 3.5, -3, 4.8, .16, .16, '#7a5236', { r: .05 });
+      const PITCH = [NOTE[0], NOTE[2], NOTE[4], NOTE[5], NOTE[7]]; // (longest tube: lowest note)
+      const rings = [], tubes = [1.9, 1.6, 1.3, 1, .75].map((len, i) => { const x = X - 1.6 + i * .8, g = new THREE.Group(); g.position.set(x, 3.45, -3); c.add(g); const tube = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, len, 12), mat(RB[i], { r: .25, m: .6 })); tube.position.y = -len / 2 - .15; g.add(tube); const str = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, .15, 4), mat('#ffffff')); str.position.y = -.07; g.add(str);
+        const ring = (quiet) => { g.userData.sw = 1; Sound.withMusic(() => Sound.bell(PITCH[i], .06)); c.burst(x, 3.4 - len, -2.8, [RB[i], '#ffffff'], 5, 1.2); if (!quiet) c.say(i === 0 ? '🔔 The long one sings low!' : i === 4 ? '🔔 The short one sings high!' : '🔔'); c.disc('chimes', '🔔 Long chimes sing low, short chimes sing high!'); };
+        rings.push(ring); c.tap(g, () => ring()); return g; });
+      c.tap(bar, () => { rings.forEach((ring, i) => setTimeout(() => ring(true), i * 220)); c.say('🔔 Low to high: ding, ding, ding!'); api.event?.({ type: 'activity', id: 'chimes' }); }, X, { icon: '🔔', label: 'Wind chimes', action: 'Ring them', disc: 'chimes' });
+      return (dt, t) => { for (const g of tubes) { g.userData.sw = Math.max(0, (g.userData.sw || 0) - dt * .8); g.rotation.z = Math.sin(t * 6 + g.position.x) * .25 * g.userData.sw + Math.sin(t * 1.3 + g.position.x) * .03; } }; },
+    // dandelion puffs: tap one and its seeds blow away on the wind; it grows back
+    () => { const X = -777, puffs = [-2.4, -1.2, 0, 1.2, 2.4].map((dx, i) => { const x = X + dx, z = -2.6 - (i % 2) * .7; c.cyl(x, 0, z, .03, .03, .9 + (i % 3) * .15, '#6cbf5a'); const h = .9 + (i % 3) * .15, ball = c.sph(x, h + .25, z, .3, '#ffffff', { m: { r: .9, cc: 0 } }); return { ball, x, z, h, gone: 0 }; });
+      const blow = q => { if (q.gone) return; q.gone = 4; Sound.whoosh(); for (let k = 0; k < 4; k++) setTimeout(() => c.burst(q.x + k * .4, q.h + .3 + k * .15, q.z, ['#ffffff', '#f4f4ff'], 6, 1.6), k * 120); c.say('💨 Whoosh! The seeds fly away on the wind!'); c.disc('dandelion', '💨 Tap the fluffy dandelions and the seeds blow away!'); api.event?.({ type: 'activity', id: 'dandelion' }); };
+      puffs.forEach(q => c.tap(q.ball, () => blow(q))); c.tap(c.add(new THREE.Group()), () => blow(puffs.find(q => !q.gone) || puffs[0]), X, { icon: '💨', label: 'Dandelions', action: 'Blow the seeds', disc: 'dandelion' }); // (PAW: the next fluffy one)
+      return dt => { for (const q of puffs) { if (q.gone > 0) { q.gone = Math.max(0, q.gone - dt); const k = q.gone > 3 ? 0 : Math.min(1, (3 - q.gone) / 3); q.ball.scale.setScalar(Math.max(.05, k)); } } }; },
+    // the end of the line: a 🏠 sign that takes you home
+    () => { const home = c.sign('🏠', 1, -794, 2.2, -1.4); c.tap(home, () => api.goHome(), -794); },
   ];
 
   // ---------- per frame ----------

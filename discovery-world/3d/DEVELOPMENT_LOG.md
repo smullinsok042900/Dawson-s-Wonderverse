@@ -4,6 +4,34 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 49 — 🎈 Balloon Hills, a new region past the pier
+- **A new streamed district** (`builders.hills`, x −800 to −668). Map tile 🎈, train station 🎈 at x −788, gems g19 (hilltop) and g20.
+- **Activities (pictures, sounds and voice only):**
+  - **Hot-air balloon:** tap or PAW, and it puffs up and floats gently back down. The camera steps back and looks up to watch (`G.camPull`, `G.camLift`).
+  - **Kites:** tap one and it loops the loop.
+  - **Grassy hill:** climb the steps and PAW on the rainbow mat at the top to slide down. Gem on the top.
+  - **Mountain goat:** each tap is one hop up the rocks, counted aloud ("Hop! One!", "Two!", "Three!").
+  - **Echo rock:** hello comes back softer and softer (loud and soft).
+  - **Wind chimes:** long tubes sing low, short tubes sing high. PAW rings them all, low to high.
+  - **Dandelions:** tap and the seeds blow away on the wind; they grow back.
+  - A 🏠 sign takes you home.
+- **The world end moved:**
+  - The left rainbow stairs and Sky Kingdom gate moved from x −666 to −798 (`EXP.xMin` −698 → −830).
+  - Train line `TRAIN.x0` −666 → −798.
+  - Ground, path and the pink kerb extend to −836.
+  - Saves restore up to −794.
+- **Fixed on the way:** PAW at the top of the Frosty Peaks sledding hill never started the sled. PAW only reaches things within 3 m of her height, and the sled counted as ground level while she stood 4.8 m up. The sled and the new hill mat now carry their real height.
+- **Investigated (performance): the "walk into the Adventure Trail" long task.** A CPU profile of that walk (`tests/perf` style, 200 µs sampling) found no JavaScript run longer than about 18 ms, while the browser reported a 70 ms task at x 454. So the time is not spent in the game's code; most likely it is the software renderer (SwiftShader) waiting on itself. Recorded in NEXT_TASKS; no change made.
+- **Verified (desktop, software rendering):**
+  - Every activity, the slide by PAW, the 🎈 station first on the line and the moved sky gate, all checked in a browser.
+  - No page errors.
+  - Screenshots of each spot.
+  - New smoke-test checks (map, the six activities, the slide, station, sky gate).
+- **Short screens:** the extra map picture and train station did not fit on 320 px tall phones. A short-screen layout fixes it (6 map columns, 44 px station buttons, the smallest comfortable touch size).
+- **Test fixes (not game bugs):** Biscuit can stand behind the slide's tube for several seconds (more tries); the unicorn wanders (tap it where it is).
+- **Full smoke test 189/189, devices 11/11** (desktop emulation).
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 48 — climb into the rocket, the big red button, a real lift-off
 - **The bug the family found:** PAW at the rocket blew bubbles. The Lab Gardens rocket (build 45) was placed at x 698, exactly on the bubble fountain. Both had PAW targets at 698, and the fountain's came first in the list. The rocket and its pad now stand at x 686, between the frog pal (678) and the fountain. `ROCKET_PAD` follows it, so flying home lands at 688.5.
 - **The rocket ride** is a new ride type in `main.js`, `P.ride = { type: 'rocket', phase }`:
