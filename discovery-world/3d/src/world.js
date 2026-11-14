@@ -239,7 +239,7 @@ export function buildWorld(G) {
   [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)
   G.grassTime = { value: 0 };
-  grassField(scene, { x0: 136, x1: 394, time: G.grassTime, ok: (x, z) => !(
+  G.grassMeshes = grassField(scene, { x0: 136, x1: 394, time: G.grassTime, ok: (x, z) => !(
     (Math.abs(x - 144) < 5.5 && z < -1 && z > -10.5) || (x > 271.5 && x < 300 && z < -2.4 && z > -11.4) || (x > 325.5 && x < 338.5 && z > -3.6) ||
     (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8)) || (x > 183.5 && x < 196.5 && z > -4.6) || (x > 260 && x < 271 && z > -6) || (Math.abs(x - 363.4) < 1.6 && z > -3.6)) });
   // natural rocks

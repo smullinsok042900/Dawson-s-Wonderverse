@@ -704,5 +704,5 @@ export function initExpansion(G, api) {
     for (const k of Object.keys(PALS)) if (X.pals[k] && !X.pals[k].follow) X.pals[k] = { follow: false };
   }
   const stats = () => S.map(s => `${s.d.id}:${s.state}`).join(' ');
-  return { palList, togglePal, palHint, _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
+  return { pictureSign, palList, togglePal, palHint, _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
 }

@@ -784,8 +784,8 @@ function updateWorldAnim(dt, t) {
   updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
   expansion.update(dt, t, player.layer === '' ? camT.x : -999); // (build 29: stream the new neighbourhoods)
   if (G.updateTrainStrip) G.updateTrainStrip();
-  if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > 16; if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
-    for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < 14; if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
+  if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > (gfx.level >= 4 ? 8 : 16); /* (build 44: at the lightest graphics levels trees switch to their simple shape sooner) */ if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
+    for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < (gfx.level >= 4 ? 0 : gfx.level >= 2 ? 10 : 14); /* (build 44: no fur layers at the lightest levels) */ if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
   G.diveRing.rotation.z = t * .8; G.diveRing.position.y = 1.05 + Math.sin(t * 3) * .08;
   bigStar.visible = !world.secret; bigStar.rotation.y = t * 1.6; bigStar.position.y = G.secretStar[1] + Math.sin(t * 2) * .12;
   // door/stair bubbles
@@ -940,6 +940,9 @@ function applyGfx(L, why) {
   L = Math.max(0, Math.min(5, L)); const prev = gfx.level; gfx.level = L; gfx.since = 0; gfx.slow = gfx.fast = 0;
   shadowEvery = L >= 5 ? 4 : L >= 1 ? 3 : 2;
   const sm = L >= 5 ? 512 : L >= 1 ? Math.min(1024, SM0) : SM0; if (sun.shadow.mapSize.x !== sm) { sun.shadow.mapSize.set(sm, sm); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+  // (build 44) the real iPhone report: the park and creature area are limited by the graphics chip (triangles), even at the
+  // lightest level, so the lightest levels also draw less grass (the clumps are in random order: the rest stay evenly spread)
+  for (const im of G.grassMeshes || []) im.count = Math.round(im.userData.n0 * (L >= 5 ? .5 : L >= 4 ? .7 : 1));
   post.lite = L >= 2; quality = QMAX - (L >= 5 ? .3 : L >= 4 ? .24 : L >= 3 ? .12 : 0); resize();
   if (why) { gfx.changes.push(`${prev}→${L} (${why})`); if (gfx.changes.length > 12) gfx.changes.shift(); try { localStorage.setItem(GFX_KEY, JSON.stringify({ level: L })); } catch (e) { } }
 }
@@ -1189,8 +1192,11 @@ function warmAreas() { const warmT0 = performance.now();
     const sig = o => { const k = []; o.traverse(q => { if (q.isMesh) k.push(q.material.uuid || '', q.geometry.attributes.uv ? 'u' : '', q.isSkinnedMesh ? 's' : '', q.isInstancedMesh ? 'i' : ''); }); return k.join(','); };
     const shown = [], kinds = new Set(); for (const it of LOD) if (!it.o.visible) { const k = sig(it.o); if (kinds.has(k)) continue; kinds.add(k); it.o.visible = true; shown.push(it.o); } for (const f of FUR) for (const sh of f.shells) if (!sh.visible) { sh.visible = true; shown.push(sh); }
     const back = []; if (G.life) for (const a of G.life.agents) if (a.detached) { a.detached.add(a.root); back.push(a); }
+    // (build 44) one picture sprite too: since the neighbourhood signposts were removed (build 43), nothing drew a sprite
+    // early, so the first one met in play (the 🏠 at the end of the Art Plaza) waited 0.27 s for its shader on the iPhone
+    const warmSprite = expansion.pictureSign ? expansion.pictureSign('🏠', 1) : null; if (warmSprite) { warmSprite.position.set(60, 3, 0); scene.add(warmSprite); }
     const oc = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 120);
-    for (const [x0, x1, y0, y1] of /[?&]noortho/.test(location.search) ? [] : [[-25, 120, -14, 16], [120, 260, -2, 16], [260, 430, -2, 22], [995, 1035, -1, 11], [1990, 2045, -1, 14]]) {
+    for (const [x0, x1, y0, y1] of /[?&]noortho/.test(location.search) ? [] : [[-25, 120, -14, 16], [120, 260, -2, 16], [260, 430, -2, 22], [995, 1035, -1, 11], [1990, 2045, -1, 14], [898, 944, -1, 13], [-704, -656, -1, 13]] /* (build 44: and the sky stairs at both ends: drawn for the first time in play, they froze the Art Plaza for 0.27 s on the iPhone) */) {
       oc.left = -(x1 - x0) / 2; oc.right = (x1 - x0) / 2; oc.top = (y1 - y0) / 2; oc.bottom = -(y1 - y0) / 2; oc.position.set((x0 + x1) / 2, (y0 + y1) / 2, 40); oc.lookAt((x0 + x1) / 2, (y0 + y1) / 2, 0); oc.updateProjectionMatrix(); oc.updateMatrixWorld();
       // (shadows too: each kind of shadow-casting thing has its own shadow shader; the sun's shadow box is stretched over the region for this one draw)
       const sc = sun.shadow.camera, keep = [sc.left, sc.right, sc.top, sc.bottom, sc.far];
@@ -1199,7 +1205,7 @@ function warmAreas() { const warmT0 = performance.now();
       renderer.shadowMap.needsUpdate = true; renderer.setRenderTarget(rt); renderer.render(scene, oc);
       [sc.left, sc.right, sc.top, sc.bottom, sc.far] = keep; sc.updateProjectionMatrix();
     }
-    for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root);
+    for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root); if (warmSprite) scene.remove(warmSprite);
     G.warmed = (G.warmed || 0) + 1; G.warmMs = Math.round(performance.now() - warmT0);
   } catch (e) { G.warmErr = String(e); }
   renderer.shadowMap.autoUpdate = shadowAuto; renderer.shadowMap.needsUpdate = true;
@@ -1225,7 +1231,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '42'; G.build = GAME_BUILD;
+const GAME_BUILD = '44'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
