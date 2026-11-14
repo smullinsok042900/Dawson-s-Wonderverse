@@ -388,6 +388,12 @@ const UG_F = -6;
     await sleep(800); const top = await jumpPeak(); check('on the Moon you jump about six times higher', top > 9, `jumped to ${top.toFixed(1)} m (Earth ≈ 1.8 m)`); }
   { await page.evaluate(() => __DDW3.G.launchTo('jupiter')); await sleep(800); c = await waitFor(s => s.layer === 'space', 20000); await sleep(800); const top = await jumpPeak(); check('on Jupiter (a floating platform in its clouds) the strong gravity allows only tiny hops', top < 1.1 && top > .2, `jumped to ${top.toFixed(2)} m`); }
   { await page.evaluate(() => __DDW3.G.launchTo('pluto')); await sleep(800); c = await waitFor(s => s.layer === 'space', 20000); const g = await page.evaluate(() => __DDW3.G.spaceG); check('Pluto has the weakest gravity of all (0.62 / 9.81)', Math.abs(g - .62 / 9.81) < .001, `g=${g.toFixed(3)}`); }
+  // (build 47) every planet is its own place: its own aliens and activities that fit it (tap them all on each one)
+  { const found = [], missing = [];
+    for (const id of ['moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto']) { await page.evaluate(id => __DDW3.G.launchTo(id), id); await sleep(600); await waitFor(s => s.layer === 'space', 20000); await sleep(400);
+      const r = await page.evaluate(id => { const its = __DDW3.G.interact.filter(i => i.layer === 'space' && i.x > __DDW3.G.spaceBounds[0] - 2 && i.x < __DDW3.G.spaceBounds[1] + 2 && i.disc && !String(i.disc).startsWith('space_')); its.forEach(i => i.run()); return { n: its.length, alien: __DDW3.world.disc.has('alien_' + id) }; }, id);
+      (r.alien && r.n >= 3 ? found : missing).push(`${id}:${r.n}${r.alien ? '' : ' (no alien)'}`); }
+    check('every planet has its own aliens and at least 2 activities of its own', missing.length === 0, (missing.length ? 'MISSING ' + missing.join(' ') + ' | ' : '') + found.join(' ')); }
   { await page.evaluate(() => __DDW3.G.launchTo('earth')); await sleep(800); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 700.5) < 3, `layer=${c.layer} x=${c.x.toFixed(1)}`); }
   // the voice can be chosen by a grown-up (the test browser may have no voices: the panel must still work)
   check('the ⚙️ panel has a voice chooser', await page.evaluate(() => !!document.querySelector('#perfPanel .ppVoices') && typeof __DDW3.G.voice === 'object' ? true : !!document.querySelector('#perfPanel .ppVoices')));
