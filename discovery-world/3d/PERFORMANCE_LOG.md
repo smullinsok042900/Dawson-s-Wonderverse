@@ -4,6 +4,43 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Android rendering fixes (based on build 50) — mobile portraits and frame-safe resizing
+
+- Product change is limited to portrait capture and resize scheduling in
+  main.js. Preserve the existing native shadows, HDR/MSAA buffers, effects,
+  shaders and adaptive quality settings. Portrait readback runs only when the
+  refreshed picture cache is missing; subsequent starts perform no readback.
+- Real WebGL fixtures: portrait maximum pixel-channel difference **0** versus
+  working canvas capture; a simulated failed canvas-copy path is flat grey
+  while direct capture contains the model. Empty and throwing reads restore
+  renderer state. The resize fixture reproduces the original cleared frame
+  (**alpha 255 → 0**); deferred quality changes preserve **alpha 255**, coalesce
+  repeated requests, and retain pending requests while a playroom is active.
+- Full native-game check passed at the reported portrait viewport and after
+  rotation: Pip/Zuzu/Jelly pictures contain 2219/1861/1670 distinct colours;
+  exactly three reads on a cold cache and zero on reload. Selected creature and
+  saved progress survive reload. Native PCF shadows and original 4x AA/depth
+  buffers are preserved. An actual end-of-frame quality change causes zero
+  immediate resizes, retains alpha 255, and resizes before the next drawn frame.
+- Before/after software-renderer timing, six callbacks per view, both run orders:
+
+  | View | Median script ms, before → after (forward order) | Before → after (reverse order) |
+  |---|---|---|
+  | Park | 22.9 → 37.1 | 19.7 → 19.2 |
+  | Creatures | 19.0 → 27.2 | 12.1 → 13.4 |
+  | Castle | 21.1 → 24.9 | 11.2 → 11.0 |
+
+  Startup before → after: 42.8 → 72.6 s forward, 43.5 → 41.4 s reverse.
+  These short software-GPU runs vary substantially with run order and do not
+  establish a performance improvement or a repeatable regression. No new
+  programs, errors or in-view resizes occurred; creature/castle draw calls and
+  triangles match. Park counts vary with wandering characters. No per-frame
+  GPU work was added; portrait readback is one-time cache work.
+- Full smoke suite is running. Pixel confirmation is required for remaining
+  object flicker and device performance; software rendering cannot establish
+  a device-driver fix or iPhone performance.
+
+
 ## Build 49 — Balloon Hills (desktop, software rendering; `ba.cjs 3D_build48_index.html index.html`, run twice)
 | View | Script ms/frame 48 → 49, run 1 | run 2 | Long tasks |
 |---|---|---|---|

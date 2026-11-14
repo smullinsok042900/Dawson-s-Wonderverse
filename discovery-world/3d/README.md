@@ -4,6 +4,17 @@ This is the full rebuild of Dawson's Discovery World in real 3D. It is a **separ
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## Android rendering fixes (based on build 50) — mobile portraits and frame-safe resizing
+
+Character previews now read pixels directly from WebGL and refresh the old
+portrait cache, preserving their colours and orientation. Empty readbacks are
+not cached, and the renderer state is restored after capturing the pictures.
+
+Screen and quality changes resize the canvas before the next game frame.
+Resizing it after drawing could clear the completed picture and cause a black
+flash. Shadows, antialiasing, effects and quality settings are unchanged. The
+Pixel still needs a physical check for any remaining object-level flicker.
+
 ## 3D build 41: Pet Nursery & Creative Studio
 
 Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same sculpted pets and toy materials as the world, or choose **🥚 🎨** in the home gallery.

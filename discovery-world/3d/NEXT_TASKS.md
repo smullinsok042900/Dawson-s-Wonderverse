@@ -4,6 +4,11 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 ## Waiting for the user
+- **Pixel Android rendering:** after the system update stopped native
+  crashes, verify that the three character previews draw on a fresh/warm start
+  and that movement/quality changes no longer produce a black frame. Report any
+  remaining flicker limited to particular objects/areas; it may have a separate
+  cause. The portrait cache is refreshed without clearing progress.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
 - **Build 48 rocket ride on the real iPhone:** PAW at the rocket, pick a planet, press the red button. Is the lift-off smooth (no freeze when the flame first appears) and is the button easy to press? Is her face visible in the window?

@@ -4,6 +4,38 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: Android rendering fixes (based on build 50) — mobile portrait readback and frame-safe resizing
+- **Reported:** Pixel character-selection boxes remain blank after the Android
+  update, and movement sometimes causes local flicker or a larger black flash.
+- Keep the original rendering pipeline. The only product source changed is
+  `src/main.js`; no shadow, shader, post-processing or quality-profile changes.
+- Capture the same three portrait renders with synchronous WebGL readPixels,
+  flip rows into ImageData and encode PNGs. This avoids the canvas-to-2D copy.
+  Refresh only the portrait cache key; saved progress and graphics choices are
+  untouched. Reject empty/lost-context reads and restore target, viewport,
+  scissor and shadow state in finally, including failed captures.
+- **Concrete black-frame bug:** applyGfx ran after rendering and called resize,
+  which clears the drawing buffer even when a frame was just completed.
+  Queue runtime resize requests and consume them at the next frame's size
+  check. Coalesce window/visual viewport/orientation/visibility/observer events.
+  Startup sizing remains immediate; requests during a 3D playroom wait until
+  the main world resumes. The quality choices themselves are unchanged.
+- Real WebGL fixtures reproduce a cleared frame (alpha 255 → 0) using the old
+  resize timing; the new quality request preserves alpha 255 until the next
+  frame redraw. They also verify coalescing and playroom deferral. Portrait
+  colours/orientation match normal canvas capture with maximum channel
+  difference 0. When the canvas-copy API is made to return a flat grey picture,
+  direct readback still returns the model. Throwing/empty reads restore state.
+- `tests/android-rendering.cjs` runs the focused tests; FULL_GAME_CHECK=1 also
+  checks actual portraits, obsolete-cache replacement, native PCF/4x AA,
+  end-of-frame quality changes, warm-cache reuse and saved progress.
+- All measurements here are desktop/software rendering, not physical iPhone
+  or Pixel results. Full-game/performance/smoke status is in PERFORMANCE_LOG.md.
+  The physical movement/object-flicker check remains pending.
+- The previous HTML is preserved locally as a separate baseline;
+  the PR does not add a duplicate generated backup.
+
+
 ## Checkpoint: build 50 — bigger planets (the Moon and Mars first), only the current planet in memory
 - **The family asked** for much bigger planets with many more activities, and above all no extra lag. This build changes the system first, then expands two places.
 - **The planet system (`space.js`, new `planets.js`):**
