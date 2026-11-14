@@ -29,6 +29,15 @@ const UG_F = -6;
   const DRAG0 = { x: 150, y: 285, id: 7 };
   const drag = async (dx, ms, dy = 0) => holdBtn(Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? '#upBtn' : '#downBtn') : (dx > 0 ? '#rightBtn' : '#leftBtn'), ms); // (build 9: arrow buttons are back)
   const holdBtn = async (sel, ms) => { const c = await center(sel); await touch('touchStart', [{ ...c, id: 1 }]); await sleep(ms); await touch('touchEnd', []); await sleep(80); };
+  // Bounded, real-touch holds for reaching a position on a slow renderer.
+  const holdUntil = async (sel, condition, arg, timeout = 15000) => {
+    const pt = await center(sel); let reached = false;
+    await touch('touchStart', [pt]);
+    try { await page.waitForFunction(condition, arg, { polling: 'raf', timeout }); reached = true; }
+    catch (_) { /* The caller retains its full movement/state assertion. */ }
+    finally { await touch('touchEnd', []); }
+    return reached;
+  };
   const press = async sel => holdBtn(sel, 80);
   const teleport = async (x, y = 0) => { await page.evaluate(([x, y]) => __DDW3.teleport(x, y), [x, y]); await sleep(2200); }; // let the camera settle (slow software WebGL)
   const waitFor = async (fn, ms = 8000) => { ms *= 3; /* (the software-graphics test browser is slow) */ const t0 = Date.now(); let s; while (Date.now() - t0 < ms) { s = await S(); if (fn(s)) return s; await sleep(120); } return s; };
@@ -54,14 +63,8 @@ const UG_F = -6;
   // so a fixed 0.6 s hold measures walking, not start-up work
   await page.evaluate(() => new Promise(res => { const t0 = performance.now(); let last = t0; const iv = []; const f = now => { iv.push(now - last); last = now; if (iv.length > 5) iv.shift(); if ((iv.length === 5 && iv.reduce((a, b) => a + b) / 5 < 120) || now - t0 > 10000) res(); else requestAnimationFrame(f); }; requestAnimationFrame(f); }));
   c = await S(); const x0 = c.x;
-  // The software renderer often advances only one capped .25 s physics frame
-  // during a .6 s wall-clock hold. Keep the SAME >2 m requirement, and wait for
-  // the actual movement while the real touch stays down (bounded to 15 s).
-  { const right = await center('#rightBtn'); await touch('touchStart', [right]);
-    try { await page.waitForFunction(x => __DDW3.player.x > x + 2, x0, { timeout: 15000 }); }
-    catch (_) { /* Record the unchanged distance assertion below on timeout. */ }
-    finally { await touch('touchEnd', []); } }
-  c = await S(); check('slide a finger right to walk right', c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
+  const walked = await holdUntil('#rightBtn', x => __DDW3.player.x > x + 2, x0);
+  c = await S(); check('slide a finger right to walk right', walked && c.x > x0 + 2, `x ${x0.toFixed(1)} → ${c.x.toFixed(1)}`);
   const x1 = await page.evaluate(() => new Promise(r => { let still = 0, n = 0; const f = () => { const P = __DDW3.player; still = Math.abs(P.vx) < .01 ? still + 1 : 0; if (still > 4 || ++n > 300) return r(P.x); requestAnimationFrame(f); }; f(); })); await sleep(600); check('let go and the creature stops', Math.abs((await S()).x - x1) < .2);
   await holdBtn('#leftBtn', 500); check('slide a finger left to walk left', (await S()).x < x1 - .5);
   { const j = await center('#jumpBtn'); const seen = page.evaluate(() => new Promise(r => { let n = 0; const f = () => { const P = __DDW3.player; if (P.y > .3) return r(P.y); if (++n > 200) return r(P.y); requestAnimationFrame(f); }; f(); })); await touch('touchStart', [j]); await touch('touchEnd', []); const jy = await seen; check('JUMP jumps', jy > .3, `y=${jy.toFixed(2)}`);
@@ -285,14 +288,14 @@ const UG_F = -6;
   await sleep(600); await shot('13_inside_house.jpg');
   await teleport(1022.6); await sleep(200); c = await S(); check('stair bubble at the bottom of the stairs', c.door === 'up');
   await press('#pawBtn'); await sleep(500); c = await S(); check('PAW puts you on the first step (no automatic walking)', c.stair === 0);
-  await holdBtn('#rightBtn', 700); c = await S(); check('hold ▶ to walk up part-way, let go to stop', c.stair > .2 && c.stair < .95, `k=${c.stair}`);
-  await holdBtn('#rightBtn', 1400); c = await waitFor(s => s.stair === null && Math.abs(s.y - 4.4) < .01, 6000); check('walk off the top onto the upstairs floor', c.stair === null && Math.abs(c.y - 4.4) < .01, `y=${c.y}`);
+  const partWay = await holdUntil('#rightBtn', () => __DDW3.player.stair?.k > .35); c = await S(); check('hold ▶ to walk up part-way, let go to stop', partWay && c.stair > .2 && c.stair < .95, `k=${c.stair}`);
+  const upstairs = await holdUntil('#rightBtn', () => !__DDW3.player.stair && Math.abs(__DDW3.player.y - 4.4) < .01); c = await S(); check('walk off the top onto the upstairs floor', upstairs && c.stair === null && Math.abs(c.y - 4.4) < .01, `y=${c.y}`);
   await holdBtn('#leftBtn', 900); await sleep(800); await shot('14_nursery.jpg');
   await page.evaluate(() => __DDW3.teleport(1015, 4.4)); await sleep(300); await press('#jumpBtn'); await sleep(200); await press('#jumpBtn'); await sleep(500);
   c = await S(); check('the ceiling stops you upstairs (no flying through the roof)', c.y + 1.5 <= 8.81, `y=${c.y.toFixed(2)}`);
   await waitFor(s => s.grounded, 3000);
   await page.evaluate(() => __DDW3.teleport(1028.2, 4.4)); await sleep(300); c = await S(); check('stair bubble at the top of the stairs', c.door === 'down');
-  await press('#pawBtn'); await sleep(200); await holdBtn('#leftBtn', 3200); c = await waitFor(s => s.stair === null && s.y === 0, 6000); check('walk back down the stairs', c.stair === null && c.y === 0, `y=${c.y}`);
+  await press('#pawBtn'); await sleep(200); const downstairs = await holdUntil('#leftBtn', () => !__DDW3.player.stair && __DDW3.player.y === 0); c = await S(); check('walk back down the stairs', downstairs && c.stair === null && c.y === 0, `y=${c.y}`);
   await page.evaluate(() => __DDW3.teleport(1003.2)); await sleep(300); await press('#pawBtn'); await sleep(500); c = await S(); check('the front door inside takes you back outside', c.layer === '' && Math.abs(c.x - 190) < .1);
   // ---------- sound + saving ----------
   { const s0 = (await S()).sound, hit = await page.evaluate(() => { const b = document.getElementById('soundBtn').getBoundingClientRect(); const e = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2); return e && (e.id || e.className || e.tagName); }); await page.locator('#soundBtn').tap(); await sleep(100); /* (an earlier world tap can land on this button first, so check that a tap FLIPS the setting) */ check('sound button turns sound off (flips the sound setting)', (await S()).sound === !s0, `was ${s0}, top element at the button: ${hit}`); }

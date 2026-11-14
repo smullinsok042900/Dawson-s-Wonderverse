@@ -457,8 +457,8 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 @media(prefers-reduced-motion:reduce){#nurseryPanel *{animation:none!important;transition:none!important}}
 
 /* Reserve enough space for all five left-hand shortcuts on small screens. */
-#upperRight{max-width:calc(100vw - 280px * var(--ui) - env(safe-area-inset-left) - env(safe-area-inset-right))}
-@media(min-width:900px){#upperRight{max-width:none}}
+#upperRight{flex-wrap:wrap;max-width:calc((100vw - env(safe-area-inset-left) - env(safe-area-inset-right) - 20px) / var(--ui) - 280px)}
+@media(max-width:720px){#upperRight #chooser{order:2}}
 
 .nursery-studio-layout{align-items:start}.nursery-art-paper,.nursery-preview{position:sticky;top:0;align-self:start}
 @media(max-height:500px) and (min-width:601px){#nurseryPanel .nursery-friend{width:175px}}
