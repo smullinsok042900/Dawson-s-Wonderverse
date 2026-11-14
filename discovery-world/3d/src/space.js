@@ -49,7 +49,7 @@ export function initSpace(G, api) {
     } else {
       // swirling cloud bands far below the platform, and the platform itself (with railings)
       for (let k = 0; k < 6; k++) box(X + SPACE.w / 2, -30 - k * 3, -20 + k * 2, 500, 3, 60, k % 2 ? c1 : c2, { r: .9 });
-      box(X + SPACE.w / 2, -.6, -1, 44, .6, 8, '#c9d3df', { r: .4, m: .5 }); for (const s of [-1, 1]) box(X + SPACE.w / 2, 0, -1 + s * 3.6, 44, .9, .12, '#ffd23f', { r: .4 });
+      box(X + SPACE.w / 2, -.6, -1, 44, .6, 8, '#c9d3df', { r: .4, m: .5 }); box(X + SPACE.w / 2, 0, -4.6, 44, .9, .12, '#ffd23f', { r: .4 }); // (a railing at the back only: one in front stood between you and the camera; the game keeps you on the platform)
       for (let k = 0; k < 8; k++) { const lamp = ball(X + SPACE.w / 2 - 20 + k * 5.7, .15, 2.6, .18, '#9fe6ff', { em: '#9fe6ff', ei: 1 }); }
     }
     // the parked rocket (tap it to fly somewhere else, or home)
@@ -63,7 +63,7 @@ export function initSpace(G, api) {
     if (id === 'mars') { const rv = new THREE.Group(); rv.position.set(X + 46, 0, -3); add(rv); const bd = new THREE.Mesh(new THREE.BoxGeometry(2, .6, 1.3), toy('#e8e8ec', { r: .4, m: .4 })); bd.position.y = .8; rv.add(bd); for (const [x, z] of [[-.8, -.7], [0, -.7], [.8, -.7], [-.8, .7], [0, .7], [.8, .7]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(.25, .25, .2, 12), toy('#3a3a46')); w.rotation.x = Math.PI / 2; w.position.set(x, .25, z); rv.add(w); } const ms = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 1, 8), toy('#e8e8ec')); ms.position.set(.6, 1.6, 0); rv.add(ms); const cam = new THREE.Mesh(new THREE.BoxGeometry(.4, .25, .25), toy('#3a3a46')); cam.position.set(.6, 2.1, 0); rv.add(cam);
       rv.traverse(o => { if (o.isMesh) o.userData.tap = () => { Sound.tone(700, .1, 'square', .03, 1.2); say('🤖 A robot rover! It explores Mars and takes pictures.', true); disc('rover'); }; }); G.taps.push(rv); }
     if (id === 'jupiter') { const spot = ball(X + 70, -24, -60, 9, '#d8573a', { r: .8 }); spot.scale.set(1.6, .7, .3); }
-    if (id === 'saturn') { const ring = new THREE.Mesh(new THREE.TorusGeometry(40, 4, 6, 64), toy('#e8d29a', { r: .7 })); ring.position.set(X + 55, 18, -70); ring.rotation.x = 1.25; add(ring); const ring2 = new THREE.Mesh(new THREE.TorusGeometry(48, 2, 6, 64), toy('#cfb07a', { r: .7 })); ring2.position.copy(ring.position); ring2.rotation.copy(ring.rotation); add(ring2); }
+    if (id === 'saturn') { const ring = new THREE.Mesh(new THREE.TorusGeometry(40, 4, 6, 64), toy('#e8d29a', { r: .7 })); ring.position.set(X + 55, 7, -70); ring.rotation.x = 1.35; const planet = ball(X + 55, 7, -70, 26, '#f5e2a8', { r: .8 }); planet.scale.y = .9; add(ring); const ring2 = new THREE.Mesh(new THREE.TorusGeometry(48, 2, 6, 64), toy('#cfb07a', { r: .7 })); ring2.position.copy(ring.position); ring2.rotation.copy(ring.rotation); add(ring2); }
     if (id === 'pluto') { const h1 = ball(X + 52, -.12, -6, 3, '#ffffff', { r: .9 }), h2 = ball(X + 56, -.12, -6, 3, '#ffffff', { r: .9 }); h1.scale.y = h2.scale.y = .05; const tip = new THREE.Mesh(new THREE.ConeGeometry(4.2, 5, 4), toy('#ffffff', { r: .9 })); tip.rotation.set(-Math.PI / 2, 0, Math.PI / 4); tip.scale.set(1, 1, .02); tip.position.set(X + 54, -.1, -9.2); add(tip); ball(X + 75, 20, -40, 3.5, '#9a9aa6', { r: .9 }); }
     g.traverse(o => { if (o.isMesh) o.castShadow = false; });
     scene.add(g); api.compile && api.compile(g);

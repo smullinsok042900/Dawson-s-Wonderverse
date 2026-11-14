@@ -8,7 +8,7 @@
   "map": "15 pictures, smallest 67 px",
   "pets": "9 tiles, smallest 77 px",
   "train": "20 stations all on screen: true, reaching 87% down",
-  "touch": "walked 10.1 m, jumped to y 1.68"
+  "touch": "walked 8.7 m, jumped to y 1.60"
  },
  {
   "name": "iPhone 15 (typical iPhone)",
@@ -19,7 +19,7 @@
   "map": "15 pictures, smallest 72 px",
   "pets": "9 tiles, smallest 82 px",
   "train": "20 stations all on screen: true, reaching 66% down",
-  "touch": "walked 8.7 m, jumped to y 1.60"
+  "touch": "walked 6.1 m, jumped to y 1.75"
  },
  {
   "name": "iPhone 15 Pro Max (large iPhone)",
@@ -30,7 +30,7 @@
   "map": "15 pictures, smallest 80 px",
   "pets": "9 tiles, smallest 91 px",
   "train": "20 stations all on screen: true, reaching 46% down",
-  "touch": "walked 4.3 m, jumped to y 1.60"
+  "touch": "walked 6.0 m, jumped to y 1.60"
  },
  {
   "name": "iPad 7th gen (iPad)",
@@ -41,7 +41,7 @@
   "map": "15 pictures, smallest 104 px",
   "pets": "9 tiles, smallest 104 px",
   "train": "20 stations all on screen: true, reaching 28% down",
-  "touch": "walked 4.7 m, jumped to y 1.71"
+  "touch": "walked 5.3 m, jumped to y 1.71"
  },
  {
   "name": "iPad Pro 11 (iPad)",
@@ -52,7 +52,7 @@
   "map": "15 pictures, smallest 104 px",
   "pets": "9 tiles, smallest 104 px",
   "train": "20 stations all on screen: true, reaching 27% down",
-  "touch": "walked 4.9 m, jumped to y 1.75"
+  "touch": "walked 4.4 m, jumped to y 1.60"
  },
  {
   "name": "Pixel 5 (Android phone)",
@@ -63,7 +63,7 @@
   "map": "15 pictures, smallest 62 px",
   "pets": "9 tiles, smallest 70 px",
   "train": "20 stations all on screen: true, reaching 60% down",
-  "touch": "walked 9.1 m, jumped to y 1.60"
+  "touch": "walked 5.8 m, jumped to y 1.60"
  },
  {
   "name": "Galaxy S9+ (Android phone)",
@@ -85,7 +85,7 @@
   "map": "15 pictures, smallest 104 px",
   "pets": "9 tiles, smallest 104 px",
   "train": "20 stations all on screen: true, reaching 32% down",
-  "touch": "walked 7.2 m, jumped to y 1.76"
+  "touch": "walked 5.8 m, jumped to y 1.60"
  },
  {
   "name": "small Android 640×360",
@@ -96,7 +96,7 @@
   "map": "15 pictures, smallest 76 px",
   "pets": "9 tiles, smallest 86 px",
   "train": "20 stations all on screen: true, reaching 63% down",
-  "touch": "walked 7.8 m, jumped to y 1.64"
+  "touch": "walked 7.2 m, jumped to y 1.68"
  },
  {
   "name": "iPhone SE 2022 667x375",
@@ -107,7 +107,7 @@
   "map": "15 pictures, smallest 79 px",
   "pets": "9 tiles, smallest 90 px",
   "train": "20 stations all on screen: true, reaching 61% down",
-  "touch": "walked 9.1 m, jumped to y 1.76"
+  "touch": "walked 7.0 m, jumped to y 1.68"
  },
  {
   "name": "extra-wide Android 21:9",
@@ -118,6 +118,6 @@
   "map": "15 pictures, smallest 87 px",
   "pets": "9 tiles, smallest 99 px",
   "train": "20 stations all on screen: true, reaching 45% down",
-  "touch": "walked 6.4 m, jumped to y 1.68"
+  "touch": "walked 3.8 m, jumped to y 1.60"
  }
 ]
