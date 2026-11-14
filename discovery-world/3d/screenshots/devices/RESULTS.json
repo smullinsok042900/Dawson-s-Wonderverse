@@ -5,10 +5,10 @@
   "problems": [],
   "picture": "454×256 drawn for 568×320, fov 40.6°, ui ×1.000, seen as phone",
   "buttons": "15 buttons, smallest 45 px",
-  "map": "14 pictures, smallest 67 px",
-  "pets": "7 tiles, smallest 77 px",
-  "train": "19 stations all on screen: true, reaching 71% down",
-  "touch": "walked 7.2 m, jumped to y 1.60"
+  "map": "15 pictures, smallest 67 px",
+  "pets": "8 tiles, smallest 77 px",
+  "train": "20 stations all on screen: true, reaching 71% down",
+  "touch": "walked 7.2 m, jumped to y 1.64"
  },
  {
   "name": "iPhone 15 (typical iPhone)",
@@ -16,10 +16,10 @@
   "problems": [],
   "picture": "587×274 drawn for 734×343, fov 38.0°, ui ×1.000, seen as phone",
   "buttons": "15 buttons, smallest 45 px",
-  "map": "14 pictures, smallest 72 px",
-  "pets": "7 tiles, smallest 82 px",
-  "train": "19 stations all on screen: true, reaching 51% down",
-  "touch": "walked 7.0 m, jumped to y 1.60"
+  "map": "15 pictures, smallest 72 px",
+  "pets": "8 tiles, smallest 82 px",
+  "train": "20 stations all on screen: true, reaching 51% down",
+  "touch": "walked 7.7 m, jumped to y 1.60"
  },
  {
   "name": "iPhone 15 Pro Max (large iPhone)",
@@ -27,10 +27,10 @@
   "problems": [],
   "picture": "651×304 drawn for 814×380, fov 38.0°, ui ×1.000, seen as phone",
   "buttons": "15 buttons, smallest 45 px",
-  "map": "14 pictures, smallest 80 px",
-  "pets": "7 tiles, smallest 91 px",
-  "train": "19 stations all on screen: true, reaching 46% down",
-  "touch": "walked 7.9 m, jumped to y 1.60"
+  "map": "15 pictures, smallest 80 px",
+  "pets": "8 tiles, smallest 91 px",
+  "train": "20 stations all on screen: true, reaching 46% down",
+  "touch": "walked 6.1 m, jumped to y 1.75"
  },
  {
   "name": "iPad 7th gen (iPad)",
@@ -38,10 +38,10 @@
   "problems": [],
   "picture": "864×648 drawn for 1080×810, fov 49.2°, ui ×1.350, seen as tablet",
   "buttons": "15 buttons, smallest 61 px",
-  "map": "14 pictures, smallest 104 px",
-  "pets": "7 tiles, smallest 104 px",
-  "train": "19 stations all on screen: true, reaching 28% down",
-  "touch": "walked 3.0 m, jumped to y 1.60"
+  "map": "15 pictures, smallest 104 px",
+  "pets": "8 tiles, smallest 104 px",
+  "train": "20 stations all on screen: true, reaching 28% down",
+  "touch": "walked 5.0 m, jumped to y 1.76"
  },
  {
   "name": "iPad Pro 11 (iPad)",
@@ -49,10 +49,10 @@
   "problems": [],
   "picture": "955×667 drawn for 1194×834, fov 46.9°, ui ×1.350, seen as tablet",
   "buttons": "15 buttons, smallest 61 px",
-  "map": "14 pictures, smallest 104 px",
-  "pets": "7 tiles, smallest 104 px",
-  "train": "19 stations all on screen: true, reaching 27% down",
-  "touch": "walked 5.6 m, jumped to y 1.64"
+  "map": "15 pictures, smallest 104 px",
+  "pets": "8 tiles, smallest 104 px",
+  "train": "20 stations all on screen: true, reaching 27% down",
+  "touch": "walked 4.5 m, jumped to y 1.60"
  },
  {
   "name": "Pixel 5 (Android phone)",
@@ -60,10 +60,10 @@
   "problems": [],
   "picture": "641×234 drawn for 802×293, fov 38.0°, ui ×1.000, seen as phone",
   "buttons": "15 buttons, smallest 45 px",
-  "map": "14 pictures, smallest 62 px",
-  "pets": "7 tiles, smallest 70 px",
-  "train": "19 stations all on screen: true, reaching 60% down",
-  "touch": "walked 4.3 m, jumped to y 1.68"
+  "map": "15 pictures, smallest 62 px",
+  "pets": "8 tiles, smallest 70 px",
+  "train": "20 stations all on screen: true, reaching 60% down",
+  "touch": "walked 5.6 m, jumped to y 1.64"
  },
  {
   "name": "Galaxy S9+ (Android phone)",
@@ -71,10 +71,10 @@
   "problems": [],
   "picture": "526×256 drawn for 658×320, fov 38.0°, ui ×1.000, seen as phone",
   "buttons": "15 buttons, smallest 45 px",
-  "map": "14 pictures, smallest 67 px",
-  "pets": "7 tiles, smallest 77 px",
-  "train": "19 stations all on screen: true, reaching 71% down",
-  "touch": "walked 8.5 m, jumped to y 1.60"
+  "map": "15 pictures, smallest 67 px",
+  "pets": "8 tiles, smallest 77 px",
+  "train": "20 stations all on screen: true, reaching 71% down",
+  "touch": "walked 10.2 m, jumped to y 1.64"
  },
  {
   "name": "Galaxy Tab S4 (Android tablet)",
@@ -82,10 +82,10 @@
   "problems": [],
   "picture": "910×569 drawn for 1138×712, fov 43.6°, ui ×1.350, seen as tablet",
   "buttons": "15 buttons, smallest 61 px",
-  "map": "14 pictures, smallest 104 px",
-  "pets": "7 tiles, smallest 104 px",
-  "train": "19 stations all on screen: true, reaching 32% down",
-  "touch": "walked 4.5 m, jumped to y 1.68"
+  "map": "15 pictures, smallest 104 px",
+  "pets": "8 tiles, smallest 104 px",
+  "train": "20 stations all on screen: true, reaching 32% down",
+  "touch": "walked 5.8 m, jumped to y 1.60"
  },
  {
   "name": "small Android 640×360",
@@ -93,10 +93,10 @@
   "problems": [],
   "picture": "512×288 drawn for 640×360, fov 40.5°, ui ×1.000, seen as phone",
   "buttons": "15 buttons, smallest 45 px",
-  "map": "14 pictures, smallest 76 px",
-  "pets": "7 tiles, smallest 86 px",
-  "train": "19 stations all on screen: true, reaching 63% down",
-  "touch": "walked 8.8 m, jumped to y 1.60"
+  "map": "15 pictures, smallest 76 px",
+  "pets": "8 tiles, smallest 86 px",
+  "train": "20 stations all on screen: true, reaching 63% down",
+  "touch": "walked 7.1 m, jumped to y 1.68"
  },
  {
   "name": "extra-wide Android 21:9",
@@ -104,9 +104,9 @@
   "problems": [],
   "picture": "768×329 drawn for 960×412, fov 38.0°, ui ×1.056, seen as phone",
   "buttons": "15 buttons, smallest 47 px",
-  "map": "14 pictures, smallest 87 px",
-  "pets": "7 tiles, smallest 99 px",
-  "train": "19 stations all on screen: true, reaching 45% down",
-  "touch": "walked 5.9 m, jumped to y 1.73"
+  "map": "15 pictures, smallest 87 px",
+  "pets": "8 tiles, smallest 99 px",
+  "train": "20 stations all on screen: true, reaching 45% down",
+  "touch": "walked 6.2 m, jumped to y 1.75"
  }
 ]
