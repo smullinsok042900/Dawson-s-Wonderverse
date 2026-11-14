@@ -4,6 +4,13 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 40 — freezes say where; Clover the goat
+- **The performance report says where each freeze over 250 ms happened:** the place name (Park, Toy Town, Ocean Pier…), the house, castle or underground, any ride, or a learning game. The build 36 iPhone report had two real 309–339 ms freezes with no location.
+  - Verified (desktop): two deliberate 400 ms freezes are reported as "(Ocean Pier)" and "(in the house)". Other examples seen: "Park", "Playhouse, riding the slide".
+- **Clover the mountain goat 🐐** lives on the Adventure Trail (x 494), the only neighbourhood that had no pal. Three taps to befriend; follows you; appears in 🐾 (9 pals); the save accepts `goat`.
+  - Verified (desktop): befriends and follows to the park; no console errors. Shader programs on that route are 103 with and without Clover (build 39 gives the same 103), so no new shaders.
+- The report's build number is 40.
+
 ## Checkpoint: build 39 — fixes from the first real iPhone report of the new builds
 - **The report (iPhone, iOS 18.7, Home Screen app, build 36, 844×390 at 3×):**
   - start-up 3.8–4.8 s; moving between areas 130–300 ms; worst test frames 38–78 ms; frame work 7.7–8 ms;

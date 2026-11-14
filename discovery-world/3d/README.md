@@ -37,6 +37,22 @@ These are planned for later 3D builds:
 - Star Babies
 - creature styles
 
+## 3D build 40: Clover the goat, and freezes that say where
+
+- **A new pet friend: Clover the mountain goat 🐐** on the Adventure Trail. Tap her three times to make friends.
+- **For grown-ups:** the ⚙️ performance report now says *where* any freeze happened (for example "Park" or "in the house"), so it can be fixed.
+
+## 3D build 39: fixes from the iPhone report
+
+- Under a 30 fps cap (iPhone Low Power Mode), the automatic graphics no longer lower the picture for nothing. A short test tells a cap from real slowness.
+- Time in the background is no longer reported as a "freeze", and the report shows the real build number.
+
+## 3D build 38: 🌊 Ocean Pier
+
+- **A new area past the farm,** with a 🌊 train station. Seven activities need no reading: fishing (count the fish), a tide pool, musical buoys, a dolphin jumping through a hoop, treasure digging (count the coins), a sailboat and a spouting whale.
+- **A new pet: Splash the seal 🦭.**
+- **2 more gems,** 18 in all.
+
 ## 3D build 37: a lighter castle
 
 - The decorated castle front was drawn as 213 separate little pieces. The ones that never move are now combined (the same look), so the castle view needs about a quarter fewer drawing commands every frame (221 → 163), measured on the test computer.
