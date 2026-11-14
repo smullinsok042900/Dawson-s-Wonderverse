@@ -926,7 +926,7 @@ function setGfxMode(m, save = true) {
   gfx.changes.push('mode ' + m); if (save) try { localStorage.setItem(MODE_KEY, m); } catch (e) { }
 }
 if (!TEST && !/[?&]hq/.test(location.search)) { try { const m = localStorage.getItem(MODE_KEY); if (m && m !== 'auto') setGfxMode(m, false); } catch (e) { } }
-G.setGfxMode = setGfxMode;
+G.setGfxMode = setGfxMode; G.adapt = dt => adapt(dt); // (a test can freeze the real timing, G.adaptFrozen, and feed adapt() recorded frame times)
 function adapt(dt) {
   ema += (dt - ema) * .05; gfx.var += ((dt - ema) * (dt - ema) - gfx.var) * .05; gfx.since += dt;
   if (gfx.mode !== 'auto') return; // (a fixed graphics mode chosen by a grown-up)
@@ -934,11 +934,13 @@ function adapt(dt) {
   // 20-26 fps, seen on the real iPhone) is recognised by TRYING: after stepping down at about 30 fps, if 8 s later the frame
   // rate hasn't improved, lowering the quality didn't help, so the step is undone and, while the cap lasts, the game stops
   // lowering the picture at about 30 fps. (On the real iPhone it went 4→5→4 under the cap: a worse picture for nothing.)
-  const near30 = ema > .028 && ema < .038, capped30 = (near30 && Math.sqrt(gfx.var) < .004) || (gfx.capLock && near30);
+  const near30 = ema > .028 && ema < .038, capped30 = !gfx.notCap && ((near30 && Math.sqrt(gfx.var) < .004) || (gfx.capLock && near30)); // (notCap: the test showed lowering DOES help here)
   if (gfx.capLock && ema < 1 / 50) gfx.capLock = false; // (the cap is gone: e.g. Low Power Mode was switched off)
-  if (gfx.probe) { gfx.probe.t += dt; if (gfx.probe.t > 8) { const p = gfx.probe; gfx.probe = null; if (ema > p.ema0 * .9 && near30) { gfx.capLock = true; applyGfx(p.from, '30 fps cap: lower quality didn\'t help'); gfx.since = 0; } } }
+  // The test is decisive: for 6 s the picture drops to the LOWEST level. If even that isn't faster, it is a cap: back to the
+  // level it was, and no more lowering under the cap. If it IS faster, the device really was slow: one level lower than before.
+  if (gfx.probe) { gfx.probe.t += dt; if (gfx.probe.t > 6) { const p = gfx.probe; gfx.probe = null; if (ema > p.ema0 * .85 && ema > .028) { gfx.capLock = true; applyGfx(p.from, '30 fps cap: lower quality didn\'t help'); } else { gfx.notCap = true; applyGfx(Math.min(5, p.from + 1), 'faster when lowered'); } gfx.since = 0; } return; }
   if (ema > 1 / 48 && !capped30) { gfx.fast = 0; gfx.slow += dt;
-    if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5 && !gfx.probe) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } const from = gfx.level, e0 = ema; applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); if (near30) gfx.probe = { from, ema0: e0, t: 0 }; } }
+    if (gfx.slow > 2.5 && gfx.since > 4 && gfx.level < 5 && !gfx.probe) { if (gfx.since < 60 && gfx.changes.length && gfx.changes[gfx.changes.length - 1].includes('smooth')) { gfx.failed = gfx.level; gfx.failedAt = performance.now(); } const from = gfx.level, e0 = ema; if (near30 && from < 4 && !gfx.notCap) { applyGfx(5, 'is it a 30 fps cap? testing'); gfx.probe = { from, ema0: e0, t: 0 }; } else applyGfx(gfx.level + 1, Math.round(1 / ema) + ' fps'); } }
   else { gfx.slow = Math.max(0, gfx.slow - dt * .5);
     // (build 33) a steady 30 fps cap (iPhone Low Power Mode) hides how much headroom there is. If each frame's own work is
     // small (well under the 33 ms the cap allows) for 20 s, step the picture quality back UP a level. A level that then
@@ -989,7 +991,7 @@ function frame() {
   renderer.shadowMap.needsUpdate = (++shadowTick % shadowEvery) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
   renderer.info.reset(); // (build 26: count every pass of the frame, not just the last one)
   if (post.enabled) post.render(); else renderer.render(scene, camera);
-  if (!TEST && !/[?&]hq/.test(location.search)) { gfx.work += (performance.now() - frameT0 - gfx.work) * .05; adapt(raw); }
+  if (!TEST && !/[?&]hq/.test(location.search) && !G.adaptFrozen) { gfx.work += (performance.now() - frameT0 - gfx.work) * .05; adapt(raw); }
   requestAnimationFrame(frame);
 }
 

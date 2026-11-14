@@ -4,8 +4,9 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 ## Waiting for the user
-- **Build 40 on the real iPhone:** check the new compass menu, saved adventures/book/gallery, calm learning, voice/music/effect controls and the in-game performance report. Desktop tests passed; actual-device results are still needed.
-- **GitHub delivery:** this connection currently rejects repository writes (403). Enable write access to deliver the preserved combined release as one PR, or use the release package.
+- **Build 40 on the real iPhone:** check the compass menu, saved adventures/book/gallery, calm learning, separate audio controls and the performance report. Desktop verification is recorded in DEVELOPMENT_LOG.md.
+- **Is Low Power Mode on?** (asked after the build 36 report: a flat 30 fps everywhere). If not, look for another 30 fps cap.
+- **iPhone report after build 39:** expect no 4↔5 bounce under the cap, graphics settling at the best level, the real build number in the title, and no background time counted as a freeze.
 - **iPhone report #2:** ask for the in-game ⚙️ → Performance Test → Copy Test Results, with Low Power Mode off, after
   tapping "Test the voice". It shows whether the graphics level recovers (build 33), the real frame rate, and whether speech plays.
 - **Confirm the squish fix (build 34b)** on the iPhone Home Screen app after turning the phone.
@@ -42,5 +43,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - Nicer station platforms.
 
 ## Known issues
+- **Two real 309–339 ms freezes** in the iPhone session (build 36), place unknown. The report should say where: add the player's x and layer to each freeze in `perf.js`.
+- **One 835 ms long task** on a train trip (desktop, x 202) that did not reproduce.
 - **The test browser is very slow** (software 3D), so a few smoke checks are timing-sensitive. Run the full test alone,
   and tap moving characters where they are (use `tapChar` or re-aim), never at fixed spots.

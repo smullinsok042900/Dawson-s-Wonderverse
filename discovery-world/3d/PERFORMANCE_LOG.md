@@ -99,7 +99,16 @@ Keep the previous build's file (`../backups/3D_buildNN_index.html`) to compare a
   - house transitions about 134 ms; start-up 7 s;
   - a flat 30 fps (likely Low Power Mode), with graphics stuck at the lowest level (fixed in build 33);
   - voice: 0 sentences started (sound status unknown; now reported).
-- **Build 33/34:** not yet received.
+- **Build 36 (Home Screen app, 844×390 at 3×, two runs):**
+  - start-up 3.8–4.8 s;
+  - every scene a flat 30 fps (1% lows 20–27);
+  - test worst frames 38–78 ms;
+  - moving between areas 130–301 ms;
+  - frame work 7.7–8.0 ms;
+  - draw calls 83–364, triangles 61k–1014k;
+  - voice works (sound was off).
+  - Automatic graphics: 4→5 (30 fps) and 5→4 (room to spare): the bounce fixed in build 39.
+  - The "10,412 ms freeze" was time in the background (fixed in build 39); real freezes in the session: 309 and 339 ms, place unknown.
 
 ## Known performance problems
 - Loading is long because of the whole-world rehearsal (see NEXT_TASKS).

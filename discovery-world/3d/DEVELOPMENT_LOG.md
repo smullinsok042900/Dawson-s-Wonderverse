@@ -19,7 +19,36 @@ are in `PERFORMANCE_LOG.md`.
   - **11 unique emulated screen sizes** passed. An older-iPad screenshot exceeded the device harness's original 30 s capture allowance; its rerun with the same 240 s screenshot allowance as the smoke harness passed every unchanged game/layout/touch assertion. Device results are in `screenshots/devices/RESULTS.json`.
   - Before/after performance and earned-reward measurements recorded in PERFORMANCE_LOG.md and tests/PERFORMANCE_BUILD40.json. Shader count remains 101; far home display detaches.
 - Built to one offline HTML file; service-worker cache version is build 40. Previous published HTML retained in backups.
-- Delivery: local development branch is preserved. Git push and connected-app branch creation both returned GitHub **403** write-permission errors; no merge or live deployment was made. Release package and patch are provided for manual delivery or a later authorized push.
+- After merging the newer main: rebuilt the HTML; reran all 11 unit checks, both focused adventure browser suites, and all three graphics-cap scenarios successfully on desktop Chromium.
+- Delivery: repository access is now installed and the combined release is uploaded as PR #46. Latest main fixes for the iPhone graphics cap are retained; the PR is left for the user to merge.
+
+
+## Checkpoint: build 39 — fixes from the first real iPhone report of the new builds
+- **The report (iPhone, iOS 18.7, Home Screen app, build 36, 844×390 at 3×):**
+  - start-up 3.8–4.8 s; moving between areas 130–300 ms; worst test frames 38–78 ms; frame work 7.7–8 ms;
+  - a flat 30 fps everywhere (even the light house interior), so the phone is capping it. Likely Low Power Mode; the user has been asked.
+  - Voice works: the sound button was off, and "Test the voice" spoke and finished a sentence.
+- **Fixed:**
+  1. **Time in the background no longer counts as a frame.** The report showed a "10,412 ms freeze": the app was in the background while the results were copied.
+  2. **A 30 fps cap is recognised by trying.**
+     - On the iPhone, the automatic graphics went 4→5→4 under the cap: a worse picture for nothing.
+     - Now, when frames are at about 30 fps and seem slow, the picture drops to the lowest level for 6 s. If even that isn't faster, it is a cap: back to the previous level, no more lowering while the cap lasts, and the build 33 "room to spare" rule may raise the quality.
+     - If it IS faster, the device really is slow: one level lower than before, and the "room to spare" rule is switched off (it measures CPU time only).
+  3. **The report shows the real build number** (it always said "build 26").
+- **Verified (desktop):** `tests/perf/capcheck.cjs` feeds recorded frame times to the automatic graphics:
+  - (A) a jumpy 30 fps cap like the iPhone's: one 6 s test, then the best picture (level 0);
+  - (B) a genuinely slow device (22 fps): steps down to level 5;
+  - (C) a GPU-bound device at 30 fps that is faster when lowered: test, then level 3 (60 fps).
+  - The first versions of this logic failed (C) twice; both were fixed before this checkpoint.
+  - `ba.cjs` runs with adaptive quality off, so it can't show this change.
+  - The full smoke test result is recorded in the commit after this entry.
+- **Build 38 (🌊 Ocean Pier) after merge:** full smoke test 159/159, device test 10/10.
+
+## Checkpoint: build 38 — 🌊 Ocean Pier (merged as #44)
+- New district (x -668 to -536) with 7 activities (fishing, tide pool, musical buoys, dolphin, treasure, sailboat, whale), crates and gems g17–g18, Splash the seal 🦭, and a 🌊 station (20 stations).
+- Walking in: 0 long tasks, programs 101 → 101, 71 calls and 104k triangles.
+- `ba.cjs` 37 → 38: no slower. Full smoke test 159/159; device test 10/10.
+- An 835 ms long task happened once on a train trip (x 202) and did not reproduce in 2 more runs of each build: on the task list.
 
 ## Checkpoint: build 37 — the castle draws much less
 - **Castle front merged:** 162 still, untapped parts of the build 16 castle front (steps, railings, shutters, flower boxes, climbing roses, hedges, topiary, lanterns, rose window, banners) are merged into one shape per *look-alike* material.
