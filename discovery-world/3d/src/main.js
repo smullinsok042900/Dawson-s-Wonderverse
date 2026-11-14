@@ -17,6 +17,7 @@ import { ADVENTURES } from './adventure-state.js';
 import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatures.js';
 import { makeToyModel } from './toy-models.js';
 import { initSea, SEA } from './sea.js';
+import { initSpace } from './space.js';
 import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
@@ -247,7 +248,12 @@ const friends = initFriends(G, {
 const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
 // (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
 const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
-const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
+// (build 45) the space rocket: the Moon, the planets and Pluto, with their real gravity
+const ROCKET_PAD = 698;
+const space = initSpace(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x,
+  openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
+G.space = space;
+const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), rocket: () => openRocket(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
 G.expansion = expansion;
 
 // ---------------- bubbles ----------------
@@ -435,6 +441,31 @@ G.useLift = () => {
   discover(down ? 'liftdown' : 'liftup', down ? 'Down, down in the glass lift!' : 'Up, up in the glass lift!');
 };
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
+// (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
+// countdown, and off you fly. Earth (first) takes you home to the launch pad.
+const ROCKET_NAMES = { earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
+let rocketPanel = null, launching = false;
+function openRocket() {
+  if (launching || G.activityOpen) return;
+  if (!rocketPanel) { rocketPanel = document.createElement('div'); rocketPanel.id = 'rocketPanel';
+    const tiles = [['earth', ['#5fa8ff', '#2f6fd0']], ...space.places.map(p => [p[0], p[1]])];
+    rocketPanel.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="rkGrid">${tiles.map(([id, [a, b]]) => `<button class="rkT ${id}" data-id="${id}" aria-label="${ROCKET_NAMES[id]}"><i style="background:radial-gradient(circle at 35% 30%, ${a}, ${b})"></i></button>`).join('')}</div></div>`;
+    document.body.appendChild(rocketPanel);
+    rocketPanel.querySelector('.mpX').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); rocketPanel.classList.remove('show'); Sound.click(); });
+    rocketPanel.querySelectorAll('.rkT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; launchTo(b.dataset.id); })); }
+  rocketPanel.querySelectorAll('.rkT').forEach(b => b.classList.toggle('here', b.dataset.id === (player.layer === 'space' ? space.here() : 'earth')));
+  rocketPanel.classList.add('show'); Sound.click(); voice.speak('Where shall we fly? Tap a planet!'); discover('rocketmenu');
+}
+G.openRocket = openRocket;
+function launchTo(id) {
+  if (launching) return; rocketPanel.classList.remove('show');
+  const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
+  launching = true; voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
+  Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
+  for (let k = 0; k < 8; k++) setTimeout(() => burst(player.x, .5, player.z - 1, ['#ffd23f', '#ff9a2e', '#ffffff'], 6, 2.5), k * 150);
+  setTimeout(() => { launching = false; if (id === 'earth') space.goHome(); else space.goTo(space.places.findIndex(p => p[0] === id)); saveSoon(); }, TEST ? 200 : 1600);
+}
+G.launchTo = launchTo;
 // (build 43) through the rainbow gate at the top of the stairs at either end of the world: into the Sky Kingdom
 G.toSky = () => { const P = player; world.flash = 1; P.layer = ''; P.x = 42; P.y = SKY.y + .05; P.z = SKY.z; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; P.facing = 1; snapCamera(); Sound.whoosh(); Sound.chime(); toast('🌈 Welcome to the Sky Kingdom!'); discover('skygate', 'The rainbow stairs lead up to the Sky Kingdom!'); saveSoon(); };
 G.tapWhale = () => { const W = G.whale, P = player; if (!P.ride && P.layer === '' && P.y > SKY.y - .6 && Math.abs(P.x - W.g.position.x) < 10) { P.ride = { type: 'whale', u: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('whaleride', 'You are riding the sky whale! JUMP to hop off.'); } W.spout = 2.4; Sound.withMusic(() => [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22))); discover('whale', 'The sky whale sings you a song!'); };
@@ -644,7 +675,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
+function bounds() { const P = player; return P.layer === 'space' && G.spaceBounds ? G.spaceBounds : P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -679,7 +710,7 @@ function updatePlayer(dt) {
   }
   P.z += (P.groundZ - P.z) * Math.min(1, dt * 6);
   const oldY = P.y, wasG = P.grounded;
-  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * dt; if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
+  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * (P.layer === 'space' ? (G.spaceG || 1) : 1) * dt; /* (build 45: the real gravity of the Moon, the planets and Pluto, relative to Earth) */ if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
   P.y += P.vy * dt; P.grounded = false;
   // land on the HIGHEST surface you reach (so a bouncy puff on top of a cloud wins over the cloud)
   let land = null, landStep = false;
@@ -725,6 +756,7 @@ const CAM_DIST = 9.0; // (build 43: zoomed out from 7.6 at the family's request,
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
+  if (P.layer === 'space' && G.spaceBounds) { const [a, b] = G.spaceBounds; return b - a < 2 * hw ? (a + b) / 2 : clamp(x, a + hw, b - hw); }
   return P.layer === 'sea' ? clamp(x, SEA.ox + Math.min(hw, SEA.w / 2), SEA.ox + SEA.w - Math.min(hw, SEA.w / 2)) : P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
@@ -750,6 +782,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
+  space.update(dt, t); // (build 45)
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
@@ -1238,7 +1271,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   $('soundBtn').after(btn);
   const pan = document.createElement('div'); pan.id = 'perfPanel';
   pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
-    <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
+    <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier ppVoices"></div><div class="ppInfo ppVoiceTip">For the most natural voice: on the iPhone open Settings → Accessibility → Spoken Content → Voices → English and download <b>Ava (Premium)</b> or <b>Zoe (Premium)</b> (free, works offline). The game uses it automatically; choose it here to be sure.</div><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
     <div class="ppTier ppMode">Graphics: <button data-a="m-auto">Auto</button><button data-a="m-quality">Quality</button><button data-a="m-balanced">Balanced</button><button data-a="m-performance">Performance</button></div>
     <button data-a="full" class="small fsOnly">⛶ Full screen</button>
@@ -1246,7 +1279,8 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   document.body.appendChild(pan);
   const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
   const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
-  const refresh = () => { pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', /^m-/.test(b.dataset.a) ? b.dataset.a === 'm-' + (G.gfx || {}).mode : +b.dataset.a[1] === learning.tier())); pan.querySelector('.fsOnly').style.display = fsAvailable() ? '' : 'none'; monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; ${g.mode === 'auto' ? 'changes by itself if the game runs slowly' : 'fixed: ' + g.mode}) · ${DEV.kind}${DEV.ios ? ' (Apple)' : DEV.android ? ' (Android)' : ''}${DEV.standalone ? ', Home Screen app' : ''} · picture ${canvas.width}×${canvas.height}${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
+  const refreshVoices = () => { const box = pan.querySelector('.ppVoices'); const vs = voice.voices ? voice.voices() : []; box.innerHTML = vs.length ? 'Voice: ' + vs.map(v => `<button data-a="v:${v.name.replace(/"/g, '')}" class="${v.current ? 'on' : ''}">${v.name}${v.quality ? ' ★' : ''}</button>`).join('') : ''; };
+  const refresh = () => { refreshVoices(); pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', /^m-/.test(b.dataset.a) ? b.dataset.a === 'm-' + (G.gfx || {}).mode : +b.dataset.a[1] === learning.tier())); pan.querySelector('.fsOnly').style.display = fsAvailable() ? '' : 'none'; monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; ${g.mode === 'auto' ? 'changes by itself if the game runs slowly' : 'fixed: ' + g.mode}) · ${DEV.kind}${DEV.ios ? ' (Apple)' : DEV.android ? ' (Android)' : ''}${DEV.standalone ? ', Home Screen app' : ''} · picture ${canvas.width}×${canvas.height}${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
   // (build 28) iPhone: a long press makes Safari start its own gesture, which CANCELS the touch (pointercancel) even
   // though the finger is still down. So only a real lift ends the hold; a quick tap shows a small "hold me" hint.
   let holdT = null, downAt = 0, opened = false;
@@ -1264,6 +1298,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
       G.erasing = true; try { localStorage.removeItem(SAVE_KEY); } catch (err) { } location.reload(); return; }
     if (/^t[123]$/.test(a)) { learning.setTier(+a[1]); refresh(); }
     if (/^m-/.test(a)) { setGfxMode(a.slice(2)); refresh(); }
+    if (/^v:/.test(a)) { if (!Sound.on) setSound(true); voice.unlock(); voice.choose(a.slice(2)); voice.speak('Hi Dawson! Let\'s go and play!'); refreshVoices(); }
     if (a === 'full') { goFullscreen(); pan.classList.remove('show'); }
     if (a === 'voice') { if (!Sound.on) setSound(true); voice.unlock(); voice.speak('Hello! Can you hear me? Let\'s play and learn!'); setTimeout(() => { info.textContent = 'Voice: ' + perfMon.voiceLine(); }, 2500); }
     if (a === 'mon') { perfMon.show(!perfMon.isShown()); refresh(); }

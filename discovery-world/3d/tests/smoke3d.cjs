@@ -378,6 +378,19 @@ const UG_F = -6;
   { const r = await page.evaluate(() => { __DDW3.G.interact.filter(i => i.layer === 'sea').forEach(i => i.run()); return ['coral', 'fishschool', 'seaturtle', 'octopus', 'jellyfish', 'seatreasure', 'clam', 'seadolphins', 'seafloor'].filter(d => __DDW3.world.disc.has(d)); }); check('the sea creatures answer when tapped (coral, fish, turtle, octopus, jellyfish, treasure, clam, dolphins, sea floor)', r.length === 9, r.join(' ')); }
   await page.evaluate(() => { __DDW3.player.x = 3005; __DDW3.player.y = -1; __DDW3.keys.up = true; }); c = await waitFor(s => s.layer === '', 20000); await page.evaluate(() => { __DDW3.keys.up = false; });
   check('swim up to the top of the pool to climb out', c.layer === '' && Math.abs(c.x + 8) < 1, `layer=${c.layer} x=${c.x.toFixed(1)}`);
+  // ---------- build 45: the space rocket, with each place's real gravity ----------
+  await teleport(700); await page.evaluate(() => __DDW3.G.expansion.buildNow(700)); await sleep(500);
+  await page.evaluate(() => __DDW3.G.openRocket()); await sleep(400);
+  { const n = await page.locator('#rocketPanel.show .rkT').count(); check('the rocket shows a picture for Earth, the Moon, every planet and Pluto', n === 10, `${n} pictures`); }
+  const jumpPeak = async () => { await press('#jumpBtn'); return page.evaluate(() => new Promise(res => { let top = 0, seen = 0; const t0 = performance.now(); const f = () => { const P = __DDW3.player; top = Math.max(top, P.y); if (P.y > .2) seen = 1; if ((seen && P.grounded) || performance.now() - t0 > 60000) res(top); else requestAnimationFrame(f); }; requestAnimationFrame(f); })); };
+  { await page.locator('#rocketPanel .rkT.moon').tap(); c = await waitFor(s => s.layer === 'space', 20000); const g = await page.evaluate(() => __DDW3.G.spaceG);
+    check('fly to the Moon: real Moon gravity (1.62 / 9.81 of Earth\'s)', c.layer === 'space' && Math.abs(g - 1.62 / 9.81) < .001, `layer=${c.layer} g=${g && g.toFixed(3)}`);
+    await sleep(800); const top = await jumpPeak(); check('on the Moon you jump about six times higher', top > 9, `jumped to ${top.toFixed(1)} m (Earth ≈ 1.8 m)`); }
+  { await page.evaluate(() => __DDW3.G.launchTo('jupiter')); await sleep(800); c = await waitFor(s => s.layer === 'space', 20000); await sleep(800); const top = await jumpPeak(); check('on Jupiter (a floating platform in its clouds) the strong gravity allows only tiny hops', top < 1.1 && top > .2, `jumped to ${top.toFixed(2)} m`); }
+  { await page.evaluate(() => __DDW3.G.launchTo('pluto')); await sleep(800); c = await waitFor(s => s.layer === 'space', 20000); const g = await page.evaluate(() => __DDW3.G.spaceG); check('Pluto has the weakest gravity of all (0.62 / 9.81)', Math.abs(g - .62 / 9.81) < .001, `g=${g.toFixed(3)}`); }
+  { await page.evaluate(() => __DDW3.G.launchTo('earth')); await sleep(800); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 700.5) < 3, `layer=${c.layer} x=${c.x.toFixed(1)}`); }
+  // the voice can be chosen by a grown-up (the test browser may have no voices: the panel must still work)
+  check('the ⚙️ panel has a voice chooser', await page.evaluate(() => !!document.querySelector('#perfPanel .ppVoices') && typeof __DDW3.G.voice === 'object' ? true : !!document.querySelector('#perfPanel .ppVoices')));
   // ---------- build 27: the learning games work for a child who can't read ----------
   { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
   await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);
