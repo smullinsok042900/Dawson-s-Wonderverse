@@ -872,7 +872,7 @@ function updateCamera(dt) {
   const P = player;
   camT.look += ((P.ride ? (P.ride.type === 'train' ? P.facing * 2.6 : 0) : P.facing * 1.8) - camT.look) * ease(dt, 3);
   camT.x += (camTargetX() - camT.x) * ease(dt, 8); // (build 25: the camera keeps up more tightly, so the controls don't feel delayed)
-  camT.y += (P.y + (G.camLift || 0) - camT.y) * ease(dt, G.camLift ? 6 : (P.grounded ? 4 : 2)); camT.rk = (camT.rk ?? 0) + ((P.ride && P.ride.type === 'rocket' ? 1 : 0) - (camT.rk ?? 0)) * ease(dt, 2); // (build 48: the camera rides up with the rocket, a little further back)
+  camT.y += (P.y + (G.camLift || 0) - camT.y) * ease(dt, G.camLift ? 6 : (P.grounded ? 4 : 2)); camT.rk = (camT.rk ?? 0) + ((P.ride && P.ride.type === 'rocket' ? 1 : G.camPull || 0) - (camT.rk ?? 0)) * ease(dt, 2); /* (build 49: G.camPull: something big to watch, like the hot-air balloon) */ // (build 48: the camera rides up with the rocket, a little further back)
   const y = camT.y;
   // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
   // (also a little at the Marble Machine, so its top ramps stay clear of the buttons)
@@ -970,7 +970,7 @@ function restore(d) {
   if (d.crown === true) world.crown = true;
   if (d.wand === true) world.wand = true; // (build 33)
   if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
-  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x1 + 20 ? 190 /* (saved inside a room far away, e.g. the house or the underwater world: wake up at home) */ : d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, 902) : d.x < -6 ? clamp(d.x, -662, -6) : clamp(d.x, .5, 301); // (build 43: never inside the new sky stairs) // (build 29: you can also wake up in the new neighbourhoods)
+  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x1 + 20 ? 190 /* (saved inside a room far away, e.g. the house or the underwater world: wake up at home) */ : d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, 902) : d.x < -6 ? clamp(d.x, -794, -6) /* (build 49: Balloon Hills) */ : clamp(d.x, .5, 301); // (build 43: never inside the new sky stairs) // (build 29: you can also wake up in the new neighbourhoods)
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
   world.secret = d.secret === true;

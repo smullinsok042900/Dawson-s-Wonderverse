@@ -20,6 +20,19 @@ Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same 
 
 Desktop software-rendering verification is recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Real iPhone playtesting remains necessary.
 
+## 3D build 49: Balloon Hills
+
+- **A new place past the Ocean Pier** (by map, train or walking):
+  - a hot-air balloon that floats up;
+  - kites that loop the loop;
+  - a grassy hill to climb and slide down;
+  - a goat that counts its hops;
+  - an echo rock;
+  - wind chimes (long ones low, short ones high);
+  - dandelions to blow.
+- The rainbow stairs to the Sky Kingdom are now at the far end of Balloon Hills.
+- PAW at the top of the snowy sledding hill now starts the sled.
+
 ## 3D build 48: climb into the rocket and press the big red button
 
 - **PAW at the rocket now gets you in.** It used to blow bubbles, because the rocket stood exactly on the bubble fountain. The rocket has moved a few steps over, next to the fountain.
