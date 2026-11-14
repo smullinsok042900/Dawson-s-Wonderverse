@@ -503,5 +503,5 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
   #mapPanel .mpGrid{grid-template-columns:repeat(6,auto)}
   #mapPanel .mpT{width:min(14vw,20vh,104px);height:min(14vw,20vh,104px)}
   #trainStrip{gap:4px;padding:5px 6px}
-  #trainStrip .tsT{width:44px;height:44px;font-size:25px;border-radius:13px}
+  #trainStrip .tsT{box-sizing:border-box;width:44px;height:44px;min-width:44px;min-height:44px;font-size:25px;border-radius:13px;padding:0}
 }
