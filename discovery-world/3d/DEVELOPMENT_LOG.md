@@ -4,6 +4,47 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 45 — a warmer voice, and a rocket to the planets with real gravity
+- **Voice:**
+  - Picks the most natural installed voice: Premium, then Enhanced (on iPhone the quality is in the voice id), then kid-friendly names (Zoe, Ava, Nicky, Samantha…), never "compact".
+  - Natural pitch (1.04, a little brighter on excited sentences, 1.1) instead of 1.15, which made synthetic voices sound more robotic; an unhurried pace (0.9–0.96); "..." becomes a pause.
+  - ⚙️ lists the installed voices: tap one to hear "Hi Dawson! Let's go and play!" (remembered).
+  - The panel tells grown-ups how to download the free Ava/Zoe (Premium) voices on the iPhone.
+  - Real device check needed: voices differ per phone.
+- **The space rocket** (`src/space.js`):
+  - **Launch pad:** in the Lab Gardens (x 698). Tap the rocket or PAW for a picture menu: Earth (home), the Moon, Mercury, Venus, Mars, Jupiter, Saturn (with rings), Uranus, Neptune and Pluto.
+  - **Each place:** its own scene at x 5000 + 200·i, built on first visit and hidden otherwise:
+    - Moon: craters, Earth in the sky and a flag.
+    - Mercury: the Sun huge in the sky.
+    - Venus: a hazy yellow sky.
+    - Mars: red dust and a rover to tap.
+    - Gas giants: a floating platform in the clouds, with cloud bands below, the Great Red Spot, and Saturn's rings.
+    - Pluto: the white heart and Charon.
+  - **Every place:** a striped metre pole, and the voice reports each new jump height.
+  - **Real gravity:** game gravity × (g / 9.81), with g = Moon 1.62, Mercury 3.70, Venus 8.87, Mars 3.71, Jupiter 24.79, Saturn 10.44, Uranus 8.69, Neptune 11.15, Pluto 0.62 m/s². For the gas giants g is at the 1-bar cloud tops; they have no surface, and the voice says you're on a floating platform.
+  - **Measured jump heights** (same jump): Earth 1.7 m, Moon 11.1, Mars and Mercury 4.8, Pluto 29, Jupiter 0.5, Saturn 1.5, Venus 1.8, Uranus 2.0, Neptune 1.4 m.
+  - **Earth** in the menu flies you home to the launch pad.
+  - No console errors; programs 103.
+- **Build 44** (speed fixes from the real iPhone report) passed 172/172 and 11/11, and ships together with this build.
+
+## Checkpoint: build 44 — fixes from the real iPhone report (build 43)
+- **The report:**
+  - The flat 30 fps cap is gone (likely Low Power Mode before): castle, house and studio 56–60 fps, but park 44 and creature area 40 fps at the lightest level.
+  - Frame work was only 4 ms, so the graphics chip is the limit.
+  - One 274 ms freeze "(Art Plaza)"; area changes 59–108 ms; the pool works on the phone.
+- **The lightest graphics levels (4–5) now draw less:**
+  - trees go to their simple shape beyond 8 m (was 16);
+  - no fur layers at all;
+  - grass drawn at 70% / 50% of the phone amount.
+  - Desktop triangles at level 5 (build 43 → 44): park 560k → 436k (−22%), creatures 669k → 469k (−30%), castle 476k → 404k.
+  - Screenshots look nearly the same.
+- **The Art Plaza freeze (caused in build 43):**
+  - Removing the neighbourhood signposts meant nothing drew a picture sprite early, so the first one met in play (the 🏠 at the Art Plaza end) waited for its shader (`getProgramParameter`, 550 ms on desktop).
+  - The start-up rehearsal now draws one sprite (and the sky stairs).
+  - Verified: walking 760 → the stairs has 0 long tasks.
+  - The new `tests/perf/shaderwaits.cjs` checks the whole train line, the sky, the pool and the underwater world: no shader waits anywhere.
+- **The report shows the real build number** (build 43 still said 42).
+
 ## Checkpoint: build 43 — the family's list
 1. **Camera zoomed out:** CAM_DIST 7.6 → 9.0, plus an automatic pull-back at the Block Builder (like the castle's), so the whole 12 × 5 m wall is on screen. Before, the top rows were cut off.
 2. **No more activity signs:**
