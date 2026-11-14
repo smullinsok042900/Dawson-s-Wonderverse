@@ -458,7 +458,7 @@ function openRocket() {
 }
 G.openRocket = openRocket;
 function launchTo(id) {
-  if (launching) return; rocketPanel.classList.remove('show');
+  if (launching) return; if (rocketPanel) rocketPanel.classList.remove('show');
   const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
   launching = true; voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
   Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
@@ -1264,7 +1264,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '46'; G.build = GAME_BUILD;
+const GAME_BUILD = '47'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';

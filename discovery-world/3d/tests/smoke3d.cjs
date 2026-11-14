@@ -382,7 +382,8 @@ const UG_F = -6;
   await teleport(700); await page.evaluate(() => __DDW3.G.expansion.buildNow(700)); await sleep(500);
   await page.evaluate(() => __DDW3.G.openRocket()); await sleep(400);
   { const n = await page.locator('#rocketPanel.show .rkT').count(); check('the rocket shows a picture for Earth, the Moon, every planet and Pluto', n === 10, `${n} pictures`); }
-  const jumpPeak = async () => { await press('#jumpBtn'); return page.evaluate(() => new Promise(res => { let top = 0, seen = 0; const t0 = performance.now(); const f = () => { const P = __DDW3.player; top = Math.max(top, P.y); if (P.y > .2) seen = 1; if ((seen && P.grounded) || performance.now() - t0 > 60000) res(top); else requestAnimationFrame(f); }; requestAnimationFrame(f); })); };
+  // (the game records each jump's peak on every physics step: a Jupiter hop is over in a third of a second, faster than this slow test browser draws frames)
+  const jumpPeak = async () => { await page.evaluate(() => { __DDW3.G.spaceLastJump = 0; }); await press('#jumpBtn'); return page.evaluate(() => new Promise(res => { const t0 = performance.now(); const f = () => { const h = __DDW3.G.spaceLastJump; if (h > 0 || performance.now() - t0 > 60000) res(h || 0); else setTimeout(f, 50); }; f(); })); };
   { await page.locator('#rocketPanel .rkT.moon').tap(); c = await waitFor(s => s.layer === 'space', 20000); const g = await page.evaluate(() => __DDW3.G.spaceG);
     check('fly to the Moon: real Moon gravity (1.62 / 9.81 of Earth\'s)', c.layer === 'space' && Math.abs(g - 1.62 / 9.81) < .001, `layer=${c.layer} g=${g && g.toFixed(3)}`);
     await sleep(800); const top = await jumpPeak(); check('on the Moon you jump about six times higher', top > 9, `jumped to ${top.toFixed(1)} m (Earth ≈ 1.8 m)`); }

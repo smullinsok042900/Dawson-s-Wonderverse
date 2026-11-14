@@ -210,7 +210,7 @@ export function initSpace(G, api) {
     const [, , grav, gas] = PLACES[i], X = placeX(i);
     sky.position.set(api.camX(), P.y, -45); stars.position.set(api.camX() * .9, P.y * .9, -44);
     if (!P.grounded) jumpTop = Math.max(jumpTop, P.y);
-    else if (jumpTop > .3) { const h = jumpTop; jumpTop = 0; if (!told[Math.round(h)]) { told[Math.round(h)] = 1; const m = Math.round(h * 10) / 10; say(m >= 1 ? `⭐ You jumped ${m >= 3 ? Math.round(m) : m} metres high!` : '⭐ A tiny hop! Gravity is very strong here!', true); disc('spacejump', 'Jump on each planet: the gravity is different everywhere!'); } }
+    else if (jumpTop > .05) { const h = jumpTop; jumpTop = 0; G.spaceLastJump = h; /* (measured every physics step: a Jupiter hop lasts a third of a second) */ if (h < .3) return; if (!told[Math.round(h)]) { told[Math.round(h)] = 1; const m = Math.round(h * 10) / 10; say(m >= 1 ? `⭐ You jumped ${m >= 3 ? Math.round(m) : m} metres high!` : '⭐ A tiny hop! Gravity is very strong here!', true); disc('spacejump', 'Jump on each planet: the gravity is different everywhere!'); } }
     for (const u of ups[here] || []) u(dt, t);
   }
   return { goTo, goHome, update, places: PLACES, here: () => here };
