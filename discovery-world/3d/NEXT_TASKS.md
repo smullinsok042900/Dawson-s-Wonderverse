@@ -3,6 +3,16 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## IN PROGRESS, NOT SHIPPED: planet graphics overhaul (branch `claude/dawsons-discovery-world-x3f0o2`)
+A second chat is doing a game-wide graphics overhaul on its own branch. It is work in progress: no PR, no full test yet.
+- **What is there:** `src/spacekit.js` (new: sculpted ground, craters, rocks, painted moons, sky dome, glows, dust, the new rocket) and a rewritten `src/space.js` (each planet's own terrain, sky, light, landmarks, aliens). `main.js` gained `spaceLight` (per-planet light and haze), a pulled-back camera on the planets (`camT.sp`) and `warmPaint`. The Lab Gardens rocket uses the new model. Build 49 (main) is merged in; `GAME_BUILD` still says 49 and needs its own number.
+- **CLASH TO RESOLVE FIRST:** the other chat's build 50 moves the planets into `planets.js` (built in areas, freed on leaving). That is not on `main` yet. When it is, port this branch's planet scenery into that system instead of merging `space.js` over it.
+- **Must fix before shipping** (desktop, software rendering, `tests/perf/space.cjs 3D_build48_index.html index.html`):
+  - **Freezes on arriving at a planet:** longest task 693 ms (Moon), 2106 ms (Mercury), 398 ms (Mars), 743 ms (Saturn); build 48 had 0. Cause: 1–2 new shader programs per planet compiled on arrival (sky dome, dust points, textured sky bodies, rings, double-sided toy materials). Warm them at startup like `warmPaint` does.
+  - **Script time walking:** Neptune 5.1 → 18.8 ms/frame, Pluto 4.1 → 11.9 (the other seven are level: mean of those 4.9 → 4.8). Not yet investigated; suspects are the particle bursts and the Pluto slide/heart updates.
+  - Draw calls are level (build 48: 74–86; now 63–88).
+- **Not done:** full smoke test, device test, `DEVELOPMENT_LOG.md`/`README.md`/`PERFORMANCE_LOG.md` entries, new smoke checks, and everything outside the planets (the Earth districts have not been touched).
+
 ## Waiting for the user
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
 - **Build 48 rocket ride on the real iPhone:** PAW at the rocket, pick a planet, press the red button. Is the lift-off smooth (no freeze when the flame first appears) and is the button easy to press? Is her face visible in the window?
