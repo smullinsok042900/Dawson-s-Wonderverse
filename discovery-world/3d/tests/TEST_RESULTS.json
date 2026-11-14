@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-14T18:53:49.767Z",
+  "date": "2026-11-14T20:27:58.838Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 184,
-  "total": 184,
+  "passed": 186,
+  "total": 189,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 6.8"
+      "detail": "x 1.2 → 5.5"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.49"
+      "detail": "y=1.55"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 1.7→5.8, y 1.55"
+      "detail": "x 2.6→6.7, y 1.55"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.68"
+      "detail": "rose to y=1.60"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 63% height"
+      "detail": "body squashed to 58% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 310,220 lands on: game [[\"SkinnedMesh\",\"8.98\",\"creature\",\"0.0\",\"creature\",\"Group@9.3\"],[\"Mesh\",\"9.96\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"Mesh\",\"10.05\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"]] P=9.31,0.00,0.00"
+      "detail": "tap at 310,220 lands on: game [[\"SkinnedMesh\",\"8.98\",\"creature\",\"0.0\",\"creature\",\"Group@9.7\"]] P=9.67,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,22 +112,22 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=2.90"
+      "detail": "highest y=3.25"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=41.1 y=3.60"
+      "detail": "x=41.7 y=3.60"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.6 (ok)"
+      "detail": "got to x=16.9 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=14.1"
+      "detail": "x=10.0"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -5.17 → -3.62"
+      "detail": "y -6.00 → -4.45"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-1.51"
+      "detail": "y=-2.29"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=10.1 y=0.00"
+      "detail": "x=8.9 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.6"
+      "detail": "x=37.7"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.049 → 1.010, z=-3.3"
+      "detail": "u 0.051 → 1.034, z=-3.3"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -446,8 +446,8 @@
     },
     {
       "name": "tap Biscuit the puppy: he follows you everywhere",
-      "ok": true,
-      "detail": "followers 2 → 3; in front of him: Mesh@0.0 Mesh@0.0 Mesh@0.0 buddy_biscuit "
+      "ok": false,
+      "detail": "followers 2 → 2; in front of him: Mesh@0.0 Mesh@0.0 Mesh@0.0 Mesh@0.0 Mesh@0.0 Mesh@0.0 "
     },
     {
       "name": "tap Twinkle the fairy: she flies along with you",
@@ -461,18 +461,18 @@
     },
     {
       "name": "all your pets and friends follow you in a line",
-      "ok": true,
-      "detail": "2.8 3.7 4.6 5.6 6.4"
+      "ok": false,
+      "detail": "2.8 3.7 4.7 5.5"
     },
     {
       "name": "tap a friend who follows you: they stay (tap again to bring them)",
-      "ok": true,
-      "detail": "followers 5 → 4"
+      "ok": false,
+      "detail": "followers 4 → 5"
     },
     {
       "name": "tap the sky whale: ride on its back",
       "ok": true,
-      "detail": "ride=whale y=12.9"
+      "detail": "ride=whale y=12.7"
     },
     {
       "name": "JUMP hops off the whale onto the clouds",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=4.58"
+      "detail": "y=5.13"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=1.59"
+      "detail": "y=1.83"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "44 → 48"
+      "detail": "47 → 51"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,7 +597,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.49612942806652677"
+      "detail": "k=0.580377821511786"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -607,7 +607,7 @@
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=4.55"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -657,7 +657,7 @@
     {
       "name": "reload keeps all your pets and the friends who follow you",
       "ok": true,
-      "detail": "{\"pets\":2,\"f\":4}"
+      "detail": "{\"pets\":2,\"f\":5}"
     },
     {
       "name": "reload keeps your crown and your hatched baby dino",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":48,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":51,\"fl\":3,\"p\":true}"
     },
     {
       "name": "🗺️ opens the picture map",
@@ -682,7 +682,7 @@
     {
       "name": "the neighbourhood you travel to is built at once",
       "ok": true,
-      "detail": "pier:none farm:none frosty:none woods:none seaside:none trail:ready toytown:none labgarden:none artplaza:none"
+      "detail": "hills:none pier:none farm:none frosty:none woods:none seaside:none trail:ready toytown:none labgarden:none artplaza:none"
     },
     {
       "name": "🏠 takes you home in one tap",
@@ -722,7 +722,7 @@
     {
       "name": "🚜 the map takes you to the Happy Farm, built at once",
       "ok": true,
-      "detail": "x=-412.0 pier:none farm:ready frosty:ready woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
+      "detail": "x=-412.0 hills:none pier:none farm:ready frosty:ready woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
     },
     {
       "name": "tap the hen: she lays eggs and you count them",
@@ -747,7 +747,7 @@
     {
       "name": "🌊 the map takes you to the Ocean Pier, built at once",
       "ok": true,
-      "detail": "x=-544.0 pier:ready farm:ready frosty:ready woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
+      "detail": "x=-544.0 hills:none pier:ready farm:ready frosty:ready woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
     },
     {
       "name": "the pier activities work (fishing, tide pool, buoys, dolphin, treasure, sailboat, whale)",
@@ -760,9 +760,34 @@
       "detail": "{\"crab\":{\"follow\":true},\"pig\":{\"follow\":true},\"seal\":{\"follow\":true}}"
     },
     {
-      "name": "the train line reaches the pier (🌊 station at the far left)",
+      "name": "the train line reaches the pier (🌊 station)",
       "ok": true,
       "detail": ""
+    },
+    {
+      "name": "🎈 the map takes you to Balloon Hills, built at once",
+      "ok": true,
+      "detail": "x=-676.0 hills:ready pier:ready farm:ready frosty:none woods:none seaside:none trail:none toytown:none labgarden:none artplaza:none"
+    },
+    {
+      "name": "the Balloon Hills activities work (balloon, kites, goats, echo, chimes, dandelions)",
+      "ok": true,
+      "detail": "balloon kites goats echo chimes dandelion"
+    },
+    {
+      "name": "PAW on top of the grassy hill: slide down",
+      "ok": true,
+      "detail": "ride=slide y=4.5"
+    },
+    {
+      "name": "the train line reaches Balloon Hills (🎈 station at the far left)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the rainbow stairs at the new far-left end still lead into the Sky Kingdom",
+      "ok": true,
+      "detail": "x=42.0 y=9.6"
     },
     {
       "name": "befriend Clover the goat on the Adventure Trail (three taps): Clover follows you",
@@ -787,7 +812,7 @@
     {
       "name": "the seesaw rocks you up and down",
       "ok": true,
-      "detail": "highest y=1.90"
+      "detail": "highest y=1.86"
     },
     {
       "name": "the rainbow stairs at the end of the world lead up into the Sky Kingdom",
@@ -802,7 +827,7 @@
     {
       "name": "steer the sky whale: it flies where you point (and stays visible: never in a scenery section)",
       "ok": true,
-      "detail": "x 54.5 → 64.5, y 16.8, whale in the scene: true"
+      "detail": "x 57.8 → 67.8, y 16.4, whale in the scene: true"
     },
     {
       "name": "JUMP hops off the flying whale and you float gently down",
@@ -817,7 +842,7 @@
     {
       "name": "swim down and through the tunnel at the bottom into the underwater world",
       "ok": true,
-      "detail": "x=3012.1"
+      "detail": "x=3012.6"
     },
     {
       "name": "the sea creatures answer when tapped (coral, fish, turtle, octopus, jellyfish, treasure, clam, dolphins, sea floor)",
