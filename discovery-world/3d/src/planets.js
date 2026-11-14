@@ -68,7 +68,7 @@ const moon = {
         k.tapIt(c, () => { c.userData.lit = 1; k.Sound.bell([523, 587, 659, 784, 880][i], .05); k.disc('mooncave'); }); return c; }); let found = false;
       k.U.push((dt, t) => { const near = k.P.layer === 'space' && Math.abs(k.P.x - cvX) < 3; if (near && !found) { found = true; k.Sound.twinkle(); k.fact('💎 A hidden moon cave, full of glowing crystals! Tap them to make them sing. (The crystals are pretend.)', 'mooncave'); }
         for (const c of cr) { c.userData.lit = Math.max(0, (c.userData.lit || 0) - dt); c.material.emissiveIntensity = (near ? .5 : .1) + c.userData.lit * 1.2 + Math.sin(t * 2 + c.position.x) * .1; c.rotation.y += dt; } });
-      k.tapIt(mouth, () => k.say('🕳️ A cave! Walk up to it and look inside.', true), cvX, 'mooncave');
+      k.tapIt(mouth, () => { for (const c of cr) c.userData.lit = 1.5; k.Sound.twinkle(); k.fact('💎 A hidden moon cave, full of glowing crystals! Tap them to make them sing. (The crystals are pretend.)', 'mooncave'); }, cvX, 'mooncave'); /* (PAW at the cave lights it up, as walking up does) */
       // shape sorting: round, square and pointy moon rocks each go into their own hole
       const sx = X + 64; k.sbox(sx, 0, -3.2, 4.4, 1, 1.4, '#5a6aa8', { r: .5 }); const holes = [['circle', -1.4], ['square', 0], ['triangle', 1.4]];
       const shapeGeo = { circle: new THREE.CylinderGeometry(.42, .42, .3, 24), square: new THREE.BoxGeometry(.75, .3, .75), triangle: new THREE.CylinderGeometry(.5, .5, .3, 3) };
