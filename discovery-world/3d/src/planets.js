@@ -57,10 +57,10 @@ const moon = {
     // ----- area 3: MOON MOUNTAINS and the HIDDEN CAVE -----
     k => { const X = k.s0;
       // a moon mountain to climb (big steps; a star waits at the top)
-      const steps = [[X + 12, 1.4], [X + 15, 2.8], [X + 18, 4.2], [X + 21, 5.6], [X + 24.5, 7]]; for (const [x, h] of steps) { k.sbox(x, 0, -1.6, 3, h, 2.4, '#b4b4c0', { r: .9 }); k.plat(x - 1.5, x + 1.5, h, { step: true, stepMax: 1.5 }); }
+      const steps = [[X + 12, 1.4], [X + 15, 2.8], [X + 18, 4.2], [X + 21, 5.6], [X + 24, 7]] /* (no gaps between steps) */; for (const [x, h] of steps) { k.sbox(x, 0, -1.6, 3, h, 2.4, '#b4b4c0', { r: .9 }); k.plat(x - 1.5, x + 1.5, h, { step: true, stepMax: 1.5 }); }
       k.sball(X + 20, -2, -8, 12, 11, 6, '#a4a4b2', { r: .95 });
-      const star = k.sball(X + 24.5, 8, -1.6, .45, .45, .15, '#ffd23f', { em: '#ffd23f', ei: .8 }); let won = false;
-      k.U.push((dt, t) => { star.rotation.y += dt * 2; star.position.y = 8 + Math.sin(t * 2) * .1; const P = k.P; if (!won && P.layer === 'space' && P.y > 6.8 && Math.abs(P.x - (X + 24.5)) < 1.6) { won = true; k.Sound.chime(); k.api.burst && k.api.burst(X + 24.5, 8, -1.6, ['#ffd23f', '#ffffff'], 18, 3); k.fact('⛰️ You climbed a moon mountain! What a view!', 'moonpeak'); } });
+      const star = k.sball(X + 24, 8, -1.6, .45, .45, .15, '#ffd23f', { em: '#ffd23f', ei: .8 }); let won = false;
+      k.U.push((dt, t) => { star.rotation.y += dt * 2; star.position.y = 8 + Math.sin(t * 2) * .1; const P = k.P; if (!won && P.layer === 'space' && P.y > 6.8 && Math.abs(P.x - (X + 24)) < 1.6) { won = true; k.Sound.chime(); k.api.burst && k.api.burst(X + 24, 8, -1.6, ['#ffd23f', '#ffffff'], 18, 3); k.fact('⛰️ You climbed a moon mountain! What a view!', 'moonpeak'); } });
       k.G.interact.push({ x: X + 12, y: 0, layer: 'space', disc: 'moonpeak', run: () => k.say('⛰️ Climb the big steps all the way to the star at the top!', true), hintY: 2.4 });
       // the hidden cave: walk in front of the dark opening and the crystals inside light up and sing
       const cvX = X + 44; k.sball(cvX, -.5, -4.6, 6, 4.6, 3.2, '#9a9aa8', { r: .95 }); const mouth = k.sball(cvX, 0, -2.2, 2.2, 2.2, .6, '#16162a', { r: 1 });

@@ -169,7 +169,7 @@ export function initSpace(G, api) {
   // you fly away (so only the place you are on is ever in memory). Shapes come from shared unit geometries. ----------
   const kits = {}, secs = {}, UNIT_BALL = new THREE.SphereGeometry(1, 24, 16), UNIT_BOX = new THREE.BoxGeometry(1, 1, 1); UNIT_BALL.userData.shared = UNIT_BOX.userData.shared = true;
   function areaKit(id, s, sub) {
-    const K = kits[id], X = K.X, add = o => { sub.add(o); return o; };
+    const K = kits[id], X = K.X, add = o => { sub.add(o); return o; }, { tapIt, U, say, disc } = K;
     const sball = (x, y, z, sx, sy, sz, c, o = {}) => { const m = new THREE.Mesh(UNIT_BALL, toy(c, o)); m.position.set(x, y, z); m.scale.set(sx, sy, sz); return add(m); };
     const sbox = (x, y, z, w, h, d, c, o = {}) => { const m = new THREE.Mesh(UNIT_BOX, toy(c, o)); m.position.set(x, y + h / 2, z); m.scale.set(w, h, d); return add(m); };
     const plat = (a, b, y, o = {}) => G.platforms.push({ a, b, y, layer: 'space', z: -1.2, ...o });

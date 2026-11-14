@@ -557,7 +557,7 @@ function showPicker() {
   rocketPanel.querySelectorAll('.rkT').forEach(b => b.classList.toggle('here', b.dataset.id === (player.layer === 'space' ? space.here() : 'earth')));
   rocketPanel.classList.add('show'); Sound.click(); voice.speak('Where shall we fly? Tap a planet!'); discover('rocketmenu');
 }
-G.openRocket = openRocket;
+G.openRocket = openRocket; G.spaceHere = () => space.here();
 // picking a planet: sitting in a rocket, the big red button comes up; (with no rocket nearby: straight off, as before)
 function launchTo(id, go) {
   if (launching) return; if (rocketPanel) rocketPanel.classList.remove('show');
@@ -1370,7 +1370,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '48'; G.build = GAME_BUILD;
+const GAME_BUILD = '50'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
