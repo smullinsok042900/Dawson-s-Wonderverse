@@ -89,6 +89,38 @@ export function buildSky(G) {
   slide.traverse(o => { o.userData.tap = () => G.startSkySlide(); }); G.taps.push(slide);
   G.interact.push({ x: SKY.b - .6, y: SKY.y, layer: '', disc: 'skyslide', run: () => G.startSkySlide(), hintY: 2.4 });
 
+  // =================== (build 43) A BIGGER SKY KINGDOM ===================
+  // The cloud path now runs on to the left, over the Playhouse (x 8 to 45.6), with new things to do. Everything is pictures,
+  // sounds and spoken words. (No new star bits: saved star bits are stored by their place in the list.)
+  const A = () => G.skyApi || {}; // (sound, sparkles, spoken words: filled in by main.js)
+  const tapIt = (obj, fn, x, disc, hintY = 2.4) => { obj.traverse(o => { if (o.isMesh) o.userData.tap = fn; }); G.taps.push(obj); G.interact.push({ x, y: SKY.y, layer: '', disc, run: fn, hintY }); };
+  cloud(8, SKY.a, SKY.y, SKY.z, 1.8); plat(8, SKY.a, SKY.y, { z: SKY.z, sky: true });
+  const ups = [];
+  // the moon and the stars: tap the moon and ten stars light up one by one (count them!)
+  { const moon = new THREE.Mesh(new THREE.SphereGeometry(1.1, 24, 16), toy('#fff6c8', { r: .5, em: '#ffe9a0', ei: .5 })); moon.position.set(12, SKY.y + 3.2, -5); add(moon);
+    const stars = []; for (let i = 0; i < 10; i++) { const st = new THREE.Mesh(new THREE.OctahedronGeometry(.22), toy('#ffffff', { em: '#fff3a6', ei: .1 })); st.material = st.material.clone(); st.position.set(9 + (i % 5) * 1.6, SKY.y + 4.6 + Math.floor(i / 5) * 1.1 + (i % 2) * .3, -5.5); add(st); stars.push(st); }
+    let lit = -1, t0 = 0;
+    tapIt(moon, () => { lit = 0; t0 = 0; stars.forEach(s2 => { s2.material.emissiveIntensity = .1; }); A().Sound && A().Sound.chime(); A().discover && A().discover('skystars', 'Tap the moon and count the stars!'); }, 12, 'skystars', 4.6);
+    ups.push(dt => { moon.rotation.y += dt * .2; if (lit < 0) return; t0 += dt; if (t0 > .6) { t0 = 0; if (lit < 10) { const st = stars[lit]; st.material.emissiveIntensity = 1.4; lit++; A().Sound && A().Sound.tone(500 + lit * 60, .15, 'sine', .05, 1.2); A().toast && A().toast(`⭐ ${lit}!`); if (lit === 10) { A().toast && A().toast('⭐ Ten twinkly stars!'); lit = -1; } } } for (const st of stars) st.rotation.y += dt; }); }
+  // cloud sheep: tap them and it rains, then a rainbow comes out
+  { const sheep = [17, 19.5].map(x => { const g = new THREE.Group(); g.position.set(x, SKY.y + .55, -2.6); add(g); const b = new THREE.Mesh(puffG, cloudMat); b.scale.set(.75, .5, .5); g.add(b);
+      for (const dx of [-.4, 0, .4]) { const p2 = new THREE.Mesh(puffG, cloudMat); p2.scale.setScalar(.3); p2.position.set(dx, .35, 0); g.add(p2); } const hd = new THREE.Mesh(new THREE.SphereGeometry(.22, 12, 10), toy('#6b5a7a', { r: .7 })); hd.position.set(.75, .1, 0); g.add(hd); return g; });
+    const bow = new THREE.Group(); bow.position.set(18.2, SKY.y, -4.2); bow.visible = false; add(bow); for (let i = 0; i < 6; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(2.6 - i * .2, .09, 8, 36, Math.PI), toy(RAINBOW[i], { em: RAINBOW[i], ei: .3 })); bow.add(arc); }
+    let rain = 0; const go = () => { rain = 4; bow.visible = false; A().Sound && A().Sound.noise && A().Sound.noise(1.2, 400, 1600, .04); A().toast && A().toast('🌧️ Pitter patter! The cloud sheep made rain!'); A().discover && A().discover('skysheep', 'Tap the cloud sheep to make it rain!'); };
+    sheep.forEach(g => tapIt(g, go, g.position.x, 'skysheep'));
+    ups.push((dt, t) => { sheep.forEach((g, i) => { g.position.y = SKY.y + .55 + Math.sin(t * 1.5 + i) * .08; }); if (rain > 0) { rain -= dt; if (Math.random() < dt * 25 && A().burst) A().burst(16.5 + Math.random() * 4, SKY.y + 1.2, -2.6, ['#9fdcff', '#cfefff'], 1, .6); if (rain <= 0) { bow.visible = true; A().toast && A().toast('🌈 A rainbow!'); A().Sound && A().Sound.chime(); } } }); }
+  // colour balloons: tap one, it pops and says its colour; they come back
+  { const COL = [['#ff4f6a', 'red'], ['#ff9a2e', 'orange'], ['#ffd23f', 'yellow'], ['#36c96b', 'green'], ['#3d9bff', 'blue'], ['#a15cff', 'purple']];
+    const balloons = COL.map(([c, n], i) => { const g = new THREE.Group(); g.position.set(24 + i * 1.3, SKY.y + 2.2, -3); add(g); const b = new THREE.Mesh(new THREE.SphereGeometry(.42, 16, 12), toy(c, { r: .3, cc: 1 })); b.scale.y = 1.2; g.add(b); const str = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 1.4, 4), toy('#ffffff')); str.position.y = -1.2; g.add(str); g.userData = { n, c, gone: 0, i }; return g; });
+    balloons.forEach(g => tapIt(g, () => { if (g.userData.gone) return; g.userData.gone = 4; g.visible = false; A().Sound && A().Sound.pop && A().Sound.pop(); A().burst && A().burst(g.position.x, g.position.y, g.position.z, [g.userData.c, '#fff'], 14, 2.5); A().toast && A().toast(`🎈 Pop! ${g.userData.n[0].toUpperCase() + g.userData.n.slice(1)}!`); A().discover && A().discover('skyballoons', 'Pop the sky balloons! What colour is it?'); }, g.position.x, 'skyballoons', 1.6));
+    ups.push((dt, t) => { for (const g of balloons) { const u = g.userData; g.position.y = SKY.y + 2.2 + Math.sin(t * 1.2 + u.i) * .15; if (u.gone) { u.gone = Math.max(0, u.gone - dt); if (!u.gone) g.visible = true; } } }); }
+  // bouncy clouds up to the high moon cloud (a twinkling gem-star waits on top)
+  { for (const [x, c] of [[33, '#ffb8dc'], [36.5, '#b8e4ff']]) { const m = new THREE.Mesh(puffG, toy(c, { r: .6, sheen: 1, em: c, ei: .25 })); m.scale.set(.9, .45, .8); m.position.set(x, SKY.y + .25, SKY.z + .2); m.castShadow = true; add(m); plat(x - .8, x + .8, SKY.y + .45, { pad: true, top: m, bounce: 12.5, step: true, z: SKY.z }); G.skyPuffs.push(m); }
+    cloud(31.5, 38.5, SKY.high + 1, -1.9, 1.5, '#fff7d8'); plat(31.5, 38.5, SKY.high + 1, { z: -1.9 });
+    const big = new THREE.Mesh(new THREE.OctahedronGeometry(.45), toy('#fff3a6', { em: '#ffd76a', ei: 1 })); big.position.set(35, SKY.high + 2.2, -1.9); add(big); let got = 0;
+    ups.push((dt, t) => { big.rotation.y += dt * 2; big.position.y = SKY.high + 2.2 + Math.sin(t * 2) * .12; const P = G.player; if (!got && P && Math.abs(P.x - 35) < .9 && Math.abs(P.y - (SKY.high + 1)) < .6) { got = 1; big.visible = false; A().Sound && A().Sound.chime(); A().burst && A().burst(35, SKY.high + 2, -1.9, ['#fff3a6', '#ffffff', '#ffd1ec'], 30, 3.5); A().toast && A().toast('🌟 You reached the highest cloud!'); A().discover && A().discover('skytop'); setTimeout(() => { got = 0; big.visible = true; }, 15000); } }); }
+  G.skyUpdate = (dt, t) => { for (const u of ups) u(dt, t); };
+
   // ---------- star bits in the sky ----------
   for (let i = 0; i < 10; i++) G.bitSpots.push([47 + i * 2, SKY.y + 1.1]);
   for (let i = 0; i < 4; i++) G.bitSpots.push([50.3 + i * 1.1, SKY.high + 1.1]);

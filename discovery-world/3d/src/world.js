@@ -54,7 +54,7 @@ export function buildWorld(G) {
     g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 4; for (const v of [0, 128, 256]) { g.beginPath(); g.moveTo(v, 0); g.lineTo(v, 256); g.moveTo(0, v); g.lineTo(256, v); g.stroke(); }
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
   };
-  const ZONES = [[-670, -538, 'sand'], [-538, -406, 'lawn'], [-406, -274, 'snow'], [-274, -150, 'lawn'], [-150, -20, 'sand'], [-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 356, '#c4e2ff', '#a9d3ff'], [356, 394, '#d9f2b4', '#c5e89c'], [394, 432, '#ffdcef', '#ffc9e4'], [432, 548, 'lawn'], [548, 668, '#ffd6a5', '#ffc38a'], [668, 788, 'lawn'], [788, 906, '#c8f5e6', '#a8ecd4']];
+  const ZONES = [[-704, -670, 'sand'], [-670, -538, 'sand'], [-538, -406, 'lawn'], [-406, -274, 'snow'], [-274, -150, 'lawn'], [-150, -20, 'sand'], [-20, 51, '#ffb3dc', '#ff8fca'], [51, 92, '#ffe39a', '#ffcf6a'], [92, 135, '#cdb8ff', '#b39cff'], [135, 312, '#9fe8b4', '#7fdc9a'], [312, 356, '#c4e2ff', '#a9d3ff'], [356, 394, '#d9f2b4', '#c5e89c'], [394, 432, '#ffdcef', '#ffc9e4'], [432, 548, 'lawn'], [548, 668, '#ffd6a5', '#ffc38a'], [668, 788, 'lawn'], [788, 906, '#c8f5e6', '#a8ecd4'], [906, 944, '#c8f5e6', '#a8ecd4']]; // (build 43: room at both ends for the stairs to the sky)
   // floor holes: the deep part of the ball pit (a shaft down to the secret underground) and the glass lift
   const HOLES = [[10.8, 14.4, -1.2, 1.2], [52.6, 54.2, -3.2, -1.6]];
   // a normal map so each tile has softly rounded edges and grout lines that catch the light (made once, shared)
@@ -96,7 +96,7 @@ export function buildWorld(G) {
     floorPiece(a, hx0, -12, 6, c1, c2); floorPiece(hx1, b, -12, 6, c1, c2); floorPiece(hx0, hx1, -12, hz0, c1, c2); floorPiece(hx0, hx1, hz1, 6, c1, c2);
   }
   // a cobblestone path through the park, the meadow and the valley (where you walk)
-  for (const [x0, x1] of [[LAWN_FROM, LAWN_TO], [432, 906], [-670, -20]]) { // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
+  for (const [x0, x1] of [[LAWN_FROM, LAWN_TO], [432, 944], [-704, -20]]) { // build 19: a real cobblestone texture set (colour, normal, roughness) from tools/textures/make_cobble.py
     const C = USE_ASSETS ? cobbleSet() : cobbleTextures(), cl = t => { if (!t) return null; const k = t.clone(); k.needsUpdate = true; return k; }, map = cl(C.map), nm = cl(C.normal), rm = cl(C.rough); for (const t of [map, nm, rm]) if (t) t.repeat.set((x1 - x0) / 3, 1); // (each path piece has its own tiling)
     const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), macroVariation(new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.75, .75), roughness: rm ? 1 : .82, roughnessMap: rm }), { scale: .13, amount: .08 }));
     path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);

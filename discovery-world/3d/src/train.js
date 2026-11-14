@@ -91,9 +91,9 @@ export function initTrain(G, api) {
     // a picture sign with a bell at both ends of the platform (so one is always on screen)
     st.bells = [];
     for (const sx of [-2.4, 2.4]) {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .6, 10), toy('#ffffff')); post.position.set(sx, .3, TRAIN.z + .9); post.castShadow = true; g.add(post);
-      const sign = new THREE.Mesh(new THREE.CircleGeometry(.32, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
-      sign.position.set(sx, .82, TRAIN.z + .95); /* low, so it never hides your creature */ g.add(sign);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.04, .06, .4, 10), toy('#ffffff')); post.position.set(sx, .2, TRAIN.z + .9); // (build 43: smaller and lower, so it never stands in front of the view) post.castShadow = true; g.add(post);
+      const sign = new THREE.Mesh(new THREE.CircleGeometry(.25, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
+      sign.position.set(sx, .6, TRAIN.z + .95); /* low, so it never hides your creature */ g.add(sign);
       const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(sx + .42, .55, TRAIN.z + .95); bell.rotation.x = Math.PI; g.add(bell);
       st.bells.push(bell);
     }
