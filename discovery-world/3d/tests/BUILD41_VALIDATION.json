@@ -1,0 +1,50 @@
+{
+  "build": 41,
+  "environment": "desktop Chromium software rendering; NOT physical iPhone",
+  "fullSweep": {
+    "passed": 158,
+    "total": 159,
+    "failures": [
+      {
+        "name": "walk off the top onto the upstairs floor",
+        "ok": false,
+        "detail": "y=4.365938966985433"
+      }
+    ],
+    "errors": []
+  },
+  "resolution": {
+    "reason": "fixed1400ms synthetic hold released before top; original criterion preserved under bounded condition-based hold",
+    "targetedStairs": {
+      "partway": 0.7207918105872179,
+      "upstairs": {
+        "stair": null,
+        "y": 4.4,
+        "grounded": true
+      },
+      "downstairs": {
+        "stair": null,
+        "y": 0,
+        "grounded": true
+      },
+      "passed": true
+    },
+    "all11ViewportLayoutsPassed": true,
+    "compiledJavaScriptUnchangedAfterHudCssFix": true
+  },
+  "nurseryBrowser": "passed",
+  "nativeLearningActivities": 41,
+  "calmMotion": "passed",
+  "adventureSuites": "both passed",
+  "stateAudioRenderUnitCases": 24,
+  "modelSymbols": 337,
+  "semanticCaseDistinctions": 58,
+  "graphicsDecisionCodeUnchangedFromMain": true,
+  "randomCapDiagnostic": {
+    "A": 0,
+    "B": 5,
+    "C": 0,
+    "note": "C randomized outcome varies0/3; deterministic fixture follow-up documented"
+  },
+  "performance": "PERFORMANCE_BUILD41.json"
+}

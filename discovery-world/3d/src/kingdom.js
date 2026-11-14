@@ -334,7 +334,7 @@ export function initKingdom(G, api) {
   plat({ a: CI.ox + 17.5, b: CI.ox + 21.5, y: .3, z: -3.3, layer: 'castle', step: true });
   plat({ a: CI.ox + 18, b: CI.ox + 21, y: .6, z: -3.3, layer: 'castle', step: true });
   plat({ a: CI.ox + 18.9, b: CI.ox + 20.1, y: .95, z: -3.3, layer: 'castle' });
-  const sitThrone = () => { const P = api.player; if (P.layer !== 'castle' || P.ride) return; P.x = CI.ox + 19.5; P.y = 1.4; P.vx = 0; P.vy = 0; P.grounded = false; Sound.chime(); [0, 4, 7, 12].forEach((n, i) => Sound.tone(NOTES[n % 8] * (n > 7 ? 2 : 1), .3, 'triangle', .04, 1, i * .15)); burst(CI.ox + 19.5, 3, -3, ['#ffd23f', '#fff3a6', '#ff8fc8', '#fff'], 26, 3); discover('throne', 'You sit on the royal throne!'); };
+  const sitThrone = () => { const P = api.player; if (P.layer !== 'castle' || P.ride) return; P.x = CI.ox + 19.5; P.y = 1.4; P.vx = 0; P.vy = 0; P.grounded = false; Sound.chime(); Sound.withMusic(() => [0, 4, 7, 12].forEach((n, i) => Sound.tone(NOTES[n % 8] * (n > 7 ? 2 : 1), .3, 'triangle', .04, 1, i * .15))); burst(CI.ox + 19.5, 3, -3, ['#ffd23f', '#fff3a6', '#ff8fc8', '#fff'], 26, 3); discover('throne', 'You sit on the royal throne!'); };
   icTap(throne, sitThrone, 19.5, 'throne', 3.9);
   // the crystal chandelier (tap it and it sparkles and spins)
   const chand = new THREE.Group(); chand.position.set(12, 7.3, -1.6); IC.add(chand);
@@ -344,7 +344,7 @@ export function initKingdom(G, api) {
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; const cr = new THREE.Mesh(new THREE.OctahedronGeometry(.13), new THREE.MeshPhysicalMaterial({ color: '#e6f8ff', roughness: .02, clearcoat: 1, iridescence: 1, emissive: '#bfe8ff', emissiveIntensity: .2 })); cr.position.set(Math.cos(a) * 1.2, -.3, Math.sin(a) * 1.2); cr.scale.y = 1.6; chand.add(cr); chand.userData.crystals.push(cr); }
     for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; chand.add(ball(toy('#fff6b0', { em: '#ffd84a', ei: 1.2 }), .08, Math.cos(a) * 1.2, .2, Math.sin(a) * 1.2)); } }
   let chandSpin = 0;
-  icTap(chand, () => { chandSpin = 2.5; Sound.twinkle && Sound.twinkle(); [7, 9, 11, 12, 14].forEach((n, i) => Sound.bell(NOTES[n % 8] * 2, .03, i * .1)); burst(CI.ox + 12, 6.5, -1.6, ['#ffffff', '#bfe8ff', '#fff3a6'], 26, 3); discover('chandelier', 'The sparkly chandelier!'); }, 12, 'chandelier', 1.2);
+  icTap(chand, () => { chandSpin = 2.5; Sound.twinkle && Sound.twinkle(); Sound.withMusic(() => [7, 9, 11, 12, 14].forEach((n, i) => Sound.bell(NOTES[n % 8] * 2, .03, i * .1))); burst(CI.ox + 12, 6.5, -1.6, ['#ffffff', '#bfe8ff', '#fff3a6'], 26, 3); discover('chandelier', 'The sparkly chandelier!'); }, 12, 'chandelier', 1.2);
   // the royal party cake (tap: the candles light up; tap again: blow them out)
   const cake = new THREE.Group(); cake.position.set(6.5, 0, -2.8); IC.add(cake);
   const flames = [];
@@ -354,7 +354,7 @@ export function initKingdom(G, api) {
     for (let i = 0; i < 3; i++) { const x = (i - 1) * .2; const cnd = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .3, 8), toy(['#3d9bff', '#ffd23f', '#3cc46e'][i])); cnd.position.set(x, 2.47, 0); cake.add(cnd); const fl = new THREE.Mesh(new THREE.SphereGeometry(.06, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffcf4a' })); fl.scale.y = 1.6; fl.position.set(x, 2.7, 0); fl.visible = false; cake.add(fl); flames.push(fl); }
     for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; cake.add(ball(toy(['#ff4f6e', '#ffffff'][i % 2], { r: .3 }), .06, Math.cos(a) * .62, 1.6, Math.sin(a) * .62)); }
     cake.traverse(o => { if (o.isMesh && o.material.type !== 'MeshBasicMaterial') o.castShadow = true; }); }
-  icTap(cake, () => { const lit = !flames[0].visible; flames.forEach(f => { f.visible = lit; }); if (lit) { [0, 0, 1, 0, 3, 2].forEach((n, i) => Sound.tone(NOTES[n] , .25, 'triangle', .045, 1, i * .22)); burst(CI.ox + 6.5, 3, -2.8, ['#ff4f9a', '#ffd23f', '#3d9bff', '#3cc46e', '#fff'], 30, 3.5); } else { Sound.whoosh(); burst(CI.ox + 6.5, 2.8, -2.8, ['#ffffff', '#e9dcff'], 12, 1.5); } discover('cake', 'A royal party cake! Tap to light the candles.'); }, 6.5, 'cake', 3.2);
+  icTap(cake, () => { const lit = !flames[0].visible; flames.forEach(f => { f.visible = lit; }); if (lit) { Sound.withMusic(() => [0, 0, 1, 0, 3, 2].forEach((n, i) => Sound.tone(NOTES[n] , .25, 'triangle', .045, 1, i * .22))); burst(CI.ox + 6.5, 3, -2.8, ['#ff4f9a', '#ffd23f', '#3d9bff', '#3cc46e', '#fff'], 30, 3.5); } else { Sound.whoosh(); burst(CI.ox + 6.5, 2.8, -2.8, ['#ffffff', '#e9dcff'], 12, 1.5); } discover('cake', 'A royal party cake! Tap to light the candles.'); }, 6.5, 'cake', 3.2);
   // a music box with a tiny dancer (tap it: music, and she twirls)
   const mbox = new THREE.Group(); mbox.position.set(13.8, 0, -3.2); IC.add(mbox);
   let dancer, mlid, music = 0;
@@ -366,7 +366,7 @@ export function initKingdom(G, api) {
     dancer.add(ball(toy('#ffd1ec'), .05, 0, .26, 0, 1, 1.4, 1)); dancer.add(ball(toy('#f6d0b4'), .05, 0, .37, 0)); dancer.add(ball(toy('#8a5530'), .035, 0, .42, -.01));
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .14, 6), toy('#f6d0b4')); leg.position.y = .07; dancer.add(leg);
     mbox.traverse(o => { if (o.isMesh) o.castShadow = true; }); }
-  icTap(mbox, () => { music = 4; const tune = [4, 2, 0, 2, 4, 4, 4, 2, 2, 2, 4, 7, 7]; tune.forEach((n, i) => Sound.bell(NOTES[n % 8] * 2, .035, i * .28)); discover('musicbox', 'A music box with a tiny dancer!'); }, 13.8, 'musicbox', 2.4);
+  icTap(mbox, () => { music = 4; const tune = [4, 2, 0, 2, 4, 4, 4, 2, 2, 2, 4, 7, 7]; Sound.withMusic(() => tune.forEach((n, i) => Sound.bell(NOTES[n % 8] * 2, .035, i * .28))); discover('musicbox', 'A music box with a tiny dancer!'); }, 13.8, 'musicbox', 2.4);
   // the royal toy chest (tap: the lid pops open and toys bounce out)
   const chest = new THREE.Group(); chest.position.set(23, 0, -2.6); IC.add(chest);
   let clid, toysOut = [];
@@ -423,7 +423,7 @@ export function initKingdom(G, api) {
     // dance floor: the tile under you glows and plays a note; the princesses dance
     let on = -1;
     if (P.layer === '' && P.y < .2 && P.x > T0 && P.x < T0 + TW * TN && Math.abs(P.z) < 1.5) on = Math.floor((P.x - T0) / TW);
-    if (on >= 0 && on !== lastTile) { const k = on % 8; Sound.bell(NOTES[k] * (on >= 8 ? 2 : 1), .035); tiles.filter(tl => tl.i === on).forEach(tl => { tl.glow = 1; }); discover('dance', 'A dance floor! Every step plays music!'); }
+    if (on >= 0 && on !== lastTile) { const k = on % 8; Sound.withMusic(() => Sound.bell(NOTES[k] * (on >= 8 ? 2 : 1), .035)); tiles.filter(tl => tl.i === on).forEach(tl => { tl.glow = 1; }); discover('dance', 'A dance floor! Every step plays music!'); }
     lastTile = on; danceT = on >= 0 ? 1.2 : Math.max(0, danceT - dt);
     for (const tl of tiles) { tl.glow = Math.max(on === tl.i ? .6 : 0, tl.glow - dt * 1.5); tl.m.material.emissiveIntensity = .05 + tl.glow * 1.1 + (danceT > 0 ? (Math.sin(t * 6 + tl.i + tl.j * 2) * .5 + .5) * .25 : 0); }
     for (const c of [rosie, luna]) { if (danceT > 0 && c.act <= 0) { c.dance = (c.dance || 0) + dt; c.root.rotation.y = c.dance * 3; c.root.position.y = c.y + Math.abs(Math.sin(c.dance * 6)) * .12; } else c.dance = 0; if (c.parts.skirt) c.parts.skirt.scale.set(1 + (danceT > 0 ? .08 : 0), 1, 1 + (danceT > 0 ? .08 : 0)); }

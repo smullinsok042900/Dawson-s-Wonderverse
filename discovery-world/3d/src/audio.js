@@ -1,7 +1,14 @@
 // Tiny synthesiser: every sound is made in code (no sound files, no downloads).
 export const NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.51];
 export const Sound = {
-  on: true, ac: null, noiseBuf: null, unlocked: false,
+  on: true, musicEnabled: true, effectsEnabled: true, _musicChannel: false, ac: null, noiseBuf: null, unlocked: false,
+  // The callback schedules its tones synchronously (including future AudioContext delays).
+  withMusic(schedule) {
+    const previous = this._musicChannel;
+    this._musicChannel = true;
+    try { return schedule(); } finally { this._musicChannel = previous; }
+  },
+  channelEnabled() { return this.on && (this._musicChannel ? this.musicEnabled : this.effectsEnabled); },
   ensure() {
     if (!this.on || !this.unlocked) return null;
     try {
@@ -16,6 +23,7 @@ export const Sound = {
     } catch (e) { return null; }
   },
   tone(freq = 560, dur = .1, type = 'sine', vol = .06, slide = .67, delay = 0) {
+    if (!this.channelEnabled()) return;
     const ac = this.ensure(); if (!ac) return;
     try {
       const t0 = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
@@ -27,6 +35,7 @@ export const Sound = {
     } catch (e) { }
   },
   noise(dur = .3, f1 = 600, f2 = 2400, vol = .05, delay = 0) {
+    if (!this.channelEnabled()) return;
     const ac = this.ensure(); if (!ac) return;
     try {
       const t0 = ac.currentTime + delay, s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();

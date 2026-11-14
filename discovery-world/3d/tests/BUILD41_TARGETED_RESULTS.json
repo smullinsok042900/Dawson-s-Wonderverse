@@ -1,0 +1,119 @@
+{
+  "environment": "desktop Chromium touch viewport resizing; NOT physical devices or separate device identities",
+  "stairs": {
+    "partway": 0.7207918105872179,
+    "upstairs": {
+      "stair": null,
+      "y": 4.4,
+      "grounded": true
+    },
+    "downstairs": {
+      "stair": null,
+      "y": 0,
+      "grounded": true
+    },
+    "passed": true
+  },
+  "layouts": [
+    {
+      "name": "small iPhone",
+      "width": 568,
+      "height": 320,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "typical iPhone",
+      "width": 844,
+      "height": 390,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "large iPhone",
+      "width": 932,
+      "height": 430,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "iPad",
+      "width": 1024,
+      "height": 768,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "iPad Pro",
+      "width": 1194,
+      "height": 834,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "Pixel",
+      "width": 851,
+      "height": 393,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "Galaxy phone",
+      "width": 740,
+      "height": 360,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "Galaxy tablet",
+      "width": 1280,
+      "height": 800,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "small Android",
+      "width": 640,
+      "height": 360,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "SE 2022",
+      "width": 667,
+      "height": 375,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    },
+    {
+      "name": "extra wide",
+      "width": 960,
+      "height": 412,
+      "problems": [],
+      "buttons": 17,
+      "canvasFits": true,
+      "aspectFits": true
+    }
+  ],
+  "errors": []
+}

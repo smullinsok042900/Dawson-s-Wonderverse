@@ -37,6 +37,8 @@ export const SPECIES = {
 
 const TAU = Math.PI * 2, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const angDiff = (a, b) => { let d = (b - a) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
+const yawOf = (a, dx, dz) => a.sp.fwd === 'x' ? Math.atan2(-dz, dx) : Math.atan2(dx, dz);
+const setLeg = (B, name, angle) => { if (B[name]) B[name].rotation.z = angle; };
 
 export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles = [] }) {
   const agents = [];
@@ -124,12 +126,11 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
 
     // turning: face where I'm going; otherwise the player (if near) or what I'm looking at; never snap
     let wantYaw = a.yaw;
-    const yawOf = (dx, dz) => a.sp.fwd === 'x' ? Math.atan2(-dz, dx) : Math.atan2(dx, dz);
     if (Math.abs(a.vx) > .3) a.lastDir = Math.sign(a.vx);
-    if (v > .25) wantYaw = yawOf(a.vx, a.vz);
-    else if (a.tapped > 0 || a.state === 'curious' || (a.follower && dPlayer < 6) || dPlayer < 3.2) wantYaw = yawOf(dxP, dzP + 2.5); // toward the player, a little toward the camera too
-    else if (a.state === 'look') wantYaw = yawOf(a.lookX - a.x, a.lookZ - a.z);
-    else wantYaw = yawOf(a.lastDir * .9, 1); // resting: a three-quarter view towards the camera
+    if (v > .25) wantYaw = yawOf(a, a.vx, a.vz);
+    else if (a.tapped > 0 || a.state === 'curious' || (a.follower && dPlayer < 6) || dPlayer < 3.2) wantYaw = yawOf(a, dxP, dzP + 2.5); // toward the player, a little toward the camera too
+    else if (a.state === 'look') wantYaw = yawOf(a, a.lookX - a.x, a.lookZ - a.z);
+    else wantYaw = yawOf(a, a.lastDir * .9, 1); // resting: a three-quarter view towards the camera
     if (a.spin > 0) { a.spin -= dt; a.yaw += dt * 9; } else if (a.state !== 'sleep' && !a.noTurn) a.yaw += clamp(angDiff(a.yaw, wantYaw), -a.sp.turn * dt, a.sp.turn * dt);
 
     // the gait: phase advances with distance actually travelled (so feet don't slide)
@@ -165,9 +166,8 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
     const B = a.B; if (!B) return;
     const amp = Math.min(1, v / Math.max(.5, a.sp.v)) * (a.sp.legs === 'quad' ? .55 : .6), s = Math.sin(TAU * a.phase);
     if (a.sp.legs === 'quad') {
-      const set = (n, ang) => { if (B[n]) B[n].rotation.z = ang; };
-      if (g === 'skip') { set('legFL', s * amp); set('legFR', s * amp); set('legBL', -s * amp); set('legBR', -s * amp); }
-      else { set('legFL', s * amp); set('legBR', s * amp); set('legFR', -s * amp); set('legBL', -s * amp); }
+      if (g === 'skip') { setLeg(B, 'legFL', s * amp); setLeg(B, 'legFR', s * amp); setLeg(B, 'legBL', -s * amp); setLeg(B, 'legBR', -s * amp); }
+      else { setLeg(B, 'legFL', s * amp); setLeg(B, 'legBR', s * amp); setLeg(B, 'legFR', -s * amp); setLeg(B, 'legBL', -s * amp); }
     } else if (a.sp.legs === 'biped') {
       const hopFold = (g === 'hop') ? -Math.sin(Math.PI * (a.phase % 1)) * .5 * Math.min(1, v) : 0;
       if (B.legL) B.legL.rotation.x = g === 'hop' ? hopFold : s * amp - a.sit * .9;
@@ -178,7 +178,7 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
     let hy = 0;
     if (a.state === 'look' || a.state === 'curious' || a.tapped > 0 || dPlayer < 4 || a.follower) {
       const lx = a.state === 'look' ? a.lookX : P.x, lz = a.state === 'look' ? a.lookZ : (P.z ?? 0) + 2;
-      hy = clamp(angDiff(a.yaw, yawOf(lx - a.x, lz - a.z)), -.7, .7);
+      hy = clamp(angDiff(a.yaw, yawOf(a, lx - a.x, lz - a.z)), -.7, .7);
     } else hy = Math.sin(t * .5 + a.seed) * .25;
     a.headYaw += (hy - a.headYaw) * Math.min(1, dt * 4);
     const head = B.head || B.neck;
@@ -199,12 +199,12 @@ export function makeLife({ camera, emote = () => {}, chirp = () => {}, obstacles
     frameNo++;
     const cx = camera.position.x, cz = camera.position.z;
     for (const a of agents) {
-      const d = Math.hypot(a.x - cx, a.z - cz);
+      const dx = a.x - cx, dz = a.z - cz, d2 = dx * dx + dz * dz;
       // far away: no work at all, and (build 25) off the scene too, so its skeleton isn't updated every frame
-      if (!a.follower && d > 60) { if (a.root.parent && !a.detached) { a.detached = a.root.parent; a.detached.remove(a.root); } continue; }
+      if (!a.follower && d2 > 3600) { if (a.root.parent && !a.detached) { a.detached = a.root.parent; a.detached.remove(a.root); } continue; }
       if (a.detached) { a.detached.add(a.root); a.detached = null; }
-      if (!a.follower && d > 48) continue;
-      if (!a.follower && d > 22) { a.accum += dt; if ((frameNo + (a.seed | 0)) % 3) continue; step(a, a.accum, t, P, ctx); a.accum = 0; continue; } // mid-distance: every 3rd frame
+      if (!a.follower && d2 > 2304) continue;
+      if (!a.follower && d2 > 484) { a.accum += dt; if ((frameNo + (a.seed | 0)) % 3) continue; step(a, a.accum, t, P, ctx); a.accum = 0; continue; } // mid-distance: every 3rd frame
       step(a, dt, t, P, ctx);
     }
   }

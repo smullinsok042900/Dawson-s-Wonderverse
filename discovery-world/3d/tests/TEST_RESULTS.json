@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-13T21:19:17.431Z",
+  "date": "2026-11-14T03:12:59.185Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 159,
+  "passed": 158,
   "total": 159,
   "results": [
     {
@@ -27,7 +27,7 @@
     {
       "name": "slide a finger right to walk right",
       "ok": true,
-      "detail": "x 1.2 → 5.3"
+      "detail": "x 1.2 → 6.8"
     },
     {
       "name": "let go and the creature stops",
@@ -42,7 +42,7 @@
     {
       "name": "JUMP jumps",
       "ok": true,
-      "detail": "y=1.55"
+      "detail": "y=0.68"
     },
     {
       "name": "double jump (tap JUMP again in the air)",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 1.0→7.7, y 0.43"
+      "detail": "x 2.5→6.6, y 1.55"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.60"
+      "detail": "rose to y=1.73"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -87,12 +87,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 61% height"
+      "detail": "body squashed to 70% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 290,224 lands on: game [[\"Mesh\",\"6.37\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"Mesh\",\"6.92\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\",\"creature\",\"Group@8.7\"],[\"Mesh\",\"8.42\",\"creature\",\"0.0\",\"creature\",\"Group@8.7\"]] P=8.70,0.00,0.00"
+      "detail": "tap at 290,224 lands on: game [[\"SkinnedMesh\",\"7.63\",\"creature\",\"0.0\",\"creature\",\"Group@7.4\"]] P=7.35,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -112,22 +112,22 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=3.46"
+      "detail": "highest y=2.33"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=41.9 y=3.60"
+      "detail": "x=42.9 y=2.40"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
       "ok": true,
-      "detail": "got to x=16.6 (ok)"
+      "detail": "got to x=16.8 (ok)"
     },
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=10.7"
+      "detail": "x=10.6"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -142,7 +142,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -6.00 → -4.45"
+      "detail": "y -4.96 → -3.41"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -157,12 +157,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-2.29"
+      "detail": "y=-1.29"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=-0.0 y=0.00"
+      "detail": "x=9.1 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -177,7 +177,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.0"
+      "detail": "x=37.4"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -217,7 +217,7 @@
     {
       "name": "your pet follows you",
       "ok": true,
-      "detail": "pet is 2.7 away"
+      "detail": "pet is 2.8 away"
     },
     {
       "name": "tap your pet: it waves and stays put",
@@ -272,7 +272,7 @@
     {
       "name": "bouncy cloud puffs bounce you up to the high clouds",
       "ok": true,
-      "detail": "highest y=13.0"
+      "detail": "highest y=13.1"
     },
     {
       "name": "tap the sky whale: it sings",
@@ -322,7 +322,7 @@
     {
       "name": "tap the unicorn: it talks in a picture speech bubble",
       "ok": true,
-      "detail": "2 bubbles"
+      "detail": "3 bubbles"
     },
     {
       "name": "the hedgehog plays a song",
@@ -352,7 +352,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.051 → 1.023, z=-3.3"
+      "detail": "u 0.052 → 1.053, z=-3.4"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -537,7 +537,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.22"
+      "detail": "y=4.67"
     },
     {
       "name": "tap the carousel to ride",
@@ -557,12 +557,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=1.61"
+      "detail": "y=1.66"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "45 → 50"
+      "detail": "48 → 51"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -597,17 +597,17 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.4774075628564692"
+      "detail": "k=0.4212419672262964"
     },
     {
       "name": "walk off the top onto the upstairs floor",
-      "ok": true,
-      "detail": "y=4.4"
+      "ok": false,
+      "detail": "y=4.365938966985433"
     },
     {
       "name": "the ceiling stops you upstairs (no flying through the roof)",
       "ok": true,
-      "detail": "y=4.40"
+      "detail": "y=4.55"
     },
     {
       "name": "stair bubble at the top of the stairs",
@@ -667,7 +667,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":50,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":51,\"fl\":3,\"p\":true}"
     },
     {
       "name": "🗺️ opens the picture map",
@@ -787,7 +787,7 @@
     {
       "name": "a broken save is ignored safely (fresh start, no crash)",
       "ok": true,
-      "detail": "button=\"LET'S PLAY ▶\" save={\"v\":1,\"creature\":\"p"
+      "detail": "button=\"LET'S PLAY ▶\" save={broken"
     },
     {
       "name": "portrait phone shows the turn-sideways tip",
