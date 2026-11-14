@@ -35,7 +35,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - **More secret tunnels** (Woods ↔ Toy Town is done), and a picture "tunnel map" once one is found.
 
 ## 3. Creatures and pets
-- **A pal in the Adventure Trail;** pals react to each other (wave, play) when two follow you.
+- **Pals react to each other** (wave, play) when two follow you. (The Adventure Trail pal, Clover the goat, was added in build 40.)
 - **Idle variety:** sitting, sniffing, looking at you.
 - **Followers step aside when you turn round.**
 
@@ -45,7 +45,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - Nicer station platforms.
 
 ## Known issues
-- **Two real 309–339 ms freezes** in the iPhone session (build 36), place unknown. The report should say where: add the player's x and layer to each freeze in `perf.js`.
+- **Two real 309–339 ms freezes** in the iPhone session (build 36), place unknown. From build 40 the report names the place: ask for a new report and fix what it shows.
 - **One 835 ms long task** on a train trip (desktop, x 202) that did not reproduce.
 - **The test browser is very slow** (software 3D), so a few smoke checks are timing-sensitive. Run the full test alone,
   and tap moving characters where they are (use `tapChar` or re-aim), never at fixed spots.

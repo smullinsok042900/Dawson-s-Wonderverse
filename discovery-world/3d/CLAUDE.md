@@ -22,6 +22,16 @@ This folder is separate from "Dawson's Wonderverse" (the rest of the repository)
   - Ship each verified milestone as a PR to `main`; the user merges.
   - If the branch's PR was merged, restart the branch from `origin/main` first.
 
+## Who develops (decided by the user, 2026-11-14)
+- **The scheduled Claude sessions are the sole developer.** Builds 40 and 41 (#46 connected adventures, #47 pet nursery
+  and creative studio) were made by another tool (ChatGPT). They are merged into `main` and integrated into build 42, and
+  that tool has stopped making code changes.
+- **Still, before every build, `git fetch origin main` and merge it.** If anything new appeared there, keep it, resolve
+  conflicts without removing it, and run its own tests too: `node --test tests/*.test.mjs`,
+  `node tests/unit/learning-contract.cjs` and `node tests/world-regressions.cjs`.
+- **Every emoji used in `src/expansion.js` or `src/learn.js` needs a 3D toy model** (`src/toy-models.js`;
+  `tests/toy-models.test.mjs` checks it). Reuse an emoji that already has one, or add a model.
+
 ## Architecture (`src/`, bundled by `build.mjs` with esbuild into ONE offline `index.html`, about 8.7 MB; Three.js r187)
 | File | What it holds |
 |---|---|

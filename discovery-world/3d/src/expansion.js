@@ -142,8 +142,8 @@ export function initExpansion(G, api) {
 
   // ---------- (build 30) PALS: creatures you befriend and keep (a crab at the seaside, a fox cub in the woods) ----------
   X.pals = X.pals || {};
-  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' }, seal: { home: [-584, .36, -2.3], hello: '🦭 Splash the seal is your friend now! Ar ar!' } };
-  const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜', pig: '🐷', seal: '🦭' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi', pig: 'Truffle', seal: 'Splash' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza', pig: 'on the farm', seal: 'at the ocean pier' };
+  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' }, seal: { home: [-584, .36, -2.3], hello: '🦭 Splash the seal is your friend now! Ar ar!' }, goat: { home: [494, 0, -2.4], hello: '🐐 Clover the goat is your friend now! Maa!' } };
+  const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜', pig: '🐷', seal: '🦭', goat: '🐐' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi', pig: 'Truffle', seal: 'Splash', goat: 'Clover' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza', pig: 'on the farm', seal: 'at the ocean pier', goat: 'on the Adventure Trail' };
   function makePalMesh(kind) {
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
     if (kind === 'crab') { const sh = new THREE.Mesh(new THREE.SphereGeometry(.38, 18, 12), mat('#ff5a3c', { r: .5 })); sh.scale.set(1.25, .62, 1); sh.position.y = .32; sh.castShadow = true; body.add(sh);
@@ -166,6 +166,13 @@ export function initExpansion(G, api) {
       const beak = new THREE.Mesh(new THREE.ConeGeometry(.07, .2, 10), mat('#ff9a1f')); beak.rotation.z = -Math.PI / 2; beak.position.set(.36, .74, 0); body.add(beak);
       for (const s2 of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), mat('#ffffff')); e.position.set(.27, .82, s2 * .11); body.add(e); const pp = new THREE.Mesh(new THREE.SphereGeometry(.028, 8, 6), mat('#2b1d3d')); pp.position.set(.31, .82, s2 * .11); body.add(pp);
         const ft = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), mat('#ff9a1f')); ft.scale.set(1.4, .4, .9); ft.position.set(.1, .04, s2 * .13); body.add(ft); const fl = new THREE.Mesh(new THREE.SphereGeometry(.12, 10, 8), mat('#2b2d42')); fl.scale.set(.5, 1.4, .3); fl.position.set(0, .5, s2 * .3); body.add(fl); g.userData['fl' + s2] = fl; } }
+    else if (kind === 'goat') { const wt = '#f4efe6'; const b = new THREE.Mesh(new THREE.SphereGeometry(.32, 18, 12), mat(wt, { r: .85 })); b.scale.set(1.35, .95, .9); b.position.y = .55; b.castShadow = true; body.add(b); // (build 40) Clover the mountain goat
+      const h = new THREE.Mesh(new THREE.SphereGeometry(.2, 16, 12), mat(wt, { r: .85 })); h.scale.set(1.2, 1, .9); h.position.set(.44, .82, 0); body.add(h); const sn = new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 8), mat('#e8c9b8', { r: .7 })); sn.position.set(.62, .76, 0); body.add(sn);
+      const beard = new THREE.Mesh(new THREE.ConeGeometry(.05, .18, 8), mat('#d9d2c4')); beard.rotation.x = Math.PI; beard.position.set(.56, .6, 0); body.add(beard);
+      for (const s2 of [-1, 1]) { const horn = new THREE.Mesh(new THREE.ConeGeometry(.04, .2, 8), mat('#a8916f')); horn.position.set(.4, 1.02, s2 * .08); horn.rotation.z = .5; body.add(horn); const ear = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), mat('#e8dccb')); ear.scale.set(1.6, .5, .8); ear.position.set(.34, .9, s2 * .19); body.add(ear);
+        const e = new THREE.Mesh(new THREE.SphereGeometry(.035, 8, 6), mat('#2b1d3d')); e.position.set(.58, .88, s2 * .09); body.add(e); }
+      for (const [x, z] of [[.26, .14], [.26, -.14], [-.26, .14], [-.26, -.14]]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.045, .04, .4, 8), mat(wt)); leg.position.set(x, .2, z); body.add(leg); const hoof = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .06, 8), mat('#5a4a3a')); hoof.position.set(x, .02, z); body.add(hoof); }
+      const tail = new THREE.Mesh(new THREE.ConeGeometry(.05, .14, 8), mat(wt)); tail.rotation.z = 1.9; tail.position.set(-.44, .7, 0); body.add(tail); g.userData.tail = tail; }
     else if (kind === 'seal') { const gy = '#8f9fb3'; const b = new THREE.Mesh(new THREE.SphereGeometry(.32, 18, 12), mat(gy, { r: .35, cc: .6 })); b.scale.set(1.6, .8, .9); b.position.y = .28; b.castShadow = true; body.add(b); // (build 38) Splash the seal
       const h = new THREE.Mesh(new THREE.SphereGeometry(.24, 16, 12), mat(gy, { r: .35, cc: .6 })); h.position.set(.42, .58, 0); body.add(h); const sn = new THREE.Mesh(new THREE.SphereGeometry(.1, 12, 8), mat('#c9d3df', { r: .5 })); sn.position.set(.62, .52, 0); body.add(sn);
       const no = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), mat('#2b1d3d')); no.position.set(.71, .56, 0); body.add(no);
@@ -201,8 +208,16 @@ export function initExpansion(G, api) {
       const dx = tx - m.position.x; m.position.x += dx * Math.min(1, dt * 3); m.position.y += (ty - m.position.y) * Math.min(1, dt * 6); m.position.z += (1.5 + slot * .45 - m.position.z) * Math.min(1, dt * 3);
       const moving = Math.abs(dx) > .3; m.userData.body.position.y = moving ? Math.abs(Math.sin(t * 12 + slot)) * .12 : 0;
       if (k === 'crab') m.rotation.y = 0; else m.rotation.y = dx >= 0 ? 0 : Math.PI; if (k === 'penguin') { m.userData.body.rotation.z = moving ? Math.sin(t * 10) * .12 : 0; } if (k === 'parrot') { m.userData.body.position.y = .7 + Math.sin(t * 5) * .15; if (m.userData.wing1) { m.userData.wing1.rotation.x = Math.sin(t * 18) * .6; m.userData['wing-1'].rotation.x = -Math.sin(t * 18) * .6; } } if (m.userData.curl) m.userData.curl.rotation.y = t * 6; if (k === 'robot' && m.userData.bulb) m.userData.bulb.material.emissiveIntensity = .5 + Math.abs(Math.sin(t * 4)) * .8;
+      if (f.play > 0) { f.play -= dt; m.userData.body.position.y = Math.abs(Math.sin(t * 11)) * .3; m.rotation.y = f.face; } // (build 41: playing with a friend)
       if (m.userData.tail) m.userData.tail.rotation.y = Math.sin(t * 6) * .4; m.visible = P.layer === '' || P.layer === 'in'; }
+    // (build 41) PALS PLAY TOGETHER: when two or more friends follow you and you stand still for a moment, now and then two
+    // friends next to each other turn to face each other and hop about, with a little burst of hearts and a giggle.
+    const ks = Object.keys(followers); still = P.layer === '' && Math.abs(P.vx) < .3 && !P.ride ? still + dt : 0;
+    if (ks.length >= 2 && still > 2.5 && (playAt -= dt) <= 0) { playAt = 9 + Math.random() * 6; const i = rnd(ks.length - 1), a = followers[ks[i]], b = followers[ks[i + 1]];
+      const right = a.m.position.x < b.m.position.x; a.face = right ? 0 : Math.PI; b.face = right ? Math.PI : 0; a.play = b.play = 1.6;
+      api.burst((a.m.position.x + b.m.position.x) / 2, 1.1, (a.m.position.z + b.m.position.z) / 2, ['#ff8fc8', '#ffd1ec', '#fff'], 10, 1.6); Sound.giggle(); disc('palsplay', `💖 ${PAL_EMOJI[ks[i]]} and ${PAL_EMOJI[ks[i + 1]]} are playing together!`); }
   }
+  let still = 0, playAt = 4;
 
   // ---------- gems (8 hidden around the new neighbourhoods; walk into one to collect it) ----------
   const gemObjs = [];
@@ -244,6 +259,8 @@ export function initExpansion(G, api) {
       for (const k of crystals) c.tap(k.cr, () => { k.on = !k.on; k.m.emissiveIntensity = k.on ? 1.6 : .05; Sound.withMusic(() => Sound.tone(NOTE[crystals.indexOf(k) + 2] * 2, .5, 'sine', .05, 1)); c.burst(k.x, 1.5, -2.2, [k.m.color.getStyle(), '#fff'], 8, 2);
         if (crystals.every(q => q.on)) { c.disc('cave', '✨ The whole cave is glowing!'); c.say('✨ The whole cave is glowing! You lit every crystal!'); } else c.say(k.on ? '💎 Glow!' : '💤 Sleepy crystal.'); }, k.x);
       return (dt, t) => { for (const k of crystals) k.cr.rotation.y = t * .6 + k.x; if (P.layer === '' && P.x > 533 && P.x < 545) c.disc('cavewalk', '🪨 A secret crystal cave! Tap the crystals!'); }; },
+    // (build 40) Clover the mountain goat waits on the trail (the only neighbourhood without a pal)
+    () => { const pal = palAtHome(c, 'goat'); return (dt, t) => { pal && pal(dt, t); }; },
   ];
 
   // =================== 🧸 TOY TOWN ===================
@@ -369,7 +386,7 @@ export function initExpansion(G, api) {
   function palAtHome(c, kind) {
     if (followers[kind]) return null; const m = makePalMesh(kind), [x, y, z] = PALS[kind].home; m.position.set(x, y, z); m.userData.pal = kind; c.add(m); let taps = 0;
     c.tap(m, () => { if (followers[kind]) return; taps++; boingIt(m); Sound.giggle(); if (X.pals[kind]) { c.remove(m); setFollow(kind, true); say(`${PAL_EMOJI[kind]} ${PAL_NAME[kind]} is coming with you!`); return; }
-      if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak', robot: 'Beep boop', frog: 'Ribbit', parrot: 'Squawk', pig: 'Oink oink', seal: 'Ar ar' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
+      if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak', robot: 'Beep boop', frog: 'Ribbit', parrot: 'Squawk', pig: 'Oink oink', seal: 'Ar ar', goat: 'Maa' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
       else { c.remove(m); setFollow(kind, true); disc('pal_' + kind); say(PALS[kind].hello); c.burst(x, 1.5, z, ['#ff8fc8', '#fff', '#ffd23f'], 24, 3); Sound.chime(); } }, x);
     return (dt, t) => { if (!m.parent) return; m.position.x = x + Math.sin(t * .9) * (kind === 'crab' ? 1.5 : .6); m.userData.body.position.y = Math.abs(Math.sin(t * 5)) * .05; if (kind === 'fox') m.rotation.y = Math.cos(t * .9) > 0 ? 0 : Math.PI; };
   }
