@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { makeToyModel } from './toy-models.js';
 
-export const EXP = { x0: 424, x1: 902, xMin: -662 }; // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
+export const EXP = { x0: 424, x1: 940, xMin: -698 }; // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
   { id: 'pier', icon: '🌊', name: 'Ocean Pier', x0: -668, x1: -536, home: -544, enter: -540, arrow: '⬅️' }, // (build 38)
   { id: 'farm', icon: '🚜', name: 'Happy Farm', x0: -536, x1: -404, home: -412, enter: -408, arrow: '⬅️' }, // (build 35)
@@ -70,16 +70,8 @@ export function initExpansion(G, api) {
   // the sea behind the beach (one big shared plane; it gently bobs)
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(140, 60, 1, 1), mat('#3fa9e8', { r: .12, cc: .7 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-86, .02, -38); sea.receiveShadow = true; scene.add(sea); G.sea = sea;
   const foam = new THREE.Mesh(new THREE.PlaneGeometry(140, .9, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
-  // signposts with each neighbourhood's picture (and an arrow to the next one)
-  for (const d of DISTRICTS) {
-    const g = new THREE.Group(); g.position.set(d.enter ?? d.x0 + 4, 0, -2.6); scene.add(g);
-    const post = new THREE.Mesh(W.rbox(.22, 3.2, .22, .08), mat('#9a6a3a', { r: .8, cc: 0 })); post.position.y = 1.6; post.castShadow = true; g.add(post);
-    const board = new THREE.Mesh(W.rbox(1.9, 1.5, .18, .2), mat('#ffffff', { r: .5, cc: .2 })); board.position.y = 3.1; board.castShadow = true; g.add(board);
-    const pic = pictureSign(d.icon, 1.25); pic.position.set(0, 3.1, .2); g.add(pic);
-    const ar = pictureSign(d.arrow || '➡️', .6); ar.position.set(0, 2.05, .2); g.add(ar);
-  }
-  // the rainbow gate at 422 is now a gateway: a sign with the new places
-  { const s = pictureSign('🌉', 1.1); s.position.set(426, 3.4, -1.5); scene.add(s); }
+  // (build 43: the neighbourhood signposts were removed at the family's request: they overlapped activities, and the picture map
+  //  and the train already show every place)
 
   function removeOwned(object) {
     object.removeFromParent();
@@ -89,6 +81,22 @@ export function initExpansion(G, api) {
       for (const m of [].concat(o.material || [])) if (m && !W.isSharedMat(m) && !toyMaterials.has(m)) { if (m.map) m.map.dispose(); m.dispose(); }
     });
   }
+
+  // ---------- (build 43) RAINBOW CLOUD STAIRS at both ends of the world, up to a gate into the Sky Kingdom ----------
+  // The world used to just stop. Now the path climbs a staircase of rainbow cloud steps (small enough to walk up, 0.4 m
+  // each); at the top a rainbow arch takes you to the Sky Kingdom.
+  const SKYGATE = [];
+  for (const [start, dir] of [[908, 1], [-666, -1]]) {
+    for (let i = 0; i < 24; i++) { const x = start + dir * (i + .5), y = (i + 1) * .4; W.block(x, 0, 0, 1, y, 2.2, RB[i % RB.length], { r: .3, cast: false }); G.platforms.push({ a: x - .5, b: x + .5, y, layer: '', step: true, stepMax: .45, z: 0 }); }
+    const top = start + dir * 24, land = [Math.min(top, top + dir * 8), Math.max(top, top + dir * 8)];
+    W.block((land[0] + land[1]) / 2, 0, 0, 8, 9.6, 2.6, '#ffffff', { r: .5, cast: false }); G.platforms.push({ a: land[0], b: land[1], y: 9.6, layer: '', z: 0 });
+    const gx = top + dir * 5;
+    for (let i = 0; i < 6; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(2.4 - i * .2, .12, 10, 36, Math.PI), mat(RB[i], { em: RB[i], ei: .3 })); arc.position.set(gx, 9.6, 0); arc.rotation.y = Math.PI / 2; scene.add(arc); }
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, .1, 32), mat('#fff3a6', { em: '#ffd76a', ei: .8 })); pad.position.set(gx, 9.65, 0); scene.add(pad);
+    SKYGATE.push({ x: gx, dir });
+    G.interact.push({ x: start + dir * 2, y: 0, layer: '', disc: 'skystairs', run: () => say('🌈 Climb the rainbow stairs up into the sky!'), hintY: 1.4 });
+  }
+  function updateSkyGate() { if (P.layer !== '' || P.ride || P.y < 9) return; for (const g of SKYGATE) if (Math.abs(P.x - g.x) < .8) { disc('skystairs'); api.toSky && api.toSky(); return; } }
 
   // ---------- streaming ----------
   const S = DISTRICTS.map(d => ({ d, state: 'none', g: null, taps: [], inter: [], parts: null, step: 0, live: null, onceDone: false }));
@@ -289,9 +297,21 @@ export function initExpansion(G, api) {
       const balls = []; let swish = 0;
       c.tap(can, () => { const b = new THREE.Mesh(new THREE.SphereGeometry(.28, 16, 12), mat(pick(RB))); b.position.set(616.6, 1.6, -2); b.userData = { t: 0 }; c.add(b); balls.push(b); Sound.boing(); }, 616);
       return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.t += dt; const k = Math.min(1, u.t / 1.1); b.position.set(616.6 + (624.4 - 616.6) * k, 1.6 + Math.sin(k * Math.PI) * 3.4 + (3.6 - 1.6) * k, -2); if (k >= 1) { b.position.y -= (u.t - 1.1) * 6; if (!u.s) { u.s = 1; swish++; Sound.chime(); c.burst(624.4, 3.5, -2, ['#ffd23f', '#fff'], 14, 2.5); c.say(swish % 5 === 0 ? `🏀 Swish! ${swish} baskets!` : '🏀 Swish!'); c.disc('cannon', '🏀 Tap the cannon to shoot a ball into the hoop!'); } if (u.t > 1.6) { c.remove(b); balls.splice(i, 1); } } } }; },
-    // a seesaw (it tips toward you) with a gem above the high end
-    () => { c.cyl(638, 0, -.2, .25, .35, .7, '#ff9a2e'); const plank = new THREE.Mesh(W.rbox(6, .18, 1.2, .08), mat('#ffc21c', { r: .5 })); plank.position.set(638, .8, -.2); plank.castShadow = true; c.add(plank);
-      return dt => { const want = P.layer === '' && Math.abs(P.x - 638) < 3 && P.y < 1.5 ? Math.sign(P.x - 638) * -.28 : 0; plank.rotation.z += (want - plank.rotation.z) * Math.min(1, dt * 3); if (want) c.disc('seesaw', '🎢 A seesaw! It tips when you stand on it.'); }; },
+    // (build 43) A REAL SEESAW: stand on either end and it rocks you up and down (a teddy friend rides the other end).
+    // Press JUMP as your end rises for a super bounce. A gem floats above the high end.
+    () => { c.cyl(638, 0, -.2, .25, .35, .7, '#ff9a2e'); const pivot = new THREE.Group(); pivot.position.set(638, .8, -.2); c.add(pivot);
+      const plank = new THREE.Mesh(W.rbox(6, .18, 1.2, .08), mat('#ffc21c', { r: .5 })); plank.castShadow = true; pivot.add(plank);
+      for (const s2 of [-1, 1]) { const seat = new THREE.Mesh(W.rbox(.7, .12, 1.1, .05), mat('#ff4f9a', { r: .5 })); seat.position.set(s2 * 2.6, .15, 0); pivot.add(seat); const hd = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .7, 8), mat('#ffffff')); hd.position.set(s2 * 2.2, .45, 0); pivot.add(hd); }
+      const teddy = c.toy('🧸', 1, 0, 0, 0); let ph = 0, on = 0, side = 0, rides = 0;
+      const endY = (sd, a) => .8 + .24 + Math.sin(a) * 2.6 * sd; // (height of the seat at side sd: -1 left, 1 right; a positive tilt lifts the right end)
+      return dt => {
+        const near = P.layer === '' && !P.ride && Math.abs(P.x - 638) > .6 && Math.abs(P.x - 638) < 3.2 && Math.abs(P.z + .2) < 1.2;
+        const sd = Math.sign(P.x - 638), a0 = pivot.rotation.z;
+        if (!on && near && P.vy <= 0 && P.y <= endY(sd, a0) + .35 && Math.abs(a0 + sd * .34) < .06) { on = 1; side = sd; rides++; ph = side < 0 ? Math.PI / 2 : -Math.PI / 2; /* (starts from the low end, where you stepped on) */ c.disc('seesaw', '🎢 Up and down on the seesaw! Jump at the top for a big bounce!'); Sound.boing(); }
+        if (on) { if (!near || Math.sign(P.x - 638) !== side || P.vy > .5) { on = 0; if (P.vy > .5 && Math.sin(pivot.rotation.z) * side > .2) { P.vy += 5; Sound.whoosh ? Sound.whoosh() : Sound.boing(); c.say('🚀 Super bounce!'); } }
+          else { ph += dt * 2.6; pivot.rotation.z = Math.sin(ph) * .34; P.y = endY(side, pivot.rotation.z); P.vy = 0; P.grounded = true; P.jumps = 0; if (Math.abs(Math.cos(ph)) > .99 && Math.sin(pivot.rotation.z) * side < 0) Sound.tone(300, .05, 'triangle', .03, 1); } }
+        else { const want = near ? -sd * .34 : 0; pivot.rotation.z += (want - pivot.rotation.z) * Math.min(1, dt * 4); } // (the near end dips down to the ground so you can step on)
+        const tx = 638 - (on ? side : 1) * 2.6 * Math.cos(pivot.rotation.z); teddy.position.set(tx, .8 + .7 + Math.sin(pivot.rotation.z) * 2.6 * -(on ? side : 1), -.2); }; },
     // catch the balloons floating up from the basket
     () => { c.cyl(656, 0, -2.4, .9, .7, .8, '#c87a2a', { r: .8 }); const list = []; const spawn = b => { b.position.set(654.5 + Math.random() * 3, .8, -2.4 + Math.random() * .8); b.rotation.z = 0; b.userData.v = .8 + Math.random() * .6; };
       for (let i = 0; i < 6; i++) { const b = physicalToy('🎈', 1); spawn(b); b.position.y = Math.random() * 8; c.add(b); list.push(b); c.tap(b, () => { if (b.userData.pop) return; b.userData.pop = 1; Sound.pop ? Sound.pop() : Sound.click(); X.balloons++; c.burst(b.position.x, b.position.y, b.position.z, RB, 10, 2.5); c.disc('balloons', '🎈 Pop! Catch the balloons as they float up!'); if (X.balloons % 10 === 0) c.say(`🎈 ${X.balloons} balloons caught!`); setTimeout(() => { b.userData.pop = 0; spawn(b); }, 400); b.position.y = -20; api.saveSoon(); }); }
@@ -667,7 +687,7 @@ export function initExpansion(G, api) {
 
   // ---------- per frame ----------
   function update(dt, t, camX) {
-    stream(camX);
+    stream(camX); updateSkyGate();
     if (camX > EXP.x0 - 30 || camX < -10) updateGems(t); // (build 30: gems on both sides of the world)
     for (const st of S) if (st.state === 'ready' && st.updates) for (const u of st.updates) u(dt, t);
     updateFollowers(dt, t);

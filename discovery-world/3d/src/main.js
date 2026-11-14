@@ -15,6 +15,8 @@ import { initNursery } from './nursery.js';
 import { initComfort } from './comfort.js';
 import { ADVENTURES } from './adventure-state.js';
 import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatures.js';
+import { makeToyModel } from './toy-models.js';
+import { initSea, SEA } from './sea.js';
 import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
@@ -98,7 +100,7 @@ let adventures = null;
 let started = false;
 buildWorld(G);
 buildUnderground(G);
-buildSky(G);
+buildSky(G); G.player = player; G.skyApi = { Sound, burst, discover: (id, m) => discover(id, m), toast: m => toast(m) }; // (build 43: the bigger Sky Kingdom's sounds, sparkles and words)
 const IN = G.inside;
 G.xylo.forEach(k => { k.key.userData.y0 = k.key.position.y; });
 G.platforms.forEach(z => { if (z.top) z.top.userData.s0 = z.top.scale.y; });
@@ -153,7 +155,7 @@ let creature = null;
 // soft contact shadow on the ground under the creature (shrinks and fades as it jumps)
 const shadowMat = new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true, depthWrite: false, opacity: 1, polygonOffset: true, polygonOffsetFactor: -4 });
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; blob.userData.dynamic = true; /* (build 33: it follows you; never part of a scenery slice) */ scene.add(blob);
-function groundUnder(x, y) { let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
+function groundUnder(x, y) { if (player.layer === 'sea') return SEA.floor; let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
   player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root);
@@ -244,7 +246,8 @@ const friends = initFriends(G, {
 });
 const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), world, player, friends, saveSoon: () => saveSoon(), startSlide: path => { if (!player.ride) startSlide(path); }, snapCamera: () => snapCamera() });
 // (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
-const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
+const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
+const expansion = initExpansion(G, { scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
 G.expansion = expansion;
 
 // ---------------- bubbles ----------------
@@ -333,13 +336,19 @@ function updateRide(dt) {
   } else if (R.type === 'kart' || R.type === 'train') {
     // (moved by kart.js / train.js)
   } else if (R.type === 'whale') {
-    // riding the sky whale: one big loop over the Cloud Kingdom, then back home (JUMP hops off onto the clouds)
-    const W = G.whale; R.u += dt / 20;
-    if (R.u >= 1) { const g = W.g.position; P.x = g.x; P.y = g.y + 1.6; P.z = W.g.position.z; endRide(0, 2); return; }
-    const a = R.u * Math.PI * 2, x = W.x + Math.sin(a) * 8, y = W.y + 1.4 + Math.sin(a * 2) * 1.2, vx = Math.cos(a);
-    W.g.position.set(x, y, -7.5); W.g.rotation.y += ((vx >= 0 ? 0 : Math.PI) - W.g.rotation.y) * Math.min(1, dt * 2); W.g.rotation.z = Math.cos(a * 2) * .12 * (vx >= 0 ? 1 : -1);
-    P.x = x; P.y = y + 1.55; P.z = -7.5; P.facing = vx >= 0 ? 1 : -1; P.vx = vx * 3; P.grounded = true;
-    if (Math.random() < dt * .4) W.spout = 1.5;
+    // (build 43) STEER THE SKY WHALE anywhere over the world: ◀ ▶ (or slide sideways) fly left and right, ▲ ▼ (or slide up
+    // and down) fly higher and lower. JUMP hops off and you float gently down. Neighbourhoods load ahead as you fly, like
+    // on the train. With no input the whale just hovers and bobs.
+    const W = G.whale, g = W.g.position, sd = stick && stick.active ? stick : null;
+    const ix = (keys.right ? 1 : 0) - (keys.left ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, sd.dx / 55)) : 0), iy = (keys.up ? 1 : 0) - (keys.down ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, -sd.dy / 55)) : 0);
+    R.vx = (R.vx || 0) + (ix * 11 - (R.vx || 0)) * Math.min(1, dt * 2.2); R.vy = (R.vy || 0) + (iy * 5 - (R.vy || 0)) * Math.min(1, dt * 2.5);
+    R.t = (R.t || 0) + dt; const bob = Math.sin(R.t * 1.6) * .25;
+    let x = g.x + R.vx * dt, y = (R.alt ?? g.y) + R.vy * dt; x = clamp(x, EXP.xMin + 4, EXP.x1 - 4); y = clamp(y, 6, 32); R.alt = y;
+    const z = g.z + (-1.2 - g.z) * Math.min(1, dt * .8); // (it comes forward over the path, so the world below stays in view)
+    W.g.position.set(x, y + bob, z); if (Math.abs(R.vx) > .3) W.g.rotation.y += ((R.vx >= 0 ? 0 : Math.PI) - W.g.rotation.y) * Math.min(1, dt * 3); W.g.rotation.z = clamp(R.vy * .05, -.25, .25) * (W.g.rotation.y > 1.5 ? -1 : 1);
+    W.tail.rotation.y = Math.sin(R.t * (3 + Math.abs(R.vx) * .3)) * .4;
+    P.x = x; P.y = y + bob + 1.55; P.z = z; P.facing = W.g.rotation.y > 1.5 ? -1 : 1; P.vx = R.vx; P.grounded = true;
+    if (Math.abs(R.vx) > 6 && Math.random() < dt) W.spout = .8; if (!R.told && (ix || iy)) { R.told = 1; discover('whalefly', 'You are flying the sky whale! Go anywhere you like.'); }
   } else if (R.type === 'climb') {
     // climbing the rope ladder: slide your finger up/down (or arrow keys), or tap JUMP to climb a step
     const L = SKY.ladder; let v = 0;
@@ -426,6 +435,8 @@ G.useLift = () => {
   discover(down ? 'liftdown' : 'liftup', down ? 'Down, down in the glass lift!' : 'Up, up in the glass lift!');
 };
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
+// (build 43) through the rainbow gate at the top of the stairs at either end of the world: into the Sky Kingdom
+G.toSky = () => { const P = player; world.flash = 1; P.layer = ''; P.x = 42; P.y = SKY.y + .05; P.z = SKY.z; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; P.facing = 1; snapCamera(); Sound.whoosh(); Sound.chime(); toast('🌈 Welcome to the Sky Kingdom!'); discover('skygate', 'The rainbow stairs lead up to the Sky Kingdom!'); saveSoon(); };
 G.tapWhale = () => { const W = G.whale, P = player; if (!P.ride && P.layer === '' && P.y > SKY.y - .6 && Math.abs(P.x - W.g.position.x) < 10) { P.ride = { type: 'whale', u: 0 }; P.vx = P.vy = 0; Sound.whoosh(); discover('whaleride', 'You are riding the sky whale! JUMP to hop off.'); } W.spout = 2.4; Sound.withMusic(() => [0, 4, 7, 4, 2, 0].forEach((n, i) => Sound.bell(NOTES[n % 8] / 2, .05, i * .22))); discover('whale', 'The sky whale sings you a song!'); };
 G.bounceUp = () => { const P = player; if (P.ride || Math.abs(P.x - (UG.shaft[0] + UG.shaft[1]) / 2) > 2.5 || P.y > UG.floor + 1.5) return; P.x = (UG.shaft[0] + UG.shaft[1]) / 2; P.y = UG.floor + 1; P.vy = 13.5; P.grounded = false; Sound.boing(); discover('mushroomup', 'Boing! Back up into the ball pit. Swim to the top!'); };
 G.singCrystal = k => { k.lit = 1; k.cd = 1; Sound.withMusic(() => { Sound.bell(NOTES[k.i % 8] / 2, .06); Sound.bell(NOTES[(k.i + 2) % 8], .025, .08); }); burst(k.x, UG.floor + 1.5, -1.4, [k.c, '#fff'], 10, 2); discover('crystal', 'Singing crystals! Tap them or walk past them.'); };
@@ -435,14 +446,20 @@ function nearDoor() { const P = player; if (P.ride || P.stair) return null; retu
 
 // ---------------- hint arrow (picture-only guidance) ----------------
 const hint = new THREE.Group(); hint.userData.dynamic = true; scene.add(hint); // (build 33: it moves to whatever you can use; never part of a scenery slice)
-{ const c = new THREE.Mesh(new THREE.ConeGeometry(.28, .55, 20), toy('#ffd84a', { em: '#ffb000', ei: .5 })); c.rotation.x = Math.PI; hint.add(c); const r = new THREE.Mesh(new THREE.TorusGeometry(.3, .07, 10, 24), toy('#ff6fae', { em: '#ff6fae', ei: .4 })); r.position.y = .45; r.rotation.x = Math.PI / 2; hint.add(r); }
+{ /* (build 43) 'stand here and press the paw': a glowing circle on the path in front of the activity (a cone floating over
+     things covered them up) */ const r = new THREE.Mesh(new THREE.TorusGeometry(.62, .08, 10, 36), toy('#ffd84a', { em: '#ffb000', ei: .9 })); r.rotation.x = Math.PI / 2; hint.add(r);
+  const r2 = new THREE.Mesh(new THREE.TorusGeometry(.42, .05, 8, 30), toy('#ff6fae', { em: '#ff6fae', ei: .6 })); r2.rotation.x = Math.PI / 2; hint.add(r2); hint.userData.r2 = r2; }
 function updateHint(t) {
   const P = player; let best = null, bd = 13;
   if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4 || (it.need && !it.need())) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
   const actionable = actionTarget(); G.actionTarget=actionable; if (actionable) best = { ...actionable, hintY: actionable.hintY || 2.4 };
   const door = nearDoor(); if (door) best = { x: door.x, y: door.y, hintY: 3.1 };
   hint.visible = !!best;
-  if (best) { hint.position.set(best.x, best.y + best.hintY + (world.comfort?.calm ? 0 : Math.sin(t * 4) * .15), .3); hint.rotation.y = world.comfort?.calm ? 0 : t * 2; }
+  // (build 43) EVERY activity nearby twinkles now and then (a few sparkles every half second, from the existing particle
+  // pool): one consistent picture cue for 'you can play with this', without signs
+  if ((G.twinkleT = (G.twinkleT || 0) - 1 / 60) <= 0 && !P.ride && !world.comfort?.calm) { G.twinkleT = .5; const near = G.interact.filter(i => (i.layer || '') === P.layer && Math.abs(i.x - P.x) < 10 && Math.abs((i.y || 0) - P.y) < 5 && (!i.need || i.need()));
+    if (near.length) { const i = near[Math.floor(Math.random() * near.length)]; burst(i.x + (Math.random() - .5), (i.y || 0) + 1 + Math.random(), -1.6 - Math.random(), ['#fff3a6', '#ffffff', '#ffd1ec'], 3, .8); } }
+  if (best) { hint.position.set(best.x, best.y + .06, .4); const k = world.comfort?.calm ? 1 : 1 + Math.sin(t * 4) * .08; hint.scale.set(k, 1, k); hint.userData.r2.scale.setScalar(world.comfort?.calm ? 1 : 1 + Math.sin(t * 4 + 1.5) * .12); }
 }
 
 // ---------------- input ----------------
@@ -470,11 +487,12 @@ function stickMove(e) {
 function stickEnd() { keys.left = keys.right = false; keys.scale = 1; stickUI(false); $('knob').style.transform = ''; stick = null; }
 function upAction() {
   const P = player; if (!started || G.activityOpen || P.stair) return;
+  if (P.ride && P.ride.type === 'whale') return; // (build 43: on the whale, ▲ flies higher; only JUMP hops off)
   const d = nearDoor(); if (d && d.kind !== 'down') { d.go(); return; } // up at a door goes in/out; at the bottom of stairs or the lift goes up
   jump();
 }
 function downAction() {
-  const P = player; if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
+  const P = player; if (P.ride && P.ride.type === 'whale') return; // (▼ flies lower) if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
   if (P.ride && P.ride.type === 'train') { train.hopOff(); return; }
   if (!started || P.stair || P.ride) return;
   const d = nearDoor(); if (d && d.kind === 'down') { d.go(); return; }
@@ -509,7 +527,7 @@ function jump() {
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
   if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
-  if (P.ride) { if (P.ride.type === 'slide') return; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = z; Sound.jump(1); return; }
+  if (P.ride) { if (P.ride.type === 'slide') return; const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
   if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps] * (world.comfort?.relaxed ? 1.08 : 1); P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
 }
@@ -626,7 +644,7 @@ $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world
 
 // ---------------- physics ----------------
 const GRAV = 24;
-function bounds() { const P = player; return P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
+function bounds() { const P = player; return P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -638,14 +656,14 @@ function updatePlayer(dt) {
   }
   if (h) P.facing = h;
   // swimming in the deep part of the ball pit
-  const swim = P.layer === '' && inShaftX(P.x) && P.y < .45 && P.y > UG.swimBottom;
-  if (swim && !P.swim && P.vy <= 0) P.vy = -3.2; // plunge in with a splash
-  if (swim && !P.swim) { Sound.tone(300, .25, 'sine', .05, .6); burst(P.x, Math.max(P.y, 0) + .6, 0, ['#65dcec', '#ffda68', '#b587ff', '#ff67ab'], 12, 2); discover('dive', 'The deep part! Swim down through the balls to a secret place. JUMP swims up!'); }
-  P.swim = swim; if (swim) P.fromShaft = true;
+  const swim = (P.layer === '' && inShaftX(P.x) && P.y < .45 && P.y > UG.swimBottom) || P.layer === 'sea'; // (build 43: everywhere in the deep pool and the underwater world)
+  if (swim && !P.swim && P.vy <= 0 && P.layer === '') P.vy = -3.2; // plunge in with a splash
+  if (swim && !P.swim && P.layer === '') { Sound.tone(300, .25, 'sine', .05, .6); burst(P.x, Math.max(P.y, 0) + .6, 0, ['#65dcec', '#ffda68', '#b587ff', '#ff67ab'], 12, 2); discover('dive', 'The deep part! Swim down through the balls to a secret place. JUMP swims up!'); }
+  P.swim = swim; if (swim && P.layer === '') P.fromShaft = true;
   const crawl = P.layer === '' && P.y < UG.ceil - .1 && P.x > UG.tunnel[0] - .3 && P.x < UG.tunnel[1] + .3 && P.y < UG.tunnelCeil - .5;
   if (crawl && !P.crawl) discover('crawl', 'A tiny tunnel! Crawl through it.');
   P.crawl = crawl;
-  const top = (swim ? 2.2 : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
+  const top = (swim ? (P.layer === 'sea' ? 3.6 : 2.2) : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
   // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
   for (const s of G.solids) {
@@ -661,7 +679,7 @@ function updatePlayer(dt) {
   }
   P.z += (P.groundZ - P.z) * Math.min(1, dt * 6);
   const oldY = P.y, wasG = P.grounded;
-  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else P.vy -= GRAV * dt; // in the deep ball pit you sink slowly
+  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * dt; if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
   P.y += P.vy * dt; P.grounded = false;
   // land on the HIGHEST surface you reach (so a bouncy puff on top of a cloud wins over the cloud)
   let land = null, landStep = false;
@@ -683,7 +701,7 @@ function updatePlayer(dt) {
     }
   }
   // the floor: normally y 0; under the floor (or down the deep shaft) it is the underground floor
-  const gy = P.layer !== '' ? 0 : (P.y > UG.ceil + .05 && !inShaftX(P.x)) ? 0 : UG.floor;
+  const gy = P.layer === 'sea' ? SEA.floor : P.layer !== '' ? 0 : (P.y > UG.ceil + .05 && !inShaftX(P.x)) ? 0 : UG.floor;
   if (P.y <= gy) { if (!P.grounded && P.vy < -6) Sound.land(); P.y = gy; P.vy = 0; P.grounded = true; P.groundZ = 0; if (gy < 0) discover('underground', 'A secret underground world! Explore the caves.'); }
   if (P.layer === '' && P.y < UG.ceil - .05) { // underground ceilings (low in the crawl tunnel, open under the shaft)
     const tun = P.x > UG.tunnel[0] && P.x < UG.tunnel[1], c = tun ? UG.tunnelCeil : inShaftX(P.x) ? null : UG.ceil, Hh = tun ? .9 : 1.5;
@@ -703,11 +721,11 @@ function updatePlayer(dt) {
 // ---------------- camera ----------------
 const camT = { x: 5, y: 1.6, look: 0 };
 function viewHalfW(dist) { return Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect; }
-const CAM_DIST = 7.6; // build 16: a little closer, to show the characters
+const CAM_DIST = 9.0; // (build 43: zoomed out from 7.6 at the family's request, so whole activities fit on screen)
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
-  return P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
+  return P.layer === 'sea' ? clamp(x, SEA.ox + Math.min(hw, SEA.w / 2), SEA.ox + SEA.w - Math.min(hw, SEA.w / 2)) : P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
 }
 function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
 // build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
@@ -720,9 +738,10 @@ function updateCamera(dt) {
   const y = camT.y;
   // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
   // (also a little at the Marble Machine, so its top ramps stay clear of the buttons)
-  const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45) : 0; camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * ease(dt, 1.5);
+  const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45, Math.max(0, 1 - Math.abs(P.x - (BUILD.x0 + BUILD.cols * BUILD.cw / 2)) / 8) * .7) : 0; /* (build 43: and at the Block Builder, so the whole wall shows) */ camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * ease(dt, 1.5);
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
-  camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2, CAM_DIST + camT.z + camT.cz * 3.2); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4, camT.z - camT.cz * 2);
+  camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
+  camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4 - camT.wz * 3.5, camT.z - camT.cz * 2);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
@@ -731,6 +750,12 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
+  sea.update(dt, t); // (build 43)
+  if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
+  // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
+  if (G.learnSigns) for (const g of G.learnSigns) { const d = Math.abs(g.position.x - camT.x); if (d > 30) continue; const u = g.userData;
+    u.toy.rotation.y += dt * .9; u.toy.position.y = 1.35 + Math.sin(t * 2 + g.position.x) * .1; u.star.position.set(Math.cos(t * 1.5) * .6, 1.6 + Math.sin(t * 3) * .15, Math.sin(t * 1.5) * .6); u.ring.scale.setScalar(1 + Math.sin(t * 3) * .05);
+    if (d < 8 && Math.random() < dt * 2.5) burst(g.position.x + (Math.random() - .5) * 1.2, .25, g.position.z + (Math.random() - .5) * .8, ['#fff3a6', '#ffd1ec', '#ffffff'], 2, 1); }
   const C = G.carousel, riding = player.ride && player.ride.type === 'carousel';
   C.speed += ((riding ? 1.1 : .25) - C.speed) * Math.min(1, dt * .8); C.spin.rotation.y += C.speed * dt;
   C.mounts.forEach((m, i) => { m.ride.position.y = Math.sin(t * 2.2 + i * 1.3) * .35 + .2; });
@@ -748,7 +773,7 @@ function updateWorldAnim(dt, t) {
   for (const k of G.crystals) { if (P0.y < UG.ceil && Math.abs(P0.x - k.x) < .45 && k.cd <= 0 && P0.grounded) G.singCrystal(k); k.cd = Math.max(0, k.cd - dt); k.lit = Math.max(0, k.lit - dt * 1.5); k.m.material.emissiveIntensity = .25 + k.lit * 1.2; k.m.rotation.y += dt * (.3 + k.lit * 6); }
   for (const g of G.gems) { g.spin = Math.max(0, g.spin - dt); g.g.rotation.y += dt * (1 + g.spin * 10); g.g.position.y = g.y + .45 + Math.sin(t * 2 + g.i) * .08 + g.spin * .3; }
   if (!(P0.ride && P0.ride.type === 'lift')) { const target = P0.y < -1 ? UG.floor : 0; G.liftPad.position.y += (target - .07 - G.liftPad.position.y) * Math.min(1, dt * 3); } else G.liftPad.position.y = P0.y - .07;
-  { const W = G.whale; W.spout = Math.max(0, W.spout - dt); if (!(player.ride && player.ride.type === 'whale')) { const k = Math.min(1, dt * 2); W.g.position.y += (W.y + Math.sin(t * .8) * .35 - W.g.position.y) * k; W.g.position.x += (W.x + Math.sin(t * .23) * 2 - W.g.position.x) * k; W.g.rotation.z = Math.sin(t * .8) * .05; W.g.rotation.y *= 1 - k; } W.tail.rotation.y = Math.sin(t * 2.2) * .4;
+  { const W = G.whale; W.spout = Math.max(0, W.spout - dt); if (!(player.ride && player.ride.type === 'whale')) { const k = Math.min(1, dt * 2); if (Math.abs(W.g.position.x - W.x) > 30 && Math.abs(W.g.position.x - camT.x) > 40) W.g.position.set(W.x, W.y, -7.5); W.g.position.z += (-7.5 - W.g.position.z) * Math.min(1, dt * .5); /* (build 43: after a long flight it swims home out of sight, instead of zooming back across the map) */ W.g.position.y += (W.y + Math.sin(t * .8) * .35 - W.g.position.y) * k; W.g.position.x += (W.x + Math.sin(t * .23) * 2 - W.g.position.x) * k; W.g.rotation.z = Math.sin(t * .8) * .05; W.g.rotation.y *= 1 - k; } W.tail.rotation.y = Math.sin(t * 2.2) * .4;
     if (W.spout > 0 && Math.random() < dt * 30) burst(W.g.position.x + 1.4, W.g.position.y + 1.8, W.g.position.z, ['#bfe8ff', '#ffffff', '#9fe6ff'], 3, 2.5); }
   G.skyPuffs.forEach(m => { m.position.y = SKY.y + .25 + Math.sin(t * 2 + m.position.x) * .04; });
   G.grassTime.value = t; windTime.value = t;
@@ -806,7 +831,7 @@ function restore(d) {
   if (d.crown === true) world.crown = true;
   if (d.wand === true) world.wand = true; // (build 33)
   if (Array.isArray(d.dinoEggs) && d.dinoEggs.length === 3 && d.dinoEggs.every(v => typeof v === 'boolean')) world.dinoEggs = d.dinoEggs.slice();
-  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, EXP.x1 - 2) : d.x < -6 ? clamp(d.x, EXP.xMin + 2, -6) : clamp(d.x, .5, 301); // (build 29: you can also wake up in the new neighbourhoods)
+  if (typeof d.x === 'number' && isFinite(d.x)) player.x = d.x > EXP.x1 + 20 ? 190 /* (saved inside a room far away, e.g. the house or the underwater world: wake up at home) */ : d.x > EXP.x0 + 6 ? clamp(d.x, EXP.x0 + 6, 902) : d.x < -6 ? clamp(d.x, -662, -6) : clamp(d.x, .5, 301); // (build 43: never inside the new sky stairs) // (build 29: you can also wake up in the new neighbourhoods)
   (Array.isArray(d.disc) ? d.disc : []).forEach(x => typeof x === 'string' && world.disc.add(x));
   (Array.isArray(d.bits) ? d.bits : []).forEach(i => Number.isInteger(i) && i >= 0 && i < G.bitSpots.length && world.bits.add(i));
   world.secret = d.secret === true;
@@ -1044,10 +1069,12 @@ G.learning = learning;
   for (const [cat, [icon]] of Object.entries(learning.corners)) {
     let x = PREF[cat]; const busy = taken(); for (let k = 0; k < 40 && busy.some(b => Math.abs(b - x) < 3.2); k++) x += (k % 2 ? -1 : 1) * (k + 1) * .8;
     const g = new THREE.Group(), z = -1.95; g.position.set(x, 0, z); scene.add(g);
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(.07, .09, 1.7, 12), wood); post.position.y = .85; g.add(post);
-    const sign = new THREE.Mesh(new THREE.CircleGeometry(.48, 40), new THREE.MeshStandardMaterial({ map: signTex(icon), roughness: .6 })); sign.position.set(0, 1.95, .06); g.add(sign);
-    const back = new THREE.Mesh(new THREE.CylinderGeometry(.53, .53, .08, 40), toy('#b28cff', { r: .5 })); back.rotation.x = Math.PI / 2; back.position.set(0, 1.95, 0); g.add(back);
-    const star = new THREE.Mesh(starGeometry(.16, .08, .05, .02, 5), glow); star.position.set(0, 2.62, 0); g.add(star); g.userData.star = star;
+    // (build 43) A PLAY SPOT instead of a signpost (signs overlapped other things, and a pre-reader can't tell a sign is a
+    // game): a glowing, sparkling circle on the ground with the corner's toy floating and turning above it.
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(.78, .82, .08, 40), toy('#fff6fb', { r: .5 })); pad.position.y = .04; g.add(pad);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.8, .07, 10, 40), glow); ring.rotation.x = Math.PI / 2; ring.position.y = .1; g.add(ring);
+    const toyM = makeToyModel(icon); toyM.scale.setScalar(1.3); toyM.position.y = 1.35; g.add(toyM); g.userData.toy = toyM; g.userData.ring = ring;
+    const star = new THREE.Mesh(starGeometry(.12, .06, .04, .02, 5), glow); star.position.set(.55, 1.9, 0); g.add(star); g.userData.star = star;
     g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => learning.showCorner(cat); } }); G.taps.push(g);
     G.interact.push({ x, y: 0, layer: '', disc: 'corner_' + cat, run: () => learning.showCorner(cat), hintY: 2.9 });
     (G.learnSigns = G.learnSigns || []).push(g);

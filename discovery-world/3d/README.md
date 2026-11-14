@@ -20,6 +20,18 @@ Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same 
 
 Desktop software-rendering verification is recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Real iPhone playtesting remains necessary.
 
+## 3D build 43: zoomed out, no signs, a real seesaw, stairs to the sky, fly the whale, an underwater world
+
+- **See more:** the camera is further out, and the whole Block Builder wall fits on screen.
+- **No signs in the way:**
+  - The learning signposts are now glowing play spots with a floating toy.
+  - A glowing circle on the path shows where to stand.
+  - Every activity twinkles, so Dawson can tell what she can play with.
+- **A real seesaw** to ride up and down, with a teddy friend. Jump at the top for a super bounce!
+- **Stairs to the sky:** at both ends of the world, rainbow stairs climb up to the Sky Kingdom. The Sky Kingdom is bigger, with the moon and stars to count, cloud sheep that make rain and a rainbow, colour balloons and bouncy clouds.
+- **Fly the sky whale anywhere:** the arrows steer it over the whole world; JUMP hops off and you float down.
+- **A deep swimming pool** by the beach. Swim to the bottom, through the tunnel, into an **underwater world** full of fish, a turtle, an octopus, jellyfish, dolphins, coral, a shipwreck with treasure, and more.
+
 ## 3D build 40: connected adventures and home treasures
 
 - Tap 🧭 for eleven optional picture adventures, the discovery book, home gallery and comfort settings. Every essential prompt is spoken and can be replayed; there is no reading required or forced progression.

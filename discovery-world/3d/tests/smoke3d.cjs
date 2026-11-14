@@ -210,7 +210,7 @@ const UG_F = -6;
   await shot('22_train.jpg');
   await press('#pawBtn'); await sleep(400); c = await S(); check('PAW: hop off the train (anywhere)', !c.ride && c.y < .1, `ride=${c.ride} x=${c.x.toFixed(1)}`);
   // ---------- build 9: the Marble Machine ----------
-  await teleport(332);
+  await teleport(332); await sleep(2000); // (build 43: let the camera finish easing back here before tapping the small ramps)
   { const n0 = await page.evaluate(() => __DDW3.marbles.marbles.length); await tapWorld(327.6, 2.3, -2.2); const n1 = await page.evaluate(() => __DDW3.marbles.marbles.length);
     check('tap the Marble Machine board: a marble drops', n1 === n0 + 1 && (await S()).disc.includes('marbles'), `${n0} → ${n1}`); }
   { const a0 = await page.evaluate(() => __DDW3.marbles.ramps[1].target); await tapWorld(332.2, 3.2, -1.8); const a1 = await page.evaluate(() => __DDW3.marbles.ramps[1].target);
@@ -350,6 +350,34 @@ const UG_F = -6;
   await teleport(150); await sleep(500);
   { const ok = await page.evaluate(() => new Promise(res => { const t0 = performance.now(); const f = () => { if (__DDW3.world.disc.has('palsplay')) res(true); else if (performance.now() - t0 > 40000) res(false); else setTimeout(f, 250); }; f(); }));
     check('stand still with friends following: two of them play together (hearts and a giggle)', ok, `${await page.evaluate(() => __DDW3.G.expansion._followers().join(' '))}`); }
+  // ---------- build 43: the family's list ----------
+  // 1. the camera is further out, and at the Block Builder the whole wall (all 5 rows) is on screen
+  await teleport(214.4); await sleep(3500);
+  { const r = await page.evaluate(() => { const top = __DDW3.toScreen(214.4, 5.0, -1.7), bot = __DDW3.toScreen(214.4, 0, -1.7); return { top: Math.round(top.y), bot: Math.round(bot.y), h: innerHeight }; }); check('the Block Builder wall fits on screen, top row included', r.top > 0 && r.bot < r.h, JSON.stringify(r)); }
+  // 2. the learning corners are play spots with a floating toy (no signposts), and still open their games
+  { const r = await page.evaluate(() => (__DDW3.G.learnSigns || []).map(g => !!g.userData.toy && !!g.userData.ring)); check('the learning corners are play spots with a floating toy (no signposts)', r.length === 7 && r.every(Boolean), JSON.stringify(r)); }
+  // 3. the seesaw: walk onto it and it rocks you up and down; jump at the top for a super bounce
+  await teleport(632); await page.evaluate(() => __DDW3.G.expansion.buildNow(632)); await sleep(800);
+  await page.evaluate(() => { __DDW3.keys.right = true; }); for (let i = 0; i < 60 && (await page.evaluate(() => __DDW3.player.x)) < 635.6; i++) await sleep(100); await page.evaluate(() => { __DDW3.keys.right = false; });
+  { let hi = 0; for (let i = 0; i < 24; i++) { hi = Math.max(hi, await page.evaluate(() => __DDW3.player.y)); await sleep(150); } check('the seesaw rocks you up and down', hi > 1.2, `highest y=${hi.toFixed(2)}`); }
+  // 4. the stairs at the end of the world climb into the sky, and the rainbow gate takes you to the Sky Kingdom
+  await teleport(930); await page.evaluate(() => { __DDW3.player.y = 9.6; __DDW3.player.x = 933; }); await sleep(300);
+  await page.evaluate(() => { __DDW3.keys.right = true; }); c = await waitFor(s => s.y > 9 && s.x < 100, 30000); await page.evaluate(() => { __DDW3.keys.right = false; });
+  check('the rainbow stairs at the end of the world lead up into the Sky Kingdom', c.x < 100 && c.y > 9, `x=${c.x.toFixed(1)} y=${c.y.toFixed(1)}`);
+  { const r = await page.evaluate(() => { ['skystars', 'skysheep', 'skyballoons'].forEach(id => { const it = __DDW3.G.interact.find(i => i.disc === id); it && it.run(); }); return ['skystars', 'skysheep', 'skyballoons'].filter(d => __DDW3.world.disc.has(d)); }); check('the bigger Sky Kingdom: moon and stars, cloud sheep, colour balloons', r.length === 3, r.join(' ')); }
+  // 5. steer the sky whale: ▶ flies right, ▲ flies higher (and doesn't throw you off); JUMP hops off and you float down
+  await page.evaluate(() => { const P = __DDW3.player; P.x = 54; P.y = 9.55; P.z = -1.4; }); await sleep(500); await page.evaluate(() => __DDW3.G.tapWhale()); await sleep(500);
+  { const x0 = await page.evaluate(() => __DDW3.player.x); await page.evaluate(() => { __DDW3.keys.right = true; }); await waitFor(s => s.x > x0 + 6, 20000); /* (build 43: hold until it has flown, not a fixed time: late in the test this machine draws only 1-2 frames a second) */ await page.evaluate(() => { __DDW3.keys.right = false; __DDW3.keys.up = true; }); await sleep(1500); await page.evaluate(() => { __DDW3.keys.up = false; });
+    const r = await page.evaluate(() => ({ ride: __DDW3.player.ride && __DDW3.player.ride.type, x: __DDW3.player.x, y: __DDW3.player.y })); check('steer the sky whale: it flies where you point', r.ride === 'whale' && r.x > x0 + 5, `x ${x0.toFixed(1)} → ${r.x.toFixed(1)}, y ${r.y.toFixed(1)}`);
+    await press('#jumpBtn'); await sleep(300); const v = await page.evaluate(() => [__DDW3.player.ride, __DDW3.player.vy]); check('JUMP hops off the flying whale and you float gently down', !v[0] && v[1] > -4, JSON.stringify(v)); }
+  await sleep(4000);
+  // 6. the deep pool: dive in, swim down through the tunnel into the underwater world, and climb back out
+  await teleport(-8); await sleep(800); await page.evaluate(() => __DDW3.G.deepSea.dive()); await sleep(600); c = await S(); check('tap the Splash Pool: you dive into the deep pool and swim', c.layer === 'sea', `layer=${c.layer}`);
+  await page.evaluate(() => { __DDW3.keys.right = true; }); c = await waitFor(s => s.x > 3012, 60000); await page.evaluate(() => { __DDW3.keys.right = false; });
+  check('swim down and through the tunnel at the bottom into the underwater world', c.x > 3012 && c.layer === 'sea', `x=${c.x.toFixed(1)}`);
+  { const r = await page.evaluate(() => { __DDW3.G.interact.filter(i => i.layer === 'sea').forEach(i => i.run()); return ['coral', 'fishschool', 'seaturtle', 'octopus', 'jellyfish', 'seatreasure', 'clam', 'seadolphins', 'seafloor'].filter(d => __DDW3.world.disc.has(d)); }); check('the sea creatures answer when tapped (coral, fish, turtle, octopus, jellyfish, treasure, clam, dolphins, sea floor)', r.length === 9, r.join(' ')); }
+  await page.evaluate(() => { __DDW3.player.x = 3005; __DDW3.player.y = -1; __DDW3.keys.up = true; }); c = await waitFor(s => s.layer === '', 20000); await page.evaluate(() => { __DDW3.keys.up = false; });
+  check('swim up to the top of the pool to climb out', c.layer === '' && Math.abs(c.x + 8) < 1, `layer=${c.layer} x=${c.x.toFixed(1)}`);
   // ---------- build 27: the learning games work for a child who can't read ----------
   { const a = await page.evaluate(() => __DDW3.G.learning.audit()); check('every learning game meets the pre-reader standard (spoken instruction and hint, demo, no words to read)', a.every(x => x.ok), JSON.stringify(a.filter(x => !x.ok)).slice(0, 200)); }
   await page.evaluate(() => __DDW3.G.learning.showCorner('num')); await sleep(200); await page.locator('#learn .lmenuitem[data-id="count"]').tap(); await sleep(600);

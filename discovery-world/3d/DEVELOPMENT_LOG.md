@@ -4,6 +4,36 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 43 — the family's list
+1. **Camera zoomed out:** CAM_DIST 7.6 → 9.0, plus an automatic pull-back at the Block Builder (like the castle's), so the whole 12 × 5 m wall is on screen. Before, the top rows were cut off.
+2. **No more activity signs:**
+   - The 7 Learning Corner signposts are now **play spots**: a glowing, sparkling ring on the ground with the corner's 3D toy floating and turning above it. Tapping still opens the games.
+   - The floating yellow cone (it covered things) is replaced by a glowing **"stand here" circle** on the path.
+   - **Every activity nearby twinkles** now and then (shared particles).
+   - The neighbourhood signposts are removed (the map and train show every place).
+   - Train-station signs are smaller and lower.
+3. **A real seesaw** (Toy Town, x 638): the near end dips down so you can step on; it rocks you between about 0.2 and 1.9 m with a teddy on the other end; JUMP at the top is a super bounce (reached 5.9 m).
+4. **The world ends climb into the sky:**
+   - **Rainbow stairs:** both ends (x 908 → 932 and −666 → −690) have 24 rainbow cloud steps (0.4 m, walkable) up to a landing at 9.6 m. A rainbow gate there takes you to the Sky Kingdom. The world is a little wider (EXP −698 … 940); saved positions are never restored inside the stairs.
+   - **A bigger Sky Kingdom:** the cloud path runs on from x 8 to 45.6. New activities: the moon (tap it and 10 stars light up, counted), cloud sheep (rain, then a rainbow), colour balloons (pop one and it says its colour), and bouncy clouds up to a high cloud with a star. No new star bits, because saved star bits are stored by list position.
+5. **Steer the sky whale:**
+   - ◀ ▶ / sideways drag fly it anywhere over the world (11 m/s); ▲ ▼ fly higher and lower (6–32 m). Areas stream in as you fly.
+   - ▲ no longer throws you off; JUMP hops off and you float down gently (fall speed capped).
+   - The camera pulls back and looks down while flying.
+   - After a long flight the whale swims home out of sight.
+6. **The deep pool and the underwater world** (`src/sea.js`):
+   - A Splash Pool next to the beach (x −12 to −4). Tap it to dive into a deep tiled pool (its own place at x 3000+, built on first dive, hidden otherwise).
+   - Swim down; a tunnel at the bottom leads into a 120 m underwater world: colour coral, 4 fish schools, a sea turtle, an octopus that squirts ink, glowing jellyfish, a shipwreck with a treasure chest (count 5 pearls), a clam, dolphins, a big whale far away, starfish, crabs, a shrimp, seaweed and bubbles.
+   - Swim up to the top of the pool to climb out.
+- **Merged-code lessons:**
+  - `c.sprite` is now `c.toy` (3D toy models).
+  - Every emoji in `expansion.js`, `learn.js` and now `sea.js` needs a toy model; the test caught 💕, 🗺️, 🪸 and 🏊, even inside comments and messages.
+  - `G.sea` is the beach's sea plane, so the underwater world is `G.deepSea`.
+- **Verified (desktop):**
+  - Every feature by script: builder wall fits; seesaw heights 0.17 → 1.88 and a 5.9 m bounce; both stairs climbed and the gate → sky; whale flew 43 m right and up to 25 m, ▲ kept the ride, JUMP → float; pool → tunnel → all 10 sea activities → climb out, with shader programs 104 → 104.
+  - `ba.cjs` 42 → 43, two runs each: park 10.9 → 11.1, creatures 8.7 → 9.6, castle 8.7 → 9.7 ms average. Each view was faster in one run and slower in the other: within noise. 0 long tasks; programs 102 → 102.
+  - Unit tests 25/25 (the toy-model test now also scans `sea.js`).
+
 ## Checkpoint: build 42 — freezes say where; Clover the goat; friends play together (built on top of builds 40 and 41 from main)
 - **The performance report says where each freeze over 250 ms happened:** the place name (Park, Toy Town, Ocean Pier…), the house, castle or underground, any ride, or a learning game. The build 36 iPhone report had two real 309–339 ms freezes with no location.
   - Verified (desktop): two deliberate 400 ms freezes are reported as "(Ocean Pier)" and "(in the house)". Other examples seen: "Park", "Playhouse, riding the slide".
