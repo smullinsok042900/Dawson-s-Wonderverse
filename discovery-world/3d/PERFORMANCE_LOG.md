@@ -4,6 +4,28 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 40 — connected adventures (desktop software rendering only)
+
+Final comparison used the previous published HTML retained at `../backups/3D_build40_before_connected_adventures.html` and the rebuilt release. No other browser tests ran during these measurements.
+
+`tests/perf/adventures.cjs`, fixed views, identical random seed 123456:
+
+| View | Script ms/frame, previous → build 40 | Draw calls, previous → build 40 |
+|---|---|---|
+| park | 10.96 → 12.42 | 221 → 217 |
+| creatures | 11.18 → 11.97 | 168 → 168 |
+| castle | 11.26 → 8.83 | 172 → 172 |
+| home | 8.48 → 8.81 | 96 → 99 |
+
+These small script-time differences are within the roughly ±4 ms run-to-run variation already documented for this software-rendering machine; they are not real iPhone FPS measurements. The castle sample improved; the other fixed samples differed by 0.33–1.46 ms/frame. No consistent slowdown beyond that measurement variation was observed.
+
+- Shader programs stayed **101** in both builds, including after all eleven home rewards appeared and all three cushion colours were selected.
+- Fully earned home: **131 calls, 125,662 triangles**, versus the new empty-home view's 99 calls / 106,846 triangles. Extra decorations therefore have a drawing cost in the house; the entire display detaches outside the house, including its tap target.
+- `tests/perf/ba.cjs`: loading **31.7 → 27.4 s**; final heap **121 MB**. Walking samples advanced different distances on this slow renderer, so fixed-view samples above are the more comparable result.
+- Active measured JS long tasks in the new walking pass: one **53 ms** at the castle and one **62 ms** on map travel. Other measured walking, house entry/exit and streaming scenarios had zero. Short 50–60 ms tasks were also observed in earlier baseline runs; this release does not claim to eliminate them. Startup shader rehearsal is measured separately.
+- No browser page errors in either fixed-view run. Full raw measurements: `tests/PERFORMANCE_BUILD40.json`.
+- Actual iPhone performance remains to be measured on the device.
+
 ## How to measure (from `discovery-world/3d`)
 Prefix every command with `NODE_PATH=$(npm root -g)`, e.g. `NODE_PATH=$(npm root -g) node tests/perf/ba.cjs index.html`.
 

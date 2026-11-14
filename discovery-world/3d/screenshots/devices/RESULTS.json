@@ -1,112 +1,123 @@
 [
  {
   "name": "iPhone SE (small iPhone)",
-  "size": "568×320 @2x",
+  "size": "568\u00d7320 @2x",
   "problems": [],
-  "picture": "454×256 drawn for 568×320, fov 40.6°, ui ×1.000, seen as phone",
-  "buttons": "15 buttons, smallest 45 px",
+  "picture": "454\u00d7256 drawn for 568\u00d7320, fov 40.6\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
   "map": "15 pictures, smallest 67 px",
   "pets": "8 tiles, smallest 77 px",
   "train": "20 stations all on screen: true, reaching 71% down",
-  "touch": "walked 7.2 m, jumped to y 1.64"
+  "touch": "walked 5.4 m, jumped to y 1.75"
  },
  {
   "name": "iPhone 15 (typical iPhone)",
-  "size": "734×343 @3x",
+  "size": "734\u00d7343 @3x",
   "problems": [],
-  "picture": "587×274 drawn for 734×343, fov 38.0°, ui ×1.000, seen as phone",
-  "buttons": "15 buttons, smallest 45 px",
+  "picture": "587\u00d7274 drawn for 734\u00d7343, fov 38.0\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
   "map": "15 pictures, smallest 72 px",
   "pets": "8 tiles, smallest 82 px",
   "train": "20 stations all on screen: true, reaching 51% down",
-  "touch": "walked 7.7 m, jumped to y 1.60"
+  "touch": "walked 5.6 m, jumped to y 1.73"
  },
  {
   "name": "iPhone 15 Pro Max (large iPhone)",
-  "size": "814×380 @3x",
+  "size": "814\u00d7380 @3x",
   "problems": [],
-  "picture": "651×304 drawn for 814×380, fov 38.0°, ui ×1.000, seen as phone",
-  "buttons": "15 buttons, smallest 45 px",
+  "picture": "651\u00d7304 drawn for 814\u00d7380, fov 38.0\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
   "map": "15 pictures, smallest 80 px",
   "pets": "8 tiles, smallest 91 px",
   "train": "20 stations all on screen: true, reaching 46% down",
-  "touch": "walked 6.1 m, jumped to y 1.75"
+  "touch": "walked 4.6 m, jumped to y 1.60"
  },
  {
   "name": "iPad 7th gen (iPad)",
-  "size": "1080×810 @2x",
+  "size": "1080\u00d7810 @2x",
   "problems": [],
-  "picture": "864×648 drawn for 1080×810, fov 49.2°, ui ×1.350, seen as tablet",
-  "buttons": "15 buttons, smallest 61 px",
+  "picture": "864\u00d7648 drawn for 1080\u00d7810, fov 49.2\u00b0, ui \u00d71.350, seen as tablet",
+  "buttons": "16 buttons, smallest 61 px",
   "map": "15 pictures, smallest 104 px",
   "pets": "8 tiles, smallest 104 px",
   "train": "20 stations all on screen: true, reaching 28% down",
-  "touch": "walked 5.0 m, jumped to y 1.76"
+  "touch": "walked 4.3 m, jumped to y 1.60"
  },
  {
   "name": "iPad Pro 11 (iPad)",
-  "size": "1194×834 @2x",
+  "size": "1194\u00d7834 @2x",
   "problems": [],
-  "picture": "955×667 drawn for 1194×834, fov 46.9°, ui ×1.350, seen as tablet",
-  "buttons": "15 buttons, smallest 61 px",
+  "picture": "955\u00d7667 drawn for 1194\u00d7834, fov 46.9\u00b0, ui \u00d71.350, seen as tablet",
+  "buttons": "16 buttons, smallest 61 px",
   "map": "15 pictures, smallest 104 px",
   "pets": "8 tiles, smallest 104 px",
   "train": "20 stations all on screen: true, reaching 27% down",
-  "touch": "walked 4.5 m, jumped to y 1.60"
+  "touch": "walked 2.8 m, jumped to y 1.60"
  },
  {
   "name": "Pixel 5 (Android phone)",
-  "size": "802×293 @2.75x",
+  "size": "802\u00d7293 @2.75x",
   "problems": [],
-  "picture": "641×234 drawn for 802×293, fov 38.0°, ui ×1.000, seen as phone",
-  "buttons": "15 buttons, smallest 45 px",
+  "picture": "641\u00d7234 drawn for 802\u00d7293, fov 38.0\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
   "map": "15 pictures, smallest 62 px",
   "pets": "8 tiles, smallest 70 px",
   "train": "20 stations all on screen: true, reaching 60% down",
-  "touch": "walked 5.6 m, jumped to y 1.64"
+  "touch": "walked 2.8 m, jumped to y 1.60"
  },
  {
   "name": "Galaxy S9+ (Android phone)",
-  "size": "658×320 @4.5x",
+  "size": "658\u00d7320 @4.5x",
   "problems": [],
-  "picture": "526×256 drawn for 658×320, fov 38.0°, ui ×1.000, seen as phone",
-  "buttons": "15 buttons, smallest 45 px",
+  "picture": "526\u00d7256 drawn for 658\u00d7320, fov 38.0\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
   "map": "15 pictures, smallest 67 px",
   "pets": "8 tiles, smallest 77 px",
   "train": "20 stations all on screen: true, reaching 71% down",
-  "touch": "walked 10.2 m, jumped to y 1.64"
+  "touch": "walked 4.7 m, jumped to y 1.76"
  },
  {
   "name": "Galaxy Tab S4 (Android tablet)",
-  "size": "1138×712 @2.25x",
+  "size": "1138\u00d7712 @2.25x",
   "problems": [],
-  "picture": "910×569 drawn for 1138×712, fov 43.6°, ui ×1.350, seen as tablet",
-  "buttons": "15 buttons, smallest 61 px",
+  "picture": "910\u00d7569 drawn for 1138\u00d7712, fov 43.6\u00b0, ui \u00d71.350, seen as tablet",
+  "buttons": "16 buttons, smallest 61 px",
   "map": "15 pictures, smallest 104 px",
   "pets": "8 tiles, smallest 104 px",
   "train": "20 stations all on screen: true, reaching 32% down",
-  "touch": "walked 5.8 m, jumped to y 1.60"
+  "touch": "walked 2.9 m, jumped to y 1.73"
  },
  {
-  "name": "small Android 640×360",
-  "size": "640×360 @3x",
+  "name": "small Android 640\u00d7360",
+  "size": "640\u00d7360 @3x",
   "problems": [],
-  "picture": "512×288 drawn for 640×360, fov 40.5°, ui ×1.000, seen as phone",
-  "buttons": "15 buttons, smallest 45 px",
+  "picture": "512\u00d7288 drawn for 640\u00d7360, fov 40.5\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
   "map": "15 pictures, smallest 76 px",
   "pets": "8 tiles, smallest 86 px",
   "train": "20 stations all on screen: true, reaching 63% down",
-  "touch": "walked 7.1 m, jumped to y 1.68"
+  "touch": "walked 6.1 m, jumped to y 1.73"
  },
  {
   "name": "extra-wide Android 21:9",
-  "size": "960×412 @2.75x",
+  "size": "960\u00d7412 @2.75x",
   "problems": [],
-  "picture": "768×329 drawn for 960×412, fov 38.0°, ui ×1.056, seen as phone",
-  "buttons": "15 buttons, smallest 47 px",
+  "picture": "768\u00d7329 drawn for 960\u00d7412, fov 38.0\u00b0, ui \u00d71.056, seen as phone",
+  "buttons": "16 buttons, smallest 48 px",
   "map": "15 pictures, smallest 87 px",
   "pets": "8 tiles, smallest 99 px",
   "train": "20 stations all on screen: true, reaching 45% down",
-  "touch": "walked 6.2 m, jumped to y 1.75"
+  "touch": "walked 4.4 m, jumped to y 1.68"
+ },
+ {
+  "name": "iPhone SE 2022 667x375",
+  "size": "667\u00d7375 @2x",
+  "problems": [],
+  "picture": "533\u00d7300 drawn for 667\u00d7375, fov 40.5\u00b0, ui \u00d71.000, seen as phone",
+  "buttons": "16 buttons, smallest 45 px",
+  "map": "15 pictures, smallest 79 px",
+  "pets": "8 tiles, smallest 90 px",
+  "train": "20 stations all on screen: true, reaching 61% down",
+  "touch": "walked 7.6 m, jumped to y 1.60"
  }
 ]

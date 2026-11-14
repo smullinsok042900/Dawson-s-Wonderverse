@@ -4,6 +4,25 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 40 — connected adventures, one release
+
+- Eleven optional picture adventures connect Fluffkin rescue, companions, learning, regional activities, art and Ocean Pier treasure. Progress and rewards are saved by stable event IDs; repeated/out-of-order discoveries cannot duplicate prizes.
+- A picture/voice discovery book records sea creatures and places. Home and Art Plaza galleries keep compact painting and building previews, with saved souvenirs and a cushion choice. The pattern reward starts a small moving train in the house.
+- Regional additions include an owl search with visible and audible clues, persistent snow friend, varied deterministic fishing catches, reusable shell clue, harvest/feeding milestones, sea discoveries and learning flowers.
+- Illustrated map destinations show discovered activity pictures. The paw prompt shares its target selection with the indicator. Optional guide controls are at least 44 px and hide while creative tool trays are visible.
+- Independent voice/music/effect settings, calm effects and gentle controls retain the existing master mute. Calm bubble, float/sink and magnet activities retain static visible outcomes. Musical creatures, castle toys and marble bins use the music channel.
+- Existing save key and fields remain intact. Completed rescues can retell their story through pictures without resetting rescued babies. A detached home display is removed from both scene traversal and outdoor tap targets.
+- Verified on desktop Chromium / SwiftShader (not an actual iPhone):
+  - Full existing game smoke suite: **159/159**, no console errors or warnings, including old save/reload, creatures, rides, painting, building, farm, pier and learning checks.
+  - Final focused adventure integration and regression suites passed after the home-display, music-routing and narrow-screen follow-ups. They check real activity callbacks, save reload, guide restoration, rescue replay, home routing, calm learning, music sources, woodland persistence, train movement and creative tray access.
+  - Pure adventure state **8/8** and comfort/audio **3/3** tests passed.
+  - **11 unique emulated screen sizes** passed. An older-iPad screenshot exceeded the device harness's original 30 s capture allowance; its rerun with the same 240 s screenshot allowance as the smoke harness passed every unchanged game/layout/touch assertion. Device results are in `screenshots/devices/RESULTS.json`.
+  - Before/after performance and earned-reward measurements recorded in PERFORMANCE_LOG.md and tests/PERFORMANCE_BUILD40.json. Shader count remains 101; far home display detaches.
+- Built to one offline HTML file; service-worker cache version is build 40. Previous published HTML retained in backups.
+- After merging the newer main: rebuilt the HTML; reran all 11 unit checks, both focused adventure browser suites, and all three graphics-cap scenarios successfully on desktop Chromium.
+- Delivery: repository access is now installed and the combined release is uploaded as PR #46. Latest main fixes for the iPhone graphics cap are retained; the PR is left for the user to merge.
+
+
 ## Checkpoint: build 39 — fixes from the first real iPhone report of the new builds
 - **The report (iPhone, iOS 18.7, Home Screen app, build 36, 844×390 at 3×):**
   - start-up 3.8–4.8 s; moving between areas 130–300 ms; worst test frames 38–78 ms; frame work 7.7–8 ms;
