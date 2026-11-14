@@ -4,6 +4,20 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 49 — Balloon Hills (desktop, software rendering; `ba.cjs 3D_build48_index.html index.html`, run twice)
+| View | Script ms/frame 48 → 49, run 1 | run 2 | Long tasks |
+|---|---|---|---|
+| Park | 14.3 → 14.3 | 13.0 → 15.6 | 0 |
+| Creature area | 9.7 → 14.7 | 13.0 → 10.6 | 0 |
+| Castle | 12.5 → 13.3 | 10.5 → 13.5 | 0 |
+| Map jump to Art Plaza | 0 → one 70 ms task | 0 → 0 | |
+| Walk into new areas | 0 → 0 | 0 → one 54 ms task (x ≈ 462, the known spot) | |
+
+- Differences flip direction between the two identical runs (e.g. the creature area was slower in run 1 and faster in run 2), so they are this machine's noise. Build 49 changes nothing in these views; Balloon Hills is 1 km away and only built when you get near.
+- Memory: geometries 1499 → 1460, textures 162 → 164, **shader programs 103 → 103**, heap 134 → 138 MB.
+- Balloon Hills: no page errors, no slow shader waits, no new shader programs when walking in (browser check).
+- Screens: the 16th map picture and 21st station did not fit on 320 px tall phones (iPhone SE, Galaxy S9+, Pixel 5). Fixed with a short-screen layout (6 map columns, 44 px station buttons). Devices test 11/11.
+
 ## Build 48 — rocket ride (desktop, software rendering; `ba.cjs 3D_build47_index.html index.html`, then `calls.cjs`)
 | View | Script ms/frame 47 → 48 | Long tasks | Notes |
 |---|---|---|---|

@@ -27,6 +27,9 @@ are in `PERFORMANCE_LOG.md`.
   - No page errors.
   - Screenshots of each spot.
   - New smoke-test checks (map, the six activities, the slide, station, sky gate).
+- **Short screens:** the extra map picture and train station did not fit on 320 px tall phones. A short-screen layout fixes it (6 map columns, 44 px station buttons, the smallest comfortable touch size).
+- **Test fixes (not game bugs):** Biscuit can stand behind the slide's tube for several seconds (more tries); the unicorn wanders (tap it where it is).
+- **Full smoke test 189/189, devices 11/11** (desktop emulation).
 - **Not yet tried on the real iPhone.**
 
 ## Checkpoint: build 48 — climb into the rocket, the big red button, a real lift-off
