@@ -91,7 +91,7 @@ export function initSea(G, api) {
   // ---------- in and out ----------
   function dive() {
     if (P.ride || P.layer !== '') return; if (!built) build();
-    api.flash(); P.layer = 'sea'; P.x = SEA.ox + 4; P.y = -.8; P.z = 0; P.vx = 0; P.vy = -2; P.grounded = false; root.visible = true;
+    api.flash(); P.layer = 'sea'; P.x = SEA.ox + 4; lastX = P.x; /* (a fresh dive starts in the pool: forget where you were last time) */ P.y = -.8; P.z = 0; P.vx = 0; P.vy = -2; P.grounded = false; root.visible = true;
     Sound.tone(300, .3, 'sine', .05, .6); Sound.whoosh && Sound.whoosh(); say('Splash! Swim down to the bottom of the deep pool!'); disc('deeppool', 'Dive into the deep pool!'); api.snap();
   }
   function climbOut() { api.flash(); P.layer = ''; P.x = SEA.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.swim = false; root.visible = false; Sound.tone(520, .2, 'triangle', .05, 1.2); say('💦 Out of the pool! Drip drip!'); api.snap(); }
@@ -100,6 +100,7 @@ export function initSea(G, api) {
     if (P.layer !== 'sea') { if (root.visible) root.visible = false; return; }
     root.visible = true;
     // walls: the pool's right-hand wall only has an opening at the bottom (the tunnel)
+    if (Math.abs(P.x - lastX) > 2) lastX = P.x; // (a jump to another place is not swimming through the wall)
     const wall = SEA.poolB; if (P.y > SEA.tunnelTop - .2 && ((lastX <= wall && P.x > wall) || (lastX >= wall && P.x < wall))) { P.x = lastX <= wall ? wall - .05 : wall + .05; P.vx = 0; }
     if (P.x > wall && P.y > SEA.top) { P.y = SEA.top; if (P.vy > 0) P.vy = 0; } // (out in the sea the water goes on above you: you can't climb out there)
     if (P.x > wall + 1 && lastX <= wall + 1) { say('🐠 The underwater world! So many sea creatures!'); disc('underwater', '🐠 Swim through the tunnel at the bottom of the pool into the underwater world!'); }
