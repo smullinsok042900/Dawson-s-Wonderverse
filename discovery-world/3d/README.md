@@ -20,6 +20,17 @@ Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same 
 
 Desktop software-rendering verification is recorded in DEVELOPMENT_LOG.md and PERFORMANCE_LOG.md. Real iPhone playtesting remains necessary.
 
+## 3D build 50: much bigger Moon and Mars
+
+- **The Moon and Mars are three times bigger,** each with two new areas:
+  - **The Moon:** a bouncy crater, a moon station that calls Earth, a moon-phases toy, collecting moon rocks, a mountain to climb, a hidden crystal cave, shape sorting, a moon buggy, and footprints that stay in the dust.
+  - **Mars:** mesas to climb, rocks that say what they are, an ice cave, a blue sunset, a pretend explorer base with a greenhouse, the little helicopter, Mars's two moons, and a flag trail.
+- **Faster where it counts:**
+  - Only the planet you are on is kept in memory.
+  - New areas are built bit by bit as you walk there.
+  - The planet you fly to is made during the countdown.
+- A little rocket sign in each new area takes you back to your rocket.
+
 ## 3D build 49: Balloon Hills
 
 - **A new place past the Ocean Pier** (by map, train or walking):

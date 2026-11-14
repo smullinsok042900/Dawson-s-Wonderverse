@@ -422,6 +422,16 @@ const UG_F = -6;
       const r = await page.evaluate(id => { const its = __DDW3.G.interact.filter(i => i.layer === 'space' && i.x > __DDW3.G.spaceBounds[0] - 2 && i.x < __DDW3.G.spaceBounds[1] + 2 && i.disc && !String(i.disc).startsWith('space_')); its.forEach(i => i.run()); return { n: its.length, alien: __DDW3.world.disc.has('alien_' + id) }; }, id);
       (r.alien && r.n >= 3 ? found : missing).push(`${id}:${r.n}${r.alien ? '' : ' (no alien)'}`); }
     check('every planet has its own aliens and at least 2 activities of its own', missing.length === 0, (missing.length ? 'MISSING ' + missing.join(' ') + ' | ' : '') + found.join(' ')); }
+  // (build 50) BIGGER PLANETS: the Moon and Mars are 330 m long; their new areas are built as you walk there; their
+  // activities work; the little rocket signs take you back to the rocket; only the planet you are on is in memory
+  for (const [id, ds] of [['moon', ['moonbounce', 'moonradio', 'moonphases', 'moonsamples', 'mooncave', 'moonshapes', 'moonbuggy']], ['mars', ['marsrocks', 'marsice', 'marssunset', 'marsbase', 'marsgarden', 'marsheli', 'marsmoons', 'marsflags']]]) {
+    await flyTo(id); const B = await page.evaluate(() => __DDW3.G.spaceBounds);
+    for (const x of [B[0] + 60, B[0] + 120, B[0] + 180, B[0] + 240, B[0] + 300]) { await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; }, x); await sleep(1500); }
+    const r = await page.evaluate(([B, ds]) => { __DDW3.G.interact.filter(i => i.layer === 'space' && i.x > B[0] + 108 && i.x < B[1] && i.disc && ds.includes(i.disc)).forEach(i => i.run()); return new Promise(res => setTimeout(() => res({ len: Math.round(B[1] - B[0]), miss: ds.filter(d => !__DDW3.world.disc.has(d)), groups: __DDW3.G.scene.children.filter(o => /^space:/.test(o.name)).map(o => o.name) }), 1500)); }, [B, ds]);
+    check(`${id}: a big place (330 m) whose new areas have their own activities`, r.len >= 320 && r.miss.length === 0, `length ${r.len} m, missing: ${r.miss.join(' ') || 'none'}`);
+    check(`${id}: only this planet is kept in memory`, r.groups.length === 1 && r.groups[0] === 'space:' + id, r.groups.join(' '));
+    const back = await page.evaluate(B => { const it = __DDW3.G.interact.find(i => i.layer === 'space' && i.action === 'Back to the rocket' && i.x > B[0] + 200); if (!it) return null; it.run(); const r = __DDW3.G.rockets[__DDW3.G.spaceHere ? __DDW3.G.spaceHere() : Object.keys(__DDW3.G.rockets).find(k => k !== 'earth')]; return [__DDW3.player.x, r && r.x]; }, B);
+    check(`${id}: the little rocket sign takes you back to your rocket`, !!back && back[1] != null && Math.abs(back[0] - back[1] - 2.5) < .5, JSON.stringify(back)); }
   { await flyTo('earth'); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 688.5) < 3, `layer=${c.layer} x=${c.x.toFixed(1)}`); }
   // the voice can be chosen by a grown-up (the test browser may have no voices: the panel must still work)
   check('the ⚙️ panel has a voice chooser', await page.evaluate(() => !!document.querySelector('#perfPanel .ppVoices') && typeof __DDW3.G.voice === 'object' ? true : !!document.querySelector('#perfPanel .ppVoices')));
