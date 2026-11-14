@@ -19,9 +19,13 @@ export function initPerf(o) {
   let shown = false, lastUI = 0, lastLayer = player.layer, lastX = player.x, trans = null;
   const box = document.createElement('div'); box.id = 'perfbox'; document.body.appendChild(box);
 
+  // where you are, in words a grown-up can recognise: the place name, the layer (house, castle, underground), riding what
+  const PLACES = [[-670, -536, 'Ocean Pier'], [-536, -404, 'Happy Farm'], [-404, -272, 'Frosty Peaks'], [-272, -150, 'Whispering Woods'], [-150, -18, 'Sunny Seaside'], [-18, 51, 'Playhouse'], [51, 92, 'Studio'], [92, 135, 'Wonder Lab'], [135, 312, 'Park'], [312, 356, 'creature area'], [356, 394, 'Dino Valley'], [394, 428, 'castle'], [428, 548, 'Adventure Trail'], [548, 668, 'Toy Town'], [668, 788, 'Lab Gardens'], [788, 910, 'Art Plaza']];
+  function where() { const x = player.x, p = PLACES.find(q => x >= q[0] && x < q[1]); const L = player.layer === 'in' ? 'in the house' : player.layer === 'castle' ? 'in the castle' : player.y < -1.5 ? 'underground' : (p ? p[2] : 'x ' + Math.round(x));
+    return `(${L}${player.ride ? ', riding the ' + player.ride.type : ''}${G.activityOpen ? ', learning game' : ''})`; }
   function frame(ms, now) {
     ft[head] = ms; head = (head + 1) % N; if (count < N) count++;
-    st.frames++; st.total += ms; if (ms > st.worst) st.worst = ms; if (ms > 50) st.spikes50++; if (ms > 100) { st.spikes100++; if (ms > 250) { st.freezes.push(Math.round(ms)); if (st.freezes.length > 20) st.freezes.shift(); } }
+    st.frames++; st.total += ms; if (ms > st.worst) st.worst = ms; if (ms > 50) st.spikes50++; if (ms > 100) { st.spikes100++; if (ms > 250) { st.freezes.push(`${Math.round(ms)} ms ${where()}`); if (st.freezes.length > 20) st.freezes.shift(); } } // (build 40: each freeze says WHERE it happened)
     const inf = renderer.info.render; st.calls = inf.calls; st.tris = inf.triangles;
     // loading between areas: a jump (house door, teleport, slide end...) starts a timer that stops once frames are smooth again
     if (player.layer !== lastLayer || Math.abs(player.x - lastX) > 20) { if (trans) done(now); trans = { from: lastLayer || 'outside', to: player.layer || 'outside', t0: now, worst: 0, smooth: 0 }; }
@@ -80,7 +84,7 @@ export function initPerf(o) {
       `Graphics: level ${e.level} of 5${e.lite ? ' (lite effects)' : ''}, frame work ${G.gfx ? G.gfx.work.toFixed(1) : '?'} ms, shadows ${e.shadow} px, post-processing ${e.post ? 'on' : 'off'}; JS memory: ${e.mem}`,
       `Start-up: playable after ${G.startupMs ? (G.startupMs / 1000).toFixed(1) + ' s' : '?'}`,
       ...results.map(r => '• ' + r),
-      `Whole session so far: ${all.fps} fps avg, 1% low ${all.low1} fps, worst frame ${Math.round(st.worst)} ms, frames over 100 ms: ${st.spikes100}, freezes over 250 ms: ${st.freezes.length ? st.freezes.join(', ') + ' ms' : 'none'}`,
+      `Whole session so far: ${all.fps} fps avg, 1% low ${all.low1} fps, worst frame ${Math.round(st.worst)} ms, frames over 100 ms: ${st.spikes100}, freezes over 250 ms: ${st.freezes.length ? st.freezes.join(', ') : 'none'}`,
       `Loading between areas (recent): ${st.trans.length ? st.trans.join('; ') : 'none measured'}`,
       `Voice: ${voiceLine()}`,
       `Automatic quality changes: ${G.gfx && G.gfx.changes.length ? G.gfx.changes.join(', ') : 'none'}`,
