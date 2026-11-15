@@ -9,6 +9,7 @@
 // It is inspection only: it never changes the world, never saves and does nothing without the flag.
 // ===================================================================
 import * as THREE from 'three';
+import { UG } from './underground.js';
 
 export async function runWorldCheck({ G, player, renderer, scene, teleport }) {
   const box = document.createElement('pre'); box.id = 'mpCheck'; document.body.appendChild(box);
@@ -37,7 +38,7 @@ export async function runWorldCheck({ G, player, renderer, scene, teleport }) {
   }
   for (const it of I) {
     const y = it.y || 0, layer = it.layer || '';
-    if (y <= .6 || layer === 'in' || layer === 'castle' || layer === 'space' || layer === 'sea') continue;
+    if (y <= 3 || layer === 'in' || layer === 'castle' || layer === 'space' || layer === 'sea') continue; // (build 60: PAW reaches ~3 m, so a spot up to 3 m high is usable from the ground)
     const stand = P.some(z => (z.layer || '') === layer && it.x >= z.a - .2 && it.x <= z.b + .2 && Math.abs(z.y - y) < .35);
     if (!stand) add('activity with nothing to stand on', `${label(it)} at x=${it.x.toFixed(1)} y=${y.toFixed(1)}`);
   }
@@ -55,9 +56,11 @@ export async function runWorldCheck({ G, player, renderer, scene, teleport }) {
     if (o.scale.x === 0 || o.scale.y === 0 || o.scale.z === 0) zeroScale++;
     if (!o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
     bb.setFromObject(o); if (bb.isEmpty()) return; bb.getCenter(centre);
-    if (Math.abs(centre.x) < 990 && centre.y > -2.5 && bb.max.y < -.08) buried.push(`${o.name || o.type} at x=${centre.x.toFixed(1)} y=${centre.y.toFixed(2)} z=${centre.z.toFixed(2)}`);
-    const h = bb.max.y - bb.min.y;
-    if (h > 60) broken.push(`${o.name || o.type} is ${h.toFixed(0)} m tall at x=${centre.x.toFixed(0)}`);
+    // (build 60) the underground cave and the sky dome are not "buried"/"broken": they are meant to be where they are
+    const inCave = centre.x > UG.x0 - 2 && centre.x < UG.x1 + 2 && centre.y > UG.floor - 1.5 && centre.y < UG.ceil + 1.5 && Math.abs(centre.z) < 20;
+    if (!inCave && Math.abs(centre.x) < 990 && centre.y > -2.5 && bb.max.y < -.08) buried.push(`${o.name || o.type} at x=${centre.x.toFixed(1)} y=${centre.y.toFixed(2)} z=${centre.z.toFixed(2)}`);
+    const h = bb.max.y - bb.min.y, r = o.geometry.parameters && o.geometry.parameters.radius;
+    if (h > 60 && !(r >= 200)) broken.push(`${o.name || o.type} is ${h.toFixed(0)} m tall at x=${centre.x.toFixed(0)}`);
   });
 
   show('--- the world as built ---');
@@ -75,8 +78,9 @@ export async function runWorldCheck({ G, player, renderer, scene, teleport }) {
   for (const [x, name] of STOPS) {
     try {
       teleport(x, 0);
-      await raf();
-      const r = renderer.info.render;
+      await raf(); await raf();
+      let r = renderer.info.render;
+      if (r.calls < 5) { await raf(); await raf(); r = renderer.info.render; } // (build 60: a frame drawn before the world is ready is not a cost)
       if (r.calls > maxCalls) { maxCalls = r.calls; worst = name + ' (x=' + x + ')'; }
       maxTris = Math.max(maxTris, r.triangles);
       show(`${name} x=${x}: ${r.calls} draw calls, ${(r.triangles / 1000).toFixed(0)}k triangles`);

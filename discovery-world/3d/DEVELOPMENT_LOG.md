@@ -64,6 +64,21 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
+## Checkpoint: build 60 — first fixes from the world check
+- **The check's own accuracy:** the 16 "buried" meshes were the underground cave's own objects (y −0.3…−2.1 inside
+  `UG`, x 6…33) and the "800 m tall mesh" was the sky dome. The check now knows the cave volume and the sky, and treats
+  an activity up to 3 m high as usable (PAW's reach), so its report only lists real faults. It also waits two frames (and
+  retries a frame that drew almost nothing) before measuring, which removes the bogus "1 draw call" rows.
+- **Fixed in the game:** the Fluffkin-friends' hint ring sat at the creature's perch height, so the owl's ring floated
+  2.1 m in the air by its tree; it now sits on the ground (`friends.js`, `critter`).
+- **Fixed (memory):** each other player's 👋 sprite material was created per friend and never freed; it is disposed when
+  they leave (`multiplayer.js`, `removeOther`). The wave picture itself is shared and kept.
+- **Real faults found:** none other in the classes checked (no two activities in one spot, no broken platform or solid,
+  no buried outdoor mesh). **Not verified visually:** nothing was rendered here; the owl ring fix is code-level.
+- **Performance baseline from the first run** (desktop, software rendering, the same URL gave different rows between
+  runs until this build's wait fix): park entrance ~247 draw calls, Ferris wheel ~159–251, Balloon Hills ~239, castle front
+  ~158, studio ~150, lab ~120; triangles 44k–530k. Those are the areas to attack next.
+
 ## Checkpoint: build 59 — a whole-world inspection pass (`?worldcheck`) for the overhaul
 - **The family asked** for a complete overhaul: every object checked for overlaps, buried/floating/misplaced things, a
   visual upgrade everywhere, and better performance. That cannot be done honestly in one blind pass — this environment

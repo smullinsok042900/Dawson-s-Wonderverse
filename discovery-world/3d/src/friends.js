@@ -175,7 +175,7 @@ export function initFriends(G, api) {
     const parts = build(root); contactShadow(root, kind === 'unicorn' ? 2.2 : 1.3, kind === 'unicorn' ? 1.1 : 1.0);
     const c = { kind, root, parts, x, y, z, t: Math.random() * 6, act: 0, near: 0, onTap, disc, msg };
     root.userData.tap = () => tapCritter(c); root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => tapCritter(c); } }); G.taps.push(root);
-    G.interact.push({ x, y, layer: '', disc, run: () => tapCritter(c), hintY: 2.6 });
+    G.interact.push({ x, y: Math.min(y, 0), layer: '', disc, run: () => tapCritter(c), hintY: 2.6 }); // (build 60: the hint ring sits on the ground, not in the air where the creature's perch is)
     if (kind !== 'snail') { c.agent = life.add({ root, B: parts.B, species: SPEC[kind] || 'bear', home: new THREE.Vector3(x, y, z), baseY: y, radius: WANDER[kind] ?? .8, zMax: z + .5, noTurn: kind === 'frog' || kind === 'owl' }); c.agent.who = c; }
     critters.push(c); return c;
   }
