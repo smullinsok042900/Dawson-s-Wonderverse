@@ -206,8 +206,9 @@ export function initMultiplayer(G, api) {
     if (!o) { o = { id, interp: makeInterp(), colour: s.k ?? 0, kind: null, model: null, ring: null, mark: null, waveM: null, waveAt: 0, petSig: '', petCodes: '', petModels: [], seen: now }; others.set(id, o); say('👋 A friend joined the room!', true); Sound.chime(); if (panel.classList.contains('show')) render('room'); }
     o.seen = now; o.colour = s.k ?? o.colour;
     o.petSig = typeof s.ps === 'string' ? s.ps : (Array.isArray(s.p) ? s.p.join(',') : '');
-    o.interp.push(now, { x: +s.x || 0, y: +s.y || 0, z: +s.z || 0, f: s.f || 1, g: !!s.g, r: !!s.r, l: s.l || '', h: !!s.h, c: s.c || 'pip' });
-    if (o.kind !== (s.c || 'pip')) buildModel(o, s.c || 'pip');
+    const kind = api.CREATURES && api.CREATURES[s.c] ? s.c : 'pip'; /* (build 59: an unknown creature, e.g. from a newer game, shows as Pip) */
+    o.interp.push(now, { x: +s.x || 0, y: +s.y || 0, z: +s.z || 0, f: s.f || 1, g: !!s.g, r: !!s.r, l: s.l || '', h: !!s.h, c: kind });
+    if (o.kind !== kind) buildModel(o, kind);
     if (o.ring && o.ring.userData.c !== o.colour) { o.ring.material.color.set(COLOURS[o.colour % 4]); o.mark.material.color.set(COLOURS[o.colour % 4]); o.mark.material.emissive.set(COLOURS[o.colour % 4]); o.ring.userData.c = o.colour; }
     if (s.k === myColour && id < (T && T.id || '')) fixColour();
   }

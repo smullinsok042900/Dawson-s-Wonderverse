@@ -4,6 +4,29 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 59 — Sprout, a fourth main character
+- **The family asked** for a fourth character, since up to four players can play together now and there were only three.
+- **Sprout** (`characters.js`, `sproutSpec`) is an original leaf sprite:
+  - a round, velvety mint-green body (the same kind of soft material as Pip's, so no new shader);
+  - two leaf ears that point up like sprouting leaves and spring when it hops;
+  - big violet eyes that blink and glance, like the others;
+  - a pink flower on a stem on top of its head, which sways as it walks and spins when it jumps or giggles;
+  - a curly leaf tail, rosy cheeks and a smile.
+- One sculpted body on its own skeleton, like Pip, Zuzu and Jelly, with its own walk (a bouncy step, swinging arms, the flower swaying after everything else) and the same waves, looks and hops when idle.
+- **Choosing it:**
+  - It appears on the title screen and in the top bar (four pictures).
+  - Its picture is drawn by the game like the others (the Android picture fix reads four pictures now).
+  - Saves remember it, the 🎨 colour styles work for it, and its jumps are between Pip's and Zuzu's.
+- **Multiplayer:** others see Sprout. A game that receives a character it doesn't know (an older or newer build) shows Pip instead of breaking.
+- **Verified (desktop, software rendering):**
+  - Screenshots of the title screen, standing and jumping.
+  - No page errors, and no new shader programs (150 before and after choosing it, in `?test`).
+  - Unit tests 47/47 and learning contracts 41/41.
+  - Browser tests: see the PR.
+- **Not yet tried on the real iPhone.**
+
+## Checkpoint: build 58 and earlier (another session): see below
+
 ## Checkpoint: build 56 — Play Together, a world you share
 - **The family asked** for multiplayer to become a truly shared world, not just player-position markers. The Firebase
   project they made is now in the game.

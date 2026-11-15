@@ -32,6 +32,8 @@ the build workflow in `.github/workflows/build-3d.yml`, which rebuilds this game
 - **Still, before every build, `git fetch origin main` and merge it.** If anything new appeared there, keep it, resolve
   conflicts without removing it, and run its own tests too: `node --test tests/*.test.mjs`,
   `node tests/unit/learning-contract.cjs` and `node tests/world-regressions.cjs`.
+- **(2026-11-16) This chat keeps developing** (the user's decision); another session only finished the multiplayer part
+  (builds 56–58) while this chat was out of usage.
 - **(2026-11-15) This chat is the sole developer again** (the user said so with the multiplayer request). A second chat
   made the planet graphics (builds 51 and 51b, merged). If any other work ever appears in `main`, keep it and merge it.
 - **Planets (build 50+):** places are up to 330 m long. New areas live in `src/planets.js` (`PLANET_EXTRA`) and are built

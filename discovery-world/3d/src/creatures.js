@@ -14,6 +14,7 @@ export const CREATURES = {
   pip: { name: 'Pip', jump: [9.4, 8.2], body: '#f2c2ff' },
   zuzu: { name: 'Zuzu', jump: [9.6, 8.4], body: '#ffd84a' },
   jelly: { name: 'Jelly', jump: [9.8, 8.6], body: '#7ef0c8' },
+  sprout: { name: 'Sprout', jump: [9.5, 8.3], body: '#a3e88f' }, // (build 59: a fourth friend, so four players can each have their own)
 };
 // build 17: softer, less glassy "toy" surfaces with a fine grain (painted wood / soft vinyl, not wet plastic)
 const toy = (color, o = {}) => new THREE.MeshPhysicalMaterial({
@@ -139,7 +140,7 @@ export function makeCreature(kind, style = {}) {
   // build 14: a sculpted, skinned character on a real skeleton (characters.js)
   const P = buildCharacter(kind, style);
   const A = { t: Math.random() * 9, phase: 0, run: 0, squash: spring(), turn: 0, blink: 2, earS: spring(), ear2: spring(), tailS: spring(), react: 0, prevGround: true, prevVy: 0, idle: 0, act: null, actT: 0, lastStep: 0 };
-  const SQ = { pip: .2, zuzu: .16, jelly: .5 }[kind], SQX = SQ * .6;
+  const SQ = { pip: .2, zuzu: .16, jelly: .5, sprout: .24 }[kind] ?? .2, SQX = SQ * .6;
   function update(dt, s) {
     A.t += dt; const speed = Math.abs(s.vx || 0);
     A.run += ((s.grounded && !s.seated ? Math.min(1, speed / 5) : 0) - A.run) * Math.min(1, dt * 10);
@@ -150,7 +151,7 @@ export function makeCreature(kind, style = {}) {
     A.prevGround = s.grounded; A.prevVy = s.vy || 0;
     if (kind === 'jelly' && A.run > .2) { const st = Math.floor(A.phase / Math.PI); if (st !== A.lastStep) { A.lastStep = st; A.squash.v -= 4.5 * A.run; } }
     // idle actions after standing still for a while
-    if (A.run < .05 && s.grounded && !s.seated && !A.act) { A.idle += dt; if (A.idle > 4.5) { A.idle = 0; A.act = { pip: ['wave', 'look', 'hop'], zuzu: ['twirl', 'look', 'hop'], jelly: ['jiggle', 'look', 'hop'] }[kind][Math.floor(Math.random() * 3)]; A.actT = 0; } } else if (A.run > .05 || !s.grounded) A.idle = 0;
+    if (A.run < .05 && s.grounded && !s.seated && !A.act) { A.idle += dt; if (A.idle > 4.5) { A.idle = 0; A.act = { pip: ['wave', 'look', 'hop'], sprout: ['wave', 'look', 'hop'], zuzu: ['twirl', 'look', 'hop'], jelly: ['jiggle', 'look', 'hop'] }[kind][Math.floor(Math.random() * 3)]; A.actT = 0; } } else if (A.run > .05 || !s.grounded) A.idle = 0;
     if (A.act) { A.actT += dt; if (A.actT > 1.6) A.act = null; }
     const act = A.act, ak = A.actT;
     if (act === 'hop' && ak < .05) A.squash.v += 7;

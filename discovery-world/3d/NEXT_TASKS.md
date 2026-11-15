@@ -32,6 +32,7 @@ A tour of every district found these still looking like placeholders. Do them in
 - Then the remaining toys built from plain cylinders and boxes (`c.cyl` is used 56 times in `expansion.js`).
 
 ## Waiting for the user
+- **Build 59 Sprout on the real iPhone:** does Sprout's picture appear on the title screen, and is it smooth to play as?
 - **Play Together, a world you share (build 56): paste the database rules once** (`firebase-rules.json`, step 3 of
   `MULTIPLAYER.md`), check that anonymous sign-in is on, then test on two real devices: build together, paint together,
   see a friend's pets, wave, leave and rejoin (the room keeps its world). The first push runs the new GitHub build.
