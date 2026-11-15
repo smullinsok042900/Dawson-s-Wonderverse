@@ -9,7 +9,7 @@ are in `PERFORMANCE_LOG.md`.
 - **Toy Town houses** (`src/earthkit.js`, `toyHouses`): walls that darken towards the ground, a ridged roof with overhanging eaves painted in rows of tiles, a chimney, a framed door with a round window, a knob, a step and a striped awning, windows with cross bars, shutters and flower boxes, a flag on some. All nine houses are ONE mesh (painted colours), replacing 18 meshes. A little smoke rises from the chimneys while you are near.
 - **The sea** (`makeSea`; the beach at x −86 and the Ocean Pier): pale shallows with foam at the shore, turquoise, then deep blue far out, with rolling waves that catch the sunlight. About a thousand points are moved each frame, only while the camera is near.
 - **No new shaders when walking in:** both use the painted materials already compiled during loading (`warmPaint`). The shader count is the same at every stop of the tour (149; it was 148: one more is compiled during LOADING because the beach sea is part of the world from the start).
-- **Verified (desktop, software rendering):** tour screenshots of Toy Town, the beach and the pier before and after; no page errors. Full smoke test: see the result recorded with this build.
+- **Verified (desktop, software rendering):** tour screenshots of Toy Town, the beach and the pier before and after; no page errors. Full smoke test, run alone on the final build: **195/195 passed**, no console errors or warnings.
 - **Not done yet (next batches):** see `NEXT_TASKS.md`, "Earth graphics".
 - **Not yet tried on the real iPhone.**
 
