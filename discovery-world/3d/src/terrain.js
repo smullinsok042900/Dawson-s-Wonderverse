@@ -90,7 +90,7 @@ export function makeRidge(scene, opts = {}) {
 }
 
 /** angular rock formations sitting on a range's slope, all painted into ONE mesh (one draw call) */
-export function makeCrags(scene, H, { x0, x1, z0, z1, n = 12, seed = 0 } = {}) {
+export function makeCrags(scene, H, { x0, x1, z0, z1, n = 12, seed = 0, snowy = false } = {}) {
   if (typeof H !== 'function' || !(n > 0)) return null;
   const b = makeBatch();
   for (let i = 0; i < n; i++) {
@@ -101,8 +101,8 @@ export function makeCrags(scene, H, { x0, x1, z0, z1, n = 12, seed = 0 } = {}) {
     const s = .9 + fbm2(i * 5.3 + seed, 2.1, 2) * 2.3;
     b.put(rockGeo(i + seed, 1), x, H(x, z) + s * .12, z, (px, py, pz, nx, ny, nz, o) => {
       const st = .5 + .5 * Math.sin(py * 2.1 + fbm2(px * .6, pz * .6, 2) * 3);
-      ramp(['#8f968c', '#aab2a4', '#c6ccbe'], st, o).multiplyScalar(.74 + .32 * Math.max(0, ny));
-      o.lerp(TC.set('#7fbf63'), sstep(.62, .96, ny) * .45); // a little moss on top
+      ramp(snowy ? ['#b9c4d0', '#d8e2ec', '#f2f7ff'] : ['#8f968c', '#aab2a4', '#c6ccbe'], st, o).multiplyScalar(.74 + .32 * Math.max(0, ny));
+      o.lerp(TC.set(snowy ? '#ffffff' : '#7fbf63'), sstep(snowy ? .35 : .62, snowy ? .8 : .96, ny) * (snowy ? .6 : .45)); // snow caps, or a little moss on top
     }, [s * 1.1, s * (1.2 + fbm2(i, 4, 2) * .8), s * .95], [0, fbm2(i * 7.7, 3, 2) * 6.283, 0]);
   }
   if (!b.count()) return null;

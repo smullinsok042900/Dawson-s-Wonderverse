@@ -4,6 +4,22 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 69 — mountains behind Frosty Peaks and the Woods (overhaul, stage 4)
+- **The family asked** for depth in every area. The park and Balloon Hills got real ranges in build 66; **Frosty Peaks
+  and Whispering Woods** still had open sky behind them (the woods had trees only to z −11.5; Frosty Peaks had a
+  squashed-sphere sledding hill and nothing behind it).
+- **Frosty Peaks — `src/expansion.js` (builder `frosty`):** a displaced range x −410…−266, z −12…−48, up to **24 m**,
+  96 × 42 cells, with **snow caps above the snow line** and 14 **icy crags** on its slope (`makeCrags` now takes a
+  `snowy` flag: pale snow-and-ice strata with white caps instead of grey rock with moss).
+- **Whispering Woods — builder `woods`:** a range x −268…−146, z −12…−44, up to **15 m**, 84 × 38 cells, with 12 rock
+  crags — summits, a ridgeline and erosion gullies behind the forest instead of empty sky.
+- **Nothing in either area moved:** both ranges start with the same flat 3.2 m front band at y = 0, so the woods trees
+  (which stand at z −7.5…−11.5), the sledding-hill steps, the sled, the snowman pile, the snowball target, the frozen
+  pond, the penguins and every activity stand exactly where they did.
+- **Cost:** four more draw calls in total (two ranges, two crag fields), about 6.4k and 5.7k triangles, no new shaders.
+- **Not verified visually** (no renderer here): what to check on a phone is the horizon behind Frosty Peaks (snowy peaks
+  with white caps) and behind the Woods (green/rock summits above the trees).
+
 ## Checkpoint: build 68 — a real cave, and the tide pool moves (overhaul, stage 3)
 - **The family asked** for depth in every area, including the underground and the sea side. Two places were still flat:
   the underground cave (a smooth purple box for a ceiling, a flat floor and a flat back wall) and the beach's tide pool
