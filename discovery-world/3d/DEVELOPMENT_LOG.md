@@ -4,6 +4,27 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 74 — verified horizon, softer hills, visible snow caps (art direction, third pass)
+- **Verified with real screenshots (web inspector, published build 73):** the outdoor views now read
+  **meadow → hills → distant ridge → sky**. At Whispering Woods there is a soft green ridgeline with a clear
+  peak/notch behind the trees and lavender sky above it; at Frosty Peaks the sky gradient has real room above the
+  hills; at the Ocean Pier the sky gradient is unchanged. No grey wall, no hard diagonal cut, no seam where the lawn
+  meets the hills, and **no "Oops!" panel or script error** on any load. Build 73 was confirmed by the in-game
+  "performance build 73" label.
+- **Two things the screenshots still showed, fixed here:**
+  - the hills were more saturated than the lawn next to them (bright card-green against textured grass), so the hill
+    greens are softened (`#8acc72 → #9ad882 → #add69a`);
+  - Frosty Peaks' snow did not register on the crests, because the cap test only allowed white on the steepest faces;
+    caps now start lower (45 % of the height) and are allowed on flatter crests (up to 30° slope), and are painted
+    fully white (`×1.3`).
+- **Not yet verified visually:** this build's two tweaks. Also still open from the screenshots: a wide **pink band**
+  crossing the hillside at Frosty Peaks (looks like a ground zone showing where a range fades), and the fact that the
+  boulders, the fallen log and the trees are still simple smooth primitives — the "detailed sculpted props" part of the
+  brief is not done yet.
+- **Automation limits, stated plainly:** the inspector can only send DOM clicks, so it cannot press keys, hold the
+  d-pad, or open the 🗺️ picture map (all `pointerdown`). It reached Frosty Peaks, the Woods and the Ocean Pier by quest
+  travel. The park rides, ball pit, cave and every planet are still unseen by me.
+
 ## Checkpoint: build 73 — the horizon shows sky and distant peaks (art direction, second pass)
 - **What the build-72 screenshots showed:** the grey wall was gone, but the peaks were **above the top of the frame**.
   The camera is a fixed third-person view at 2.15 m, pitched about 6° down, with a 38° vertical field of view, so the

@@ -94,10 +94,10 @@ export function ridgePaint({ h = 45, snow = false, seed = 0, zFront = -12 }, x, 
   const n = fbm2(x * .3 + seed, y * .42 + z * .18, 3);
   const strata = .5 + .5 * Math.sin(y * 1.15 + n * 3.2 + x * .04);
   const rock = sstep(.28, .6, slope + (n - .5) * .3);
-  ramp(['#79bd63', '#8ccb73', '#a6d488'], .25 + n * .55 + y * .01, out);
+  ramp(['#8acc72', '#9ad882', '#add69a'], .25 + n * .55 + y * .01, out);
   if (y < 1.4) out.lerp(TC.set('#8fdc6a'), sstep(1.4, .2, y) * .8); // the near ground matches the lawn, so there is no seam
   if (rock > 0) { ramp(['#98a096', '#b4bcae', '#cdd3c4', '#8b9188'], strata, TC2); out.lerp(TC2, rock); }
-  if (snow) { const cap = sstep(h * .55, h * .75, y) * sstep(.92, .5, slope + (n - .5) * .4); if (cap > 0) out.lerp(TC.set('#ffffff'), Math.min(1, cap * 1.15)); }
+  if (snow) { const cap = sstep(h * .45, h * .7, y) * sstep(.99, .7, slope + (n - .5) * .4); if (cap > 0) out.lerp(TC.set('#ffffff'), Math.min(1, cap * 1.3)); }
   out.multiplyScalar(.78 + .3 * Math.max(0, ny)); // darker folds: cheap ambient occlusion, so the gullies read as cuts
   const haze = sstep(-60, -115, z) * .45; // far peaks fade into the sky, which separates them from the near hills
   if (haze > 0) out.lerp(TC.set('#c9d7e8'), haze);
