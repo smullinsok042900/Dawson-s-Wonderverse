@@ -4,6 +4,27 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 68 — a real cave, and the tide pool moves (overhaul, stage 3)
+- **The family asked** for depth in every area, including the underground and the sea side. Two places were still flat:
+  the underground cave (a smooth purple box for a ceiling, a flat floor and a flat back wall) and the beach's tide pool
+  (a flat blue disc).
+- **The cave — `src/terrain.js` → `makeCaveRock`, used by `src/underground.js`:** ONE painted mesh now adds
+  - a **rough ceiling sheet** (about 88 × 10 cells, displaced up to **0.45 m**), facing down so the lantern light picks
+    out its bumps, under the flat ceiling;
+  - **44 stalactites** hanging from it, each a displaced cone **0.45–1.95 m** long, 0.2–0.6 m wide;
+  - **20 stalagmites** rising **0.3–1.2 m** from the floor at the back.
+  All of them keep to **z −5.8 … −3.4**, so the ball shaft, the glass lift, the crawl tunnel and the walking lane are
+  exactly as they were; the tallest stalactite still leaves about 2.4 m of head-room above the cave floor. Rock strata are
+  painted by height, the underside is lifted (light from the lanterns), and faint glowing flecks are mixed in.
+- **The tide pool — `src/expansion.js`:** the flat disc is the same animated water mesh the seas use (1.8 × 1.1 m,
+  10 × 8 cells), so the pool ripples and catches the light; it is updated only while you are within 40 m of it. The
+  rocks around it, the tap-to-find-a-creature game and the creature's peek animation are unchanged.
+- **Cost:** two more draw calls in total (one cave-rock mesh, one pool mesh), no new shaders, no new textures. The cave
+  mesh is about 2,000 triangles; the pool is 99 vertices recomputed per frame only when nearby.
+- **Not verified visually:** this is code and geometry, not a picture. What to check on a phone: go down the ball shaft
+  and look up and back in the cave (stalactites above, stalagmites behind the crystal cave), and stand at the tide pool
+  on the pier beach to see the water move.
+
 ## Checkpoint: build 67 — moving water at the Splash Pool (overhaul, stage 2)
 - **The family asked** for water that visibly moves: ripples, highlights, depth-dependent colour — not a moving picture
   on a flat sheet. The three seas and the Adventure Trail stream already used the animated water mesh (`makeSea`, build

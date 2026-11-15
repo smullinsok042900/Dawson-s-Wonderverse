@@ -21,7 +21,7 @@
 import * as THREE from 'three';
 import { fbm2, noise2, sstep, ramp, makeBatch, paintMat, rockGeo } from './spacekit.js';
 
-const TC = new THREE.Color(), TC2 = new THREE.Color();
+const TC = new THREE.Color(), TC2 = new THREE.Color(), CAVE_GLOW = new THREE.Color('#9fe6ff');
 
 /**
  * The height of a mountain range at (x, z), in metres. y is 0 in front of the range (the ground the world stands on)
@@ -107,5 +107,47 @@ export function makeCrags(scene, H, { x0, x1, z0, z1, n = 12, seed = 0 } = {}) {
   }
   if (!b.count()) return null;
   const m = b.mesh(paintMat()); m.name = 'crags'; m.castShadow = false; m.receiveShadow = true; scene.add(m);
+  return m;
+}
+
+
+/**
+ * (build 68) REAL CAVE ROCK for the underground: a rough ceiling sheet (it faces down, so the light picks out its bumps)
+ * with stalactites hanging from it and stalagmites growing at the back, all painted into ONE mesh. The stalactites and
+ * stalagmites keep to the back of the cave (z −5.8 … −3.4), so nothing hangs over the ball shaft, the lift or the
+ * crawl tunnel, and nothing stands in the walking lane.
+ */
+export function makeCaveRock(scene, { x0 = 0, x1 = 40, ceil = -1.6, floor = -6, zBack = -5.8, zFront = -3.4, nA = 44, nB = 20, seed = 0 } = {}) {
+  const b = makeBatch(), W = Math.max(1, x1 - x0);
+  const paint = (px, py, pz, ny, out) => {
+    const n = fbm2(px * .8 + seed, pz * .8 + py * .5, 3), strata = .5 + .5 * Math.sin(py * 2.3 + n * 3);
+    ramp(['#4a2a70', '#6a4a90', '#8a6aa8', '#b0a0c0'], .2 + n * .6, out);
+    out.multiplyScalar(.7 + .35 * Math.max(0, -ny) + .1 * strata); // the ceiling catches the lantern light on its underside
+    if (fbm2(px * 3.1 + 7 + seed, pz * 3.1 + py * 2, 2) > .74) out.lerp(CAVE_GLOW, .35); // faint glowing flecks
+    return out;
+  };
+  // the ceiling itself: a rough sheet just under the flat ceiling, so it reads as rock instead of a painted lid
+  const g = new THREE.PlaneGeometry(W, zFront - zBack, Math.round(W * 1.6), 10);
+  g.rotateX(Math.PI / 2); g.translate((x0 + x1) / 2, ceil - .02, (zBack + zFront) / 2);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const n = fbm2(p.getX(i) * .9 + seed, p.getZ(i) * .9, 3) - .5; p.setY(i, ceil - .02 - Math.abs(n) * .45); }
+  g.computeVertexNormals(); b.add(g, null, paint);
+  // stalactites hanging from the ceiling, and stalagmites growing from the floor at the back
+  const cone = new THREE.ConeGeometry(1, 1, 8, 3);
+  for (let i = 0; i < nA + nB; i++) {
+    const up = i >= nA, k = up ? i - nA : i;
+    const x = x0 + W * ((k + .5) / (up ? nB : nA)) + (fbm2(k * 2.1 + seed, 3.3, 2) - .5) * 1.2;
+    const z = up ? zBack + .4 + (zFront - zBack) * .35 * fbm2(k * 4.3 + seed, 1.9, 2)
+      : zBack + .3 + (zFront - zBack - .6) * fbm2(k * 3.7 + seed, 1.7, 2);
+    const len = (up ? .3 : .45) + fbm2(k * 5.1 + seed, 2.9, 2) * (up ? .9 : 1.5);
+    const rad = .1 + fbm2(k * 7.3 + seed, 4.1, 2) * .22;
+    const cg = cone.clone(), cp = cg.attributes.position;
+    for (let q = 0; q < cp.count; q++) { const s = 1 + (fbm2(cp.getX(q) * 2 + k, cp.getY(q) * 2 + seed, 2) - .5) * .5; cp.setXYZ(q, cp.getX(q) * s, cp.getY(q), cp.getZ(q) * s); }
+    cg.computeVertexNormals();
+    b.put(cg, x, up ? floor + len / 2 : ceil - .02 - len / 2, z, paint, [rad, len, rad], [up ? Math.PI : 0, fbm2(k, 1, 2) * 6.283, 0]);
+    cg.dispose();
+  }
+  g.dispose(); cone.dispose();
+  const m = b.mesh(paintMat()); m.name = 'caverock'; m.castShadow = false; m.receiveShadow = true; scene.add(m);
   return m;
 }

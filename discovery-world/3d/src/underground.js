@@ -14,6 +14,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { toy } from './creatures.js';
 import { NOTES } from './audio.js';
 import { RAINBOW } from './world.js';
+import { makeCaveRock } from './terrain.js';
 
 export const UG = {
   ceil: -1.6, floor: -6, x0: 2, x1: 57,
@@ -59,6 +60,10 @@ export function buildUnderground(G) {
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   for (let i = 0; i < 140; i++) { m4.makeTranslation(UG.x0 + (i * 7.31) % (UG.x1 - UG.x0), UG.floor + .5 + (i * 2.17) % 3.8, -5.85); dots.setMatrixAt(i, m4); dots.setColorAt(i, col.set(['#9fe6ff', '#ff9fd8', '#c9a6ff', '#fff3a6'][i % 4])); }
   add(dots);
+  // (build 68) REAL CAVE ROCK: a rough ceiling with 44 hanging stalactites and 20 stalagmites along the back of the cave,
+  // painted into ONE mesh. They keep to z −5.8 … −3.4, so the ball shaft, the lift, the crawl tunnel and the walking
+  // lane are untouched.
+  makeCaveRock(scene, { x0: UG.x0, x1: UG.x1, ceil: UG.ceil, floor: UG.floor, zBack: -5.8, zFront: -3.4, seed: 5 });
   // warm lanterns + coloured lights
   for (const [x, c] of [[6, '#ffd9a0'], [16, '#ff9fd8'], [24, '#9fe6ff'], [33, '#ffe2a0'], [43, '#c9a6ff'], [53, '#9ff7e0']]) {
     const l = new THREE.PointLight(c, 22, 13, 1.6); l.userData.zone = 'under'; l.position.set(x, UG.floor + 3.2, 1); add(l);
