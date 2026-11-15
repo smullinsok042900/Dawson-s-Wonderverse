@@ -4,6 +4,28 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 56 — Play Together: a shared world (NOT MEASURED)
+
+**No numbers for this build.** It was written where there is no browser and no Node, so nothing could be run. These are
+the expectations to measure with `tests/perf/*.cjs` (old `index.html` vs. the rebuilt one) before it is called verified:
+
+- **Playing alone (no room):** no change is expected. The shared-world hooks are empty functions until a room starts, and
+  the one extra call per painted line returns at once. Measure the park, the studio wall and the Meadow anyway.
+- **In a room, standing still:** the only new work per frame is one string compare of the player's own state (already
+  there in build 55) and, per other player, one pet-list compare (`syncPeerPets`) that returns immediately when their
+  pets have not changed. A friend's pets (at most 2) add their usual draw calls/triangles and are only drawn when their
+  owner is on screen.
+- **In a room, building together:** a friend's arriving blocks are noted and the wall is rebuilt **once per frame**, not
+  once per block. A rebuild recreates only the meshes whose cell changed (plus the stand-on platforms); the block
+  materials are the ones created at startup, so no new shader programs.
+- **In a room, painting together:** one write per 24 lines or per third of a second, whichever comes first; the drawing
+  itself is the same 2D canvas work as before (once per received batch).
+- **Waves:** one small write, removed again after 30 s; nothing per frame.
+
+**To do:** run `tests/perf/calls.cjs`, `tests/perf/ba.cjs` and a two-client `tests/multiplayer.cjs` on a machine with Node
+and Playwright, record the numbers here, then confirm on two real devices. Until then this build has no performance
+clearance.
+
 ## Build 54 — crates, hay bales, boulders, stream (desktop, software rendering; one frame at each stop, `?test`)
 | Stop | Draw calls before → 54 | Triangles before → 54 | Shader programs |
 |---|---|---|---|

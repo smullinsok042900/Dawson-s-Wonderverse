@@ -99,6 +99,10 @@ const G = { scene, renderer, platforms: [], solids: [], taps: [], interact: [], 
 G.playroom=createPlayroomViewport({renderer,G});
 const player = { groundZ: 0, x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
 const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#bfe8ff', lastBuckets: [], paintColor: '#ff4f9a', rainbowHue: 0, trail: [], flash: 0, drumT: 0, mobileT: 0, wake: [0, 0, 0, 0, 0, 0] };
+// (build 56) PLAY TOGETHER's shared world: the game reports here what someone built or painted, and the room calls back
+// what a friend made. These are filled in when a room starts (see the 👫 button at the end of this file), so playing
+// alone they do nothing at all.
+const SHARE = { block() { }, paint() { }, clearPaint() { } };
 let adventures = null;
 let started = false;
 buildWorld(G);
@@ -232,7 +236,7 @@ function paintStamp() { // the painter bunny paints a picture on the big wall
   else { g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(0, 0, 70, 0, 7); g.fill(); g.fillStyle = '#3a2864'; g.beginPath(); g.arc(-24, -14, 9, 0, 7); g.arc(24, -14, 9, 0, 7); g.fill(); g.strokeStyle = '#3a2864'; g.lineWidth = 9; g.beginPath(); g.arc(0, 8, 34, .3, Math.PI - .3); g.stroke(); }
   g.restore(); G.paint.tex.needsUpdate = true; world.painted = true; saveSoon();
 }
-const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), saveSoon: () => saveSoon(), tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
+const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), saveSoon: () => saveSoon(), share: SHARE, tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
 G.startKart = () => {
   const P = player; if (P.ride || P.layer !== '' || P.x < KART.garage - 5 || P.x > KART.flag + 5 || P.y > .5) { Sound.click(); return; }
   P.ride = { type: 'kart', u: 0, v: 2, lap: 0, hop: 0, hopV: 0 }; P.vx = P.vy = 0; Sound.whoosh(); Sound.tone(220, .5, 'sawtooth', .03, 2.2);
@@ -778,15 +782,30 @@ function paintAt(a, b) {
   const erase = c === 'erase'; if (erase) c = '#fffaf2';
   g.strokeStyle = c; g.lineWidth = erase ? 60 : 26; g.lineCap = 'round'; g.lineJoin = 'round';
   g.beginPath(); g.moveTo(a.x * W, (1 - a.y) * H); g.lineTo(b.x * W, (1 - b.y) * H); g.stroke();
-  if (erase) { G.paint.tex.needsUpdate = true; return; }
+  if (erase) { G.paint.tex.needsUpdate = true; SHARE.paint({ a: [a.x, a.y], b: [b.x, b.y], c: 'erase', w: 60 }); return; }
   g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 7; g.beginPath(); g.moveTo(a.x * W - 5, (1 - a.y) * H - 5); g.lineTo(b.x * W - 5, (1 - b.y) * H - 5); g.stroke();
   G.paint.tex.needsUpdate = true; world.painted = true;
+  SHARE.paint({ a: [a.x, a.y], b: [b.x, b.y], c: world.paintColor === 'rainbow' ? c : world.paintColor, w: erase ? 60 : 26 });
   if (Math.random() < .2) Sound.tone(300 + Math.random() * 300, .05, 'sine', .015, 1.2);
+}
+// (build 56) PLAY TOGETHER: a line a friend drew on the shared paint wall (wall coordinates 0..1, as paintAt above)
+function paintRemote(seg) {
+  try {
+    if (!seg || !seg.a || !seg.b) return;
+    const g = G.paint.ctx, W = G.paint.canvas.width, H = G.paint.canvas.height;
+    const erase = seg.c === 'erase';
+    g.strokeStyle = erase ? '#fffaf2' : (seg.c || '#ff4f9a'); g.lineWidth = erase ? 60 : (seg.w || 26); g.lineCap = 'round'; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(seg.a[0] * W, (1 - seg.a[1]) * H); g.lineTo(seg.b[0] * W, (1 - seg.b[1]) * H); g.stroke();
+    G.paint.tex.needsUpdate = true; if (!erase) world.painted = true;
+  } catch (e) { }
+}
+function clearPaintRemote() {
+  try { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; } catch (e) { }
 }
 // paint palette (appears only by the paint wall)
 const PAINTS = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ffffff', 'rainbow', 'erase', 'clear'];
 // (🧽 = eraser: rub out paint, or tap a coloured part to make it white again; 🗑️ = start the picture over)
-function clearBoard() { if (nearPaint()) { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; saveSoon(); } else if (meadow.nearColor(player)) meadow.clearColoring(player); Sound.whoosh(); discover('clearboard', 'A clean page to start again!'); }
+function clearBoard() { if (nearPaint()) { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; SHARE.clearPaint(); saveSoon(); } else if (meadow.nearColor(player)) meadow.clearColoring(player); Sound.whoosh(); discover('clearboard', 'A clean page to start again!'); }
 PAINTS.forEach(c => { const b = document.createElement('button'); b.className = 'swatch' + (c === world.paintColor ? ' selected' : '') + (c === 'erase' || c === 'clear' ? ' tool' : ''); b.style.background = c === 'rainbow' ? 'conic-gradient(#ff4f9a,#ffd23f,#3cc46e,#3d9bff,#a15cff,#ff4f9a)' : c === 'erase' || c === 'clear' ? '#ffffff' : c; if (c === 'erase' || c === 'clear') b.textContent = c === 'erase' ? '🧽' : '🗑️'; b.setAttribute('aria-label', c); b.addEventListener('pointerdown', e => { e.preventDefault(); if (c === 'clear') { clearBoard(); b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 150); return; } world.paintColor = c; if (c === 'erase') discover('eraser', 'The eraser! Rub out what you drew.'); document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s === b)); Sound.click(); }); $('paintTools').appendChild(b); });
 
 // ---------------- block tray (Block Builder) ----------------
@@ -1442,7 +1461,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '55'; G.build = GAME_BUILD;
+const GAME_BUILD = '56'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1570,8 +1589,15 @@ function trainArrived(i) {
   tapEl(btn, () => { if (G.activityOpen) return; draw(); pn.classList.add('show'); Sound.click(); voice.speak('Your pet friends! Tap one to bring it along, or to send it home.'); });
   tapEl(pn.querySelector('.mpX'), () => { pn.classList.remove('show'); Sound.click(); });
 }
-// (build 52) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
-const mp = initMultiplayer(G, { scene, player, makeCreature, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g) }); G.mp = mp;
+// (build 55) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
+// (build 56) The room shares the WORLD too, so the game hands it the two things it can build for everyone (the Block
+// Builder wall and the big paint wall) and lets it draw what friends made.
+const mp = initMultiplayer(G, { scene, player, world, makeCreature, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g),
+  applyBlock: (i, t) => meadow.setBuildCell(i, t), applyPaint: segs => { for (const s of segs) paintRemote(s); }, applyClear: () => clearPaintRemote() });
+G.mp = mp;
+SHARE.block = (i, t) => mp.block(i, t);
+SHARE.paint = seg => mp.paint(seg);
+SHARE.clearPaint = () => mp.clearPaint();
 
 // ---------------- Build 40: connected adventures ----------------
 G.started = () => started;

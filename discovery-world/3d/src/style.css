@@ -528,3 +528,9 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 #mpPanel .mpOff{font-size:32px}
 #mpPanel .mpLeave{width:72px;height:72px;border-radius:22px;border:4px solid #fff;background:#ffe0e8;box-shadow:0 5px 0 #f0a8bc;font-size:40px}
 #perfPanel .ppBuild{font:800 13px system-ui;color:#7a68b0;background:#efe8ff;border-radius:10px;padding:2px 8px;margin-left:6px}
+
+/* (build 56) PLAY TOGETHER's shared world: the wave button beside the door, and the room's picture code */
+#mpPanel .mpPic{font-size:inherit}
+#mpPanel .mpShare{font-size:min(6vw,7vh,30px);letter-spacing:.1em;margin-bottom:6px;opacity:.85}
+#mpPanel .mpDoors{display:flex;gap:min(18px,3vw);justify-content:center;align-items:center}
+#mpPanel .mpWave{width:72px;height:72px;border-radius:22px;border:4px solid #fff;background:#fff6c4;box-shadow:0 5px 0 #e9c93f;font-size:40px}

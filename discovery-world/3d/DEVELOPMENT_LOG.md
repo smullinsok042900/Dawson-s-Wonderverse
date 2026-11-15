@@ -4,6 +4,43 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 56 — Play Together, a world you share
+- **The family asked** for multiplayer to become a truly shared world, not just player-position markers. The Firebase
+  project they made is now in the game.
+- **What the room shares (`src/multiplayer.js`, new `src/shared.js`):**
+  - **the players** (build 55): each other's creatures, colours, pets;
+  - **the Block Builder wall**: a block placed or erased on one device is written as `objects/b<i>` and applied on the
+    others; remote blocks are noted and the wall is rebuilt once a frame (never one rebuild per block);
+  - **the big paint wall**: finger lines are batched (at most 24 lines, sent about three times a second) as
+    `objects/s<id>`, drawn on the other devices in the same wall coordinates, and 🗑️ writes a clear that erases the room's
+    strokes for everyone;
+  - **pets**: each player's pet recipes travel in their own player entry (`ps`), and up to two of a friend's pets walk
+    behind them on your device;
+  - **a 👋 wave**: an `events` entry, removed again after half a minute, shown as sparkles, a sound and a waving hand.
+- **The room keeps its world:** objects are not deleted when a player leaves, so the tower and painting are still there
+  when the same four-animal code is used again. Paint strokes are capped (60 batches, oldest dropped for everyone).
+- **Small and safe:** `src/shared.js` holds every limit and check (block cell/type, paint colour and line, pet recipe, a
+  wave) and `tests/shared.test.mjs` checks them without a browser. `firebase-rules.json` checks the same things again in
+  the database: only the three small shapes are accepted, text is refused, each device writes only its own player entry,
+  rooms hold at most 4. Rooms live under `dw3/rooms/<CODE>`, so an older game's rooms cannot collide.
+- **Config:** `src/mp-config.js` now holds the family's Firebase project (the same values an earlier Copilot change had
+  put in the 2D game, which has since been removed), so the 👫 button is no longer hidden. The database rules still have
+  to be pasted once (`MULTIPLAYER.md`, step 3).
+- **The build is now made on GitHub:** this environment has no terminal, so `.github/workflows/build-3d.yml` runs
+  `npm ci` and `node build.mjs` when the 3D source changes, commits the rebuilt `index.html`, `mp-firebase.js` and
+  `version.json`, and Pages publishes them. The service-worker cache name is now `dawsons-world-v56`.
+- **How verified (and what is NOT):**
+  - the pure rules were written to be checked by `tests/shared.test.mjs` (runs in the workflow; `continue-on-error`, so
+    a failing check cannot stop the build);
+  - `tests/multiplayer.cjs` gained four checks for the shared world (a block and a paint line crossing between two
+    browsers, and a wave);
+  - **not run here:** no browser and no Node in this environment, so neither the Node checks nor the two-browser test nor
+    the smoke suite were run against this build. **Not measured:** no performance numbers (see below). They must be run
+    on a machine with Node and Playwright, and then on two real devices as `MULTIPLAYER.md` says.
+- **Performance safeguards (not measured):** with no room nothing is created at all (same code path as before, the only
+  additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
+  per frame; paint arrives in batches; nothing new is drawn per frame when alone.
+
 ## Checkpoint: build 55 — Play Together (online multiplayer, private family rooms)
 - **The family asked** for 2–4 players on different devices and networks to see each other in the world.
 - **How it works (`src/multiplayer.js`):**

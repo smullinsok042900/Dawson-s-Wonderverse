@@ -1,10 +1,30 @@
 # Dawson's Discovery World 3D (3D build 1)
 
 
+**Build 56 — Play Together, a world you share:** rooms (a code of four animal pictures) now share the world itself, not
+only where everyone is. Friends see each other's creatures and pets, build on the same Block Builder wall, paint on the
+same big wall, and can wave hello. A room keeps its world when everyone leaves. Solo and offline play are unchanged.
+The Firebase project is set up in `src/mp-config.js`; paste the rules from `firebase-rules.json` once (see
+`MULTIPLAYER.md`).
+
 **Build 51 — planet travel fixes (PR #55):** the sculpted planets retain build 50's larger Moon/Mars areas. Planet construction runs in short tasks, shaders are rehearsed before play, and Home/map controls cancel pending flights safely. Desktop verification and measurements are recorded in `DEVELOPMENT_LOG.md` and `PERFORMANCE_LOG.md`; physical iPhone confirmation remains a separate check.
-This is the full rebuild of Dawson's Discovery World in real 3D. It is a **separate version**: the 2D game in `../` is untouched and still works. The last 2D build before the rebuild was saved as `../releases/DawsonsDiscoveryWorld_build11_SAVED.html`.
+This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the whole game:** the 2D version that used to sit beside it was removed at the family's request, and only the 3D builds (kept in `../backups/`) remain.
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
+
+## 3D build 56: Play Together, a world you share
+
+- **👫 Play with family on other phones, tablets or computers,** even on different Wi-Fi or cellular. One makes a room
+  and gets four animal pictures; the others press the same four pictures to join.
+- **The world is shared, not just the players:**
+  - friends' creatures walk and jump where they really are (with their pets behind them);
+  - the Block Builder wall is one wall for everyone: build together and climb on what a friend built;
+  - the big paint wall in the Studio is one wall for everyone: their lines appear as they paint, and 🗑️ clears it for all;
+  - 👋 waves hello with a picture and a sound.
+- **A room keeps its world** when everybody leaves, so the tower and painting are still there next time.
+- Private rooms, no chat, no names, nothing to read. Each device keeps its own saves, rewards and progress.
+- Needs the free Firebase project once (see `MULTIPLAYER.md`); it is already set up in `src/mp-config.js`, and the
+  database rules in `firebase-rules.json` need pasting once.
 
 ## 3D build 55: Play Together
 
