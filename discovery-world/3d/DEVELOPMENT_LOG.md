@@ -4,6 +4,19 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 77 — Sprout is back in the game
+- **What happened:** restoring the served game to the build-58 bundle (the "undo everything since 58" request) also removed
+  **Sprout**, the fourth character, because Sprout was added in build 59. The character still existed in the source code,
+  but the served build was the old one.
+- **Fix:** the game is rebuilt from the current source, which contains Sprout and everything else since build 58. The
+  build number went to 77 so every device reloads onto it. This undoes the served-game rollback; the source was never
+  reverted, so nothing else was lost.
+- **Where Sprout lives:** `src/characters.js` (`sproutSpec`, the sculpted leaf sprite with leaf ears, the flower on its
+  head and the curly leaf tail) and the wiring in `src/main.js` (title screen cards, top bar, saves, and the multiplayer
+  creature list so other players see Sprout instead of a fallback).
+- **Not verified visually in this build** (no renderer here): the previous screenshots were of builds 70–75 and did show
+  four creature cards — Pip, Zuzu, Jelly and **Sprout** — which confirms the character was present and drawn.
+
 ## Checkpoint: build 76 — collision for every building, in every district (repair, stage 1b)
 - **Why this was still wrong after build 75:** only 52 colliders existed — the main world's props. Every district built
   out of blocks (Toy Town's houses, the Farm, Art Plaza, the castle front, Frosty Peaks' steps, the seaside, Balloon
