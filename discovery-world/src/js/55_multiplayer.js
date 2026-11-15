@@ -1,7 +1,5 @@
 // ===================================================================
-// 55_multiplayer.js — optional Firebase online room for Discovery World
-// Included by build.mjs after the UI module. Syncs player positions only;
-// each browser continues to simulate its own world locally.
+// 55_multiplayer.js — Firebase room multiplayer with in-world remote avatars
 // ===================================================================
 (() => {
   'use strict';
@@ -16,159 +14,349 @@
     appId: '1:793284371423:web:106e2901cd55a0021fda6a',
     measurementId: 'G-CMPFF3XG1J',
   };
-  const SDK = 'https://www.gstatic.com/firebasejs/10.12.2';
-  let db, auth, roomRef, selfRef, playerId, roomId = '', peers = {};
-  let connected = false, started = false, lastSent = 0, overlay, drawCanvas, drawCtx, statusEl;
+  const SDK_BASE = 'https://www.gstatic.com/firebasejs/10.12.2';
+
+  const state = {
+    db: null,
+    auth: null,
+    roomRef: null,
+    playersRef: null,
+    selfRef: null,
+    playerId: null,
+    roomCode: '',
+    connected: false,
+    peers: new Map(),
+    lastPublish: 0,
+    initialized: false,
+    roomInput: null,
+    statusEl: null,
+    syncTimer: null,
+  };
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === '1') return resolve();
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(new Error('Firebase script failed to load')), { once: true });
+        return;
+      }
       const script = document.createElement('script');
       script.src = src;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error('Could not load Firebase SDK'));
+      script.async = true;
+      script.addEventListener('load', () => {
+        script.dataset.loaded = '1';
+        resolve();
+      }, { once: true });
+      script.addEventListener('error', () => reject(new Error('Firebase script failed to load')), { once: true });
       document.head.appendChild(script);
     });
   }
 
-  function element(tag, attrs = {}, text = '') {
-    const node = document.createElement(tag);
-    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
-    if (text) node.textContent = text;
-    return node;
+  async function ensureFirebase() {
+    if (window.firebase && window.firebase.apps && window.firebase.apps.length) return;
+    await loadScript(`${SDK_BASE}/firebase-app-compat.js`);
+    await loadScript(`${SDK_BASE}/firebase-auth-compat.js`);
+    await loadScript(`${SDK_BASE}/firebase-database-compat.js`);
+    if (!window.firebase.apps.length) {
+      window.firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    state.db = window.firebase.database();
+    state.auth = window.firebase.auth();
   }
 
   function setStatus(message, bad = false) {
-    if (!statusEl) return;
-    statusEl.textContent = message;
-    statusEl.style.color = bad ? '#ffe0e8' : '#fff';
+    if (!state.statusEl) return;
+    state.statusEl.textContent = message;
+    state.statusEl.style.color = bad ? '#ffe0e8' : '#ffffff';
   }
 
   function makeUI() {
-    const style = element('style');
+    const style = document.createElement('style');
     style.textContent = `
-      #ddw-mp { position:fixed; z-index:20; top:68px; left:50%; transform:translateX(-50%); display:flex; gap:6px; align-items:center; padding:7px 9px; border:1px solid #ffffff80; border-radius:18px; background:#39206ddd; color:white; font:600 13px system-ui,sans-serif; box-shadow:0 3px 14px #23104455; }
-      #ddw-mp input { width:92px; min-width:0; border:0; border-radius:11px; padding:7px 9px; text-transform:uppercase; font:700 13px system-ui,sans-serif; }
-      #ddw-mp button { border:0; border-radius:12px; padding:7px 10px; background:#ff8fc8; color:#39206d; font:800 12px system-ui,sans-serif; cursor:pointer; }
-      #ddw-mp-status { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      #ddw-mp-canvas { position:fixed; inset:0; width:100vw; height:100vh; z-index:3; pointer-events:none; }
-      @media (max-width:560px) { #ddw-mp { top:58px; gap:4px; padding:6px; font-size:11px; } #ddw-mp input { width:64px; } #ddw-mp button { padding:7px; } #ddw-mp-status { max-width:90px; } }
+      #ddw-mp {
+        position: fixed; top: 64px; left: 50%; transform: translateX(-50%);
+        z-index: 500; display: flex; align-items: center; gap: 6px;
+        padding: 7px 10px; border-radius: 18px; border: 1px solid rgba(255,255,255,.52);
+        background: rgba(51, 32, 94, .82); backdrop-filter: blur(8px);
+        box-shadow: 0 10px 25px rgba(24, 13, 43, .38);
+        font: 700 12px/1.2 system-ui, sans-serif; color: #fff;
+      }
+      #ddw-mp input {
+        width: 98px; border: none; border-radius: 10px; padding: 7px 10px;
+        background: rgba(255,255,255,.10); color: #fff; font: 800 12px system-ui, sans-serif;
+        text-transform: uppercase; letter-spacing: .08em; outline: none;
+      }
+      #ddw-mp input::placeholder { color: rgba(255,255,255,.72); }
+      #ddw-mp button {
+        border: none; border-radius: 11px; padding: 7px 10px; cursor: pointer;
+        background: linear-gradient(135deg, #ff99cf, #ffd76b); color: #351f61;
+        font: 900 11px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .04em;
+      }
+      #ddw-mp-status { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #ddw-mp-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 450; }
+      @media (max-width: 640px) {
+        #ddw-mp { top: 54px; gap: 4px; padding: 6px 7px; }
+        #ddw-mp input { width: 74px; padding: 6px 8px; }
+        #ddw-mp button { padding: 6px 8px; }
+        #ddw-mp-status { max-width: 95px; }
+      }
     `;
     document.head.appendChild(style);
-    overlay = element('div', { id: 'ddw-mp' });
-    const input = element('input', { id: 'ddw-mp-room', maxlength: '16', placeholder: 'ROOM CODE', 'aria-label': 'Room code' });
-    const join = element('button', { type: 'button' }, 'Join');
-    const create = element('button', { type: 'button' }, 'New room');
-    statusEl = element('span', { id: 'ddw-mp-status', role: 'status' }, 'Online co-op');
-    overlay.append(input, join, create, statusEl);
-    document.body.appendChild(overlay);
-    drawCanvas = element('canvas', { id: 'ddw-mp-canvas', 'aria-hidden': 'true' });
-    document.body.appendChild(drawCanvas);
-    drawCtx = drawCanvas.getContext('2d');
 
-    create.addEventListener('click', () => {
+    const wrap = document.createElement('div');
+    wrap.id = 'ddw-mp';
+
+    state.roomInput = document.createElement('input');
+    state.roomInput.id = 'ddw-room-code';
+    state.roomInput.placeholder = 'ROOM';
+    state.roomInput.maxLength = 16;
+    state.roomInput.setAttribute('aria-label', 'Room code');
+
+    const joinBtn = document.createElement('button');
+    joinBtn.type = 'button';
+    joinBtn.textContent = 'Join';
+
+    const createBtn = document.createElement('button');
+    createBtn.type = 'button';
+    createBtn.textContent = 'New';
+
+    state.statusEl = document.createElement('span');
+    state.statusEl.id = 'ddw-mp-status';
+    state.statusEl.textContent = 'Co-op offline';
+
+    wrap.append(state.roomInput, joinBtn, createBtn, state.statusEl);
+    document.body.appendChild(wrap);
+
+    joinBtn.addEventListener('click', () => connectRoom(state.roomInput.value));
+    createBtn.addEventListener('click', () => {
       const code = Math.random().toString(36).slice(2, 8).toUpperCase();
-      input.value = code;
+      state.roomInput.value = code;
       connectRoom(code);
     });
-    join.addEventListener('click', () => connectRoom(input.value));
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') connectRoom(input.value); });
+    state.roomInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') connectRoom(state.roomInput.value);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.id = 'ddw-mp-canvas';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(canvas);
+    canvas.width = innerWidth * Math.min(devicePixelRatio || 1, 2);
+    canvas.height = innerHeight * Math.min(devicePixelRatio || 1, 2);
+    window.__DDW_MULTIPLAYER_CANVAS = canvas;
+  }
+
+  function roomKeyFromQuery() {
+    const qs = new URLSearchParams(location.search || '');
+    const room = qs.get('room') || qs.get('roomCode');
+    if (!room) return '';
+    return String(room).toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16);
+  }
+
+  function setRoomInput(code) {
+    if (state.roomInput) state.roomInput.value = code;
+  }
+
+  function cleanupRoom() {
+    if (state.playersRef) {
+      state.playersRef.off('value');
+      state.playersRef = null;
+    }
+    if (state.selfRef) {
+      try { state.selfRef.onDisconnect().cancel(); } catch (e) {}
+      state.selfRef = null;
+    }
+    if (state.roomRef) {
+      state.roomRef = null;
+    }
+    state.peers.clear();
   }
 
   async function connectRoom(rawCode) {
     const code = String(rawCode || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16);
-    if (!code) { setStatus('Enter a room code', true); return; }
-    if (roomRef) { roomRef.child('players').off(); selfRef?.onDisconnect().cancel().catch(() => {}); }
-    roomId = code;
+    if (!code) {
+      setStatus('Enter a room code', true);
+      return;
+    }
+
+    state.roomCode = code;
+    setRoomInput(code);
     setStatus('Connecting…');
+
     try {
-      if (!window.firebase) {
-        await loadScript(`${SDK}/firebase-app-compat.js`);
-        await loadScript(`${SDK}/firebase-auth-compat.js`);
-        await loadScript(`${SDK}/firebase-database-compat.js`);
-      }
-      if (!window.firebase.apps.length) window.firebase.initializeApp(FIREBASE_CONFIG);
-      auth = window.firebase.auth();
-      if (!auth.currentUser) await auth.signInAnonymously();
-      db = window.firebase.database();
-      playerId = auth.currentUser.uid;
-      roomRef = db.ref(`rooms/${code}`);
-      selfRef = roomRef.child(`players/${playerId}`);
-      await selfRef.onDisconnect().remove();
-      await publish(true);
-      roomRef.child('players').on('value', snap => {
-        peers = snap.val() || {};
-        delete peers[playerId];
-        setStatus(`Room ${code} · ${Object.keys(peers).length + 1} here`);
-      }, () => setStatus('Room read blocked — check database rules', true));
-      db.ref('.info/connected').on('value', snap => {
-        connected = !!snap.val();
-        if (!connected) setStatus('Reconnecting…');
+      await ensureFirebase();
+      if (!state.auth.currentUser) await state.auth.signInAnonymously();
+      state.playerId = state.auth.currentUser.uid;
+      cleanupRoom();
+
+      state.roomRef = state.db.ref(`rooms/${code}`);
+      state.playersRef = state.roomRef.child('players');
+      state.selfRef = state.playersRef.child(state.playerId);
+      state.selfRef.onDisconnect().remove();
+
+      state.playersRef.on('value', snap => {
+        const value = snap.val() || {};
+        const next = new Map();
+        Object.entries(value).forEach(([id, data]) => {
+          if (id === state.playerId) return;
+          const clean = {
+            id,
+            x: Number(data && data.x) || 0,
+            y: Number(data && data.y) || GROUND,
+            creature: Object.hasOwn(CREATURES, data && data.creature) ? data.creature : 'pip',
+            facing: Number(data && data.facing) || 1,
+            updatedAt: data && data.updatedAt,
+            anim: (data && data.anim) || null,
+            vx: Number(data && data.vx) || 0,
+            vy: Number(data && data.vy) || 0,
+          };
+          next.set(id, clean);
+        });
+        state.peers = next;
+        setStatus(`Room ${code} · ${state.peers.size + 1} players`);
       });
-      inputRoom(code);
+
+      state.db.ref('.info/connected').on('value', snap => {
+        state.connected = !!snap.val();
+        if (!state.connected) setStatus('Reconnecting…');
+      });
+
+      await publishState(true);
+      state.connected = true;
+      setStatus(`Room ${code} connected`);
+      if (history && history.replaceState) {
+        const url = new URL(location.href);
+        url.searchParams.set('room', code);
+        history.replaceState({}, '', url);
+      }
     } catch (error) {
-      console.error('Multiplayer connection failed:', error);
-      const msg = String(error?.code || error?.message || 'Connection failed');
-      setStatus(msg.includes('auth/operation-not-allowed') ? 'Enable Anonymous sign-in in Firebase' : 'Could not connect — check Firebase setup', true);
+      state.connected = false;
+      console.error('Firebase multiplayer connection failed', error);
+      const message = String((error && (error.code || error.message)) || 'Connect failed');
+      setStatus(message.includes('auth/operation-not-allowed') ? 'Enable anonymous auth in Firebase' : 'Could not connect to room', true);
     }
   }
 
-  function inputRoom(code) {
-    const field = document.getElementById('ddw-mp-room');
-    if (field) field.value = code;
-  }
-
-  async function publish(force = false) {
-    const game = window.__DDW;
-    if (!selfRef || !game || !connected) return;
+  function publishState(force = false) {
+    if (!state.selfRef || !window.__DDW || !state.connected) return;
     const now = performance.now();
-    if (!force && now - lastSent < 100) return;
-    lastSent = now;
+    if (!force && now - state.lastPublish < 90) return;
+    state.lastPublish = now;
+
+    const game = window.__DDW;
     const p = game.player;
-    try {
-      await selfRef.update({ x: Math.round(p.x), y: Math.round(p.y), creature: p.creature, facing: p.facing || 1, updatedAt: window.firebase.database.ServerValue.TIMESTAMP });
-    } catch (error) {
-      console.warn('Multiplayer position update failed:', error);
+    if (!p) return;
+
+    const payload = {
+      x: Math.round(p.x),
+      y: Math.round(p.y),
+      creature: p.creature || 'pip',
+      facing: p.facing || 1,
+      grounded: !!p.grounded,
+      ride: p.ride ? p.ride.type || 'ride' : null,
+      vx: Math.round(p.vx || 0),
+      vy: Math.round(p.vy || 0),
+      updatedAt: window.firebase.database.ServerValue.TIMESTAMP,
+    };
+
+    state.selfRef.set(payload).catch(() => {});
+  }
+
+  function updatePeerAnim(peer, dt) {
+    const anim = peer.anim || makeAnim();
+    const prevX = Number(peer.lastX) || peer.x;
+    const prevY = Number(peer.lastY) || peer.y;
+    const vx = (peer.x - prevX) / Math.max(dt, 0.016);
+    const vy = (peer.y - prevY) / Math.max(dt, 0.016);
+    peer.lastX = peer.x;
+    peer.lastY = peer.y;
+    peer.vx = vx;
+    peer.vy = vy;
+    updateAnim(anim, peer.creature, dt, {
+      vx,
+      vy,
+      grounded: true,
+      seated: false,
+      facing: peer.facing || 1,
+      x: peer.x,
+      y: peer.y,
+      onLand: () => {},
+    });
+    peer.anim = anim;
+  }
+
+  function renderRemotePlayers() {
+    if (!window.__DDW || !state.peers.size) return;
+    const game = window.__DDW;
+    const now = performance.now();
+    const dt = 1 / 60;
+
+    for (const peer of state.peers.values()) {
+      if (!peer || !Number.isFinite(peer.x) || !Number.isFinite(peer.y)) continue;
+      if (!peer.lastStamp) peer.lastStamp = now;
+      const elapsed = Math.min(0.05, (now - peer.lastStamp) / 1000 || dt);
+      peer.lastStamp = now;
+      updatePeerAnim(peer, elapsed);
+
+      const dx = Math.abs(peer.x - (game.player && game.player.x));
+      const dy = Math.abs(peer.y - (game.player && game.player.y));
+      if (dx > vw + 300 || dy > VH + 200) continue;
+
+      const anim = peer.anim || makeAnim();
+      drawCreatureLit(peer.creature, anim, peer.x, peer.y, { noShadow: false, drop: 0 });
     }
   }
 
-  function drawPeers() {
-    if (!drawCanvas || !window.__DDW) return;
-    const w = innerWidth, h = innerHeight, dpr = Math.min(devicePixelRatio || 1, 2);
-    if (drawCanvas.width !== Math.round(w * dpr) || drawCanvas.height !== Math.round(h * dpr)) {
-      drawCanvas.width = Math.round(w * dpr);
-      drawCanvas.height = Math.round(h * dpr);
-    }
-    const c = drawCtx, game = window.__DDW;
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    c.clearRect(0, 0, w, h);
-    for (const [id, other] of Object.entries(peers)) {
-      if (!other || !Number.isFinite(other.x) || !Number.isFinite(other.y)) continue;
-      const x = (other.x - game.camera) / game.VH * h + w * .0;
-      const y = (other.y - 70 - (game.camY || 0)) / game.VH * h;
-      if (x < -40 || x > w + 40 || y < -80 || y > h + 40) continue;
-      const faces = { pip: '🐾', zuzu: '⭐', jelly: '🪼' };
-      c.save();
-      c.globalAlpha = .9;
-      c.fillStyle = '#33205e'; c.beginPath(); c.ellipse(x, y, 23, 28, 0, 0, Math.PI * 2); c.fill();
-      c.strokeStyle = '#fff'; c.lineWidth = 3; c.stroke();
-      c.font = '23px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(faces[other.creature] || '🐾', x, y);
-      c.font = 'bold 12px system-ui, sans-serif'; c.lineWidth = 3; c.strokeStyle = '#39206d'; c.fillStyle = '#fff';
-      const label = `Player ${id.slice(0, 4)}`;
-      c.strokeText(label, x, y - 38); c.fillText(label, x, y - 38);
-      c.restore();
-    }
-  }
-
-  function boot() {
-    if (started || !window.__DDW) return;
-    started = true;
+  function beginMultiplayer() {
+    if (state.initialized) return;
+    state.initialized = true;
     makeUI();
-    setInterval(() => { publish(); drawPeers(); }, 100);
-    addEventListener('resize', drawPeers);
-    addEventListener('pagehide', () => { if (selfRef) selfRef.remove(); }, { once: true });
+
+    const roomFromUrl = roomKeyFromQuery();
+    if (roomFromUrl) {
+      setRoomInput(roomFromUrl);
+      connectRoom(roomFromUrl);
+    } else {
+      setStatus('Co-op ready');
+    }
+
+    state.syncTimer = setInterval(() => {
+      if (window.__DDW && state.roomCode && state.connected) {
+        publishState();
+      }
+    }, 120);
+
+    window.addEventListener('resize', () => {
+      const c = window.__DDW_MULTIPLAYER_CANVAS;
+      if (c) {
+        c.width = innerWidth * Math.min(devicePixelRatio || 1, 2);
+        c.height = innerHeight * Math.min(devicePixelRatio || 1, 2);
+      }
+    }, { passive: true });
+
+    window.__DDW_MULTIPLAYER = {
+      state,
+      connectRoom,
+      publishState,
+      renderRemotePlayers,
+      start: beginMultiplayer,
+      disconnect() {
+        cleanupRoom();
+        state.connected = false;
+        setStatus('Disconnected', true);
+      },
+      get peers() {
+        return Array.from(state.peers.values());
+      },
+    };
   }
 
-  const wait = setInterval(() => {
-    if (window.__DDW) { clearInterval(wait); boot(); }
-  }, 250);
+  const watch = setInterval(() => {
+    if (window.__DDW) {
+      clearInterval(watch);
+      beginMultiplayer();
+    }
+  }, 200);
 })();
