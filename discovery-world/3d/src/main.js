@@ -18,6 +18,7 @@ import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatur
 import { makeToyModel } from './toy-models.js';
 import { initSea, SEA } from './sea.js';
 import { initSpace } from './space.js';
+import { makeBatch, paintMat, shinyMat, softMat } from './spacekit.js';
 import { buildWorld, RAINBOW } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
@@ -250,8 +251,17 @@ const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => bur
 const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
 // (build 45) the space rocket: the Moon, the planets and Pluto, with their real gravity
 const ROCKET_PAD = 686;
-const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x,
+const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
+// (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
+// the sun stands (low and from the side on the airless worlds, for long shadows). Only numbers change: no new shaders.
+let spaceLit = null; const FOG0 = { c: scene.fog.color.clone(), n: scene.fog.near, f: scene.fog.far }, RIM0 = rim.color.clone(), SUN0 = sun.color.clone(), HEMI0 = [hemi.color.clone(), hemi.groundColor.clone()];
+function spaceLight(L) {
+  spaceLit = L || null;
+  if (!L) { sun.color.copy(SUN0); sun.intensity = LIGHT.sun; hemi.color.copy(HEMI0[0]); hemi.groundColor.copy(HEMI0[1]); hemi.intensity = LIGHT.hemi; rim.color.copy(RIM0); rim.intensity = LIGHT.rim; scene.fog.color.copy(FOG0.c); scene.fog.near = FOG0.n; scene.fog.far = FOG0.f; scene.environmentIntensity = LIGHT.env; G.sunOff = null; }
+  else { sun.color.set(L.sun[0]); sun.intensity = L.sun[1]; hemi.color.set(L.hemi[0]); hemi.groundColor.set(L.hemi[1]); hemi.intensity = L.hemi[2]; rim.color.set(L.rim[0]); rim.intensity = L.rim[1]; scene.fog.color.set(L.fog[0]); scene.fog.near = L.fog[1]; scene.fog.far = L.fog[2]; scene.environmentIntensity = L.env; G.sunOff = L.sunOff || null; }
+  sky.visible = !L; renderer.shadowMap.needsUpdate = true;
+}
 G.space = space;
 const expansion = initExpansion(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), rocket: () => openRocket(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
 G.expansion = expansion;
@@ -445,7 +455,7 @@ G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P
 // (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
 // countdown, and off you fly. Earth (first) takes you home to the launch pad.
 const ROCKET_NAMES = { earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
-let rocketPanel = null, launching = false, blastBtn = null;
+let rocketPanel = null, launching = false, blastBtn = null, flightSequence = 0;
 // (build 48) A REAL ROCKET RIDE. PAW (or a tap) at the rocket: she walks up and climbs in, and her face shows in the round
 // window. The planet pictures come up; after she picks one, a BIG RED BUTTON appears. Pressing it starts the countdown
 // (rumble, smoke), then the rocket lifts off the pad on a flame and the camera follows it up into the sky. At the other end
@@ -480,10 +490,19 @@ function boardRocket(key, quick) {
   if (quick) rocketRide(0, P.ride);
 }
 function climbOut(r) {
+  launching = false;
   const P = player; G.playerHidden = false; hideBlast(); if (rocketPanel) rocketPanel.classList.remove('show');
   if (r) { showFace(r, false); r.flame.visible = false; r.g.position.y = r.baseY; P.x = r.x + 2.5; P.y = r.layer === 'space' ? 0 : groundUnder(r.x + 2.5, r.baseY + 1); }
   P.ride = null; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; P.facing = 1; G.camLift = 0;
 }
+function cancelFlight() {
+  ++flightSequence; launching = false; space.cancel();
+  const R = seated();
+  if (R) climbOut(G.rockets[R.key]);
+  G.playerHidden = false; G.camLift = 0; hideBlast();
+  if (rocketPanel) rocketPanel.classList.remove('show');
+}
+
 function hideBlast() { if (blastBtn) blastBtn.classList.remove('show'); }
 function showBlast(id) {
   if (!blastBtn) { blastBtn = document.createElement('button'); blastBtn.id = 'blastBtn'; blastBtn.setAttribute('aria-label', 'Blast off'); blastBtn.innerHTML = '<i></i><b></b>'; document.body.appendChild(blastBtn);
@@ -494,7 +513,7 @@ function showBlast(id) {
 G.blastOff = blastOff;
 function blastOff() {
   const R = seated(); if (!R || R.phase !== 'in' || !R.dest || launching) return;
-  hideBlast(); launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth') setTimeout(() => space.prepare(R.dest), 120); /* (build 50: the planet is made during the countdown) */
+  hideBlast(); ++flightSequence; launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth') setTimeout(() => { if (player.ride === R && launching) space.prepare(R.dest); }, 120); /* (build 50: the planet is made during the countdown) */
   Sound.click(); Sound.tone(180, .5, 'square', .03, .9); voice.speak('Three... two... one... blast off!'); toast('🚀 3');
   discover('blastoff', 'Press the big red button to blast off!');
 }
@@ -533,9 +552,14 @@ function rocketRide(dt, R) {
     if (k >= 1) { G.shake = .5; Sound.boing(); burst(r.x, r.baseY + .3, gz + .8, ['#ffffff', '#e4e4ee', '#ffd23f'], 18, 3); climbOut(r); }
   }
 }
-function arrive(R, r) {
-  const dest = R.dest; r.g.position.y = r.baseY; r.flame.visible = false; showFace(r, false); G.camLift = 0; launching = false; G.playerHidden = false;
-  player.ride = null; if (dest === 'earth') space.goHome(); else space.goTo(space.places.findIndex(p => p[0] === dest)); saveSoon();
+async function arrive(R, r) {
+  R.phase = 'prepare';
+  const dest = R.dest;
+  try { if (dest !== 'earth') await space.prepare(dest); }
+  catch (error) { if (player.ride === R) climbOut(r); if (error.name !== 'AbortError') console.error(error); return; }
+  if (player.ride !== R) return;
+  r.g.position.y = r.baseY; r.flame.visible = false; showFace(r, false); G.camLift = 0; launching = false; G.playerHidden = false;
+  player.ride = null; if (dest === 'earth') space.goHome(); else if (!await space.goTo(space.places.findIndex(p => p[0] === dest))) return; saveSoon();
   const r2 = G.rockets[dest]; if (!r2 || !inScene(r2.g)) return; // (lands beside the pad without the ride if the rocket isn't there)
   const P = player; P.ride = { type: 'rocket', key: dest, phase: 'land', t0: rkNow() }; G.playerHidden = true; showFace(r2, true);
   P.x = r2.x; P.y = r2.baseY; P.z = r2.g.position.z + 1.05; r2.g.position.y = r2.baseY + 26; G.camLift = 26; snapCamera(); camT.y = P.y + 26;
@@ -564,10 +588,17 @@ function launchTo(id, go) {
   const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
   if (go && !seated() && !player.ride) { const k = nearRocket(); if (k) boardRocket(k, true); }
   const R = seated(); if (R) { if (R.phase !== 'in') return; R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
-  launching = true; voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
+  launching = true; const flight = ++flightSequence; if (id !== 'earth') space.prepare(id); voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
   Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
   for (let k = 0; k < 8; k++) setTimeout(() => burst(player.x, .5, player.z - 1, ['#ffd23f', '#ff9a2e', '#ffffff'], 6, 2.5), k * 150);
-  setTimeout(() => { launching = false; if (id === 'earth') space.goHome(); else space.goTo(space.places.findIndex(p => p[0] === id)); saveSoon(); }, TEST ? 200 : 1600);
+  setTimeout(async () => {
+    if (flight !== flightSequence) return;
+    try {
+      if (id === 'earth') space.goHome(); else await space.goTo(space.places.findIndex(p => p[0] === id));
+      if (flight === flightSequence) saveSoon();
+    } catch (error) { if (error.name !== 'AbortError') console.error(error); }
+    finally { if (flight === flightSequence) launching = false; }
+  }, TEST ? 200 : 1600);
 }
 G.launchTo = id => launchTo(id, true); // (tests: pick and press the button in one go)
 // (build 43) through the rainbow gate at the top of the stairs at either end of the world: into the Sky Kingdom
@@ -865,7 +896,7 @@ function camTargetX() {
   if (P.layer === 'space' && G.spaceBounds) { const [a, b] = G.spaceBounds; return b - a < 2 * hw ? (a + b) / 2 : clamp(x, a + hw, b - hw); }
   return P.layer === 'sea' ? clamp(x, SEA.ox + Math.min(hw, SEA.w / 2), SEA.ox + SEA.w - Math.min(hw, SEA.w / 2)) : P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
 }
-function snapCamera() { camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
+function snapCamera() { camT.sp = player.layer === 'space' ? 1 : 0; camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
 // build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
 const ease = (dt, rate) => 1 - Math.exp(-dt * rate);
 function updateCamera(dt) {
@@ -879,11 +910,12 @@ function updateCamera(dt) {
   const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45, Math.max(0, 1 - Math.abs(P.x - (BUILD.x0 + BUILD.cols * BUILD.cw / 2)) / 8) * .7) : 0; /* (build 43: and at the Block Builder, so the whole wall shows) */ camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * ease(dt, 1.5);
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
-  camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2, camT.z - camT.cz * 2 - camT.rk * 2);
+  camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
+  camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
-  { const tex = 26 / 2048, sx = Math.round(camT.x / tex) * tex, sy = Math.round(Math.max(0, camT.y) / tex) * tex; sun.position.set(sx - 7, 16 + sy, 10); sun.target.position.set(sx, sy, 0); } // (snapped to shadow texels: no shimmering)
+  { const tex = 26 / 2048, sx = Math.round(camT.x / tex) * tex, sy = Math.round(Math.max(0, camT.y) / tex) * tex; const o = G.sunOff; if (o) sun.position.set(sx + o[0], o[1] + sy, o[2]); else sun.position.set(sx - 7, 16 + sy, 10); sun.target.position.set(sx, sy, 0); } // (snapped to shadow texels: no shimmering)
 }
 
 // ---------------- world animation ----------------
@@ -1264,7 +1296,7 @@ function sliceScenery() {
 }
 G.unslice = o => { if (o && o.parent && o.parent.userData.slice) scene.attach(o); }; // (something that starts to follow you leaves its slice)
 function updateSlices() { for (const g of slices) { const near = Math.abs(g.userData.x - camT.x) < 52; if (near && !g.parent) scene.add(g); else if (!near && g.parent) scene.remove(g); } }
-const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { chunkInstanced(); sliceScenery(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
+const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { sliceScenery(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
 // (build 24) shaders: compile everything in the scene before play starts (the light count is now fixed, so these stay
 // valid), then compile the model files' materials as soon as they arrive (in the background where the phone supports
 // parallel compiling), so nothing compiles the first time it comes into view.
@@ -1277,14 +1309,38 @@ const compileAll = () => {
   const prevRT = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target);
   let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(scene, camera) : Promise.resolve(renderer.compile(scene, camera)); } catch (e) { r = Promise.resolve(); }
   renderer.setRenderTarget(prevRT);
-  for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root); return r;
+  for (const o of shown) o.visible = false; for (const a of back) a.detached.remove(a.root); return r.then(warmPrograms);
 };
+// Linking can finish before the driver prepares its active-uniform/attribute metadata.
+// Force those first-use lookups during loading, including compiled but hidden world effects.
+function warmPrograms() {
+  for (const program of renderer.info.programs) { program.getUniforms(); program.getAttributes(); }
+}
 // (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
 function warmGroup(g) { // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
   try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, 2.15, CAM_DIST); cam.lookAt(c.x, 1.15, 0); cam.updateMatrixWorld();
     const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; if (post.enabled && !post.lite) { G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true }); renderer.setRenderTarget(G.warmRT); renderer.render(scene, cam); } renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm; } catch (e) { }
 }
 G.warmGroup = warmGroup;
+// (build 49) the painted-scenery materials of the planets (and of the new rocket in the Lab Gardens) are compiled and
+// drawn once here, out of sight, while the loading screen shows: so they never cause a wait when first seen.
+function warmPaint() {
+  const g = new THREE.Group(); g.position.set(0, -60, 0);
+  const batch = makeBatch(); batch.put(new THREE.SphereGeometry(.2, 4, 3), 0, 0, 0, '#ffffff');
+  const painted = batch.geometry(), round = new THREE.SphereGeometry(.2, 4, 3);
+  const add = (material, geometry = painted) => { const mesh = new THREE.Mesh(geometry, material); mesh.castShadow = mesh.receiveShadow = true; g.add(mesh); };
+  for (const material of [paintMat(), shinyMat(), softMat()]) add(material);
+  // Small resident representatives keep these programs alive when a planet is freed.
+  const farPaint = paintMat().clone(); farPaint.fog = false; add(farPaint);
+  const ice = shinyMat().clone(); ice.transparent = true; ice.opacity = .55; add(ice);
+  const bolt = toy('#ffffff', { ei: 1.8 }); bolt.fog = false; add(bolt, round);
+  const pixel = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); pixel.colorSpace = THREE.SRGBColorSpace; pixel.needsUpdate = true;
+  add(new THREE.MeshStandardMaterial({ map: pixel, roughness: 1, fog: false }), round);
+  add(new THREE.MeshBasicMaterial({ map: pixel, fog: false, toneMapped: false }), round);
+  add(new THREE.MeshBasicMaterial({ map: pixel, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false }), round);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: pixel, transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); glow.scale.setScalar(.2); g.add(glow);
+  g.traverse(o => { o.userData.dynamic = true; }); scene.add(g); return g;
+}
 function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.enabled) renderer.setRenderTarget(post.target); let r; try { r = renderer.extensions.has('KHR_parallel_shader_compile') ? renderer.compileAsync(g, camera, scene) : Promise.resolve(renderer.compile(g, camera, scene)); } catch (e) { r = Promise.resolve(); } renderer.setRenderTarget(prev); return r; }
 // creatures are sculpted in the background and appear a moment later: compile their materials as they arrive
 // (build 29) ...and then draw just those new creatures once, out of sight, into a tiny buffer of the real kind:
@@ -1293,20 +1349,27 @@ function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.ena
 const WARM_LAYER = 5, warmCam = new THREE.PerspectiveCamera(45, 2, .1, 60); warmCam.layers.set(WARM_LAYER);
 scene.traverse(o => { if (o.isLight) o.layers.enable(WARM_LAYER); }); // (lights are seen on every layer, so the shaders are the real ones)
 function warmObjects(list) {
-  if (!list.length || !(post.enabled && !post.lite)) return;
+  if (!list.length || !post.enabled) return;
   G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true });
   const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; const V0 = new THREE.Vector3();
   for (const o of list) {
+    const visible = o.visible; o.visible = true;
     let root = o; while (root.parent && root.parent !== scene && !root.parent.isScene) root = root.parent;
     const agent = G.life && G.life.agents.find(a => a.root === root && a.detached); if (agent) agent.detached.add(root);
     o.traverse(q => q.layers.enable(WARM_LAYER)); o.getWorldPosition(V0); warmCam.position.set(V0.x, V0.y + 1, V0.z + 5); warmCam.lookAt(V0.x, V0.y + .6, V0.z); warmCam.updateMatrixWorld();
     try { renderer.setRenderTarget(G.warmRT); renderer.render(scene, warmCam); } catch (e) { }
-    o.traverse(q => q.layers.disable(WARM_LAYER)); if (agent) agent.detached.remove(root);
+    o.traverse(q => q.layers.disable(WARM_LAYER)); o.visible = visible; if (agent) agent.detached.remove(root);
   }
   renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm;
 }
 const fresh = [];
-let compileTimer = 0; globalThis.__ddwCompile = obj => { if (obj) fresh.push(obj); clearTimeout(compileTimer); compileTimer = setTimeout(() => { Promise.resolve(compileAll()).then(() => warmObjects(fresh.splice(0)), () => { }); }, 300); };
+let compileTimer = 0, compilePending = Promise.resolve();
+globalThis.__ddwCompile = obj => {
+  if (obj) fresh.push(obj); clearTimeout(compileTimer);
+  compileTimer = setTimeout(() => { compilePending = Promise.resolve(compileAll()).then(() => warmObjects(fresh.splice(0)), () => {}); }, 300);
+};
+const planetWarmup = warmPaint();
+try { globalThis.__ddwCompile(planetWarmup); } catch (e) { console.log('paint warm skipped', e); }
 // PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
 // upstairs and downstairs, the underground, the clouds, the castle, the park), with the sun's shadow over it. That
 // makes the graphics driver finish every shader and upload every texture and mesh NOW, not the first time you walk in.
@@ -1351,8 +1414,15 @@ function warmAreas() { const warmT0 = performance.now();
   renderer.setRenderTarget(null); if (rt.depthTexture) rt.depthTexture.dispose(); rt.dispose(); sun.position.copy(sp); sun.target.position.copy(st); sun.target.updateMatrixWorld();
 }
 Promise.race([Promise.all([assetsReady, landmarksReady]), new Promise(r => setTimeout(r, 6000))])
-  .then(() => compileAll()).then(() => { warmAreas(); begin(); }, begin);
-setTimeout(begin, 15000);
+  .then(() => { chunkInstanced(); return compileAll(); })
+  .then(async () => {
+    clearTimeout(compileTimer); await compilePending; clearTimeout(compileTimer);
+    // Asset callbacks and the delayed compile pass may have filled the scene while the first pass waited.
+    await compileAll();
+    warmAreas(); warmObjects([...fresh.splice(0), planetWarmup, ...space.warmup]);
+    warmPrograms(); planetWarmup.visible = false; begin();
+  }).catch(begin);
+// Do not end loading before shader rehearsal; the asset wait above already has a timeout.
 
 // debug/test hook (used by the automated tests only)
 window.__DDW3 = { THREE,
@@ -1370,7 +1440,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '50'; G.build = GAME_BUILD;
+const GAME_BUILD = '51'; G.build = GAME_BUILD;
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
@@ -1428,6 +1498,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
 // Big pictures only: tap one and you are there (with a sparkle and its name spoken). 🏠 always takes you home.
 const TRAVEL = [['🏠', 'home', 190], ['🎪', 'the Playhouse', 8], ['🎨', 'the Studio', 62], ['🔬', 'the Wonder Lab', 100], ['🎡', 'the Adventure Park', 160], ['🏰', 'the castle', 398], ...expansion.districts.map(d => [d.icon === '🔬' ? '🚀' : d.icon, d.name, d.home])];
 function travel([icon, name, x]) {
+  cancelFlight();
   const P = player; if (P.ride && P.ride.type === 'kart') parkKart(); if (P.ride && P.ride.type === 'train') train.hopOff();
   P.ride = null; P.stair = null; P.layer = ''; P.x = x; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.groundZ = 0; P.swim = false;
   expansion.buildNow(x); snapCamera(); world.flash = 1; Sound.twinkle(); Sound.chime(); burst(x, 1.5, 0, ['#fff', '#ffe36e', '#9fe6ff'], 24, 3);

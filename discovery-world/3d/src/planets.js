@@ -6,8 +6,8 @@
 // Everything is pictures, sounds and short spoken sentences. Real facts are said as facts; the pretend parts (our
 // friendly aliens, the pretend explorer stations) are said to be pretend.
 //
-// kit (from space.js): { X, s0 (where this area starts), add, ball, box, sball, sbox, tapIt, fact, say, disc, Sound, U,
-//   P, G, api, placeAlien, plat, rocketSign, sky }
+// kit (from space.js): { X, s0 (where this area starts), add, sball, sbox, tapIt, fact, say, disc, Sound, U,
+//   P, G, api, placeAlien, plat, rocketSign, setSkyColor }
 // ===================================================================
 import * as THREE from 'three';
 import { toy } from './creatures.js';
@@ -117,7 +117,7 @@ const mars = {
       k.tapIt(sun, () => { dusk = 6; k.Sound.chime(); k.fact('🌅 On Mars the sunset looks BLUE, not orange! The red dust makes the sky look blue near the Sun.', 'marssunset'); });
       k.G.interact.push({ x: X + 86, y: 0, layer: 'space', disc: 'marssunset', run: () => sun.userData.tap && sun.userData.tap(), hintY: 2.4 });
       const red = new THREE.Color('#b8794a'), blue = new THREE.Color('#5f7fb8'), tmp = new THREE.Color();
-      k.U.push(dt => { if (dusk <= 0) return; dusk = Math.max(0, dusk - dt); const a = Math.min(1, Math.min(dusk, 6 - dusk) / 1.2); tmp.copy(red).lerp(blue, a); k.sky.material.color.copy(tmp); k.sky.material.emissive.copy(tmp); sun.position.y = 9 - a * 3; });
+      k.U.push(dt => { if (dusk <= 0) return; dusk = Math.max(0, dusk - dt); const a = Math.min(1, Math.min(dusk, 6 - dusk) / 1.2); tmp.copy(red).lerp(blue, a); k.setSkyColor(tmp); sun.position.y = 9 - a * 3; });
       k.placeAlien(X + 26, -2, 3); k.placeAlien(X + 76, -2.4, 4);
       k.rocketSign(X + 4);
     },

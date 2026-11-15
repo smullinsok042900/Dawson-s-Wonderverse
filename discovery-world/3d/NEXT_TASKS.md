@@ -3,7 +3,15 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## PR #55: build 51 verified, ready for review
+The planet graphics branch now includes main through build 50 and the build 51 flight/preparation fixes. PR #55 remains open; the user reviews and merges it.
+- Sculpted planet scenery and the 330 m Moon/Mars are retained. Construction is sliced into short tasks, shaders are rehearsed before play, cancelled flights cannot move or hide Dawson later, and private ring textures are freed on departure.
+- Desktop focused checks pass: 40 Node checks, 41 learning contracts, saved-world regressions, flight cancellation/retry, save reload/corruption, all nine planets and expanded activities, zero new shader variants/waits, and stable ring texture counts on repeat visits. See `DEVELOPMENT_LOG.md` and `PERFORMANCE_LOG.md` for limits and measurements.
+- Final full smoke suite passed **195/195**, run alone, including save corruption recovery and zero console errors/warnings. Results and screenshots are committed with the build.
+- Physical iPhone confirmation and future Earth graphics work remain separate tasks.
+
 ## Waiting for the user
+- **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
 - **Build 48 rocket ride on the real iPhone:** PAW at the rocket, pick a planet, press the red button. Is the lift-off smooth (no freeze when the flame first appears) and is the button easy to press? Is her face visible in the window?
@@ -17,10 +25,8 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - **Real-device check of build 36** on the iPhone (and any iPad or Android device the family has): buttons, panels, framing, full screen on Android/iPad, the ⚙️ graphics modes. Emulation passed 10/10, but that is not a real device.
 
 ## 0. Bigger planets (the family's request, build 50 onward)
-- **RESUME HERE (session ended, 2026-11-14):**
-  1. **Build 50 is in this branch.** Its first full smoke run passed 194/195. The one failure ("moon: missing mooncave") is fixed: PAW at the moon cave now counts as finding it. Rerun `node tests/smoke3d.cjs` to confirm 195/195, then run devices and `tests/perf/planets.cjs 3D_build49_index.html index.html`. Update the PR and publish the artifact.
-  2. **Build 51 (bigger Mercury and Pluto) is written but untested.** It is saved as `docs/wip/build51_mercury_pluto.patch`. Apply it with `git am docs/wip/build51_mercury_pluto.patch` (from the repository root), then build, check in the browser, add smoke checks like build 50's, and test.
-  3. **The family asked a second Claude chat to do the graphics overhaul.** Do not do the graphics overhaul here (the user asked this chat to drop it).
+- Build 50's larger Moon/Mars are integrated into PR #55 together with build 51's planet graphics/travel fixes. Finish that PR's verification before expanding more planets.
+- The untested larger Mercury/Pluto work is preserved in `docs/wip/build51_mercury_pluto.patch`. Its historical build number now collides with this PR: rebase/review it as build 52 or later, then build and test it before use. Do not apply it as part of PR #55.
 - Done: the system (areas built when near, planets freed when you leave), the Moon and Mars (two new areas each).
 - **Next, two per build, same pattern** (add to `PLANET_EXTRA` in `planets.js`; measure with `tests/perf/planets.cjs OLD NEW`):
   - **Mercury:** crater fields, light and shadow, a rock-shape matching game.

@@ -4,6 +4,56 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 51 — planet preparation fixes (desktop, software rendering; 2026-11-15)
+
+Initial diagnostic compared the saved pre-fix merged PR (`5c2dd42`) with an intermediate build 51 candidate using identical `tests/perf/space.cjs` scenarios (844×390 touch viewport, Chromium/SwiftShader). No physical iPhone speed is claimed.
+
+| Place | Script ms/frame before → after | Arrival longest task before → after | Walking longest task before → after |
+|---|---:|---:|---:|
+| Moon | 18.6 → 13.6 | 0 → 85 ms | 52 → 0 ms |
+| Mercury | 16.7 → 9.9 | 1506 → 0 ms | 0 → 0 ms |
+| Venus | 83.0 → 10.7 | 0 → 0 ms | 657 → 0 ms |
+| Mars | 10.1 → 11.8 | 611 → 0 ms | 0 → 0 ms |
+| Jupiter | 9.6 → 7.7 | 1195 → 0 ms | 0 → 0 ms |
+| Saturn | 6.6 → 15.7 | 1234 → 0 ms | 0 → 0 ms |
+| Uranus | 9.8 → 12.5 | 1110 → 65 ms | 0 → 0 ms |
+| Neptune | 8.2 → 14.9 | 663 → 0 ms | 0 → 67 ms |
+| Pluto | 11.8 → 7.5 | 2078 → 0 ms | 0 → 0 ms |
+
+- Mean script time: **19.4 → 11.6 ms/frame**. The per-place samples contain only 8–10 frames; individual increases need repeat comparison rather than being called improvements.
+- Final memory: geometries **1382 → 1379**, textures **163 → 164** (one 1-pixel warmup texture), heap **145 → 132 MB**, programs **108 → 113** (resident representatives prevent repeated program disposal/creation). No page errors in either build.
+- `tests/perf/planet-shaders.cjs`: the original merged build introduced eight distinct shader variants (20 per-visit additions) and 13 shader readiness waits, up to 4241 ms. The fixed build traversed all nine planets and expanded activities with **zero added variants, zero readiness waits, zero page errors**.
+- A separate CPU-profiled fixed-build pass over all nine planets recorded one 52 ms Moon frame, dominated by Three.js rendering/material setup, and no other long tasks. It did not reproduce the multi-second shader waits. This does not claim a browser-wide zero-long-task guarantee.
+- Node construction checks preserve exact terrain geometry, painted pixels and transform isolation. Warm terrain chunks measured at most 2.04 ms; 512-pixel Earth painting chunks at most 3.69 ms; cold normal calculation around 12 ms. The scheduler yields between chunks at a nominal 3.5 ms budget.
+- The six-second moving diagnostic reaches different positions at low frame rates (physics advances at most 0.25 simulated seconds per rendered frame). Its per-view numbers are not the steady-view regression gate.
+- Final fixed-view comparison (`space-steady.cjs`, final build first, original merged PR second; 32 measured rendered frames after 8 warm frames, fixed player/camera, matching draw-call/triangle/shadow signatures):
+
+| Place | Mean complete-frame script time before → final | Median before → final | Matched work coverage |
+|---|---:|---:|---:|
+| Saturn | 12.71 → 8.77 ms | 9.60 → 7.40 ms | 96.9–100% |
+| Uranus | 11.47 → 10.16 ms | 8.05 → 6.95 ms | 100% |
+| Neptune | 11.26 → 11.06 ms | 8.05 → 7.15 ms | 100% |
+
+These include actual shadow and plain frames. Browser timing has outliers: p95 before/final was 35.8/13.6 ms (Saturn), 37.9/33.7 ms (Uranus), 33.1/40.1 ms (Neptune). No claim of an absolute zero-long-frame guarantee is made.
+- The final shader gate also returns to Earth and revisits Saturn/Uranus twice: **zero shader waits**, **zero page errors**, and GPU texture count **165 → 165**. It caught a delayed compile pass that created foliage programs after startup; every compile pass now completes first-use metadata and startup waits for pending compilation. Private ring textures are disposed while shared sky textures remain cached.
+- Final `tests/perf/planets.cjs index.html` completed all nine planets, end-to-end Moon/Mars exploration, and Earth return: **zero slow shader waits**; two long tasks, 58 ms at Uranus x7506 and 82 ms at the Earth pad x689. Final memory: 1399 geometries, 170 textures, 111 programs, 133 MB heap. The 2117 ms maximum frame gap reflects this slow software-rendered run and is not an iPhone result.
+
+## PR #55 conflict-resolution merge — work in progress (desktop, software rendering)
+
+Compared PR head `537497d` with its integration of main `02de466` using `tests/perf/space.cjs` on identical 844×390 touch viewports, Chromium/SwiftShader. This is a conflict-resolution checkpoint, not a performance-approved release or an iPhone result.
+
+| Measure | Original PR | Combined branch |
+|---|---:|---:|
+| Mean script ms/frame | 13.3 | 23.1 |
+| Largest arrival long task | 1126 ms | 2319 ms |
+| Largest walking long task | 53 ms | 654 ms |
+| Final geometries | 1451 | 1379 |
+| Final textures | 160 | 163 |
+| Final shader programs | 111 | 108 |
+| JavaScript page errors | 0 | 0 |
+
+The combined branch loads expanded Moon/Mars areas and frees other planets, which the original PR did not. Its first-use shader pauses remain unresolved and these measurements do not pass the performance gate. Keep the graphics overhaul work in progress; investigate and warm the new shader variants before publishing it. The merge preserves the existing task notes rather than claiming the graphics work is complete.
+
 ## Build 49 — Balloon Hills (desktop, software rendering; `ba.cjs 3D_build48_index.html index.html`, run twice)
 | View | Script ms/frame 48 → 49, run 1 | run 2 | Long tasks |
 |---|---|---|---|

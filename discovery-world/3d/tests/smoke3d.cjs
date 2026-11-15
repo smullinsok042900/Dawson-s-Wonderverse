@@ -14,7 +14,8 @@ const UG_F = -6;
 
 (async () => {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
+  const contextOptions = { viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 };
+  let ctx = await browser.newContext(contextOptions);
   let page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
@@ -98,7 +99,7 @@ const UG_F = -6;
   await shot('04_ball_pit.jpg');
   await teleport(21.6, 3.8); await holdBtn('#rightBtn', 700); c = await waitFor(s => s.ride === 'slide', 2000); check('walk off the tower onto the twisty slide', c.ride === 'slide');
   await shot('05_slide.jpg');
-  c = await waitFor(s => !s.ride, 9000); check('slide ends on the floor and you can move again', !c.ride && c.x > 30 && c.y === 0, `x=${c.x.toFixed(1)}`);
+  c = await waitFor(s => !s.ride && s.grounded && s.y === 0, 9000); check('slide ends on the floor and you can move again', !c.ride && c.x > 30 && c.y === 0, `x=${c.x.toFixed(1)}`);
   await teleport(31.5); { const top = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (m > 2 || ++n > 200) return r(m); requestAnimationFrame(f); }; f(); })); await holdBtn('#rightBtn', 500); const m = await top; check('walk onto the trampoline: big bounce', m > 2, `highest y=${m.toFixed(2)}`); }
   await shot('06_trampoline.jpg'); await waitFor(s => s.grounded && s.x > 36 || s.grounded && s.y === 0, 4000);
   // ---------- solid things ----------
@@ -138,8 +139,27 @@ const UG_F = -6;
   await shot('16_pet_workshop.jpg');
   await tapWorld(8.6, UG_F + .25, -1.2); { const two = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.petCount() >= 2) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever again: a second pet (you can have up to 5)', two && (await S()).disc.includes('pets2'), `pets=${await page.evaluate(() => __DDW3.friends.petCount())}`); }
   { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 9.5 || ++n > 400) { D.keys.right = false; return res(Math.abs(D.friends.petPos.x - P.x)); } requestAnimationFrame(f); }; f(); })); check('your pet follows you', r < 3, `pet is ${r.toFixed(1)} away`); }
-  await sleep(1200); { /* (aim only once the pet has stopped walking: the software-graphics browser runs a few frames a second, so a moving pet can walk out from under the tap) */ let pp = await page.evaluate(() => __DDW3.friends.petPos.toArray()); for (let k = 0; k < 20; k++) { await sleep(400); const q = await page.evaluate(() => __DDW3.friends.petPos.toArray()); const still = Math.hypot(q[0] - pp[0], q[2] - pp[2]) < .02; pp = q; if (still) break; } await tapWorld(pp[0], pp[1] + .5, pp[2]); await sleep(200); check('tap your pet: it waves and stays put', (await S()).disc.includes('stayhere') && await page.evaluate(() => __DDW3.world.petStay.includes(true)));
-    await page.evaluate(() => { const f = __DDW3.friends.pets.find(p => p.waiting); let done = false; f.root.traverse(o => { if (!done && o.userData.tap) { done = true; o.userData.tap(); } }); /* one tap */ }); await sleep(200); check('tap it again: it does a trick and follows you again', !(await page.evaluate(() => __DDW3.world.petStay.includes(true)))); }
+  { // Observe distinct animation frames: two wall-clock samples can be the same slow-rendered frame.
+    const aim = await page.evaluate(() => new Promise(resolve => {
+      const f = __DDW3.friends.pets[0]; let stable = 0, frames = 0;
+      const observe = () => {
+        const a = f.agent;
+        stable = a && Math.hypot(a.vx, a.vz) < .03 ? stable + 1 : 0;
+        if (stable >= 3 || ++frames >= 400) return resolve({ settled: stable >= 3, pos: f.root.position.toArray() });
+        requestAnimationFrame(observe);
+      };
+      requestAnimationFrame(observe);
+    }));
+    await tapWorld(aim.pos[0], aim.pos[1] + .5, aim.pos[2]);
+    c = await waitFor(s => s.disc.includes('stayhere'), 3000);
+    const waiting = await page.evaluate(() => __DDW3.friends.pets.findIndex(p => p.waiting));
+    check('tap your pet: it waves and stays put', aim.settled && c.disc.includes('stayhere') && waiting >= 0 && await page.evaluate(() => (__DDW3.world.petStay || []).includes(true)), `pet settled=${aim.settled}, waiting index=${waiting}`);
+    const tappedAgain = await page.evaluate(i => {
+      const f = __DDW3.friends.pets[i]; if (!f) return false;
+      f.root.userData.tap(); return true;
+    }, waiting);
+    check('tap it again: it does a trick and follows you again', tappedAgain && !(await page.evaluate(() => (__DDW3.world.petStay || []).includes(true))));
+  }
   { }
   await teleport(135.6); await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('the Balloon Bear gives you a balloon', await page.evaluate(() => __DDW3.world.balloons.length === 1));
   await tapWorld(137.6, 1.4, -2.4); await sleep(300); check('tap the bear again: a second balloon (you can have lots)', await page.evaluate(() => __DDW3.world.balloons.length === 2));
@@ -441,11 +461,30 @@ const UG_F = -6;
   { const d = await page.evaluate(() => __DDW3.G.learning.isDemo()); let ended = false; for (let i = 0; i < 80; i++) { if (!(await page.evaluate(() => __DDW3.G.learning.isDemo()))) { ended = true; break; } await sleep(250); } check('a learning game starts with a "watch me" demo that ends by itself', d && ended); }
   { const w = await page.evaluate(() => (document.querySelector('#learn').innerText.match(/[A-Za-z]{2,}/g) || []).join(' ')); check('no words to read in a learning game', !w, w); }
   await page.locator('#learn .lx').tap(); await sleep(300); check('closing a learning game returns to the world', !(await page.evaluate(() => __DDW3.G.activityOpen)));
-  // a broken save: close the game (it saves as it closes), then open it fresh with a corrupted save
-  await page.close(); page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  await page.addInitScript(() => localStorage.setItem('dawsons-discovery-world-3d-v1', '{broken'));
-  await page.goto(FILE); await sleep(2500);
-  { const txt = await page.locator('#playBtn').textContent(), raw = await page.evaluate(() => localStorage.getItem('dawsons-discovery-world-3d-v1')); check('a broken save is ignored safely (fresh start, no crash)', await page.locator('#playBtn').isVisible() && txt.includes("LET'S"), `button="${txt}" save=${(raw || '').slice(0, 20)}`); }
+  // Isolate this corruption case from the played world's close-time saves and service worker.
+  // The separate save-reopen regression also verifies close/corrupt/reopen in one context.
+  await page.close(); await ctx.close(); ctx = await browser.newContext(contextOptions);
+  page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
+  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+  await page.addInitScript(() => {
+    const key = 'dawsons-discovery-world-3d-v1';
+    window.__brokenSaveTrace = [];
+    for (const method of ['getItem', 'setItem']) {
+      const original = Storage.prototype[method];
+      Storage.prototype[method] = function (k, ...args) {
+        const value = original.call(this, k, ...args);
+        if (k === key && window.__brokenSaveTrace.length < 12) window.__brokenSaveTrace.push({ method, value: String(method === 'getItem' ? value : args[0]).slice(0, 40), caller: new Error().stack.split('\n')[2] });
+        return value;
+      };
+    }
+    localStorage.setItem(key, '{broken');
+    window.__brokenSaveSeed = localStorage.getItem(key);
+  });
+  await page.goto(FILE);
+  await page.waitForFunction(() => window.__DDW3 && document.querySelector('#loading.done'), null, { timeout: 240000 });
+  { const txt = await page.locator('#playBtn').textContent(), data = await page.evaluate(() => ({ seed: window.__brokenSaveSeed, trace: window.__brokenSaveTrace, raw: localStorage.getItem('dawsons-discovery-world-3d-v1') }));
+    const ok = data.seed === '{broken' && await page.locator('#playBtn').isVisible() && txt.includes("LET'S");
+    check('a broken save is ignored safely (fresh start, no crash)', ok, `button="${txt}" save=${(data.raw || '').slice(0, 20)}${ok ? '' : ' seed=' + JSON.stringify(data.seed) + ' trace=' + JSON.stringify(data.trace)}`); }
   // ---------- portrait ----------
   await page.setViewportSize({ width: 390, height: 844 }); await sleep(400);
   check('portrait phone shows the turn-sideways tip', await page.locator('#rotate').isVisible());
