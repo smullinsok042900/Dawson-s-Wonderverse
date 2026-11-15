@@ -16,6 +16,7 @@ import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
+import { makeBatch, shinyMat } from './spacekit.js';
 import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
@@ -291,15 +292,19 @@ export function buildWorld(G) {
   const fw = new THREE.Group(); fw.position.set(160, 7.5, -3.2); add(fw);
   for (const z of [-.6, .6]) { const leg = (s) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.18, .25, 8.6, 12), M('#ffffff')); l.position.set(s * 2.2, -3.9, z); l.rotation.z = s * .28; l.castShadow = true; fw.add(l); }; leg(-1); leg(1); }
   const wheel = new THREE.Group(); fw.add(wheel);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(6.4, .16, 12, 80), M('#ff65b5')); wheel.add(rim);
-  const rim2 = new THREE.Mesh(new THREE.TorusGeometry(5.9, .08, 8, 80), M('#ffd84a')); wheel.add(rim2);
-  for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 6.4, 6), M('#ffffff')); s.rotation.z = i / 10 * Math.PI * 2; s.position.set(Math.sin(-i / 10 * Math.PI * 2) * 3.2, Math.cos(i / 10 * Math.PI * 2) * 3.2, 0); wheel.add(s); }
-  sph(0, 0, 0, .6, '#ffd84a', { parent: wheel });
+  // (build 62) the rim, the 10 spokes and the hub turn together, so they are painted into ONE mesh (12 fewer draw calls)
+  { const wb = makeBatch();
+    wb.put(new THREE.TorusGeometry(6.4, .16, 12, 80), 0, 0, 0, '#ff65b5');
+    wb.put(new THREE.TorusGeometry(5.9, .08, 8, 80), 0, 0, 0, '#ffd84a');
+    for (let i = 0; i < 10; i++) wb.put(new THREE.CylinderGeometry(.05, .05, 6.4, 6), Math.sin(-i / 10 * Math.PI * 2) * 3.2, Math.cos(i / 10 * Math.PI * 2) * 3.2, 0, '#ffffff', 1, [0, 0, i / 10 * Math.PI * 2]);
+    wb.put(new THREE.SphereGeometry(.6, 20, 12), 0, 0, 0, '#ffd84a');
+    const frame = wb.mesh(shinyMat()); frame.castShadow = false; wheel.add(frame); }
   const gondolas = [];
   for (let i = 0; i < 10; i++) {
     const g = new THREE.Group(); fw.add(g);
-    const cab = new THREE.Mesh(rbox(1.3, .9, 1.1, .25), M(RAINBOW[i % 8])); cab.position.y = -.75; cab.castShadow = true; g.add(cab);
-    const hood = new THREE.Mesh(new THREE.SphereGeometry(.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#ffffff')); hood.position.y = .05; g.add(hood);
+    // (build 62) each cabin and its hood are one painted mesh (one draw call instead of two)
+    const gb = makeBatch(); gb.put(rbox(1.3, .9, 1.1, .25), 0, -.75, 0, RAINBOW[i % 8]); gb.put(new THREE.SphereGeometry(.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), 0, .05, 0, '#ffffff');
+    const cab = gb.mesh(shinyMat()); cab.castShadow = true; g.add(cab);
     const seat = new THREE.Object3D(); seat.position.set(0, -.35, .2); g.add(seat);
     gondolas.push({ g, seat, i });
   }

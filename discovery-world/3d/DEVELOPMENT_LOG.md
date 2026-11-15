@@ -64,6 +64,18 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
+## Checkpoint: build 62 — fewer draw calls: the Ferris wheel frame and cabins
+- **Changed (`world.js`):** the wheel's two rims, its 10 spokes and its hub rotate as one unit, so they are now painted
+  into **one** mesh (12 meshes → 1). Each cabin and its white hood move as one unit too, so each pair is now **one**
+  painted mesh (20 meshes → 10). Both use the engine's existing `shinyMat` (already compiled for the rocket and planets,
+  so no new shader program).
+- **Why it is safe:** nothing inside the merged parts moves on its own; the wheel still turns as before (the parent group
+  is unchanged), the gondolas still hang and swing as before, and each gondola's seat anchor (`seat`) is untouched, so
+  riding the wheel works exactly as it did.
+- **Expected effect:** about **22 fewer draw calls** in the Adventure Park, the heaviest measured view (park entrance
+  ~247, Ferris wheel ~159–251). Should show in the next `?worldcheck` at `ferris wheel x=160` and `park entrance x=137`.
+- **Not verified:** not rendered here; the merge is verified by reading (same shapes, same colours, same parent groups).
+
 ## Checkpoint: build 61 — fewer draw calls: the rainbow stairs are one mesh
 - **Changed (`expansion.js`):** each rainbow staircase up to the Sky Kingdom (24 rising steps plus their 8 m landing) was
   25 separate rounded meshes, at **both** ends of the world. Each staircase is now painted into **one** mesh with the
