@@ -34,6 +34,7 @@ import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
+import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD, makeTree } from './nature.js';
 import { LOWSTATS } from './assets.js';
@@ -1186,6 +1187,7 @@ function frame() {
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
+  if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
   $('buildTools').classList.toggle('show', started && meadow.nearBuild(player));
@@ -1440,7 +1442,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '54'; G.build = GAME_BUILD;
+const GAME_BUILD = '55'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1461,7 +1463,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
   $('soundBtn').after(btn);
   const pan = document.createElement('div'); pan.id = 'perfPanel';
-  pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <button data-a="close" aria-label="close">✖</button></div>
+  pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <span class="ppBuild">build ${GAME_BUILD}</span> <button data-a="close" aria-label="close">✖</button></div>
     <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier ppVoices"></div><div class="ppInfo ppVoiceTip">For the most natural voice: on the iPhone open Settings → Accessibility → Spoken Content → Voices → English and download <b>Ava (Premium)</b> or <b>Zoe (Premium)</b> (free, works offline). The game uses it automatically; choose it here to be sure.</div><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
     <div class="ppTier ppMode">Graphics: <button data-a="m-auto">Auto</button><button data-a="m-quality">Quality</button><button data-a="m-balanced">Balanced</button><button data-a="m-performance">Performance</button></div>
@@ -1568,6 +1570,8 @@ function trainArrived(i) {
   tapEl(btn, () => { if (G.activityOpen) return; draw(); pn.classList.add('show'); Sound.click(); voice.speak('Your pet friends! Tap one to bring it along, or to send it home.'); });
   tapEl(pn.querySelector('.mpX'), () => { pn.classList.remove('show'); Sound.click(); });
 }
+// (build 52) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
+const mp = initMultiplayer(G, { scene, player, makeCreature, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g) }); G.mp = mp;
 
 // ---------------- Build 40: connected adventures ----------------
 G.started = () => started;
