@@ -4,6 +4,20 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 71 — a start-up crash found by looking at the real page (build 68's cave rock)
+- **What was wrong:** the first visual check of the live site (the web inspector, on the published build 70) showed the
+  purple "Oops! The 3D world couldn't start on this device." screen on every load, with
+  `TypeError: t.copy is not a function`. Cause: the paint callback added with the build-68 cave rock
+  (`src/terrain.js`, `makeCaveRock`) was declared as `(px, py, pz, ny, out)`, but `makeBatch().add` calls a paint
+  function as `fn(x, y, z, nx, ny, nz, outColor)`. So `out` received the normal's `y` — a number — and `ramp()` called
+  `.copy()` on it. `buildUnderground` runs before the first frame, so **every** device got the error screen.
+- **Fixed:** the callback is `(px, py, pz, nx, ny, nz, out)` again (the body already used `ny` and `out`).
+- **Why the tests did not catch it:** they exercise the height fields and the crate/ridge maths, not the cave paint
+  callback, and the browser bundle is only run in the browser.
+- **Verified:** the error was diagnosed from the exact deployed stack trace and the minified message, and the fix is the
+  one-line signature; the rest of the overhaul (mountains, water, craters) never ran on the live site, so it is still
+  unverified visually and will be checked on build 71.
+
 ## Checkpoint: build 70 — rock micro-detail and wavy foam (overhaul, stage 5, last)
 - **The family asked** for surfaces that do not look smooth or plastic, and for foam and shore movement. This stage adds
   the last two pieces.

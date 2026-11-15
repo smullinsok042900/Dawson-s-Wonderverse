@@ -155,7 +155,7 @@ export function makeCrags(scene, H, { x0, x1, z0, z1, n = 12, seed = 0, snowy = 
  */
 export function makeCaveRock(scene, { x0 = 0, x1 = 40, ceil = -1.6, floor = -6, zBack = -5.8, zFront = -3.4, nA = 44, nB = 20, seed = 0 } = {}) {
   const b = makeBatch(), W = Math.max(1, x1 - x0);
-  const paint = (px, py, pz, ny, out) => {
+  const paint = (px, py, pz, nx, ny, nz, out) => {
     const n = fbm2(px * .8 + seed, pz * .8 + py * .5, 3), strata = .5 + .5 * Math.sin(py * 2.3 + n * 3);
     ramp(['#4a2a70', '#6a4a90', '#8a6aa8', '#b0a0c0'], .2 + n * .6, out);
     out.multiplyScalar(.7 + .35 * Math.max(0, -ny) + .1 * strata); // the ceiling catches the lantern light on its underside
