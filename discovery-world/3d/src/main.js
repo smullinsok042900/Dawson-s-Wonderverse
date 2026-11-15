@@ -35,9 +35,10 @@ import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import { initMultiplayer } from './multiplayer.js';
+import { makeCollision, PLAYER_R, PLAYER_H } from './collision.js';
 import { runWorldCheck } from './worldcheck.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
-import { LOD, makeTree } from './nature.js';
+import { LOD, makeTree, TREE_SPOTS } from './nature.js';
 import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
@@ -96,7 +97,7 @@ const cloudMat = toy('#ffffff', { r: .9, cc: 0, em: '#fff4fb', ei: .35 });
 for (let i = 0; i < 16; i++) { const c = new THREE.Group(); for (let k = 0; k < 5; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), cloudMat); s.scale.setScalar(2 + (k % 3) * .8); s.position.set((k - 2) * 2.2, (k % 2) * 1.1, 0); c.add(s); } c.position.set(-20 + i * 16, 18 + (i % 3) * 4, -55 - (i % 2) * 15); scene.add(c); }
 
 // ---------------- game state ----------------
-const G = { scene, renderer, platforms: [], solids: [], taps: [], interact: [], camera };
+const G = { scene, renderer, platforms: [], solids: [], taps: [], interact: [], camera, collision: makeCollision() };
 G.playroom=createPlayroomViewport({renderer,G});
 const player = { groundZ: 0, x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
 const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#bfe8ff', lastBuckets: [], paintColor: '#ff4f9a', rainbowHue: 0, trail: [], flash: 0, drumT: 0, mobileT: 0, wake: [0, 0, 0, 0, 0, 0] };
@@ -853,19 +854,19 @@ function updatePlayer(dt) {
   if (crawl && !P.crawl) discover('crawl', 'A tiny tunnel! Crawl through it.');
   P.crawl = crawl;
   const top = (swim ? (P.layer === 'sea' ? 3.6 : 2.2) : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
-  const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
-  // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
-  for (const s of G.solids) {
-    if (s.layer !== P.layer || P.y >= s.top - .02 || P.y + 1.4 <= (s.bottom ?? 0)) continue;
-    const L = s.a - .35, Rr = s.b + .35;
-    if (P.x > L && P.x < Rr) {
-      const fromLeft = ox <= L + .001, fromRight = ox >= Rr - .001;
-      if (!fromLeft && !fromRight) continue; // already inside (e.g. just landed): don't trap
-      P.x = fromLeft ? L : Rr;
-      if ((P.grounded || P.swim) && s.top - P.y <= 1.25 && Math.sign(P.vx) === (fromLeft ? 1 : -1)) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = fromLeft ? 1 : -1; }
-      else P.vx = 0;
-    }
+  const [x1, x2] = bounds(); const ox = P.x; const wantX = clamp(P.x + P.vx * dt, x1, x2);
+  // (build 75) REAL COLLISION: the player is a cylinder of radius PLAYER_R; every solid object in the world registers a
+  // box with a real x range, z range and height, and the move stops at the face. Because the boxes know their depth, you
+  // walk in front of and behind a house instead of through it, and because the sweep checks every 12 m column it
+  // crosses, a long frame cannot tunnel through a thin wall.
+  const step75 = G.collision.moveX(ox, wantX, P.z, P.y, PLAYER_R, PLAYER_H, P.layer);
+  P.x = step75.x;
+  if (step75.hit) {
+    const s = step75.hit;
+    if ((P.grounded || P.swim) && s.top - P.y <= 1.25 && Math.sign(wantX - ox) === 1) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = 1; }
+    else P.vx = 0;
   }
+  if (P.x <= x1 || P.x >= x2) P.vx = 0;
   P.z += (P.groundZ - P.z) * Math.min(1, dt * 6);
   const oldY = P.y, wasG = P.grounded;
   if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * (P.layer === 'space' ? (G.spaceG || 1) : 1) * dt; /* (build 45: the real gravity of the Moon, the planets and Pluto, relative to Earth) */ if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
@@ -1477,7 +1478,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '74'; G.build = GAME_BUILD;
+const GAME_BUILD = '75'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

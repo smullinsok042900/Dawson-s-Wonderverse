@@ -65,11 +65,28 @@ export async function runWorldCheck({ G, player, renderer, scene, teleport }) {
 
   show('--- the world as built ---');
   show(`${meshes} static meshes checked, ${I.length} activity spots, ${P.length} platforms, ${S.length} solids`);
-  show(`${found.length} placement problems, ${buried.length} buried meshes, ${broken.length} broken meshes, ${zeroScale} with a zero scale`);
   const sample = (title, list) => { if (!list.length) return; show(title + ` (${list.length}):`); list.slice(0, 12).forEach(t => show('  • ' + t)); if (list.length > 12) show(`  … and ${list.length - 12} more`); };
   sample('placement problems', found);
   sample('buried under the ground', buried);
   sample('broken meshes', broken);
+
+  // ---------- (build 75) the player's collision: does every box actually stop a walk-in? ----------
+  const C = G.collision;
+  if (C) {
+    const fails = [];
+    let tested = 0;
+    for (const b of C.boxes) {
+      if (b.layer !== '' || b.top <= .6 || (b.bottom ?? 0) > .02) continue; // only floor-standing props in the main world
+      tested++;
+      const z = (b.z0 + b.z1) / 2;
+      const r = C.moveX(b.x0 - 3, b.x1 + 3, z, 0, undefined, undefined, '');
+      if (!r.hit || r.x > b.x0 + .02) fails.push(`${b.tag || 'solid'} x ${b.x0.toFixed(1)}..${b.x1.toFixed(1)} z ${b.z0.toFixed(1)}..${b.z1.toFixed(1)}`);
+    }
+    show(`${C.count()} collision boxes in the world; ${tested - fails.length} of ${tested} stop a walk-in from the left`);
+    if (fails.length) sample('colliders that do NOT stop the player', fails);
+  }
+
+  show(`${found.length} placement problems, ${buried.length} buried meshes, ${broken.length} broken meshes, ${zeroScale} with a zero scale`);
 
   // ---------- what it costs to draw, area by area ----------
   const STOPS = [[1, 'start'], [8, 'ball pit'], [20, 'slide'], [34, 'trampoline'], [60, 'studio'], [100, 'lab'], [137, 'park entrance'], [160, 'ferris wheel'], [199, 'fluffkin house'], [208, 'block builder'], [236, 'creative meadow'], [300, 'adventure trail'], [398, 'castle front'], [441, 'trail far'], [561, 'toy town'], [620, 'toy town far'], [686, 'rocket pad'], [801, 'art plaza'], [900, 'far right'], [1008, 'fluffkin house in'], [2010, 'castle inside'], [-86, 'beach'], [-262, 'woods'], [-392, 'frosty peaks'], [-470, 'happy farm'], [-600, 'ocean pier'], [-740, 'balloon hills']];

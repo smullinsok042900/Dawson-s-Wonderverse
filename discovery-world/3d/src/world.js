@@ -17,7 +17,7 @@ import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 import { makeBatch, shinyMat } from './spacekit.js';
-import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeTreeBatch, makeRock, terrainH, fabricMat } from './nature.js';
+import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeTreeBatch, makeRock, terrainH, fabricMat, TREE_SPOTS } from './nature.js';
 import { makeRidge, makeCrags } from './terrain.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
@@ -44,7 +44,8 @@ export function buildWorld(G) {
   function sph(x, y, z, r, color, o = {}) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = o.cast ?? true; return add(m, o.parent); }
   const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); return p; };
   // solid things in the creature's path: you can't walk through them (low ones you hop up onto by yourself)
-  const solid = (a, b, top, o = {}) => { G.solids.push({ a, b, top, layer: o.layer || '' }); };
+  // (build 75) a solid now also registers a real box collider (x range, z depth, height, layer) with the collision system
+  const solid = (a, b, top, o = {}) => { const p = { a, b, top, layer: o.layer || '', bottom: o.bottom ?? 0 }; G.solids.push(p); G.collision.add({ x0: a, x1: b, top: p.top, bottom: p.bottom, layer: p.layer, z0: (o.z ?? 0) - (o.d ?? 1.2), z1: (o.z ?? 0) + (o.d ?? 1.2), tag: 'world' }); return p; };
   const tap = (obj, fn, o = {}) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); if (o.paw) G.interact.push({ x: o.paw[0], y: o.paw[1], layer: o.layer || '', disc: o.disc, run: fn, hintY: o.hintY ?? 2 }); return obj; };
 
   // ---------- floor: glossy tiles, a different colour in each zone ----------
@@ -418,5 +419,20 @@ export function buildWorld(G) {
   // where the six lost baby Fluffkins wait
   G.fluffSpots = [[22.4, 3.8, -1.9], [44, -6, -.3], [87, 3.0, -1.7], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
   G.secretStar = [12, 3.2];
+
+  // ---------- (build 75) REAL COLLISION for the things you can see ----------
+  // Before this, houses, trees, rocks, the carousel and the Ferris wheel had no collision at all, so the player walked
+  // straight through them. Each of them now gets a box that matches its visible footprint and its z position.
+  const propBox = (x, z, w, d, top, bottom = 0, layer = '') => G.collision.add({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, top, bottom, layer, tag: 'world' });
+  for (const t of TREE_SPOTS) G.collision.add({ x0: t.x - .45, x1: t.x + .45, z0: t.z - .45, z1: t.z + .45, top: 5, tag: 'world' }); // every trunk
+  // the boulders along the park (the same list that placed them, so position and size match the meshes exactly)
+  [[141, -9.5, .5], [168, -10.2, .7], [186, -8.8, .4], [214, -9.6, .6], [252, -10.4, .55], [305, -9.6, .7], [341, -8.9, .45], [359, -9.8, .6], [393, -9.2, .5], [181, 4.25, .22], [233, 4.2, .2], [318, 4.25, .24]]
+    .forEach(([x, z, s]) => propBox(x, z, s * 2.2, s * 2.2, s * 1.1));
+  propBox(190, -2.2, 11, 4, 6.5);      // the Fluffkin House
+  propBox(144, -5.4, 9.2, 9.2, 5.2);   // the carousel platform
+  propBox(160, -3.2, 4.4, 2.4, 8);     // the Ferris wheel legs and hub
+  propBox(174, -1.8, 1.1, 1.1, 1.6);   // the bouncy mushroom's stem
+  propBox(22.4, -1.9, 2, 2, 5.2);      // the slide tower
+  propBox(34, 0, 3.4, 3.4, .5);        // the trampoline rim
 }
 function rand(a, b) { return a + Math.random() * (b - a); }

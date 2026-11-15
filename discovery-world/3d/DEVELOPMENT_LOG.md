@@ -4,6 +4,42 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 75 — the collision system (repair, stage 1)
+- **Checkpoint first:** the playable build 74 bundle was saved as
+  `backups/3D_build74_before_collision_repair_index.html`, so there is a working reference to compare against and to
+  restore from.
+- **What was actually wrong:** the player moved along x only, and the game tested a short list of x-INTERVALS
+  (`{a, b, top}`) that **almost nothing registered**. Houses, trees, rocks, the carousel, the Ferris wheel and the
+  slide tower had no entry at all, so the player walked straight through them. The intervals had no depth either: one
+  entry blocked the player at every z, and there was no height cylinder, so jumping and ducking were not considered.
+- **New `src/collision.js` (pure maths, testable, no Three.js):**
+  - every solid is a **box** with a real x range, **z range**, top and bottom, and a layer (world / underground /
+  planet / house), so the world's props do not collide with the Moon's or with the Fluffy House interior;
+  - boxes are bucketed into **12 m columns**, so a check only looks at the few boxes the player can touch;
+  - `moveX` sweeps every column between the old and the new position, so **a long frame cannot tunnel** through a thin
+    wall; it stops at the face and reports the hit;
+  - the player is a **cylinder** (radius 0.36 m, height 1.55 m): you can jump over a low box, walk under a raised one,
+    and you cannot be trapped inside one (a box is only tested when the player started outside it).
+- **Wired in:**
+  - `src/main.js`: the old x-interval loop is replaced by `G.collision.moveX(...)`; the auto-hop onto low obstacles is
+    kept (`top − y ≤ 1.25 m`).
+  - `src/world.js`: `solid()` now registers a box too, and a new block at the end of `buildWorld` registers colliders
+    for **every tree trunk** (`TREE_SPOTS`), **all twelve boulders** (same coordinates and sizes as the meshes), the
+    **Fluffkin House**, the **carousel**, the **Ferris wheel legs**, the **bouncy mushroom stem**, the **slide tower**
+    and the **trampoline rim**.
+  - `src/underground.js`: its solids register boxes as well.
+- **Tests (`tests/collision.test.mjs`, new — 8 checks):** a wall stops the player from both sides; an 80 m step cannot
+  tunnel through a 0.4 m wall; collision has depth (walk past at z 0, blocked at z −2.5); low boxes can be jumped,
+  tall ones cannot; a raised box can be walked under but not through; layers keep the underground and planets apart;
+  a player inside a box can walk out; colliders can be removed when a streamed area unloads.
+- **In-game self-test (`?worldcheck`, build 75):** the report now walks a simulated player into **every** floor-standing
+  collider from the left and lists any that fail to stop it, plus the total box count. That check runs in the real
+  bundle on the real device.
+- **What is NOT yet done (stated plainly):** this stage covers the main world's props and the underground's solids.
+  The streamed districts (Toy Town, Art Plaza, the Farm, Frosty Peaks, the seaside, Balloon Hills), the castle, the
+  planets and the Sky Kingdom do not register colliders yet, and the overlapping/floating-object audit (stage 2) and
+  the graphics work (stage 3) have not been started. I have not walked the game with a finger; that needs a device.
+
 ## Checkpoint: build 74 — verified horizon, softer hills, visible snow caps (art direction, third pass)
 - **Verified with real screenshots (web inspector, published build 73):** the outdoor views now read
   **meadow → hills → distant ridge → sky**. At Whispering Woods there is a soft green ridgeline with a clear

@@ -36,7 +36,7 @@ export function buildUnderground(G) {
   }
   const sph = (x, y, z, r, color, o = {}) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = !!o.cast; return add(m); };
   const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: '', ...o }; G.platforms.push(p); return p; };
-  const solid = (a, b, top, bottom) => G.solids.push({ a, b, top, bottom, layer: '' });
+  const solid = (a, b, top, bottom) => { G.solids.push({ a, b, top, bottom, layer: '' }); G.collision.add({ x0: a, x1: b, top, bottom: bottom ?? 0, layer: '', tag: 'underground' }); };
   const tap = (obj, fn, o = {}) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); if (o.paw) G.interact.push({ x: o.paw[0], y: o.paw[1], layer: '', disc: o.disc, run: fn, hintY: o.hintY ?? 2 }); return obj; };
 
   // ---------- the earth between the floor and the underground (cut away at the front) ----------
