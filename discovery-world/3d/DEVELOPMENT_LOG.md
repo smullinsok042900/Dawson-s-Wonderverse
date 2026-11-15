@@ -4,6 +4,32 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 64 — fewer draw calls (builds 60–64)
+- **The family asked** for the world to run better without losing anything: no new activities, no new pictures, only
+  less work in every frame. Every change here draws exactly what was drawn before; it only draws it in fewer pieces.
+- **Merged into one painted mesh** (a group of small meshes became a single mesh; a painted mesh uses a material that
+  was already compiled, so no new shader is made):
+  - the Ferris wheel frame, and each gondola's cabin with its hood (`src/main.js`);
+  - both rainbow staircases — 24 steps each, and the landing (`src/expansion.js`);
+  - the Adventure Trail bridge's posts and rails, one mesh per side, and the Crystal Cave's stalactites
+    (`src/expansion.js`);
+  - **the 21 park trees** (`src/nature.js`, new `makeTreeBatch`), drawn as instanced meshes by tree variant and 24 m
+    chunk — the same pattern the bushes already use, so each tree costs one draw call per part per chunk instead of one
+    per tree. Off-screen chunks are not drawn, and a phone can still swap a chunk to the low-detail shape further away.
+- **Why it is safe:** the parts that were merged move as one unit, so the picture is identical; geometry, positions,
+  colours and the collision/platform data are untouched, so nothing can move, float or stop being stood on.
+- **Trees keep their places for the creatures:** pets still walk around every tree. Their obstacle spots are collected
+  while the world is built (`TREE_SPOTS` in `src/nature.js`), because a batch of trees has one place for many trees,
+  which is no use as an obstacle. Each tree keeps the same variant, size and turn as before, and the low-detail copy is
+  still used for the shadow map.
+- **Verified by reading the code (not by playing it):** the merges use the same materials, matrices and per-tree
+  variant/size/turn as the separate meshes did; the tree batch falls back to the procedural trees exactly as before when
+  the model files are missing, and phones keep the distance swap to the low-detail shape.
+- **Not yet measured on a device.** What to compare is the ⚙️ monitor's draw-call count, or `?worldcheck`, taken at the
+  park entrance, the Ferris wheel, the Adventure Trail and the far right of the park.
+- **Earlier in this run:** build 61 the rainbow staircases, build 62 the Ferris wheel, build 63 the trail bridge and the
+  cave lights.
+
 ## Checkpoint: build 59 — Sprout, a fourth main character
 - **The family asked** for a fourth character, since up to four players can play together now and there were only three.
 - **Sprout** (`characters.js`, `sproutSpec`) is an original leaf sprite:

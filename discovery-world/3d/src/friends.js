@@ -11,7 +11,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { makeLife } from './life.js';
-import { LOD } from './nature.js';
+import { TREE_SPOTS } from './nature.js';
 import { toy, ball, face, starGeometry } from './creatures.js';
 import { plushNormal } from './nature.js';
 import { plush, bipedSpec, quadSpec, personSpec, foxSpec, bearSpec, bunnySpec } from './critterkit.js';
@@ -42,7 +42,7 @@ export function initFriends(G, api) {
   const M = (c, o) => toy(c, o);
   const UGF = api.UG.floor;
   // (build 23) every creature is driven by the shared behaviour system (life.js)
-  const life = makeLife({ camera: G.camera, obstacles: LOD.filter(it => it.tree).map(it => ({ x: it.x, z: it.z, r: .9 })),
+  const life = makeLife({ camera: G.camera, obstacles: TREE_SPOTS, /* (build 64: the trees are drawn in batches, so their places are kept apart from the pictures) */
     emote: (a, txt) => say(a.who || a, txt, true), chirp: a => Sound.tone((VOICE[a.kind] || 560) * 1.15, .07, 'sine', .035, 1.25) });
   G.life = life;
   const SPEC = { biscuit: 'dog', pom: 'lamb', twinkle: 'fairy', bear: 'bear', bunny: 'bunny', frog: 'frog', penguin: 'penguin', owl: 'owl', beaver: 'beaver', unicorn: 'unicorn', hedgehog: 'hedgehog', fox: 'fox', tops: 'unicorn', rosie: 'person', luna: 'person' };

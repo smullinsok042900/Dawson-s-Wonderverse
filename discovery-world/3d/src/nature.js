@@ -36,6 +36,9 @@ export function leafDetail() {
 }
 const PHONE_GRASS = typeof navigator !== 'undefined' && (/iPhone|iPad|Android/.test(navigator.userAgent) || (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches));
 export const LOD = []; // (build 22) things that are only drawn near the camera: { o, x, r }
+// (build 64) where the trees stand, so the creatures can keep walking around them even when the trees are drawn as
+// instanced meshes (a batch has one place for many trees, which is no use as an obstacle): { x, z, r }
+export const TREE_SPOTS = [];
 const NO_FLIP = THREE.ShaderChunk.normal_fragment_begin.replace('normal *= faceDirection;', '');
 
 // turn a picture's brightness into bumps (a normal map)
@@ -283,7 +286,40 @@ function canopyGeo() { if (canopyCache) return canopyCache; const g = new THREE.
   canopyCache = g; return g; }
 // build 19: trees and bushes come from the Blender asset pipeline (real model files); the
 // procedural versions below stay as the light test mode and as a fallback
+// (build 64) A whole row of trees drawn as a few instanced meshes instead of one group of meshes per tree: each tree
+// variant's parts become ONE InstancedMesh per 24 m chunk (the same pattern the bushes already use, so every tree of a
+// variant in one chunk costs one draw call per part instead of one per tree). The models arrive a moment after start-up;
+// until then nothing is drawn, and if the models never arrive the procedural trees are used exactly as before.
+export function makeTreeBatch(scene, list) {
+  for (const [x, z] of list) TREE_SPOTS.push({ x, z, r: .9 }); // (the pets avoid the same 21 trees as before)
+  if (!USE_ASSETS) { for (const [x, z, s = 1] of list) makeTreeProc(scene, x, z, s); return; }
+  assetsReady.then(A => {
+    if (!A) { for (const [x, z, s = 1] of list) makeTreeProc(scene, x, z, s); return; }
+    const chunks = new Map();
+    for (const [x, z, s = 1] of list) {
+      const v = Math.abs(Math.round(x * 7.3)) % 3, key = v + '|' + Math.floor(x / 24);
+      if (!chunks.has(key)) chunks.set(key, { v, x: Math.floor(x / 24) * 24 + 12, m: [] });
+      const sc = s * (.9 + rnd() * .18); // (the same size and turn this tree got when it was made on its own)
+      const m = new THREE.Matrix4().compose(new THREE.Vector3(x, terrainH(x, z) - .03, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rnd() * 6.283, 0)), new THREE.Vector3(sc, sc, sc));
+      chunks.get(key).m.push(m);
+    }
+    for (const c of chunks.values()) {
+      for (const p of A.trees[c.v]) {
+        const im = new THREE.InstancedMesh(p.geo, p.mat, c.m.length);
+        c.m.forEach((m, i) => im.setMatrixAt(i, m));
+        im.castShadow = !p.lo; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im);
+        // (the shape can still swap to the low-detail copy on a phone, exactly as it did for a single tree)
+        LOD.push({ o: im, x: c.x, r: 60, parts: p.lo ? [{ m: im, hi: p.geo, lo: p.lo }] : null });
+        if (p.lo) { // (the low-detail copy is only drawn into the shadow map, like before)
+          const sh = new THREE.InstancedMesh(p.lo, p.mat, c.m.length); sh.instanceMatrix = im.instanceMatrix; sh.castShadow = true; sh.receiveShadow = false; sh.layers.set(1); sh.computeBoundingSphere(); im.add(sh);
+        }
+      }
+    }
+  });
+}
+
 export function makeTree(scene, x, z, s = 1) {
+  TREE_SPOTS.push({ x, z, r: .9 });
   if (!USE_ASSETS) return makeTreeProc(scene, x, z, s);
   const g = new THREE.Group(); g.position.set(x, terrainH(x, z) - .03, z); g.rotation.y = rnd() * 6.283; scene.add(g); const entry = { o: g, x, z, r: 60, tree: true }; LOD.push(entry);
   const v = Math.abs(Math.round(x * 7.3)) % 3, sc = s * (.9 + rnd() * .18);
