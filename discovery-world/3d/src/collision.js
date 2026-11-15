@@ -86,5 +86,37 @@ export function makeCollision() {
     return { x, hit };
   }
 
-  return { add, removeTag, overlap, moveX, boxes, cells, count: () => boxes.length };
+  /**
+   * Remove the boxes that stand under one platform: when a platform is registered at the same height and its x range
+   * covers a box, that box is a step you are meant to walk up, not a wall. Called as each platform is added (so it works
+   * for the streamed districts too, which build their platforms long after the world is built).
+   */
+  function uncover(p) {
+    if (!p) return 0;
+    const layer = p.layer || '';
+    let killed = 0;
+    for (let i = boxes.length - 1; i >= 0; i--) {
+      const b = boxes[i];
+      if (b.layer !== layer) continue;
+      if (!(p.y >= b.top - .1 && p.y <= b.top + .1)) continue;
+      if (!(p.a <= b.x0 + .05 && p.b >= b.x1 - .05)) continue;
+      boxes.splice(i, 1); killed++;
+    }
+    if (killed) { cells.clear(); for (const b of boxes) for (let k = key(b.x0); k <= key(b.x1); k++) bucket(k).push(b); }
+    return killed;
+  }
+
+  /** Drop boxes that are actually things you stand on (a bulk pass, for the end of a build) */
+  function pruneStandable(platforms) {
+    const keep = [];
+    for (const b of boxes) {
+      const covered = (platforms || []).some(p => (p.layer || '') === b.layer && p.y >= b.top - .1 && p.y <= b.top + .1 && p.a <= b.x0 + .05 && p.b >= b.x1 - .05);
+      if (!covered) keep.push(b);
+    }
+    boxes.length = 0; cells.clear();
+    for (const b of keep) { boxes.push(b); for (let k = key(b.x0); k <= key(b.x1); k++) bucket(k).push(b); }
+    return boxes.length;
+  }
+
+  return { add, removeTag, overlap, moveX, pruneStandable, uncover, boxes, cells, count: () => boxes.length };
 }

@@ -56,6 +56,15 @@ test('a player already inside a box can walk out (no trapping)', () => {
   assert.ok(r.x > 10.5, 'they move freely out of the box');
 });
 
+test('a platform over a block makes it a step, not a wall', () => {
+  const c = makeCollision();
+  c.add({ x0: 10, x1: 11, z0: -1, z1: 1, top: 2 });
+  assert.ok(c.moveX(5, 20, 0, 0).hit, 'the block starts solid');
+  const removed = c.uncover({ a: 9.9, b: 11.1, y: 2, layer: '' });
+  assert.equal(removed, 1, 'the platform uncovered exactly one box');
+  assert.equal(c.moveX(5, 20, 0, 0).hit, null, 'and now the player can walk up it');
+});
+
 test('the box list can be cleaned up when a streamed area unloads', () => {
   const c = makeCollision();
   c.add({ x0: 10, x1: 11, z0: -1, z1: 1, top: 4, tag: 'space:mars' });

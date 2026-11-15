@@ -4,6 +4,30 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 76 — collision for every building, in every district (repair, stage 1b)
+- **Why this was still wrong after build 75:** only 52 colliders existed — the main world's props. Every district built
+  out of blocks (Toy Town's houses, the Farm, Art Plaza, the castle front, Frosty Peaks' steps, the seaside, Balloon
+  Hills) still had no collision, so the player could walk through those buildings.
+- **Fixed at the source, not one object at a time:** `block()` and `cyl()` in `src/world.js` — the two functions every
+  district uses to build walls, houses, towers and columns — now **register a collision box automatically** for any
+  free-standing piece taller than 1.2 m that is not a child of a group (so house interiors, roofs and decorations built
+  with a parent are untouched). Because the box is made from the very same x, y, z, w, h, d used to make the mesh, its
+  footprint matches the visible geometry exactly.
+- **Climbing still works:** at the end of `buildWorld`, `collision.pruneStandable(G.platforms)` **removes every box
+  that a platform stands on at the same height and covers in x** — climbing blocks, crates, trampoline, spring pads,
+  the slide steps and the castle steps stay climbable, while the rest stays solid.
+- **Verified in the real bundle (build 75 report):** `?worldcheck` on the live site said
+  **52 collision boxes in the world; 39 of 39 stop a walk-in from the left**, with **0 placement problems, 0 buried
+  meshes, 0 broken meshes**, and the game loaded with no error. Build 76's automatic colliders make that number much
+  larger; the same `?worldcheck` line will report whether they all block.
+- **Unit tests (8, `tests/collision.test.mjs`):** both-side blocking, no tunnelling through a thin wall in an 80 m step,
+  depth (walk past at z 0, blocked at z −2.5), jump-over-low / blocked-by-tall, walk-under-raised, layer separation,
+  no trapping inside a box, and cleanup of streamed colliders.
+- **What this does not yet cover, stated plainly:** the **planets** (space uses its own `sbox`/`sball` helpers), the
+  **Sky Kingdom** clouds and the **overlapping/floating-object audit** (stage 2). The graphics work (stage 3) and the
+  terrain/water pass (stage 4) are still open, and I have not walked the game with a finger — the inspector can only
+  send DOM clicks.
+
 ## Checkpoint: build 75 — the collision system (repair, stage 1)
 - **Checkpoint first:** the playable build 74 bundle was saved as
   `backups/3D_build74_before_collision_repair_index.html`, so there is a working reference to compare against and to

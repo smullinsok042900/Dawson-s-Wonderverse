@@ -38,11 +38,18 @@ export function buildWorld(G) {
   G.W = { M, rbox, isShared: g => Object.values(boxGeoCache).includes(g), isSharedMat: m => Object.values(matCache).includes(m), block, cyl, sph }; // (build 29) for expansion.js
   function block(x, y, z, w, h, d, color, o = {}) { // y = bottom
     const m = new THREE.Mesh(rbox(w, h, d, o.r ?? .12), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z);
-    m.castShadow = o.cast ?? true; m.receiveShadow = true; if ((y === 0 || o.aoY != null) && h > .3 && !o.noAO && !o.parent) ao(x, z, w * 1.5 + .4, d * 1.5 + .4, o.aoY ?? 0); return add(m, o.parent);
+    m.castShadow = o.cast ?? true; m.receiveShadow = true; if ((y === 0 || o.aoY != null) && h > .3 && !o.noAO && !o.parent) ao(x, z, w * 1.5 + .4, d * 1.5 + .4, o.aoY ?? 0);
+    // (build 76) every free-standing block that is tall enough to be a wall or a building gets a collision box that
+    // matches its footprint exactly. Climbable ledges are removed again at the end of the build (pruneStandable), so
+    // they stay climbable and everything else becomes solid — automatically, in every district.
+    if (!o.parent && !o.noCollide && h >= 1.2 && y >= -.5) G.collision.add({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, top: y + h, bottom: y, layer: o.layer || '', tag: 'block' });
+    return add(m, o.parent);
   }
-  function cyl(x, y, z, r1, r2, h, color, o = {}) { if (y === 0 && h > .3 && !o.parent) ao(x, z, r2 * 3.2, r2 * 3.2); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true; return add(m, o.parent); }
+  function cyl(x, y, z, r1, r2, h, color, o = {}) { if (y === 0 && h > .3 && !o.parent) ao(x, z, r2 * 3.2, r2 * 3.2); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true;
+    if (!o.parent && !o.noCollide && h >= 1.2 && y >= -.5) G.collision.add({ x0: x - r2, x1: x + r2, z0: z - r2, z1: z + r2, top: y + h, bottom: y, layer: o.layer || '', tag: 'cyl' });
+    return add(m, o.parent); }
   function sph(x, y, z, r, color, o = {}) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = o.cast ?? true; return add(m, o.parent); }
-  const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); return p; };
+  const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); if (G.collision) G.collision.uncover(p); return p; };
   // solid things in the creature's path: you can't walk through them (low ones you hop up onto by yourself)
   // (build 75) a solid now also registers a real box collider (x range, z depth, height, layer) with the collision system
   const solid = (a, b, top, o = {}) => { const p = { a, b, top, layer: o.layer || '', bottom: o.bottom ?? 0 }; G.solids.push(p); G.collision.add({ x0: a, x1: b, top: p.top, bottom: p.bottom, layer: p.layer, z0: (o.z ?? 0) - (o.d ?? 1.2), z1: (o.z ?? 0) + (o.d ?? 1.2), tag: 'world' }); return p; };
@@ -434,5 +441,8 @@ export function buildWorld(G) {
   propBox(174, -1.8, 1.1, 1.1, 1.6);   // the bouncy mushroom's stem
   propBox(22.4, -1.9, 2, 2, 5.2);      // the slide tower
   propBox(34, 0, 3.4, 3.4, .5);        // the trampoline rim
+
+  // remove colliders that are really steps/ledges, so climbing still works exactly as before
+  G.collision.pruneStandable(G.platforms);
 }
 function rand(a, b) { return a + Math.random() * (b - a); }
