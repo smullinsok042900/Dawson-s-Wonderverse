@@ -9,7 +9,7 @@
 // Everything reuses the world's shared materials and shapes (no new shader programs).
 // Every activity: one tap or one walk, a spoken line, a big reaction, nothing to read, no way to fail.
 // ===================================================================
-import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
+import { makeBatch, rocketParts, rocketGlass, shinyMat, paintMat } from './spacekit.js';
 import * as THREE from 'three';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
@@ -90,9 +90,13 @@ export function initExpansion(G, api) {
   // each); at the top a rainbow arch takes you to the Sky Kingdom.
   const SKYGATE = [];
   for (const [start, dir] of [[908, 1], [-798, -1]]) { // (build 49: the left stairs moved out past Balloon Hills)
-    for (let i = 0; i < 24; i++) { const x = start + dir * (i + .5), y = (i + 1) * .4; W.block(x, 0, 0, 1, y, 2.2, RB[i % RB.length], { r: .3, cast: false }); G.platforms.push({ a: x - .5, b: x + .5, y, layer: '', step: true, stepMax: .45, z: 0 }); }
+    // (build 61) the 24 steps and their landing are painted into ONE mesh (one draw call, the same rounded steps and
+    // colours) instead of 25 separate meshes at each end of the world. The walkable tops stay as platform data.
+    const steps = makeBatch();
+    for (let i = 0; i < 24; i++) { const x = start + dir * (i + .5), y = (i + 1) * .4; steps.put(W.rbox(1, y, 2.2, .3), x, y / 2, 0, RB[i % RB.length]); G.platforms.push({ a: x - .5, b: x + .5, y, layer: '', step: true, stepMax: .45, z: 0 }); }
     const top = start + dir * 24, land = [Math.min(top, top + dir * 8), Math.max(top, top + dir * 8)];
-    W.block((land[0] + land[1]) / 2, 0, 0, 8, 9.6, 2.6, '#ffffff', { r: .5, cast: false }); G.platforms.push({ a: land[0], b: land[1], y: 9.6, layer: '', z: 0 });
+    steps.put(W.rbox(8, 9.6, 2.6, .5), (land[0] + land[1]) / 2, 4.8, 0, '#ffffff'); G.platforms.push({ a: land[0], b: land[1], y: 9.6, layer: '', z: 0 });
+    const stair = steps.mesh(paintMat()); stair.castShadow = false; stair.receiveShadow = true; scene.add(stair);
     const gx = top + dir * 5;
     for (let i = 0; i < 6; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(2.4 - i * .2, .12, 10, 36, Math.PI), mat(RB[i], { em: RB[i], ei: .3 })); arc.position.set(gx, 9.6, 0); arc.rotation.y = Math.PI / 2; scene.add(arc); }
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, .1, 32), mat('#fff3a6', { em: '#ffd76a', ei: .8 })); pad.position.set(gx, 9.65, 0); scene.add(pad);

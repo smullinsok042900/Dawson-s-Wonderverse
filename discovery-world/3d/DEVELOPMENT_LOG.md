@@ -64,6 +64,17 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
+## Checkpoint: build 61 — fewer draw calls: the rainbow stairs are one mesh
+- **Changed (`expansion.js`):** each rainbow staircase up to the Sky Kingdom (24 rising steps plus their 8 m landing) was
+  25 separate rounded meshes, at **both** ends of the world. Each staircase is now painted into **one** mesh with the
+  engine's shared painted material (`makeBatch` + `paintMat`), keeping the same rounded steps, colours, sizes and the
+  same walkable platform data. That removes 24 draw calls per end (48 in the world) wherever those ends are in view —
+  the "far right" and "Balloon Hills" views from the world check.
+- **Why it is safe:** nothing in the staircase moves, the platforms are unchanged, and `paintMat` is the material
+  already compiled during loading (no new shader program). The stairs are still cut into the 24 m scenery slices.
+- **Not verified:** not rendered here; the merge is verified by reading (same geometry, same colours, same platforms). The
+  draw-call saving should show in the next `?worldcheck` run at `far right x=900` and `balloon hills x=-740`.
+
 ## Checkpoint: build 60 — first fixes from the world check
 - **The check's own accuracy:** the 16 "buried" meshes were the underground cave's own objects (y −0.3…−2.1 inside
   `UG`, x 6…33) and the "800 m tall mesh" was the sky dome. The check now knows the cave volume and the sky, and treats
