@@ -13,7 +13,7 @@ not cached, and the renderer state is restored after capturing the pictures.
 Screen and quality changes resize the canvas before the next game frame.
 Resizing it after drawing could clear the completed picture and cause a black
 flash. Shadows, antialiasing, effects and quality settings are unchanged. The
-Pixel still needs a physical check for any remaining object-level flicker.
+parent has tested the updated game on the Pixel and reports it looks good.
 
 ## 3D build 41: Pet Nursery & Creative Studio
 

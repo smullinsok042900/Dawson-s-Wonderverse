@@ -32,7 +32,7 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
   **0 → 6** (363 ms), and the map jump **4 → 9** (maximum 176 → 138 ms).
   The expansion walk reaches different positions (444 → 403). These results
   do not establish performance parity: timing and long-task variation require
-  confirmation, and the PR remains a draft. Original shadow/shader/buffer work
+  confirmation on device; visual Pixel acceptance does not measure speed. Original shadow/shader/buffer work
   is unchanged; the patch adds no world geometry or rendering passes.
 - A follow-up warm-cache comparison in reverse order (patch first), six full
   callbacks per view: median script ms original → patch park **21.8 → 22.1**,
@@ -44,9 +44,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 - Full `tests/smoke3d.cjs` run: **195/195 passed**, no console errors or
   warnings. Generated screenshots and raw results are retained locally rather
   than adding unrelated snapshot changes to this small PR. Pixel confirmation
-  is required for remaining
-  object flicker and device performance; software rendering cannot establish
-  a device-driver fix or iPhone performance.
+  of visual rendering is now positive: the parent reports it looks good and
+  authorized publishing the PR. Quantitative device performance is unmeasured;
+  software rendering cannot establish a device-driver fix or iPhone performance.
 
 
 ## Build 49 — Balloon Hills (desktop, software rendering; `ba.cjs 3D_build48_index.html index.html`, run twice)

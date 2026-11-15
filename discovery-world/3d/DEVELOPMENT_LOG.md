@@ -38,8 +38,9 @@ are in `PERFORMANCE_LOG.md`.
   locally; the PR keeps the upstream snapshots to avoid unrelated churn.
 - All measurements here are desktop/software rendering, not physical iPhone
   or Pixel results. Full-game/performance/smoke status is in PERFORMANCE_LOG.md.
-  The parent reports improved rendering on the Pixel preview; confirmation
-  that all movement/object flicker is resolved remains pending.
+  The parent tested the preview on the Pixel, reports it looks good, and
+  authorized publishing the PR. Quantitative Pixel/iPhone performance remains
+  unmeasured.
 - The previous HTML is preserved locally as a separate baseline;
   the PR does not add a duplicate generated backup.
 
