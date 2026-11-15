@@ -4,6 +4,23 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 67 — moving water at the Splash Pool (overhaul, stage 2)
+- **The family asked** for water that visibly moves: ripples, highlights, depth-dependent colour — not a moving picture
+  on a flat sheet. The three seas and the Adventure Trail stream already used the animated water mesh (`makeSea`, build
+  53); the **Splash Pool by the Playhouse** was still a flat blue box (`BoxGeometry` with a glow) and did not move.
+- **Now:** the pool's surface is the same animated water mesh as the seas — a 7.7 m × 3.5 m sheet of 16 × 10 cells whose
+  vertices are displaced every frame by three crossing waves, with the surface normal worked out from the slopes (so
+  highlights slide across the crests), and it is painted **shallow pale turquoise at the near edge into deep blue**,
+  with a white foam tint at the shallowest rim. Worksheet numbers: waves rise and fall by up to about **±0.16 m**
+  (amplitude ramp `0.03 → 0.16` across the pool), and the crests lift about **0.11 m above the white rim**.
+- **Cost:** 187 vertices recomputed per frame, and **only when you are within 40 m of the pool** (`src/sea.js`,
+  `update`). No new shader: the mesh uses the same water material the seas already share.
+- **Untouched:** it is still the tappable way into the deep pool (the same tap and PAW entry), the rim, the diving board
+  and the deep-pool/underwater world are exactly as they were.
+- **Not verified visually** (no rendering here): the numbers above come from the wave code, not from a picture. What to
+  check on a phone: stand on the beach and look at the pool — the surface should visibly swell and catch the light, and
+  the near edge should look paler than the far edge.
+
 ## Checkpoint: build 66 — real mountains (overhaul, stage 1: depth and terrain)
 - **The family asked** for the world to stop looking flat and smooth: real height differences, peaks, ridgelines,
   valleys, rock formations — not "smooth rounded blobs". This stage replaces the hills that were exactly that.
