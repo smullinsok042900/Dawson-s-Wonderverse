@@ -271,7 +271,7 @@ export function buildWorld(G) {
     const c = ['#ff8fc8', '#ffb35c', '#ffd84a', '#6fd38c', '#6fb8ff', '#b28cff'][i], pony = new THREE.Group(); pony.position.y = .42; ride.add(pony);
     plush(pony, quadSpec({ scale: .82, body: '#fffafc', belly: '#fffafc', snoutCol: '#ffe6f2', hoof: '#ffd23f', horn: '#ffd23f', legLen: .42, neck: 1.05, tail: 'long', iris: '#8a4ae0', voxel: .03,
       extraPaints: (s2, hx2, hyy) => [{ type: 'limb', a: s2([hx2 - .35, hyy - .15, 0]), b: s2([hx2 - .02, hyy + .15, 0]), ra: .13 * .62, rb: .1 * .62, color: c, soft: .02 }, { type: 'sphere', c: s2([-.95, .75, 0]), r: .25 * .62, color: c, soft: .02 }] }),
-      { fur: false, rough: .22, clearcoat: 1, lid: '#fffafc', iris: '#8a4ae0', mouth: false });
+      { fur: false, rough: .22, clearcoat: 1, lid: '#fffafc', iris: '#8a4ae0', mouth: false, lightEyes: true }); // (build 60: light eyes: 48 fewer draws in the park, the same look at this size)
     const saddle = new THREE.Mesh(new THREE.CylinderGeometry(.24, .26, .1, 20), M(c, { r: .4 })); saddle.scale.z = .75; saddle.position.set(-.05, 1.25, 0); ride.add(saddle);
     const seat = new THREE.Object3D(); seat.position.set(-.05, 1.36, 0); ride.add(seat);
     mounts.push({ m, ride, seat });
@@ -373,8 +373,22 @@ export function buildWorld(G) {
   block(1009.5, 0, -2.8, 3.6, .9, 1.4, '#a15cff', { parent: room, r: .35 }); block(1009.5, .9, -3.4, 3.6, 1, .4, '#b58cff', { parent: room, r: .2 });
   for (const x of [1008.4, 1010.6]) block(x, .9, -2.7, 1.4, .3, 1.1, '#c9a6ff', { parent: room, r: .15 });
   plat(1007.8, 1011.2, 1.1, { layer: 'in', step: true, bounce: 11, sofa: true, z: -2.4 });
-  block(1015.5, 0, -3.5, 3, 3, .9, '#ff9fc0', { parent: room, r: .2 }); block(1015.5, .2, -3.05, 1.8, 1.6, .2, '#4a2a5a', { parent: room, r: .4, cast: false });
-  G.fire = [0, 1, 2].map(i => { const f = new THREE.Mesh(new THREE.ConeGeometry(.28, .9, 12), new THREE.MeshStandardMaterial({ color: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissive: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissiveIntensity: 1.2 })); f.position.set(1015 + (i - 1) * .45, .65, -2.95); room.add(f); return f; });
+  // (build 60) A REAL FIREPLACE: the flames used to float in front of a solid block, half a metre off centre. Now there are
+  // two pillars and a mantel shelf around a dark, recessed firebox, two crossed logs on the hearth, and the flames stand on
+  // the logs INSIDE the opening (they flicker up from their base, not from their middle).
+  { const FX = 1015.5;
+    block(FX, 0, -3.9, 3.2, 3.2, .3, '#ff9fc0', { parent: room, r: .1 });                                  // the chimney breast (back)
+    for (const s of [-1, 1]) block(FX + s * 1.2, 0, -3.35, .8, 2.05, .9, '#ff9fc0', { parent: room, r: .12 }); // the two pillars
+    block(FX, 2.05, -3.3, 3.4, .22, 1.05, '#ffd1e0', { parent: room, r: .08 });                            // the mantel shelf
+    block(FX, 2.27, -3.6, 2.6, .9, .5, '#ff9fc0', { parent: room, r: .1 });                                 // above the mantel
+    block(FX, 1.7, -3.35, 1.6, .35, .9, '#ff9fc0', { parent: room, r: .06 });                               // the top of the opening
+    block(FX, 0, -3.72, 1.6, 1.7, .05, '#2a1420', { parent: room, r: .3, cast: false });                    // the dark firebox
+    block(FX, 0, -3.35, 1.6, .06, .8, '#3a1f2e', { parent: room, r: .2, cast: false });                     // its floor
+    block(FX, 0, -2.55, 3.4, .08, .75, '#d8c6e8', { parent: room, r: .1, cast: false });                    // the stone hearth in front
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.2), new THREE.MeshStandardMaterial({ color: '#2a1420', emissive: '#ff7a2e', emissiveIntensity: .35 })); glow.position.set(FX, .7, -3.69); room.add(glow); G.fireGlow = glow;
+    for (const [rz, ry] of [[.12, .5], [-.12, -.5]]) { const log = new THREE.Mesh(new THREE.CylinderGeometry(.1, .11, 1.1, 10), M('#7a4a2e', { r: .9, cc: 0 })); log.rotation.z = Math.PI / 2 + rz; log.rotation.y = ry; log.position.set(FX, .16, -3.3); log.castShadow = true; room.add(log); }
+    const flameGeo = new THREE.ConeGeometry(.24, .85, 12); flameGeo.translate(0, .425, 0); // (base at the bottom: they grow up from the logs)
+    G.fire = [0, 1, 2].map(i => { const f = new THREE.Mesh(flameGeo, new THREE.MeshStandardMaterial({ color: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissive: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissiveIntensity: 1.2 })); f.position.set(FX + (i - 1) * .32, .2, -3.32 + (i === 1 ? .06 : 0)); if (i === 1) f.scale.setScalar(1.2); room.add(f); return f; }); }
   const drum = cyl(1020, 0, -1.6, .8, .8, 1, '#ff6fae'); room.add(drum); cyl(1020, 1, -1.6, .8, .8, .06, '#fff8ea', { parent: room, cast: false });
   tap(drum, () => G.tapDrum(), { paw: [1020, 0], layer: 'in', disc: 'fluffdrum', hintY: 2 });
   // upstairs: the nursery, a bed for each Fluffkin, and a spinning mobile

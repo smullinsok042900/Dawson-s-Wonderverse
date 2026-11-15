@@ -4,6 +4,22 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 60 — lighter carousel and critters (desktop, software rendering; `ba.cjs 3D_build59 index.html`, plus `calls.cjs` and a per-object count)
+| View | Draw calls 59 → 60 | Triangles 59 → 60 | Script ms/frame 59 → 60 | Long tasks |
+|---|---|---|---|---|
+| Park | 300 → 197 | 791k → 549k | 11.5 → 15.9 | 0 → 0 |
+| Creature area | 290 → 232 | 960k → 863k | 12.1 → 13.9 | 0 → 0 |
+| Castle | 181 → 206 | 312k → 324k | 9.0 → 10.9 | 0 → 0 |
+
+- **Deterministic counts** (the view counts above move as animals wander):
+  - the carousel draws 126 → 78 parts;
+  - each critter with light eyes: 8 fewer (e.g. bear 26 → 18, unicorn 35 → 27);
+  - `calls.cjs` park, averaged over 6 frames: 230 → 198.
+- **No change in shader programs:** 114 → 114.
+- Script ms/frame differences are within this machine's known ±4 ms noise. No claim of faster frames is made from them; the drawing work (draw calls, triangles) is what went down.
+- One 69 ms long task on the walk into the trail (the known x ≈ 455 spot, not in the game's code).
+- **Not measured on the real iPhone.**
+
 ## Build 56 — Play Together: a shared world (NOT MEASURED)
 
 **No numbers for this build.** It was written where there is no browser and no Node, so nothing could be run. These are

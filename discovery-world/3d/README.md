@@ -12,6 +12,12 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 60: graphics fixes and a lighter park
+
+- **The fireplace in the house is a real fireplace now,** with the flames burning on logs inside it.
+- **Water no longer runs over the train track** (the woods creek, the ice pond, the trail stream), the beach's sea ends behind a grassy headland, and the fox no longer walks into a wall.
+- **Lighter to draw:** the carousel ponies and the wandering animals use simpler eyes that look the same at their size, so the park needs about 14% fewer draw calls.
+
 ## 3D build 59: Sprout joins
 
 - **A fourth friend to play as: Sprout,** a cheerful leaf sprite with leaf ears, big violet eyes and a flower on its head that sways as it walks and spins when it jumps.

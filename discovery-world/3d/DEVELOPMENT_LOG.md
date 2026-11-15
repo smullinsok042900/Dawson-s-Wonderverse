@@ -4,6 +4,18 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 60 — graphics fixes from a whole-game tour, and a lighter carousel and critters
+- **How the problems were found:** a screenshot tour of the whole game (`tour.cjs` in the session; every 20 m across the world, inside the house and castle, underground, the underwater world, the Sky Kingdom and every planet).
+- **Fixed:**
+  - **The fireplace:** the flames floated in front of a solid block, half a metre off centre. It is now a real fireplace: pillars, a mantel shelf, a dark recessed firebox with a softly flickering glow, two crossed logs and a stone hearth. The flames stand on the logs inside the opening and flicker up from their base.
+  - **Water and ice over the train track:** the woods creek (x −226), the Frosty Peaks ice pond (x −361) and the Adventure Trail stream (x 450) all ran over the rails and the strip in front. They now stop just before the track.
+  - **The beach's sea** ended in a hard straight cut where the woods begin (x −156). A grassy headland now hides the end.
+  - **The fox** wandered into the wall of the pink building beside it. Its home is moved a little away.
+- **Faster:**
+  - The carousel ponies and the nine wandering critters now use light eyes (4 parts per eye instead of 8: no cornea gloss layer, one catchlight instead of three, no lower lid). These eyes are small on screen there, and they still blink and glance. Your own character, pets and following buddies keep the full eyes.
+  - Measured: the carousel draws 126 → 78 parts, each critter 8 fewer, and the park view 230 → 198 draw calls per frame (desktop, software rendering; see PERFORMANCE_LOG).
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 59 — Sprout, a fourth main character
 - **The family asked** for a fourth character, since up to four players can play together now and there were only three.
 - **Sprout** (`characters.js`, `sproutSpec`) is an original leaf sprite:

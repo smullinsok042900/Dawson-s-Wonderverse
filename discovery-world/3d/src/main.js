@@ -956,7 +956,7 @@ function updateWorldAnim(dt, t) {
   G.xylo.forEach(k => { k.lit = Math.max(0, k.lit - dt * 2); k.key.material.emissiveIntensity = k.lit * .8; k.key.position.y = k.key.userData.y0 - k.lit * .06; });
   G.orbs.forEach(o => { o.zap = Math.max(0, o.zap - dt); o.o.material.emissiveIntensity = .8 + Math.sin(t * 3) * .2 + o.zap * 2; o.o.scale.setScalar(1 + o.zap * .15); });
   if (world.wandT > 0) { world.wandT -= dt; G.bubbleWand.rotation.x = world.wandT * 6; }
-  G.fire.forEach((f, i) => { f.scale.y = 1 + Math.sin(t * 9 + i * 2) * .25; f.scale.x = 1 - Math.sin(t * 9 + i * 2) * .1; });
+  G.fire.forEach((f, i) => { const k = i === 1 ? 1.2 : 1; f.scale.y = k * (1 + Math.sin(t * 9 + i * 2) * .25); f.scale.x = f.scale.z = k * (1 - Math.sin(t * 9 + i * 2) * .1); }); if (G.fireGlow) G.fireGlow.material.emissiveIntensity = .3 + Math.sin(t * 7) * .08 + Math.sin(t * 13) * .05;
   world.drumT = Math.max(0, world.drumT - dt); world.mobileT = Math.max(0, world.mobileT - dt); world.wake = world.wake.map(w => Math.max(0, w - dt));
   G.mobile.rotation.y += dt * (world.mobileT > 0 ? 3 : .3);
   G.platforms.forEach(z => { if (z.top) z.top.scale.y += (z.top.userData.s0 - z.top.scale.y) * Math.min(1, dt * 8); });
@@ -1476,7 +1476,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '59'; G.build = GAME_BUILD;
+const GAME_BUILD = '60'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

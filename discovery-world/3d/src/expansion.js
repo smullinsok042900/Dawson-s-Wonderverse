@@ -71,7 +71,7 @@ export function initExpansion(G, api) {
   for (let x = -268; x < -152; x += 6 + rnd(4)) api.makeTree(scene, x, -7.5 - rnd(4), 1 + Math.random() * .35); // (the woods: a real forest behind the path)
   for (let x = -532; x < -410; x += 13 + rnd(5)) api.makeTree(scene, x, -12 - rnd(3), 1 + Math.random() * .3); // (build 35: a few trees behind the farm fields)
   // the sea behind the beach (one big shared plane; it gently bobs)
-  const seaW = makeSea(140, 60, 60, 18), sea = seaW.mesh; /* (build 53: rolling waves instead of a flat blue sheet) */ sea.position.set(-86, .02, -38); scene.add(sea); G.sea = sea;
+  const seaW = makeSea(140, 60, 60, 18), sea = seaW.mesh; /* (build 53: rolling waves instead of a flat blue sheet) */ sea.position.set(-86, .02, -38); scene.add(sea); G.sea = sea; { const head = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 16), mat('#7fcf7a', { r: .95, cc: 0 })); head.scale.set(9, 2.6, 22); head.position.set(-158, -1.2, -30); head.receiveShadow = true; scene.add(head); } /* (build 60: a grassy headland where the beach meets the woods, so the sea tucks behind it instead of ending in a straight cut) */
   const foam = new THREE.Mesh(new THREE.PlaneGeometry(140, .9, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
   // (build 43: the neighbourhood signposts were removed at the family's request: they overlapped activities, and the picture map
   //  and the train already show every place)
@@ -242,7 +242,7 @@ export function initExpansion(G, api) {
   // =================== 🌉 ADVENTURE TRAIL ===================
   builders.trail = c => [
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
-    () => { const stream = makeSea(12, 18, 10, 16), w = stream.mesh; w.position.set(450, .035, -3); c.add(w); /* (build 54: the stream ripples) */
+    () => { const stream = makeSea(12, 14.6, 10, 14), w = stream.mesh; w.position.set(450, .035, -5); c.add(w); /* (build 60: the stream stops before the train track, z up to 2.3) */ /* (build 54: the stream ripples) */
       for (const x of [446, 449.5, 453]) c.block(x, 0, -3.6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 });
       c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { for (let x = 445.5; x <= 454.5; x += 1.5) c.cyl(x, 0, z, .07, .07, 1, '#8a5a2a'); c.block(450, .95, z, 10, .12, .14, '#b07a4a', { r: .05 }); }
       let splash = 0; return (dt, t) => { if (Math.abs(P.x - 450) < 60) stream.update(t); const inW = P.layer === '' && P.x > 444 && P.x < 456 && P.y < 1.5; if (inW && Math.abs(P.vx) > 1 && (splash -= dt) < 0) { splash = .35; c.burst(P.x, .3, 1.5, ['#9fe6ff', '#ffffff'], 4, 1.4); } if (inW) disc('stream', 'A little stream with a wooden bridge!'); }; },
@@ -511,7 +511,7 @@ export function initExpansion(G, api) {
     () => { const piles = [-207, -212, -217].map(x => { const p2 = c.sph(x, 0, 0, .9, pick(['#e8902a', '#d9682a', '#f2b23a']), { m: { r: .9 } }); p2.scale.y = .35; return { p2, x, t: 0 }; });
       return (dt) => { for (const q of piles) { q.t = Math.max(0, q.t - dt); if (q.t <= 0 && P.layer === '' && Math.abs(P.x - q.x) < 1 && P.y < .8 && Math.abs(P.vx) > 1) { q.t = 2; c.burst(q.x, .5, 0, ['#e8902a', '#d9682a', '#f2b23a', '#8a5a2a'], 22, 3.5); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('leaves', '🍂 Crunch! Run through the leaf piles!'); } q.p2.scale.y = .35 * (q.t > 0 ? .4 + (2 - q.t) * .3 : 1); } }; },
     // the creek: stepping logs across (jump from log to log), with a gem on the tall one
-    () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 16), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -3); c.add(w);
+    () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 13.3), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -4.35); c.add(w); /* (build 60: the creek stops before the train track; it used to run over the rails) */
       for (const [x, y] of [[-223.5, .5], [-226, 1.0], [-228.5, .5]]) { c.cyl(x, 0, -.4, .45, .5, y, '#8a5a2a', { r: .9 }); c.plat(x - .5, x + .5, y, { z: -.4, step: true, stepMax: .6, onLand: () => c.disc('logs', '🪵 Hop across the stepping logs!') }); } },
     // a jar of fireflies: tap it and they swirl out, glowing
     () => { const jar = c.cyl(-240, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); c.block(-240, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 }); const flies = []; let out = 0;
@@ -549,7 +549,7 @@ export function initExpansion(G, api) {
       c.tap(pile, () => { const s2 = c.sph(-306.5, .6, -1.6, .2, '#ffffff', { m: { r: .9, cc: 0 } }); s2.userData.t = 0; balls.push(s2); Sound.whoosh ? Sound.whoosh() : Sound.click(); }, -306.5);
       return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i]; b.userData.t += dt; const k = Math.min(1, b.userData.t / .8); b.position.set(-306.5 - 5.5 * k, .6 + Math.sin(k * Math.PI) * 2.4 + 1.4 * k, -1.6 - 2.2 * k); if (k >= 1) { c.remove(b); balls.splice(i, 1); hits++; Sound.tone(200, .15, 'square', .03, .6); c.burst(-312, 2, -3.7, ['#ffffff', '#dff3ff'], 12, 2); c.say(hits % 5 === 0 ? `❄️ Splat! ${hits} snowballs!` : '❄️ Splat!'); c.disc('snowball', '❄️ Tap the snow pile to throw snowballs at the target!'); } } }; },
     // the frozen pond: step on the ice and you glide along (slippery!)
-    () => { const ice = new THREE.Mesh(new THREE.BoxGeometry(14, .06, 7), mat('#bfe6ff', { r: .08, cc: .8 })); ice.position.set(-361, .03, -.6); ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
+    () => { const ice = new THREE.Mesh(new THREE.BoxGeometry(14, .06, 6), mat('#bfe6ff', { r: .08, cc: .8 })); ice.position.set(-361, .03, -1.1); /* (build 60: the pond stops before the train track) */ ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
       return dt => { const keys = api.getKeys(), on = P.layer === '' && P.grounded && P.y < .3 && P.x > -368 && P.x < -354 && !P.ride, held = keys.left || keys.right;
         if (on && Math.abs(P.vx) > 1 && held) glide = P.vx; if (on && !held && Math.abs(glide) > .3) { P.x = Math.max(-367.5, Math.min(-354.5, P.x + glide * dt)); glide *= Math.max(0, 1 - dt * .7); if (!was) { c.say('⛸️ Wheee! Slippery ice!'); c.disc('ice', '⛸️ Slide across the frozen pond!'); } was = true; } else if (!on) { glide = 0; was = false; } }; },
     // the igloo: tap it, it glows warm inside
