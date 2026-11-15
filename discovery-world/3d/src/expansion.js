@@ -331,11 +331,11 @@ export function initExpansion(G, api) {
     // greenhouse domes behind
     () => { for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#d9f6ff', { r: .1, cc: .6 })); d.position.set(x, 0, -11); d.scale.y = .8; c.add(d); } },
     // a colour-changing pond: tap the water, it changes colour, a fish jumps
-    () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const pw = makePond(3, 3, '#3b82f6'), m = pw.mat; /* (build 55: the pond ripples) */
-      const pond = pw.mesh; pond.position.set(684, .075, -3.6); c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(3, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(684, .1, -3.6); c.add(rim);
-      const fish = c.toy('🐟', .9, 684, -1, -3.6); let k = 0, jt = 9;
-      c.tap(pond, () => { k = (k + 1) % cols.length; m.color.set(cols[k][1]); c.say(`🎨 The pond is ${cols[k][0]}!`); jt = 0; Sound.tone(500 + k * 60, .3, 'sine', .05, 1.3); c.burst(684, .4, -3.6, [cols[k][1], '#fff'], 12, 2); c.disc('pond', '🎨 A magic pond! Tap it to change its colour!'); }, 684);
-      return (dt, t) => { if (Math.abs(P.x - 684) < 45) pw.update(t, Math.max(0, 1 - jt / 1.5)); jt += dt; const j = Math.min(1, jt / 1.2); fish.position.set(682.5 + j * 3, j < 1 ? Math.sin(j * Math.PI) * 2 : -1, -3.6); }; },
+    () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const PX = 672.4, pw = makePond(2.6, 2.6, '#3b82f6'), m = pw.mat; /* (build 55: the pond ripples. It also moved from x 684 to 672.4: since build 48 the rocket's landing pad (x 686) stood half inside it) */
+      const pond = pw.mesh; pond.position.set(PX, .075, -3.6); c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(2.6, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(PX, .1, -3.6); c.add(rim);
+      const fish = c.toy('🐟', .9, PX, -1, -3.6); let k = 0, jt = 9;
+      c.tap(pond, () => { k = (k + 1) % cols.length; m.color.set(cols[k][1]); c.say(`🎨 The pond is ${cols[k][0]}!`); jt = 0; Sound.tone(500 + k * 60, .3, 'sine', .05, 1.3); c.burst(PX, .4, -3.6, [cols[k][1], '#fff'], 12, 2); c.disc('pond', '🎨 A magic pond! Tap it to change its colour!'); }, PX);
+      return (dt, t) => { if (Math.abs(P.x - PX) < 45) pw.update(t, Math.max(0, 1 - jt / 1.5)); jt += dt; const j = Math.min(1, jt / 1.2); fish.position.set(PX - 1.3 + j * 2.6, j < 1 ? Math.sin(j * Math.PI) * 2 : -1, -3.6); }; },
     // the bubble fountain
     () => { c.cyl(698, 0, -2.2, .8, 1, .7, '#9fe6ff'); const sp = c.cyl(698, .7, -2.2, .15, .2, 1, '#ffffff'); const bubbles = [];
       c.tap(sp.parent ? sp : sp, () => { for (let i = 0; i < 10; i++) { const b = c.toy('🫧', .5 + Math.random() * .5, 698, 1.8, -2.2); b.userData = { vx: (Math.random() - .5) * 1.6, vy: 1 + Math.random() * 1.5, t: 0 }; bubbles.push(b); } Sound.whoosh ? Sound.whoosh() : Sound.click(); c.say('🫧 Bubbles!'); c.disc('fountain', '🫧 The bubble fountain! Tap it for bubbles!'); }, 698);
