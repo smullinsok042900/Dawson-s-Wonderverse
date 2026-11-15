@@ -5,14 +5,8 @@ name: Build the 3D game
 # The committed build files are then published by GitHub Pages like any other change.
 
 on:
-  push:
-    paths:
-      - 'discovery-world/3d/src/**'
-      - 'discovery-world/3d/build.mjs'
-      - 'discovery-world/3d/package.json'
-      - 'discovery-world/3d/package-lock.json'
-      - 'discovery-world/3d/sw.js'
-      - 'discovery-world/3d/tests/shared.test.mjs'
+  # (build 59 restore) The automatic rebuild is switched off: it kept overwriting the restored build-59 game with a
+  # build made from the later source. Run it by hand from the Actions tab when a rebuild is actually wanted.
   workflow_dispatch:
 
 permissions:
