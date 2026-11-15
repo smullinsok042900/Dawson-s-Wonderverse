@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 59: Sprout joins
+
+- **A fourth friend to play as: Sprout,** a cheerful leaf sprite with leaf ears, big violet eyes and a flower on its head that sways as it walks and spins when it jumps.
+- Now each of four players can have their own character.
+
 ## 3D build 56: Play Together, a world you share
 
 - **👫 Play with family on other phones, tablets or computers,** even on different Wi-Fi or cellular. One makes a room
