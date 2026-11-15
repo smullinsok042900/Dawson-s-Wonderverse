@@ -4,6 +4,19 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 53 — Toy Town houses and moving sea (desktop, software rendering; one frame at each stop, `?test`)
+| Stop | Draw calls 51 → 53 | Triangles 51 → 53 | Shader programs |
+|---|---|---|---|
+| Toy Town (x 561) | 80 → 76 | 59k → 75k | 148 → 149 |
+| Toy Town (x 620) | 70 → 65 | 53k → 83k (measured before the houses were lightened; not re-measured) | 148 → 149 |
+| Beach (x −40) | 89 → 88 | 60k → 57k | 148 → 149 |
+| Pier (x −600) | 60 → 60 | 48k → 49k | 148 → 149 |
+| Pier (x −656) | 72 → 72 | 59k → 60k | 148 → 149 |
+
+- Draw calls go down or stay level. Toy Town draws about 16k more triangles (the houses have real windows and doors now); for scale, the park view draws about 870k on the iPhone report.
+- The one extra shader program is compiled while the loading screen shows, not on walking anywhere.
+- **Not measured for this build:** script time per frame and long tasks (`tests/perf/ba.cjs`). Characters walking in and out of view change single-frame counts by a few draw calls.
+
 ## Build 51 — planet preparation fixes (desktop, software rendering; 2026-11-15)
 
 Initial diagnostic compared the saved pre-fix merged PR (`5c2dd42`) with an intermediate build 51 candidate using identical `tests/perf/space.cjs` scenarios (844×390 touch viewport, Chromium/SwiftShader). No physical iPhone speed is claimed.

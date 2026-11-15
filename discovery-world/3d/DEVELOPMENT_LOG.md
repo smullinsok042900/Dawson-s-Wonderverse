@@ -4,6 +4,15 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 53 — Earth graphics, first batch: real Toy Town houses and a sea that moves (2026-11-15)
+- **Why:** a tour of every district (28 stops, screenshots) showed the middle of the world is polished, while the outer districts still had placeholder shapes: Toy Town's houses were plain coloured blocks with a pyramid on top, and every sea was a flat blue sheet.
+- **Toy Town houses** (`src/earthkit.js`, `toyHouses`): walls that darken towards the ground, a ridged roof with overhanging eaves painted in rows of tiles, a chimney, a framed door with a round window, a knob, a step and a striped awning, windows with cross bars, shutters and flower boxes, a flag on some. All nine houses are ONE mesh (painted colours), replacing 18 meshes. A little smoke rises from the chimneys while you are near.
+- **The sea** (`makeSea`; the beach at x −86 and the Ocean Pier): pale shallows with foam at the shore, turquoise, then deep blue far out, with rolling waves that catch the sunlight. About a thousand points are moved each frame, only while the camera is near.
+- **No new shaders when walking in:** both use the painted materials already compiled during loading (`warmPaint`). The shader count is the same at every stop of the tour (149; it was 148: one more is compiled during LOADING because the beach sea is part of the world from the start).
+- **Verified (desktop, software rendering):** tour screenshots of Toy Town, the beach and the pier before and after; no page errors. Full smoke test: see the result recorded with this build.
+- **Not done yet (next batches):** see `NEXT_TASKS.md`, "Earth graphics".
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 51b — updates arrive by themselves on the Home Screen app (2026-11-15)
 - **The family's report:** the iPhone still showed build 48 while builds 49–51 were published. Cause: an iPhone Home Screen app is not reloaded when opened again; iOS brings the same running page back from the background, so the page check in `sw.js` never ran. (Separately, the Pages deployment of PR #55 failed and #57 fixed it: build 51 went live at 03:30 UTC on 2026-11-15.)
 - **Fix:** `build.mjs` writes `version.json` (`{"build":"51b"}`). At start-up and each time the game returns to the front (`visibilitychange`, `pageshow`), `checkForUpdate` in `main.js` fetches it uncached; if the published build differs, it saves and reloads. It reloads at most once per published build (remembered in `sessionStorage`), and never without storage, offline, from a file, or inside a frame. The service-worker cache name is now `dawsons-world-v51b`.

@@ -11,6 +11,7 @@
 // ===================================================================
 import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
+import { toyHouses, makeSea } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -70,7 +71,7 @@ export function initExpansion(G, api) {
   for (let x = -268; x < -152; x += 6 + rnd(4)) api.makeTree(scene, x, -7.5 - rnd(4), 1 + Math.random() * .35); // (the woods: a real forest behind the path)
   for (let x = -532; x < -410; x += 13 + rnd(5)) api.makeTree(scene, x, -12 - rnd(3), 1 + Math.random() * .3); // (build 35: a few trees behind the farm fields)
   // the sea behind the beach (one big shared plane; it gently bobs)
-  const sea = new THREE.Mesh(new THREE.PlaneGeometry(140, 60, 1, 1), mat('#3fa9e8', { r: .12, cc: .7 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-86, .02, -38); sea.receiveShadow = true; scene.add(sea); G.sea = sea;
+  const seaW = makeSea(140, 60, 60, 18), sea = seaW.mesh; /* (build 53: rolling waves instead of a flat blue sheet) */ sea.position.set(-86, .02, -38); scene.add(sea); G.sea = sea;
   const foam = new THREE.Mesh(new THREE.PlaneGeometry(140, .9, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
   // (build 43: the neighbourhood signposts were removed at the family's request: they overlapped activities, and the picture map
   //  and the train already show every place)
@@ -278,7 +279,8 @@ export function initExpansion(G, api) {
     () => palAtHome(c, 'robot'), // (build 32) Bolt the toy robot waits here
     () => tunnelMouth(c, 612, -3.6, 'woods'), // (build 32) a secret tunnel to the Whispering Woods
     // toy houses behind
-    () => { for (let i = 0; i < 9; i++) { const x = 554 + i * 13; const col = RB[i % 8]; c.block(x, 0, -8.5, 5, 4 + (i % 3), 4, col, { r: .4 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(3.6, 2.4, 4), mat(RB[(i + 3) % 8])); roof.position.set(x, 4 + (i % 3) + 1.2, -8.5); roof.rotation.y = Math.PI / 4; roof.castShadow = true; c.add(roof); } },
+    () => { const list = []; for (let i = 0; i < 9; i++) list.push([554 + i * 13, -8.5, 5, 4 + (i % 3), 4, ['#ffd9e6', '#ffe9b8', '#cfe9ff', '#d9f5d0', '#e8dcff', '#ffe0c8'][i % 6], RB[(i + 3) % 8]]); c.add(toyHouses(list)); /* (build 53: real little houses, all nine in one mesh) */
+      let puff = 0; return dt => { if (Math.abs(P.x - 608) > 75) return; puff -= dt; if (puff < 0) { puff = .5; const i = Math.floor(Math.random() * 9), x = 554 + i * 13 + (i % 2 ? 1 : -1) * 1.4; c.burst(x, 4 + (i % 3) + 3.3, -9, ['#ffffff', '#e6e6ee'], 1, .5); } }; }, // (a little smoke from the chimneys)
     // a musical floor: every tile plays a note
     () => { const tiles = NOTE.map((f, i) => { const m = mat(RB[i], { r: .3, em: RB[i], ei: .05 }).clone(); const t = new THREE.Mesh(W.rbox(1.9, .08, 3, .04), m); t.position.set(557 + i * 2, .04, 0); t.receiveShadow = true; c.add(t); return { m, x: 557 + i * 2 }; });
       let last = -1; return dt => { for (const k of tiles) k.m.emissiveIntensity = Math.max(.05, k.m.emissiveIntensity - dt * 2.5);
@@ -646,10 +648,10 @@ export function initExpansion(G, api) {
   const FISH = [['🐟', 'a blue fish'], ['🐠', 'a yellow fish'], ['🐡', 'a puffer fish'], ['🐟', 'another blue fish'], ['🐠', 'a stripy fish']];
   builders.pier = c => [
     // the sea behind the pier (one shared-material plane), a foam line and the wooden pier going out over the water
-    () => { const sea = new THREE.Mesh(new THREE.PlaneGeometry(134, 40, 1, 1), mat('#3fa9e8', { r: .12, cc: .7 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-602, .02, -26); sea.receiveShadow = true; c.add(sea);
+    () => { const pierSea = makeSea(134, 40, 56, 14), sea = pierSea.mesh; sea.position.set(-602, .02, -26); c.add(sea);
       const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
       c.block(-560, .5, -11, 3, .25, 12, '#b07a4a', { r: .04 }); for (const z of [-6, -10, -14, -17]) for (const dx of [-1.3, 1.3]) c.cyl(-560 + dx, 0, z, .14, .14, .8, '#7a5236');
-      return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; }; },
+      return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; pierSea.update(t); }; },
     // fishing: tap the rod, wait for the bobber to dip, and a fish jumps into the bucket (count to five, then let them go)
     () => { c.cyl(-552, 0, -3.2, .06, .06, 1.6, '#7a5236'); const rod = new THREE.Mesh(new THREE.CylinderGeometry(.03, .04, 2.6, 8), mat('#3b2b30')); rod.position.set(-552, 2, -4); rod.rotation.x = -.7; c.add(rod);
       const bob = c.sph(-552, .15, -6.8, .16, '#ff4f6a', { m: { r: .4 } }); const bucket = c.cyl(-550, 0, -2.2, .4, .32, .55, '#4fa8ff', { r: .5 }); let wait = 0, n = 0, fishCount = 0; const caught = []; let catchCycle = 0;
@@ -766,7 +768,7 @@ export function initExpansion(G, api) {
     if (camX > EXP.x0 - 30 || camX < -10) updateGems(t); // (build 30: gems on both sides of the world)
     for (const st of S) if (st.state === 'ready' && st.updates) for (const u of st.updates) u(dt, t);
     updateFollowers(dt, t);
-    if (G.sea && camX < 0) { G.sea.position.y = .02 + Math.sin(t * .8) * .04; G.foam.position.z = -8.2 + Math.sin(t * .8) * .35; }
+    if (G.sea && camX < 0) { if (camX > -190) seaW.update(t); G.sea.position.y = .02 + Math.sin(t * .8) * .04; G.foam.position.z = -8.2 + Math.sin(t * .8) * .35; }
   }
   // (build 31) the pets panel
   const palList = () => Object.keys(PALS).map(k => ({ kind: k, emoji: PAL_EMOJI[k], found: !!X.pals[k], follow: !!(X.pals[k] && X.pals[k].follow) }));
