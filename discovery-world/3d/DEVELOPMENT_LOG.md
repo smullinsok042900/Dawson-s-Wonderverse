@@ -11,7 +11,7 @@ are in `PERFORMANCE_LOG.md`.
   - Balloon Hills and the Adventure Trail lookout: lumpy boulders with cracks and a flat mossy top (`boulders`).
   - Every stack uses exactly the old boxes' sizes and places, so the steps you stand on (`c.plat`) have not moved.
 - **The Adventure Trail stream** ripples and shades from pale to deep (`makeSea`), instead of a flat blue slab.
-- **Verified (desktop, software rendering):** before/after tour screenshots, no page errors; full smoke test result recorded below when it finishes.
+- **Verified (desktop, software rendering):** before/after tour screenshots, no page errors; full smoke test, run alone on the build 54 file: **195/195 passed** (the first run was cut off at 53 checks by a session restart, with no failures; this is the complete re-run). Build 54 reached `main` through PR #59 before this result existed.
 - **Not yet tried on the real iPhone.**
 
 ## Checkpoint: build 53 — Earth graphics, first batch: real Toy Town houses and a sea that moves (2026-11-15)
