@@ -32,9 +32,14 @@ are in `PERFORMANCE_LOG.md`.
 - Full smoke exposed a pre-existing slide-test timing race: ending the ride
   launches a small hop (`endRide(4.5, 3)`). Wait for floor contact before the
   existing floor assertion; do not change slide behavior or weaken the check.
+- Full smoke rerun: **195/195 passed**, including save/reload, portrait layout,
+  expanded planets and console checks. Node suites, 41 learning contracts and
+  world regressions also passed. Generated smoke images/results are preserved
+  locally; the PR keeps the upstream snapshots to avoid unrelated churn.
 - All measurements here are desktop/software rendering, not physical iPhone
   or Pixel results. Full-game/performance/smoke status is in PERFORMANCE_LOG.md.
-  The physical movement/object-flicker check remains pending.
+  The parent reports improved rendering on the Pixel preview; confirmation
+  that all movement/object flicker is resolved remains pending.
 - The previous HTML is preserved locally as a separate baseline;
   the PR does not add a duplicate generated backup.
 

@@ -22,10 +22,6 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
   saved progress survive reload. Native PCF shadows and original 4x AA/depth
   buffers are preserved. An actual end-of-frame quality change causes zero
   immediate resizes, retains alpha 255, and resizes before the next drawn frame.
-- Preliminary before/after runs on the earlier build 48 varied substantially
-  with run order (e.g. castle median script time 21.1 → 24.9 ms forward,
-  11.2 → 11.0 ms reverse). Static-view draw/triangle work matched outside
-  wandering actors, with no new programs, errors or in-view resizes.
 - Final build-50 comparison with `tests/perf/ba.cjs` (original → patch):
   load **42.4 → 42.8 s**; script ms/frame park **16.7 → 18.8**, creatures
   **19.9 → 18.7**, castle **23.5 → 19.2**. Both use 103 programs after travel;
@@ -38,7 +34,17 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
   do not establish performance parity: timing and long-task variation require
   confirmation, and the PR remains a draft. Original shadow/shader/buffer work
   is unchanged; the patch adds no world geometry or rendering passes.
-- Full smoke verification is in progress. Pixel confirmation is required for remaining
+- A follow-up warm-cache comparison in reverse order (patch first), six full
+  callbacks per view: median script ms original → patch park **21.8 → 22.1**,
+  creatures **22.4 → 16.0**, castle **9.8 → 15.2**; startup **40.6 → 43.6 s**.
+  Creature/castle draw and triangle samples match exactly, including both
+  shadow phases. Park counts differ slightly as actors wander. Both have zero
+  in-view resizes, new programs and page errors. Timings remain mixed despite
+  matching rendering work; no device-performance improvement is claimed.
+- Full `tests/smoke3d.cjs` run: **195/195 passed**, no console errors or
+  warnings. Generated screenshots and raw results are retained locally rather
+  than adding unrelated snapshot changes to this small PR. Pixel confirmation
+  is required for remaining
   object flicker and device performance; software rendering cannot establish
   a device-driver fix or iPhone performance.
 
