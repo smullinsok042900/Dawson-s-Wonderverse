@@ -109,3 +109,18 @@ export function boulders(list) {
     b.put(g, x, y + h / 2, z, (px, py, pz, nx, ny, nz, o) => { const n = noise2(px * 2.2 + pz, py * 2.2 + pz * 2); o.set('#8f877c').lerp(col('#b9b0a2'), n).multiplyScalar(.8 + .25 * Math.max(0, ny)); o.lerp(col('#7fb85a'), sstep(.75, .98, ny) * sstep(.35, .7, noise2(px * 1.3, pz * 1.3 + 4)) * .8); if (Math.abs(((py * 1.7 + n) % 1) - .5) < .03 && ny < .5) o.multiplyScalar(.8); }); });
   return finish(b, 'boulders', .9);
 }
+
+// ---------- (build 55) a pond that ripples: rings spreading from the middle, pale at the edge and deeper in the middle ----------
+/** rx × rz metres. The water's colour is the material's colour (so a pond can change colour); returns { mesh, mat, update(t) } */
+export function makePond(rx, rz, color, rings = 9, seg = 36) {
+  const g = new THREE.RingGeometry(.0001, 1, seg, rings); g.rotateX(-Math.PI / 2); g.deleteAttribute('uv');
+  const p = g.attributes.position, n = g.attributes.normal, cols = new Float32Array(p.count * 3), rr = new Float32Array(p.count);
+  for (let i = 0; i < p.count; i++) { const r = Math.hypot(p.getX(i), p.getZ(i)); rr[i] = r; const v = 1.18 - sstep(0, .9, 1 - r) * .36 + (r > .93 ? .25 : 0); cols[i * 3] = cols[i * 3 + 1] = cols[i * 3 + 2] = v; p.setX(i, p.getX(i) * rx); p.setZ(i, p.getZ(i) * rz); }
+  g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  const mat = Object.assign(shinyMat().clone(), { roughness: .1, metalness: .2 }); mat.color.set(color);
+  const mesh = new THREE.Mesh(g, mat); mesh.receiveShadow = true; mesh.userData.dynamic = true; const pa = p.array, na = n.array;
+  return { mesh, mat, update(t, kick = 0) {
+    for (let i = 0, k = 0; i < p.count; i++, k += 3) { const r = rr[i], a = (.012 + kick * .05) * (1 - r) * (r > .02 ? 1 : 0), ph = r * 15 - t * 2.4, s = a * Math.cos(ph) * 15 * 2.5, x = pa[k] / rx, z = pa[k + 2] / rz, l = 1 / Math.sqrt(s * s + 1), q = r > .001 ? 1 / r : 0;
+      pa[k + 1] = a * Math.sin(ph); na[k] = -s * x * q * l; na[k + 1] = l; na[k + 2] = -s * z * q * l; }
+    p.needsUpdate = true; n.needsUpdate = true; } };
+}

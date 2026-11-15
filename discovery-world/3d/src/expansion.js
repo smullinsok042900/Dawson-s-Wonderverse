@@ -11,7 +11,7 @@
 // ===================================================================
 import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
-import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
+import { toyHouses, makeSea, crates, hayBales, boulders, makePond } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -331,11 +331,11 @@ export function initExpansion(G, api) {
     // greenhouse domes behind
     () => { for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#d9f6ff', { r: .1, cc: .6 })); d.position.set(x, 0, -11); d.scale.y = .8; c.add(d); } },
     // a colour-changing pond: tap the water, it changes colour, a fish jumps
-    () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const m = mat('#3b82f6', { r: .15, cc: .6 }).clone();
-      const pond = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, .08, 40), m); pond.position.set(684, .03, -3.6); c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(3, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(684, .1, -3.6); c.add(rim);
+    () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const pw = makePond(3, 3, '#3b82f6'), m = pw.mat; /* (build 55: the pond ripples) */
+      const pond = pw.mesh; pond.position.set(684, .075, -3.6); c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(3, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(684, .1, -3.6); c.add(rim);
       const fish = c.toy('🐟', .9, 684, -1, -3.6); let k = 0, jt = 9;
       c.tap(pond, () => { k = (k + 1) % cols.length; m.color.set(cols[k][1]); c.say(`🎨 The pond is ${cols[k][0]}!`); jt = 0; Sound.tone(500 + k * 60, .3, 'sine', .05, 1.3); c.burst(684, .4, -3.6, [cols[k][1], '#fff'], 12, 2); c.disc('pond', '🎨 A magic pond! Tap it to change its colour!'); }, 684);
-      return dt => { jt += dt; const j = Math.min(1, jt / 1.2); fish.position.set(682.5 + j * 3, j < 1 ? Math.sin(j * Math.PI) * 2 : -1, -3.6); }; },
+      return (dt, t) => { if (Math.abs(P.x - 684) < 45) pw.update(t, Math.max(0, 1 - jt / 1.5)); jt += dt; const j = Math.min(1, jt / 1.2); fish.position.set(682.5 + j * 3, j < 1 ? Math.sin(j * Math.PI) * 2 : -1, -3.6); }; },
     // the bubble fountain
     () => { c.cyl(698, 0, -2.2, .8, 1, .7, '#9fe6ff'); const sp = c.cyl(698, .7, -2.2, .15, .2, 1, '#ffffff'); const bubbles = [];
       c.tap(sp.parent ? sp : sp, () => { for (let i = 0; i < 10; i++) { const b = c.toy('🫧', .5 + Math.random() * .5, 698, 1.8, -2.2); b.userData = { vx: (Math.random() - .5) * 1.6, vy: 1 + Math.random() * 1.5, t: 0 }; bubbles.push(b); } Sound.whoosh ? Sound.whoosh() : Sound.click(); c.say('🫧 Bubbles!'); c.disc('fountain', '🫧 The bubble fountain! Tap it for bubbles!'); }, 698);
@@ -625,9 +625,9 @@ export function initExpansion(G, api) {
       let fast = 0; c.tap(hub, () => { fast = 5; Sound.whoosh ? Sound.whoosh() : Sound.click(); c.say('🌬️ Whoosh! The windmill spins in the wind!'); c.disc('windmill', '🌬️ Tap the windmill to make it spin!'); }, -503);
       return dt => { fast = Math.max(0, fast - dt); hub.rotation.z += dt * (.4 + fast * 1.6); }; },
     // the duck pond: tap the mother duck and her ducklings swim after her in a line (one, two, three!)
-    () => { const pond = c.cyl(-514, 0, -3.8, 2.6, 2.6, .05, '#4fb3ff', { r: .15, cc: .6 }); pond.scale.z = .6; const mom = c.toy('🦆', 1, -514, .45, -3.8); const kids = [0, 1, 2].map(() => c.toy('🐤', .5, -514, .3, -3.8)); let swim = 0;
+    () => { const dw = makePond(2.6, 1.56, '#4fb3ff'), pond = dw.mesh; pond.position.set(-514, .05, -3.8); c.add(pond); /* (build 55: the duck pond ripples) */ const mom = c.toy('🦆', 1, -514, .45, -3.8); const kids = [0, 1, 2].map(() => c.toy('🐤', .5, -514, .3, -3.8)); let swim = 0;
       c.tap(mom, () => { swim = 8; Sound.tone(700, .1, 'square', .02, .7); Sound.tone(650, .1, 'square', .02, .7, .12); c.say('🦆 Quack quack! Follow me! One, two, three ducklings!'); c.disc('ducks', '🦆 Tap the mother duck and the ducklings follow her!'); }, -514); c.tap(pond, () => { c.say('💧 Splash!'); Sound.pop ? Sound.pop() : Sound.click(); c.burst(-514, .3, -3.6, ['#9fdcff', '#fff'], 10, 2); });
-      return (dt, t) => { swim = Math.max(0, swim - dt); const sp = swim > 0 ? 1.3 : .3, a = t * sp; mom.position.set(-514 + Math.cos(a) * 1.7, .45, -3.8 + Math.sin(a) * .9); kids.forEach((k2, i) => { const b = a - (i + 1) * .45; k2.position.set(-514 + Math.cos(b) * 1.7, .3 + Math.abs(Math.sin(t * 6 + i)) * .05, -3.8 + Math.sin(b) * .9); }); }; },
+      return (dt, t) => { if (Math.abs(P.x + 514) < 45) dw.update(t, swim > 0 ? .5 : 0); swim = Math.max(0, swim - dt); const sp = swim > 0 ? 1.3 : .3, a = t * sp; mom.position.set(-514 + Math.cos(a) * 1.7, .45, -3.8 + Math.sin(a) * .9); kids.forEach((k2, i) => { const b = a - (i + 1) * .45; k2.position.set(-514 + Math.cos(b) * 1.7, .3 + Math.abs(Math.sin(t * 6 + i)) * .05, -3.8 + Math.sin(b) * .9); }); }; },
     // the toy tractor: tap it and it drives across the field and back (vroom!)
     () => { const tr = new THREE.Group(); tr.position.set(-524, 0, -5); c.add(tr); const bd = new THREE.Mesh(W.rbox(2, .9, 1.2, .15), mat('#3cc46e', { r: .4 })); bd.position.y = .9; bd.castShadow = true; tr.add(bd); const cab = new THREE.Mesh(W.rbox(.9, 1, 1.1, .1), mat('#ffd23f', { r: .4 })); cab.position.set(-.4, 1.75, 0); tr.add(cab);
       const wheels = []; for (const [x, r] of [[-.6, .6], [.7, .38]]) for (const z of [-.65, .65]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .3, 16), mat('#2b2d42', { r: .9 })); w.rotation.x = Math.PI / 2; w.position.set(x, r, z); tr.add(w); wheels.push(w); }
