@@ -4,6 +4,12 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 51b — updates arrive by themselves on the Home Screen app (2026-11-15)
+- **The family's report:** the iPhone still showed build 48 while builds 49–51 were published. Cause: an iPhone Home Screen app is not reloaded when opened again; iOS brings the same running page back from the background, so the page check in `sw.js` never ran. (Separately, the Pages deployment of PR #55 failed and #57 fixed it: build 51 went live at 03:30 UTC on 2026-11-15.)
+- **Fix:** `build.mjs` writes `version.json` (`{"build":"51b"}`). At start-up and each time the game returns to the front (`visibilitychange`, `pageshow`), `checkForUpdate` in `main.js` fetches it uncached; if the published build differs, it saves and reloads. It reloads at most once per published build (remembered in `sessionStorage`), and never without storage, offline, from a file, or inside a frame. The service-worker cache name is now `dawsons-world-v51b`.
+- **Each build must keep `GAME_BUILD` unique** (the check compares it with `version.json`, which the build writes from it).
+- **Verified (desktop, local web server, Playwright):** same build: no reload; newer build published: one reload; asked again: no second reload; no page errors. Node checks pass. The full smoke test was NOT run for this change (no gameplay code changed). **Not yet confirmed on the iPhone:** the phone must load this build once the old way (close the app fully and reopen) before the check exists there.
+
 ## Checkpoint: build 51 — smoother planet preparation and reliable flight cancellation (2026-11-15)
 - Kept the planet graphics and build 50's larger Moon/Mars. Terrain and sky textures now build in scheduled slices instead of blocking a countdown or arrival in one large task. Golden geometry/pixel checks preserve their appearance.
 - Startup rehearses planet sky, dust, sky bodies, rings, transparent ice and lightning materials in the rendering pipeline. Small resident representatives retain the shader programs when planets are freed. Loading no longer finishes before rehearsal completes, including the delayed startup compile pass and first-use metadata.
