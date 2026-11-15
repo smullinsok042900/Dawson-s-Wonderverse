@@ -10,6 +10,15 @@ The planet graphics branch now includes main through build 50 and the build 51 f
 - Final full smoke suite passed **195/195**, run alone, including save corruption recovery and zero console errors/warnings. Results and screenshots are committed with the build.
 - Physical iPhone confirmation and future Earth graphics work remain separate tasks.
 
+## Earth graphics (the graphics chat; build 53 onward)
+A tour of every district found these still looking like placeholders. Do them in batches, each merged into one painted mesh (`earthkit.js`), measured and smoke-tested:
+- **Water that is still a flat slab:** the duck pond and the Lab Gardens pond (the sea and the trail stream are done).
+- **White patches on tree tops** in the woods, the farm and Frosty Peaks (x −160, −262, −524): check whether it is meant to be snow or blossom, or a fault in the far-tree model.
+- **Art Plaza (x 801–930):** huge blank boards and plain round bushes.
+- **Frosty Peaks (x −392):** very bare; snow drifts, icicles, pine trees.
+- **Far hills** in the outer districts are single smooth blobs: add tree lines or layered ridges.
+- Then the remaining toys built from plain cylinders and boxes (`c.cyl` is used 56 times in `expansion.js`).
+
 ## Waiting for the user
 - **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
