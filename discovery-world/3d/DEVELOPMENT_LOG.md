@@ -4,6 +4,31 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 73 — the horizon shows sky and distant peaks (art direction, second pass)
+- **What the build-72 screenshots showed:** the grey wall was gone, but the peaks were **above the top of the frame**.
+  The camera is a fixed third-person view at 2.15 m, pitched about 6° down, with a 38° vertical field of view, so the
+  top of the screen is only about **12.7° above horizontal**. A 46 m range at 65 m subtends about 35° — impossible to
+  see with sky above it. The frame showed meadow, then one hazy pale slope with no ridgeline, and a hard diagonal cut
+  where the range's fade-out met the sky.
+- **Fixed — a LOW, DISTANT landscape:** the peaks are now sized to the camera, not to a mountain fantasy:
+  - park **13 m** (x 120…410, z −12…−120), Frosty Peaks **15 m** with snow, Woods **10 m**, Balloon Hills **11 m**;
+  - the rolling meadow behind the path is gentler still (±2.5 m instead of ±9 m);
+  - the **near ground is painted in the lawn's own green** (`#8fdc6a`) up to 1.4 m, so there is no hard seam where
+    the lawn meets the hills;
+  - haze now only affects the far peaks (z −60 → −115, up to 45 %), and snow caps start lower (55 % of height) so they
+    read on a smaller mountain;
+  - each range was widened past its district so its fade-out ends off-screen (park x 120…410, woods −270…−140,
+    Frosty −430…−290, Balloon Hills −860…−650) — no more hard diagonal edge in frame.
+- **Measured:** `tests/terrain.test.mjs` updated to the new scale: summit over **6 m**, relief over **4 m**, skyline
+  variation over **1.5 m**, the ground within 18 m behind the path under **6 m** (this is the number that guarantees the
+  sky stays visible), park strip exactly 0.
+- **Checked visually (web inspector, real screenshots):** build 72 loaded with no errors and no cubes anywhere; the
+  meadow, trees, cobble path and boulders are the smooth toy style they always were. The new low horizon is **not yet
+  visually verified** — it needs the next look after CI builds 73.
+- **Known limits of the check:** the inspector cannot press keys or hold the d-pad (DOM clicks only), so it saw the
+  home meadow, Frosty Peaks, the Woods and the Ocean Pier by quest travel; the park rides, ball pit and planets still
+  need a device or a screenshot set from the family.
+
 ## Checkpoint: build 72 — art direction: the horizon is a landscape again, not a wall
 - **What the first real screenshots showed** (web inspector, published build 71): the game starts correctly and there
   are no cubes, voxels or pixel textures anywhere — but in every outdoor view (start meadow, Frosty Peaks, Whispering

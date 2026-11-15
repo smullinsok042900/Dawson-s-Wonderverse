@@ -237,8 +237,8 @@ export function buildWorld(G) {
   // wandering ridgeline, steep faces, erosion gullies, stepped rock ledges and snow on the tops (src/terrain.js), all in
   // ONE mesh, plus angular crags on its slope. The first 3 m of the range is exactly flat at y = 0, so every tree and
   // ride in the park stands exactly where it stood before.
-  const parkRange = makeRidge(scene, { x0: 133, x1: 396, zFront: -12, zBack: -120, h: 46, seed: 3, snow: true, segX: 130, segZ: 70 });
-  makeCrags(scene, parkRange.H, { x0: 142, x1: 390, z0: -26, z1: -62, n: 14, seed: 9 });
+  const parkRange = makeRidge(scene, { x0: 120, x1: 410, zFront: -12, zBack: -120, h: 13, seed: 3, snow: true, segX: 120, segZ: 54 });
+  makeCrags(scene, parkRange.H, { x0: 142, x1: 390, z0: -22, z1: -52, n: 14, seed: 9 });
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
   const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   // (build 64: the 21 park trees are drawn as a few instanced meshes, by variant and 24 m chunk, instead of ~6 meshes each)

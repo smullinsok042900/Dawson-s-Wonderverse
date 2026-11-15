@@ -66,8 +66,8 @@ export function ridgeField({ x0, x1, zFront = -12, zBack = -120, h = 45, seed = 
     const u = (x - x0) / W;
     const along = sstep(-.02, .12, u) * sstep(1.02, .9, u); // the landscape fades out at both ends
     const t = Math.min(1, (d - flatBand) / span);
-    // 1) the meadow and foothills behind the path: soft rolling ground you look across
-    const roll = (fbm2(x * .012 + seed, z * .02 + 2, 4) - .34) * 9 * sstep(0, .3, t);
+    // 1) the meadow and foothills behind the path: soft rolling ground you look across (±2.5 m, never a wall)
+    const roll = (fbm2(x * .012 + seed, z * .02 + 2, 4) - .34) * 5 * sstep(0, .3, t);
     // 2) the range: far back, so its peaks stand against the sky
     const far = sstep(.4, .88, t);
     const warp = x * .0035 + fbm2(x * .005 + seed * 7.7, 2.3, 2) * 3.4;
@@ -95,10 +95,11 @@ export function ridgePaint({ h = 45, snow = false, seed = 0, zFront = -12 }, x, 
   const strata = .5 + .5 * Math.sin(y * 1.15 + n * 3.2 + x * .04);
   const rock = sstep(.28, .6, slope + (n - .5) * .3);
   ramp(['#79bd63', '#8ccb73', '#a6d488'], .25 + n * .55 + y * .01, out);
+  if (y < 1.4) out.lerp(TC.set('#8fdc6a'), sstep(1.4, .2, y) * .8); // the near ground matches the lawn, so there is no seam
   if (rock > 0) { ramp(['#98a096', '#b4bcae', '#cdd3c4', '#8b9188'], strata, TC2); out.lerp(TC2, rock); }
-  if (snow) { const cap = sstep(h * .62, h * .8, y) * sstep(.92, .5, slope + (n - .5) * .4); if (cap > 0) out.lerp(TC.set('#ffffff'), Math.min(1, cap * 1.15)); }
+  if (snow) { const cap = sstep(h * .55, h * .75, y) * sstep(.92, .5, slope + (n - .5) * .4); if (cap > 0) out.lerp(TC.set('#ffffff'), Math.min(1, cap * 1.15)); }
   out.multiplyScalar(.78 + .3 * Math.max(0, ny)); // darker folds: cheap ambient occlusion, so the gullies read as cuts
-  const haze = sstep(-30, -110, z) * .55; // far peaks fade into the sky, which separates them from the near hills
+  const haze = sstep(-60, -115, z) * .45; // far peaks fade into the sky, which separates them from the near hills
   if (haze > 0) out.lerp(TC.set('#c9d7e8'), haze);
   return out;
 }
