@@ -4,6 +4,14 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 55 — Earth graphics, third batch: ponds, bushes, snowy pines; white tree tops fixed (2026-11-15)
+- **Ponds ripple** (`makePond` in `earthkit.js`): the farm's duck pond and the Lab Gardens colour pond have rings spreading from the middle, pale at the edge and deeper in the middle. The Lab pond still changes colour when tapped (the water colour is the material's colour) and ripples harder for a moment; the duck pond ripples more while the ducks swim fast.
+- **Leafy bushes** (`bush`): the plain green balls (hide-and-seek at the Rainbow end, the tunnel mouths, the owl's bush and the berry bush in the woods) are heaps of leafy lumps, speckled light and dark. Each is one mesh and is moved, scaled and tapped exactly like the ball it replaces.
+- **Frosty Peaks** (`snowyPines`): fifteen pine trees with snow on every tier, and eleven drifts of snow, behind the path (z −7.6 and further back, behind every toy). One mesh.
+- **Fixed: white tree tops left of the house.** The fallback trees (drawn in test mode, and on a device if the tree models fail to load) picked a leaf colour with `(i + round(x)) % 4`. Left of the house x is negative, the remainder came out negative, no colour was found and the leaves were drawn plain white. Now always 0–3. The real iPhone normally shows the model trees, which never had this fault, so this mostly corrects the test pictures.
+- **Verified (desktop, software rendering):** tour screenshots of every changed spot, no page errors; 40 Node checks pass. Full smoke test result: recorded below when the run finishes.
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 54 — Earth graphics, second batch: crates, hay bales, boulders, a rippling stream (2026-11-15)
 - **The climbing stacks were plain blocks.** Now (`src/earthkit.js`, each stack ONE painted mesh):
   - Ocean Pier: planked wooden crates with frames, a diagonal brace and corner bolts (`crates`);

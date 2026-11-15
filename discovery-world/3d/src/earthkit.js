@@ -124,3 +124,25 @@ export function makePond(rx, rz, color, rings = 9, seg = 36) {
       pa[k + 1] = a * Math.sin(ph); na[k] = -s * x * q * l; na[k + 1] = l; na[k + 2] = -s * z * q * l; }
     p.needsUpdate = true; n.needsUpdate = true; } };
 }
+
+// ---------- (build 55) leafy bushes instead of plain green balls; snowy pines and snow drifts for Frosty Peaks ----------
+const BALL = new THREE.SphereGeometry(1, 12, 8); BALL.deleteAttribute('uv');
+/** a bush of radius r at (x, y, z): a heap of leafy lumps, speckled light and dark like real leaves. One mesh; move, scale or shake it like the old ball. */
+export function bush(x, y, z, r, color = '#4caf50', seed = 0) {
+  const b = makeBatch(), base = new THREE.Color(color), lite = base.clone().lerp(col('#d8f5a0'), .45), dark = base.clone().multiplyScalar(.62);
+  const paint = (px, py, pz, nx, ny, nz, o) => { const n = noise2(px * 9 + seed, py * 9 + pz * 7); o.copy(dark).lerp(base, sstep(-.4, .5, ny + py * .5)).lerp(lite, sstep(.55, .8, n) * .8); if (n < .2) o.multiplyScalar(.82); };
+  b.put(BALL, 0, 0, 0, paint, [1, .86, .92]);
+  for (let k = 0; k < 9; k++) { const a = k * 2.4 + seed, u = .25 + (k * .37 % 1) * .6, rr = .38 + (k * .53 % 1) * .2; b.put(BALL, Math.cos(a) * u * .8, -.15 + (k * .29 % 1) * .75, Math.sin(a) * u * .7 + .12, paint, [rr, rr * .85, rr]); }
+  const m = b.mesh(shinyMat()); m.material = MAT(.9); m.castShadow = true; m.position.set(x, y, z); m.scale.setScalar(r); m.name = 'bush'; return m;
+}
+/** list: [x, z, height]. Pines in tiers with snow lying on every tier, plus soft drifts of snow between them: ONE mesh. */
+export function snowyPines(list, drifts = []) {
+  const b = makeBatch(), tier = new THREE.ConeGeometry(1, 1, 9, 1, true); tier.deleteAttribute('uv'); tier.translate(0, .5, 0);
+  list.forEach(([x, z, h], i) => { const w = h * .32;
+    b.put(geo.cyl(8), x, h * .12, z, '#7a5236', [w * .16, h * .24, w * .16]);
+    for (let t = 0; t < 4; t++) { const k = t / 4, y0 = h * (.18 + k * .62), rw = w * (1 - k * .72), th = h * .34;
+      b.put(tier, x, y0, z, (px, py, pz, nx, ny, nz, o) => { const up = (py - y0) / th, snow = sstep(.28, .5, up + noise2(px * 3 + i, pz * 3) * .3); o.set('#2f7a4a').lerp(col('#3f9a5c'), noise2(px * 5, py * 5 + pz)).multiplyScalar(.75 + .3 * up).lerp(col('#f4f9ff'), snow); }, [rw, th, rw], [0, i + t, 0]); }
+    b.put(DOT, x, h * 1.0, z, '#ffffff', [w * .13, w * .1, w * .13]); });
+  for (const [x, z, r] of drifts) b.put(BALL, x, -.05, z, (px, py, pz, nx, ny, nz, o) => { o.set('#dfeaf8').lerp(col('#ffffff'), sstep(0, .9, ny)).multiplyScalar(.93 + noise2(px, pz) * .08); }, [r * 1.7, r * .42, r]);
+  const m = b.mesh(shinyMat()); m.material = MAT(.9); m.castShadow = true; m.name = 'pines'; return m;
+}

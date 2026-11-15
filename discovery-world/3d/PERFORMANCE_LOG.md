@@ -4,6 +4,17 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 55 — ponds, bushes, snowy pines (desktop, software rendering; one frame at each stop, `?test`)
+| Stop | Draw calls before → 55 | Triangles before → 55 |
+|---|---|---|
+| Frosty Peaks (x −392) | 89 (build 51) → 87 | 62k → 64k |
+| Rainbow end bushes (x 892) | not measured before → 78 | → 59k |
+| Lab pond (x 684) | not measured before → 131 | → 104k |
+| Duck pond (x −516) | not measured before → 117 | → 105k |
+
+- The pines and drifts are one mesh; each bush and pond replaces one mesh with one mesh. Shader programs: 149 at every stop, no new ones.
+- Only Frosty Peaks has a "before" at the same stop. Frame time and long tasks were not measured for this build.
+
 ## Build 54 — crates, hay bales, boulders, stream (desktop, software rendering; one frame at each stop, `?test`)
 | Stop | Draw calls before → 54 | Triangles before → 54 | Shader programs |
 |---|---|---|---|

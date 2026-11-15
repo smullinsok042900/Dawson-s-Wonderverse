@@ -11,7 +11,7 @@
 // ===================================================================
 import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
-import { toyHouses, makeSea, crates, hayBales, boulders, makePond } from './earthkit.js';
+import { toyHouses, makeSea, crates, hayBales, boulders, makePond, bush, bush as bush2, snowyPines } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -406,7 +406,7 @@ export function initExpansion(G, api) {
       c.tap(bowl, () => { if (eat) return; eat = .001; api.event?.({ type: 'activity', id: 'feed_friend' }); c.say('🍪 Yum yum! Thank you for feeding me!'); c.disc('feedfriend', '🍪 Tap the bowl to feed your friend!'); }, 879, { icon: '🍪', label: 'Hungry friend', action: 'Feed friend', disc: 'feedfriend' });
       return (dt, t) => { pet = Math.max(0, pet - dt); f.rotation.z = Math.sin(t * 20) * .08 * pet; body.scale.y = 1 + Math.sin(t * 3) * .03; if (eat) { eat += dt; const k = eat < 1 ? eat : eat < 3 ? 1 : Math.max(0, 4 - eat); f.position.x = 876 + k * 2.2; f.position.y = Math.abs(Math.sin(eat * 8)) * .2 * (eat < 1 || eat > 3 ? 1 : 0); if (eat > 1 && eat < 3 && Math.random() < .1) { Sound.tone(300, .06, 'square', .02, .7); c.burst(879, 1, -1.8, ['#ff7ad9'], 2, 1); } if (eat > 4) { eat = 0; f.position.set(876, 0, -2.2); } } }; },
     // hide and seek: the little friend hides behind one of the bushes
-    () => { const bushes = [888, 891.5, 895].map(x => { const b = c.sph(x, .9, -2.6, 1, '#4caf50', { m: { r: .9 } }); b.scale.set(1.1, .9, .8); return b; }); const kid = c.toy('🐣', 1.1, 888, -2, -3.4); let hide = rnd(3), found = 0;
+    () => { const bushes = [888, 891.5, 895].map(x => { const b = c.add(bush(x, .9, -2.6, 1, '#4caf50', x)); b.scale.set(1.1, .9, .8); return b; }); /* (build 55: leafy bushes) */ const kid = c.toy('🐣', 1.1, 888, -2, -3.4); let hide = rnd(3), found = 0;
       bushes.forEach((b, i) => c.tap(b, () => { b.userData.w = 1; Sound.tone(300 + i * 80, .1, 'sine', .04, 1); if (found) return; if (i === hide) { found = 1; kid.position.set(bushes[i].position.x, 2.2, -3); Sound.giggle(); c.say('🐣 Peekaboo! You found me!'); c.disc('hideseek', '🐣 Hide and seek! Tap the bushes to find the chick!'); setTimeout(() => { found = 0; hide = rnd(3); kid.position.y = -2; c.say('🙈 I am hiding again!'); }, 3000); } else c.say(pick(['🌿 Not here!', '🌿 Rustle rustle... nobody!'])); }));
       return (dt, t) => { for (const b of bushes) { b.userData.w = Math.max(0, (b.userData.w || 0) - dt * 2); b.rotation.z = Math.sin(t * 25) * .1 * b.userData.w; } if (found) kid.position.y = 2.2 + Math.abs(Math.sin(t * 6)) * .3; }; },
     // Kiwi the parrot waits here to be befriended
@@ -431,7 +431,7 @@ export function initExpansion(G, api) {
   function tunnelMouth(c, x, z, to) {
     const rock = c.sph(x, 0, z, 1.9, '#8a7f74', { m: { r: .95, cc: 0 } }); rock.scale.set(1.2, .9, .7);
     const hole = c.sph(x, .6, z + 1.25, .95, '#1c1520', { m: { r: 1, cc: 0 } }); hole.scale.set(1, 1, .2);
-    for (const dx of [-1.6, 1.6]) { const b = c.sph(x + dx, .5, z + 1.1, .7, '#3f8f4a', { m: { r: .9 } }); b.scale.y = .8; }
+    for (const dx of [-1.6, 1.6]) { const b = c.add(bush(x + dx, .5, z + 1.1, .7, '#3f8f4a', dx)); b.scale.y = .7 * .8; }
     const sign = c.sign('🕳️', .8, x, 2.2, z + 1.3);
     const go = () => { const dest = TUNNELS[to]; c.disc('tunnel', '🕳️ A secret tunnel! It is a shortcut across the world!'); api.travelTo(dest.x + 2, '🕳️', 'the other end of the secret tunnel'); };
     c.tap(rock, go, x); c.tap(hole, go); c.tap(sign, go);
@@ -501,10 +501,10 @@ export function initExpansion(G, api) {
       [-190, -194, -198].forEach(x => c.sign('🦉', .45, x, .7, -1.4));
       c.tap(listen, () => { listening = true; api.event?.({ type: 'activity', id: 'woods_listen' }); Sound.tone(420, .3, 'sine', .05, 1); Sound.tone(340, .4, 'sine', .05, 1, .4); c.say('🦉 Hoo hoo! Follow the owl pictures to the hidden owl!'); }, -187, { icon: '👂', label: 'Owl call', action: 'Listen', disc: 'woods_listen' });
       const reveal = () => { if (!listening) { c.say('👂 Tap the ear picture, then follow the owl pictures!'); return; } owl.visible = true; api.event?.({ type: 'activity', id: 'woods_found' }); Sound.giggle(); c.say('🦉 You found the owl! Hoo hoo!'); };
-      const hiding = c.sph(-201, .8, -3, .8, '#3f8f4a', { m: { r: .9 } }); c.tap(hiding, reveal, -201, { icon: '🦉', label: 'Hidden owl', action: 'Find owl', disc: 'woods_found' }); c.tap(owl, reveal);
+      const hiding = c.add(bush(-201, .8, -3, .8, '#3f8f4a', 3)); c.tap(hiding, reveal, -201, { icon: '🦉', label: 'Hidden owl', action: 'Find owl', disc: 'woods_found' }); c.tap(owl, reveal);
     },
     // berry bushes: tap a bush, berries drop into the basket, and we count them
-    () => { const bush = c.sph(-195, .9, -3, 1.1, '#3f8f4a', { m: { r: .9 } }); bush.scale.set(1.3, .9, .9); const berries = []; for (let i = 0; i < 6; i++) berries.push(c.sph(-195.8 + (i % 3) * .8, 1.2 + Math.floor(i / 3) * .5, -2.2, .13, '#c2185b', { m: { r: .4 } }));
+    () => { const bush = c.add(bush2(-195, .9, -3, 1.1, '#3f8f4a', 5)); bush.scale.set(1.3 * 1.1, .9 * 1.1, .9 * 1.1); const berries = []; for (let i = 0; i < 6; i++) berries.push(c.sph(-195.8 + (i % 3) * .8, 1.2 + Math.floor(i / 3) * .5, -2.2, .13, '#c2185b', { m: { r: .4 } }));
       c.cyl(-192.4, 0, -2, .5, .4, .5, '#c8925a', { r: .8 }); let n = 0;
       c.tap(bush, () => { const b = berries.find(q => q.visible); if (!b) { berries.forEach(q => { q.visible = true; q.position.set(q.userData.x0 ?? q.position.x, q.userData.y0 ?? q.position.y, -2.2); }); n = 0; c.say('🫐 The berries grew back!'); return; } b.userData.x0 = b.userData.x0 ?? b.position.x; b.userData.y0 = b.userData.y0 ?? b.position.y; b.visible = false; n++; c.say(['', 'one', 'two', 'three', 'four', 'five', 'six'][n] + '!'); Sound.tone(500 + n * 60, .1, 'triangle', .05, 1.2); c.burst(-192.4, .6, -2, ['#c2185b'], 4, 1); if (n === 6) c.say('🧺 Six berries in the basket! Yummy!'); c.disc('berries', '🧺 Pick berries! Tap the bush and count them.'); }, -195); },
     // leaf piles on the path: run through them and the leaves fly everywhere
@@ -528,6 +528,8 @@ export function initExpansion(G, api) {
 
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
   builders.frosty = c => [
+    // (build 55) snowy pine trees and drifts of snow behind the path: ONE mesh, well behind the toys
+    () => { const pines = [], drifts = []; for (let k = 0; k < 15; k++) { const x = -400 + k * 8.6 + (k * 37 % 5), z = -9.5 - (k * 53 % 7) * .9; pines.push([x, z, 3.2 + (k * 29 % 5) * .55]); } for (let k = 0; k < 11; k++) drifts.push([-402 + k * 12 + (k % 3) * 2, -7.6 - (k % 4) * 1.4, 1.3 + (k % 3) * .5]); c.add(snowyPines(pines, drifts)); },
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
       for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#e8f1fd', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
