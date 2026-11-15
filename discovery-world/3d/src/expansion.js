@@ -499,7 +499,7 @@ export function initExpansion(G, api) {
   // =================== 🌲 WHISPERING WOODS (x -272 to -150) ===================
   builders.woods = c => [
     // (build 69) a real displaced range behind the woods: summits, a ridgeline and erosion gullies instead of empty sky
-    () => { const woodsRange = makeRidge(scene, { x0: -268, x1: -146, zFront: -12, zBack: -44, h: 15, seed: 31, segX: 84, segZ: 38 }); makeCrags(scene, woodsRange.H, { x0: -262, x1: -152, z0: -16, z1: -24, n: 12, seed: 3 }); },
+    () => { const woodsRange = makeRidge(scene, { x0: -268, x1: -146, zFront: -12, zBack: -100, h: 34, seed: 31, segX: 80, segZ: 50 }); makeCrags(scene, woodsRange.H, { x0: -262, x1: -152, z0: -22, z1: -50, n: 10, seed: 3 }); },
     () => tunnelMouth(c, -232, -4.4, 'toytown'), // (build 32) a secret tunnel to Toy Town
     // the campfire: tap the fire for flames; tap the marshmallow to toast it golden
     () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const st = c.sph(-165 + Math.cos(a) * .9, .15, -2.6 + Math.sin(a) * .9, .25, '#9a9a9a', { m: { r: .9 } }); st.scale.y = .6; } const logs = [0, 1.2].map(r => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.4, 8), mat('#7a4a2a')); lg.rotation.set(Math.PI / 2, r, 0); lg.position.set(-165, .15, -2.6); c.add(lg); return lg; });
@@ -547,7 +547,7 @@ export function initExpansion(G, api) {
   builders.frosty = c => [
     // (build 69) snowy mountains behind Frosty Peaks: peaks with snow caps above the snow line and icy crags on the
     // slope, so the snow area has real depth behind it
-    () => { const snowRange = makeRidge(scene, { x0: -410, x1: -266, zFront: -12, zBack: -48, h: 24, seed: 21, snow: true, segX: 96, segZ: 42 }); makeCrags(scene, snowRange.H, { x0: -404, x1: -272, z0: -17, z1: -27, n: 14, seed: 6, snowy: true }); },
+    () => { const snowRange = makeRidge(scene, { x0: -410, x1: -266, zFront: -12, zBack: -120, h: 52, seed: 21, snow: true, segX: 90, segZ: 56 }); makeCrags(scene, snowRange.H, { x0: -404, x1: -272, z0: -26, z1: -60, n: 12, seed: 6, snowy: true }); },
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
       for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#e8f1fd', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
@@ -726,7 +726,7 @@ export function initExpansion(G, api) {
   builders.hills = c => [
     // rolling green hills behind: (build 66) a real displaced range with summits, ridgelines, gullies and crags,
     // instead of four large squashed balls
-    () => { const range = makeRidge(scene, { x0: -836, x1: -668, zFront: -12, zBack: -46, h: 17, seed: 11, segX: 96, segZ: 40 }); makeCrags(scene, range.H, { x0: -828, x1: -676, z0: -16, z1: -25, n: 12, seed: 4 }); },
+    () => { const range = makeRidge(scene, { x0: -836, x1: -668, zFront: -12, zBack: -110, h: 38, seed: 11, segX: 90, segZ: 54 }); makeCrags(scene, range.H, { x0: -828, x1: -676, z0: -24, z1: -55, n: 10, seed: 4 }); },
     // the hot-air balloon: tap the burner, the balloon puffs up into the sky and floats back down
     () => { const X = -684, bal = new THREE.Group(); bal.position.set(X, 0, -4.2); c.add(bal);
       const basket = new THREE.Mesh(W.rbox(1.4, 1, 1.4, .12), mat('#b5793c', { r: .8 })); basket.position.y = .5; basket.castShadow = true; bal.add(basket);

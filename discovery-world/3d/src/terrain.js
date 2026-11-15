@@ -53,25 +53,29 @@ export function ridgeMaterial() {
 }
 
 /**
- * The height of a mountain range at (x, z), in metres. y is 0 in front of the range (the ground the world stands on)
- * and rises to about `h` at the highest summit.
+ * The height of a landscape at (x, z), in metres. y is 0 in front (the ground the world stands on).
+ * (build 72) This is a LANDSCAPE, not a wall: the first stretch behind the path rolls gently (0–6 m of meadow and
+ * foothills), and the mountain range itself stands far back (t ≥ 0.4 of the depth), so you look ACROSS ground at
+ * distant peaks with sky above them — instead of looking up the near flank of a mountain that fills the frame.
  */
-export function ridgeField({ x0, x1, zFront = -12, zBack = -50, h = 20, seed = 0, flatBand = 3.2 }) {
+export function ridgeField({ x0, x1, zFront = -12, zBack = -120, h = 45, seed = 0, flatBand = 3.2 }) {
   const W = Math.max(1, x1 - x0), span = Math.max(1, flatBand + zFront - zBack);
   return (x, z) => {
     const d = zFront - z;
     if (d <= flatBand) return 0; // (the flat strip: the park's trees and rides stand exactly where they always did)
     const u = (x - x0) / W;
-    const along = sstep(-.02, .12, u) * sstep(1.02, .9, u); // the range fades out at both ends
+    const along = sstep(-.02, .12, u) * sstep(1.02, .9, u); // the landscape fades out at both ends
     const t = Math.min(1, (d - flatBand) / span);
-    const front = sstep(0, .1, t); // it climbs steeply just behind the flat strip
-    // a ridgeline that wanders: two scales of ridged noise, so there are big summits and smaller shoulders
-    const warp = x * .004 + fbm2(x * .006 + seed * 7.7, 2.3, 2) * 3.1;
-    const r1 = 1 - Math.abs(fbm2(warp, z * .0095 + seed * 1.7, 4) * 2 - 1);
-    const r2 = 1 - Math.abs(fbm2(warp * 2.4 + 4.3, z * .024 + seed * 3.1, 3) * 2 - 1);
-    const ridge = Math.pow(r1, 1.5) * .8 + Math.pow(r2, 2.2) * .34;
+    // 1) the meadow and foothills behind the path: soft rolling ground you look across
+    const roll = (fbm2(x * .012 + seed, z * .02 + 2, 4) - .34) * 9 * sstep(0, .3, t);
+    // 2) the range: far back, so its peaks stand against the sky
+    const far = sstep(.4, .88, t);
+    const warp = x * .0035 + fbm2(x * .005 + seed * 7.7, 2.3, 2) * 3.4;
+    const r1 = 1 - Math.abs(fbm2(warp, z * .006 + seed * 1.7, 4) * 2 - 1);
+    const r2 = 1 - Math.abs(fbm2(warp * 2.4 + 4.3, z * .016 + seed * 3.1, 3) * 2 - 1);
+    const ridge = Math.pow(r1, 1.6) * .82 + Math.pow(r2, 2.2) * .3;
     const broad = fbm2(x * .0075 + seed * 2.9, z * .008 + 1.1, 3);
-    let y = (ridge * .82 + broad * .36) * h * front * along;
+    let y = roll + (ridge * .82 + broad * .36) * h * far * along;
     y += (fbm2(x * .05 + seed, z * .05, 3) - .5) * 2.6 * sstep(1.5, 5, y); // rough surface, only where it is high
     // erosion: narrow gullies cut down the face where the noise folds
     const cut = Math.abs(noise2(x * .06 + seed * 5, z * .012) - .5);
@@ -83,16 +87,19 @@ export function ridgeField({ x0, x1, zFront = -12, zBack = -50, h = 20, seed = 0
   };
 }
 
-/** how a mountain is painted: grass at the bottom, rock on the steep faces (in strata), snow on the tops */
-export function ridgePaint({ h = 20, snow = false, seed = 0 }, x, y, z, ny, out) {
+/** how a landscape is painted: meadow green near, rock on the steep faces (in strata), snow on the tops, and a little
+ *  atmospheric haze with distance so the far peaks separate from the hills in front of them (build 72) */
+export function ridgePaint({ h = 45, snow = false, seed = 0, zFront = -12 }, x, y, z, ny, out) {
   const slope = 1 - Math.max(0, Math.min(1, ny));
   const n = fbm2(x * .3 + seed, y * .42 + z * .18, 3);
   const strata = .5 + .5 * Math.sin(y * 1.15 + n * 3.2 + x * .04);
   const rock = sstep(.28, .6, slope + (n - .5) * .3);
   ramp(['#79bd63', '#8ccb73', '#a6d488'], .25 + n * .55 + y * .01, out);
   if (rock > 0) { ramp(['#98a096', '#b4bcae', '#cdd3c4', '#8b9188'], strata, TC2); out.lerp(TC2, rock); }
-  if (snow) { const cap = sstep(h * .66, h * .84, y) * sstep(.92, .5, slope + (n - .5) * .4); if (cap > 0) out.lerp(TC.set('#ffffff'), Math.min(1, cap * 1.1)); }
+  if (snow) { const cap = sstep(h * .62, h * .8, y) * sstep(.92, .5, slope + (n - .5) * .4); if (cap > 0) out.lerp(TC.set('#ffffff'), Math.min(1, cap * 1.15)); }
   out.multiplyScalar(.78 + .3 * Math.max(0, ny)); // darker folds: cheap ambient occlusion, so the gullies read as cuts
+  const haze = sstep(-30, -110, z) * .55; // far peaks fade into the sky, which separates them from the near hills
+  if (haze > 0) out.lerp(TC.set('#c9d7e8'), haze);
   return out;
 }
 
@@ -101,7 +108,7 @@ export function ridgePaint({ h = 20, snow = false, seed = 0 }, x, y, z, ny, out)
  * opts: { x0, x1, zFront, zBack, h, seed, segX, segZ, snow }
  */
 export function makeRidge(scene, opts = {}) {
-  const o = { x0: -100, x1: 100, zFront: -12, zBack: -50, h: 20, seed: 0, segX: 132, segZ: 44, snow: false, ...opts };
+  const o = { x0: -100, x1: 100, zFront: -12, zBack: -120, h: 45, seed: 0, segX: 132, segZ: 60, snow: false, ...opts };
   const H = ridgeField(o);
   const g = new THREE.PlaneGeometry(o.x1 - o.x0, o.zFront - o.zBack, o.segX, o.segZ);
   g.rotateX(-Math.PI / 2);

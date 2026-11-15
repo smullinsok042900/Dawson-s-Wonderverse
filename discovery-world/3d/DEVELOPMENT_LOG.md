@@ -4,6 +4,35 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 72 — art direction: the horizon is a landscape again, not a wall
+- **What the first real screenshots showed** (web inspector, published build 71): the game starts correctly and there
+  are no cubes, voxels or pixel textures anywhere — but in every outdoor view (start meadow, Frosty Peaks, Whispering
+  Woods) the whole sky was replaced by a **flat grey-green band with vertical streaks**. That was the build-66/69
+  mountain ranges: they began **12 m behind the path** and rose 15–24 m, so the player saw only the near flank of a
+  mountain filling the frame, with the sky hidden behind it. The "vertical streaks" were the mountain's gullies and
+  normal-map detail stretched up that near face.
+- **Fixed — it is a landscape now (`src/terrain.js`, `ridgeField`):**
+  - the ground behind the path first **rolls gently** (meadow and foothills, ~0–6 m) so you look ACROSS it;
+  - the **range stands far back** — its peaks only start at 40 % of the depth and are highest near the back — so the
+    peaks are 50–110 m away and stand **against the sky**;
+  - ranges are now much bigger and further: park **46 m** tall over z −12…−120, Frosty Peaks **52 m**, Balloon Hills
+    **38 m**, Woods **34 m**;
+  - **atmospheric haze**: the paint fades distant slopes toward the sky colour (`#c9d7e8`, up to 55 % by z −110), so
+    the far peaks separate from the near hills instead of merging into a single grey-green mass;
+  - snow line raised (caps start at 62 % of the height), so snow reads on the summits.
+- **Measured proof (`tests/terrain.test.mjs`, rewritten):** peak over **20 m**, relief over **15 m**, skyline varying by
+  over **8 m**; the ground within 18 m behind the path stays below **9 m** (measured, so a close flank cannot fill the
+  view again); the park strip is still exactly 0; both ends still fade out.
+- **What was already right and was kept:** no cubes or voxel shapes are used anywhere — creatures, trees, houses, rides
+  and rocks are smooth sculpted meshes; the cobble path, lawn, snow and sand use colour + normal + roughness maps; the
+  creatures carry soft contact shadows. Nothing in the art style was changed toward blocky.
+- **Verified this build:** the build-71 start-up crash is gone (the game loads, title screen and world show, no error),
+  confirmed by real screenshots. The new horizon is **not yet verified visually** — it needs the next look after CI
+  builds 72.
+- **Also true from that check:** the inspector can only send DOM clicks, so it cannot walk with the d-pad or press
+  keys; it saw the start meadow, Frosty Peaks and the Woods (by quest travel) but not the park rides, ball pit or
+  planets. A phone screenshot set from the family is still the best check of the rest.
+
 ## Checkpoint: build 71 — a start-up crash found by looking at the real page (build 68's cave rock)
 - **What was wrong:** the first visual check of the live site (the web inspector, on the published build 70) showed the
   purple "Oops! The 3D world couldn't start on this device." screen on every load, with
