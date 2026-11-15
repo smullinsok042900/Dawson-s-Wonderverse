@@ -87,3 +87,18 @@ on the Spark plan.
   places are the Block Builder wall and the paint wall.
 - Paint is shared live while you are in the room. A picture painted before you joined stays on your own device (it is
   part of your saved world) and is not uploaded.
+
+
+## If a room says "no" (troubleshooting)
+
+The game no longer closes when a room is refused: it says a picture message instead. If it shows **🔒 The room service
+said no**:
+
+1. Open the game with `?mpcheck` on the end of the link (`…/discovery-world/3d/?mpcheck`). A white page of lines
+   appears: the project and database it uses, whether anonymous sign-in worked, and what Firebase answered for a read
+   and a write. Those lines say exactly what is wrong — send them in the chat.
+2. The usual cause is that the rules were not published on **the database the game uses**. Compare the `database:` line
+   of `?mpcheck` with **Realtime Database** in the console: they must be the same address, and that database's **Rules**
+   tab must hold the whole of `firebase-rules.json` (press **Publish**; a red error means it was not accepted).
+3. The next usual cause: anonymous sign-in is off (Build → Authentication → Sign-in method → Anonymous → Enable), or
+   `smullinsok042900.github.io` is missing from Authentication → Settings → Authorized domains.

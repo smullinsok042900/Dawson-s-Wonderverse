@@ -41,6 +41,21 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
+## Checkpoint: build 58 — a refused room can no longer close the game; `?mpcheck`
+- **Reported:** creating a room showed the purple "Oops! … Permission denied" screen. A Firebase rejection was reaching
+  the page's unhandled-rejection handler, which replaces the whole game with that box.
+- **Fix (`src/multiplayer.js`):** joining is wrapped (both around the transport's join and around the whole join), so a
+  refusal speaks/shows a picture message and returns to the room panel; a small classifier names the likely cause
+  (rules not pasted, sign-in off, no internet). Playing alone is untouched.
+- **New `?mpcheck`:** a troubleshooting page inside the game. It prints the project and database address, whether
+  anonymous sign-in works, and the result — with Firebase's own code and message — of reading `dw3`, reading a room's
+  players, and writing a player and a block; the test room `AAAA` is removed afterwards. Nothing happens without the
+  flag, and it is not part of normal play.
+- **Rules simplified (`firebase-rules.json`):** the wildcard-key `matches()` checks were cosmetic; they are gone (key
+  length and the data shapes are still enforced), so the ruleset is less likely to be refused when pasted.
+- **Not verified here:** no browser or Node, so this was not run. An unauthenticated probe of the live database returns
+  "Permission denied", which the rules intend — the signed-in `?mpcheck` result is what will show the real cause.
+
 ## Checkpoint: build 57 — Android/Pixel rendering fixes (PR #56 by zyzil)
 - **Reported:** on a Pixel 10 Pro XL the character-selection pictures were blank and movement sometimes produced a black
   flash.

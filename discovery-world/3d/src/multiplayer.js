@@ -126,6 +126,15 @@ export function initMultiplayer(G, api) {
   let lastPaintAt = 0, waveTex = null;
   const strokeKeys = [], clearedKeys = new Set(); let lastClearAt = 0;
   const say = (m, speak) => api.toast(m, speak);
+  // (build 58) A room problem must never crash the game: say what happened, in a picture message, and keep playing.
+  function roomProblem(e) {
+    const text = String((e && (e.code || e.message)) || e || '');
+    console.warn('Play Together:', e && (e.code || e.message) || e);
+    if (/PERMISSION_DENIED|permission/i.test(text)) return '🔒 The room service said no. A grown-up needs to paste the database rules (MULTIPLAYER.md, step 3).';
+    if (/operation-not-allowed|unauthorized-domain|admin-restricted|auth\//i.test(text)) return '🔑 Rooms need sign-in turned on for this game (MULTIPLAYER.md, step 4).';
+    if (/network|offline|unavailable|timeout|disconnect/i.test(text)) return '📶 The internet had a hiccup. Try again in a moment!';
+    return '📶 Could not open a room just now. Try again in a moment!';
+  }
   // (build 56) the room's world, applied on this device (no-ops when playing alone, or before the game has its hooks)
   const applyBlock = (i, v) => { try { api.applyBlock && api.applyBlock(i, v); } catch (e) { } };
   const applyPaint = segs => { try { api.applyPaint && api.applyPaint(segs); } catch (e) { } };
@@ -163,19 +172,24 @@ export function initMultiplayer(G, api) {
   }
   async function ensure() { if (T) return true; if (!make) return false; T = make(); T.onStatus = on => { const was = online; online = on; if (room && was !== on) { say(on ? '✅ Connected again!' : '📶 Lost the connection… trying again', true); render(panel.classList.contains('show') ? 'room' : undefined); } };
     T.onPlayer = (id, s) => onPlayer(id, s); T.onShared = (key, obj) => onShared(key, obj); T.onEvent = evt => onEvent(evt);
-    try { await T.connect(); return true; } catch (e) { console.log('mp connect failed', e); T = null; say('📶 Could not connect. Try again in a moment!', true); return false; } }
+    try { await T.connect(); return true; } catch (e) { T = null; say(roomProblem(e), true); return false; } }
   async function roomBusy() { return false; } // (with 20,736 codes and family-only use, a fresh random code is all but always free; joining checks for full rooms)
   async function joinRoom(code, created) {
-    if (joining) return; joining = true; try {
+    if (joining) return; joining = true;
+    try {
       if (!(await ensure())) return; if (room) leaveRoom(true);
       room = code; // (the room's shared world can arrive while joining)
-      myColour = Math.floor(Math.random() * 4); const r = await T.join(code, myState());
+      myColour = Math.floor(Math.random() * 4);
+      let r;
+      try { r = await T.join(code, myState()); }
+      catch (e) { room = null; say(roomProblem(e), true); render('home'); return; }
       if (!r.ok) { room = null; say(r.full ? '🙈 That room is full: four friends are already playing!' : '📶 Could not join. Check the pictures and try again!', true); render('home'); return; }
       localStorage.setItem(ROOM_KEY, code); try { sessionStorage.setItem(ROOM_KEY, code); } catch (e) { } render('room'); Sound.chime();
       if (created) { say(`🏠 Your room! Show the four pictures to the others: ${sayCode(code)}.`, true); api.discover && api.discover('mpcreate'); }
       else { say('👫 You joined! Look for your friends.', true); api.discover && api.discover('mpjoin'); }
       fixColour(); publishMine(); lastSent = '';
-    } finally { joining = false; } }
+    } catch (e) { room = null; say(roomProblem(e), true); render('home'); } // (build 58: never let a room problem crash the game)
+    finally { joining = false; } }
   function leaveRoom(quiet) {
     flushPaint(); if (T) T.leave(); room = null; try { sessionStorage.removeItem(ROOM_KEY); } catch (e) { } /* (the connection object is kept, so joining again reuses it) */
     strokeKeys.length = 0; clearedKeys.clear(); lastClearAt = 0;
@@ -344,4 +358,37 @@ export function initMultiplayer(G, api) {
     // (the game's hooks into the shared world; see main.js and meadow.js)
     block, paint, clearPaint, wave,
   };
+}
+
+
+// (build 58) A grown-up can open the game with ?mpcheck to see exactly why rooms are refused: which database it uses,
+// whether anonymous sign-in works, and a read and a write with Firebase's own error codes. Nothing is kept (the test
+// room is removed again). It is for troubleshooting only and does nothing without the flag.
+if (/[?&]mpcheck/.test(location.search)) setTimeout(runMpCheck, 1500);
+async function runMpCheck() {
+  const box = document.createElement('pre'); box.id = 'mpCheck'; document.body.appendChild(box);
+  const lines = [], show = t => { lines.push(t); box.textContent = lines.join('\n'); console.log('[mpcheck]', t); };
+  const short = s => String(s || '').slice(0, 160);
+  show('Room check — build ' + (window.__DDW3 && window.__DDW3.G && window.__DDW3.G.build || '?'));
+  show('page: ' + location.origin);
+  show('project: ' + (FIREBASE_CONFIG.projectId || '?'));
+  show('database: ' + (FIREBASE_CONFIG.databaseURL || '?'));
+  try {
+    const M = await import(new URL('mp-firebase.js', location.href).href);
+    const [{ initializeApp }, A, D] = [M.appMod, M.authMod, M.dbMod];
+    const app = initializeApp(FIREBASE_CONFIG, 'ddw3-check'), auth = A.getAuth(app), db = D.getDatabase(app);
+    let uid = '';
+    try { const cred = await A.signInAnonymously(auth); uid = cred.user.uid; show('sign-in: OK (' + uid.slice(0, 6) + '…)'); }
+    catch (e) { show('sign-in: FAILED — ' + (e.code || short(e.message))); }
+    const attempt = async (label, fn) => { try { await fn(); show(label + ': allowed'); } catch (e) { show(label + ': ' + (e.code || 'error') + ' — ' + short(e.message)); } };
+    await attempt('read dw3', () => D.get(D.ref(db, 'dw3')));
+    await attempt('read room players', () => D.get(D.ref(db, 'dw3/rooms/AAAA/players')));
+    if (uid) {
+      const me = `dw3/rooms/AAAA/players/${uid}`;
+      await attempt('write player', () => D.set(D.ref(db, me), { x: 5, y: 0, z: 0, t: D.serverTimestamp(), f: 1, g: true, r: false, l: '', h: false, c: 'pip', k: 0, ps: '' }));
+      await attempt('write block', () => D.set(D.ref(db, 'dw3/rooms/AAAA/objects/b0'), { t: 'b', i: 0, v: 2, by: uid, at: D.serverTimestamp() }));
+      await attempt('clean up', () => D.remove(D.ref(db, 'dw3/rooms/AAAA')));
+    }
+  } catch (e) { show('check failed: ' + (e.code || short(e.message))); }
+  show('done — a grown-up can read these lines to the developer');
 }
