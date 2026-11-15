@@ -1476,7 +1476,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '58'; G.build = GAME_BUILD;
+const GAME_BUILD = '59'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1607,7 +1607,7 @@ function trainArrived(i) {
 // (build 55) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
 // (build 56) The room shares the WORLD too, so the game hands it the two things it can build for everyone (the Block
 // Builder wall and the big paint wall) and lets it draw what friends made.
-const mp = initMultiplayer(G, { scene, player, world, makeCreature, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g),
+const mp = initMultiplayer(G, { scene, player, world, makeCreature, CREATURES, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g),
   applyBlock: (i, t) => meadow.setBuildCell(i, t), applyPaint: segs => { for (const s of segs) paintRemote(s); }, applyClear: () => clearPaintRemote() });
 G.mp = mp;
 SHARE.block = (i, t) => mp.block(i, t);

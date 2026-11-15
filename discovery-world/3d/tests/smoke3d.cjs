@@ -85,7 +85,7 @@ const UG_F = -6;
   await waitFor(s => s.grounded, 3000);
   { const v = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, Math.abs(__DDW3.player.vx)); if (++n > 60) return r(m); requestAnimationFrame(f); }; f(); })); await drag(90, 700); const vx = await v; check('holding ▶ walks at a normal speed (never too fast)', vx > 2.5 && vx < 6, `speed ${vx.toFixed(2)} (normal walk 5.2)`); }
   // ---------- creatures ----------
-  for (const k of ['zuzu', 'jelly', 'pip']) { await page.locator(`.creatureChoice[data-c="${k}"]`).tap(); await sleep(500); c = await S(); check(`switch to ${k}`, c.creature === k); if (k !== 'pip') await shot(`03_${k}.jpg`); }
+  for (const k of ['zuzu', 'jelly', 'sprout', 'pip']) { /* (build 59: Sprout, the fourth friend) */ await page.locator(`.creatureChoice[data-c="${k}"]`).tap(); await sleep(500); c = await S(); check(`switch to ${k}`, c.creature === k); if (k !== 'pip') await shot(`03_${k}.jpg`); }
   { await page.locator('.creatureChoice[data-c="jelly"]').tap(); await sleep(400);
     const minSy = await page.evaluate(() => new Promise(r => { const P = __DDW3.player; P.y = 2.5; P.vy = 0; P.grounded = false; let m = 9, n = 0; const f = () => { m = Math.min(m, __DDW3.bodyScaleY()); if (++n > 90) return r(m); requestAnimationFrame(f); }; f(); }));
     check('Jelly squishes flat when it lands', minSy < .8, `body squashed to ${(minSy * 100).toFixed(0)}% height`);

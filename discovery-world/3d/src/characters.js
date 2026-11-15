@@ -211,20 +211,84 @@ function jellySpec(body) {
   return { voxel: .025, bones, parts, paints };
 }
 
+// -------------------------------------------------------------- SPROUT (build 59)
+// a cheerful little leaf sprite: a round mint body with a soft velvety skin, two leaf ears that flop and spring, a flower
+// growing from the top of its head that sways as it walks (and spins when it is happy), and a curly leaf tail.
+function sproutSpec(body) {
+  const leaf = body, light = mixC(body, '#f4ffe8', .55), dark = shade(body, .72), vein = shade(body, .55);
+  const bones = [
+    { name: 'root', pos: [0, 0, 0] }, { name: 'hips', parent: 'root', pos: [0, .46, 0] }, { name: 'spine', parent: 'hips', pos: [0, .72, 0] },
+    { name: 'head', parent: 'spine', pos: [0, 1.0, .01] },
+    { name: 'earL', parent: 'head', pos: [.24, 1.4, -.02] }, { name: 'earL2', parent: 'earL', pos: [.4, 1.68, -.04] },
+    { name: 'earR', parent: 'head', pos: [-.24, 1.4, -.02] }, { name: 'earR2', parent: 'earR', pos: [-.4, 1.68, -.04] },
+    { name: 'sprout', parent: 'head', pos: [0, 1.5, -.02] },
+    { name: 'armL', parent: 'spine', pos: [.28, .86, .04] }, { name: 'handL', parent: 'armL', pos: [.42, .66, .1] },
+    { name: 'armR', parent: 'spine', pos: [-.28, .86, .04] }, { name: 'handR', parent: 'armR', pos: [-.42, .66, .1] },
+    { name: 'legL', parent: 'hips', pos: [.16, .4, 0] }, { name: 'footL', parent: 'legL', pos: [.17, .13, .03] },
+    { name: 'legR', parent: 'hips', pos: [-.16, .4, 0] }, { name: 'footR', parent: 'legR', pos: [-.17, .13, .03] },
+    { name: 'tail', parent: 'hips', pos: [0, .46, -.3] },
+  ];
+  const parts = [
+    // a round, bean-shaped body and a big round head, one smooth shape
+    { type: 'ellipsoid', c: [0, .64, 0], r: [.36, .36, .32], bone: 'spine', color: leaf, k: .1 },
+    { type: 'ellipsoid', c: [0, .5, .01], r: [.34, .24, .31], bone: 'hips', color: leaf, k: .1 },
+    { type: 'ellipsoid', c: [0, 1.16, .02], r: [.44, .39, .38], bone: 'head', color: leaf, k: .12 },
+    { type: 'ellipsoid', c: [.2, 1.04, .18], r: [.16, .12, .14], bone: 'head', color: leaf, k: .1 },
+    { type: 'ellipsoid', c: [-.2, 1.04, .18], r: [.16, .12, .14], bone: 'head', color: leaf, k: .1 },
+    { type: 'ellipsoid', c: [0, 1.06, .3], r: [.12, .08, .09], bone: 'head', color: light, k: .07, soft: .02 },
+    // leaf ears: wide in the middle, pointed at the tip, reaching out to the sides
+    { type: 'limb', a: [.22, 1.38, -.02], b: [.4, 1.68, -.04], ra: .07, rb: .12, bone: 'earL', color: leaf, k: .05 },
+    { type: 'limb', a: [.4, 1.68, -.04], b: [.56, 1.9, -.06], ra: .12, rb: .025, bone: 'earL2', color: leaf, k: .05 },
+    { type: 'limb', a: [-.22, 1.38, -.02], b: [-.4, 1.68, -.04], ra: .07, rb: .12, bone: 'earR', color: leaf, k: .05 },
+    { type: 'limb', a: [-.4, 1.68, -.04], b: [-.56, 1.9, -.06], ra: .12, rb: .025, bone: 'earR2', color: leaf, k: .05 },
+    // the stem of the flower, growing out of the top of the head
+    { type: 'limb', a: [0, 1.46, -.02], b: [.02, 1.78, -.03], ra: .035, rb: .028, bone: 'sprout', color: dark, k: .03 },
+    // little arms and round leaf-tip hands
+    { type: 'limb', a: [.26, .87, .03], b: [.4, .68, .09], ra: .08, rb: .066, bone: 'armL', color: leaf, k: .06 },
+    { type: 'sphere', c: [.43, .62, .11], r: .08, bone: 'handL', color: light, k: .04 },
+    { type: 'limb', a: [-.26, .87, .03], b: [-.4, .68, .09], ra: .08, rb: .066, bone: 'armR', color: leaf, k: .06 },
+    { type: 'sphere', c: [-.43, .62, .11], r: .08, bone: 'handR', color: light, k: .04 },
+    // short legs and round feet
+    { type: 'limb', a: [.16, .42, 0], b: [.17, .16, .02], ra: .12, rb: .1, bone: 'legL', color: leaf, k: .08 },
+    { type: 'ellipsoid', c: [.17, .07, .08], r: [.12, .075, .16], bone: 'footL', color: dark, k: .06 },
+    { type: 'limb', a: [-.16, .42, 0], b: [-.17, .16, .02], ra: .12, rb: .1, bone: 'legR', color: leaf, k: .08 },
+    { type: 'ellipsoid', c: [-.17, .07, .08], r: [.12, .075, .16], bone: 'footR', color: dark, k: .06 },
+    // a curly leaf tail
+    { type: 'limb', a: [0, .46, -.28], b: [0, .62, -.46], ra: .07, rb: .1, bone: 'tail', color: leaf, k: .05 },
+    { type: 'limb', a: [0, .62, -.46], b: [0, .86, -.44], ra: .1, rb: .02, bone: 'tail', color: leaf, k: .05 },
+    // a smile carved into the face
+    { type: 'limb', a: [-.07, 1.0, .385], b: [0, .978, .395], ra: .012, rb: .012, carve: true, k: .012 },
+    { type: 'limb', a: [0, .978, .395], b: [.07, 1.0, .385], ra: .012, rb: .012, carve: true, k: .012 },
+  ];
+  const paints = [
+    { type: 'ellipsoid', c: [0, .6, .26], r: [.22, .26, .12], color: light, soft: .05 },                     // tummy
+    { type: 'limb', a: [.24, 1.4, .04], b: [.54, 1.88, -.02], ra: .012, rb: .008, color: vein, soft: .01 },   // leaf veins
+    { type: 'limb', a: [-.24, 1.4, .04], b: [-.54, 1.88, -.02], ra: .012, rb: .008, color: vein, soft: .01 },
+    { type: 'ellipsoid', c: [.26, 1.0, .29], r: [.07, .05, .06], color: '#ffa8b8', soft: .035 },              // blush
+    { type: 'ellipsoid', c: [-.26, 1.0, .29], r: [.07, .05, .06], color: '#ffa8b8', soft: .035 },
+    { type: 'limb', a: [-.07, 1.0, .39], b: [0, .978, .4], ra: .017, rb: .017, color: '#2f5a24', soft: .008 }, { type: 'limb', a: [0, .978, .4], b: [.07, 1.0, .39], ra: .017, rb: .017, color: '#2f5a24', soft: .008 },
+    { type: 'sphere', c: [.12, 1.42, .2], r: .05, color: light, soft: .04 }, { type: 'sphere', c: [-.16, 1.36, .24], r: .04, color: light, soft: .04 }, // a few soft freckles of light
+    { type: 'limb', a: [0, .5, -.38], b: [0, .82, -.45], ra: .01, rb: .008, color: vein, soft: .01 },          // tail vein
+  ];
+  return { voxel: .022, bones, parts, paints };
+}
+
 // ---------------------------------------------------------------- build
 export function buildCharacter(kind, style = {}) {
-  const def = { pip: '#f2c2ff', zuzu: '#ffd84a', jelly: '#7ef0c8' }[kind], body = style.body || def;
-  const spec = kind === 'pip' ? pipSpec(body) : kind === 'zuzu' ? zuzuSpec(body) : jellySpec(body);
+  const def = { pip: '#f2c2ff', zuzu: '#ffd84a', jelly: '#7ef0c8', sprout: '#a3e88f' }[kind], body = style.body || def;
+  const spec = kind === 'pip' ? pipSpec(body) : kind === 'zuzu' ? zuzuSpec(body) : kind === 'sprout' ? sproutSpec(body) : jellySpec(body);
   const geo = cached(kind + body, () => sculpt(spec));
   const sk = makeSkeleton(spec.bones), B = sk.bones;
-  const mat = kind === 'pip' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .78, sheen: 1, sheenRoughness: .45, sheenColor: new THREE.Color('#fff0fb'), normalMap: plushNormal(), normalScale: new THREE.Vector2(.45, .45) })
+  const mat = kind === 'sprout' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .62, sheen: .8, sheenRoughness: .5, sheenColor: new THREE.Color('#eaffd8'), normalMap: plushNormal(), normalScale: new THREE.Vector2(.25, .25) })
+    : kind === 'pip' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .78, sheen: 1, sheenRoughness: .45, sheenColor: new THREE.Color('#fff0fb'), normalMap: plushNormal(), normalScale: new THREE.Vector2(.45, .45) })
     : kind === 'zuzu' ? new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .28, metalness: .15, clearcoat: 1, clearcoatRoughness: .12, iridescence: .25, iridescenceIOR: 1.4, emissive: new THREE.Color(body).multiplyScalar(.08) })
       : new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .06, clearcoat: 1, clearcoatRoughness: .02, transparent: true, opacity: .84, iridescence: .6, iridescenceIOR: 1.35, emissive: new THREE.Color(body).multiplyScalar(.1), depthWrite: true });
   const mesh = new THREE.SkinnedMesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
   mesh.add(sk.root); mesh.updateMatrixWorld(true); sk.skeleton.calculateInverses(); mesh.bind(sk.skeleton, mesh.matrixWorld); // (record the bind pose after the bones are in place)
   const root = new THREE.Group(), bodyG = new THREE.Group(); root.add(bodyG); bodyG.add(mesh);
   if (kind === 'pip') addFur(mesh, { shells: 9, length: .02, density: 250 }); // build 15: real fur
-  const lidMat = new THREE.MeshPhysicalMaterial({ color: kind === 'jelly' ? shade(body, .9) : body, roughness: kind === 'pip' ? .8 : .3, sheen: kind === 'pip' ? 1 : 0, clearcoat: kind === 'pip' ? 0 : .8, transparent: kind === 'jelly', opacity: kind === 'jelly' ? .95 : 1 });
+  const soft = kind === 'pip' || kind === 'sprout';
+  const lidMat = new THREE.MeshPhysicalMaterial({ color: kind === 'jelly' ? shade(body, .9) : body, roughness: soft ? .8 : .3, sheen: soft ? 1 : 0, clearcoat: soft ? 0 : .8, transparent: kind === 'jelly', opacity: kind === 'jelly' ? .95 : 1 });
   const P = { root, body: bodyG, mesh, B, eyes: [], extras: {} };
   if (kind === 'pip') {
     P.eyes = [1, -1].map(s => attach(B.head, makeEye(.128, '#8a4ae0', lidMat), s * .162, 1.345, .282)); // (build 21: seated into sockets, not stuck on)
@@ -252,6 +316,17 @@ export function buildCharacter(kind, style = {}) {
     // baby stars that orbit Zuzu
     const sg = (() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .055 : .12; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const g = new THREE.ExtrudeGeometry(sh, { depth: .04, bevelEnabled: true, bevelThickness: .025, bevelSize: .02, bevelSegments: 3, curveSegments: 3 }); g.center(); return g; })();
     P.babies = ['#ff9fd2', '#9fe6ff', '#c9a6ff'].map(c => { const b = new THREE.Mesh(sg, new THREE.MeshPhysicalMaterial({ color: c, emissive: c, emissiveIntensity: .3, roughness: .25, clearcoat: 1 })); bodyG.add(b); return b; });
+  } else if (kind === 'sprout') {
+    P.eyes = [1, -1].map(s => attach(B.head, makeEye(.145, '#6a4ad8', lidMat), s * .17, 1.23, .29));
+    P.eyes.forEach((e, i) => { e.rotation.y = (i ? -1 : 1) * .27; e.rotation.x = -.04; });
+    P.mouth = attach(B.head, makeMouth(.065), 0, 1.0, .38);
+    // the flower on top: five soft petals around a sunny middle, on the end of the stem
+    const fl = new THREE.Group(); attach(B.sprout, fl, .02, 1.8, -.03); P.flower = fl;
+    const petalM = new THREE.MeshPhysicalMaterial({ color: '#ff8fbf', roughness: .55, sheen: 1, sheenColor: new THREE.Color('#ffe0ee'), clearcoat: .2 });
+    const petalG = cached('sproutPetal', () => { const g = new THREE.SphereGeometry(1, 18, 12); g.scale(.11, .035, .065); g.translate(.1, 0, 0); return g; });
+    for (let i = 0; i < 5; i++) { const pm = new THREE.Mesh(petalG, petalM); pm.rotation.y = i * Math.PI * 2 / 5; pm.rotation.z = .25; pm.castShadow = true; fl.add(pm); }
+    const mid = new THREE.Mesh(cached('sproutMid', () => new THREE.SphereGeometry(.065, 18, 12)), new THREE.MeshPhysicalMaterial({ color: '#ffd23f', roughness: .45, emissive: '#ffb000', emissiveIntensity: .15 })); mid.scale.y = .7; mid.position.y = .02; fl.add(mid);
+    fl.rotation.x = .35; // (the flower faces up and a little forward, so you can see it from the side)
   } else {
     P.eyes = [1, -1].map(s => attach(B.body, makeEye(.12, '#1f8f6f', lidMat), s * .18, .72, .47));
     P.eyes.forEach((e, i) => { e.rotation.y = (i ? -1 : 1) * .25; });
@@ -307,6 +382,25 @@ export function animateCharacter(kind, P, A, s, dt, extra) {
     const ant = stepSpring(A.earS, -(s.vy || 0) * .04 - sq * .6 + (r > 0 ? sin(t * 25) * .6 : 0), 120, 6, dt);
     B.crest.rotation.x = ant * .3; B.ant.rotation.x = ant * .7 + sin(t * 3) * .1; B.ant.rotation.z = sin(t * 2.2) * .15;
     P.babies.forEach((b, i) => { const a = t * (r > 0 ? 7 : 2) + i * 2.1; b.position.set(Math.cos(a) * .78, 1.05 + sin(a * 1.3) * .25, sin(a) * .55); b.rotation.z = t * 3; });
+  } else if (kind === 'sprout') {
+    // Sprout: a bouncy little walk, leaf ears that spring, and the flower that sways after everything else
+    B.hips.position.y = B.hips.userData.rest.y + Math.abs(sin(phase)) * .045 * run;
+    B.hips.rotation.y = swing * .1 * run; B.spine.rotation.y = -swing * .08 * run; B.spine.rotation.z = sin(phase) * .05 * run;
+    B.spine.rotation.x = run * .1 + (air ? -.12 : 0); B.spine.scale.set(1 + breathe * .02, 1 + breathe * .025, 1 + breathe * .02);
+    B.head.rotation.x = -run * .08 + sin(t * 1.2) * .03 + (act === 'look' ? -.15 : 0); B.head.rotation.z = sin(t * .8) * .05 + (r > 0 ? sin(t * 28) * .15 * r : 0);
+    B.head.rotation.y = act === 'look' ? sin(ak * 3) * .6 : swing * .05 * run;
+    for (const [leg, foot, sgn] of [[B.legL, B.footL, 1], [B.legR, B.footR, -1]]) { const ph = swing * sgn; leg.rotation.x = air ? -.5 : ph * .65 * run; foot.rotation.x = air ? .45 : -ph * .5 * run; }
+    const wave = act === 'wave';
+    B.armL.rotation.x = -swing * .6 * run; B.armR.rotation.x = swing * .6 * run;
+    B.armL.rotation.z = .15 + (air ? 1 : 0) + (r > 0 ? 1.3 : 0) + breathe * .04;
+    B.armR.rotation.z = -.15 - (air ? 1 : 0) - (r > 0 ? 1.3 : 0) - (wave ? 2.2 + sin(ak * 14) * .35 : 0) - breathe * .04;
+    B.handR.rotation.z = wave ? sin(ak * 14) * .4 : 0;
+    const ear = stepSpring(A.earS, -(s.vy || 0) * .05 - sq * .7 + (r > 0 ? sin(t * 22) * .6 : 0), 100, 6, dt), ear2 = stepSpring(A.ear2, ear * 1.5, 60, 5, dt);
+    for (const [e1, e2, sgn] of [[B.earL, B.earL2, 1], [B.earR, B.earR2, -1]]) { e1.rotation.z = sgn * (ear * .35 + sin(t * 2.2 + sgn) * .05); e1.rotation.x = ear * .2; e2.rotation.z = sgn * (ear2 * .4 - .05); }
+    const sway = stepSpring(A.tailS, -(s.vx || 0) * .07 * (s.facing || 1) + (r > 0 ? sin(t * 18) : 0), 70, 4, dt);
+    B.sprout.rotation.z = sway * .5 + sin(t * 2.6) * .08; B.sprout.rotation.x = -(s.vy || 0) * .03 + sin(t * 2.1) * .05;
+    B.tail.rotation.y = sway * .4 + sin(t * 2.8) * .12; B.tail.rotation.x = -.15;
+    if (P.flower) P.flower.rotation.y += dt * (r > 0 || air ? 9 : .6);
   } else {
     // Jelly: everything wobbles a little behind everything else
     const wob = stepSpring(A.tailS, -(s.vx || 0) * .05 + (r > 0 ? sin(t * 18) * 1.2 : 0), 60, 3, dt);
@@ -327,4 +421,4 @@ export function animateCharacter(kind, P, A, s, dt, extra) {
   const ms = happy ? 1 : act ? .55 : .001; P.mouth.scale.setScalar(P.mouth.scale.x + (ms - P.mouth.scale.x) * Math.min(1, dt * 10));
 }
 export { spring, stepSpring };
-export { pipSpec, zuzuSpec, jellySpec, makeEye, setLids, makeMouth, glance };
+export { pipSpec, zuzuSpec, jellySpec, sproutSpec, makeEye, setLids, makeMouth, glance };
