@@ -248,7 +248,9 @@ export function initExpansion(G, api) {
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
     () => { const stream = makeSea(12, 18, 10, 16), w = stream.mesh; w.position.set(450, .035, -3); c.add(w); /* (build 54: the stream ripples) */
       for (const x of [446, 449.5, 453]) c.block(x, 0, -3.6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 });
-      c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { for (let x = 445.5; x <= 454.5; x += 1.5) c.cyl(x, 0, z, .07, .07, 1, '#8a5a2a'); c.block(450, .95, z, 10, .12, .14, '#b07a4a', { r: .05 }); }
+      c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { // (build 63: each row of posts and its rail are painted into ONE mesh: 14 meshes -> 2)
+        const posts = makeBatch(); for (let x = 445.5; x <= 454.5; x += 1.5) posts.put(new THREE.CylinderGeometry(.07, .07, 1, 8), x, .5, z, '#8a5a2a'); posts.put(W.rbox(10, .12, .14, .05), 450, .95, z, '#b07a4a');
+        const pm = posts.mesh(paintMat()); pm.receiveShadow = true; pm.castShadow = false; c.add(pm); }
       let splash = 0; return (dt, t) => { if (Math.abs(P.x - 450) < 60) stream.update(t); const inW = P.layer === '' && P.x > 444 && P.x < 456 && P.y < 1.5; if (inW && Math.abs(P.vx) > 1 && (splash -= dt) < 0) { splash = .35; c.burst(P.x, .3, 1.5, ['#9fe6ff', '#ffffff'], 4, 1.4); } if (inW) disc('stream', 'A little stream with a wooden bridge!'); }; },
     // climbing rocks up to a lookout with a telescope
     () => { const RK = [[474, 477, 1.2], [478.5, 481.5, 2.4], [483, 486.5, 3.6]]; c.add(boulders(RK.map(([a, b, y]) => [(a + b) / 2, 0, -1.3, b - a, y, 1.8]))); for (const [a, b, y] of RK) c.plat(a, b, y, { z: -1.2 });
@@ -269,7 +271,7 @@ export function initExpansion(G, api) {
     // a crystal cave: walk through, tap the crystals to make them glow
     () => { c.block(539, 0, -4.4, 14, 4.2, 1.2, '#6a5a7a', { r: .5 }); c.block(539, 3.7, -2.6, 14, .7, 3.6, '#7d6a8f', { r: .4 }); // (a back wall and an overhanging roof: the camera can still see you inside)
       for (const x of [532.5, 545.5]) c.block(x, 0, -2.8, 1, 3.8, 2.4, '#6a5a7a', { r: .4 });
-      for (let x = 533.5; x < 545; x += 1.6) { const st = new THREE.Mesh(new THREE.ConeGeometry(.22, .8 + (x % 3) * .2, 8), c.mat('#8a7a9a', { r: .9 })); st.rotation.x = Math.PI; st.position.set(x, 3.3, -1.4 - (x % 2)); c.add(st); }
+      { const st = makeBatch(); for (let x = 533.5; x < 545; x += 1.6) st.put(new THREE.ConeGeometry(.22, .8 + (x % 3) * .2, 8), x, 3.3, -1.4 - (x % 2), '#8a7a9a', 1, [Math.PI, 0, 0]); const sm = st.mesh(paintMat()); sm.receiveShadow = true; c.add(sm); } // (build 63: the cave's stalactites are one mesh)
       const crystals = [534, 536.5, 539, 541.5, 544].map((x, i) => { const m = mat(RB[i + 2], { r: .2, em: RB[i + 2], ei: .05 }).clone(); const cr = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), m); cr.scale.y = 1.8; cr.position.set(x, 1.1 + (i % 2) * .5, -2.4); c.add(cr); return { cr, m, on: false, x }; });
       for (const k of crystals) c.tap(k.cr, () => { k.on = !k.on; k.m.emissiveIntensity = k.on ? 1.6 : .05; Sound.withMusic(() => Sound.tone(NOTE[crystals.indexOf(k) + 2] * 2, .5, 'sine', .05, 1)); c.burst(k.x, 1.5, -2.2, [k.m.color.getStyle(), '#fff'], 8, 2);
         if (crystals.every(q => q.on)) { c.disc('cave', '✨ The whole cave is glowing!'); c.say('✨ The whole cave is glowing! You lit every crystal!'); } else c.say(k.on ? '💎 Glow!' : '💤 Sleepy crystal.'); }, k.x);

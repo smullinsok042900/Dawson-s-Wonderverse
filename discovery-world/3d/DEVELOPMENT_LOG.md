@@ -64,6 +64,15 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
+## Checkpoint: build 63 — fewer draw calls: the trail bridge and the crystal cave
+- **Changed (`expansion.js`):** the Adventure Trail's bridge was 7 post cylinders + 1 rail on each side (16 meshes); each
+  side is now painted into **one** mesh (2 in all). The crystal cave's 7 stalactite cones are now **one** mesh. Both use
+  the shared `paintMat` that is already compiled at load, so no new shader program, and both belong to their streamed
+  district, so they are disposed with it exactly as before.
+- **Expected effect:** about **20 fewer draw calls** at the Adventure Trail and the crystal cave (the trail view measured
+  115 draw calls; this removes 14 of them when the bridge is in view).
+- **Not verified:** not rendered here; verified by reading — same shapes, positions, colours and sizes.
+
 ## Checkpoint: build 62 — fewer draw calls: the Ferris wheel frame and cabins
 - **Changed (`world.js`):** the wheel's two rims, its 10 spokes and its hub rotate as one unit, so they are now painted
   into **one** mesh (12 meshes → 1). Each cabin and its white hood move as one unit too, so each pair is now **one**
