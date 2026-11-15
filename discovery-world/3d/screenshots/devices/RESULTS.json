@@ -1,14 +1,15 @@
 [
  {
-  "name": "iPad 7th gen (iPad)",
-  "size": "1080×810 @2x",
+  "name": "iPad Pro 11 (iPad)",
+  "size": "1194×834 @2x",
   "problems": [
-   "test error: page.screenshot: Target page, context or browser has been closed"
+   "picture stretched after turning"
   ],
-  "picture": "864×648 drawn for 1080×810, fov 49.2°, ui ×1.350, seen as tablet",
+  "picture": "955×667 drawn for 1194×834, fov 46.9°, ui ×1.350, seen as tablet",
   "buttons": "18 buttons, smallest 61 px",
   "map": "16 pictures, smallest 104 px",
   "pets": "9 tiles, smallest 104 px",
-  "train": "21 stations all on screen: true, reaching 37% down"
+  "train": "21 stations all on screen: true, reaching 27% down",
+  "touch": "walked 2.7 m, jumped to y 1.60"
  }
 ]
