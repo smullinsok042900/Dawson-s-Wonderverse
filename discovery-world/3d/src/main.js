@@ -1440,7 +1440,22 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '51'; G.build = GAME_BUILD;
+const GAME_BUILD = '51b'; G.build = GAME_BUILD;
+// (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
+// only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
+// game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
+// one, saves and reloads. It reloads at most once for each published build, so it can never loop.
+function checkForUpdate() {
+  if (!/^https?:$/.test(location.protocol) || window.top !== window.self || navigator.onLine === false || TEST && !G.updateTest) return;
+  fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(v => {
+    const b = v && String(v.build || ''); if (!b || b === GAME_BUILD) return;
+    let tried = ''; try { tried = sessionStorage.getItem('ddwUpdate') || ''; } catch (e) { }
+    if (tried === b) return; try { sessionStorage.setItem('ddwUpdate', b); } catch (e) { return; } // (no storage: never reload, rather than risk a loop)
+    try { save(); } catch (e) { } location.reload();
+  }).catch(() => { });
+}
+G.checkForUpdate = checkForUpdate; setTimeout(checkForUpdate, 1500);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); }); addEventListener('pageshow', e => { if (e.persisted) checkForUpdate(); });
 const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, doAction, build: GAME_BUILD }); G.perfMon = perfMon;
 {
   const btn = document.createElement('button'); btn.className = 'pill'; btn.id = 'gearBtn'; btn.setAttribute('aria-label', 'settings for grown-ups (hold)'); btn.textContent = '⚙️';
