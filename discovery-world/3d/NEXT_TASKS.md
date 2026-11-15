@@ -3,6 +3,18 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## The overhaul (builds 59 onward, game-wide)
+- **Start from numbers, not guesses.** Open the game with `?worldcheck`: it lists placement problems (two activities in
+  one spot, broken platforms/solids, activity spots with nothing to stand on, meshes buried under the ground or oversized)
+  and the draw calls/triangles of 27 areas. Fix the worst first, then re-run and compare.
+- **Order of work:** (1) collision and placement faults the pass finds; (2) the heaviest views (the park and creature
+  area are the known ones: about 710k–735k triangles, 165–244 draw calls); (3) visual upgrades area by area, each
+  measured — Art Plaza boards, Frosty Peaks, far hills/tree lines, the remaining plain cylinders, the ponds; (4) the
+  planets need their own check stops before any planet-wide claim is made.
+- **Rules still apply:** never slower, measure every build (`PERFORMANCE_LOG.md`), and no visual claim without a real
+  device check. The overhaul is complete only when every area (Earth districts, house, castle, underground, sky, and each
+  planet) has been toured, measured and listed here as done.
+
 ## PR #55: build 51 verified, ready for review
 The planet graphics branch now includes main through build 50 and the build 51 flight/preparation fixes. PR #55 remains open; the user reviews and merges it.
 - Sculpted planet scenery and the 330 m Moon/Mars are retained. Construction is sliced into short tasks, shaders are rehearsed before play, cancelled flights cannot move or hide Dawson later, and private ring textures are freed on departure.

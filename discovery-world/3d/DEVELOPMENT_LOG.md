@@ -41,6 +41,26 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
+## Checkpoint: build 59 — a whole-world inspection pass (`?worldcheck`) for the overhaul
+- **The family asked** for a complete overhaul: every object checked for overlaps, buried/floating/misplaced things, a
+  visual upgrade everywhere, and better performance. That cannot be done honestly in one blind pass — this environment
+  cannot render the game or run Node, and the project's own rules require a measurement before/after every change — so
+  this build adds the **instrument** the overhaul needs and takes the first measured step.
+- **`src/worldcheck.js`, opened with `?worldcheck`:** the game walks itself through 27 areas (start, ball pit, slide,
+  trampoline, studio, lab, park, wheel, Fluffkin House, Block Builder, Creative Meadow, Adventure Trail, castle front,
+  Toy Town, rocket pad, Art Plaza, far right, the house inside, the castle inside, beach, woods, Frosty Peaks, farm,
+  Ocean Pier, Balloon Hills) and reports, in plain lines on screen:
+  - static meshes checked, activity spots, platforms and solids;
+  - **two activities in one spot**, platforms/solids with no width or height, activity spots with nothing to stand on;
+  - **static meshes buried under the ground** (bounding box entirely below y=0 outdoors) and oversized/broken meshes;
+  - objects with non-finite positions or a zero scale;
+  - **draw calls and triangles at every area**, with the heaviest view named.
+  It changes nothing, saves nothing, and does nothing without the flag.
+- **Not covered yet:** the planets (Moon, Mars, Pluto…), the underground world and the Sky Kingdom are not toured by
+  this pass; they need their own stops (the planet system builds areas as you approach, so it has to be visited in play).
+- **Not verified (no browser/Node here):** the pass itself has not been run by the author; the first run's output is
+  what the next fixes will be based on. It is inspection only, so a fault in it can only lose the report, not the game.
+
 ## Checkpoint: build 58 — a refused room can no longer close the game; `?mpcheck`
 - **Reported:** creating a room showed the purple "Oops! … Permission denied" screen. A Firebase rejection was reaching
   the page's unhandled-rejection handler, which replaces the whole game with that box.

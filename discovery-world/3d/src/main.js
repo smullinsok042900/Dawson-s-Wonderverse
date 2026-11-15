@@ -35,6 +35,7 @@ import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import { initMultiplayer } from './multiplayer.js';
+import { runWorldCheck } from './worldcheck.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD, makeTree } from './nature.js';
 import { LOWSTATS } from './assets.js';
@@ -1476,7 +1477,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '58'; G.build = GAME_BUILD;
+const GAME_BUILD = '59'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1658,3 +1659,8 @@ G.nursery=initNursery({world,G,Sound,voice,save});
  const openGallery=()=>adventures.gallery();frame.userData.tap=openGallery;G.taps.push(frame);G.interact.push({x:1015.7,y:0,layer:'in',icon:'🖼️',action:'Open home gallery',run:openGallery,hintY:2.5});
  G.refreshAdventureWorld(); G.updateAdventureWorld();
 }
+
+
+// (build 59) ?worldcheck: an inspection pass over the whole world (see worldcheck.js). Nothing changes or saves; it only
+// lists placement problems and measures what each area costs to draw, so the overhaul can be driven by numbers.
+if (/[?&]worldcheck/.test(location.search)) setTimeout(() => runWorldCheck({ G, player, renderer, scene, teleport: window.__DDW3.teleport }).catch(e => console.error('worldcheck', e)), 3000);
