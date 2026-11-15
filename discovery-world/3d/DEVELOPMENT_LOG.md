@@ -55,6 +55,11 @@ are in `PERFORMANCE_LOG.md`.
   length and the data shapes are still enforced), so the ruleset is less likely to be refused when pasted.
 - **Not verified here:** no browser or Node, so this was not run. An unauthenticated probe of the live database returns
   "Permission denied", which the rules intend — the signed-in `?mpcheck` result is what will show the real cause.
+- **What `?mpcheck` showed on the live site (build 58):** project and database address match `src/mp-config.js`, and
+  `sign-in: OK` (anonymous sign-in works), but every read and write under `dw3/rooms` returns `PERMISSION_DENIED`. So
+  the published rules on that database are not the ones in `firebase-rules.json` (never applied, applied to Firestore,
+  or applied to another instance). `firebase-rules-simple.json` was added as a minimal, hard-to-reject paste for that
+  case; the full rules can follow once rooms work.
 
 ## Checkpoint: build 57 — Android/Pixel rendering fixes (PR #56 by zyzil)
 - **Reported:** on a Pixel 10 Pro XL the character-selection pictures were blank and movement sometimes produced a black

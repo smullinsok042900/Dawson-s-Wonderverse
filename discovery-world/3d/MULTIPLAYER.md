@@ -100,5 +100,12 @@ said no**:
 2. The usual cause is that the rules were not published on **the database the game uses**. Compare the `database:` line
    of `?mpcheck` with **Realtime Database** in the console: they must be the same address, and that database's **Rules**
    tab must hold the whole of `firebase-rules.json` (press **Publish**; a red error means it was not accepted).
+   - If publishing the full rules gives an error, paste [`firebase-rules-simple.json`](firebase-rules-simple.json)
+     instead: it allows any signed-in device to read and write inside a room, and nothing else. It is less strict
+     (no size/shape limits at the database), but the game itself still only ever sends the small checked values, and it
+     is enough for a private family room.
+   - If `?mpcheck` says `read room players: error — Permission denied` while `sign-in: OK`, the rules are not on that
+     database yet (this is exactly the state to fix). Be sure the paste goes into **Realtime Database → Rules** of the
+     project named on the `project:` line — not **Firestore**, which is a different product with its own Rules tab.
 3. The next usual cause: anonymous sign-in is off (Build → Authentication → Sign-in method → Anonymous → Enable), or
    `smullinsok042900.github.io` is missing from Authentication → Settings → Authorized domains.
