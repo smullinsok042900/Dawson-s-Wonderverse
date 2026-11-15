@@ -485,6 +485,9 @@ const UG_F = -6;
   { const txt = await page.locator('#playBtn').textContent(), data = await page.evaluate(() => ({ seed: window.__brokenSaveSeed, trace: window.__brokenSaveTrace, raw: localStorage.getItem('dawsons-discovery-world-3d-v1') }));
     const ok = data.seed === '{broken' && await page.locator('#playBtn').isVisible() && txt.includes("LET'S");
     check('a broken save is ignored safely (fresh start, no crash)', ok, `button="${txt}" save=${(data.raw || '').slice(0, 20)}${ok ? '' : ' seed=' + JSON.stringify(data.seed) + ' trace=' + JSON.stringify(data.trace)}`); }
+  // (build 52) Play Together: without a room service set up, the 👫 button is hidden and nothing connects (solo as before)
+  check('Play Together: hidden until set up; the game never connects on its own', await page.evaluate(() => { const b = document.getElementById('mpBtn'); return !!b && getComputedStyle(b).display === 'none' && !__DDW3.G.mp.room; }));
+  check('the ⚙️ panel shows the build number', await page.evaluate(() => /build \w+/.test((document.querySelector('#perfPanel .ppBuild') || {}).textContent || '')));
   // ---------- portrait ----------
   await page.setViewportSize({ width: 390, height: 844 }); await sleep(400);
   check('portrait phone shows the turn-sideways tip', await page.locator('#rotate').isVisible());

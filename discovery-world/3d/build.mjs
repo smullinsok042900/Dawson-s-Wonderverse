@@ -5,6 +5,8 @@ const out = await build({ entryPoints: ['src/main.js'], bundle: true, minify: tr
 const js = out.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const html = readFileSync('src/index.template.html', 'utf8').replace('/*__CSS__*/', readFileSync('src/style.css', 'utf8')).replace('/*__JS__*/', () => js);
 writeFileSync('index.html', html);
+// (build 52) multiplayer's Firebase code: a separate file, fetched only when a room is created or joined
+await build({ entryPoints: ['src/mp-firebase-entry.js'], bundle: true, minify: true, format: 'esm', outfile: 'mp-firebase.js', target: ['safari15', 'chrome100'], legalComments: 'none' });
 // (build 51b) a tiny file that says which build is published: the running game compares it with itself when it is
 // opened or brought back to the front, and reloads if a newer build is out (the Home Screen app used to keep an old one).
 const buildNo = (readFileSync('src/main.js', 'utf8').match(/const GAME_BUILD = '([^']+)'/) || [])[1] || '0';

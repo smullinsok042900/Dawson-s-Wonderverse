@@ -11,6 +11,8 @@ The planet graphics branch now includes main through build 50 and the build 51 f
 - Physical iPhone confirmation and future Earth graphics work remain separate tasks.
 
 ## Waiting for the user
+- **Multiplayer (build 52): create the free Firebase project** (`MULTIPLAYER.md` steps 1–7) and send the web config, then paste it into `src/mp-config.js`, rebuild, and test on two real devices.
+- Multiplayer ideas after the first release: waving, playing an activity together, seeing a friend's pets.
 - **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
