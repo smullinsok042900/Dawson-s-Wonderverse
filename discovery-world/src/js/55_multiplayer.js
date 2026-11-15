@@ -1,5 +1,5 @@
 // ===================================================================
-// 55_multiplayer.js — Firebase room multiplayer with in-world remote avatars
+// 55_multiplayer.js — Firebase room multiplayer + shared world snapshot sync
 // ===================================================================
 (() => {
   'use strict';
@@ -21,6 +21,7 @@
     auth: null,
     roomRef: null,
     playersRef: null,
+    worldRef: null,
     selfRef: null,
     playerId: null,
     roomCode: '',
@@ -31,6 +32,8 @@
     roomInput: null,
     statusEl: null,
     syncTimer: null,
+    lastWorldSync: 0,
+    remoteWorld: null,
   };
 
   function loadScript(src) {
@@ -95,7 +98,6 @@
         font: 900 11px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .04em;
       }
       #ddw-mp-status { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      #ddw-mp-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 450; }
       @media (max-width: 640px) {
         #ddw-mp { top: 54px; gap: 4px; padding: 6px 7px; }
         #ddw-mp input { width: 74px; padding: 6px 8px; }
@@ -138,14 +140,6 @@
     state.roomInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') connectRoom(state.roomInput.value);
     });
-
-    const canvas = document.createElement('canvas');
-    canvas.id = 'ddw-mp-canvas';
-    canvas.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(canvas);
-    canvas.width = innerWidth * Math.min(devicePixelRatio || 1, 2);
-    canvas.height = innerHeight * Math.min(devicePixelRatio || 1, 2);
-    window.__DDW_MULTIPLAYER_CANVAS = canvas;
   }
 
   function roomKeyFromQuery() {
@@ -164,6 +158,10 @@
       state.playersRef.off('value');
       state.playersRef = null;
     }
+    if (state.worldRef) {
+      state.worldRef.off('value');
+      state.worldRef = null;
+    }
     if (state.selfRef) {
       try { state.selfRef.onDisconnect().cancel(); } catch (e) {}
       state.selfRef = null;
@@ -172,6 +170,72 @@
       state.roomRef = null;
     }
     state.peers.clear();
+  }
+
+  function pruneRemoteWorld(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    const out = {};
+    if (Array.isArray(snapshot.discoveries)) out.discoveries = snapshot.discoveries.slice(0, 200);
+    if (Array.isArray(snapshot.stars)) out.stars = snapshot.stars.slice(0, 200);
+    if (Array.isArray(snapshot.battery)) out.battery = snapshot.battery.filter(v => typeof v === 'string').slice(0, 6);
+    if (snapshot.tank && typeof snapshot.tank === 'object') {
+      out.tank = { amount: Number(snapshot.tank.amount) || 0, color: snapshot.tank.color || null };
+    }
+    if (Array.isArray(snapshot.portions)) out.portions = snapshot.portions.slice(0, 4);
+    if (snapshot.lastMix) out.lastMix = snapshot.lastMix;
+    if (Array.isArray(snapshot.strokes)) out.strokes = snapshot.strokes.slice(-80);
+    if (Array.isArray(snapshot.stickers)) out.stickers = snapshot.stickers.slice(-80);
+    if (Array.isArray(snapshot.bits)) out.bits = snapshot.bits;
+    if (typeof snapshot.labOn === 'boolean') out.labOn = snapshot.labOn;
+    if (typeof snapshot.magnetOn === 'boolean') out.magnetOn = snapshot.magnetOn;
+    if (typeof snapshot.powered === 'boolean') out.powered = snapshot.powered;
+    if (snapshot.pet && typeof snapshot.pet === 'object') out.pet = snapshot.pet;
+    return out;
+  }
+
+  function applyRemoteWorld(snapshot) {
+    const game = window.__DDW;
+    if (!game || !snapshot || typeof snapshot !== 'object') return;
+    const w = game.world;
+
+    if (Array.isArray(snapshot.discoveries)) w.discoveries = new Set(snapshot.discoveries);
+    if (Array.isArray(snapshot.stars)) w.stars = new Set(snapshot.stars);
+    if (Array.isArray(snapshot.battery)) w.battery = snapshot.battery.slice(0, 6);
+    if (snapshot.tank && typeof snapshot.tank === 'object') {
+      w.tank = { amount: clamp(Number(snapshot.tank.amount) || 0, 0, 8), color: snapshot.tank.color || null };
+    }
+    if (Array.isArray(snapshot.portions)) w.portions = snapshot.portions.slice(0, 4);
+    if (snapshot.lastMix) w.lastMix = snapshot.lastMix;
+    if (Array.isArray(snapshot.strokes)) w.strokes = snapshot.strokes.slice(-140);
+    if (Array.isArray(snapshot.stickers)) w.stickers = snapshot.stickers.slice(-80);
+    if (typeof snapshot.labOn === 'boolean') w.labOn = snapshot.labOn;
+    if (typeof snapshot.magnetOn === 'boolean') w.magnetOn = snapshot.magnetOn;
+    if (typeof snapshot.powered === 'boolean') w.powered = snapshot.powered;
+    if (typeof snapshot.bits !== 'undefined') w.bits = clamp(Math.floor(Number(snapshot.bits) || 0), 0, 1e6);
+    if (snapshot.pet && typeof snapshot.pet === 'object') w.pet = snapshot.pet;
+    if (snapshot.petDraft && typeof snapshot.petDraft === 'object') w.petDraft = snapshot.petDraft;
+  }
+
+  function serializeWorldSnapshot() {
+    const game = window.__DDW;
+    if (!game) return null;
+    const w = game.world;
+    return pruneRemoteWorld({
+      discoveries: [...w.discoveries],
+      stars: [...w.stars],
+      battery: w.battery.slice(),
+      tank: { amount: w.tank && Number(w.tank.amount) ? Number(w.tank.amount) : 0, color: w.tank && w.tank.color || null },
+      labOn: !!w.labOn,
+      magnetOn: !!w.magnetOn,
+      powered: !!w.powered,
+      portions: w.portions.slice(),
+      lastMix: w.lastMix || null,
+      strokes: w.strokes.slice(-80),
+      stickers: w.stickers.slice(-80),
+      bits: Number(w.bits) || 0,
+      pet: w.pet || null,
+      petDraft: w.petDraft || null,
+    });
   }
 
   async function connectRoom(rawCode) {
@@ -193,6 +257,7 @@
 
       state.roomRef = state.db.ref(`rooms/${code}`);
       state.playersRef = state.roomRef.child('players');
+      state.worldRef = state.roomRef.child('world');
       state.selfRef = state.playersRef.child(state.playerId);
       state.selfRef.onDisconnect().remove();
 
@@ -201,21 +266,27 @@
         const next = new Map();
         Object.entries(value).forEach(([id, data]) => {
           if (id === state.playerId) return;
-          const clean = {
+          next.set(id, {
             id,
             x: Number(data && data.x) || 0,
             y: Number(data && data.y) || GROUND,
             creature: Object.hasOwn(CREATURES, data && data.creature) ? data.creature : 'pip',
             facing: Number(data && data.facing) || 1,
             updatedAt: data && data.updatedAt,
-            anim: (data && data.anim) || null,
             vx: Number(data && data.vx) || 0,
             vy: Number(data && data.vy) || 0,
-          };
-          next.set(id, clean);
+          });
         });
         state.peers = next;
         setStatus(`Room ${code} · ${state.peers.size + 1} players`);
+      });
+
+      state.worldRef.on('value', snap => {
+        const data = snap.val();
+        if (data && typeof data === 'object') {
+          state.remoteWorld = data;
+          applyRemoteWorld(data);
+        }
       });
 
       state.db.ref('.info/connected').on('value', snap => {
@@ -262,6 +333,11 @@
     };
 
     state.selfRef.set(payload).catch(() => {});
+
+    const snapshot = serializeWorldSnapshot();
+    if (snapshot) {
+      state.worldRef.set(snapshot).catch(() => {});
+    }
   }
 
   function updatePeerAnim(peer, dt) {
@@ -327,14 +403,6 @@
         publishState();
       }
     }, 120);
-
-    window.addEventListener('resize', () => {
-      const c = window.__DDW_MULTIPLAYER_CANVAS;
-      if (c) {
-        c.width = innerWidth * Math.min(devicePixelRatio || 1, 2);
-        c.height = innerHeight * Math.min(devicePixelRatio || 1, 2);
-      }
-    }, { passive: true });
 
     window.__DDW_MULTIPLAYER = {
       state,
