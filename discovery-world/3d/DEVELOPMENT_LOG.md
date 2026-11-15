@@ -4,6 +4,44 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 66 — real mountains (overhaul, stage 1: depth and terrain)
+- **The family asked** for the world to stop looking flat and smooth: real height differences, peaks, ridgelines,
+  valleys, rock formations — not "smooth rounded blobs". This stage replaces the hills that were exactly that.
+- **What was there before:** the park's backdrop was 29 squashed spheres (`sph(...)` with `scale.y = .6`), and the
+  Balloon Hills backdrop was 4 more squashed spheres. No peaks, no ridges, no rock, no shadow or fold in the surface.
+- **What is there now — `src/terrain.js` (new), `makeRidge` + `makeCrags`:**
+  - each range is ONE displaced mesh (a height field), built from a **wandering ridgeline** (two scales of ridged
+    noise), so a range has several separate summits and saddles instead of one lump;
+  - **steep faces**: the height climbs quickly just behind the flat ground, and the range fades out at both ends;
+  - **erosion gullies**: narrow channels cut down the face where the noise folds, and then darkened (cheap ambient
+    occlusion from the surface normal), so they read as cuts;
+  - **stepped rock ledges**: part of the height is pulled toward shelf heights, so cliffs step instead of sliding;
+  - **snow on the tops** (park range) and rock strata painted by height and slope over grass;
+  - **crags**: 18 angular boulders (park) and 12 (Balloon Hills), painted into one mesh each, standing on the slope.
+- **Sizes (measured from the code):** the park range is x 133…396, from z −12 back to z −50, up to **21 m** high,
+  140 × 46 height-field cells (about 12,900 triangles); Balloon Hills is x −836…−668, up to **17 m**, 96 × 40 cells.
+  That is ONE draw call per range and one per crag field, using the painted ground material the planets already use.
+- **Nothing in the park moved:** the front 3.2 m of every range is exactly flat at y = 0, so every tree, ride, rock,
+  flower and grass clump stands where it did (grass ends at z −11, and the park's deepest trees are at z −14).
+- **Measured proof — `tests/terrain.test.mjs` (new):** it samples the exported height field exactly as the mesh builder
+  does and asserts that the highest summit is **over 10 m**, that peak-to-valley relief is **over 8 m**, that the
+  skyline varies by **over 6 m** along the range (many summits, not one lump), that the park's ground is **exactly 0**,
+  that the face climbs within 4 m behind it and keeps rising, and that both ends fade out.
+- **Measured proof — planets (`tests/spacekit.test.mjs`):** the crater test now asserts a real hole — floor more than
+  **55 % of the crater depth below the plain**, rim **above** the plain, a wall that climbs from floor to rim, a flat
+  floor, a settling apron outside, and an optional central peak.
+- **Craters, deeper (build 66, `src/spacekit.js` → `craterH`):** the old profile was one smooth saucer with a wide,
+  soft rim. Now: a flat floor (the middle 28 % barely changes), a steep wall with two shallow terraces, a **narrow
+  raised rim exactly at the edge**, an **ejecta apron** with radial ridges outside it, and a central peak in big craters.
+  Because `craterH` is used for the ground's height and for its paint, the Moon, Mercury, Mars and Pluto now have
+  craters with real rims, walls and floors.
+- **More planet ground detail:** the rocky places (Moon, Mercury, Venus, Mars, Pluto) now build their ground at
+  **168 × 66** height-field cells instead of 128 × 54, so the same craters, mesas and ridges are tessellated with about
+  1.3× more vertices and their slopes read as slopes.
+- **Not measured on a device:** no screenshots and no frame-time comparison were possible from here. What to look at:
+  the park backdrop from the park entrance and from the Ferris wheel, and the Balloon Hills backdrop; on the planets,
+  the crater rims on the Moon and Mercury from the landing pad, and Mars's canyon country.
+
 ## Checkpoint: build 65 — a start-up crash fixed (build 64's tree batching)
 - **What was wrong:** build 64 removed the one-line `tree()` helper from `src/world.js` but the big toadstool's tree, at
   `tree(178.5, -2.6, 1.25)`, still used it. Building the world would have thrown a `ReferenceError` and the purple

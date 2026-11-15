@@ -144,15 +144,26 @@ export function rockGeo(k = 0, sharp = 0, lo = 0) {
 export function lathe(points, seg = 24) { const g = new THREE.LatheGeometry(points.map(p => new THREE.Vector2(p[0], p[1])), seg); g.deleteAttribute('uv'); return g; }
 
 // ---------- sculpted ground ----------
-/** a crater: returns how much it changes the height at (x, z), and writes shade (-1 dark floor … +1 bright rim) to cr.s */
+/**
+ * a crater: returns how much it changes the height at (x, z), and writes shade (-1 dark floor … +1 bright rim) to cr.s
+ * (build 66) A REAL HOLE, not a painted circle and not a smooth saucer: a flat floor, a steep wall with two shallow
+ * terraces, a NARROW raised rim exactly at the edge, an ejecta apron outside it, and an optional central peak.
+ */
 export function craterH(cr, x, z) {
   const dx = x - cr.x, dz = z - cr.z, distance2 = dx * dx + dz * dz;
   // A slightly generous bound leaves the original 2.2 boundary and its floating-point rounding intact.
   if (cr.r > 0 && distance2 > cr.r * cr.r * 5) { cr.s = 0; return 0; }
   const d = Math.sqrt(distance2) / cr.r; if (d > 2.2) { cr.s = 0; return 0; }
-  const rim = Math.exp(-((d - 1) * (d - 1)) / .045), bowl = d < 1 ? (d * d - 1) : 0, mid = cr.peak ? Math.exp(-d * d / .03) * .35 : 0;
-  cr.s = rim * .9 + bowl * .8 + (d > 1 ? Math.exp(-(d - 1) * 2.2) * .35 : 0) + (dx / cr.r) * Math.exp(-((d - .72) * (d - .72)) / .07) * 1.1; // (the wall facing away from the sun is dark, the one facing it bright: that is what makes a crater read as a hole)
-  return cr.r * (cr.depth ?? .3) * (bowl + mid) + cr.r * (cr.rim ?? .12) * rim;
+  const depth = (cr.depth ?? .3) * cr.r, rimH = (cr.rim ?? .12) * cr.r;
+  const k = Math.min(1, d / .96); // 0 in the middle … 1 at the rim
+  const inner = k < .28 ? 0 : Math.pow((k - .28) / .72, 1.9); // the wall, from the flat floor up to the rim
+  const terrace = k > .28 ? Math.sin((k - .28) * Math.PI * 6) * .05 : 0; // two low ledges in the wall
+  const bowl = d < 1 ? -depth * (1 - inner) + rimH * terrace : 0; // the depression (metres below the plain)
+  const rim = Math.exp(-((d - 1) * (d - 1)) / .012); // a narrow raised ring, exactly at the edge
+  const apron = d > 1 ? Math.exp(-(d - 1) * 2.4) * rimH * .45 * (1 + Math.sin(Math.atan2(dz, dx) * 5) * .25) : 0; // thrown-out rock
+  const peak = cr.peak ? Math.exp(-(d * d) / .02) * depth * .5 : 0; // the little mountain in the middle of a big crater
+  cr.s = rim * .9 + bowl * .8 + (d > 1 ? Math.exp(-(d - 1) * 2.2) * .35 : 0) + dx / cr.r * Math.exp(-((d - .72) * (d - .72)) / .07) * 1.1; // (the wall facing away from the sun is dark, the one facing it bright: that is what makes a crater read as a hole)
+  return bowl + rimH * rim + apron + peak;
 }
 /**
  * The ground of one place: a big sheet that is dense near you and reaches far to the horizon, shaped by height(x, z) and

@@ -12,6 +12,7 @@
 import { makeBatch, rocketParts, rocketGlass, shinyMat, paintMat } from './spacekit.js';
 import * as THREE from 'three';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
+import { makeRidge, makeCrags } from './terrain.js';
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -710,8 +711,9 @@ export function initExpansion(G, api) {
   // (the echo), long tubes play low notes and short tubes high notes (wind chimes), blow and watch (dandelions), and a
   // grassy hill to climb and slide down.
   builders.hills = c => [
-    // rolling green hills behind (a few big shared-material bumps) and a soft lawn colour
-    () => { for (const [x, z, r, sy, col] of [[-690, -22, 16, .45, '#8fd88a'], [-722, -26, 20, .55, '#7fcf7a'], [-756, -21, 15, .5, '#9be096'], [-788, -25, 18, .5, '#86d482']]) { const h = c.sph(x, -3, z, r, col, { m: { r: .95, cc: 0 } }); h.scale.y = sy; h.castShadow = false; } },
+    // rolling green hills behind: (build 66) a real displaced range with summits, ridgelines, gullies and crags,
+    // instead of four large squashed balls
+    () => { const range = makeRidge(scene, { x0: -836, x1: -668, zFront: -12, zBack: -46, h: 17, seed: 11, segX: 96, segZ: 40 }); makeCrags(scene, range.H, { x0: -828, x1: -676, z0: -16, z1: -25, n: 12, seed: 4 }); },
     // the hot-air balloon: tap the burner, the balloon puffs up into the sky and floats back down
     () => { const X = -684, bal = new THREE.Group(); bal.position.set(X, 0, -4.2); c.add(bal);
       const basket = new THREE.Mesh(W.rbox(1.4, 1, 1.4, .12), mat('#b5793c', { r: .8 })); basket.position.y = .5; basket.castShadow = true; bal.add(basket);

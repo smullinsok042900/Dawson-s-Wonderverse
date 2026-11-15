@@ -18,6 +18,7 @@ import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 import { makeBatch, shinyMat } from './spacekit.js';
 import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeTreeBatch, makeRock, terrainH, fabricMat } from './nature.js';
+import { makeRidge, makeCrags } from './terrain.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -232,8 +233,12 @@ export function buildWorld(G) {
   G.orbs = [127, 130.5].map(x => { cyl(x, 0, -2, .5, .7, 1.2, '#5b2f8a'); const o = sph(x, 1.85, -2, .65, '#c9a6ff', { m: { em: '#a15cff', ei: .8, opacity: .85, irid: 1 } }); const orb = { x, o, zap: 0 }; tap(o, () => G.zapOrb(orb), { paw: [x, 0], disc: 'orb', hintY: 2.8 }); return orb; });
 
   // =================== ADVENTURE PARK ===================
-  // soft hills and trees in the back
-  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#93cf9c', '#82c28e', '#a6dbb0'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
+  // (build 66) REAL MOUNTAINS behind the park, instead of 29 squashed balls: a displaced range with several summits, a
+  // wandering ridgeline, steep faces, erosion gullies, stepped rock ledges and snow on the tops (src/terrain.js), all in
+  // ONE mesh, plus angular crags on its slope. The first 3 m of the range is exactly flat at y = 0, so every tree and
+  // ride in the park stands exactly where it stood before.
+  const parkRange = makeRidge(scene, { x0: 133, x1: 396, zFront: -12, zBack: -50, h: 21, seed: 3, snow: true, segX: 140, segZ: 46 });
+  makeCrags(scene, parkRange.H, { x0: 142, x1: 390, z0: -17, z1: -26, n: 18, seed: 9 });
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
   const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   // (build 64: the 21 park trees are drawn as a few instanced meshes, by variant and 24 m chunk, instead of ~6 meshes each)
