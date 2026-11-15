@@ -26,7 +26,7 @@ the expectations to measure with `tests/perf/*.cjs` (old `index.html` vs. the re
 and Playwright, record the numbers here, then confirm on two real devices. Until then this build has no performance
 clearance.
 
-- **Android portrait readback and frame-safe resizing (PR #56, folded into build 56), reported by the contributor
+- **Android portrait readback and frame-safe resizing (PR #56, build 57), reported by the contributor
   (desktop, software rendering):** mixed timings, including slower samples and long tasks; warm-cache creature/castle
   draw calls and triangles match exactly; no new shader programs and no in-view resizes. The Pixel check was visual
   only. **Not re-measured for this merge** — re-run `tests/perf/calls.cjs` and `tests/perf/ba.cjs` before calling it

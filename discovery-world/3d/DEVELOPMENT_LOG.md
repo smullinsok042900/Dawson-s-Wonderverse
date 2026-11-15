@@ -41,7 +41,7 @@ are in `PERFORMANCE_LOG.md`.
   additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
   per frame; paint arrives in batches; nothing new is drawn per frame when alone.
 
-## Checkpoint: Android/Pixel rendering fixes (PR #56 by zyzil, folded into build 56)
+## Checkpoint: build 57 — Android/Pixel rendering fixes (PR #56 by zyzil)
 - **Reported:** on a Pixel 10 Pro XL the character-selection pictures were blank and movement sometimes produced a black
   flash.
 - **Portraits (`src/main.js` `renderPortraits`):** each of the three pictures is now read straight out of the WebGL
@@ -63,7 +63,8 @@ are in `PERFORMANCE_LOG.md`.
   Quantitative Pixel/iPhone performance was not measured, and this merged build was not re-run here.
 - **How it was merged:** PR #56 was based on build 50, so it conflicted with main. `src/main.js` merged cleanly with the
   build 55/56 shared-world changes; the only conflicts were this documentation, the generated `index.html` (taken as
-  build 56 and rebuilt from the merged sources by the build workflow) and one smoke-test wait line (the PR's).
+  build 56 and rebuilt from the merged sources by the build workflow) and one smoke-test wait line (the PR's). The
+  combined build is **build 57**, so phones already on 56 update themselves.
 
 ## Checkpoint: build 55 — Play Together (online multiplayer, private family rooms)
 - **The family asked** for 2–4 players on different devices and networks to see each other in the world.
