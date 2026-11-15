@@ -1,4 +1,4 @@
-// (build 52) PLAY TOGETHER with two (and up to five) independent browsers, through the local stand-in relay.
+// (build 55) PLAY TOGETHER with two (and up to five) independent browsers, through the local stand-in relay.
 // Checks: create + join by the four pictures; each sees the other; smooth movement; jumping; colours differ; leaving;
 // losing the connection and coming back; a full room says no; nothing is written to the saved game.
 // usage: NODE_PATH=$(npm root -g) node tests/multiplayer.cjs [index.html]

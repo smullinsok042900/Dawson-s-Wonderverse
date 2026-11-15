@@ -1,4 +1,4 @@
-// (build 52) Firebase settings for PLAY TOGETHER (multiplayer). These values are public by design: they end up in the
+// (build 55) Firebase settings for PLAY TOGETHER (multiplayer). These values are public by design: they end up in the
 // game page anyway. What protects the rooms is the database's security rules (see MULTIPLAYER.md). Until this is filled
 // in, the 👫 button stays hidden and the game is exactly as before.
 export const FIREBASE_CONFIG = null;

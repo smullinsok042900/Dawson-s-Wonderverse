@@ -53,7 +53,7 @@ This folder is separate from "Dawson's Wonderverse" (the rest of the repository)
 | `perf.js` | In-game monitor and Performance Test |
 | `sculpt.js`, `fur.js`, `creatures.js` | Sculpted creatures |
 | `post.js` | Post-processing (`post.lite` on weaker devices) |
-| `multiplayer.js` | Play Together (build 52): private family rooms with a four-animal picture code, other players' creatures (interpolated), Firebase or the test relay (`?mp=ws://…`). Setup: `MULTIPLAYER.md`; settings: `src/mp-config.js`; Firebase code: separate `mp-firebase.js`, loaded only on Create/Join. Never touches the saved game. Test: `node tests/multiplayer.cjs` |
+| `multiplayer.js` | Play Together (build 55): private family rooms with a four-animal picture code, other players' creatures (interpolated), Firebase or the test relay (`?mp=ws://…`). Setup: `MULTIPLAYER.md`; settings: `src/mp-config.js`; Firebase code: separate `mp-firebase.js`, loaded only on Create/Join. Never touches the saved game. Test: `node tests/multiplayer.cjs` |
 
 - **URL flags:**
   - `?test`: light test mode;

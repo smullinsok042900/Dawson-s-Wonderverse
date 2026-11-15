@@ -505,7 +505,7 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
   #trainStrip{gap:4px;padding:5px 6px}
   #trainStrip .tsT{box-sizing:border-box;width:44px;height:44px;min-width:44px;min-height:44px;font-size:25px;border-radius:13px;padding:0}
 }
-/* (build 52) PLAY TOGETHER: the 👫 panel (pictures only) */
+/* (build 55) PLAY TOGETHER: the 👫 panel (pictures only) */
 #mpPanel{display:none;position:fixed;inset:0;z-index:40;background:rgba(40,20,80,.45);align-items:center;justify-content:center}
 #mpPanel.show{display:flex}
 #mpPanel .mpIn{position:relative;background:linear-gradient(160deg,#fff8fd,#e8f6ff);border:5px solid #fff;border-radius:28px;padding:16px 20px;box-shadow:0 12px 30px #0005;max-width:94vw;max-height:calc(100dvh - 20px);overflow:auto;text-align:center}

@@ -4,7 +4,7 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
-## Checkpoint: build 52 — Play Together (online multiplayer, private family rooms)
+## Checkpoint: build 55 — Play Together (online multiplayer, private family rooms)
 - **The family asked** for 2–4 players on different devices and networks to see each other in the world.
 - **How it works (`src/multiplayer.js`):**
   - The 👫 button opens big picture buttons: 🏠✨ Create and 🔑👫 Join.
@@ -37,6 +37,25 @@ are in `PERFORMANCE_LOG.md`.
   - 🚪 leave, ↩️ rejoin, and rejoin by itself after a reload;
   - nothing in the save; no page errors.
 - **Not yet verified:** the real Firebase service (this test machine cannot reach it, and the project does not exist yet) and real devices. The two-device steps are in `MULTIPLAYER.md`.
+
+## Checkpoint: build 54 — Earth graphics, second batch: crates, hay bales, boulders, a rippling stream (2026-11-15)
+- **The climbing stacks were plain blocks.** Now (`src/earthkit.js`, each stack ONE painted mesh):
+  - Ocean Pier: planked wooden crates with frames, a diagonal brace and corner bolts (`crates`);
+  - Happy Farm: straw-streaked hay bales tied with two cords, loose straw sticking out (`hayBales`);
+  - Balloon Hills and the Adventure Trail lookout: lumpy boulders with cracks and a flat mossy top (`boulders`).
+  - Every stack uses exactly the old boxes' sizes and places, so the steps you stand on (`c.plat`) have not moved.
+- **The Adventure Trail stream** ripples and shades from pale to deep (`makeSea`), instead of a flat blue slab.
+- **Verified (desktop, software rendering):** before/after tour screenshots, no page errors; full smoke test result recorded below when it finishes.
+- **Not yet tried on the real iPhone.**
+
+## Checkpoint: build 53 — Earth graphics, first batch: real Toy Town houses and a sea that moves (2026-11-15)
+- **Why:** a tour of every district (28 stops, screenshots) showed the middle of the world is polished, while the outer districts still had placeholder shapes: Toy Town's houses were plain coloured blocks with a pyramid on top, and every sea was a flat blue sheet.
+- **Toy Town houses** (`src/earthkit.js`, `toyHouses`): walls that darken towards the ground, a ridged roof with overhanging eaves painted in rows of tiles, a chimney, a framed door with a round window, a knob, a step and a striped awning, windows with cross bars, shutters and flower boxes, a flag on some. All nine houses are ONE mesh (painted colours), replacing 18 meshes. A little smoke rises from the chimneys while you are near.
+- **The sea** (`makeSea`; the beach at x −86 and the Ocean Pier): pale shallows with foam at the shore, turquoise, then deep blue far out, with rolling waves that catch the sunlight. About a thousand points are moved each frame, only while the camera is near.
+- **No new shaders when walking in:** both use the painted materials already compiled during loading (`warmPaint`). The shader count is the same at every stop of the tour (149; it was 148: one more is compiled during LOADING because the beach sea is part of the world from the start).
+- **Verified (desktop, software rendering):** tour screenshots of Toy Town, the beach and the pier before and after; no page errors. Full smoke test, run alone on the final build: **195/195 passed**, no console errors or warnings.
+- **Not done yet (next batches):** see `NEXT_TASKS.md`, "Earth graphics".
+- **Not yet tried on the real iPhone.**
 
 ## Checkpoint: build 51b — updates arrive by themselves on the Home Screen app (2026-11-15)
 - **The family's report:** the iPhone still showed build 48 while builds 49–51 were published. Cause: an iPhone Home Screen app is not reloaded when opened again; iOS brings the same running page back from the background, so the page check in `sw.js` never ran. (Separately, the Pages deployment of PR #55 failed and #57 fixed it: build 51 went live at 03:30 UTC on 2026-11-15.)

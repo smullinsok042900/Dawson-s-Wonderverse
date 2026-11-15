@@ -1,5 +1,5 @@
 // ===================================================================
-// multiplayer.js (build 52): PLAY TOGETHER. 2–4 people on different phones, tablets or computers share one private
+// multiplayer.js (build 55): PLAY TOGETHER. 2–4 people on different phones, tablets or computers share one private
 // family room and see each other's creatures walking and jumping around the world.
 //
 // - Rooms: a grown-up taps "Create" and gets a code made of FOUR ANIMAL PICTURES (12 animals: 20,736 codes). Others

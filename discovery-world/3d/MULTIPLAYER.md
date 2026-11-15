@@ -70,7 +70,7 @@ its own entry. A room holds at most 4 players. Only small position values are ac
 
 ## Testing on two real devices
 1. Make sure both devices have the newest game: open the game, then ⚙️ → Performance Test → Copy Test Results. The
-   first line shows the build: it must be **52 or later**.
+   first line shows the build: it must be **55 or later**.
 2. On device 1, tap **👫**, then the big **🏠✨** button. Four big animal pictures appear (e.g. 🐶🦊🐸🐮), and the voice
    says them.
 3. On device 2, tap **👫**, then the big **🔑👫** button, and press the same four animal pictures in the same order.
