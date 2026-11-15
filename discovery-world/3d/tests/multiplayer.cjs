@@ -23,6 +23,13 @@ let pass = 0, fail = 0; const check = (name, ok, info = '') => { console.log(`${
   const idx = [...room].map(ch => 'ABCDEFGHJKMN'.indexOf(ch)); for (const i of idx) { await B.locator(`#mpPanel .mpKey[data-k="${i}"]`).tap(); await sleep(150); }
   const joined = await until(B, r => __DDW3.G.mp.room === r, room); check('Join: pressing the same four pictures joins the room', joined);
   const seeEach = await until(A, () => __DDW3.G.mp.others.size === 1) && await until(B, () => __DDW3.G.mp.others.size === 1); check('each sees the other player', seeEach);
+  // (build 56) the WORLD is shared too: a block and a paint line made on A appear on B, and a wave reaches B
+  await A.evaluate(() => __DDW3.G.mp.block(7, 2));
+  check('a block built on one device appears on the other', await until(B, () => __DDW3.world.build[7] === 2, null, 20000));
+  await A.evaluate(() => { const c = __DDW3.G.paint.canvas; __DDW3.G.mp.paint({ a: [.5, .5], b: [.6, .6], c: '#ff4f9a', w: 26 }); return c.width; });
+  check('a line painted on one device appears on the other', await until(B, () => { const g = __DDW3.G.paint, c = g.ctx.getImageData(Math.round(.55 * g.canvas.width), Math.round((1 - .55) * g.canvas.height), 1, 1).data; return c[0] > 150 && c[1] < 150; }, null, 20000));
+  await A.evaluate(() => __DDW3.G.mp.wave());
+  check('a wave reaches the other device', await until(B, () => document.getElementById('toast').textContent.includes('waves'), null, 20000));
   for (const p of [A, B]) await p.evaluate(() => document.getElementById('mpPanel').classList.remove('show'));
   // put both in the same spot of the park; B walks right: A sees B's creature move there, smoothly
   await A.evaluate(() => { __DDW3.teleport(150); }); await B.evaluate(() => { __DDW3.teleport(148); }); await sleep(1500);

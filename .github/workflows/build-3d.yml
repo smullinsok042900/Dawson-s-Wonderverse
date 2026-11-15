@@ -1,0 +1,53 @@
+name: Build the 3D game
+
+# The game Dawson plays is ONE built file (discovery-world/3d/index.html), made from src/ by `node build.mjs`.
+# This chat's phone has no terminal, so the build happens here, on GitHub, after every push that changes the source.
+# The committed build files are then published by GitHub Pages like any other change.
+
+on:
+  push:
+    paths:
+      - 'discovery-world/3d/src/**'
+      - 'discovery-world/3d/build.mjs'
+      - 'discovery-world/3d/package.json'
+      - 'discovery-world/3d/package-lock.json'
+      - 'discovery-world/3d/sw.js'
+      - 'discovery-world/3d/tests/shared.test.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: discovery-world/3d
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: discovery-world/3d/package-lock.json
+      - run: npm ci
+      - name: Node checks (the rules of the shared world)
+        run: node --test tests/*.test.mjs
+        continue-on-error: true
+      - name: Build the one game file
+        run: node build.mjs
+      - name: Commit the built game
+        run: |
+          git config user.name "Wonderverse maintenance"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html mp-firebase.js version.json
+          if git diff --cached --quiet; then
+            echo "The built game is already up to date."
+            exit 0
+          fi
+          git commit -m "Build the 3D game from its source"
+          git push

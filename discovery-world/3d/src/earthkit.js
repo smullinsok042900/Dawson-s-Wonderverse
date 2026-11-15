@@ -110,7 +110,7 @@ export function boulders(list) {
   return finish(b, 'boulders', .9);
 }
 
-// ---------- (build 56) a pond that ripples: rings spreading from the middle, pale at the edge and deeper in the middle ----------
+// ---------- (build 59) a pond that ripples: rings spreading from the middle, pale at the edge and deeper in the middle ----------
 /** rx × rz metres. The water's colour is the material's colour (so a pond can change colour); returns { mesh, mat, update(t) } */
 export function makePond(rx, rz, color, rings = 9, seg = 36) {
   const g = new THREE.RingGeometry(.0001, 1, seg, rings); g.rotateX(-Math.PI / 2); g.deleteAttribute('uv');
@@ -125,7 +125,7 @@ export function makePond(rx, rz, color, rings = 9, seg = 36) {
     p.needsUpdate = true; n.needsUpdate = true; } };
 }
 
-// ---------- (build 56) leafy bushes instead of plain green balls; snowy pines and snow drifts for Frosty Peaks ----------
+// ---------- (build 59) leafy bushes instead of plain green balls; snowy pines and snow drifts for Frosty Peaks ----------
 const BALL = new THREE.SphereGeometry(1, 12, 8); BALL.deleteAttribute('uv');
 /** a bush of radius r at (x, y, z): a heap of leafy lumps, speckled light and dark like real leaves. One mesh; move, scale or shake it like the old ball. */
 export function bush(x, y, z, r, color = '#4caf50', seed = 0) {

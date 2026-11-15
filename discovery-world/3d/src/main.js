@@ -99,6 +99,10 @@ const G = { scene, renderer, platforms: [], solids: [], taps: [], interact: [], 
 G.playroom=createPlayroomViewport({renderer,G});
 const player = { groundZ: 0, x: 5, y: 0, z: 0, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, ride: null, stair: null, layer: '', happy: 0, creature: 'pip' };
 const world = { disc: new Set(), bits: new Set(), secret: false, bubbleColor: '#bfe8ff', lastBuckets: [], paintColor: '#ff4f9a', rainbowHue: 0, trail: [], flash: 0, drumT: 0, mobileT: 0, wake: [0, 0, 0, 0, 0, 0] };
+// (build 56) PLAY TOGETHER's shared world: the game reports here what someone built or painted, and the room calls back
+// what a friend made. These are filled in when a room starts (see the 👫 button at the end of this file), so playing
+// alone they do nothing at all.
+const SHARE = { block() { }, paint() { }, clearPaint() { } };
 let adventures = null;
 let started = false;
 buildWorld(G);
@@ -232,7 +236,7 @@ function paintStamp() { // the painter bunny paints a picture on the big wall
   else { g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(0, 0, 70, 0, 7); g.fill(); g.fillStyle = '#3a2864'; g.beginPath(); g.arc(-24, -14, 9, 0, 7); g.arc(24, -14, 9, 0, 7); g.fill(); g.strokeStyle = '#3a2864'; g.lineWidth = 9; g.beginPath(); g.arc(0, 8, 34, .3, Math.PI - .3); g.stroke(); }
   g.restore(); G.paint.tex.needsUpdate = true; world.painted = true; saveSoon();
 }
-const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), saveSoon: () => saveSoon(), tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
+const meadow = buildMeadow(G, { scene, world, Sound, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), saveSoon: () => saveSoon(), share: SHARE, tap: (obj, fn) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); } });
 G.startKart = () => {
   const P = player; if (P.ride || P.layer !== '' || P.x < KART.garage - 5 || P.x > KART.flag + 5 || P.y > .5) { Sound.click(); return; }
   P.ride = { type: 'kart', u: 0, v: 2, lap: 0, hop: 0, hopV: 0 }; P.vx = P.vy = 0; Sound.whoosh(); Sound.tone(220, .5, 'sawtooth', .03, 2.2);
@@ -778,15 +782,30 @@ function paintAt(a, b) {
   const erase = c === 'erase'; if (erase) c = '#fffaf2';
   g.strokeStyle = c; g.lineWidth = erase ? 60 : 26; g.lineCap = 'round'; g.lineJoin = 'round';
   g.beginPath(); g.moveTo(a.x * W, (1 - a.y) * H); g.lineTo(b.x * W, (1 - b.y) * H); g.stroke();
-  if (erase) { G.paint.tex.needsUpdate = true; return; }
+  if (erase) { G.paint.tex.needsUpdate = true; SHARE.paint({ a: [a.x, a.y], b: [b.x, b.y], c: 'erase', w: 60 }); return; }
   g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 7; g.beginPath(); g.moveTo(a.x * W - 5, (1 - a.y) * H - 5); g.lineTo(b.x * W - 5, (1 - b.y) * H - 5); g.stroke();
   G.paint.tex.needsUpdate = true; world.painted = true;
+  SHARE.paint({ a: [a.x, a.y], b: [b.x, b.y], c: world.paintColor === 'rainbow' ? c : world.paintColor, w: erase ? 60 : 26 });
   if (Math.random() < .2) Sound.tone(300 + Math.random() * 300, .05, 'sine', .015, 1.2);
+}
+// (build 56) PLAY TOGETHER: a line a friend drew on the shared paint wall (wall coordinates 0..1, as paintAt above)
+function paintRemote(seg) {
+  try {
+    if (!seg || !seg.a || !seg.b) return;
+    const g = G.paint.ctx, W = G.paint.canvas.width, H = G.paint.canvas.height;
+    const erase = seg.c === 'erase';
+    g.strokeStyle = erase ? '#fffaf2' : (seg.c || '#ff4f9a'); g.lineWidth = erase ? 60 : (seg.w || 26); g.lineCap = 'round'; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(seg.a[0] * W, (1 - seg.a[1]) * H); g.lineTo(seg.b[0] * W, (1 - seg.b[1]) * H); g.stroke();
+    G.paint.tex.needsUpdate = true; if (!erase) world.painted = true;
+  } catch (e) { }
+}
+function clearPaintRemote() {
+  try { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; } catch (e) { }
 }
 // paint palette (appears only by the paint wall)
 const PAINTS = ['#ff4f9a', '#ff9a2e', '#ffd23f', '#3cc46e', '#3d9bff', '#a15cff', '#ffffff', 'rainbow', 'erase', 'clear'];
 // (🧽 = eraser: rub out paint, or tap a coloured part to make it white again; 🗑️ = start the picture over)
-function clearBoard() { if (nearPaint()) { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; saveSoon(); } else if (meadow.nearColor(player)) meadow.clearColoring(player); Sound.whoosh(); discover('clearboard', 'A clean page to start again!'); }
+function clearBoard() { if (nearPaint()) { const g = G.paint.ctx; g.fillStyle = '#fffaf2'; g.fillRect(0, 0, G.paint.canvas.width, G.paint.canvas.height); G.paint.tex.needsUpdate = true; world.painted = false; SHARE.clearPaint(); saveSoon(); } else if (meadow.nearColor(player)) meadow.clearColoring(player); Sound.whoosh(); discover('clearboard', 'A clean page to start again!'); }
 PAINTS.forEach(c => { const b = document.createElement('button'); b.className = 'swatch' + (c === world.paintColor ? ' selected' : '') + (c === 'erase' || c === 'clear' ? ' tool' : ''); b.style.background = c === 'rainbow' ? 'conic-gradient(#ff4f9a,#ffd23f,#3cc46e,#3d9bff,#a15cff,#ff4f9a)' : c === 'erase' || c === 'clear' ? '#ffffff' : c; if (c === 'erase' || c === 'clear') b.textContent = c === 'erase' ? '🧽' : '🗑️'; b.setAttribute('aria-label', c); b.addEventListener('pointerdown', e => { e.preventDefault(); if (c === 'clear') { clearBoard(); b.classList.add('pressed'); setTimeout(() => b.classList.remove('pressed'), 150); return; } world.paintColor = c; if (c === 'erase') discover('eraser', 'The eraser! Rub out what you drew.'); document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s === b)); Sound.click(); }); $('paintTools').appendChild(b); });
 
 // ---------------- block tray (Block Builder) ----------------
@@ -1016,19 +1035,30 @@ $('soundBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.u
 
 // ---------------- creature portraits (rendered once, in 3D) ----------------
 function renderPortraits() {
-  // drawn with the main renderer into a corner of the canvas, then copied (no second WebGL context)
   const s = new THREE.Scene(); s.environment = scene.environment; s.environmentIntensity = .7; s.background = new THREE.Color('#fff6ee');
   s.add(new THREE.HemisphereLight('#ffffff', '#c9a6ff', 1.4)); const l = new THREE.DirectionalLight('#fff', 2); l.position.set(2, 4, 5); s.add(l);
   const cam = new THREE.PerspectiveCamera(30, 1, .1, 50); cam.position.set(0, 1.3, 4.6); cam.lookAt(0, .95, 0);
-  const pr = renderer.getPixelRatio(), css = 128 / pr, px = Math.round(css * pr), out = {};
-  const c2 = document.createElement('canvas'); c2.width = c2.height = 128; const g2 = c2.getContext('2d');
-  renderer.setScissorTest(true); renderer.setViewport(0, 0, css, css); renderer.setScissor(0, 0, css, css);
-  const was = renderer.shadowMap.enabled; renderer.shadowMap.enabled = false;
-  for (const k of Object.keys(CREATURES)) {
-    const c = makeCreature(k); s.add(c.root); c.update(.016, { grounded: true, facing: 1, vx: 0, vy: 0 }); c.root.rotation.y = .35;
-    renderer.render(s, cam); g2.clearRect(0, 0, 128, 128); g2.drawImage(canvas, 0, canvas.height - px, px, px, 0, 0, 128, 128); out[k] = c2.toDataURL(); s.remove(c.root);
+  const css = 128 / renderer.getPixelRatio(), out = {}, pixels = new Uint8Array(128 * 128 * 4);
+  const c2 = document.createElement('canvas'); c2.width = c2.height = 128; const g2 = c2.getContext('2d'), picture = g2.createImageData(128, 128);
+  const target = renderer.getRenderTarget(), viewport = renderer.getViewport(new THREE.Vector4()), scissor = renderer.getScissor(new THREE.Vector4());
+  const scissorTest = renderer.getScissorTest(), shadows = renderer.shadowMap.enabled, gl = renderer.getContext();
+  try {
+    renderer.setRenderTarget(null); renderer.shadowMap.enabled = false;
+    renderer.setScissorTest(true); renderer.setViewport(0, 0, css, css); renderer.setScissor(0, 0, css, css);
+    for (const k of Object.keys(CREATURES)) {
+      const c = makeCreature(k); s.add(c.root); c.update(.016, { grounded: true, facing: 1, vx: 0, vy: 0 }); c.root.rotation.y = .35;
+      renderer.render(s, cam);
+      // Read synchronously before the browser can discard the drawing buffer.
+      // WebGL rows start at the bottom; ImageData starts at the top.
+      gl.readPixels(0, 0, 128, 128, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      if (gl.isContextLost() || !pixels.some((v, i) => i % 4 < 3 && v !== pixels[i % 4])) throw new Error('Portrait readback is empty');
+      for (let y = 0; y < 128; y++) picture.data.set(pixels.subarray((127 - y) * 512, (128 - y) * 512), y * 512);
+      g2.putImageData(picture, 0, 0); out[k] = c2.toDataURL(); s.remove(c.root);
+    }
+  } finally {
+    renderer.shadowMap.enabled = shadows;
+    renderer.setViewport(viewport); renderer.setScissor(scissor); renderer.setScissorTest(scissorTest); renderer.setRenderTarget(target);
   }
-  renderer.shadowMap.enabled = was; renderer.setScissorTest(false); renderer.setViewport(0, 0, canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight);
   return out;
 }
 document.querySelectorAll('.creatureChoice').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; setCreature(b.dataset.c); Sound.giggle(); save(); }));
@@ -1085,15 +1115,18 @@ function resize() {
 }
 // (build 36) the browser tells us when the canvas changes size (ResizeObserver: no cost per frame); as a safety net the
 // size is also compared twice a second (reading it every frame could force the page layout to be redone each frame).
-let sizeCheckAt = 0;
-function checkSize(now) { if (now - sizeCheckAt < 500) return; sizeCheckAt = now; const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
-if (window.ResizeObserver) try { new ResizeObserver(() => { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }).observe(canvas); } catch (e) { }
-addEventListener('resize', resize); addEventListener('orientationchange', () => { resize(); setTimeout(resize, 300); setTimeout(resize, 1000); });
-if (window.visualViewport) visualViewport.addEventListener('resize', resize);
+let sizeCheckAt = 0, resizePending = false, frameStarted = false;
+// Resizing clears the canvas. After startup, do it immediately before drawing,
+// never from an event or the adaptive-quality step at the end of a frame.
+function requestResize() { if (frameStarted) resizePending = true; else resize(); }
+function checkSize(now) { if (resizePending) { if (G.playroom?.active()) return; resizePending = false; resize(); sizeCheckAt = now; return; } if (now - sizeCheckAt < 500) return; sizeCheckAt = now; const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) resize(); }
+if (window.ResizeObserver) try { new ResizeObserver(() => { const w = canvas.clientWidth, h = canvas.clientHeight; if (w && h && (w !== sizeW || h !== sizeH)) requestResize(); }).observe(canvas); } catch (e) { }
+addEventListener('resize', requestResize); addEventListener('orientationchange', () => { requestResize(); setTimeout(requestResize, 300); setTimeout(requestResize, 1000); });
+if (window.visualViewport) visualViewport.addEventListener('resize', requestResize);
 resize();
 // (build 23) the title pictures never change: they are drawn once, saved on the device, and shown instantly on
 // every later start. On the very first start they are drawn just after the game becomes playable.
-const PORTRAIT_KEY = 'ddw3-portraits-b23';
+const PORTRAIT_KEY = 'ddw3-portraits-readback-v1'; // Regenerate pictures cached blank by the old canvas-copy path.
 let portraits = {};
 try { portraits = JSON.parse(localStorage.getItem(PORTRAIT_KEY) || '{}'); } catch (e) { portraits = {}; }
 const applyPortraits = () => document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
@@ -1115,7 +1148,7 @@ function applyGfx(L, why) {
   // (build 44) the real iPhone report: the park and creature area are limited by the graphics chip (triangles), even at the
   // lightest level, so the lightest levels also draw less grass (the clumps are in random order: the rest stay evenly spread)
   for (const im of G.grassMeshes || []) im.count = Math.round(im.userData.n0 * (L >= 5 ? .5 : L >= 4 ? .7 : 1));
-  post.lite = L >= 2; quality = QMAX - (L >= 5 ? .3 : L >= 4 ? .24 : L >= 3 ? .12 : 0); resize();
+  post.lite = L >= 2; quality = QMAX - (L >= 5 ? .3 : L >= 4 ? .24 : L >= 3 ? .12 : 0); requestResize();
   if (why) { gfx.changes.push(`${prev}→${L} (${why})`); if (gfx.changes.length > 12) gfx.changes.shift(); try { localStorage.setItem(GFX_KEY, JSON.stringify({ level: L })); } catch (e) { } }
 }
 if (!TEST && !/[?&]hq/.test(location.search)) { try { const g = JSON.parse(localStorage.getItem(GFX_KEY) || 'null'); if (g && Number.isFinite(g.level)) applyGfx(g.level); else if (MOBILE) applyGfx(1); } catch (e) { } } // (build 28: a phone starts on lighter shadows, so lag never comes first)
@@ -1167,6 +1200,7 @@ function step(dt) {
   updatePit(dt); updateWorldAnim(dt, T); updateParticles(dt);
 }
 function frame() {
+  frameStarted = true;
   const frameT0 = performance.now();
   { const now = performance.now(); if (lastFrameAt && perfMon && !G.activityOpen) perfMon.frame(now - lastFrameAt, now); lastFrameAt = now; } // (build 26: monitor: a few numbers per frame)
   if (G.activityOpen) { requestAnimationFrame(frame); return; } // (build 25: a learning game is open: the 3D world sleeps)
@@ -1212,7 +1246,7 @@ updateCounters(); snapCamera(); updateBits(0);
 // (build 9: arrow buttons are back, so there is no drag hint)
 if (saved) $('playBtn').textContent = 'KEEP PLAYING ▶';
 $('playBtn').addEventListener('click', () => { if (MOBILE && !TEST && fsAvailable()) goFullscreen(); /* (build 36: a phone or tablet in the browser plays full screen where allowed) */ Sound.unlocked = true; started = true; $('overlay').classList.add('hidden'); document.body.classList.add('playing'); adventures?.intro(); Sound.chime(); if (!saved) toast('✨ Find the 6 lost baby Fluffkins and take them home!'); });
-addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { lastFrameAt = 0; /* (build 39: time spent in the background, e.g. while copying the test results, is not a 10-second 'freeze') */ if (document.hidden) { save(); /* (build 36: iPhone may not send 'blur' when the app is switched away: let go of every button, so nothing is stuck when she comes back) */ if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; padPointer = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); } else resize(); });
+addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { lastFrameAt = 0; /* (build 39: time spent in the background, e.g. while copying the test results, is not a 10-second 'freeze') */ if (document.hidden) { save(); /* (build 36: iPhone may not send 'blur' when the app is switched away: let go of every button, so nothing is stuck when she comes back) */ if (stick) stickEnd(); keys.left = keys.right = keys.up = keys.down = false; padPointer = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); } else requestResize(); });
 // (build 24) the lamps of the house and the underground: a FIXED pool of 3 point lights that is always in the scene.
 // Switching lights on and off (build 22) changed the number of lights, which forces every material in the game to
 // recompile its shader: that was the freeze when entering the house. Now the light count never changes; the pool
@@ -1442,7 +1476,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '56'; G.build = GAME_BUILD;
+const GAME_BUILD = '59'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1570,8 +1604,15 @@ function trainArrived(i) {
   tapEl(btn, () => { if (G.activityOpen) return; draw(); pn.classList.add('show'); Sound.click(); voice.speak('Your pet friends! Tap one to bring it along, or to send it home.'); });
   tapEl(pn.querySelector('.mpX'), () => { pn.classList.remove('show'); Sound.click(); });
 }
-// (build 52) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
-const mp = initMultiplayer(G, { scene, player, makeCreature, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g) }); G.mp = mp;
+// (build 55) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
+// (build 56) The room shares the WORLD too, so the game hands it the two things it can build for everyone (the Block
+// Builder wall and the big paint wall) and lets it draw what friends made.
+const mp = initMultiplayer(G, { scene, player, world, makeCreature, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g),
+  applyBlock: (i, t) => meadow.setBuildCell(i, t), applyPaint: segs => { for (const s of segs) paintRemote(s); }, applyClear: () => clearPaintRemote() });
+G.mp = mp;
+SHARE.block = (i, t) => mp.block(i, t);
+SHARE.paint = seg => mp.paint(seg);
+SHARE.clearPaint = () => mp.clearPaint();
 
 // ---------------- Build 40: connected adventures ----------------
 G.started = () => started;

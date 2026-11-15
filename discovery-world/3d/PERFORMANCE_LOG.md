@@ -4,8 +4,8 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
-## Build 56 — ponds, bushes, snowy pines (desktop, software rendering; one frame at each stop, `?test`)
-| Stop | Draw calls before → 56 | Triangles before → 56 |
+## Build 59 — ponds, bushes, snowy pines (desktop, software rendering; one frame at each stop, `?test`)
+| Stop | Draw calls before → 59 | Triangles before → 59 |
 |---|---|---|
 | Frosty Peaks (x −392) | 89 (build 51) → 87 | 62k → 64k |
 | Rainbow end bushes (x 892) | not measured before → 78 | → 59k |
@@ -14,6 +14,33 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 - The pines and drifts are one mesh; each bush and pond replaces one mesh with one mesh. Shader programs: 149 at every stop, no new ones.
 - Only Frosty Peaks has a "before" at the same stop. Frame time and long tasks were not measured for this build.
+## Build 56 — Play Together: a shared world (NOT MEASURED)
+
+**No numbers for this build.** It was written where there is no browser and no Node, so nothing could be run. These are
+the expectations to measure with `tests/perf/*.cjs` (old `index.html` vs. the rebuilt one) before it is called verified:
+
+- **Playing alone (no room):** no change is expected. The shared-world hooks are empty functions until a room starts, and
+  the one extra call per painted line returns at once. Measure the park, the studio wall and the Meadow anyway.
+- **In a room, standing still:** the only new work per frame is one string compare of the player's own state (already
+  there in build 55) and, per other player, one pet-list compare (`syncPeerPets`) that returns immediately when their
+  pets have not changed. A friend's pets (at most 2) add their usual draw calls/triangles and are only drawn when their
+  owner is on screen.
+- **In a room, building together:** a friend's arriving blocks are noted and the wall is rebuilt **once per frame**, not
+  once per block. A rebuild recreates only the meshes whose cell changed (plus the stand-on platforms); the block
+  materials are the ones created at startup, so no new shader programs.
+- **In a room, painting together:** one write per 24 lines or per third of a second, whichever comes first; the drawing
+  itself is the same 2D canvas work as before (once per received batch).
+- **Waves:** one small write, removed again after 30 s; nothing per frame.
+
+**To do:** run `tests/perf/calls.cjs`, `tests/perf/ba.cjs` and a two-client `tests/multiplayer.cjs` on a machine with Node
+and Playwright, record the numbers here, then confirm on two real devices. Until then this build has no performance
+clearance.
+
+- **Android portrait readback and frame-safe resizing (PR #56, build 57), reported by the contributor
+  (desktop, software rendering):** mixed timings, including slower samples and long tasks; warm-cache creature/castle
+  draw calls and triangles match exactly; no new shader programs and no in-view resizes. The Pixel check was visual
+  only. **Not re-measured for this merge** — re-run `tests/perf/calls.cjs` and `tests/perf/ba.cjs` before calling it
+  verified.
 
 ## Build 54 — crates, hay bales, boulders, stream (desktop, software rendering; one frame at each stop, `?test`)
 | Stop | Draw calls before → 54 | Triangles before → 54 | Shader programs |

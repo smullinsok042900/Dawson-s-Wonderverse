@@ -4,8 +4,8 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
-## Checkpoint: build 56 — Earth graphics, third batch: ponds, bushes, snowy pines; white tree tops fixed (2026-11-15)
-- **Numbering:** this was tested as build 55 until Play Together reached `main` as build 55; it was merged on top of that and renumbered 56.
+## Checkpoint: build 59 — Earth graphics, third batch: ponds, bushes, snowy pines; white tree tops fixed (2026-11-15)
+- **Numbering:** this was tested as build 55 until Play Together reached `main` as build 55; it was merged on top of that and renumbered 56, then merged on top of builds 56–58 (shared world, Android fixes) and renumbered 59.
 - **Ponds ripple** (`makePond` in `earthkit.js`): the farm's duck pond and the Lab Gardens colour pond have rings spreading from the middle, pale at the edge and deeper in the middle. The Lab pond still changes colour when tapped (the water colour is the material's colour) and ripples harder for a moment; the duck pond ripples more while the ducks swim fast.
 - **The Lab Gardens pond no longer sits under the rocket** (the family's report). Build 48 moved the rocket's landing pad to x 686, half inside the pond at x 684. The pond is now at x 672.4 (2.6 m across the radius instead of 3), left of Hoppy the frog and clear of the pad; its PAW spot, fish and splash moved with it.
 - **Leafy bushes** (`bush`): the plain green balls (hide-and-seek at the Rainbow end, the tunnel mouths, the owl's bush and the berry bush in the woods) are heaps of leafy lumps, speckled light and dark. Each is one mesh and is moved, scaled and tapped exactly like the ball it replaces.
@@ -13,6 +13,88 @@ are in `PERFORMANCE_LOG.md`.
 - **Fixed: white tree tops left of the house.** The fallback trees (drawn in test mode, and on a device if the tree models fail to load) picked a leaf colour with `(i + round(x)) % 4`. Left of the house x is negative, the remainder came out negative, no colour was found and the leaves were drawn plain white. Now always 0–3. The real iPhone normally shows the model trees, which never had this fault, so this mostly corrects the test pictures.
 - **Verified (desktop, software rendering):** tour screenshots of every changed spot, no page errors; 40 Node checks pass. Full smoke test result: recorded below when the run finishes.
 - **Not yet tried on the real iPhone.**
+## Checkpoint: build 56 — Play Together, a world you share
+- **The family asked** for multiplayer to become a truly shared world, not just player-position markers. The Firebase
+  project they made is now in the game.
+- **What the room shares (`src/multiplayer.js`, new `src/shared.js`):**
+  - **the players** (build 55): each other's creatures, colours, pets;
+  - **the Block Builder wall**: a block placed or erased on one device is written as `objects/b<i>` and applied on the
+    others; remote blocks are noted and the wall is rebuilt once a frame (never one rebuild per block);
+  - **the big paint wall**: finger lines are batched (at most 24 lines, sent about three times a second) as
+    `objects/s<id>`, drawn on the other devices in the same wall coordinates, and 🗑️ writes a clear that erases the room's
+    strokes for everyone;
+  - **pets**: each player's pet recipes travel in their own player entry (`ps`), and up to two of a friend's pets walk
+    behind them on your device;
+  - **a 👋 wave**: an `events` entry, removed again after half a minute, shown as sparkles, a sound and a waving hand.
+- **The room keeps its world:** objects are not deleted when a player leaves, so the tower and painting are still there
+  when the same four-animal code is used again. Paint strokes are capped (60 batches, oldest dropped for everyone).
+- **Small and safe:** `src/shared.js` holds every limit and check (block cell/type, paint colour and line, pet recipe, a
+  wave) and `tests/shared.test.mjs` checks them without a browser. `firebase-rules.json` checks the same things again in
+  the database: only the three small shapes are accepted, text is refused, each device writes only its own player entry,
+  rooms hold at most 4. Rooms live under `dw3/rooms/<CODE>`, so an older game's rooms cannot collide.
+- **Config:** `src/mp-config.js` now holds the family's Firebase project (the same values an earlier Copilot change had
+  put in the 2D game, which has since been removed), so the 👫 button is no longer hidden. The database rules still have
+  to be pasted once (`MULTIPLAYER.md`, step 3).
+- **The build is now made on GitHub:** this environment has no terminal, so `.github/workflows/build-3d.yml` runs
+  `npm ci` and `node build.mjs` when the 3D source changes, commits the rebuilt `index.html`, `mp-firebase.js` and
+  `version.json`, and Pages publishes them. The service-worker cache name is now `dawsons-world-v56`.
+- **How verified (and what is NOT):**
+  - the pure rules were written to be checked by `tests/shared.test.mjs` (runs in the workflow; `continue-on-error`, so
+    a failing check cannot stop the build);
+  - `tests/multiplayer.cjs` gained four checks for the shared world (a block and a paint line crossing between two
+    browsers, and a wave);
+  - **not run here:** no browser and no Node in this environment, so neither the Node checks nor the two-browser test nor
+    the smoke suite were run against this build. **Not measured:** no performance numbers (see below). They must be run
+    on a machine with Node and Playwright, and then on two real devices as `MULTIPLAYER.md` says.
+- **Performance safeguards (not measured):** with no room nothing is created at all (same code path as before, the only
+  additions are no-op hooks); remote pets are limited to 2; a friend's arriving blocks cause at most one wall rebuild
+  per frame; paint arrives in batches; nothing new is drawn per frame when alone.
+
+## Checkpoint: build 58 — a refused room can no longer close the game; `?mpcheck`
+- **Reported:** creating a room showed the purple "Oops! … Permission denied" screen. A Firebase rejection was reaching
+  the page's unhandled-rejection handler, which replaces the whole game with that box.
+- **Fix (`src/multiplayer.js`):** joining is wrapped (both around the transport's join and around the whole join), so a
+  refusal speaks/shows a picture message and returns to the room panel; a small classifier names the likely cause
+  (rules not pasted, sign-in off, no internet). Playing alone is untouched.
+- **New `?mpcheck`:** a troubleshooting page inside the game. It prints the project and database address, whether
+  anonymous sign-in works, and the result — with Firebase's own code and message — of reading `dw3`, reading a room's
+  players, and writing a player and a block; the test room `AAAA` is removed afterwards. Nothing happens without the
+  flag, and it is not part of normal play.
+- **Rules simplified (`firebase-rules.json`):** the wildcard-key `matches()` checks were cosmetic; they are gone (key
+  length and the data shapes are still enforced), so the ruleset is less likely to be refused when pasted.
+- **Not verified here:** no browser or Node, so this was not run. An unauthenticated probe of the live database returns
+  "Permission denied", which the rules intend — the signed-in `?mpcheck` result is what will show the real cause.
+- **What `?mpcheck` showed on the live site (build 58):** project and database address match `src/mp-config.js`, and
+  `sign-in: OK` (anonymous sign-in works), but every read and write under `dw3/rooms` returns `PERMISSION_DENIED`. So
+  the published rules on that database are not the ones in `firebase-rules.json` (never applied, applied to Firestore,
+  or applied to another instance). `firebase-rules-simple.json` was added as a minimal, hard-to-reject paste for that
+  case; the full rules can follow once rooms work.
+
+## Checkpoint: build 57 — Android/Pixel rendering fixes (PR #56 by zyzil)
+- **Reported:** on a Pixel 10 Pro XL the character-selection pictures were blank and movement sometimes produced a black
+  flash.
+- **Portraits (`src/main.js` `renderPortraits`):** each of the three pictures is now read straight out of the WebGL
+  drawing buffer with `gl.readPixels` (the old copy of the main canvas could come back empty on Android), its rows are
+  flipped into the same 128×128 ImageData and encoded as before. Empty reads and a lost context are rejected, the render
+  target, viewport, scissor and shadow state are restored in `finally`, and the pictures use the independent cache key
+  `ddw3-portraits-readback-v1`, so pictures cached blank by the old path regenerate.
+- **Black frames (`requestResize`/`checkSize`):** a resize clears the canvas, and the adaptive-quality step ran at the
+  end of a frame — after the picture had been drawn. Window/visualViewport/orientation/visibility/ResizeObserver and
+  quality changes now queue a single resize and apply it at the start of the next frame (boot sizing stays immediate; a
+  queued request waits while the 3D playroom is open). Shadows, antialiasing, shaders, post-processing and the quality
+  profiles are unchanged.
+- **Tests:** `tests/android-rendering.cjs` added (portrait identity, empty-read recovery, rotation, adaptive resize,
+  coalescing, playroom deferral, save preservation); `tests/smoke3d.cjs` now waits for the slide exit's intentional hop
+  to reach the floor before its **unchanged** landing assertion.
+- **Measured by the contributor (desktop, software rendering):** mixed timings, including slower samples and long
+  tasks; warm-cache creature/castle draw calls and triangles match exactly; no new shader programs and no in-view
+  resizes; full smoke 195/195 on their branch. **The parent tried the fork on the Pixel and reported it looks good.**
+  Quantitative Pixel/iPhone performance was not measured, and this merged build was not re-run here.
+- **How it was merged:** PR #56 was based on build 50, so it conflicted with main. `src/main.js` merged cleanly with the
+  build 55/56 shared-world changes; the only conflicts were this documentation, the generated `index.html` (taken as
+  build 56 and rebuilt from the merged sources by the build workflow) and one smoke-test wait line (the PR's). The
+  combined build is **build 57**, so phones already on 56 update themselves.
+
 ## Checkpoint: build 55 — Play Together (online multiplayer, private family rooms)
 - **The family asked** for 2–4 players on different devices and networks to see each other in the world.
 - **How it works (`src/multiplayer.js`):**

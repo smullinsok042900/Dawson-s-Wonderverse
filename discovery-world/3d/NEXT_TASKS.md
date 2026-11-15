@@ -13,13 +13,20 @@ The planet graphics branch now includes main through build 50 and the build 51 f
 ## Earth graphics (the graphics chat; build 53 onward)
 A tour of every district found these still looking like placeholders. Do them in batches, each merged into one painted mesh (`earthkit.js`), measured and smoke-tested:
 - **Art Plaza (x 801–930):** huge blank boards.
-- **Frosty Peaks:** pines and drifts are in (build 56); icicles and a frozen-lake look are still open.
+- **Frosty Peaks:** pines and drifts are in (build 59); icicles and a frozen-lake look are still open.
 - **Far hills** in the outer districts are single smooth blobs: add tree lines or layered ridges.
 - Then the remaining toys built from plain cylinders and boxes (`c.cyl` is used 56 times in `expansion.js`).
 
 ## Waiting for the user
-- **Multiplayer (build 55): create the free Firebase project** (`MULTIPLAYER.md` steps 1–7) and send the web config, then paste it into `src/mp-config.js`, rebuild, and test on two real devices.
-- Multiplayer ideas after the first release: waving, playing an activity together, seeing a friend's pets.
+- **Play Together, a world you share (build 56): paste the database rules once** (`firebase-rules.json`, step 3 of
+  `MULTIPLAYER.md`), check that anonymous sign-in is on, then test on two real devices: build together, paint together,
+  see a friend's pets, wave, leave and rejoin (the room keeps its world). The first push runs the new GitHub build.
+- Multiplayer after build 56: the colouring pictures, shared karts/train rides, seeing a friend's creation in other
+  places (nursery, art gallery), and a "friend is here" picture on the map.
+- **Rooms refused ("Permission denied") on the phone (build 58):** open `…/discovery-world/3d/?mpcheck` and send the
+  lines it shows — they name the database address, whether sign-in worked, and which read or write was refused.
+- **Android/Pixel (PR #56, now build 57):** the parent's Pixel check looked good. After the next deploy, re-check the
+  three character pictures, turning the phone, and a quality step on the Pixel — and the same on the iPhone.
 - **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?

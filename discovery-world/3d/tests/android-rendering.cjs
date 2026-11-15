@@ -1,0 +1,70 @@
+// Real WebGL regression tests. Software rendering does not reproduce Pixel drivers.
+const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
+const assert=require('node:assert/strict'),{build}=require('esbuild'),{chromium}=require('playwright');
+const ROOT=path.resolve(__dirname,'..'),MAIN=fs.readFileSync(path.join(ROOT,'src/main.js'),'utf8');
+function section(start,end){const a=MAIN.indexOf(start),b=MAIN.indexOf(end,a);assert(a>=0&&b>a);return MAIN.slice(a,b);}
+function portrait(source,name){const a=source.indexOf('function renderPortraits() {'),b=source.indexOf("document.querySelectorAll('.creatureChoice')",a);assert(a>=0&&b>a);return source.slice(a,b).replace('function renderPortraits()',`function ${name}()`);}
+async function main(){
+ const bundle=await build({stdin:{resolveDir:ROOT,contents:`
+ import * as THREE from 'three';
+ const data=async src=>{const img=new Image();img.src=src;await img.decode();const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.drawImage(img,0,0);return g.getImageData(0,0,128,128).data;};
+ window.portraits=async()=>{
+  const canvas=document.createElement('canvas');document.body.append(canvas);const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(2);renderer.setSize(192,192);renderer.shadowMap.enabled=true;renderer.toneMapping=THREE.NeutralToneMapping;
+  const scene=new THREE.Scene(),CREATURES={red:1,green:1,blue:1};
+  function makeCreature(kind){const root=new THREE.Group(),material=new THREE.MeshStandardMaterial({color:kind,roughness:.7});const body=new THREE.Mesh(new THREE.SphereGeometry(.5,20,12),material);body.scale.y=1.2;body.position.y=.7;root.add(body);const top=new THREE.Mesh(new THREE.BoxGeometry(.35,.3,.5),new THREE.MeshBasicMaterial({color:'#ffff00'}));top.position.set(-.15,1.4,0);root.add(top);return {root,update(){}};}
+  ${portrait(fs.readFileSync(path.join(ROOT,'src/main.js'),'utf8'),'afterPortraits')}
+  const render=renderer.render.bind(renderer);let copies=[];
+  renderer.render=(scene,camera)=>{render(scene,camera);const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.drawImage(canvas,0,canvas.height-128,128,128,0,0,128,128);copies.push(c.toDataURL());};
+  const updated=afterPortraits(),old=Object.fromEntries(Object.keys(CREATURES).map((k,i)=>[k,copies[i]]));let maxDifference=0;
+  for(const key of Object.keys(CREATURES)){const a=await data(old[key]),b=await data(updated[key]);for(let i=0;i<a.length;i++)maxDifference=Math.max(maxDifference,Math.abs(a[i]-b[i]));}
+  // Model the broken WebGL-canvas-to-2D copy, while real WebGL draws still run.
+  const draw=CanvasRenderingContext2D.prototype.drawImage;
+  CanvasRenderingContext2D.prototype.drawImage=function(source,...args){if(source===canvas){this.fillStyle='#ddd';this.fillRect(0,0,128,128);return;}return draw.call(this,source,...args);};
+  let broken,fixed;copies=[];try{fixed=afterPortraits();broken=Object.fromEntries(Object.keys(CREATURES).map((k,i)=>[k,copies[i]]));}finally{CanvasRenderingContext2D.prototype.drawImage=draw;renderer.render=render;}
+  const unique=async src=>{const pixels=await data(src),colors=new Set();for(let i=0;i<pixels.length;i+=4)colors.add(pixels[i]+','+pixels[i+1]+','+pixels[i+2]);return colors.size;};
+  const oldColors=await unique(broken.red),newColors=await unique(fixed.red);
+  const target=new THREE.WebGLRenderTarget(40,24);target.viewport.set(3,2,23,15);target.scissor.set(4,5,20,14);target.scissorTest=true;
+  renderer.setViewport(2,3,50,60);renderer.setScissor(1,2,35,41);renderer.setScissorTest(true);renderer.setRenderTarget(target);
+  const gl=renderer.getContext(),state=()=>({viewport:renderer.getViewport(new THREE.Vector4()).toArray(),scissor:renderer.getScissor(new THREE.Vector4()).toArray(),test:renderer.getScissorTest(),shadows:renderer.shadowMap.enabled,gpuViewport:Array.from(gl.getParameter(gl.VIEWPORT)),gpuScissor:Array.from(gl.getParameter(gl.SCISSOR_BOX)),gpuTest:gl.isEnabled(gl.SCISSOR_TEST),target:renderer.getRenderTarget()===target});
+  const initial=state();afterPortraits();const restored=state();const read=gl.readPixels;gl.readPixels=()=>{throw Error('injected readback failure');};let error='';try{afterPortraits();}catch(e){error=e.message;}finally{gl.readPixels=read;}
+  const afterFailure=state();gl.readPixels=(...args)=>args.at(-1).fill(0);let emptyError='';try{afterPortraits();}catch(e){emptyError=e.message;}finally{gl.readPixels=read;}const afterEmpty=state(),glError=gl.getError();renderer.setRenderTarget(null);target.dispose();renderer.dispose();return {maxDifference,oldColors,newColors,initial,restored,afterFailure,afterEmpty,error,emptyError,glError};
+ };
+ window.resizes=()=>{
+  const canvas=document.createElement('canvas');document.body.append(canvas);const renderer=new THREE.WebGLRenderer({canvas});renderer.setSize(192,192);
+  const G={playroom:{active:()=>active}},scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(38,1,.1,20),post={setSize(){},lite:false},sun=new THREE.DirectionalLight();scene.background=new THREE.Color('#d84e88');sun.shadow.mapSize.set(1536,1536);
+  let active=false,quality=.75,sizeW=0,sizeH=0,budgetScale=1,shadowEvery=2;const PIX_BUDGET=1e6,QMAX=.75,SM0=1536,GFX_KEY='fixture-gfx',gfx={level:0,changes:[]};
+  const screenSize=()=>[192,192],fovFor=()=>38,uiScale=()=>1;
+${section("function resize() {","// (build 36) the browser tells us")}
+${section("let sizeCheckAt = 0","if (window.ResizeObserver)")}
+${section("function applyGfx(L, why) {","if (!TEST && !/[?&]hq/.test(location.search)) { try { const g")}
+  const rawResize=resize;let calls=0;resize=()=>{calls++;return rawResize();};
+  const gl=renderer.getContext(),pixel=new Uint8Array(4),alpha=()=>{gl.readPixels(0,0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);return pixel[3];},draw=()=>renderer.render(scene,camera);
+  requestResize();const bootCalls=calls;draw();const painted=alpha();quality=.6;resize();const legacyCleared=alpha();draw();frameStarted=true;
+  const n=calls;applyGfx(3);const qualityPreserved=alpha(),qualityDeferred=resizePending&&calls===n;
+  checkSize(performance.now());draw();const nextFrame=alpha(),coalesced=calls===n+1;
+  requestResize();requestResize();requestResize();const beforeFlush=calls;checkSize(performance.now());const repeated=calls===beforeFlush+1;
+  active=true;requestResize();const beforeRoom=calls;checkSize(performance.now());const roomWaits=resizePending&&calls===beforeRoom;active=false;checkSize(performance.now());const roomFlush=!resizePending&&calls===beforeRoom+1;
+  const out={bootCalls,painted,legacyCleared,qualityPreserved,qualityDeferred,nextFrame,coalesced,repeated,roomWaits,roomFlush,glError:gl.getError()};active=true;renderer.dispose();canvas.remove();return out;
+ };`},bundle:true,write:false});
+ const server=http.createServer((q,s)=>{const route=new URL(q.url,'http://local').pathname;if(route.startsWith('/game/')){const name=path.resolve(ROOT,route.slice(6)||'index.html');if(!name.startsWith(ROOT+path.sep)){s.writeHead(403);s.end();return;}try{s.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.png':'image/png','.webmanifest':'application/manifest+json'})[path.extname(name)]||'application/octet-stream');s.end(fs.readFileSync(name));}catch{s.writeHead(404);s.end();}return;}s.setHeader('Content-Type','text/html');s.end('<body><script>'+bundle.outputFiles[0].text+'</script>');});let browser;
+ try{await new Promise(r=>server.listen(0,'127.0.0.1',r));browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+server.address().port);
+  const p=await page.evaluate(()=>portraits());console.log(JSON.stringify({maxDifference:p.maxDifference,oldColors:p.oldColors,newColors:p.newColors}));assert.equal(p.glError,0);assert(p.maxDifference<=1,'preserve colours and orientation');assert.equal(p.oldColors,1);assert(p.newColors>20);assert.deepEqual(p.restored,p.initial);assert.deepEqual(p.afterFailure,p.initial);assert.match(p.error,/injected/);assert.match(p.emptyError,/empty/);assert.deepEqual(p.afterEmpty,p.initial);console.log('PASS portraits: pixel identity, broken-copy recovery, renderer state and failure cleanup',JSON.stringify({maxDifference:p.maxDifference,oldColors:p.oldColors,newColors:p.newColors}));
+  const resized=await page.evaluate(()=>resizes());assert.equal(resized.glError,0);assert.equal(resized.bootCalls,1);assert.equal(resized.painted,255);assert.equal(resized.legacyCleared,0);assert.equal(resized.qualityPreserved,255);assert.equal(resized.nextFrame,255);assert(resized.qualityDeferred&&resized.coalesced&&resized.repeated&&resized.roomWaits&&resized.roomFlush);console.log('PASS resize flash reproduction, deferred quality changes, coalescing and playroom restore',JSON.stringify(resized));
+  if(process.env.FULL_GAME_CHECK==='1'){
+   const ctx=await browser.newContext({viewport:{width:443,height:816},deviceScaleFactor:2,hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (Linux; Android 17; Pixel 10 Pro XL) AppleWebKit/537.36 Chrome/157.0.0.0 Mobile Safari/537.36'});
+   await ctx.addInitScript(()=>{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.fillStyle='#ddd';g.fillRect(0,0,128,128);const gray=c.toDataURL();if(!localStorage.getItem('ddw3-portraits-b23'))localStorage.setItem('ddw3-portraits-b23',JSON.stringify({pip:gray,zuzu:gray,jelly:gray}));window.__portraitReads=0;const read=WebGL2RenderingContext.prototype.readPixels;WebGL2RenderingContext.prototype.readPixels=function(x,y,w,h,f,t,...args){if(w===128&&h===128&&t===this.UNSIGNED_BYTE)window.__portraitReads++;return read.call(this,x,y,w,h,f,t,...args);};const draw=CanvasRenderingContext2D.prototype.drawImage;CanvasRenderingContext2D.prototype.drawImage=function(source,...args){if(source?.id==='game'){this.fillStyle='#ddd';this.fillRect(0,0,this.canvas.width,this.canvas.height);return;}return draw.call(this,source,...args);};});
+   const game=await ctx.newPage(),gameErrors=[];game.setDefaultTimeout(120000);game.on('pageerror',e=>gameErrors.push(e.message));const t=Date.now();await game.goto('http://127.0.0.1:'+server.address().port+'/game/index.html?hq');
+   await game.waitForFunction(()=>window.__DDW3&&document.getElementById('loading').classList.contains('done')&&localStorage.getItem('ddw3-portraits-readback-v1'),null,{timeout:300000});
+   const coldMs=Date.now()-t;const stats=await game.evaluate(async()=>{const colors={};for(const img of document.querySelectorAll('.introPick img')){await img.decode();const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.drawImage(img,0,0,128,128);const data=g.getImageData(0,0,128,128).data,unique=new Set();for(let i=0;i<data.length;i+=4)unique.add(data[i]+','+data[i+1]+','+data[i+2]);colors[img.closest('[data-c]').dataset.c]=unique.size;}const D=__DDW3;return {colors,reads:__portraitReads,shadows:D.renderer.shadowMap.enabled,pcf:D.renderer.shadowMap.type===D.THREE.PCFShadowMap,samples:D.post.target.samples,depthTexture:!!D.post.target.depthTexture,resolve:D.post.target.resolveDepthBuffer,oldCache:!!localStorage.getItem('ddw3-portraits-b23')};});
+   assert.deepEqual(Object.keys(stats.colors).sort(),['jelly','pip','zuzu']);assert(Object.values(stats.colors).every(n=>n>100));assert.equal(stats.reads,3);assert(stats.shadows&&stats.pcf&&stats.oldCache);assert.equal(stats.samples,4);assert(stats.depthTexture&&stats.resolve);
+   await game.setViewportSize({width:844,height:390});await game.waitForFunction(()=>{const D=__DDW3,s=D.renderer.getSize(new D.THREE.Vector2());return s.x===844&&s.y===390&&Math.abs(D.camera.aspect-844/390)<1e-8;});await game.evaluate(()=>{__DDW3.Sound.on=false;});await game.locator('.introPick[data-c="zuzu"]').tap();await game.locator('#playBtn').tap();
+   const frame=await game.evaluate(()=>new Promise(done=>{const D=__DDW3,r=D.renderer,render=D.post.render.bind(D.post),setSize=r.setSize.bind(r),gl=r.getContext(),pixel=new Uint8Array(4);let phase=0,calls=0,first;const alpha=()=>{gl.readPixels(1,1,1,1,gl.RGBA,gl.UNSIGNED_BYTE,pixel);return pixel[3];};r.setSize=(...args)=>{calls++;return setSize(...args);};D.post.render=()=>{render();if(phase===0){const before=calls;D.G.applyGfx(3);first={alpha:alpha(),immediateResizes:calls-before};phase=1;}else{D.post.render=render;r.setSize=setSize;const result={first,nextAlpha:alpha(),resizes:calls,level:D.G.gfx.level};D.G.applyGfx(0);done(result);}};}));
+   assert.equal(frame.first.alpha,255);assert.equal(frame.first.immediateResizes,0);assert.equal(frame.nextAlpha,255);assert(frame.resizes>0);assert.equal(frame.level,3);
+   await game.evaluate(()=>{__DDW3.world.disc.add('android-save-check');__DDW3.save();});
+   await game.reload();await game.waitForFunction(()=>window.__DDW3&&document.getElementById('loading').classList.contains('done'),null,{timeout:300000});
+   const warm=await game.evaluate(()=>({reads:__portraitReads,creature:__DDW3.player.creature,progress:__DDW3.world.disc.has('android-save-check'),pictures:[...document.querySelectorAll('.introPick img')].every(img=>img.complete&&img.naturalWidth===128)}));assert.equal(warm.reads,0);assert.equal(warm.creature,'zuzu');assert(warm.progress&&warm.pictures);assert.deepEqual(gameErrors,[]);console.log('PASS full native game: stale portrait cache, actual character pixels, 4x AA/PCF, adaptive resize frame, warm-cache reuse and progress',JSON.stringify({coldMs,totalMs:Date.now()-t,stats,frame,warm}));await ctx.close();
+  }
+  assert.deepEqual(errors,[]);
+ }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});

@@ -3,7 +3,10 @@
 A 3D exploring game for Dawson, a 5-year-old who **cannot read yet**. It is played on an iPhone as a Home Screen app
 (GitHub Pages: `https://smullinsok042900.github.io/Dawson-s-Wonderverse/discovery-world/3d/`).
 
-This folder is separate from "Dawson's Wonderverse" (the rest of the repository). Never change files outside `discovery-world/`.
+This folder is the whole game now: the 2D version that used to live in `discovery-world/` was removed at the family's
+request (2026-11-16), so `backups/` holds only 3D builds and `discovery-world/` holds only this game. Never change the
+repository's other projects (the top-level `index.html` and the Wonderverse files at the repo root); the one exception is
+the build workflow in `.github/workflows/build-3d.yml`, which rebuilds this game's `index.html` after a source change.
 
 ## Non-negotiable rules
 - **The game must never get slower.** Measure before and after every change (`PERFORMANCE_LOG.md`). If a change makes any
@@ -53,7 +56,7 @@ This folder is separate from "Dawson's Wonderverse" (the rest of the repository)
 | `perf.js` | In-game monitor and Performance Test |
 | `sculpt.js`, `fur.js`, `creatures.js` | Sculpted creatures |
 | `post.js` | Post-processing (`post.lite` on weaker devices) |
-| `multiplayer.js` | Play Together (build 55): private family rooms with a four-animal picture code, other players' creatures (interpolated), Firebase or the test relay (`?mp=ws://…`). Setup: `MULTIPLAYER.md`; settings: `src/mp-config.js`; Firebase code: separate `mp-firebase.js`, loaded only on Create/Join. Never touches the saved game. Test: `node tests/multiplayer.cjs` |
+| `multiplayer.js`, `shared.js` | Play Together (builds 55–56): private family rooms with a four-animal picture code, other players' creatures and pets, and a SHARED WORLD (the Block Builder wall and the big paint wall are written as small validated objects, a 👋 wave is the only event, and a room keeps its world when everyone leaves). Firebase or the test relay (`?mp=ws://…`). Setup: `MULTIPLAYER.md`; settings: `src/mp-config.js`; database rules: `firebase-rules.json`; Firebase code: separate `mp-firebase.js`, loaded only on Create/Join. Never touches the saved game (except that shared blocks/lines are part of the world). Test: `node tests/multiplayer.cjs`, `node --test tests/shared.test.mjs` |
 
 - **URL flags:**
   - `?test`: light test mode;

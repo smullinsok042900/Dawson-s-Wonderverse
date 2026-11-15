@@ -41,6 +41,7 @@ export function buildMeadow(G, api) {
   const roofGeo = (() => { const sh = new THREE.Shape(); sh.moveTo(-B.cw / 2, -B.ch / 2); sh.lineTo(B.cw / 2, -B.ch / 2); sh.lineTo(0, B.ch / 2); sh.closePath(); const g = new THREE.ExtrudeGeometry(sh, { depth: 1.4, bevelEnabled: true, bevelSize: .04, bevelThickness: .04, bevelSegments: 2 }); g.translate(0, 0, -.7); return g; })();
   const mats = BLOCKS.map(b => toy(b.c, { r: .35, cc: .8 }));
   const blockMeshes = new Map(); world.build = world.build || new Array(B.cols * B.rows).fill(-1);
+  let buildDirty = false, buildPop = -1; // (build 56) PLAY TOGETHER: a friend's blocks can arrive many at once, so rebuild once a frame
   function makeBlock(t) {
     const b = BLOCKS[t], g = new THREE.Group(); g.userData.dynamic = true;
     if (b.kind === 'roof') { const m = new THREE.Mesh(roofGeo, mats[t]); m.castShadow = true; m.receiveShadow = true; g.add(m); return g; }
@@ -74,12 +75,21 @@ export function buildMeadow(G, api) {
     if (t === ERASE || cur === t) { if (cur < 0) return; world.build[i] = -1; Sound.pop(); burst(...cellPos(i), [BLOCKS[cur].c, '#fff'], 10, 2); }
     else { world.build[i] = t; Sound.tone(300 + row * 80 + col * 20, .12, 'triangle', .05, 1.5); burst(...cellPos(i), [BLOCKS[t].c, '#fff'], 8, 1.5); }
     rebuildBlocks(world.build[i] >= 0 ? i : -1);
+    api.share && api.share.block(i, world.build[i]); // (build 56) tell the room (nothing happens when playing alone)
     discover('builder', 'The Block Builder! Pick a block below and tap to build.');
     if (world.build.filter(v => v >= 0).length === 8) discover('builder8', 'Look what you built! You can climb on your blocks.');
     api.saveSoon();
   }
   api.tap(tapPlane, tapBuild);
   G.interact.push({ x: B.x0 + W / 2, y: 0, layer: '', disc: 'builder', run: () => tapBuild({ point: new THREE.Vector3(B.x0 + B.cw * 4.5, .5, 0) }), hintY: 5.6 });
+  // (build 56) PLAY TOGETHER: a block a friend placed (or erased) in the room's shared wall. It is noted now and the wall
+  // is rebuilt once, on the next frame, however many arrive together.
+  function setBuildCell(i, t) {
+    if (!Number.isInteger(i) || i < 0 || i >= world.build.length) return;
+    if (!Number.isInteger(t) || t < -1 || t >= BLOCKS.length) return;
+    if (world.build[i] === t) return;
+    world.build[i] = t; buildDirty = true; if (t >= 0) buildPop = i; api.saveSoon();
+  }
 
   // ================= COLOURING CORNER =================
   const PW = 600, PH = 450;
@@ -136,11 +146,14 @@ export function buildMeadow(G, api) {
     const post = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .7, 6), toy('#ffffff')); post.position.set(x, 5.4, -2.45); add(post); };
   sign(B.x0 + W / 2, '🧱'); sign((COLOR_X[0] + COLOR_X[1]) / 2, '🖍️');
 
-  function update(dt) { for (const m of blockMeshes.values()) if (m.scale.x < 1) m.scale.setScalar(Math.min(1, m.scale.x + dt * 5)); }
+  function update(dt) {
+    for (const m of blockMeshes.values()) if (m.scale.x < 1) m.scale.setScalar(Math.min(1, m.scale.x + dt * 5));
+    if (buildDirty) { buildDirty = false; rebuildBlocks(buildPop); buildPop = -1; } // (build 56: a friend's blocks, all at once)
+  }
   function restored() { if (!Array.isArray(world.build) || world.build.length !== B.cols * B.rows) world.build = new Array(B.cols * B.rows).fill(-1); rebuildBlocks(-1); pics.forEach(p => p.draw()); }
   const near = P => P.layer === '' && P.y < 6 && P.y > -.5;
   return {
-    update, restored, PICTURES,
+    update, restored, PICTURES, setBuildCell,
     clearColoring: P => { const n = Math.abs(P.x - COLOR_X[0]) < Math.abs(P.x - COLOR_X[1]) ? 0 : 1; world.colorings[n] = world.colorings[n].map(() => '#ffffff'); pics[n].draw(); api.saveSoon(); },
     nearBuild: P => near(P) && P.x > B.x0 - 2.5 && P.x < B.x0 + W + 2.5,
     nearColor: P => near(P) && P.x > COLOR_X[0] - 4 && P.x < COLOR_X[1] + 4,
