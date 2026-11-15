@@ -11,7 +11,7 @@
 // ===================================================================
 import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
-import { toyHouses, makeSea } from './earthkit.js';
+import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -242,12 +242,12 @@ export function initExpansion(G, api) {
   // =================== 🌉 ADVENTURE TRAIL ===================
   builders.trail = c => [
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
-    () => { const w = new THREE.Mesh(new THREE.BoxGeometry(12, .06, 18), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(450, .0, -3); w.receiveShadow = true; c.add(w);
+    () => { const stream = makeSea(12, 18, 10, 16), w = stream.mesh; w.position.set(450, .035, -3); c.add(w); /* (build 54: the stream ripples) */
       for (const x of [446, 449.5, 453]) c.block(x, 0, -3.6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 });
       c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { for (let x = 445.5; x <= 454.5; x += 1.5) c.cyl(x, 0, z, .07, .07, 1, '#8a5a2a'); c.block(450, .95, z, 10, .12, .14, '#b07a4a', { r: .05 }); }
-      let splash = 0; return dt => { const inW = P.layer === '' && P.x > 444 && P.x < 456 && P.y < 1.5; if (inW && Math.abs(P.vx) > 1 && (splash -= dt) < 0) { splash = .35; c.burst(P.x, .3, 1.5, ['#9fe6ff', '#ffffff'], 4, 1.4); } if (inW) disc('stream', 'A little stream with a wooden bridge!'); }; },
+      let splash = 0; return (dt, t) => { if (Math.abs(P.x - 450) < 60) stream.update(t); const inW = P.layer === '' && P.x > 444 && P.x < 456 && P.y < 1.5; if (inW && Math.abs(P.vx) > 1 && (splash -= dt) < 0) { splash = .35; c.burst(P.x, .3, 1.5, ['#9fe6ff', '#ffffff'], 4, 1.4); } if (inW) disc('stream', 'A little stream with a wooden bridge!'); }; },
     // climbing rocks up to a lookout with a telescope
-    () => { for (const [a, b, y, col] of [[474, 477, 1.2, '#a39a8f'], [478.5, 481.5, 2.4, '#8f8579'], [483, 486.5, 3.6, '#b5ab9e']]) { c.block((a + b) / 2, 0, -1.3, b - a, y, 1.8, col, { r: .45 }); c.plat(a, b, y, { z: -1.2 }); }
+    () => { const RK = [[474, 477, 1.2], [478.5, 481.5, 2.4], [483, 486.5, 3.6]]; c.add(boulders(RK.map(([a, b, y]) => [(a + b) / 2, 0, -1.3, b - a, y, 1.8]))); for (const [a, b, y] of RK) c.plat(a, b, y, { z: -1.2 });
       const tele = new THREE.Group(); tele.position.set(485.6, 3.6, -1.1); c.add(tele);
       const tube = new THREE.Mesh(new THREE.CylinderGeometry(.16, .24, 1.2, 20), mat('#ffd23f', { r: .4 })); tube.rotation.z = 1.1; tube.position.y = 1.1; tube.castShadow = true; tele.add(tube);
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .9, 8), mat('#7a5230')); leg.position.y = .45; tele.add(leg);
@@ -605,7 +605,7 @@ export function initExpansion(G, api) {
       c.tap(sheep, () => { k = (k + 1) % COLOURS.length; const m2 = mat(COLOURS[k][0], { r: .95, cc: 0 }); wool.material = m2; puffs.forEach(p2 => { p2.material = m2; }); bounce = 1; Sound.tone(480, .2, 'sawtooth', .02, .7); c.say(`🐑 Baa! Now I am ${COLOURS[k][1]}!`); c.burst(-457, 1.8, -2.6, [COLOURS[k][0], '#fff'], 14, 2.4); c.disc('sheep', '🐑 Tap the sheep to change the colour of her wool!'); }, -457);
       return (dt, t) => { bounce = Math.max(0, bounce - dt * 1.5); sheep.position.y = Math.abs(Math.sin(bounce * 9)) * bounce * .5; head.rotation.z = Math.sin(t * 1.5) * .1; }; },
     // the haystack: climb the bales and bounce on the top (a gem floats above it)
-    () => { for (const [x, y, w] of [[-464, 0, 3], [-466, 1, 3], [-467.5, 2, 2.2]]) c.block(x, y, -1.4, w, 1, 1.6, '#e8c45a', { r: .12 }); c.sph(-468, 3, -1.4, .9, '#f0d070', { m: { r: .95, cc: 0 } }).scale.set(1.4, .5, 1);
+    () => { c.add(hayBales([[-464, 0, 3], [-466, 1, 3], [-467.5, 2, 2.2]].map(([x, y, w]) => [x, y, -1.4, w, 1, 1.6]))); /* (build 54: tied straw bales, one mesh) */ c.sph(-468, 3, -1.4, .9, '#f0d070', { m: { r: .95, cc: 0 } }).scale.set(1.4, .5, 1);
       c.plat(-465.5, -462.5, 1, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-467.5, -464.5, 2, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-468.6, -466.4, 3.05, { z: -1.2, pad: true, bounce: 12.5, onLand: () => c.disc('hay', '🌾 Boing! Bounce on the haystack!') }); },
     // the vegetable patch: tap a mound to plant a seed, again for a sprout, again for a carrot, then pull it up
     () => { let pulled = 0; for (let i = 0; i < 4; i++) { const x = -476 - i * 1.6; const mound = c.sph(x, 0, -2.2, .55, '#8a5a3a', { m: { r: .95, cc: 0 } }); mound.scale.y = .35; let st2 = 0; const leaf = c.sph(x, .3, -2.2, .15, '#3cc46e', { m: { r: .7 } }); leaf.scale.set(.6, 1.6, .6); leaf.visible = false; const car = c.toy('🥕', .8, x, .9, -2.2); car.visible = false;
@@ -671,7 +671,7 @@ export function initExpansion(G, api) {
     // Splash the seal waits on a rock by the water
     () => { const rock = c.sph(-584, 0, -2.4, .9, '#8a7f74', { m: { r: .9 } }); rock.scale.set(1.4, .45, .9); const pal = palAtHome(c, 'seal'); return (dt, t) => { pal && pal(dt, t); }; },
     // stacked crates (a gem waits on top) next to the dolphin show
-    () => { for (const [x, y, w] of [[-594.5, 0, 2], [-596.5, 1, 2], [-598, 2, 1.6]]) c.block(x, y, -1.4, w, 1, 1.4, '#c8925a', { r: .06 }); c.plat(-595.5, -593.5, 1, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-597.5, -595.5, 2, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-598.8, -597.2, 2.98, { z: -1.2, onLand: () => c.disc('crates', '📦 You climbed the crates!') }); },
+    () => { c.add(crates([[-594.5, 0, 2], [-596.5, 1, 2], [-598, 2, 1.6]].map(([x, y, w]) => [x, y, -1.4, w, 1, 1.4]))); /* (build 54: planked crates, one mesh) */ c.plat(-595.5, -593.5, 1, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-597.5, -595.5, 2, { z: -1.2, step: true, stepMax: 1.05 }); c.plat(-598.8, -597.2, 2.98, { z: -1.2, onLand: () => c.disc('crates', '📦 You climbed the crates!') }); },
     // the dolphin show: tap the whistle and a dolphin leaps through the hoop
     () => { c.cyl(-606, 0, -3, .06, .06, 1.4, '#ffffff'); const wh = c.toy('📯', .8, -606, 1.7, -3); const hoop = new THREE.Mesh(new THREE.TorusGeometry(1.2, .1, 10, 32), mat('#ff4f9a', { r: .4 })); hoop.position.set(-606, 2.6, -10); c.add(hoop);
       const dol = c.toy('🐬', 1.6, -611, -1, -10); dol.visible = false; let jump = 0, jumps = 0;
@@ -734,7 +734,7 @@ export function initExpansion(G, api) {
       const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-716, 5.4, -1.2), new THREE.Vector3(-719, 4.6, -1), new THREE.Vector3(-723, 2.6, -.6), new THREE.Vector3(-727, 1, -.2), new THREE.Vector3(-731, .6, 0)]);
       c.tap(matG, () => { if (P.y < 4.3) { c.say('🌈 Climb up the grassy steps to the rainbow mat!'); return; } api.startSlide(path); c.disc('hillslide', '🌈 Wheee! Sliding down the grassy hill!'); c.say('🌈 Wheee!'); api.event?.({ type: 'activity', id: 'hill_slide' }); }, -715, { y: 4.8, hintY: 1.4 }); },
     // mountain goats: tap the goat and it hops up the rocks, counting each hop
-    () => { const X = -738, ROCKS = [[-736, .6], [-738.4, 1.4], [-740.8, 2.3], [-743, 3.3]]; for (const [x, h] of ROCKS) { const r = c.block(x, 0, -3.4, 2, h, 1.6, '#a39a8f', { r: .45 }); }
+    () => { const X = -738, ROCKS = [[-736, .6], [-738.4, 1.4], [-740.8, 2.3], [-743, 3.3]]; c.add(boulders(ROCKS.map(([x, h]) => [x, 0, -3.4, 2, h, 1.6]))); /* (build 54: lumpy mossy boulders, one mesh) */
       const goat = c.toy('🐐', 1.1, ROCKS[0][0], ROCKS[0][1] + .55, -3.4); let at = 0, hop = 0, from = 0;
       const go = () => { if (hop) return; from = at; at = at >= ROCKS.length - 1 ? 0 : at + 1; hop = .001; Sound.boing(); c.say(at === 0 ? '🐐 Down we go! Again?' : `🐐 Hop! ${NUM[at][0].toUpperCase() + NUM[at].slice(1)}!`); if (at === ROCKS.length - 1) setTimeout(() => c.say('🐐 Three hops to the top! Clever goat!'), 700); c.disc('goats', '🐐 Tap the goat and count its hops up the rocks!'); api.event?.({ type: 'activity', id: 'goat_hop' }); };
       c.tap(goat, go, X, { icon: '🐐', label: 'Mountain goat', action: 'Make it hop', disc: 'goats' });

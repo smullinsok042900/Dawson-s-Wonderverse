@@ -4,6 +4,16 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 54 — Earth graphics, second batch: crates, hay bales, boulders, a rippling stream (2026-11-15)
+- **The climbing stacks were plain blocks.** Now (`src/earthkit.js`, each stack ONE painted mesh):
+  - Ocean Pier: planked wooden crates with frames, a diagonal brace and corner bolts (`crates`);
+  - Happy Farm: straw-streaked hay bales tied with two cords, loose straw sticking out (`hayBales`);
+  - Balloon Hills and the Adventure Trail lookout: lumpy boulders with cracks and a flat mossy top (`boulders`).
+  - Every stack uses exactly the old boxes' sizes and places, so the steps you stand on (`c.plat`) have not moved.
+- **The Adventure Trail stream** ripples and shades from pale to deep (`makeSea`), instead of a flat blue slab.
+- **Verified (desktop, software rendering):** before/after tour screenshots, no page errors; full smoke test result recorded below when it finishes.
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 53 — Earth graphics, first batch: real Toy Town houses and a sea that moves (2026-11-15)
 - **Why:** a tour of every district (28 stops, screenshots) showed the middle of the world is polished, while the outer districts still had placeholder shapes: Toy Town's houses were plain coloured blocks with a pyramid on top, and every sea was a flat blue sheet.
 - **Toy Town houses** (`src/earthkit.js`, `toyHouses`): walls that darken towards the ground, a ridged roof with overhanging eaves painted in rows of tiles, a chimney, a framed door with a round window, a knob, a step and a striped awning, windows with cross bars, shutters and flower boxes, a flag on some. All nine houses are ONE mesh (painted colours), replacing 18 meshes. A little smoke rises from the chimneys while you are near.

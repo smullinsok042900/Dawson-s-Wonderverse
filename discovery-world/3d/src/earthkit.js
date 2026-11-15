@@ -75,3 +75,37 @@ export function makeSea(w, d, nx = 56, nz = 16) {
       na[k] = -dx * 3 * l; na[k + 1] = l; na[k + 2] = -dz * 3 * l; }
     p.needsUpdate = true; n.needsUpdate = true; } };
 }
+
+// ---------- (build 54) the climbing stacks: real crates, hay bales and boulders instead of plain blocks ----------
+// Every list entry is [x, yBottom, z, w, h, d]: the same boxes as before, so the steps you stand on have not moved.
+const finish = (b, name, rough) => { const m = b.mesh(shinyMat()); m.material = MAT(rough); m.castShadow = true; m.name = name; return m; };
+const MATS = {}; const MAT = r => MATS[r] || (MATS[r] = Object.assign(shinyMat().clone(), { roughness: r, metalness: 0 }));
+/** wooden crates: planks with grooves, a frame round each face and a diagonal brace on the front */
+export function crates(list) {
+  const b = makeBatch();
+  for (const [x, y, z, w, h, d] of list) { const cy = y + h / 2, fz = z + d / 2;
+    b.put(roundBox(w, h, d, .05, 1), x, cy, z, (px, py, pz, nx, ny, nz, o) => { const plank = Math.abs(nz) > .5 || Math.abs(nx) > .5 ? ((py - y) * 4) % 1 : ((px - x + 50) * 4) % 1, groove = plank < .09 ? .62 : 1; o.set('#c8925a').multiplyScalar(groove * (.86 + noise2(px * 1.3, py * 9 + pz * 9) * .22)); });
+    for (const sy of [-1, 1]) b.put(roundBox(w + .08, .16, d + .08, .04, 1), x, cy + sy * (h / 2 - .08), z, '#9c6a3c');
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.put(roundBox(.16, h, .16, .04, 1), x + sx * (w / 2 - .06), cy, z + sz * (d / 2 - .06), '#9c6a3c');
+    b.put(BOX, x, cy, fz + .02, '#a87444', [Math.hypot(w - .3, h - .3), .13, .05], [0, 0, Math.atan2(h - .3, w - .3)]);
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) b.put(DOT, x + sx * (w / 2 - .08), cy + sy * (h / 2 - .08), fz + .06, '#5a5f6e', .035); }
+  return finish(b, 'crates', .7);
+}
+/** hay bales: rounded golden blocks streaked like straw, tied with two cords, with loose straw sticking out */
+export function hayBales(list) {
+  const b = makeBatch();
+  list.forEach(([x, y, z, w, h, d], i) => { const cy = y + h / 2;
+    b.put(roundBox(w, h, d, .2, 2), x, cy, z, (px, py, pz, nx, ny, nz, o) => { const s = noise2(px * 1.2 + i, py * 14 + pz * 11); o.set('#e2b84a').lerp(col('#f6dc86'), s).multiplyScalar(.84 + .2 * Math.max(0, ny)); });
+    for (const sx of [-.28, .28]) { for (const [ry, rz, sw, sh, sd] of [[h / 2 + .005, 0, .07, .03, d + .02], [-h / 2 - .005, 0, .07, .03, d + .02], [0, d / 2 + .005, .07, h + .02, .03], [0, -d / 2 - .005, .07, h + .02, .03]]) b.put(BOX, x + sx * w, cy + ry, z + rz, '#8a5a2a', [sw, sh, sd]); }
+    for (let k = 0; k < 7; k++) { const a = k * 2.4 + i, sx = (k % 2 ? 1 : -1) * (w / 2 + .02), yy = y + .15 + (k * .37 % 1) * (h - .3), zz = z + (((k * .61) % 1) - .5) * (d - .3); b.put(BOX, x + sx, yy, zz, k % 2 ? '#f6dc86' : '#d9aa3c', [.3, .025, .025], [0, Math.sin(a) * .6, Math.cos(a) * .5]); } });
+  return finish(b, 'hay', .85);
+}
+/** boulders to climb: lumpy rock sides, a flat mossy top exactly where you stand */
+export function boulders(list) {
+  const b = makeBatch();
+  list.forEach(([x, y, z, w, h, d], i) => { const g = roundBox(w, h, d, Math.min(.42, h * .45), 3), p = g.attributes.position;
+    for (let k = 0; k < p.count; k++) { const px = p.getX(k), py = p.getY(k), pz = p.getZ(k), side = sstep(h / 2 - .02, h / 2 - .5, py), n = noise2(px * 1.6 + i * 7 + pz, py * 1.6 + pz * 1.3) - .5; p.setXYZ(k, px * (1 + n * .22 * side) + (py < 0 ? px * .08 : 0), py, pz * (1 + n * .26 * side)); }
+    g.computeVertexNormals();
+    b.put(g, x, y + h / 2, z, (px, py, pz, nx, ny, nz, o) => { const n = noise2(px * 2.2 + pz, py * 2.2 + pz * 2); o.set('#8f877c').lerp(col('#b9b0a2'), n).multiplyScalar(.8 + .25 * Math.max(0, ny)); o.lerp(col('#7fb85a'), sstep(.75, .98, ny) * sstep(.35, .7, noise2(px * 1.3, pz * 1.3 + 4)) * .8); if (Math.abs(((py * 1.7 + n) % 1) - .5) < .03 && ny < .5) o.multiplyScalar(.8); }); });
+  return finish(b, 'boulders', .9);
+}

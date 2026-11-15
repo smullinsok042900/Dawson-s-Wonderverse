@@ -12,8 +12,7 @@ The planet graphics branch now includes main through build 50 and the build 51 f
 
 ## Earth graphics (the graphics chat; build 53 onward)
 A tour of every district found these still looking like placeholders. Do them in batches, each merged into one painted mesh (`earthkit.js`), measured and smoke-tested:
-- **Box staircases:** the brown crates at the Ocean Pier (x −600), the hay bales at the farm (x −470), the grey rounded blocks at Balloon Hills (x −740). Give them real shapes (planked crates, tied bales, lumpy rocks).
-- **Water that is still a flat slab:** the stream on the Adventure Trail (x 441), the duck pond, the Lab Gardens pond. Reuse `makeSea` or a small version of it.
+- **Water that is still a flat slab:** the duck pond and the Lab Gardens pond (the sea and the trail stream are done).
 - **White patches on tree tops** in the woods, the farm and Frosty Peaks (x −160, −262, −524): check whether it is meant to be snow or blossom, or a fault in the far-tree model.
 - **Art Plaza (x 801–930):** huge blank boards and plain round bushes.
 - **Frosty Peaks (x −392):** very bare; snow drifts, icicles, pine trees.

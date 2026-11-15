@@ -4,6 +4,17 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 54 — crates, hay bales, boulders, stream (desktop, software rendering; one frame at each stop, `?test`)
+| Stop | Draw calls 53 → 54 | Triangles 53 → 54 | Shader programs |
+|---|---|---|---|
+| Pier crates (x −600) | 60 → 58 | 49k → 49k | 149 → 149 |
+| Farm hay (x −470) | not measured before → 106 | → 80k | 149 |
+| Balloon Hills rocks (x −740) | not measured before → 58 | → 57k | 149 |
+| Trail stream (x 441) | not measured before → 134 | → 87k | 148 |
+
+- Each stack went from 3–4 meshes to one. Only the pier has a like-for-like "before" from build 53; the other stops were photographed in build 51 but their counts were lost when that run was cut off.
+- No new shader programs. Frame time and long tasks were not measured for this build.
+
 ## Build 53 — Toy Town houses and moving sea (desktop, software rendering; one frame at each stop, `?test`)
 | Stop | Draw calls 51 → 53 | Triangles 51 → 53 | Shader programs |
 |---|---|---|---|
