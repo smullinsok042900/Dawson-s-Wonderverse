@@ -25,6 +25,8 @@ A tour of every district found these still looking like placeholders. Do them in
   see a friend's pets, wave, leave and rejoin (the room keeps its world). The first push runs the new GitHub build.
 - Multiplayer after build 56: the colouring pictures, shared karts/train rides, seeing a friend's creation in other
   places (nursery, art gallery), and a "friend is here" picture on the map.
+- **Android/Pixel (PR #56, now inside build 56):** the parent's Pixel check looked good. After the next deploy, re-check
+  the three character pictures, turning the phone, and a quality step on the Pixel — and the same on the iPhone.
 - **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?

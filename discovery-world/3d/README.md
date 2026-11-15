@@ -25,6 +25,9 @@ Play: open `index.html`. It is one self-contained file and works offline. Once m
 - Private rooms, no chat, no names, nothing to read. Each device keeps its own saves, rewards and progress.
 - Needs the free Firebase project once (see `MULTIPLAYER.md`); it is already set up in `src/mp-config.js`, and the
   database rules in `firebase-rules.json` need pasting once.
+- **Android/Pixel fixes (PR #56 by zyzil):** the three character pictures are read straight from the screen buffer, so
+  they are no longer blank on Android, and screen/quality changes are applied at the start of the next frame, so a turn
+  or a quality step can no longer flash a black picture.
 
 ## 3D build 55: Play Together
 
