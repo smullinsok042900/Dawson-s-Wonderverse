@@ -9,10 +9,18 @@
 // Everything reuses the world's shared materials and shapes (no new shader programs).
 // Every activity: one tap or one walk, a spoken line, a big reaction, nothing to read, no way to fail.
 // ===================================================================
-import { makeBatch, rocketParts, rocketGlass, shinyMat, paintMat } from './spacekit.js';
+import { makeBatch, rocketParts, rocketGlass, shinyMat, paintMat, fbm2 } from './spacekit.js';
 import * as THREE from 'three';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
 import { makeRidge, makeCrags } from './terrain.js';
+// (build 70) the shoreline foam is a real wavy ribbon now: the edge is displaced along its length (one vertex per 2 m),
+// so the water line breaks and curls instead of being a straight strip of white.
+const foamGeo = (w, h = 1.6) => {
+  const g = new THREE.PlaneGeometry(w, h, Math.round(w / 2), 2), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) p.setY(i, p.getY(i) + (fbm2(p.getX(i) * .35 + 3, 1.7) - .5) * h * .9 + (fbm2(p.getX(i) * 1.2 + 9, 3.1) - .5) * h * .35);
+  g.computeVertexNormals();
+  return g;
+};
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -73,7 +81,7 @@ export function initExpansion(G, api) {
   for (let x = -532; x < -410; x += 13 + rnd(5)) api.makeTree(scene, x, -12 - rnd(3), 1 + Math.random() * .3); // (build 35: a few trees behind the farm fields)
   // the sea behind the beach (one big shared plane; it gently bobs)
   const seaW = makeSea(140, 60, 60, 18), sea = seaW.mesh; /* (build 53: rolling waves instead of a flat blue sheet) */ sea.position.set(-86, .02, -38); scene.add(sea); G.sea = sea;
-  const foam = new THREE.Mesh(new THREE.PlaneGeometry(140, .9, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
+  const foam = new THREE.Mesh(foamGeo(140, .9), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
   // (build 43: the neighbourhood signposts were removed at the family's request: they overlapped activities, and the picture map
   //  and the train already show every place)
 
@@ -661,7 +669,7 @@ export function initExpansion(G, api) {
   builders.pier = c => [
     // the sea behind the pier (one shared-material plane), a foam line and the wooden pier going out over the water
     () => { const pierSea = makeSea(134, 40, 56, 14), sea = pierSea.mesh; sea.position.set(-602, .02, -26); c.add(sea);
-      const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
+      const foam = new THREE.Mesh(foamGeo(134, .8), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
       c.block(-560, .5, -11, 3, .25, 12, '#b07a4a', { r: .04 }); for (const z of [-6, -10, -14, -17]) for (const dx of [-1.3, 1.3]) c.cyl(-560 + dx, 0, z, .14, .14, .8, '#7a5236');
       return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; pierSea.update(t); }; },
     // fishing: tap the rod, wait for the bobber to dip, and a fish jumps into the bucket (count to five, then let them go)

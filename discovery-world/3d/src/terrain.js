@@ -23,6 +23,35 @@ import { fbm2, noise2, sstep, ramp, makeBatch, paintMat, rockGeo } from './space
 
 const TC = new THREE.Color(), TC2 = new THREE.Color(), CAVE_GLOW = new THREE.Color('#9fe6ff');
 
+// ---------- (build 70) surface micro-detail: a rock normal map, made in code, and the shared mountain material --------
+// The range mesh already has real height, but its faces are large triangles. A normal map adds cracks, pebbles and
+// erosion grooves to the LIGHTING without adding any triangles, so it is the cheapest way to stop a big face looking
+// smooth. It is a normal map (not a picture), so it is kept in linear colour space and tiles across the world position.
+let ROCK_T = null, RIDGE_M = null;
+function rockNormalMap() {
+  if (ROCK_T) return ROCK_T;
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'), img = g.createImageData(N, N), H = new Float32Array(N * N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N;
+    H[y * N + x] = fbm2(u * 7, v * 7, 4) * .72 + noise2(u * 26, v * 26) * .28; // broad lumps plus grit
+  }
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const l = H[y * N + ((x + N - 1) % N)], r = H[y * N + ((x + 1) % N)];
+    const u = H[((y + N - 1) % N) * N + x], d = H[((y + 1) % N) * N + x];
+    const dx = (r - l) * 3, dy = (d - u) * 3, il = 1 / Math.sqrt(dx * dx + dy * dy + 1), k = (y * N + x) * 4;
+    img.data[k] = (dx * il * .5 + .5) * 255; img.data[k + 1] = (dy * il * .5 + .5) * 255; img.data[k + 2] = (il * .5 + .5) * 255; img.data[k + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4;
+  return ROCK_T = t;
+}
+/** the shared material for mountain ranges: painted vertex colours plus the rock normal map (one shader program) */
+export function ridgeMaterial() {
+  if (RIDGE_M) return RIDGE_M;
+  return RIDGE_M = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95, metalness: 0, normalMap: rockNormalMap(), normalScale: new THREE.Vector2(.55, .55) });
+}
+
 /**
  * The height of a mountain range at (x, z), in metres. y is 0 in front of the range (the ground the world stands on)
  * and rises to about `h` at the highest summit.
@@ -80,10 +109,17 @@ export function makeRidge(scene, opts = {}) {
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++) p.setY(i, H(p.getX(i), p.getZ(i)));
   g.computeVertexNormals();
-  const nrm = g.attributes.normal, cols = new Float32Array(p.count * 3), c = new THREE.Color();
-  for (let i = 0; i < p.count; i++) { ridgePaint(o, p.getX(i), p.getY(i), p.getZ(i), nrm.getY(i), c); cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b; }
+  const nrm = g.attributes.normal, cols = new Float32Array(p.count * 3), uvs = new Float32Array(p.count * 2), c = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    ridgePaint(o, p.getX(i), p.getY(i), p.getZ(i), nrm.getY(i), c);
+    cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b;
+    // (build 70) UVs from the world position, so a rock normal map tiles the whole face and the light picks out cracks,
+    // pebbles and erosion grooves that are too small to model in the mesh
+    uvs[i * 2] = p.getX(i) / 3.5; uvs[i * 2 + 1] = p.getZ(i) / 3.5;
+  }
   g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-  const m = new THREE.Mesh(g, paintMat());
+  g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  const m = new THREE.Mesh(g, ridgeMaterial());
   m.name = 'ridge'; m.receiveShadow = true; m.castShadow = false; // (a whole range casting one shadow would paint the park dark)
   scene.add(m);
   return { mesh: m, H, h: o.h };

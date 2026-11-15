@@ -4,6 +4,25 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 70 — rock micro-detail and wavy foam (overhaul, stage 5, last)
+- **The family asked** for surfaces that do not look smooth or plastic, and for foam and shore movement. This stage adds
+  the last two pieces.
+- **Normal-mapped rock on every mountain — `src/terrain.js` → `rockNormalMap` + `ridgeMaterial`:**
+  - a **256 × 256 rock normal map is drawn in code** (broad lumps from fBm at scale 7, plus grit at scale 26), kept in
+    linear colour space and tiled with `RepeatWrapping`;
+  - every range mesh now carries **UVs taken from its world position** (one tile every 3.5 m), so the map runs across
+    the whole face without a seam and does not stretch with the grid;
+  - the ranges use a shared `MeshStandardMaterial` with `vertexColors` (the painted strata are unchanged) plus
+    `normalMap` at `normalScale 0.55`, so the light picks out cracks, pebbles and erosion grooves that are far too small
+    to model in triangles. **Zero extra triangles**, one extra shader program in total, shared by all four ranges.
+- **Shoreline foam is a real wavy ribbon — `src/expansion.js` → `foamGeo`:** both foam lines (the beach sea and the pier
+  sea) were 2-triangle strips with a straight edge. They are now ribbons with one vertex every 2 m whose edge is
+  displaced by two scales of noise, so the water line breaks, curls and overlaps instead of being a ruler-straight
+  white bar. The existing slow bobbing of the foam line and of the sea surface is unchanged.
+- **Not verified visually** (no renderer here): the normal map's effect is a lighting effect, so it cannot be measured
+  in the geometry tests. What to check on a phone: stand in the park and look at a steep mountain face — it should show
+  fine bumpy relief that moves as you walk — and look at the beach's foam edge, which should now be ragged.
+
 ## Checkpoint: build 69 — mountains behind Frosty Peaks and the Woods (overhaul, stage 4)
 - **The family asked** for depth in every area. The park and Balloon Hills got real ranges in build 66; **Frosty Peaks
   and Whispering Woods** still had open sky behind them (the woods had trees only to z −11.5; Frosty Peaks had a
