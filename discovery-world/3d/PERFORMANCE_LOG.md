@@ -5,15 +5,16 @@ Rule: the game must never get slower. Measure before and after every change on i
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
 ## Build 54 — crates, hay bales, boulders, stream (desktop, software rendering; one frame at each stop, `?test`)
-| Stop | Draw calls 53 → 54 | Triangles 53 → 54 | Shader programs |
+| Stop | Draw calls before → 54 | Triangles before → 54 | Shader programs |
 |---|---|---|---|
-| Pier crates (x −600) | 60 → 58 | 49k → 49k | 149 → 149 |
-| Farm hay (x −470) | not measured before → 106 | → 80k | 149 |
-| Balloon Hills rocks (x −740) | not measured before → 58 | → 57k | 149 |
-| Trail stream (x 441) | not measured before → 134 | → 87k | 148 |
+| Pier crates (x −600) | 60 (build 53) → 58 | 49k → 49k | 149 → 149 |
+| Farm hay (x −470) | 122 (build 51) → 106 | 88k → 80k | 148 → 149 |
+| Balloon Hills rocks (x −740) | 61 (build 51) → 58 | 58k → 57k | 148 → 149 |
+| Trail stream (x 441) | 117 (build 51) → 134 | 78k → 87k | 148 → 148 |
 
-- Each stack went from 3–4 meshes to one. Only the pier has a like-for-like "before" from build 53; the other stops were photographed in build 51 but their counts were lost when that run was cut off.
-- No new shader programs. Frame time and long tasks were not measured for this build.
+- Each stack went from 3–4 meshes to one, and the stream is one mesh as before.
+- **The trail stream stop reads higher (117 → 134 draw calls) and I have not explained it.** The change there replaces meshes one for one or fewer, so I expect the difference is creatures walking into view in that single frame, but that is not confirmed. Re-measure with `tests/perf/calls.cjs` (averaged frames) before relying on it.
+- No new shader programs on walking in. Frame time and long tasks were not measured for this build.
 
 ## Build 53 — Toy Town houses and moving sea (desktop, software rendering; one frame at each stop, `?test`)
 | Stop | Draw calls 51 → 53 | Triangles 51 → 53 | Shader programs |
