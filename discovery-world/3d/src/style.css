@@ -505,3 +505,26 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
   #trainStrip{gap:4px;padding:5px 6px}
   #trainStrip .tsT{box-sizing:border-box;width:44px;height:44px;min-width:44px;min-height:44px;font-size:25px;border-radius:13px;padding:0}
 }
+/* (build 55) PLAY TOGETHER: the 👫 panel (pictures only) */
+#mpPanel{display:none;position:fixed;inset:0;z-index:40;background:rgba(40,20,80,.45);align-items:center;justify-content:center}
+#mpPanel.show{display:flex}
+#mpPanel .mpIn{position:relative;background:linear-gradient(160deg,#fff8fd,#e8f6ff);border:5px solid #fff;border-radius:28px;padding:16px 20px;box-shadow:0 12px 30px #0005;max-width:94vw;max-height:calc(100dvh - 20px);overflow:auto;text-align:center}
+#mpPanel .mpRow{display:flex;gap:min(22px,4vw);justify-content:center}
+#mpPanel .mpBig{width:min(34vw,40vh,170px);height:min(34vw,40vh,170px);border-radius:30px;border:5px solid #fff;background:#fff3c4;box-shadow:0 7px 0 #e9c93f;position:relative;padding:0;display:grid;place-items:center}
+#mpPanel .mpBig[data-a=join]{background:#d8f2ff;box-shadow:0 7px 0 #7fc4ee}
+#mpPanel .mpBig span{font-size:min(16vw,18vh,78px);line-height:1}
+#mpPanel .mpBig b{position:absolute;right:8%;bottom:6%;font-size:min(8vw,9vh,40px)}
+#mpPanel .mpAgain{margin-top:12px;min-height:56px;padding:6px 16px;border-radius:20px;border:4px solid #fff;background:#e6ffe9;box-shadow:0 5px 0 #8fd99a;font-size:min(7vw,8vh,34px)}
+#mpPanel .mpSlots{display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:10px}
+#mpPanel .mpSlot{width:min(13vw,14vh,64px);height:min(13vw,14vh,64px);border-radius:16px;background:#fff;border:3px dashed #c9b8ff;display:grid;place-items:center;font-size:min(9vw,10vh,44px)}
+#mpPanel .mpBack{width:56px;height:56px;border-radius:16px;border:3px solid #fff;background:#ffe0e8;font-size:28px}
+#mpPanel .mpKeys{display:grid;grid-template-columns:repeat(6,auto);gap:min(10px,1.8vh);justify-content:center}
+#mpPanel .mpKey{width:min(13vw,17vh,78px);height:min(13vw,17vh,78px);min-width:46px;min-height:46px;border-radius:18px;border:3px solid #fff;background:#fff;box-shadow:0 5px 0 #d9c6f3;font-size:min(9vw,11vh,46px);padding:0}
+#mpPanel .mpCode{font-size:min(14vw,17vh,72px);letter-spacing:.08em}
+#mpPanel .mpLetters{font:900 15px system-ui;color:#9a86c6;letter-spacing:.4em;margin:-4px 0 8px}
+#mpPanel .mpPlayers{display:flex;gap:12px;justify-content:center;align-items:center;margin-bottom:10px}
+#mpPanel .mpDot{width:38px;height:38px;border-radius:50%;border:4px solid #fff;box-shadow:0 3px 8px #0003}
+#mpPanel .mpDot.me{width:48px;height:48px;box-shadow:0 0 0 4px #ffd23f}
+#mpPanel .mpOff{font-size:32px}
+#mpPanel .mpLeave{width:72px;height:72px;border-radius:22px;border:4px solid #fff;background:#ffe0e8;box-shadow:0 5px 0 #f0a8bc;font-size:40px}
+#perfPanel .ppBuild{font:800 13px system-ui;color:#7a68b0;background:#efe8ff;border-radius:10px;padding:2px 8px;margin-left:6px}

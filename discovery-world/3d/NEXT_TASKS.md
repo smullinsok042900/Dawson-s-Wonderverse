@@ -13,11 +13,13 @@ The planet graphics branch now includes main through build 50 and the build 51 f
 ## Earth graphics (the graphics chat; build 53 onward)
 A tour of every district found these still looking like placeholders. Do them in batches, each merged into one painted mesh (`earthkit.js`), measured and smoke-tested:
 - **Art Plaza (x 801–930):** huge blank boards.
-- **Frosty Peaks:** pines and drifts are in (build 55); icicles and a frozen-lake look are still open.
+- **Frosty Peaks:** pines and drifts are in (build 56); icicles and a frozen-lake look are still open.
 - **Far hills** in the outer districts are single smooth blobs: add tree lines or layered ridges.
 - Then the remaining toys built from plain cylinders and boxes (`c.cyl` is used 56 times in `expansion.js`).
 
 ## Waiting for the user
+- **Multiplayer (build 55): create the free Firebase project** (`MULTIPLAYER.md` steps 1–7) and send the web config, then paste it into `src/mp-config.js`, rebuild, and test on two real devices.
+- Multiplayer ideas after the first release: waving, playing an activity together, seeing a friend's pets.
 - **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
@@ -33,7 +35,7 @@ A tour of every district found these still looking like placeholders. Do them in
 
 ## 0. Bigger planets (the family's request, build 50 onward)
 - Build 50's larger Moon/Mars are integrated into PR #55 together with build 51's planet graphics/travel fixes. Finish that PR's verification before expanding more planets.
-- The untested larger Mercury/Pluto work is preserved in `docs/wip/build51_mercury_pluto.patch`. Its historical build number now collides with this PR: rebase/review it as build 52 or later, then build and test it before use. Do not apply it as part of PR #55.
+- The untested larger Mercury/Pluto work is preserved in `docs/wip/build51_mercury_pluto.patch`. Its historical build number now collides with this PR: rebase/review it as build 55 or later, then build and test it before use. Do not apply it as part of PR #55.
 - Done: the system (areas built when near, planets freed when you leave), the Moon and Mars (two new areas each).
 - **Next, two per build, same pattern** (add to `PLANET_EXTRA` in `planets.js`; measure with `tests/perf/planets.cjs OLD NEW`):
   - **Mercury:** crater fields, light and shadow, a rock-shape matching game.

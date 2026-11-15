@@ -331,7 +331,7 @@ export function initExpansion(G, api) {
     // greenhouse domes behind
     () => { for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#d9f6ff', { r: .1, cc: .6 })); d.position.set(x, 0, -11); d.scale.y = .8; c.add(d); } },
     // a colour-changing pond: tap the water, it changes colour, a fish jumps
-    () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const PX = 672.4, pw = makePond(2.6, 2.6, '#3b82f6'), m = pw.mat; /* (build 55: the pond ripples. It also moved from x 684 to 672.4: since build 48 the rocket's landing pad (x 686) stood half inside it) */
+    () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const PX = 672.4, pw = makePond(2.6, 2.6, '#3b82f6'), m = pw.mat; /* (build 56: the pond ripples. It also moved from x 684 to 672.4: since build 48 the rocket's landing pad (x 686) stood half inside it) */
       const pond = pw.mesh; pond.position.set(PX, .075, -3.6); c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(2.6, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(PX, .1, -3.6); c.add(rim);
       const fish = c.toy('🐟', .9, PX, -1, -3.6); let k = 0, jt = 9;
       c.tap(pond, () => { k = (k + 1) % cols.length; m.color.set(cols[k][1]); c.say(`🎨 The pond is ${cols[k][0]}!`); jt = 0; Sound.tone(500 + k * 60, .3, 'sine', .05, 1.3); c.burst(PX, .4, -3.6, [cols[k][1], '#fff'], 12, 2); c.disc('pond', '🎨 A magic pond! Tap it to change its colour!'); }, PX);
@@ -406,7 +406,7 @@ export function initExpansion(G, api) {
       c.tap(bowl, () => { if (eat) return; eat = .001; api.event?.({ type: 'activity', id: 'feed_friend' }); c.say('🍪 Yum yum! Thank you for feeding me!'); c.disc('feedfriend', '🍪 Tap the bowl to feed your friend!'); }, 879, { icon: '🍪', label: 'Hungry friend', action: 'Feed friend', disc: 'feedfriend' });
       return (dt, t) => { pet = Math.max(0, pet - dt); f.rotation.z = Math.sin(t * 20) * .08 * pet; body.scale.y = 1 + Math.sin(t * 3) * .03; if (eat) { eat += dt; const k = eat < 1 ? eat : eat < 3 ? 1 : Math.max(0, 4 - eat); f.position.x = 876 + k * 2.2; f.position.y = Math.abs(Math.sin(eat * 8)) * .2 * (eat < 1 || eat > 3 ? 1 : 0); if (eat > 1 && eat < 3 && Math.random() < .1) { Sound.tone(300, .06, 'square', .02, .7); c.burst(879, 1, -1.8, ['#ff7ad9'], 2, 1); } if (eat > 4) { eat = 0; f.position.set(876, 0, -2.2); } } }; },
     // hide and seek: the little friend hides behind one of the bushes
-    () => { const bushes = [888, 891.5, 895].map(x => { const b = c.add(bush(x, .9, -2.6, 1, '#4caf50', x)); b.scale.set(1.1, .9, .8); return b; }); /* (build 55: leafy bushes) */ const kid = c.toy('🐣', 1.1, 888, -2, -3.4); let hide = rnd(3), found = 0;
+    () => { const bushes = [888, 891.5, 895].map(x => { const b = c.add(bush(x, .9, -2.6, 1, '#4caf50', x)); b.scale.set(1.1, .9, .8); return b; }); /* (build 56: leafy bushes) */ const kid = c.toy('🐣', 1.1, 888, -2, -3.4); let hide = rnd(3), found = 0;
       bushes.forEach((b, i) => c.tap(b, () => { b.userData.w = 1; Sound.tone(300 + i * 80, .1, 'sine', .04, 1); if (found) return; if (i === hide) { found = 1; kid.position.set(bushes[i].position.x, 2.2, -3); Sound.giggle(); c.say('🐣 Peekaboo! You found me!'); c.disc('hideseek', '🐣 Hide and seek! Tap the bushes to find the chick!'); setTimeout(() => { found = 0; hide = rnd(3); kid.position.y = -2; c.say('🙈 I am hiding again!'); }, 3000); } else c.say(pick(['🌿 Not here!', '🌿 Rustle rustle... nobody!'])); }));
       return (dt, t) => { for (const b of bushes) { b.userData.w = Math.max(0, (b.userData.w || 0) - dt * 2); b.rotation.z = Math.sin(t * 25) * .1 * b.userData.w; } if (found) kid.position.y = 2.2 + Math.abs(Math.sin(t * 6)) * .3; }; },
     // Kiwi the parrot waits here to be befriended
@@ -528,7 +528,7 @@ export function initExpansion(G, api) {
 
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
   builders.frosty = c => [
-    // (build 55) snowy pine trees and drifts of snow behind the path: ONE mesh, well behind the toys
+    // (build 56) snowy pine trees and drifts of snow behind the path: ONE mesh, well behind the toys
     () => { const pines = [], drifts = []; for (let k = 0; k < 15; k++) { const x = -400 + k * 8.6 + (k * 37 % 5), z = -9.5 - (k * 53 % 7) * .9; pines.push([x, z, 3.2 + (k * 29 % 5) * .55]); } for (let k = 0; k < 11; k++) drifts.push([-402 + k * 12 + (k % 3) * 2, -7.6 - (k % 4) * 1.4, 1.3 + (k % 3) * .5]); c.add(snowyPines(pines, drifts)); },
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
@@ -627,7 +627,7 @@ export function initExpansion(G, api) {
       let fast = 0; c.tap(hub, () => { fast = 5; Sound.whoosh ? Sound.whoosh() : Sound.click(); c.say('🌬️ Whoosh! The windmill spins in the wind!'); c.disc('windmill', '🌬️ Tap the windmill to make it spin!'); }, -503);
       return dt => { fast = Math.max(0, fast - dt); hub.rotation.z += dt * (.4 + fast * 1.6); }; },
     // the duck pond: tap the mother duck and her ducklings swim after her in a line (one, two, three!)
-    () => { const dw = makePond(2.6, 1.56, '#4fb3ff'), pond = dw.mesh; pond.position.set(-514, .05, -3.8); c.add(pond); /* (build 55: the duck pond ripples) */ const mom = c.toy('🦆', 1, -514, .45, -3.8); const kids = [0, 1, 2].map(() => c.toy('🐤', .5, -514, .3, -3.8)); let swim = 0;
+    () => { const dw = makePond(2.6, 1.56, '#4fb3ff'), pond = dw.mesh; pond.position.set(-514, .05, -3.8); c.add(pond); /* (build 56: the duck pond ripples) */ const mom = c.toy('🦆', 1, -514, .45, -3.8); const kids = [0, 1, 2].map(() => c.toy('🐤', .5, -514, .3, -3.8)); let swim = 0;
       c.tap(mom, () => { swim = 8; Sound.tone(700, .1, 'square', .02, .7); Sound.tone(650, .1, 'square', .02, .7, .12); c.say('🦆 Quack quack! Follow me! One, two, three ducklings!'); c.disc('ducks', '🦆 Tap the mother duck and the ducklings follow her!'); }, -514); c.tap(pond, () => { c.say('💧 Splash!'); Sound.pop ? Sound.pop() : Sound.click(); c.burst(-514, .3, -3.6, ['#9fdcff', '#fff'], 10, 2); });
       return (dt, t) => { if (Math.abs(P.x + 514) < 45) dw.update(t, swim > 0 ? .5 : 0); swim = Math.max(0, swim - dt); const sp = swim > 0 ? 1.3 : .3, a = t * sp; mom.position.set(-514 + Math.cos(a) * 1.7, .45, -3.8 + Math.sin(a) * .9); kids.forEach((k2, i) => { const b = a - (i + 1) * .45; k2.position.set(-514 + Math.cos(b) * 1.7, .3 + Math.abs(Math.sin(t * 6 + i)) * .05, -3.8 + Math.sin(b) * .9); }); }; },
     // the toy tractor: tap it and it drives across the field and back (vroom!)

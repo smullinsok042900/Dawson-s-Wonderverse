@@ -29,9 +29,8 @@ This folder is separate from "Dawson's Wonderverse" (the rest of the repository)
 - **Still, before every build, `git fetch origin main` and merge it.** If anything new appeared there, keep it, resolve
   conflicts without removing it, and run its own tests too: `node --test tests/*.test.mjs`,
   `node tests/unit/learning-contract.cjs` and `node tests/world-regressions.cjs`.
-- **(2026-11-14) A second Claude chat is working on the game's graphics** at the user's request. Expect its work to arrive
-  through its own branch and PR. Before each build, fetch and merge `main`, keep its changes, and resolve conflicts without
-  undoing them (likely in `space.js`, `planets.js`, `world.js`). Tell that chat's work apart from yours by its commits.
+- **(2026-11-15) This chat is the sole developer again** (the user said so with the multiplayer request). A second chat
+  made the planet graphics (builds 51 and 51b, merged). If any other work ever appears in `main`, keep it and merge it.
 - **Planets (build 50+):** places are up to 330 m long. New areas live in `src/planets.js` (`PLANET_EXTRA`) and are built
   as she walks near them; a planet is freed completely when she flies away. Anything added on a planet must go through
   that system, or it will not load or unload correctly.
@@ -54,6 +53,7 @@ This folder is separate from "Dawson's Wonderverse" (the rest of the repository)
 | `perf.js` | In-game monitor and Performance Test |
 | `sculpt.js`, `fur.js`, `creatures.js` | Sculpted creatures |
 | `post.js` | Post-processing (`post.lite` on weaker devices) |
+| `multiplayer.js` | Play Together (build 55): private family rooms with a four-animal picture code, other players' creatures (interpolated), Firebase or the test relay (`?mp=ws://…`). Setup: `MULTIPLAYER.md`; settings: `src/mp-config.js`; Firebase code: separate `mp-firebase.js`, loaded only on Create/Join. Never touches the saved game. Test: `node tests/multiplayer.cjs` |
 
 - **URL flags:**
   - `?test`: light test mode;

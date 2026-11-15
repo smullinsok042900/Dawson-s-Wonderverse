@@ -4,7 +4,8 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
-## Checkpoint: build 55 — Earth graphics, third batch: ponds, bushes, snowy pines; white tree tops fixed (2026-11-15)
+## Checkpoint: build 56 — Earth graphics, third batch: ponds, bushes, snowy pines; white tree tops fixed (2026-11-15)
+- **Numbering:** this was tested as build 55 until Play Together reached `main` as build 55; it was merged on top of that and renumbered 56.
 - **Ponds ripple** (`makePond` in `earthkit.js`): the farm's duck pond and the Lab Gardens colour pond have rings spreading from the middle, pale at the edge and deeper in the middle. The Lab pond still changes colour when tapped (the water colour is the material's colour) and ripples harder for a moment; the duck pond ripples more while the ducks swim fast.
 - **The Lab Gardens pond no longer sits under the rocket** (the family's report). Build 48 moved the rocket's landing pad to x 686, half inside the pond at x 684. The pond is now at x 672.4 (2.6 m across the radius instead of 3), left of Hoppy the frog and clear of the pad; its PAW spot, fish and splash moved with it.
 - **Leafy bushes** (`bush`): the plain green balls (hide-and-seek at the Rainbow end, the tunnel mouths, the owl's bush and the berry bush in the woods) are heaps of leafy lumps, speckled light and dark. Each is one mesh and is moved, scaled and tapped exactly like the ball it replaces.
@@ -12,6 +13,39 @@ are in `PERFORMANCE_LOG.md`.
 - **Fixed: white tree tops left of the house.** The fallback trees (drawn in test mode, and on a device if the tree models fail to load) picked a leaf colour with `(i + round(x)) % 4`. Left of the house x is negative, the remainder came out negative, no colour was found and the leaves were drawn plain white. Now always 0–3. The real iPhone normally shows the model trees, which never had this fault, so this mostly corrects the test pictures.
 - **Verified (desktop, software rendering):** tour screenshots of every changed spot, no page errors; 40 Node checks pass. Full smoke test result: recorded below when the run finishes.
 - **Not yet tried on the real iPhone.**
+## Checkpoint: build 55 — Play Together (online multiplayer, private family rooms)
+- **The family asked** for 2–4 players on different devices and networks to see each other in the world.
+- **How it works (`src/multiplayer.js`):**
+  - The 👫 button opens big picture buttons: 🏠✨ Create and 🔑👫 Join.
+  - **Create** makes a room whose code is four animal pictures (12 animals, 20,736 codes). The voice reads them out.
+  - **Join** shows a 12-picture keypad; pressing the same four pictures joins.
+  - ↩️ joins the last room again. 🚪 leaves.
+  - No public lobby, no chat, no names.
+- **The other players:**
+  - Each other player's own creature walks, jumps and rides where they really are, drawn about 150 ms in the past between two received positions (interpolation), so movement is smooth.
+  - Each player has one of four colours: a ring under them and a gem over their head.
+  - Others are drawn and animated only in the same place as you (outside, house, same planet) and within 80 m.
+- **What is shared:** movement only (position, facing, on the ground or riding, which creature, colour), 8 times a second while moving and every 2 s when still. Saves, pets, creations and rewards stay on each device; nothing is written to the saved game.
+- **Connection problems:**
+  - Phones lose and regain connections: the game says so, and puts you back in the room when it reconnects.
+  - A player who vanishes is removed (Firebase on disconnect; otherwise after 20 s of silence).
+  - After a reload, for example the automatic update from build 51b, the game rejoins the same room by itself.
+  - A full room (4) politely says no.
+- **Backend:**
+  - **Firebase Realtime Database** with anonymous sign-in. The family chose it: free Spark plan, no card, works on cellular.
+  - Firebase's code is a separate file, `mp-firebase.js` (314 KB), downloaded only on Create or Join. The game file stays the same size (8,971 KB), and solo and offline play are unchanged.
+  - Until `src/mp-config.js` is filled in, the 👫 button is hidden.
+  - Setup, security rules (rooms of at most 4, small number fields only), costs and two-device testing are in `MULTIPLAYER.md`.
+- **The ⚙️ panel now shows the build number.**
+- **Verified (desktop, software rendering), with two independent browsers (separate storage) through a local stand-in relay (`tests/mp-relay.cjs`, `tests/multiplayer.cjs`):**
+  - create and join by the pictures;
+  - each sees the other, smooth walking with no backward steps, jumping, different colours;
+  - a dropped connection comes back in the room;
+  - four players together (with light stand-in clients); a fifth is told the room is full;
+  - closing the game removes the player for the others;
+  - 🚪 leave, ↩️ rejoin, and rejoin by itself after a reload;
+  - nothing in the save; no page errors.
+- **Not yet verified:** the real Firebase service (this test machine cannot reach it, and the project does not exist yet) and real devices. The two-device steps are in `MULTIPLAYER.md`.
 
 ## Checkpoint: build 54 — Earth graphics, second batch: crates, hay bales, boulders, a rippling stream (2026-11-15)
 - **The climbing stacks were plain blocks.** Now (`src/earthkit.js`, each stack ONE painted mesh):

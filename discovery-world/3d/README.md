@@ -6,6 +6,13 @@ This is the full rebuild of Dawson's Discovery World in real 3D. It is a **separ
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 55: Play Together
+
+- **👫 Play with family on other phones, tablets or computers,** even on different Wi-Fi or cellular. One makes a room and gets four animal pictures; the others press the same four pictures to join. Everyone sees each other's creatures walking and jumping.
+- Private rooms, no chat, no names. Each device keeps its own saves and pets.
+- **The ⚙️ panel shows the build number.**
+- Needs a free Firebase project once (see `MULTIPLAYER.md`). Until then, the 👫 button is hidden.
+
 ## 3D build 41: Pet Nursery & Creative Studio
 
 Tap **🥚** to open Little Wonders, a furnished 3D pet playroom using the same sculpted pets and toy materials as the world, or choose **🥚 🎨** in the home gallery.

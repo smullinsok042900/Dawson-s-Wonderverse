@@ -4,8 +4,8 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
-## Build 55 — ponds, bushes, snowy pines (desktop, software rendering; one frame at each stop, `?test`)
-| Stop | Draw calls before → 55 | Triangles before → 55 |
+## Build 56 — ponds, bushes, snowy pines (desktop, software rendering; one frame at each stop, `?test`)
+| Stop | Draw calls before → 56 | Triangles before → 56 |
 |---|---|---|
 | Frosty Peaks (x −392) | 89 (build 51) → 87 | 62k → 64k |
 | Rainbow end bushes (x 892) | not measured before → 78 | → 59k |
