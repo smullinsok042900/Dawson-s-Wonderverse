@@ -17,6 +17,7 @@
 import * as THREE from 'three';
 import { toy } from './creatures.js';
 import * as K from './spacekit.js';
+import { runInSlices } from './stream-work.js';
 import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 
 export const SPACE = { ox: 5000, gap: 400, w: 110 }; // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
@@ -69,7 +70,7 @@ const CLOUDS = { jupiter: ['#f3d6ae', '#c57a40', '#ebb680', '#fff1de', '#b96a3a'
 
 export function initSpace(G, api) {
   const { scene, Sound, player: P } = api;
-  const built = {}, groups = {}; let here = null, jumpTop = 0, jumpFrom = 0, told = {}, boost = 0;
+  const built = {}, groups = {}, preparing = {}, controllers = {}; let navigation = 0, here = null, jumpTop = 0, jumpFrom = 0, told = {}, boost = 0;
   const say = (m, speak) => api.toast(m, speak), disc = (id, m) => api.discover(id, m), calm = () => !!(api.calm && api.calm());
   const sky = K.makeSky(); scene.add(sky.mesh);
   const dust = K.makeDust(96); scene.add(dust.points);
@@ -77,8 +78,8 @@ export function initSpace(G, api) {
   const ups = {}, skies = {}; // per place: little animations (run only while you're there); things in the sky that stay far away
   const T3 = new THREE.Color();
 
-  function build(i) {
-    const [id, , , gas] = PLACES[i], X = placeX(i), PW = placeWidth(id), MID = X + PW / 2, g = new THREE.Group(); g.name = 'space:' + id; g.userData.dynamic = true; groups[id] = g; built[id] = true;
+  function* build(i) {
+    const [id, , , gas] = PLACES[i], X = placeX(i), PW = placeWidth(id), MID = X + PW / 2, g = new THREE.Group(); g.name = 'space:' + id; g.userData.dynamic = true; groups[id] = g; g.visible = false;
     const U = ups[id] = [], SK = skies[id] = [];
     const add = o => { g.add(o); return o; };
     const mesh = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return add(m); };
@@ -91,23 +92,24 @@ export function initSpace(G, api) {
     const matte = K.makeBatch(), props = K.makeBatch(), soft = K.makeBatch();
     let H = () => 0;
     const R = (k, a = 0, b = 1) => a + K.hash2(k * 12.9898 + i * 3.7, k * 78.233 + 1.3) * (b - a); // repeatable "random"
-    const rocks = (n, { x0 = X - 30, x1 = X + PW + 30, z0 = -4, z1 = -32, s0 = .18, s1 = .7, colors, sharp = 0, seed = 0, batch = matte, sink = .25 }) => {
+    function* rocks(n, { x0 = X - 30, x1 = X + PW + 30, z0 = -4, z1 = -32, s0 = .18, s1 = .7, colors, sharp = 0, seed = 0, batch = matte, sink = .25 }) {
       for (let k = 0; k < n; k++) { const x = R(k + seed, x0, x1), z = z0 + (z1 - z0) * Math.pow(R(k + seed + .5), 1.6), s = s0 + (s1 - s0) * Math.pow(R(k + seed + .25), 2.2) * (1 + (-z) * .03), sh = R(k + seed + .7, .75, 1.1);
         const c0 = K.ramp(colors, R(k + seed + .9), new THREE.Color());
-        batch.put(K.rockGeo(k, sharp, s < .5 || z < -22), x, H(x, z) + s * (.45 - sink), z, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.62 + .5 * Math.max(0, ny) + .12 * K.noise3(px * 4, py * 4, pz * 4)); }, [s * R(k + seed + .3, .8, 1.4), s * sh, s], [0, R(k + seed + .1) * 6.28, 0]); }
+        batch.put(K.rockGeo(k, sharp, s < .5 || z < -22), x, H(x, z) + s * (.45 - sink), z, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.62 + .5 * Math.max(0, ny) + .12 * K.noise3(px * 4, py * 4, pz * 4)); }, [s * R(k + seed + .3, .8, 1.4), s * sh, s], [0, R(k + seed + .1) * 6.28, 0]); yield; }
     };
     // a few big stones right at the front edge of the picture give it depth
-    const frontRocks = (colors, n = 7, sharp = 0) => rocks(n, { z0: 4.6, z1: 6.6, s0: .25, s1: .6, colors, sharp, seed: 400 });
+    function* frontRocks(colors, n = 7, sharp = 0) { yield* rocks(n, { z0: 4.6, z1: 6.6, s0: .25, s1: .6, colors, sharp, seed: 400 }); }
 
     // ================= the ground and scenery of each place =================
+    yield;
     if (id === 'moon') {
       const cr = []; for (let k = 0; k < 30; k++) { const z = -9 - Math.pow(R(k + 50), 1.4) * 105, r = 1.6 + R(k + 60) * 2.4 + (-z) * .06; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .34, rim: .13, peak: r > 6 }); }
       cr.push({ x: X + 61, z: -15, r: 6.5, depth: .3, rim: .15, peak: true }, { x: X + 24, z: -11, r: 3.4, depth: .3, rim: .14 }, { x: X + 88, z: -10.5, r: 3, depth: .32, rim: .14 });
-      H = K.terrain(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 1.3 + K.sstep(-60, -150, z) * (K.fbm2(x * .017 + 3, z * .017, 3) * 22 - 5); for (const c of cr) h += K.craterH(c, x, z); return h; },
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 1.3 + K.sstep(-60, -150, z) * (K.fbm2(x * .017 + 3, z * .017, 3) * 22 - 5); for (const c of cr) h += K.craterH(c, x, z); return h; },
         color: (x, z, h, ny, o) => { let s = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; }
           const mare = K.sstep(.5, .4, K.fbm2(x * .021 + 9, z * .021 + 2, 3)), n = K.fbm2(x * .9, z * .9, 3), pit = K.sstep(.74, .8, K.noise2(x * .8 + 5, z * .8)) * K.sstep(-5.5, -3, z);
           K.ramp(['#8d8d99', '#c3c3cc', '#e6e6ec'], .35 + n * .5 + s * .3, o).lerp(K.col('#6d6e7c'), mare * .55); o.multiplyScalar((.8 + .25 * ny) * Math.max(.45, Math.min(1.35, 1 + s * .3)) * (1 - pit * .13)); } });
-      rocks(70, { colors: ['#8f8f9b', '#c9c9d2'], s1: .6 }); frontRocks(['#70707c', '#a9a9b4']);
+      yield* rocks(70, { colors: ['#8f8f9b', '#c9c9d2'], s1: .6 }); yield* frontRocks(['#70707c', '#a9a9b4']);
       // the Moon lander: gold foil body on four legs, with a dish, a ladder and a little engine bell
       const lx = X + 33, lz = -8.2, ly = H(lx, lz); props.put(K.lathe([[0, 1.75], [1.05, 1.75], [1.25, 1.5], [1.25, .95], [1.0, .7], [0, .7]], 8), lx, ly, lz, '#e0a83a');
       props.put(K.lathe([[0, 2.95], [.5, 2.9], [.85, 2.55], [.9, 2.0], [.75, 1.75], [0, 1.75]], 10), lx, ly, lz, '#d9dce6'); props.put(K.lathe([[.2, .72], [.3, .5], [.5, .22], [.44, .22], [.2, .6]], 12), lx, ly, lz, '#5a5f6e');
@@ -115,7 +117,7 @@ export function initSpace(G, api) {
       props.put(K.lathe([[0, 0], [.2, .03], [.42, .16], [.5, .3]], 14), lx + .5, ly + 3.25, lz + .2, '#f2f4fa', 1, [.5, 0, -.5]); props.put(K.geo.cyl(6), lx + .42, ly + 3.0, lz + .15, '#c9cdd8', [.03, .5, .03]);
       for (let k = 0; k < 4; k++) props.put(K.geo.box(), lx - .1, ly + .25 + k * .3, lz + 1.5, '#c9cdd8', [.5, .05, .06]); for (const s of [-1, 1]) props.put(K.geo.box(), lx - .1 + s * .25, ly + .7, lz + 1.5, '#c9cdd8', [.05, 1.3, .05]);
       // Earth, hanging over the hills
-      const e = inSky(K.skyBody('earth', 10, { size: 512 }), MID + 6, 10.5, -190), eg = inSky(K.glow('#5aa0ff', 46, .34), MID + 6, 10.5, -196); U.push(dt => { e.rotation.y += dt * .03; }); e.rotation.z = .4;
+      const e = inSky((yield* K.skyBodySteps('earth', 10, { size: 512 })), MID + 6, 10.5, -190), eg = inSky(K.glow('#5aa0ff', 46, .34), MID + 6, 10.5, -196); U.push(dt => { e.rotation.y += dt * .03; }); e.rotation.z = .4;
       tapIt(e, () => fact('🌍 That blue planet is Earth: our home! Wave hello!', 'moonearth'));
       // plant a flag: the pole grows out of the ground and the flag unrolls
       const fg = new THREE.Group(); fg.position.set(X + 40, 0, -2.6); add(fg); const base = new THREE.Mesh(K.lathe([[0, .14], [.16, .12], [.24, 0], [0, 0]], 14), toy('#c9cdd8', { r: .4, m: .4 })); fg.add(base);
@@ -130,17 +132,18 @@ export function initSpace(G, api) {
         tapIt(r, () => { if (!r.visible || pop) return; pop = .001; got++; Sound.pop ? Sound.pop() : Sound.click(); api.burst(r.position.x, .5, -1.4, ['#ffffff', '#e6e6ec', '#ffe36e'], 8, 2); say(`🪨 ${['', 'One', 'Two', 'Three', 'Four', 'Five'][got]} moon rock${got > 1 ? 's' : ''}!`, true); disc('moonrocks'); if (got === 5) setTimeout(() => { got = 0; rs.forEach(q => { q.visible = true; q.scale.setScalar(.34); q.position.y = .3; }); }, 6000); }, k === 0 ? X + 48 : null, k === 0 ? 'moonrocks' : null);
         U.push((dt, t) => { if (pop) { pop += dt * 3; r.position.y = .3 + Math.sin(Math.min(1, pop) * Math.PI) * 1.2; r.scale.setScalar(.34 * (1 - K.sstep(.5, 1, pop))); r.rotation.y += dt * 9; if (pop >= 1) { pop = 0; r.visible = false; } } else r.rotation.y = Math.sin(t * .8 + k) * .25; }); }
     }
+    yield;
     if (id === 'mercury') {
       const cr = []; for (let k = 0; k < 40; k++) { const z = -8.5 - Math.pow(R(k + 50), 1.3) * 100, r = 1.3 + R(k + 60) * 2.2 + (-z) * .05; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .38, rim: .15, ray: R(k + 80) > .7 }); }
       cr.push({ x: X + 78, z: -12.5, r: 4.6, depth: .42, rim: .17 });
-      H = K.terrain(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .07, z * .07, 4) - .5) * 3.6 + K.sstep(.47, .53, K.fbm2(x * .011 + 4, z * .034 + 5, 3)) * 2.6 * K.sstep(-14, -34, z) * K.sstep(-90, -60, z) + K.sstep(-70, -160, z) * K.ridge2(x * .016, z * .016, 4) * 9; for (const c of cr) h += K.craterH(c, x, z); return h; },
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .07, z * .07, 4) - .5) * 3.6 + K.sstep(.47, .53, K.fbm2(x * .011 + 4, z * .034 + 5, 3)) * 2.6 * K.sstep(-14, -34, z) * K.sstep(-90, -60, z) + K.sstep(-70, -160, z) * K.ridge2(x * .016, z * .016, 4) * 9; for (const c of cr) h += K.craterH(c, x, z); return h; },
         color: (x, z, h, ny, o) => { let s = 0, ray = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; if (c.ray) { const dx = x - c.x, dz = z - c.z, d = Math.hypot(dx, dz) / c.r; if (d > 1 && d < 5) ray += K.sstep(.62, .8, K.noise2(Math.atan2(dz, dx) * 5 + c.x, 1.5)) * (1 - (d - 1) / 4); } }
           const n = K.fbm2(x * .8, z * .8, 3); K.ramp(['#3b3632', '#72675b', '#a89b8a'], .3 + n * .5 + ray * .4, o); o.multiplyScalar((.72 + .34 * ny) * Math.max(.45, Math.min(1.35, 1 + s * .3))); } });
-      rocks(80, { colors: ['#4f4439', '#a08a72'], sharp: 1, s1: .75 }); frontRocks(['#3f362e', '#75644f'], 7, 1);
+      yield* rocks(80, { colors: ['#4f4439', '#a08a72'], sharp: 1, s1: .75 }); yield* frontRocks(['#3f362e', '#75644f'], 7, 1);
       // ice hiding in a crater that the Sun never reaches (there really is ice on Mercury!)
       { const c = cr[cr.length - 1], y = H(c.x, c.z); props.put(K.geo.cyl(24), c.x, y + .12, c.z, '#dff3ff', [c.r * .55, .1, c.r * .5]); for (let k = 0; k < 9; k++) { const a = k * .7, r = c.r * (.15 + R(k + 5) * .3); props.put(K.rockGeo(k, 1), c.x + Math.cos(a) * r, y + .3, c.z + Math.sin(a) * r, k % 2 ? '#e8f8ff' : '#bfe6ff', [.3, .5 + R(k) * .8, .3], [R(k) * .4, k, R(k + 2) * .4]); } }
       // the huge Sun, with a glowing crown
-      const sx = MID + 30, sy = 17, sz = -210; const sun = inSky(K.skyBody('sunface', 26, { emissive: true }), sx, sy, sz), g1 = inSky(K.glow('#ffd070', 120, .8), sx, sy, sz - 4), g2 = inSky(K.glow('#ff9a3c', 260, .4), sx, sy, sz - 6); let hot = 0;
+      const sx = MID + 30, sy = 17, sz = -210; const sun = inSky((yield* K.skyBodySteps('sunface', 26, { emissive: true })), sx, sy, sz), g1 = inSky(K.glow('#ffd070', 120, .8), sx, sy, sz - 4), g2 = inSky(K.glow('#ff9a3c', 260, .4), sx, sy, sz - 6); let hot = 0;
       tapIt(sun, () => { hot = 2; Sound.noise && Sound.noise(.8, 1200, 300, .04); fact('☀️ Sizzle! The Sun looks HUGE from Mercury: it\'s the closest planet to the Sun!', 'mercurysun'); }, X + 58, 'mercurysun');
       U.push((dt, t) => { hot = Math.max(0, hot - dt); const k = 1 + Math.sin(t * 2) * .015 + hot * .06; sun.scale.setScalar(k); sun.rotation.y += dt * .02; g1.scale.setScalar(120 * (1 + Math.sin(t * 1.3) * .04 + hot * .15)); g2.scale.setScalar(260 * (1 + Math.sin(t * .7 + 1) * .06 + hot * .2)); });
       // the day and night button: a big glowing dome on a stand
@@ -152,14 +155,15 @@ export function initSpace(G, api) {
       U.push(dt => { push = Math.max(0, push - dt * 4); dome.position.y = .5 - Math.sin(push * Math.PI) * .12; });
       g.userData.leave = () => { if (night) { night = 0; sun.visible = g1.visible = g2.visible = true; dome.material.color.set('#ff9a2e'); dome.material.emissive.set('#ff7a00'); } };
     }
+    yield;
     if (id === 'venus') {
       const river = z => MID + 22 + Math.sin(z * .16) * 9 + Math.sin(z * .05 + 1) * 14; // a lava river winding down from the far volcano
       const VOL = [[MID + 10, -150, 80, 36], [X - 20, -95, 34, 16], [X + 128, -80, 30, 15]];
-      H = K.terrain(matte, { cx: MID, wNear: PW + 100, flatZ: -4.4, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 4 + K.ridge2(x * .11, z * .11, 3) * 1.1; for (const [vx, vz, r, hh] of VOL) { const d = Math.hypot(x - vx, z - vz) / r; if (d < 1) h += hh * Math.pow(1 - d, 1.5) - hh * .5 * Math.exp(-d * d / .004); }
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: -4.4, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 4 + K.ridge2(x * .11, z * .11, 3) * 1.1; for (const [vx, vz, r, hh] of VOL) { const d = Math.hypot(x - vx, z - vz) / r; if (d < 1) h += hh * Math.pow(1 - d, 1.5) - hh * .5 * Math.exp(-d * d / .004); }
           const rd = Math.abs(x - river(z)); h -= Math.exp(-rd * rd / 5) * 1.1 * K.sstep(-9, -16, z); return h; },
         color: (x, z, h, ny, o) => { const n = K.fbm2(x * .7, z * .7, 3), crack = K.sstep(.86, .97, K.ridge2(x * .4, z * .4, 2)), rd = Math.abs(x - river(z)), hot = Math.exp(-rd * rd / 14) * K.sstep(-8, -15, z);
           K.ramp(['#33231c', '#6b4830', '#a8763f', '#d9a64e'], .22 + n * .5 + (1 - ny) * .2, o); o.multiplyScalar((.72 + .32 * ny) * (1 - crack * .35)); o.lerp(K.col('#ff7a1c'), hot * .5 + crack * .12); } });
-      rocks(60, { colors: ['#2a1c18', '#6b4830'], sharp: 1, s1: .8 }); frontRocks(['#2a1c18', '#5a3c28'], 7, 1);
+      yield* rocks(60, { colors: ['#2a1c18', '#6b4830'], sharp: 1, s1: .8 }); yield* frontRocks(['#2a1c18', '#5a3c28'], 7, 1);
       // glowing lava: the river, and the pools on top of the two near volcanoes (one mesh, softly pulsing)
       const lavaM = toy('#ff7a1a', { em: '#ff4a00', ei: 1.5, r: .6 });
       { const pos = [], idx = []; let n = 0; for (let z = -15; z >= -118; z -= 2.5) { const x = river(z), w = .9 + (-z) * .02, y = H(x, z) + .28; pos.push(x - w, y, z, x + w, y, z); if (n) { const a = n * 2 - 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } n++; }
@@ -179,14 +183,15 @@ export function initSpace(G, api) {
       // far lightning inside the thick clouds (not in calm mode)
       let nextZap = 5; U.push((dt, t) => { nextZap -= dt; if (nextZap < 0) { nextZap = 6 + Math.random() * 8; if (!calm()) boost = .5; } });
     }
+    yield;
     if (id === 'mars') {
       const mons = [MID + 40, -205, 120, 34];
-      H = K.terrain(matte, { cx: MID, wNear: PW + 100, zFar: -215, height: (x, z) => { const n = K.fbm2(x * .03, z * .03, 4), far = K.sstep(-5, -22, z); let h = (n - .5) * 5 * far + Math.pow(Math.sin(x * .33 + n * 9 + z * .12) * .5 + .5, 2.2) * .8 * far * K.sstep(-60, -30, z);
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, zFar: -215, height: (x, z) => { const n = K.fbm2(x * .03, z * .03, 4), far = K.sstep(-5, -22, z); let h = (n - .5) * 5 * far + Math.pow(Math.sin(x * .33 + n * 9 + z * .12) * .5 + .5, 2.2) * .8 * far * K.sstep(-60, -30, z);
           const m = K.fbm2(x * .021 + 7, z * .021 + 3, 3), mesa = K.sstep(.565, .6, m) * K.sstep(-20, -42, z) * K.sstep(-150, -110, z); h += mesa * (8 + m * 9 + K.noise2(x * .5, z * .5) * .5);
           const d = Math.hypot(x - mons[0], (z - mons[1]) * 1.6) / mons[2]; if (d < 1) h += mons[3] * Math.pow(1 - d, 1.2) * (1 - .3 * Math.exp(-d * d / .012)); return h; },
         color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), strata = Math.sin(h * 2.6 + K.noise2(x * .1, z * .1) * 2) * .5 + .5, steep = K.sstep(.86, .6, ny);
           K.ramp(['#8f3b20', '#c45a2e', '#e08c54', '#f2b684'], .25 + n * .45 + Math.min(.25, Math.max(0, h) * .02), o); if (steep > 0) o.lerp(K.ramp(['#7a2f1c', '#d9764a', '#f0c8a0'], strata, T3), steep * .85); o.multiplyScalar(.74 + .32 * ny); } });
-      rocks(110, { colors: ['#4a2a22', '#8f4a30', '#b8603a'], sharp: 1, s1: .7 }); frontRocks(['#4a2a22', '#8f4a30'], 8, 1);
+      yield* rocks(110, { colors: ['#4a2a22', '#8f4a30', '#b8603a'], sharp: 1, s1: .7 }); yield* frontRocks(['#4a2a22', '#8f4a30'], 8, 1);
       tapIt(inSky(new THREE.Mesh(new THREE.SphereGeometry(30, 8, 6), new THREE.MeshBasicMaterial({ visible: false })), mons[0], 22, mons[1] + 40), () => fact('🌋 That\'s Olympus Mons: the biggest volcano in the whole solar system!', 'marsvolcano')); skies[id].pop(); // (an unseen tap target over the real mountain; it stays put)
       G.interact.push({ x: X + 78, y: 0, layer: 'space', disc: 'marsvolcano', run: () => fact('🌋 That\'s Olympus Mons: the biggest volcano in the whole solar system!', 'marsvolcano'), hintY: 2.4 });
       // the two little moons, Phobos and Deimos
@@ -211,12 +216,13 @@ export function initSpace(G, api) {
       tapIt(dd, () => { swirl = 4; Sound.noise && Sound.noise(1.2, 300, 900, .04); fact('🌪️ A dust devil! Twirly winds blow the red dust around on Mars.', 'dustdevil'); }, X + 64, 'dustdevil');
       U.push((dt, t) => { swirl = Math.max(0, swirl - dt); dd.position.x = X + 64 + Math.sin(t * .4) * 2; segs.forEach((s, k) => { s.rotation.y += dt * (2.2 + k * .6 + swirl * 5); s.position.x = Math.sin(t * 2.2 + k * .9) * .09 * (k + 1); s.position.z = Math.cos(t * 1.7 + k * .9) * .06 * (k + 1); }); dd.scale.setScalar(1 + Math.min(1, swirl) * .35); if (Math.random() < dt * (3 + swirl * 8)) api.burst(dd.position.x, .15, -2.6, ['#c86a40', '#e89a6a'], 1, 1.2); });
     }
+    yield;
     if (gas) {
       // ---------- the gas giants: you walk on a soft deck of cloud, with hills of cloud, towers of cloud and drifting wisps ----------
       const BD = CLOUDS[id], amp = { jupiter: 1, saturn: .6, uranus: .34, neptune: .75 }[id];
       const bandAt = (x, z, o) => { const v = z * .085 + (K.fbm2(x * .028, z * .028, 3) - .5) * 5.5 + Math.sin(x * .045 + z * .02) * .7, t = ((v % BD.length) + BD.length) % BD.length, k = Math.floor(t); return o.copy(K.col(BD[k])).lerp(K.col(BD[(k + 1) % BD.length]), K.sstep(.25, .75, t - k)); };
       const spot = id === 'neptune' ? [MID + 14, -62, 26, 9] : null;
-      H = K.terrain(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : -4.8, blend: 6, nx: 120, nz: 50, height: (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : -4.8, blend: 6, nx: 120, nz: 50, height: (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
         color: (x, z, h, ny, o) => { bandAt(x, z, o); const streak = id === 'neptune' ? K.sstep(.66, .8, K.noise2(x * .035 + 2, z * .55)) : K.sstep(.7, .86, K.noise2(x * .05, z * .4)) * .4; o.lerp(K.col('#ffffff'), streak * .6);
           if (spot) { const d = Math.hypot((x - spot[0]) / spot[2], (z - spot[1]) / spot[3]); o.lerp(K.col('#101c5c'), K.sstep(1, .7, d) * .85); o.lerp(K.col('#ffffff'), K.sstep(.12, 0, Math.abs(d - 1.12)) * .7); }
           o.multiplyScalar(.78 + .16 * ny + .12 * K.sstep(-.5, 3 * amp, h)); } });
@@ -224,13 +230,15 @@ export function initSpace(G, api) {
       const puff = (batch, x, y, z, r, k, tint = 0) => { const c0 = bandAt(x, z, new THREE.Color()).lerp(K.col('#ffffff'), .25 + tint); batch.put(K.geo.sph(r > 5 ? 2 : 1), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.74 + .3 * Math.max(0, ny)); }, [r * (1.1 + R(k) * .5), r * (.62 + R(k + 1) * .25), r]); };
       const heaps = { jupiter: 15, saturn: 12, uranus: 7, neptune: 10 }[id];
       for (let k = 0; k < heaps; k++) { const x = R(k + 20, X - 30, X + 140), z = -7 - Math.pow(R(k + 21), 1.5) * 55 - (id === 'jupiter' || id === 'saturn' ? 7 : 0), s = (.8 + R(k + 22) * 1.3) * (1 + (-z) * .03), y = H(x, z); for (let q = 0; q < 5; q++) puff(soft, x + (q - 2) * s * .8 + R(k * 7 + q) * s * .4, y + s * (.25 + (q === 2 ? .45 : R(k + q) * .25)), z + (R(k + q + 5) - .5) * s, s * (q === 2 ? 1 : .7), k * 5 + q); }
-      if (id === 'jupiter' || id === 'neptune') for (let k = 0; k < 5; k++) { const x = X - 60 + k * 56 + R(k + 30) * 20, z = -95 - R(k + 31) * 60, s = 7 + R(k + 32) * 5, y = H(x, z); for (let q = 0; q < 6; q++) { const up = q / 5; puff(soft, x + (R(k * 9 + q) - .5) * s * (1.8 - up), y + up * s * 2.6, z + (R(k * 9 + q + 3) - .5) * s, s * (1 - up * .35), k * 11 + q, up * .3); } for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s * 1.3, y + s * 2.9, z, s * .9, k * 13 + q, .35); } // (a flat anvil top, like a real storm cloud)
+      yield;
+    if (id === 'jupiter' || id === 'neptune') for (let k = 0; k < 5; k++) { const x = X - 60 + k * 56 + R(k + 30) * 20, z = -95 - R(k + 31) * 60, s = 7 + R(k + 32) * 5, y = H(x, z); for (let q = 0; q < 6; q++) { const up = q / 5; puff(soft, x + (R(k * 9 + q) - .5) * s * (1.8 - up), y + up * s * 2.6, z + (R(k * 9 + q + 3) - .5) * s, s * (1 - up * .35), k * 11 + q, up * .3); } for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s * 1.3, y + s * 2.9, z, s * .9, k * 13 + q, .35); } // (a flat anvil top, like a real storm cloud)
       for (let k = 0; k < 6; k++) { const x = R(k + 400, X, X + 110), z = 4.8 + R(k + 401) * 1.6, s = .55 + R(k + 402) * .5; for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s, -.1 + (q === 1 ? .25 : 0), z, s * (q === 1 ? 1 : .75), k * 3 + q, .1); }
       // wisps that really drift along in the wind: two layers, one mesh each
       const speed = { jupiter: 1.3, saturn: .8, uranus: .45, neptune: 5.5 }[id];
       for (const [zz, yy, n, sc, sp] of [[-13, .5, 9, 1, 1], [-34, 1.6, 9, 2.4, .6]]) { const span = 190, w = model(b => { for (let k = 0; k < n; k++) { const x = k / n * span + R(k + zz) * 8, z2 = (R(k + 1 + zz) - .5) * 9 * sc, c0 = new THREE.Color(BD[(k + 3) % BD.length]).lerp(K.col('#ffffff'), id === 'neptune' ? .85 : .5); for (let q = 0; q < 3; q++) b.put(K.geo.sph(1), x + (q - 1) * 1.5 * sc, R(k + q) * .3 * sc, z2, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.78 + .28 * Math.max(0, ny)); }, [(id === 'neptune' ? 3.4 : 1.9) * sc * (q === 1 ? 1 : .7), .42 * sc * (q === 1 ? 1 : .7), .9 * sc]); } }, K.softMat(), false);
         w.position.set(X - 40, yy, zz); w.userData.dynamic = true; add(w); const w2 = w.clone(); w2.position.x = X - 40 - span; add(w2); U.push(dt => { for (const m of [w, w2]) { m.position.x += dt * speed * sp; if (m.position.x > X - 40 + span) m.position.x -= span * 2; } }); }
     }
+    yield;
     if (id === 'jupiter') {
       // the Great Red Spot: a slowly turning whirl of red cloud, with spiral arms
       const sp = new THREE.Group(); sp.position.set(X + 52, 0, -6.5); add(sp); const sg = new THREE.CircleGeometry(1, 56, 0, Math.PI * 2); const rg = new THREE.RingGeometry(.001, 1, 56, 10); rg.rotateX(-Math.PI / 2); { const p = rg.attributes.position; for (let q = 0; q < p.count; q++) { const r = Math.hypot(p.getX(q), p.getZ(q)); p.setY(q, .32 * (1 - r * r) + .05 * Math.sin(Math.atan2(p.getZ(q), p.getX(q)) * 2 + r * 7) * (1 - r)); } rg.computeVertexNormals(); } sg.dispose();
@@ -243,16 +251,18 @@ export function initSpace(G, api) {
       tapIt(cg, () => { zap = .55; boost = calm() ? .15 : .8; Sound.noise && Sound.noise(.4, 2000, 200, .06); fact('⚡ Zap! Jupiter has huge lightning storms!', 'jupiterzap'); }, X + 66, 'jupiterzap');
       U.push((dt, t) => { cg.position.y = 6 + Math.sin(t * .9) * .18; if (zap > 0) { zap -= dt; bolt.visible = zap > 0 && (calm() || Math.sin(zap * 60) > -.3); bolt.scale.x = zap > .3 ? 1 : -1; bgl.material.opacity = Math.max(0, zap) * 1.2; if (zap <= 0) { bolt.visible = false; bgl.material.opacity = 0; api.burst(X + 66, .2, -3.8, ['#fff6a0', '#ffffff'], 6, 2); } } });
       // the four big moons, each with its own real look: yellow Io, cracked icy Europa, patchy Ganymede, dark Callisto
-      const moons = [['io', 2.6, MID - 48, 30], ['europa', 2.2, MID - 18, 36], ['ganymede', 3.4, MID + 14, 31], ['callisto', 3.0, MID + 46, 37]].map(([kind, r, x, y]) => inSky(K.skyBody(kind, r, { size: 128 }), x, y, -160)); let counted = 0;
+      const moons = []; for (const [kind, r, x, y] of [['io', 2.6, MID - 48, 30], ['europa', 2.2, MID - 18, 36], ['ganymede', 3.4, MID + 14, 31], ['callisto', 3.0, MID + 46, 37]]) moons.push(inSky((yield* K.skyBodySteps(kind, r, { size: 128 })), x, y, -160)); let counted = 0;
       moons.forEach((m, k) => { let b2 = 0; tapIt(m, () => { counted = counted % 4 + 1; b2 = 1; Sound.tone(500 + counted * 100, .15, 'sine', .05, 1.2); say(`🌕 ${['', 'One', 'Two', 'Three', 'Four'][counted]}!${counted === 4 ? ' Jupiter\'s four big moons!' : ''}`, true); disc('jupitermoons'); }, k === 0 ? X + 34 : null, k === 0 ? 'jupitermoons' : null); U.push(dt => { b2 = Math.max(0, b2 - dt * 2); m.scale.setScalar(1 + Math.sin(b2 * 9) * b2 * .3); m.rotation.y += dt * .06; }); });
     }
+    yield;
     if (id === 'saturn') {
       // the rings: a giant shining arch of ice across the whole sky, with the dark gap in it
       const ringTex = (() => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 4; const c = cv.getContext('2d'); for (let x = 0; x < 256; x++) { const u = x / 255, n = K.noise2(u * 60, 1) * .5 + K.noise2(u * 14, 3) * .5; let a = (.35 + n * .65) * K.sstep(0, .06, u) * K.sstep(1, .93, u); if (u > .58 && u < .65) a *= .08; if (u > .86 && u < .875) a *= .2; if (u < .22) a *= .45; const v = 215 + n * 40; c.fillStyle = `rgba(${v | 0},${(v * .96) | 0},${(v * .84) | 0},${a.toFixed(3)})`; c.fillRect(x, 0, 1, 4); } const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+      (g.userData.ownedTextures ||= []).push(ringTex);
       const ringG = new THREE.RingGeometry(190, 300, 128, 1); { const p = ringG.attributes.position, uv = ringG.attributes.uv; for (let q = 0; q < p.count; q++) uv.setXY(q, (Math.hypot(p.getX(q), p.getY(q)) - 190) / 110, .5); }
       const ring = inSky(new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false })), MID + 20, -168, -330); ring.rotation.set(-.2, 0, .1); ring.renderOrder = -5;
       tapIt(ring, () => fact('💍 Saturn\'s rings are made of millions of pieces of ice and rock!', 'saturnrings')); G.interact.push({ x: X + 30, y: 0, layer: 'space', disc: 'saturnrings', run: () => fact('💍 Saturn\'s rings are made of millions of pieces of ice and rock!', 'saturnrings'), hintY: 3 });
-      inSky(K.skyBody('titan', 3.4, { size: 128 }), MID - 46, 15, -165); inSky(K.glow('#ffb050', 13, .3), MID - 46, 15, -168); inSky(K.skyBody('grey', 1.3, { size: 128 }), MID + 60, 11, -165);
+      inSky((yield* K.skyBodySteps('titan', 3.4, { size: 128 })), MID - 46, 15, -165); inSky(K.glow('#ffb050', 13, .3), MID - 46, 15, -168); inSky((yield* K.skyBodySteps('grey', 1.3, { size: 128 })), MID + 60, 11, -165);
       // five lumps of ring ice to hop along: clear, sparkling crystals that slowly turn
       const iceM = K.shinyMat(); let hops = 0;
       for (let k = 0; k < 5; k++) { const x = X + 38 + k * 2.6, y = .6 + (k % 2) * .5, ice = model(b => { b.put(K.rockGeo(k + 1, 1), 0, 0, 0, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#9fdcff', '#e6f6ff', '#ffffff'], .5 + ny * .4 + nx * .2, o); }, [.62, .5, .58]); b.put(K.rockGeo(k + 2, 1), .1, .42, 0, '#f4fcff', [.3, .34, .3]); }, iceM); ice.position.set(x, y, -1.2); add(ice); G.platforms.push({ a: x - .5, b: x + .5, y: 1.1 + (k % 2) * .5, layer: 'space', z: -1.2 }); let ping = 0;
@@ -264,15 +274,17 @@ export function initSpace(G, api) {
       tapIt(hx, () => { hs = 4; Sound.noise && Sound.noise(1, 250, 800, .04); fact('⬡ A six-sided storm! Saturn has a hexagon-shaped storm at its top.', 'saturnhex'); }, X + 62, 'saturnhex');
       U.push(dt => { hs = Math.max(0, hs - dt); hexes.forEach((m, k) => { m.rotation.y += dt * (k % 2 ? -1 : 1) * (.18 + k * .07 + hs * 1.2); }); });
     }
+    yield;
     if (id === 'uranus') {
       // tall ice-diamond spires standing in the mist
-      for (let k = 0; k < 16; k++) { const x = R(k + 90, X - 20, X + 130), z = -8 - Math.pow(R(k + 91), 1.4) * 60, s = (.5 + R(k + 92) * 1.1) * (1 + (-z) * .035), y = H(x, z), c0 = K.ramp(['#8fe8f2', '#e6ffff', '#ffffff'], R(k + 93), new THREE.Color()); const dia = new THREE.OctahedronGeometry(1, 0).toNonIndexed(); dia.computeVertexNormals(); dia.deleteAttribute('uv');
+      for (let k = 0; k < 16; k++) { const x = R(k + 90, X - 20, X + 130), z = -8 - Math.pow(R(k + 91), 1.4) * 60, s = (.5 + R(k + 92) * 1.1) * (1 + (-z) * .035), y = H(x, z), c0 = K.ramp(['#8fe8f2', '#e6ffff', '#ffffff'], R(k + 93), new THREE.Color()); const dia = new THREE.OctahedronGeometry(1, 0); dia.computeVertexNormals(); dia.deleteAttribute('uv');
         for (let q = 0; q < 3; q++) props.put(dia, x + (q - 1) * s * .8, y + s * (q === 1 ? 1.9 : 1.1), z + (q === 1 ? 0 : .4 * s), (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.7 + .4 * Math.max(0, nx * -.5 + ny * .6 + nz * .5)); }, [s * (q === 1 ? .6 : .4), s * (q === 1 ? 2.2 : 1.3), s * (q === 1 ? .6 : .4)], [0, R(k + q) * 3, (q - 1) * .25]); }
       // the rings stand upright in the sky, because Uranus is tipped right over on its side
       const ringTex = (() => { const cv = document.createElement('canvas'); cv.width = 128; cv.height = 4; const c = cv.getContext('2d'); for (const [u, w, a] of [[.1, 3, .5], [.3, 2, .4], [.45, 2, .45], [.62, 3, .55], [.85, 7, .9]]) { c.fillStyle = `rgba(220,250,255,${a})`; c.fillRect(u * 128, 0, w, 4); } const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+      (g.userData.ownedTextures ||= []).push(ringTex);
       const ringG = new THREE.RingGeometry(170, 215, 128, 1); { const p = ringG.attributes.position, uv = ringG.attributes.uv; for (let q = 0; q < p.count; q++) uv.setXY(q, (Math.hypot(p.getX(q), p.getY(q)) - 170) / 45, .5); }
       const ring = inSky(new THREE.Mesh(ringG, new THREE.MeshBasicMaterial({ map: ringTex, transparent: true, side: THREE.DoubleSide, depthWrite: false, fog: false })), MID - 4, -40, -330); ring.rotation.set(0, 1.12, .12); ring.renderOrder = -5;
-      inSky(K.skyBody('miranda', 2.6, { size: 128 }), MID + 44, 14, -160); inSky(K.skyBody('grey', 1.6, { size: 128 }), MID - 52, 18, -160);
+      inSky((yield* K.skyBodySteps('miranda', 2.6, { size: 128 })), MID + 44, 14, -160); inSky((yield* K.skyBodySteps('grey', 1.6, { size: 128 })), MID - 52, 18, -160);
       // the rolling planet toy: a striped ball with its own ring, tipped on its side
       const roll = new THREE.Group(); roll.position.set(X + 44, .75, -2); add(roll); roll.add(model(b => { b.put(K.geo.sph(), 0, 0, 0, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#6fd8e0', '#b8f4f4', '#8fe4ea', '#d8fcfc', '#7fdce4'], pz * .65 + .5, o); }, .75); const rg = new THREE.RingGeometry(.95, 1.3, 40, 1); b.add(rg, null, '#ffffff'); const rg2 = rg.clone(); rg2.rotateY(Math.PI); b.add(rg2, null, '#e6ffff'); for (const s of [-1, 1]) b.put(K.geo.sph(1), 0, 0, s * .76, '#ffd23f', .09); })); let rv2 = 0;
       tapIt(roll, () => { rv2 = 6; Sound.boing(); fact('🎳 Uranus spins tipped over on its side, so it rolls like a ball!', 'uranusroll'); }, X + 44, 'uranusroll');
@@ -284,8 +296,9 @@ export function initSpace(G, api) {
       U.push((dt, t) => { dcg.position.y = 6 + Math.sin(t * .8) * .16; dcg.scale.setScalar(1 + (rain > 2.8 ? Math.sin((3.2 - rain) * 16) * .08 : 0)); if (rain > 0) { rain -= dt; drop -= dt; if (drop <= 0) { drop = .16; const m = gems.find(q => !q.visible); if (m) { m.visible = true; m.position.set(X + 60.6 + Math.random() * 2.8, 5.2, -3 + (Math.random() - .5)); m.userData.v = 0; } } }
         for (const m of gems) if (m.visible) { m.userData.v += 9 * dt; m.position.y -= m.userData.v * dt; m.rotation.y += dt * 7; if (m.position.y < .15) { m.visible = false; api.burst(m.position.x, .2, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 3, 1.4); Sound.tone && Math.random() < .5 && Sound.tone(1400 + Math.random() * 600, .06, 'sine', .02, 1.2); } } });
     }
+    yield;
     if (id === 'neptune') {
-      const tr = inSky(K.skyBody('triton', 8.5, { size: 256 }), MID - 30, 38, -175); U.push(dt => { tr.rotation.y += dt * .02; });
+      const tr = inSky((yield* K.skyBodySteps('triton', 8.5, { size: 256 })), MID - 30, 38, -175); U.push(dt => { tr.rotation.y += dt * .02; });
       // the windsock: a striped sock on a pole that streams out and flaps in the wind
       const sock = new THREE.Group(); sock.position.set(X + 44, 0, -2.4); add(sock); sock.add(model(b => { b.put(K.lathe([[0, .16], [.2, .14], [.3, 0], [0, 0]], 14), 0, 0, 0, '#8a8fa0'); b.put(K.geo.cyl(10), 0, 1.3, 0, '#f2f4fa', [.05, 2.6, .05]); b.put(K.geo.torus(.12, 16), .12, 2.5, 0, '#ffd23f', [.34, .34, .34], [0, Math.PI / 2, 0]); }));
       const links = []; let par = sock; for (let k = 0; k < 5; k++) { const lg = new THREE.Group(); lg.position.set(k ? .46 : .14, k ? 0 : 2.5, 0); par.add(lg); const r0 = .33 - k * .045, r1 = .33 - (k + 1) * .045, sg2 = new THREE.CylinderGeometry(r1, r0, .46, 14, 1, true); sg2.rotateZ(-Math.PI / 2); sg2.translate(.23, 0, 0); const m = new THREE.Mesh(sg2, toy(k % 2 ? '#ffffff' : '#ff7a2a', { r: .7 })); m.material.side = THREE.DoubleSide; lg.add(m); links.push(lg); par = lg; } let gust = 0;
@@ -298,16 +311,17 @@ export function initSpace(G, api) {
       tapIt(gy, () => { spout = 3; Sound.noise && Sound.noise(1, 600, 2400, .04); fact('⛲ An icy geyser! On Neptune\'s moon Triton, icy fountains shoot up.', 'triton'); }, gx, 'triton');
       U.push((dt, t) => { if (spout > 0) { spout -= dt; const k = Math.min(1, (3 - spout) * 3) * Math.min(1, spout * 2.5); plume.visible = true; plume.scale.set(1 + Math.sin(t * 20) * .08, k * (5 + Math.sin(t * 13) * .4), 1 + Math.cos(t * 17) * .08); if (Math.random() < dt * 30) api.burst(gx + (Math.random() - .5) * .5, .7 + k * (3 + Math.random() * 2.4), gz, ['#ffffff', '#cfefff'], 2, 1.5); } else if (plume.visible) plume.visible = false; else if (Math.random() < dt * .8) api.burst(gx, .7, gz, ['#ffffff', '#e6f2ff'], 1, .5); }); // (a little puff of steam now and then, so you can see it is alive)
     }
+    yield;
     if (id === 'pluto') {
       const hc = X + 44, face = (x, z) => Math.min(10, Math.max(0, (-41 - z) * .72)) * Math.exp(-Math.pow((x - hc) / 21, 4)); // the broad smooth mountain face that carries the heart
-      H = K.terrain(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
           return (K.fbm2(x * .06, z * .06, 4) - .5) * 3 + jag * (1 - fm) + face(x, z) + K.sstep(-70, -150, z) * 10 * fm; },
         color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), dark = K.sstep(.52, .42, K.fbm2(x * .02 + 6, z * .02 + 1, 3)), ice = K.sstep(4, 11, h + n * 4) * K.sstep(.5, .85, ny + n * .2);
           K.ramp(['#a87660', '#cfa890', '#f0dcc8'], .2 + n * .6, o).lerp(K.col('#7a3a30'), dark * .55); o.lerp(K.ramp(['#bcd4f2', '#f4f8ff'], n, T3), ice);
           const lane = K.sstep(1, 0, Math.hypot((x - (X + 44.5)) / 7.6, (z + .6) / 3.9)); if (lane > 0) { const cell = K.sstep(.42, .5, Math.abs(K.noise2(x * .7, z * .7) - .5) * 2 + .3); o.lerp(K.ramp(['#cfe2f6', '#ffffff'], cell, T3), Math.min(1, lane * 3)); }
           o.multiplyScalar(.74 + .32 * ny); } });
-      rocks(60, { colors: ['#7a4a3c', '#c9b0a0', '#e6eefa'], sharp: 1, s1: .7 }); frontRocks(['#5a3a30', '#a88a7a'], 7, 1);
-      rocks(26, { z0: -6, z1: -30, s0: .4, s1: 1.3, colors: ['#bcd4f2', '#ffffff'], sharp: 1, seed: 800, batch: props, sink: .1 }); // (shiny blocks of water ice)
+      yield* rocks(60, { colors: ['#7a4a3c', '#c9b0a0', '#e6eefa'], sharp: 1, s1: .7 }); yield* frontRocks(['#5a3a30', '#a88a7a'], 7, 1);
+      yield* rocks(26, { z0: -6, z1: -30, s0: .4, s1: 1.3, colors: ['#bcd4f2', '#ffffff'], sharp: 1, seed: 800, batch: props, sink: .1 }); // (shiny blocks of water ice)
       // THE HEART: a huge heart-shaped glacier of bright ice lying on the mountain (Pluto's real heart is a giant plain of ice)
       { const s = new THREE.Shape(); s.moveTo(0, -1); s.bezierCurveTo(-1.75, .15, -1.15, 1.35, 0, .62); s.bezierCurveTo(1.15, 1.35, 1.75, .15, 0, -1); const hg = new THREE.ExtrudeGeometry(s, { depth: .1, bevelEnabled: true, bevelSize: .08, bevelThickness: .07, bevelSegments: 3, curveSegments: 22 }); hg.deleteAttribute('uv');
         const heart = model(b => b.add(hg, null, (px, py, pz, nx, ny, nz, o) => { const cell = K.sstep(.4, .5, Math.abs(K.noise2(px * 5, py * 5) - .5) * 2 + .3); K.ramp(['#dcecff', '#ffffff'], cell * .6 + py * .2 + .3, o); if (px > .1) o.lerp(K.col('#cfe0f6'), .35); }), K.shinyMat(), false);
@@ -319,11 +333,12 @@ export function initSpace(G, api) {
       const heart = (dt) => { const on = P.layer === 'space' && P.grounded && P.x > X + 37.5 && P.x < X + 51.5; if (on && Math.abs(P.vx) > 1 && !(api.keysHeld && api.keysHeld())) { P.x += P.vx * dt * .6; if (Math.random() < dt * 14) api.burst(P.x, .1, 0, ['#ffffff', '#dcecff'], 1, .7); if (!told.slide) { told.slide = 1; fact('⛸️ Wheee! Pluto\'s big heart is made of ice: it\'s slippery!', 'plutoheart'); } } }; U.push(heart);
       G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'plutoheart', run: () => fact('💗 Pluto\'s big heart is a giant plain of ice. Run across and slide!', 'plutoheart'), hintY: 1 });
       // Charon, Pluto's big moon with its dark red cap, and the Sun: only a very bright star from this far away
-      const charon = inSky(K.skyBody('charon', 15, { size: 256 }), MID + 44, 14, -200); charon.rotation.z = -.5; U.push(dt => { charon.rotation.y += dt * .015; });
+      const charon = inSky((yield* K.skyBodySteps('charon', 15, { size: 256 })), MID + 44, 14, -200); charon.rotation.z = -.5; U.push(dt => { charon.rotation.y += dt * .015; });
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
       inSky(K.glow('#ffffff', 9, 1), MID - 86, 17, -180); inSky(K.glow('#bcd0ff', 34, .35), MID - 86, 17, -182);
     }
     // a shooting star now and then, where there is no air to hide the stars
+    yield;
     if (id === 'moon' || id === 'mercury' || id === 'pluto') { const st = inSky(K.glow('#ffffff', 1, 0), MID, 20, -170); st.scale.set(14, .5, 1); let next = 3, life = 0, vx = 0, sx = 0;
       U.push(dt => { if (life > 0) { life -= dt; sx += vx * dt; st.userData.off = sx; st.position.y -= dt * 7; st.material.opacity = Math.sin(Math.min(1, life / .9) * Math.PI); if (life <= 0) st.material.opacity = 0; } else if ((next -= dt) < 0) { next = 5 + Math.random() * 7; life = .9; vx = 55; sx = (Math.random() - .7) * 90; st.material.rotation = -.12; const e = SK.find(q => q[0] === st); e[2] = 14 + Math.random() * 10; st.position.y = e[2]; } }); }
 
@@ -365,18 +380,18 @@ export function initSpace(G, api) {
         const pop = 1 + Math.sin(boing * 12) * boing * .25; a.scale.set(pop * (1 + sq), pop * (1 - sq), pop * (1 + sq));
         if (lids) { blink -= dt; if (blink < 0) blink = 2.5 + Math.random() * 3; lids.visible = blink < .13; }
         for (let q = 0; q < ants.length; q++) ants[q].rotation.z = (ants.length === 1 ? 0 : q ? -.25 : .25) + Math.sin(t * 3 + q * 2 + k) * .18 - Math.max(-.4, Math.min(.4, vx * .12)); }); };
-    for (let k = 0; k < 3; k++) placeAlien(X + 30 + k * 22, -2 - (k % 2) * 1.5, k, k === 0 ? "alien_" + id : null);
+    for (let k = 0; k < 3; k++) { placeAlien(X + 30 + k * 22, -2 - (k % 2) * 1.5, k, k === 0 ? "alien_" + id : null); yield; }
 
     // ---------- put it together: three still meshes (matte ground, shiny things, soft clouds) ----------
-    const ground = matte.mesh(K.paintMat()); ground.name = 'ground'; add(ground);
-    if (props.count()) { const m = props.mesh(K.shinyMat()); m.castShadow = true; add(m); }
+    const ground = matte.mesh(K.paintMat()); ground.name = 'ground'; add(ground); yield;
+    if (props.count()) { const m = props.mesh(K.shinyMat()); m.castShadow = true; add(m); } yield;
     if (soft.count()) add(soft.mesh(K.softMat()));
     g.traverse(o => { o.userData.dynamic = true; });
     g.userData.tris = matte.count() + props.count() + soft.count();
     // (build 50) the toolkit the new areas use (planets.js), and anything that spans the whole planet (Moon footprints)
     kits[id] = { X, g, add, tapIt, fact, say, disc, Sound, U, P, G, api, setSkyColor: color => sky.set({ ...LOOK[id].sky, mid: "#" + color.getHexString(), hor: "#" + color.getHexString() }), placeAlien: (x, z, k) => placeAlien(x, z, k, null) };
     secs[id] = [true]; if (PLANET_EXTRA[id] && PLANET_EXTRA[id].all) PLANET_EXTRA[id].all(areaKit(id, 0, g));
-    scene.add(g); api.compile && api.compile(g);
+    scene.add(g); return g;
   }
   // ---------- (build 50) BIGGER PLANETS: each new area is built when you walk near it, and a whole planet is freed when
   // you fly away (so only the place you are on is ever in memory). Shapes come from shared unit geometries. ----------
@@ -408,15 +423,17 @@ export function initSpace(G, api) {
     () => { if (kits[id] !== K) return; K.g.add(sub); });
   }
   function unbuild(id) {
+    controllers[id]?.abort(); delete controllers[id]; delete preparing[id];
     const g = groups[id]; if (!g) return; if (g.userData.leave) g.userData.leave(); const i = PLACES.findIndex(p => p[0] === id), X = placeX(i), X2 = X + placeWidth(id);
     const mine = new Set(); g.traverse(o => mine.add(o));
     for (let k = G.taps.length - 1; k >= 0; k--) if (mine.has(G.taps[k])) G.taps.splice(k, 1);
     for (let k = G.interact.length - 1; k >= 0; k--) { const it = G.interact[k]; if (it.layer === 'space' && it.x >= X - 30 && it.x <= X2 + 30) G.interact.splice(k, 1); }
     for (let k = G.platforms.length - 1; k >= 0; k--) { const it = G.platforms[k]; if (it.layer === 'space' && it.a >= X - 30 && it.b <= X2 + 30) G.platforms.splice(k, 1); }
     g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m !== K.paintMat() && m !== K.shinyMat() && m !== K.softMat()) m.dispose(); }); });
+    for (const texture of g.userData.ownedTextures || []) texture.dispose();
     areaSteps.length = 0; delete groups[id]; delete ups[id]; delete skies[id]; delete kits[id]; delete secs[id]; built[id] = false; if (G.rockets) delete G.rockets[id];
   }
-  const unbuildOthers = keep => { for (const k in groups) if (k !== keep) unbuild(k); };
+  const unbuildOthers = keep => { for (const k of new Set([...Object.keys(groups), ...Object.keys(preparing)])) if (k !== keep) unbuild(k); };
 
   // an alien sculpted from smooth painted shapes (one mesh), with shiny eyes that blink and feelers that wobble.
   // Each planet's kind looks and moves differently.
@@ -452,19 +469,40 @@ export function initSpace(G, api) {
   }
 
   // ---------- flying ----------
-  function goTo(i) {
-    unbuildOthers(PLACES[i][0]); /* (build 50: only the place you are on stays in memory) */
-    if (!built[PLACES[i][0]]) build(i);
+  async function goTo(i) {
+    const request = ++navigation;
+    try { await prepare(PLACES[i][0]); } catch (error) { if (error.name === 'AbortError') return false; throw error; }
+    if (request !== navigation) return false;
+    unbuildOthers(PLACES[i][0]);
     const [id, , grav, gas, hello] = PLACES[i]; if (here && here !== id && groups[here]?.userData.leave) groups[here].userData.leave();
     here = id; G.spaceG = grav / EARTH_G;
     G.spaceBounds = [placeX(i) + 1, placeX(i) + placeWidth(id) - 1];
     api.flash(); P.ride = null; P.layer = 'space'; P.x = placeX(i) + 12; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; jumpTop = 0;
     show(); api.snap(); Sound.chime();
-    say(`🚀 ${hello}`, true); disc('space_' + id); disc('space'); told = {};
+    say(`🚀 ${hello}`, true); disc('space_' + id); disc('space'); told = {}; return true;
   }
   // (build 50) build the place you are flying to during the countdown, so arriving does not stop the game
-  function prepare(id) { const i = PLACES.findIndex(p => p[0] === id); if (i < 0 || built[id]) return; build(i); if (groups[id]) groups[id].visible = false; }
-  function goHome() { if (here && groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; api.home(); unbuildOthers(null); show(); }
+  function prepare(id) {
+    const i = PLACES.findIndex(p => p[0] === id);
+    if (i < 0 || built[id]) return Promise.resolve();
+    if (preparing[id]) return preparing[id];
+    const controller = controllers[id] = new AbortController();
+    const task = runInSlices(build(i), { signal: controller.signal })
+      .then(async g => {
+        if (controller.signal.aborted) return;
+        await api.compile?.(g);
+        if (!controller.signal.aborted) built[id] = true;
+      }).catch(error => {
+        if (controllers[id] === controller) unbuild(id);
+        throw error;
+      });
+    preparing[id] = task;
+    // A cancelled countdown can abandon preparation before goTo starts awaiting it.
+    task.catch(() => {});
+    return task;
+  }
+  function cancel() { ++navigation; unbuildOthers(here); }
+  function goHome() { ++navigation; if (here && groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; api.home(); unbuildOthers(null); show(); }
   let lit = null;
   function show() {
     const on = P.layer === 'space';
@@ -489,5 +527,5 @@ export function initSpace(G, api) {
     if (areaSteps.length) areaSteps.shift()();
     else if (PLANET_EXTRA[here] && secs[here]) for (let s = 1; s <= PLANET_EXTRA[here].sections.length; s++) if (!secs[here][s] && P.x > X + s * SECTION - 70) { secs[here][s] = true; buildArea(here, s); break; }
   }
-  return { goTo, goHome, update, prepare, places: PLACES, here: () => here, look: LOOK, groups };
+  return { goTo, goHome, cancel, update, prepare, places: PLACES, here: () => here, look: LOOK, groups, warmup: [sky.mesh, dust.points] };
 }

@@ -4,6 +4,18 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 51 — smoother planet preparation and reliable flight cancellation (2026-11-15)
+- Kept the planet graphics and build 50's larger Moon/Mars. Terrain and sky textures now build in scheduled slices instead of blocking a countdown or arrival in one large task. Golden geometry/pixel checks preserve their appearance.
+- Startup rehearses planet sky, dust, sky bodies, rings, transparent ice and lightning materials in the rendering pipeline. Small resident representatives retain the shader programs when planets are freed. Loading no longer finishes before rehearsal completes, including the delayed startup compile pass and first-use metadata.
+- Private Saturn/Uranus ring textures are disposed on unloading; shared painted skies and warm shader materials remain available for reuse.
+- Flights await destination readiness. Home/map travel aborts pending construction and delayed flight callbacks, reveals Dawson and releases the launch lock. Failed preparation is cleaned up and can be retried.
+- Fixed the smoke synchronization: the slide check waits for the intentional exit bounce to land; pet taps wait for three distinct settled animation frames and aim at the rendered pet. Assertions are retained, and a missing waiting pet is reported without aborting the rest of the suite.
+- Verified on desktop: 40 Node checks; 41 learning contracts; saved-world regressions; shader regression across all nine planets and expanded activities (zero new variants, zero shader waits, no page errors); real controls for Home/map cancellation, direct-flight cancellation and retry after preparation failure. Each flight recovery check subsequently reached the real Moon.
+- Performance: see `PERFORMANCE_LOG.md` for before/after timings and repeat profiling. These are SwiftShader desktop results, not physical iPhone measurements.
+- Save lifecycle regression: valid reload retains pets, crown, wand and a progress marker; same-context and isolated corrupted saves start fresh; saving recovers without page errors. The full smoke corruption case now isolates its storage context, verifies the injected seed and waits for the ready screen instead of a fixed delay.
+- Removed a redundant non-indexed conversion from Uranus crystals, preserving geometry and eliminating console warnings; a regression captures warnings during their construction.
+- Full smoke suite run alone on the final rebuilt artifact: **195/195 passed**, including expanded Moon/Mars, actual rocket controls, save corruption recovery and zero console errors/warnings. Updated `tests/TEST_RESULTS.json` and all smoke screenshots. PR #55 remains open for the user to merge; physical iPhone confirmation is pending.
+
 ## Checkpoint: PR #55 conflict resolution — graphics work remains unfinished
 - Merged main `02de466` into the planet graphics branch, preserving both the sculpted scenery and build 50's 330 m Moon/Mars, streamed areas, countdown preparation, distant-alien sleeping and departure cleanup.
 - Adapted expanded aliens and rocket signs to the sculpted models. Expanded terrain covers the longer worlds; Mars sunset changes the shader sky through an explicit color callback. Shared painted materials survive unloading, and per-planet sky references are released.

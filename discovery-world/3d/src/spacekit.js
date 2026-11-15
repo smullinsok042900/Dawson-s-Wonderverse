@@ -55,6 +55,7 @@ export const softMat = () => PAINT_SOFT || (PAINT_SOFT = new THREE.MeshStandardM
 
 // ---------- a batch: many shapes merged into one mesh with painted colours ----------
 const V = new THREE.Vector3(), N = new THREE.Vector3(), NM = new THREE.Matrix3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), S3 = new THREE.Vector3(), C2 = new THREE.Color();
+const finishSteps = steps => { let step; do { step = steps.next(); } while (!step.done); return step.value; };
 export function makeBatch() {
   const pos = [], nor = [], colr = [], idx = [];
   const B = {
@@ -69,6 +70,25 @@ export function makeBatch() {
         colr.push(C2.r, C2.g, C2.b);
       }
       if (geo.index) { const a = geo.index.array; for (let i = 0; i < a.length; i++) idx.push(a[i] + base); } else for (let i = 0; i < p.count; i++) idx.push(base + i);
+      return B;
+    },
+    /** The same paint operation, in small pieces for countdown preparation. State stays local across yields. */
+    *addSteps(geo, m, color) {
+      const p = geo.attributes.position, n = geo.attributes.normal, base = pos.length / 3, fn = typeof color === 'function' ? color : null, vc = geo.attributes.color;
+      const matrix = m && m.clone(), normalMatrix = matrix && new THREE.Matrix3().getNormalMatrix(matrix);
+      const v = new THREE.Vector3(), normal = new THREE.Vector3(), c = new THREE.Color();
+      if (!fn && !vc) c.copy(col(color));
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i); if (matrix) v.applyMatrix4(matrix);
+        normal.fromBufferAttribute(n, i); if (matrix) normal.applyMatrix3(normalMatrix).normalize();
+        pos.push(v.x, v.y, v.z); nor.push(normal.x, normal.y, normal.z);
+        if (fn) fn(v.x, v.y, v.z, normal.x, normal.y, normal.z, c); else if (vc) c.fromBufferAttribute(vc, i);
+        colr.push(c.r, c.g, c.b);
+        if ((i + 1) % 128 === 0) yield;
+      }
+      yield;
+      const a = geo.index && geo.index.array, count = a ? a.length : p.count;
+      for (let i = 0; i < count; i++) { idx.push((a ? a[i] : i) + base); if ((i + 1) % 2048 === 0) yield; }
       return B;
     },
     /** place a geometry: position, scale (number or [x,y,z]), rotation [x,y,z] */
@@ -126,7 +146,10 @@ export function lathe(points, seg = 24) { const g = new THREE.LatheGeometry(poin
 // ---------- sculpted ground ----------
 /** a crater: returns how much it changes the height at (x, z), and writes shade (-1 dark floor … +1 bright rim) to cr.s */
 export function craterH(cr, x, z) {
-  const dx = x - cr.x, dz = z - cr.z, d = Math.sqrt(dx * dx + dz * dz) / cr.r; if (d > 2.2) { cr.s = 0; return 0; }
+  const dx = x - cr.x, dz = z - cr.z, distance2 = dx * dx + dz * dz;
+  // A slightly generous bound leaves the original 2.2 boundary and its floating-point rounding intact.
+  if (cr.r > 0 && distance2 > cr.r * cr.r * 5) { cr.s = 0; return 0; }
+  const d = Math.sqrt(distance2) / cr.r; if (d > 2.2) { cr.s = 0; return 0; }
   const rim = Math.exp(-((d - 1) * (d - 1)) / .045), bowl = d < 1 ? (d * d - 1) : 0, mid = cr.peak ? Math.exp(-d * d / .03) * .35 : 0;
   cr.s = rim * .9 + bowl * .8 + (d > 1 ? Math.exp(-(d - 1) * 2.2) * .35 : 0) + (dx / cr.r) * Math.exp(-((d - .72) * (d - .72)) / .07) * 1.1; // (the wall facing away from the sun is dark, the one facing it bright: that is what makes a crater read as a hole)
   return cr.r * (cr.depth ?? .3) * (bowl + mid) + cr.r * (cr.rim ?? .12) * rim;
@@ -136,25 +159,36 @@ export function craterH(cr, x, z) {
  * painted by color(x, z, h, ny, out). The strip you walk on (z > flatZ) stays exactly flat at 0, so the game's simple
  * ground rules still hold. Returns H(x, z): the height anywhere, for standing things on the ground.
  */
-export function terrain(batch, { cx, height, color, flatZ = -4.6, blend = 4.5, nx = 128, nz = 54, zNear = 7.5, zFar = -175, wNear = 190, widen = 1.55 }) {
-  const H = (x, z) => height(x, z) * sstep(flatZ, flatZ - blend, z);
+export function terrain(batch, options) { return finishSteps(terrainSteps(batch, options)); }
+/** Incremental equivalent of terrain; yield* returns the same ground-height function. */
+export function* terrainSteps(batch, { cx, height, color, flatZ = -4.6, blend = 4.5, nx = 128, nz = 54, zNear = 7.5, zFar = -175, wNear = 190, widen = 1.55 }) {
+  const H = (x, z) => { const weight = sstep(flatZ, flatZ - blend, z); return weight === 0 ? 0 : height(x, z) * weight; };
   const g = new THREE.BufferGeometry(), pos = new Float32Array((nx + 1) * (nz + 1) * 3), idx = [];
   for (let j = 0, k = 0; j <= nz; j++) {
     const t = j / nz, z = zNear - (zNear - zFar) * Math.pow(t, 1.9), w = wNear + (zNear - z) * widen;
     for (let i = 0; i <= nx; i++) { const u = i / nx - .5, x = cx + (u * (.55 + Math.abs(u) * .9)) * w * 1.0; pos[k++] = x; pos[k++] = H(x, z); pos[k++] = z; } // (columns are closer together in the middle, where you look)
+    yield;
   }
-  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1; idx.push(a, b, c, b, d, c); } // (winding: the top faces up, z shrinking with j)
+  for (let j = 0; j < nz; j++) {
+    for (let i = 0; i < nx; i++) { const a = j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1; idx.push(a, b, c, b, d, c); } // (winding: the top faces up, z shrinking with j)
+    yield;
+  }
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-  batch.add(g, null, (x, y, z, nx2, ny, nz2, out) => color(x, z, y, ny, out));
-  g.dispose(); return H;
+  yield;
+  try { yield* batch.addSteps(g, null, (x, y, z, nx2, ny, nz2, out) => color(x, z, y, ny, out)); }
+  finally { g.dispose(); }
+  return H;
 }
 
 // ---------- pictures for moons and planets in the sky (painted once, small) ----------
-function paintSphere(w, h, fn) {
+function* paintSphereSteps(w, h, fn) {
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const ctx = cv.getContext('2d'), im = ctx.createImageData(w, h), d = im.data, c = new THREE.Color();
   for (let y = 0, k = 0; y < h; y++) {
     const lat = (.5 - (y + .5) / h) * Math.PI, cy = Math.sin(lat), cr = Math.cos(lat);
-    for (let x = 0; x < w; x++, k += 4) { const lon = (x + .5) / w * Math.PI * 2; fn(Math.cos(lon) * cr, cy, Math.sin(lon) * cr, c); d[k] = Math.min(255, c.r * 255); d[k + 1] = Math.min(255, c.g * 255); d[k + 2] = Math.min(255, c.b * 255); d[k + 3] = 255; }
+    for (let x = 0; x < w; x++, k += 4) {
+      const lon = (x + .5) / w * Math.PI * 2; fn(Math.cos(lon) * cr, cy, Math.sin(lon) * cr, c); d[k] = Math.min(255, c.r * 255); d[k + 1] = Math.min(255, c.g * 255); d[k + 2] = Math.min(255, c.b * 255); d[k + 3] = 255;
+      if ((k / 4 + 1) % 128 === 0) yield;
+    }
   }
   ctx.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
@@ -184,8 +218,10 @@ const BODY = {
 };
 const BT = {};
 /** a ball with a painted surface, for the sky (lit by the scene's sun, so it shows a real day and night side) */
-export function skyBody(kind, r, { size = 256, glow = 0, emissive = false } = {}) {
-  const tex = BT[kind] || (BT[kind] = paintSphere(size, size / 2, BODY[kind]));
+export function skyBody(kind, r, options) { return finishSteps(skyBodySteps(kind, r, options)); }
+/** Incremental painting for an uncached sky body; yield* returns its finished mesh. */
+export function* skyBodySteps(kind, r, { size = 256, glow = 0, emissive = false } = {}) {
+  const tex = BT[kind] || (BT[kind] = yield* paintSphereSteps(size, size / 2, BODY[kind]));
   const m = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 26), emissive ? new THREE.MeshBasicMaterial({ map: tex, fog: false, toneMapped: false }) : new THREE.MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0, fog: false }));
   m.userData.dynamic = true; return m;
 }

@@ -1,7 +1,7 @@
 # Dawson's Discovery World 3D (3D build 1)
 
 
-**PR #55 integration checkpoint (work in progress):** planet graphics now coexist with build 50's larger Moon/Mars areas and planet cleanup. The offline page is rebuilt, but first-use shader pauses remain unresolved. See `NEXT_TASKS.md` and `PERFORMANCE_LOG.md` before publishing this graphics work.
+**Build 51 — planet travel fixes (PR #55):** the sculpted planets retain build 50's larger Moon/Mars areas. Planet construction runs in short tasks, shaders are rehearsed before play, and Home/map controls cancel pending flights safely. Desktop verification and measurements are recorded in `DEVELOPMENT_LOG.md` and `PERFORMANCE_LOG.md`; physical iPhone confirmation remains a separate check.
 This is the full rebuild of Dawson's Discovery World in real 3D. It is a **separate version**: the 2D game in `../` is untouched and still works. The last 2D build before the rebuild was saved as `../releases/DawsonsDiscoveryWorld_build11_SAVED.html`.
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.

@@ -3,18 +3,15 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
-## IN PROGRESS, NOT SHIPPED: planet graphics overhaul (branch `claude/dawsons-discovery-world-x3f0o2`)
-A second chat is doing a game-wide graphics overhaul on its own branch. It is work in progress on PR #55; the conflict-resolution merge preserves that status.
-- **What is there:** `src/spacekit.js` (new: sculpted ground, craters, rocks, painted moons, sky dome, glows, dust, the new rocket) and a rewritten `src/space.js` (each planet's own terrain, sky, light, landmarks, aliens). `main.js` gained `spaceLight` (per-planet light and haze), a pulled-back camera on the planets (`camT.sp`) and `warmPaint`. The Lab Gardens rocket uses the new model. Main through build 50 is merged in; `GAME_BUILD` follows main at 50. Assign a new number when the graphics work is ready to ship.
-- **Build 50 integration:** PR #55 now combines the sculpted planet scenery with `planets.js`, expanded Moon/Mars areas, countdown preparation, distant-alien sleeping and cleanup on departure. Mars sunset uses the new sky renderer, scenery covers the longer places, and shared painted materials survive planet cleanup. The performance issues below remain work in progress.
-- **Full smoke run during conflict resolution:** 42 passed, two failed (slide landing and pet tap), then the test aborted at `tests/smoke3d.cjs:142` when it assumed a waiting pet existed. Reproduce against main and the combined branch before publishing; do not weaken the checks.
-- **Must fix before shipping** (desktop, software rendering, `tests/perf/space.cjs 3D_build48_index.html index.html`):
-  - **Freezes on arriving at a planet:** longest task 693 ms (Moon), 2106 ms (Mercury), 398 ms (Mars), 743 ms (Saturn); build 48 had 0. Cause: 1–2 new shader programs per planet compiled on arrival (sky dome, dust points, textured sky bodies, rings, double-sided toy materials). Warm them at startup like `warmPaint` does.
-  - **Script time walking:** Neptune 5.1 → 18.8 ms/frame, Pluto 4.1 → 11.9 (the other seven are level: mean of those 4.9 → 4.8). Not yet investigated; suspects are the particle bursts and the Pluto slide/heart updates.
-  - Draw calls are level (build 48: 74–86; now 63–88).
-- **Not done:** full smoke test, device test, `DEVELOPMENT_LOG.md`/`README.md`/`PERFORMANCE_LOG.md` entries, new smoke checks, and everything outside the planets (the Earth districts have not been touched).
+## PR #55: build 51 verified, ready for review
+The planet graphics branch now includes main through build 50 and the build 51 flight/preparation fixes. PR #55 remains open; the user reviews and merges it.
+- Sculpted planet scenery and the 330 m Moon/Mars are retained. Construction is sliced into short tasks, shaders are rehearsed before play, cancelled flights cannot move or hide Dawson later, and private ring textures are freed on departure.
+- Desktop focused checks pass: 40 Node checks, 41 learning contracts, saved-world regressions, flight cancellation/retry, save reload/corruption, all nine planets and expanded activities, zero new shader variants/waits, and stable ring texture counts on repeat visits. See `DEVELOPMENT_LOG.md` and `PERFORMANCE_LOG.md` for limits and measurements.
+- Final full smoke suite passed **195/195**, run alone, including save corruption recovery and zero console errors/warnings. Results and screenshots are committed with the build.
+- Physical iPhone confirmation and future Earth graphics work remain separate tasks.
 
 ## Waiting for the user
+- **Build 51 planet graphics and travel on the real iPhone:** try the countdown, all planets, Home/map during flight, and returning to a planet. Check startup and any visible pause with the in-game Performance Test. Desktop software-rendering results are recorded separately.
 - **Build 50 bigger Moon and Mars on the real iPhone:** walk right to the end; any stutter when a new area appears? Use ⚙️ → Performance Test there.
 - **Build 49 Balloon Hills on the real iPhone:** is the balloon fun to watch (the camera steps back), and can she reach the hill slide by PAW?
 - **Build 48 rocket ride on the real iPhone:** PAW at the rocket, pick a planet, press the red button. Is the lift-off smooth (no freeze when the flame first appears) and is the button easy to press? Is her face visible in the window?
@@ -28,10 +25,8 @@ A second chat is doing a game-wide graphics overhaul on its own branch. It is wo
 - **Real-device check of build 36** on the iPhone (and any iPad or Android device the family has): buttons, panels, framing, full screen on Android/iPad, the ⚙️ graphics modes. Emulation passed 10/10, but that is not a real device.
 
 ## 0. Bigger planets (the family's request, build 50 onward)
-- **RESUME HERE (session ended, 2026-11-14):**
-  1. **Build 50 is in this branch.** Its first full smoke run passed 194/195. The one failure ("moon: missing mooncave") is fixed: PAW at the moon cave now counts as finding it. Rerun `node tests/smoke3d.cjs` to confirm 195/195, then run devices and `tests/perf/planets.cjs 3D_build49_index.html index.html`. Update the PR and publish the artifact.
-  2. **Build 51 (bigger Mercury and Pluto) is written but untested.** It is saved as `docs/wip/build51_mercury_pluto.patch`. Apply it with `git am docs/wip/build51_mercury_pluto.patch` (from the repository root), then build, check in the browser, add smoke checks like build 50's, and test.
-  3. **The family asked a second Claude chat to do the graphics overhaul.** Do not do the graphics overhaul here (the user asked this chat to drop it).
+- Build 50's larger Moon/Mars are integrated into PR #55 together with build 51's planet graphics/travel fixes. Finish that PR's verification before expanding more planets.
+- The untested larger Mercury/Pluto work is preserved in `docs/wip/build51_mercury_pluto.patch`. Its historical build number now collides with this PR: rebase/review it as build 52 or later, then build and test it before use. Do not apply it as part of PR #55.
 - Done: the system (areas built when near, planets freed when you leave), the Moon and Mars (two new areas each).
 - **Next, two per build, same pattern** (add to `PLANET_EXTRA` in `planets.js`; measure with `tests/perf/planets.cjs OLD NEW`):
   - **Mercury:** crater fields, light and shadow, a rock-shape matching game.
