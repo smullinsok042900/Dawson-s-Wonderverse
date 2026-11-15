@@ -4,6 +4,16 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 65 — a start-up crash fixed (build 64's tree batching)
+- **What was wrong:** build 64 removed the one-line `tree()` helper from `src/world.js` but the big toadstool's tree, at
+  `tree(178.5, -2.6, 1.25)`, still used it. Building the world would have thrown a `ReferenceError` and the purple
+  "couldn't start" screen would have shown on every device.
+- **Fixed:** that call is `makeTree(scene, 178.5, -2.6, 1.25)` again (the same helper, called directly), and `makeTree`
+  is imported in `src/world.js` again. Nothing else changed; the 21 park trees stay batched.
+- **Verified by reading the code:** `world.js` has no other use of the removed helper; `makeTree` exists and is exported
+  from `src/nature.js`. The build number is 65 so every device reloads onto the fixed build.
+- **Not tried on a device** (the fetch of build 64 will already have reloaded phones onto it; this fixes that).
+
 ## Checkpoint: build 64 — fewer draw calls (builds 60–64)
 - **The family asked** for the world to run better without losing anything: no new activities, no new pictures, only
   less work in every frame. Every change here draws exactly what was drawn before; it only draws it in fewer pieces.

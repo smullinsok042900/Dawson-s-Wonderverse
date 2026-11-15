@@ -17,7 +17,7 @@ import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 import { makeBatch, shinyMat } from './spacekit.js';
-import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTreeBatch, makeRock, terrainH, fabricMat } from './nature.js';
+import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeTreeBatch, makeRock, terrainH, fabricMat } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -334,7 +334,7 @@ export function buildWorld(G) {
   const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 40), toy('#ff4f9a', { r: .32, cc: .9 })); cap.position.set(174, 1.08, -1.8); cap.castShadow = true; add(cap);
   for (let i = 0; i < 9; i++) { const a = i * 2.4, rr = i < 1 ? 0 : .35 + (i % 3) * .2, sp = new THREE.Mesh(new THREE.SphereGeometry(.13 - (i % 3) * .02, 14, 8), toy('#ffffff', { r: .5 })); sp.scale.y = .45; const yy = 1.08 + .6 - rr * rr * .45; sp.position.set(174 + Math.cos(a) * rr, yy, -1.8 + Math.sin(a) * rr); add(sp); }
   plat(173, 175, 1.55, { pad: true, top: cap, bounce: 13, z: -1.6 });
-  tree(178.5, -2.6, 1.25); block(178.6, 3.4, -1.8, 2.6, .25, 1.6, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65, { z: -1.7 });
+  makeTree(scene, 178.5, -2.6, 1.25); block(178.6, 3.4, -1.8, 2.6, .25, 1.6, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65, { z: -1.7 });
 
   // =================== FLUFFKIN HOUSE (outside) ===================
   const H = new THREE.Group(); H.position.set(190, 0, -2.2); add(H);
