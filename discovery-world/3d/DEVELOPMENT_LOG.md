@@ -18,7 +18,7 @@ are in `PERFORMANCE_LOG.md`.
   - PAW cannot drop you out mid-air; the camera follows you behind the scenery;
   - at the end you step out at the station ("Tap the car to go again!").
 - **Cost:** only on the Moon, only while its crater valley is built: about 12 draw calls (rails 2, ties and posts 1, car 1, station 8 small boxes).
-- **Verified:** a ride in the test browser (desktop, software rendering) reached 16.9 m, went upside down at the loop's top and ended at the station, with no page errors; screenshots. A new smoke check rides it end to end.
+- **Verified:** a ride in the test browser (desktop, software rendering) reached 16.9 m, went upside down at the loop's top and ended at the station, with no page errors; screenshots. A new smoke check rides it end to end. **Full smoke test, run alone: 199/199.**
 
 ## Checkpoint: build 64 — fixes from the family's 16 phone screenshots
 - **Pictures the family disliked:**
