@@ -9,18 +9,9 @@
 // Everything reuses the world's shared materials and shapes (no new shader programs).
 // Every activity: one tap or one walk, a spoken line, a big reaction, nothing to read, no way to fail.
 // ===================================================================
-import { makeBatch, rocketParts, rocketGlass, shinyMat, paintMat, fbm2 } from './spacekit.js';
+import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
-import { makeRidge, makeCrags } from './terrain.js';
-// (build 70) the shoreline foam is a real wavy ribbon now: the edge is displaced along its length (one vertex per 2 m),
-// so the water line breaks and curls instead of being a straight strip of white.
-const foamGeo = (w, h = 1.6) => {
-  const g = new THREE.PlaneGeometry(w, h, Math.round(w / 2), 2), p = g.attributes.position;
-  for (let i = 0; i < p.count; i++) p.setY(i, p.getY(i) + (fbm2(p.getX(i) * .35 + 3, 1.7) - .5) * h * .9 + (fbm2(p.getX(i) * 1.2 + 9, 3.1) - .5) * h * .35);
-  g.computeVertexNormals();
-  return g;
-};
 import { makeToyModel } from './toy-models.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -80,8 +71,8 @@ export function initExpansion(G, api) {
   for (let x = -268; x < -152; x += 6 + rnd(4)) api.makeTree(scene, x, -7.5 - rnd(4), 1 + Math.random() * .35); // (the woods: a real forest behind the path)
   for (let x = -532; x < -410; x += 13 + rnd(5)) api.makeTree(scene, x, -12 - rnd(3), 1 + Math.random() * .3); // (build 35: a few trees behind the farm fields)
   // the sea behind the beach (one big shared plane; it gently bobs)
-  const seaW = makeSea(140, 60, 60, 18), sea = seaW.mesh; /* (build 53: rolling waves instead of a flat blue sheet) */ sea.position.set(-86, .02, -38); scene.add(sea); G.sea = sea;
-  const foam = new THREE.Mesh(foamGeo(140, .9), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
+  const seaW = makeSea(140, 60, 60, 18), sea = seaW.mesh; /* (build 53: rolling waves instead of a flat blue sheet) */ sea.position.set(-86, .02, -38); scene.add(sea); G.sea = sea; { const head = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 16), mat('#7fcf7a', { r: .95, cc: 0 })); head.scale.set(9, 2.6, 22); head.position.set(-158, -1.2, -30); head.receiveShadow = true; scene.add(head); } /* (build 60: a grassy headland where the beach meets the woods, so the sea tucks behind it instead of ending in a straight cut) */
+  const foam = new THREE.Mesh(new THREE.PlaneGeometry(140, .9, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-86, .03, -8.2); scene.add(foam); G.foam = foam;
   // (build 43: the neighbourhood signposts were removed at the family's request: they overlapped activities, and the picture map
   //  and the train already show every place)
 
@@ -99,13 +90,9 @@ export function initExpansion(G, api) {
   // each); at the top a rainbow arch takes you to the Sky Kingdom.
   const SKYGATE = [];
   for (const [start, dir] of [[908, 1], [-798, -1]]) { // (build 49: the left stairs moved out past Balloon Hills)
-    // (build 61) the 24 steps and their landing are painted into ONE mesh (one draw call, the same rounded steps and
-    // colours) instead of 25 separate meshes at each end of the world. The walkable tops stay as platform data.
-    const steps = makeBatch();
-    for (let i = 0; i < 24; i++) { const x = start + dir * (i + .5), y = (i + 1) * .4; steps.put(W.rbox(1, y, 2.2, .3), x, y / 2, 0, RB[i % RB.length]); G.platforms.push({ a: x - .5, b: x + .5, y, layer: '', step: true, stepMax: .45, z: 0 }); }
+    for (let i = 0; i < 24; i++) { const x = start + dir * (i + .5), y = (i + 1) * .4; W.block(x, 0, 0, 1, y, 2.2, RB[i % RB.length], { r: .3, cast: false }); G.platforms.push({ a: x - .5, b: x + .5, y, layer: '', step: true, stepMax: .45, z: 0 }); }
     const top = start + dir * 24, land = [Math.min(top, top + dir * 8), Math.max(top, top + dir * 8)];
-    steps.put(W.rbox(8, 9.6, 2.6, .5), (land[0] + land[1]) / 2, 4.8, 0, '#ffffff'); G.platforms.push({ a: land[0], b: land[1], y: 9.6, layer: '', z: 0 });
-    const stair = steps.mesh(paintMat()); stair.castShadow = false; stair.receiveShadow = true; scene.add(stair);
+    W.block((land[0] + land[1]) / 2, 0, 0, 8, 9.6, 2.6, '#ffffff', { r: .5, cast: false }); G.platforms.push({ a: land[0], b: land[1], y: 9.6, layer: '', z: 0 });
     const gx = top + dir * 5;
     for (let i = 0; i < 6; i++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(2.4 - i * .2, .12, 10, 36, Math.PI), mat(RB[i], { em: RB[i], ei: .3 })); arc.position.set(gx, 9.6, 0); arc.rotation.y = Math.PI / 2; scene.add(arc); }
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, .1, 32), mat('#fff3a6', { em: '#ffd76a', ei: .8 })); pad.position.set(gx, 9.65, 0); scene.add(pad);
@@ -255,11 +242,9 @@ export function initExpansion(G, api) {
   // =================== 🌉 ADVENTURE TRAIL ===================
   builders.trail = c => [
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
-    () => { const stream = makeSea(12, 18, 10, 16), w = stream.mesh; w.position.set(450, .035, -3); c.add(w); /* (build 54: the stream ripples) */
+    () => { const stream = makeSea(12, 14.6, 10, 14), w = stream.mesh; w.position.set(450, .035, -5); c.add(w); /* (build 60: the stream stops before the train track, z up to 2.3) */ /* (build 54: the stream ripples) */
       for (const x of [446, 449.5, 453]) c.block(x, 0, -3.6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 });
-      c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { // (build 63: each row of posts and its rail are painted into ONE mesh: 14 meshes -> 2)
-        const posts = makeBatch(); for (let x = 445.5; x <= 454.5; x += 1.5) posts.put(new THREE.CylinderGeometry(.07, .07, 1, 8), x, .5, z, '#8a5a2a'); posts.put(W.rbox(10, .12, .14, .05), 450, .95, z, '#b07a4a');
-        const pm = posts.mesh(paintMat()); pm.receiveShadow = true; pm.castShadow = false; c.add(pm); }
+      c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { for (let x = 445.5; x <= 454.5; x += 1.5) c.cyl(x, 0, z, .07, .07, 1, '#8a5a2a'); c.block(450, .95, z, 10, .12, .14, '#b07a4a', { r: .05 }); }
       let splash = 0; return (dt, t) => { if (Math.abs(P.x - 450) < 60) stream.update(t); const inW = P.layer === '' && P.x > 444 && P.x < 456 && P.y < 1.5; if (inW && Math.abs(P.vx) > 1 && (splash -= dt) < 0) { splash = .35; c.burst(P.x, .3, 1.5, ['#9fe6ff', '#ffffff'], 4, 1.4); } if (inW) disc('stream', 'A little stream with a wooden bridge!'); }; },
     // climbing rocks up to a lookout with a telescope
     () => { const RK = [[474, 477, 1.2], [478.5, 481.5, 2.4], [483, 486.5, 3.6]]; c.add(boulders(RK.map(([a, b, y]) => [(a + b) / 2, 0, -1.3, b - a, y, 1.8]))); for (const [a, b, y] of RK) c.plat(a, b, y, { z: -1.2 });
@@ -280,7 +265,7 @@ export function initExpansion(G, api) {
     // a crystal cave: walk through, tap the crystals to make them glow
     () => { c.block(539, 0, -4.4, 14, 4.2, 1.2, '#6a5a7a', { r: .5 }); c.block(539, 3.7, -2.6, 14, .7, 3.6, '#7d6a8f', { r: .4 }); // (a back wall and an overhanging roof: the camera can still see you inside)
       for (const x of [532.5, 545.5]) c.block(x, 0, -2.8, 1, 3.8, 2.4, '#6a5a7a', { r: .4 });
-      { const st = makeBatch(); for (let x = 533.5; x < 545; x += 1.6) st.put(new THREE.ConeGeometry(.22, .8 + (x % 3) * .2, 8), x, 3.3, -1.4 - (x % 2), '#8a7a9a', 1, [Math.PI, 0, 0]); const sm = st.mesh(paintMat()); sm.receiveShadow = true; c.add(sm); } // (build 63: the cave's stalactites are one mesh)
+      for (let x = 533.5; x < 545; x += 1.6) { const st = new THREE.Mesh(new THREE.ConeGeometry(.22, .8 + (x % 3) * .2, 8), c.mat('#8a7a9a', { r: .9 })); st.rotation.x = Math.PI; st.position.set(x, 3.3, -1.4 - (x % 2)); c.add(st); }
       const crystals = [534, 536.5, 539, 541.5, 544].map((x, i) => { const m = mat(RB[i + 2], { r: .2, em: RB[i + 2], ei: .05 }).clone(); const cr = new THREE.Mesh(new THREE.OctahedronGeometry(.45, 0), m); cr.scale.y = 1.8; cr.position.set(x, 1.1 + (i % 2) * .5, -2.4); c.add(cr); return { cr, m, on: false, x }; });
       for (const k of crystals) c.tap(k.cr, () => { k.on = !k.on; k.m.emissiveIntensity = k.on ? 1.6 : .05; Sound.withMusic(() => Sound.tone(NOTE[crystals.indexOf(k) + 2] * 2, .5, 'sine', .05, 1)); c.burst(k.x, 1.5, -2.2, [k.m.color.getStyle(), '#fff'], 8, 2);
         if (crystals.every(q => q.on)) { c.disc('cave', '✨ The whole cave is glowing!'); c.say('✨ The whole cave is glowing! You lit every crystal!'); } else c.say(k.on ? '💎 Glow!' : '💤 Sleepy crystal.'); }, k.x);
@@ -498,8 +483,6 @@ export function initExpansion(G, api) {
 
   // =================== 🌲 WHISPERING WOODS (x -272 to -150) ===================
   builders.woods = c => [
-    // (build 69) a real displaced range behind the woods: summits, a ridgeline and erosion gullies instead of empty sky
-    () => { const woodsRange = makeRidge(scene, { x0: -270, x1: -140, zFront: -12, zBack: -100, h: 10, seed: 31, segX: 80, segZ: 44 }); makeCrags(scene, woodsRange.H, { x0: -262, x1: -152, z0: -20, z1: -44, n: 10, seed: 3 }); },
     () => tunnelMouth(c, -232, -4.4, 'toytown'), // (build 32) a secret tunnel to Toy Town
     // the campfire: tap the fire for flames; tap the marshmallow to toast it golden
     () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const st = c.sph(-165 + Math.cos(a) * .9, .15, -2.6 + Math.sin(a) * .9, .25, '#9a9a9a', { m: { r: .9 } }); st.scale.y = .6; } const logs = [0, 1.2].map(r => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.4, 8), mat('#7a4a2a')); lg.rotation.set(Math.PI / 2, r, 0); lg.position.set(-165, .15, -2.6); c.add(lg); return lg; });
@@ -528,7 +511,7 @@ export function initExpansion(G, api) {
     () => { const piles = [-207, -212, -217].map(x => { const p2 = c.sph(x, 0, 0, .9, pick(['#e8902a', '#d9682a', '#f2b23a']), { m: { r: .9 } }); p2.scale.y = .35; return { p2, x, t: 0 }; });
       return (dt) => { for (const q of piles) { q.t = Math.max(0, q.t - dt); if (q.t <= 0 && P.layer === '' && Math.abs(P.x - q.x) < 1 && P.y < .8 && Math.abs(P.vx) > 1) { q.t = 2; c.burst(q.x, .5, 0, ['#e8902a', '#d9682a', '#f2b23a', '#8a5a2a'], 22, 3.5); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('leaves', '🍂 Crunch! Run through the leaf piles!'); } q.p2.scale.y = .35 * (q.t > 0 ? .4 + (2 - q.t) * .3 : 1); } }; },
     // the creek: stepping logs across (jump from log to log), with a gem on the tall one
-    () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 16), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -3); c.add(w);
+    () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 13.3), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -4.35); c.add(w); /* (build 60: the creek stops before the train track; it used to run over the rails) */
       for (const [x, y] of [[-223.5, .5], [-226, 1.0], [-228.5, .5]]) { c.cyl(x, 0, -.4, .45, .5, y, '#8a5a2a', { r: .9 }); c.plat(x - .5, x + .5, y, { z: -.4, step: true, stepMax: .6, onLand: () => c.disc('logs', '🪵 Hop across the stepping logs!') }); } },
     // a jar of fireflies: tap it and they swirl out, glowing
     () => { const jar = c.cyl(-240, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); c.block(-240, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 }); const flies = []; let out = 0;
@@ -545,9 +528,6 @@ export function initExpansion(G, api) {
 
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
   builders.frosty = c => [
-    // (build 69) snowy mountains behind Frosty Peaks: peaks with snow caps above the snow line and icy crags on the
-    // slope, so the snow area has real depth behind it
-    () => { const snowRange = makeRidge(scene, { x0: -430, x1: -290, zFront: -12, zBack: -120, h: 15, seed: 21, snow: true, segX: 84, segZ: 50 }); makeCrags(scene, snowRange.H, { x0: -404, x1: -296, z0: -22, z1: -50, n: 10, seed: 6, snowy: true }); },
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
       for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#e8f1fd', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
@@ -569,7 +549,7 @@ export function initExpansion(G, api) {
       c.tap(pile, () => { const s2 = c.sph(-306.5, .6, -1.6, .2, '#ffffff', { m: { r: .9, cc: 0 } }); s2.userData.t = 0; balls.push(s2); Sound.whoosh ? Sound.whoosh() : Sound.click(); }, -306.5);
       return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i]; b.userData.t += dt; const k = Math.min(1, b.userData.t / .8); b.position.set(-306.5 - 5.5 * k, .6 + Math.sin(k * Math.PI) * 2.4 + 1.4 * k, -1.6 - 2.2 * k); if (k >= 1) { c.remove(b); balls.splice(i, 1); hits++; Sound.tone(200, .15, 'square', .03, .6); c.burst(-312, 2, -3.7, ['#ffffff', '#dff3ff'], 12, 2); c.say(hits % 5 === 0 ? `❄️ Splat! ${hits} snowballs!` : '❄️ Splat!'); c.disc('snowball', '❄️ Tap the snow pile to throw snowballs at the target!'); } } }; },
     // the frozen pond: step on the ice and you glide along (slippery!)
-    () => { const ice = new THREE.Mesh(new THREE.BoxGeometry(14, .06, 7), mat('#bfe6ff', { r: .08, cc: .8 })); ice.position.set(-361, .03, -.6); ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
+    () => { const ice = new THREE.Mesh(new THREE.BoxGeometry(14, .06, 6), mat('#bfe6ff', { r: .08, cc: .8 })); ice.position.set(-361, .03, -1.1); /* (build 60: the pond stops before the train track) */ ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
       return dt => { const keys = api.getKeys(), on = P.layer === '' && P.grounded && P.y < .3 && P.x > -368 && P.x < -354 && !P.ride, held = keys.left || keys.right;
         if (on && Math.abs(P.vx) > 1 && held) glide = P.vx; if (on && !held && Math.abs(glide) > .3) { P.x = Math.max(-367.5, Math.min(-354.5, P.x + glide * dt)); glide *= Math.max(0, 1 - dt * .7); if (!was) { c.say('⛸️ Wheee! Slippery ice!'); c.disc('ice', '⛸️ Slide across the frozen pond!'); } was = true; } else if (!on) { glide = 0; was = false; } }; },
     // the igloo: tap it, it glows warm inside
@@ -669,7 +649,7 @@ export function initExpansion(G, api) {
   builders.pier = c => [
     // the sea behind the pier (one shared-material plane), a foam line and the wooden pier going out over the water
     () => { const pierSea = makeSea(134, 40, 56, 14), sea = pierSea.mesh; sea.position.set(-602, .02, -26); c.add(sea);
-      const foam = new THREE.Mesh(foamGeo(134, .8), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
+      const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
       c.block(-560, .5, -11, 3, .25, 12, '#b07a4a', { r: .04 }); for (const z of [-6, -10, -14, -17]) for (const dx of [-1.3, 1.3]) c.cyl(-560 + dx, 0, z, .14, .14, .8, '#7a5236');
       return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; pierSea.update(t); }; },
     // fishing: tap the rod, wait for the bobber to dip, and a fish jumps into the bucket (count to five, then let them go)
@@ -680,11 +660,11 @@ export function initExpansion(G, api) {
             if (n === 5) { setTimeout(() => { for (const q of caught) c.remove(q.f); caught.length = 0; n = 0; fishCount = 0; c.say('🌊 The fish swim home. Your other finds go in the beach basket!'); }, 2500); } } }
         for (const q of caught) { q.t += dt; const k = Math.min(1, q.t / .8); q.f.position.set(-552 + 2 * k, .6 + Math.sin(k * Math.PI) * 1.6 + .2 * k, -6.8 + 4.6 * k); } }; },
     // the tide pool: tap the rocks and a sea creature appears (and is named)
-    () => { for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const r = c.sph(-566 + Math.cos(a) * 1.3, .1, -3 + Math.sin(a) * .8, .38, '#8a7f74', { m: { r: .9 } }); r.scale.y = .55; } /* (build 68) moving water instead of a flat disc */ const poolW = makeSea(1.8, 1.1, 10, 8), pool = poolW.mesh; pool.position.set(-566, .06, -3); c.add(pool);
+    () => { for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const r = c.sph(-566 + Math.cos(a) * 1.3, .1, -3 + Math.sin(a) * .8, .38, '#8a7f74', { m: { r: .9 } }); r.scale.y = .55; } const pool = c.cyl(-566, 0, -3, 1.05, 1.05, .08, '#5fc0f0', { r: .1, cc: .7 }); pool.scale.z = .62;
       const who = c.toy('⭐', .8, -566, .45, -3); who.visible = false; const SEA = [['⭐', 'a starfish'], ['🐌', 'a sea snail'], ['🦀', 'a little crab'], ['🐙', 'an octopus'], ['🦐', 'a shrimp'], ['🪼', 'a jellyfish']]; let k = -1, show = 0;
       const peek = () => { k = (k + 1) % SEA.length; setToySymbol(who, SEA[k][0]); who.visible = true; show = 3; api.event?.({ type: 'activity', id: 'tide_found' }); api.event?.({ type: 'sea', id: ['starfish', 'snail', 'crab', 'octopus', 'shrimp', 'jellyfish'][k] }); Sound.twinkle(); c.say(`${SEA[k][0]} Look! It's ${SEA[k][1]}!`); c.disc('tidepool', '🌊 Tap the tide pool to find sea creatures!'); };
       c.tap(pool, peek, -566, { icon: '🐙', label: 'Tide pool', action: 'Look in pool', disc: 'tidepool' }); c.tap(who, peek);
-      return (dt, t) => { if (Math.abs(P.x + 566) < 40) poolW.update(t); if (show > 0) { show -= dt; who.position.y = .45 + Math.min(1, (3 - show) * 3) * .4 + Math.sin(t * 4) * .05; if (show <= 0) who.visible = false; } }; },
+      return (dt, t) => { if (show > 0) { show -= dt; who.position.y = .45 + Math.min(1, (3 - show) * 3) * .4 + Math.sin(t * 4) * .05; if (show <= 0) who.visible = false; } }; },
     // musical buoys: five floating buoys play low to high notes
     () => { const buoys = RB.slice(0, 5).map((col, i) => { const x = -574 - i * 2.2; const b = c.sph(x, .35, -7.5, .45, col, { m: { r: .4, cc: .6 } }); b.scale.y = .8; const tp = c.cyl(x, .6, -7.5, .06, .06, .5, '#ffffff'); c.tap(b, () => { Sound.withMusic(() => Sound.tone(NOTE[i * 1 + 1], .35, 'sine', .07, 1)); b.userData.hop = .5; c.burst(x, .9, -7.5, [col, '#fff'], 6, 1.5); c.say(['🎵 Low!', '🎵', '🎵', '🎵', '🎵 High!'][i]); c.disc('buoys', '🎵 Tap the buoys to play music, from low to high!'); }, i === 2 ? -578.4 : undefined); return { b, tp, i }; });
       return (dt, t) => { for (const q of buoys) { q.b.userData.hop = Math.max(0, (q.b.userData.hop || 0) - dt); const y = .35 + Math.sin(t * 1.6 + q.i) * .08 + q.b.userData.hop * .6; q.b.position.y = y; q.tp.position.y = y + .25; } }; },
@@ -724,9 +704,8 @@ export function initExpansion(G, api) {
   // (the echo), long tubes play low notes and short tubes high notes (wind chimes), blow and watch (dandelions), and a
   // grassy hill to climb and slide down.
   builders.hills = c => [
-    // rolling green hills behind: (build 66) a real displaced range with summits, ridgelines, gullies and crags,
-    // instead of four large squashed balls
-    () => { const range = makeRidge(scene, { x0: -860, x1: -650, zFront: -12, zBack: -110, h: 11, seed: 11, segX: 84, segZ: 48 }); makeCrags(scene, range.H, { x0: -828, x1: -676, z0: -20, z1: -46, n: 10, seed: 4 }); },
+    // rolling green hills behind (a few big shared-material bumps) and a soft lawn colour
+    () => { for (const [x, z, r, sy, col] of [[-690, -22, 16, .45, '#8fd88a'], [-722, -26, 20, .55, '#7fcf7a'], [-756, -21, 15, .5, '#9be096'], [-788, -25, 18, .5, '#86d482']]) { const h = c.sph(x, -3, z, r, col, { m: { r: .95, cc: 0 } }); h.scale.y = sy; h.castShadow = false; } },
     // the hot-air balloon: tap the burner, the balloon puffs up into the sky and floats back down
     () => { const X = -684, bal = new THREE.Group(); bal.position.set(X, 0, -4.2); c.add(bal);
       const basket = new THREE.Mesh(W.rbox(1.4, 1, 1.4, .12), mat('#b5793c', { r: .8 })); basket.position.y = .5; basket.castShadow = true; bal.add(basket);

@@ -313,8 +313,8 @@ export function plush(group, spec, opts = {}) {
   // eyes (one each side; side-on animals show them on both sides of the head)
   const E = spec.eye, lidMat = new THREE.MeshPhysicalMaterial({ color: opts.lid || '#d8b090', roughness: .7, sheen: opts.fur !== false ? 1 : 0 });
   const eyes = E.side
-    ? [1, -1].map(sg => { const e = attach(B.head, makeEye(E.r, opts.iris || '#3a2a1a', lidMat), E.x, E.y, sg * E.z); e.rotation.y = sg > 0 ? .5 : Math.PI - .5; return e; })
-    : [1, -1].map(sg => { const e = attach(B.head, makeEye(E.r, opts.iris || '#4a2a14', lidMat), sg * E.x, E.y, E.z); e.rotation.y = sg * .25; return e; });
+    ? [1, -1].map(sg => { const e = attach(B.head, makeEye(E.r, opts.iris || '#3a2a1a', lidMat, opts.lightEyes), E.x, E.y, sg * E.z); e.rotation.y = sg > 0 ? .5 : Math.PI - .5; return e; })
+    : [1, -1].map(sg => { const e = attach(B.head, makeEye(E.r, opts.iris || '#4a2a14', lidMat, opts.lightEyes), sg * E.x, E.y, E.z); e.rotation.y = sg * .25; return e; });
   let mouth = null; if (spec.mouth && opts.mouth !== false) { mouth = attach(B.head, makeMouth(spec.eye.r * .65), 0, spec.mouth.y, spec.mouth.z); mouth.scale.setScalar(.001); }
   if (opts.accessories) opts.accessories(B, (bone, obj, x, y, z) => attach(bone, obj, x, y, z));
   sculptAsync(spec).then(geo => { setTimeout(() => globalThis.__ddwCompile && globalThis.__ddwCompile(holder), 0); const mesh = skin(geo, mat, sk); holder.add(mesh); const shells = opts.furShells ?? (opts.fur !== false ? 6 : 0); if (shells) addFur(mesh, { shells, length: opts.furLength ?? .018 * (spec.furScale || 1), density: opts.furDensity ?? 240 / (spec.furScale || 1) }); mesh.traverse(o => { if (o.isMesh) o.userData.tap = group.userData.tapAll; }); if (group.userData.onReady) group.userData.onReady(mesh); });

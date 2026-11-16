@@ -16,9 +16,7 @@ import { STATIONS } from './train.js';
 import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
-import { makeBatch, shinyMat } from './spacekit.js';
-import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeTreeBatch, makeRock, terrainH, fabricMat, TREE_SPOTS } from './nature.js';
-import { makeRidge, makeCrags } from './terrain.js';
+import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -38,21 +36,13 @@ export function buildWorld(G) {
   G.W = { M, rbox, isShared: g => Object.values(boxGeoCache).includes(g), isSharedMat: m => Object.values(matCache).includes(m), block, cyl, sph }; // (build 29) for expansion.js
   function block(x, y, z, w, h, d, color, o = {}) { // y = bottom
     const m = new THREE.Mesh(rbox(w, h, d, o.r ?? .12), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z);
-    m.castShadow = o.cast ?? true; m.receiveShadow = true; if ((y === 0 || o.aoY != null) && h > .3 && !o.noAO && !o.parent) ao(x, z, w * 1.5 + .4, d * 1.5 + .4, o.aoY ?? 0);
-    // (build 76) every free-standing block that is tall enough to be a wall or a building gets a collision box that
-    // matches its footprint exactly. Climbable ledges are removed again at the end of the build (pruneStandable), so
-    // they stay climbable and everything else becomes solid — automatically, in every district.
-    if (!o.parent && !o.noCollide && h >= 1.2 && y >= -.5) G.collision.add({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, top: y + h, bottom: y, layer: o.layer || '', tag: 'block' });
-    return add(m, o.parent);
+    m.castShadow = o.cast ?? true; m.receiveShadow = true; if ((y === 0 || o.aoY != null) && h > .3 && !o.noAO && !o.parent) ao(x, z, w * 1.5 + .4, d * 1.5 + .4, o.aoY ?? 0); return add(m, o.parent);
   }
-  function cyl(x, y, z, r1, r2, h, color, o = {}) { if (y === 0 && h > .3 && !o.parent) ao(x, z, r2 * 3.2, r2 * 3.2); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true;
-    if (!o.parent && !o.noCollide && h >= 1.2 && y >= -.5) G.collision.add({ x0: x - r2, x1: x + r2, z0: z - r2, z1: z + r2, top: y + h, bottom: y, layer: o.layer || '', tag: 'cyl' });
-    return add(m, o.parent); }
+  function cyl(x, y, z, r1, r2, h, color, o = {}) { if (y === 0 && h > .3 && !o.parent) ao(x, z, r2 * 3.2, r2 * 3.2); const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, o.seg || 32), o.mat || M(color, o.m)); m.position.set(x, y + h / 2, z); m.castShadow = o.cast ?? true; m.receiveShadow = true; return add(m, o.parent); }
   function sph(x, y, z, r, color, o = {}) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = o.cast ?? true; return add(m, o.parent); }
-  const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); if (G.collision) G.collision.uncover(p); return p; };
+  const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: o.layer || '', ...o }; G.platforms.push(p); return p; };
   // solid things in the creature's path: you can't walk through them (low ones you hop up onto by yourself)
-  // (build 75) a solid now also registers a real box collider (x range, z depth, height, layer) with the collision system
-  const solid = (a, b, top, o = {}) => { const p = { a, b, top, layer: o.layer || '', bottom: o.bottom ?? 0 }; G.solids.push(p); G.collision.add({ x0: a, x1: b, top: p.top, bottom: p.bottom, layer: p.layer, z0: (o.z ?? 0) - (o.d ?? 1.2), z1: (o.z ?? 0) + (o.d ?? 1.2), tag: 'world' }); return p; };
+  const solid = (a, b, top, o = {}) => { G.solids.push({ a, b, top, layer: o.layer || '' }); };
   const tap = (obj, fn, o = {}) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); if (o.paw) G.interact.push({ x: o.paw[0], y: o.paw[1], layer: o.layer || '', disc: o.disc, run: fn, hintY: o.hintY ?? 2 }); return obj; };
 
   // ---------- floor: glossy tiles, a different colour in each zone ----------
@@ -241,16 +231,12 @@ export function buildWorld(G) {
   G.orbs = [127, 130.5].map(x => { cyl(x, 0, -2, .5, .7, 1.2, '#5b2f8a'); const o = sph(x, 1.85, -2, .65, '#c9a6ff', { m: { em: '#a15cff', ei: .8, opacity: .85, irid: 1 } }); const orb = { x, o, zap: 0 }; tap(o, () => G.zapOrb(orb), { paw: [x, 0], disc: 'orb', hintY: 2.8 }); return orb; });
 
   // =================== ADVENTURE PARK ===================
-  // (build 66) REAL MOUNTAINS behind the park, instead of 29 squashed balls: a displaced range with several summits, a
-  // wandering ridgeline, steep faces, erosion gullies, stepped rock ledges and snow on the tops (src/terrain.js), all in
-  // ONE mesh, plus angular crags on its slope. The first 3 m of the range is exactly flat at y = 0, so every tree and
-  // ride in the park stands exactly where it stood before.
-  const parkRange = makeRidge(scene, { x0: 120, x1: 410, zFront: -12, zBack: -120, h: 13, seed: 3, snow: true, segX: 120, segZ: 54 });
-  makeCrags(scene, parkRange.H, { x0: 142, x1: 390, z0: -22, z1: -52, n: 14, seed: 9 });
+  // soft hills and trees in the back
+  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#93cf9c', '#82c28e', '#a6dbb0'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
   const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
-  // (build 64: the 21 park trees are drawn as a few instanced meshes, by variant and 24 m chunk, instead of ~6 meshes each)
-  makeTreeBatch(scene, [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].map(([x, z], i) => [x, z, 1 + (i % 2) * .3]));
+  const tree = (x, z, s = 1) => makeTree(scene, x, z, s); // build 15: real branching trees
+  [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
   // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)
   G.grassTime = { value: 0 };
   G.grassMeshes = grassField(scene, { x0: 136, x1: 394, time: G.grassTime, ok: (x, z) => !(
@@ -285,7 +271,7 @@ export function buildWorld(G) {
     const c = ['#ff8fc8', '#ffb35c', '#ffd84a', '#6fd38c', '#6fb8ff', '#b28cff'][i], pony = new THREE.Group(); pony.position.y = .42; ride.add(pony);
     plush(pony, quadSpec({ scale: .82, body: '#fffafc', belly: '#fffafc', snoutCol: '#ffe6f2', hoof: '#ffd23f', horn: '#ffd23f', legLen: .42, neck: 1.05, tail: 'long', iris: '#8a4ae0', voxel: .03,
       extraPaints: (s2, hx2, hyy) => [{ type: 'limb', a: s2([hx2 - .35, hyy - .15, 0]), b: s2([hx2 - .02, hyy + .15, 0]), ra: .13 * .62, rb: .1 * .62, color: c, soft: .02 }, { type: 'sphere', c: s2([-.95, .75, 0]), r: .25 * .62, color: c, soft: .02 }] }),
-      { fur: false, rough: .22, clearcoat: 1, lid: '#fffafc', iris: '#8a4ae0', mouth: false });
+      { fur: false, rough: .22, clearcoat: 1, lid: '#fffafc', iris: '#8a4ae0', mouth: false, lightEyes: true }); // (build 60: light eyes: 48 fewer draws in the park, the same look at this size)
     const saddle = new THREE.Mesh(new THREE.CylinderGeometry(.24, .26, .1, 20), M(c, { r: .4 })); saddle.scale.z = .75; saddle.position.set(-.05, 1.25, 0); ride.add(saddle);
     const seat = new THREE.Object3D(); seat.position.set(-.05, 1.36, 0); ride.add(seat);
     mounts.push({ m, ride, seat });
@@ -305,19 +291,15 @@ export function buildWorld(G) {
   const fw = new THREE.Group(); fw.position.set(160, 7.5, -3.2); add(fw);
   for (const z of [-.6, .6]) { const leg = (s) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.18, .25, 8.6, 12), M('#ffffff')); l.position.set(s * 2.2, -3.9, z); l.rotation.z = s * .28; l.castShadow = true; fw.add(l); }; leg(-1); leg(1); }
   const wheel = new THREE.Group(); fw.add(wheel);
-  // (build 62) the rim, the 10 spokes and the hub turn together, so they are painted into ONE mesh (12 fewer draw calls)
-  { const wb = makeBatch();
-    wb.put(new THREE.TorusGeometry(6.4, .16, 12, 80), 0, 0, 0, '#ff65b5');
-    wb.put(new THREE.TorusGeometry(5.9, .08, 8, 80), 0, 0, 0, '#ffd84a');
-    for (let i = 0; i < 10; i++) wb.put(new THREE.CylinderGeometry(.05, .05, 6.4, 6), Math.sin(-i / 10 * Math.PI * 2) * 3.2, Math.cos(i / 10 * Math.PI * 2) * 3.2, 0, '#ffffff', 1, [0, 0, i / 10 * Math.PI * 2]);
-    wb.put(new THREE.SphereGeometry(.6, 20, 12), 0, 0, 0, '#ffd84a');
-    const frame = wb.mesh(shinyMat()); frame.castShadow = false; wheel.add(frame); }
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(6.4, .16, 12, 80), M('#ff65b5')); wheel.add(rim);
+  const rim2 = new THREE.Mesh(new THREE.TorusGeometry(5.9, .08, 8, 80), M('#ffd84a')); wheel.add(rim2);
+  for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 6.4, 6), M('#ffffff')); s.rotation.z = i / 10 * Math.PI * 2; s.position.set(Math.sin(-i / 10 * Math.PI * 2) * 3.2, Math.cos(i / 10 * Math.PI * 2) * 3.2, 0); wheel.add(s); }
+  sph(0, 0, 0, .6, '#ffd84a', { parent: wheel });
   const gondolas = [];
   for (let i = 0; i < 10; i++) {
     const g = new THREE.Group(); fw.add(g);
-    // (build 62) each cabin and its hood are one painted mesh (one draw call instead of two)
-    const gb = makeBatch(); gb.put(rbox(1.3, .9, 1.1, .25), 0, -.75, 0, RAINBOW[i % 8]); gb.put(new THREE.SphereGeometry(.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), 0, .05, 0, '#ffffff');
-    const cab = gb.mesh(shinyMat()); cab.castShadow = true; g.add(cab);
+    const cab = new THREE.Mesh(rbox(1.3, .9, 1.1, .25), M(RAINBOW[i % 8])); cab.position.y = -.75; cab.castShadow = true; g.add(cab);
+    const hood = new THREE.Mesh(new THREE.SphereGeometry(.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#ffffff')); hood.position.y = .05; g.add(hood);
     const seat = new THREE.Object3D(); seat.position.set(0, -.35, .2); g.add(seat);
     gondolas.push({ g, seat, i });
   }
@@ -347,7 +329,7 @@ export function buildWorld(G) {
   const cap = new THREE.Mesh(new THREE.LatheGeometry(capPts, 40), toy('#ff4f9a', { r: .32, cc: .9 })); cap.position.set(174, 1.08, -1.8); cap.castShadow = true; add(cap);
   for (let i = 0; i < 9; i++) { const a = i * 2.4, rr = i < 1 ? 0 : .35 + (i % 3) * .2, sp = new THREE.Mesh(new THREE.SphereGeometry(.13 - (i % 3) * .02, 14, 8), toy('#ffffff', { r: .5 })); sp.scale.y = .45; const yy = 1.08 + .6 - rr * rr * .45; sp.position.set(174 + Math.cos(a) * rr, yy, -1.8 + Math.sin(a) * rr); add(sp); }
   plat(173, 175, 1.55, { pad: true, top: cap, bounce: 13, z: -1.6 });
-  makeTree(scene, 178.5, -2.6, 1.25); block(178.6, 3.4, -1.8, 2.6, .25, 1.6, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65, { z: -1.7 });
+  tree(178.5, -2.6, 1.25); block(178.6, 3.4, -1.8, 2.6, .25, 1.6, '#b06a32', { r: .1 }); plat(177.3, 179.9, 3.65, { z: -1.7 });
 
   // =================== FLUFFKIN HOUSE (outside) ===================
   const H = new THREE.Group(); H.position.set(190, 0, -2.2); add(H);
@@ -391,8 +373,22 @@ export function buildWorld(G) {
   block(1009.5, 0, -2.8, 3.6, .9, 1.4, '#a15cff', { parent: room, r: .35 }); block(1009.5, .9, -3.4, 3.6, 1, .4, '#b58cff', { parent: room, r: .2 });
   for (const x of [1008.4, 1010.6]) block(x, .9, -2.7, 1.4, .3, 1.1, '#c9a6ff', { parent: room, r: .15 });
   plat(1007.8, 1011.2, 1.1, { layer: 'in', step: true, bounce: 11, sofa: true, z: -2.4 });
-  block(1015.5, 0, -3.5, 3, 3, .9, '#ff9fc0', { parent: room, r: .2 }); block(1015.5, .2, -3.05, 1.8, 1.6, .2, '#4a2a5a', { parent: room, r: .4, cast: false });
-  G.fire = [0, 1, 2].map(i => { const f = new THREE.Mesh(new THREE.ConeGeometry(.28, .9, 12), new THREE.MeshStandardMaterial({ color: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissive: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissiveIntensity: 1.2 })); f.position.set(1015 + (i - 1) * .45, .65, -2.95); room.add(f); return f; });
+  // (build 60) A REAL FIREPLACE: the flames used to float in front of a solid block, half a metre off centre. Now there are
+  // two pillars and a mantel shelf around a dark, recessed firebox, two crossed logs on the hearth, and the flames stand on
+  // the logs INSIDE the opening (they flicker up from their base, not from their middle).
+  { const FX = 1015.5;
+    block(FX, 0, -3.9, 3.2, 3.2, .3, '#ff9fc0', { parent: room, r: .1 });                                  // the chimney breast (back)
+    for (const s of [-1, 1]) block(FX + s * 1.2, 0, -3.35, .8, 2.05, .9, '#ff9fc0', { parent: room, r: .12 }); // the two pillars
+    block(FX, 2.05, -3.3, 3.4, .22, 1.05, '#ffd1e0', { parent: room, r: .08 });                            // the mantel shelf
+    block(FX, 2.27, -3.6, 2.6, .9, .5, '#ff9fc0', { parent: room, r: .1 });                                 // above the mantel
+    block(FX, 1.7, -3.35, 1.6, .35, .9, '#ff9fc0', { parent: room, r: .06 });                               // the top of the opening
+    block(FX, 0, -3.72, 1.6, 1.7, .05, '#2a1420', { parent: room, r: .3, cast: false });                    // the dark firebox
+    block(FX, 0, -3.35, 1.6, .06, .8, '#3a1f2e', { parent: room, r: .2, cast: false });                     // its floor
+    block(FX, 0, -2.55, 3.4, .08, .75, '#d8c6e8', { parent: room, r: .1, cast: false });                    // the stone hearth in front
+    const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.2), new THREE.MeshStandardMaterial({ color: '#2a1420', emissive: '#ff7a2e', emissiveIntensity: .35 })); glow.position.set(FX, .7, -3.69); room.add(glow); G.fireGlow = glow;
+    for (const [rz, ry] of [[.12, .5], [-.12, -.5]]) { const log = new THREE.Mesh(new THREE.CylinderGeometry(.1, .11, 1.1, 10), M('#7a4a2e', { r: .9, cc: 0 })); log.rotation.z = Math.PI / 2 + rz; log.rotation.y = ry; log.position.set(FX, .16, -3.3); log.castShadow = true; room.add(log); }
+    const flameGeo = new THREE.ConeGeometry(.24, .85, 12); flameGeo.translate(0, .425, 0); // (base at the bottom: they grow up from the logs)
+    G.fire = [0, 1, 2].map(i => { const f = new THREE.Mesh(flameGeo, new THREE.MeshStandardMaterial({ color: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissive: ['#ff9a2e', '#ffc21c', '#ff6fae'][i], emissiveIntensity: 1.2 })); f.position.set(FX + (i - 1) * .32, .2, -3.32 + (i === 1 ? .06 : 0)); if (i === 1) f.scale.setScalar(1.2); room.add(f); return f; }); }
   const drum = cyl(1020, 0, -1.6, .8, .8, 1, '#ff6fae'); room.add(drum); cyl(1020, 1, -1.6, .8, .8, .06, '#fff8ea', { parent: room, cast: false });
   tap(drum, () => G.tapDrum(), { paw: [1020, 0], layer: 'in', disc: 'fluffdrum', hintY: 2 });
   // upstairs: the nursery, a bed for each Fluffkin, and a spinning mobile
@@ -426,23 +422,5 @@ export function buildWorld(G) {
   // where the six lost baby Fluffkins wait
   G.fluffSpots = [[22.4, 3.8, -1.9], [44, -6, -.3], [87, 3.0, -1.7], [121, 5.0, -.4], [167.5, 2.0, -2.2], [178.6, 3.65, -1.7]];
   G.secretStar = [12, 3.2];
-
-  // ---------- (build 75) REAL COLLISION for the things you can see ----------
-  // Before this, houses, trees, rocks, the carousel and the Ferris wheel had no collision at all, so the player walked
-  // straight through them. Each of them now gets a box that matches its visible footprint and its z position.
-  const propBox = (x, z, w, d, top, bottom = 0, layer = '') => G.collision.add({ x0: x - w / 2, x1: x + w / 2, z0: z - d / 2, z1: z + d / 2, top, bottom, layer, tag: 'world' });
-  for (const t of TREE_SPOTS) G.collision.add({ x0: t.x - .45, x1: t.x + .45, z0: t.z - .45, z1: t.z + .45, top: 5, tag: 'world' }); // every trunk
-  // the boulders along the park (the same list that placed them, so position and size match the meshes exactly)
-  [[141, -9.5, .5], [168, -10.2, .7], [186, -8.8, .4], [214, -9.6, .6], [252, -10.4, .55], [305, -9.6, .7], [341, -8.9, .45], [359, -9.8, .6], [393, -9.2, .5], [181, 4.25, .22], [233, 4.2, .2], [318, 4.25, .24]]
-    .forEach(([x, z, s]) => propBox(x, z, s * 2.2, s * 2.2, s * 1.1));
-  propBox(190, -2.2, 11, 4, 6.5);      // the Fluffkin House
-  propBox(144, -5.4, 9.2, 9.2, 5.2);   // the carousel platform
-  propBox(160, -3.2, 4.4, 2.4, 8);     // the Ferris wheel legs and hub
-  propBox(174, -1.8, 1.1, 1.1, 1.6);   // the bouncy mushroom's stem
-  propBox(22.4, -1.9, 2, 2, 5.2);      // the slide tower
-  propBox(34, 0, 3.4, 3.4, .5);        // the trampoline rim
-
-  // remove colliders that are really steps/ledges, so climbing still works exactly as before
-  G.collision.pruneStandable(G.platforms);
 }
 function rand(a, b) { return a + Math.random() * (b - a); }

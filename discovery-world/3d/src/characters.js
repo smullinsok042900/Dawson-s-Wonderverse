@@ -39,23 +39,23 @@ const CORNEA = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0, 
 const SHINE = new THREE.MeshBasicMaterial({ color: '#ffffff' }), SHINE2 = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .75 });
 const irisMatCache = new Map();
 function irisMat(color) { if (!irisMatCache.has(color)) { const tx = irisTexture(color); irisMatCache.set(color, new THREE.MeshPhysicalMaterial({ map: tx, emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: .32, roughness: .25, clearcoat: .8 })); } return irisMatCache.get(color); }
-function makeEye(r, irisColor, lidMat) {
+function makeEye(r, irisColor, lidMat, light) { // (build 60) light: for small, far-off eyes (carousel ponies): no cornea gloss, one sparkle, no lower lid = 4 parts instead of 8
   const g = new THREE.Group();
   const ball = new THREE.Mesh(cached('eyeball', () => new THREE.SphereGeometry(1, 32, 22)), SCLERA); ball.scale.setScalar(r); g.add(ball);
   // the iris and pupil sit on a "gaze" pivot so they can glance around
   const gaze = new THREE.Group(); g.add(gaze);
   const iris = new THREE.Mesh(cached('iris2', () => { const s = new THREE.SphereGeometry(1.012, 40, 12, 0, Math.PI * 2, 0, .9); s.rotateX(Math.PI / 2); return s; }), irisMat(irisColor));
   iris.scale.setScalar(r); gaze.add(iris);
-  const cornea = new THREE.Mesh(cached('cornea', () => { const s = new THREE.SphereGeometry(1.05, 28, 12, 0, Math.PI * 2, 0, 1.0); s.rotateX(Math.PI / 2); return s; }), CORNEA); cornea.scale.setScalar(r); g.add(cornea);
+  if (!light) { const cornea = new THREE.Mesh(cached('cornea', () => { const s = new THREE.SphereGeometry(1.05, 28, 12, 0, Math.PI * 2, 0, 1.0); s.rotateX(Math.PI / 2); return s; }), CORNEA); cornea.scale.setScalar(r); g.add(cornea); }
   // catchlights (stay put while the eye glances, like real reflections): a big soft one, a small one, a tiny sparkle
   const sg = cached('shine', () => new THREE.SphereGeometry(1, 14, 10));
   const s1 = new THREE.Mesh(sg, SHINE); s1.scale.set(r * .27, r * .32, r * .05); s1.position.set(-r * .3, r * .33, r * .97); s1.rotation.z = .4; g.add(s1);
-  const s2 = new THREE.Mesh(sg, SHINE2); s2.scale.set(r * .11, r * .11, r * .04); s2.position.set(r * .3, -r * .26, r * .98); g.add(s2);
-  const s3 = new THREE.Mesh(sg, SHINE2); s3.scale.set(r * .06, r * .06, r * .03); s3.position.set(-r * .05, r * .5, r * .89); g.add(s3);
+  if (!light) { const s2 = new THREE.Mesh(sg, SHINE2); s2.scale.set(r * .11, r * .11, r * .04); s2.position.set(r * .3, -r * .26, r * .98); g.add(s2);
+  const s3 = new THREE.Mesh(sg, SHINE2); s3.scale.set(r * .06, r * .06, r * .03); s3.position.set(-r * .05, r * .5, r * .89); g.add(s3); }
   // eyelids: an upper lid that slides down to blink (and half-closes when happy)
   const lidG = cached('lid', () => new THREE.SphereGeometry(1.09, 32, 14, 0, Math.PI * 2, 0, Math.PI / 2));
   const upper = new THREE.Group(); g.add(upper); const lid = new THREE.Mesh(lidG, lidMat); lid.scale.setScalar(r); upper.add(lid);
-  const lower = new THREE.Group(); g.add(lower); const lid2 = new THREE.Mesh(lidG, lidMat); lid2.scale.setScalar(r); lid2.rotation.x = Math.PI; lower.add(lid2);
+  const lower = new THREE.Group(); g.add(lower); if (!light) { const lid2 = new THREE.Mesh(lidG, lidMat); lid2.scale.setScalar(r); lid2.rotation.x = Math.PI; lower.add(lid2); }
   g.traverse(o => { if (o.isMesh) o.castShadow = false; });
   g.userData = { upper, lower, gaze, open: 1, gx: 0, gy: 0, tx: 0, ty: 0, next: Math.random() * 2 };
   setLids(g, 1, 0);

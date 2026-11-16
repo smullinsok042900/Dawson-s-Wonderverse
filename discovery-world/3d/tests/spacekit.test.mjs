@@ -82,20 +82,16 @@ test('painted sky bodies yield and retain their original pixels and shared textu
   } finally { if (previousDocument === undefined) delete globalThis.document; else globalThis.document = previousDocument; }
 });
 
-test('a crater is a real hole: a flat floor, a steep wall and a raised rim', () => {
-  const at = (cr, d) => K.craterH(cr, cr.x + d * cr.r, cr.z);
-  const flat = { x: 5000, z: -10, r: 6, depth: .3, rim: .15 };
-  const floor = at(flat, 0), wall = at(flat, .9), rim = at(flat, 1), out = at(flat, 2.1), far = at(flat, 5);
-  assert.ok(floor < -6 * .3 * .55, 'the floor is a real depression: ' + floor.toFixed(2) + ' m');
-  assert.ok(rim > 6 * .15 * .9, 'the rim stands above the plain: ' + rim.toFixed(2) + ' m');
-  assert.ok(wall > floor + 1, 'the wall climbs from the floor up to the rim');
-  assert.ok(Math.abs(out) < rim * .5, 'outside the rim the ground settles back down');
-  assert.equal(far, 0, 'far away a crater changes nothing at all');
-  const floorEdge = at(flat, .12);
-  assert.ok(Math.abs(floorEdge - floor) < 6 * .3 * .2, 'the middle is a flat floor, not a point');
-  const peaked = { ...flat, peak: true };
-  assert.ok(at(peaked, 0) > floor, 'a big crater keeps a central peak above its floor');
-  const a = { ...flat }, b = { ...flat };
-  assert.equal(K.craterH(a, 5001, -10), K.craterH(b, 5001, -10));
-  assert.equal(a.s, b.s);
+test('crater height and shade remain exact inside and outside the early distance check', () => {
+  function previous(cr, x, z) {
+    const dx = x - cr.x, dz = z - cr.z, d = Math.sqrt(dx * dx + dz * dz) / cr.r;
+    if (d > 2.2) { cr.s = 0; return 0; }
+    const rim = Math.exp(-((d - 1) * (d - 1)) / .045), bowl = d < 1 ? d * d - 1 : 0, mid = cr.peak ? Math.exp(-d * d / .03) * .35 : 0;
+    cr.s = rim * .9 + bowl * .8 + (d > 1 ? Math.exp(-(d - 1) * 2.2) * .35 : 0) + dx / cr.r * Math.exp(-((d - .72) * (d - .72)) / .07) * 1.1;
+    return cr.r * (cr.depth ?? .3) * (bowl + mid) + cr.r * (cr.rim ?? .12) * rim;
+  }
+  for (const r of [1.6, 3, 6.5, 11]) for (const d of [0, .72, 1, 2.2 - 1e-14, 2.2, 2.2 + 1e-14, 3, 100]) {
+    const a = { x: 5000, z: -10, r, peak: true }, b = { ...a }, x = a.x + d * r;
+    assert.equal(K.craterH(a, x, -10), previous(b, x, -10)); assert.equal(a.s, b.s);
+  }
 });

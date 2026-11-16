@@ -13,14 +13,13 @@
 import * as THREE from 'three';
 import { toy } from './creatures.js';
 import { makeToyModel } from './toy-models.js';
-import { makeSea } from './earthkit.js';
 
 export const SEA = { ox: 3000, w: 128, floor: -12, top: -.6, poolB: 3008, tunnelTop: -9.3, exitX: -8 };
 
 export function initSea(G, api) {
   const { scene, Sound, player: P } = api;
   const root = new THREE.Group(); root.name = 'sea'; root.userData.dynamic = true; root.visible = false;
-  let built = false, splashPool = null; const ups = [], taps = [];
+  let built = false; const ups = [], taps = [];
   const say = m => api.toast(m), disc = (id, m) => api.discover(id, m);
   const box = (x, y, z, w, h, d, c, o = {}) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), toy(c, o)); m.position.set(x, y + h / 2, z); root.add(m); return m; };
   const ball = (x, y, z, r, c, o = {}) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), toy(c, o)); m.position.set(x, y, z); root.add(m); return m; };
@@ -98,7 +97,6 @@ export function initSea(G, api) {
   function climbOut() { api.flash(); P.layer = ''; P.x = SEA.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.swim = false; root.visible = false; Sound.tone(520, .2, 'triangle', .05, 1.2); say('💦 Out of the pool! Drip drip!'); api.snap(); }
   let lastX = 0;
   function update(dt, t) {
-    if (splashPool && Math.abs(P.x - splashPool.cx) < 40) splashPool.sea.update(t); // (build 67: the pool's ripples)
     if (P.layer !== 'sea') { if (root.visible) root.visible = false; return; }
     root.visible = true;
     // walls: the pool's right-hand wall only has an opening at the bottom (the tunnel)
@@ -113,11 +111,7 @@ export function initSea(G, api) {
   // the Splash Pool on the beach side of the Playhouse
   { const X0 = -12, X1 = -4, z = -3.4, cx = (X0 + X1) / 2;
     const rim = new THREE.Mesh(new THREE.BoxGeometry(X1 - X0 + 1, .35, 4.2), toy('#ffffff', { r: .4 })); rim.position.set(cx, .17, z); scene.add(rim);
-    // (build 67) a real rippling surface instead of a flat blue box: rolling waves with their own slopes (so the light
-    // slides across them), shallow-to-deep colouring, and a crest that lifts above the rim. It is driven from this
-    // place's own update, only while you are near the pool.
-    const poolSea = makeSea(X1 - X0 - .3, 3.5, 16, 10), water = poolSea.mesh; water.position.set(cx, .3, z); scene.add(water);
-    splashPool = { sea: poolSea, cx };
+    const water = new THREE.Mesh(new THREE.BoxGeometry(X1 - X0 - .3, .1, 3.5), toy('#4fc3f7', { r: .1, cc: .8, em: '#39a9e6', ei: .25 })); water.position.set(cx, .33, z); scene.add(water);
     const board = new THREE.Mesh(new THREE.BoxGeometry(2.2, .15, .7), toy('#ff6fae', { r: .5 })); board.position.set(X1 - .4, .8, z + 1.6); scene.add(board);
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .8, 8), toy('#ffffff')); leg.position.set(X1 + .5, .4, z + 1.6); scene.add(leg);
     for (const k of [water, rim, board]) { k.userData.tap = dive; G.taps.push(k); }

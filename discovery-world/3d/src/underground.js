@@ -14,7 +14,6 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { toy } from './creatures.js';
 import { NOTES } from './audio.js';
 import { RAINBOW } from './world.js';
-import { makeCaveRock } from './terrain.js';
 
 export const UG = {
   ceil: -1.6, floor: -6, x0: 2, x1: 57,
@@ -36,7 +35,7 @@ export function buildUnderground(G) {
   }
   const sph = (x, y, z, r, color, o = {}) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), o.mat || M(color, o.m)); m.position.set(x, y, z); m.castShadow = !!o.cast; return add(m); };
   const plat = (a, b, y, o = {}) => { const p = { a, b, y, layer: '', ...o }; G.platforms.push(p); return p; };
-  const solid = (a, b, top, bottom) => { G.solids.push({ a, b, top, bottom, layer: '' }); G.collision.add({ x0: a, x1: b, top, bottom: bottom ?? 0, layer: '', tag: 'underground' }); };
+  const solid = (a, b, top, bottom) => G.solids.push({ a, b, top, bottom, layer: '' });
   const tap = (obj, fn, o = {}) => { obj.traverse(m => { m.userData.tap = fn; }); G.taps.push(obj); if (o.paw) G.interact.push({ x: o.paw[0], y: o.paw[1], layer: '', disc: o.disc, run: fn, hintY: o.hintY ?? 2 }); return obj; };
 
   // ---------- the earth between the floor and the underground (cut away at the front) ----------
@@ -60,10 +59,6 @@ export function buildUnderground(G) {
   const m4 = new THREE.Matrix4(), col = new THREE.Color();
   for (let i = 0; i < 140; i++) { m4.makeTranslation(UG.x0 + (i * 7.31) % (UG.x1 - UG.x0), UG.floor + .5 + (i * 2.17) % 3.8, -5.85); dots.setMatrixAt(i, m4); dots.setColorAt(i, col.set(['#9fe6ff', '#ff9fd8', '#c9a6ff', '#fff3a6'][i % 4])); }
   add(dots);
-  // (build 68) REAL CAVE ROCK: a rough ceiling with 44 hanging stalactites and 20 stalagmites along the back of the cave,
-  // painted into ONE mesh. They keep to z −5.8 … −3.4, so the ball shaft, the lift, the crawl tunnel and the walking
-  // lane are untouched.
-  makeCaveRock(scene, { x0: UG.x0, x1: UG.x1, ceil: UG.ceil, floor: UG.floor, zBack: -5.8, zFront: -3.4, seed: 5 });
   // warm lanterns + coloured lights
   for (const [x, c] of [[6, '#ffd9a0'], [16, '#ff9fd8'], [24, '#9fe6ff'], [33, '#ffe2a0'], [43, '#c9a6ff'], [53, '#9ff7e0']]) {
     const l = new THREE.PointLight(c, 22, 13, 1.6); l.userData.zone = 'under'; l.position.set(x, UG.floor + 3.2, 1); add(l);

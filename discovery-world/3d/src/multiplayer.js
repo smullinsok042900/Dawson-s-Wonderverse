@@ -224,7 +224,6 @@ export function initMultiplayer(G, api) {
   function removeOther(id, quiet) { const o = others.get(id); if (!o) return; others.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM]) if (m) scene.remove(m);
     for (const pet of o.petModels || []) scene.remove(pet.root);
     if (o.ring) { o.ring.geometry.dispose(); o.ring.material.dispose(); o.mark.geometry.dispose(); o.mark.material.dispose(); }
-    if (o.waveM) o.waveM.material.dispose(); // (build 60: the sprite material was made per friend; its picture is shared)
     if (!quiet) { say('👋 A friend left the room.', true); if (o.model && o.model.root.visible) api.burst && api.burst(o.model.root.position.x, o.model.root.position.y + 1, o.model.root.position.z, [COLOURS[o.colour % 4], '#ffffff'], 14, 2.5); }
     if (panel.classList.contains('show') && room) render('room'); }
 
