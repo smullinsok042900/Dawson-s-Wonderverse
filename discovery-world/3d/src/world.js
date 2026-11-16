@@ -135,7 +135,7 @@ export function buildWorld(G) {
     const halos = new THREE.Points(geo, new THREE.PointsMaterial({ size: 1.1, map: haloTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .8 })); add(halos); }
 
   // ---------- rainbow arches between zones ----------
-  for (const x of [51, 92, 135]) {
+  for (const x of [92, 135]) { // (build 62: the arch at x 51 is gone: its left foot stood in the sky ladder and its right half went behind the paint wall)
     for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(5.6 - i * .32, .17, 12, 48, Math.PI), M(RAINBOW[i])); t.position.set(x, 0, -3.8); add(t); }
     cyl(x - 5.6, 0, -3.8, .5, .6, 1, '#ffffff'); cyl(x + 5.6, 0, -3.8, .5, .6, 1, '#ffffff');
   }

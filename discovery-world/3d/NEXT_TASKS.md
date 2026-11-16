@@ -8,6 +8,9 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - Try talking on two real devices (iPhone Safari + another phone): same Wi-Fi first, then one on mobile data. If mobile data does not connect, set up the free TURN relay (MULTIPLAYER.md) and put its URL in `src/mp-config.js`.
 - On the iPhone, check that the voices come out of the loudspeaker (not the earpiece), and that game sounds still play.
 
+## Camera after floating down from the whale
+In the family's video (3:50), jumping off the whale above the Fluffkin House let the camera show the house wall for about 2 s while it caught up. Make the camera follow height faster while floating (`P.floaty`), measured.
+
 ## Character portraits: read back without a GPU stall
 The portraits (build 56) are drawn once at start-up and read with a synchronous `gl.readPixels`. Chromium logs "GPU stall due to ReadPixels" (the smoke test makes this one exception). Try `renderer.readRenderTargetPixelsAsync` into a render target, measured on the Pixel and iPhone. It must not undo the Android fix.
 

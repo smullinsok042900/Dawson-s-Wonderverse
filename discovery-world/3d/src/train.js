@@ -82,7 +82,7 @@ export function initTrain(G, api) {
     for (let i = 0; i < N; i++) { m4.makeTranslation(TRAIN.x0 + .45 + i * .9, .04, TRAIN.z); sl.setMatrixAt(i, m4); sl.setColorAt(i, cl.setHSL(.07, .45, .5 + (i * 37 % 11) / 90)); }
     sl.receiveShadow = true; add(sl);
     // buffers at both ends
-    for (const [x, s] of [[TRAIN.x0, -1], [TRAIN.x1, 1]]) { const b = new THREE.Mesh(new RoundedBoxGeometry(.4, .6, 1.4, 2, .12), toy('#ff4f9a')); b.position.set(x + s * .2, .3, TRAIN.z); b.castShadow = true; add(b); }
+    for (const [x, s] of [[TRAIN.x0, -1], [TRAIN.x1, 1]]) { const b = new THREE.Mesh(new RoundedBoxGeometry(.4, .6, 1.4, 2, .12), toy('#8a5a3a', { r: .7 })); /* (build 62: wood, like the track: a pink buffer merged with the pink rainbow step beside it) */ b.position.set(x + s * .2, .3, TRAIN.z); b.castShadow = true; add(b); }
   }
   // ---------- the stations ----------
   STATIONS.forEach((st, i) => {

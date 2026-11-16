@@ -27,7 +27,8 @@ export const DISTRICTS = [
   { id: 'labgarden', icon: '🔬', name: 'Lab Gardens', x0: 668, x1: 788, home: 674 },
   { id: 'artplaza', icon: '🖍️', name: 'Art Plaza', x0: 788, x1: 904, home: 794 },
 ];
-const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -259.5, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9], ['g17', -598, 3.4], ['g18', -652, .9], ['g19', -711, 6.1], ['g20', -771, .9]];
+// (build 62: g10, g14 and g16 moved beside the pier, the igloo door and the tractor, not in front of them)
+const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -120.6, 1], ['g11', -226, 1.9], ['g12', -259.5, .9], ['g13', -328, 6], ['g14', -384, .9], ['g15', -466, 4.6], ['g16', -518.5, .9], ['g17', -598, 3.4], ['g18', -652, .9], ['g19', -711, 6.1], ['g20', -771, .9]];
 const NOTE = [262, 294, 330, 349, 392, 440, 494, 523];
 const RB = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
 const rnd = n => Math.floor(Math.random() * n), pick = a => a[rnd(a.length)];
@@ -242,9 +243,9 @@ export function initExpansion(G, api) {
   // =================== 🌉 ADVENTURE TRAIL ===================
   builders.trail = c => [
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
-    () => { const stream = makeSea(12, 14.6, 10, 14), w = stream.mesh; w.position.set(450, .035, -5); c.add(w); /* (build 60: the stream stops before the train track, z up to 2.3) */ /* (build 54: the stream ripples) */
+    () => { const stream = makeSea(12, 13.6, 10, 14), w = stream.mesh; w.position.set(450, .035, -5.2); /* (build 62: ends at z 1.6, clear of the track) */ c.add(w); /* (build 60: the stream stops before the train track, z up to 2.3) */ /* (build 54: the stream ripples) */
       for (const x of [446, 449.5, 453]) c.block(x, 0, -3.6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 });
-      c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6, 1.6]) { for (let x = 445.5; x <= 454.5; x += 1.5) c.cyl(x, 0, z, .07, .07, 1, '#8a5a2a'); c.block(450, .95, z, 10, .12, .14, '#b07a4a', { r: .05 }); }
+      c.block(450, .02, 0, 10, .1, 3, '#b07a4a', { r: .05 }); for (const z of [-1.6]) { for (let x = 445.5; x <= 454.5; x += 1.5) c.cyl(x, 0, z, .07, .07, 1, '#8a5a2a'); c.block(450, .95, z, 10, .12, .14, '#b07a4a', { r: .05 }); } /* (build 62: one railing at the back; the front one stood over the track on screen) */
       let splash = 0; return (dt, t) => { if (Math.abs(P.x - 450) < 60) stream.update(t); const inW = P.layer === '' && P.x > 444 && P.x < 456 && P.y < 1.5; if (inW && Math.abs(P.vx) > 1 && (splash -= dt) < 0) { splash = .35; c.burst(P.x, .3, 1.5, ['#9fe6ff', '#ffffff'], 4, 1.4); } if (inW) disc('stream', 'A little stream with a wooden bridge!'); }; },
     // climbing rocks up to a lookout with a telescope
     () => { const RK = [[474, 477, 1.2], [478.5, 481.5, 2.4], [483, 486.5, 3.6]]; c.add(boulders(RK.map(([a, b, y]) => [(a + b) / 2, 0, -1.3, b - a, y, 1.8]))); for (const [a, b, y] of RK) c.plat(a, b, y, { z: -1.2 });
@@ -277,7 +278,7 @@ export function initExpansion(G, api) {
   // =================== 🧸 TOY TOWN ===================
   builders.toytown = c => [
     () => palAtHome(c, 'robot'), // (build 32) Bolt the toy robot waits here
-    () => tunnelMouth(c, 609.6, -3.4, 'woods'), // (build 32) a secret tunnel to the Whispering Woods
+    () => tunnelMouth(c, 612.4, -3.4, 'woods') /* (build 62: centred in the gap between the houses at 606 and 619) */, // (build 32) a secret tunnel to the Whispering Woods
     // toy houses behind
     () => { const list = []; for (let i = 0; i < 9; i++) list.push([554 + i * 13, -8.5, 5, 4 + (i % 3), 4, ['#ffd9e6', '#ffe9b8', '#cfe9ff', '#d9f5d0', '#e8dcff', '#ffe0c8'][i % 6], RB[(i + 3) % 8]]); c.add(toyHouses(list)); /* (build 53: real little houses, all nine in one mesh) */
       let puff = 0; return dt => { if (Math.abs(P.x - 608) > 75) return; puff -= dt; if (puff < 0) { puff = .5; const i = Math.floor(Math.random() * 9), x = 554 + i * 13 + (i % 2 ? 1 : -1) * 1.4; c.burst(x, 4 + (i % 3) + 3.3, -9, ['#ffffff', '#e6e6ee'], 1, .5); } }; }, // (a little smoke from the chimneys)
@@ -411,9 +412,7 @@ export function initExpansion(G, api) {
       return (dt, t) => { for (const b of bushes) { b.userData.w = Math.max(0, (b.userData.w || 0) - dt * 2); b.rotation.z = Math.sin(t * 25) * .1 * b.userData.w; } if (found) kid.position.y = 2.2 + Math.abs(Math.sin(t * 6)) * .3; }; },
     // Kiwi the parrot waits here to be befriended
     () => palAtHome(c, 'parrot'),
-    // the rainbow portal home
-    () => { for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(2.2 - i * .22, .14, 10, 36), mat(RB[i], { em: RB[i], ei: .2 })); r.position.set(900, 2.2, -1.5); r.rotation.y = Math.PI / 2; c.add(r); }
-      const hm = c.sign('🏠', 1.2, 900, 2.2, -1.4); c.tap(hm, () => api.goHome(), 900); },
+    // (build 62b: the rainbow 🏠 portal is gone: the family asked; the 🏠 button and the map take you home)
   ];
 
   // a pal waiting at home (inside its neighbourhood): tap it three times to make friends
@@ -427,15 +426,13 @@ export function initExpansion(G, api) {
   const boingIt = o => { o.userData.bt = 1; };
   // (build 32) SECRET TUNNELS: a cave mouth half-hidden behind bushes; tap it (or PAW next to it) and you whoosh through
   // the hill to the tunnel at the other side of the world (a shortcut; the place you arrive at is built at once)
-  const TUNNELS = { woods: { x: -232, back: 'toytown' }, toytown: { x: 609.6, back: 'woods' } };
+  const TUNNELS = { woods: { x: -232, back: 'toytown' }, toytown: { x: 612.4, back: 'woods' } };
   function tunnelMouth(c, x, z, to) {
     const rock = c.sph(x, 0, z, 1.9, '#8a7f74', { m: { r: .95, cc: 0 } }); rock.scale.set(1.2, .9, .7);
     const hole = c.sph(x, .6, z + 1.25, .95, '#1c1520', { m: { r: 1, cc: 0 } }); hole.scale.set(1, 1, .2);
     for (const dx of [-1.6, 1.6]) { const b = c.sph(x + dx, .5, z + 1.1, .7, '#3f8f4a', { m: { r: .9 } }); b.scale.y = .8; }
-    const sign = c.sign('🕳️', .8, x, 2.7, z + 1.4); /* (build 61: higher, clear of the rock) */
     const go = () => { const dest = TUNNELS[to]; c.disc('tunnel', '🕳️ A secret tunnel! It is a shortcut across the world!'); api.travelTo(dest.x + 2, '🕳️', 'the other end of the secret tunnel'); };
-    c.tap(rock, go, x); c.tap(hole, go); c.tap(sign, go);
-    return (dt, t) => { sign.position.y = 2.7 + Math.sin(t * 2) * .12; };
+    c.tap(rock, go, x); c.tap(hole, go); /* (build 62: no floating 🕳️ sign: it showed as a black blob over the cave) */
   }
 
   // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
@@ -466,12 +463,12 @@ export function initExpansion(G, api) {
       return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the little boat: ring the bell on the pier and it sails across the sea and back
     () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
-      const boat = new THREE.Group(); boat.position.set(-115, 0, -11); c.add(boat); const hull = new THREE.Mesh(W.rbox(3, .7, 1.3, .3), mat('#ff7a5c')); hull.position.y = .3; hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
-      const gull = c.toy('🕊️', .8, -115, 4, -11); let trip = 0;
+      const boat = new THREE.Group(); boat.position.set(-115, 0, -12.6); /* (build 62: moored clear of the pier's end, not in its boards) */ c.add(boat); const hull = new THREE.Mesh(W.rbox(3, .7, 1.3, .3), mat('#ff7a5c')); hull.position.y = .3; hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
+      const gull = c.toy('🕊️', .8, -115, 4, -12.6); let trip = 0;
       const go = () => { if (trip) return; trip = .001; Sound.bell ? Sound.bell(880, .06) : Sound.chime(); c.say('⛵ Ding ding! The boat is sailing!'); c.disc('boat', '⛵ Ring the bell on the pier and the boat sails away!'); };
       c.tap(bell, go, -115); c.tap(boat, go);
       return (dt, t) => { boat.rotation.z = Math.sin(t * 1.4) * .06; boat.position.y = Math.sin(t * 1.1) * .08; gull.position.set(boat.position.x + Math.sin(t) * 2, 4 + Math.sin(t * 2) * .3, boat.position.z - 1);
-        if (trip) { trip += dt; const k = trip < 6 ? trip / 6 : trip < 12 ? 1 - (trip - 6) / 6 : 0; boat.position.x = -115 - Math.sin(k * Math.PI / 2) * 22; boat.position.z = -11 - Math.sin(k * Math.PI) * 6; boat.rotation.y = trip < 6 ? Math.PI : 0; if (trip > 12) { trip = 0; boat.position.set(-115, 0, -11); boat.rotation.y = 0; } } }; },
+        if (trip) { trip += dt; const k = trip < 6 ? trip / 6 : trip < 12 ? 1 - (trip - 6) / 6 : 0; boat.position.x = -115 - Math.sin(k * Math.PI / 2) * 22; boat.position.z = -12.6 - Math.sin(k * Math.PI) * 6; boat.rotation.y = trip < 6 ? Math.PI : 0; if (trip > 12) { trip = 0; boat.position.set(-115, 0, -11); boat.rotation.y = 0; } } }; },
     // the kite: tap it and it flies up high, looping in the wind
     () => { const kite = c.toy('🪁', 1.2, -132, 1.2, -2.6); c.cyl(-132, 0, -2.6, .05, .05, .8, '#9a6a3a'); let fly = 0;
       c.tap(kite, () => { fly = fly ? 0 : .001; c.say(fly ? '🪁 Whee! The kite is flying!' : '🪁 The kite comes down to rest.'); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('kite', '🪁 Tap the kite and it flies up into the sky!'); }, -132);
@@ -522,7 +519,6 @@ export function initExpansion(G, api) {
     () => { for (let i = 0; i < 8; i++) { const pr = c.sign('🐾', .45, -247 - i * 1.6, .03, (i % 2) * .4 - .2);  }
       const den = c.sph(-263, 0, -4.4, 2, '#8a6a4a', { m: { r: .95 } }); den.scale.set(1.3, .7, 1); const hole = c.sph(-263, .4, -2.7, .7, '#3a2a1a', { m: { r: 1 } }); hole.scale.set(1, .8, .3);
       const pal = palAtHome(c, 'fox'); c.tap(den, () => { c.say(X.pals.fox ? '🦊 This is Rusty\'s den!' : '🦊 Somebody lives here... tap the little fox to say hello!'); Sound.click(); });
-      const home = c.sign('🏠', 1, -268, 2.2, -1.4); c.tap(home, () => api.goHome(), -268);
       return (dt, t) => { pal && pal(dt, t); }; },
   ];
 
@@ -530,7 +526,7 @@ export function initExpansion(G, api) {
   builders.frosty = c => [
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
-      for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#e8f1fd', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
+      for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#b9dcf5', { r: .3 }); /* (build 62: icy blue steps, not grey boxes against the snow) */ c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
       const sled = new THREE.Group(); sled.position.set(-330, 4.8, -1.2); c.add(sled); const base = new THREE.Mesh(W.rbox(1.3, .18, .7, .08), mat('#ff4f6a')); base.position.y = .25; sled.add(base); for (const z of [-.3, .3]) { const run = new THREE.Mesh(W.rbox(1.5, .06, .06, .03), mat('#ffd23f', { m: .5 })); run.position.set(0, .08, z); sled.add(run); }
       const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-331, 5.4, -1.2), new THREE.Vector3(-334, 4.6, -1), new THREE.Vector3(-338, 2.6, -.6), new THREE.Vector3(-342, 1, -.2), new THREE.Vector3(-346, .6, 0)]);
       c.tap(sled, () => { if (P.y < 4.3) { c.say('🛷 Climb up the snowy steps to the sled!'); return; } api.startSlide(path); c.disc('sled', '🛷 Wheee! Sledding down the hill!'); c.say('🛷 Wheee!'); }, -330, { y: 4.8, hintY: 1.4 }); }, // (build 49: PAW works at the top: the sled sits 4.8 m up, and PAW only reaches things near her height)
@@ -549,7 +545,7 @@ export function initExpansion(G, api) {
       c.tap(pile, () => { const s2 = c.sph(-306.5, .6, -1.6, .2, '#ffffff', { m: { r: .9, cc: 0 } }); s2.userData.t = 0; balls.push(s2); Sound.whoosh ? Sound.whoosh() : Sound.click(); }, -306.5);
       return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i]; b.userData.t += dt; const k = Math.min(1, b.userData.t / .8); b.position.set(-306.5 - 5.5 * k, .6 + Math.sin(k * Math.PI) * 2.4 + 1.4 * k, -1.6 - 2.2 * k); if (k >= 1) { c.remove(b); balls.splice(i, 1); hits++; Sound.tone(200, .15, 'square', .03, .6); c.burst(-312, 2, -3.7, ['#ffffff', '#dff3ff'], 12, 2); c.say(hits % 5 === 0 ? `❄️ Splat! ${hits} snowballs!` : '❄️ Splat!'); c.disc('snowball', '❄️ Tap the snow pile to throw snowballs at the target!'); } } }; },
     // the frozen pond: step on the ice and you glide along (slippery!)
-    () => { const ice = new THREE.Mesh(new THREE.BoxGeometry(14, .06, 6), mat('#bfe6ff', { r: .08, cc: .8 })); ice.position.set(-361, .03, -1.1); /* (build 60: the pond stops before the train track) */ ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
+    () => { const ice = new THREE.Mesh(new THREE.BoxGeometry(14, .06, 5.35), mat('#bfe6ff', { r: .08, cc: .8 })); ice.position.set(-361, .03, -1.22); /* (build 62: ends at the path's front edge, never past it) */ /* (build 60: the pond stops before the train track) */ ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
       return dt => { const keys = api.getKeys(), on = P.layer === '' && P.grounded && P.y < .3 && P.x > -368 && P.x < -354 && !P.ride, held = keys.left || keys.right;
         if (on && Math.abs(P.vx) > 1 && held) glide = P.vx; if (on && !held && Math.abs(glide) > .3) { P.x = Math.max(-367.5, Math.min(-354.5, P.x + glide * dt)); glide *= Math.max(0, 1 - dt * .7); if (!was) { c.say('⛸️ Wheee! Slippery ice!'); c.disc('ice', '⛸️ Slide across the frozen pond!'); } was = true; } else if (!on) { glide = 0; was = false; } }; },
     // the igloo: tap it, it glows warm inside
@@ -567,8 +563,6 @@ export function initExpansion(G, api) {
     // gently falling snow around you while you're here (a small pool of flakes that follows the camera)
     () => { const flakes = []; for (let i = 0; i < 28; i++) { const f = c.toy('❄️', .25 + Math.random() * .2, 0, 0, 0); f.userData.o = [Math.random() * 30 - 15, Math.random() * 10, -Math.random() * 8 + 1]; flakes.push(f); }
       return (dt, t) => { const here = P.x > -406 && P.x < -270; for (const f of flakes) f.visible = here; if (!here) return; /* (build 35: snow only falls in Frosty Peaks, not on the farm next door) */ for (const f of flakes) { const o = f.userData.o; o[1] -= dt * .9; if (o[1] < 0) o[1] += 10; f.position.set(P.x + o[0] + Math.sin(t + o[2]) * .4, o[1], o[2]); } }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -397, 2.2, -1.4); c.tap(home, () => api.goHome(), -397); },
   ];
 
   // =================== 🚜 HAPPY FARM (x -536 to -404) — build 35 ===================
@@ -638,8 +632,6 @@ export function initExpansion(G, api) {
     () => { const cows = [[-438, -9], [-485, -10], [-510, -9.5]].map(([x, z]) => { const s = c.toy('🐄', 1.8, x, .9, z); c.tap(s, () => { Sound.tone(140, .5, 'sawtooth', .03, .6); c.say('🐄 Moooo!'); c.disc('cows'); }); return { s, x }; });
       for (let x = -410; x > -534; x -= 3) c.block(x, 0, -7, .14, 1, .14, '#ffffff', { r: .03 }); c.block(-472, .7, -7, 124, .12, .08, '#ffffff', { r: .02 }); c.block(-472, .35, -7, 124, .12, .08, '#ffffff', { r: .02 });
       return (dt, t) => { for (const q of cows) q.s.position.x = q.x + Math.sin(t * .15 + q.x) * 1.5; }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -530, 2.2, -1.4); c.tap(home, () => api.goHome(), -530); },
   ];
 
   // =================== 🌊 OCEAN PIER (x -668 to -536) — build 38 ===================
@@ -695,8 +687,6 @@ export function initExpansion(G, api) {
     () => { const back = c.sph(-650, -.6, -16, 2.6, '#5a6f8f', { m: { r: .5, cc: .3 } }); back.scale.set(1.8, .6, .9); const eye = c.sph(-646.2, .2, -15.2, .14, '#ffffff'); let spout = 0;
       c.tap(back, () => { spout = 1.4; api.event?.({ type: 'sea', id: 'whale' }); Sound.noise ? Sound.noise(.6, 300, 1400, .05) : Sound.whoosh(); c.say('🐳 Whoosh! The whale says hello!'); c.disc('whale', '🐳 Tap the whale and it spouts water!'); }, -650);
       return (dt, t) => { back.position.y = -.6 + Math.sin(t * .7) * .12; if (spout > 0) { spout -= dt; if (Math.random() < dt * 30) c.burst(-650.6, 1 + Math.random() * 3, -16, ['#cfefff', '#ffffff'], 2, 1.2); } }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -662, 2.2, -1.4); c.tap(home, () => api.goHome(), -662); },
   ];
 
   // =================== 🎈 BALLOON HILLS (x -800 to -668) — build 49 ===================
@@ -729,7 +719,7 @@ export function initExpansion(G, api) {
           q.k.position.set(x, y, -6); q.k.rotation.z = rz; A.set(X, 1.3, -2.6); B.set(x, y - .6, -6); q.str.position.copy(A).add(B).multiplyScalar(.5); q.str.scale.y = A.distanceTo(B); q.str.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.sub(A).normalize()); } }; },
     // the grassy hill: climb the steps, tap the rainbow mat at the top and slide down the other side
     () => { const hill = c.sph(-713, -3.2, -5.2, 8.5, '#86d482', { m: { r: .95, cc: 0 } }); hill.scale.set(1, .95, .55);
-      for (const [a, b, y] of [[-704.5, -706.5, 1.2], [-707, -709, 2.4], [-709.5, -711.5, 3.6], [-712, -716, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#9be096', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
+      for (const [a, b, y] of [[-704.5, -706.5, 1.2], [-707, -709, 2.4], [-709.5, -711.5, 3.6], [-712, -716, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#c98b5a', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); } /* (build 62: wooden steps up the hill; green boxes in front of the green hill looked like broken scenery) */
       const matG = new THREE.Group(); matG.position.set(-715, 4.8, -1.2); c.add(matG); RB.slice(0, 6).forEach((col, i) => { const st = new THREE.Mesh(W.rbox(1.4, .1, .16, .04), mat(col)); st.position.set(0, .06, -.4 + i * .16); matG.add(st); });
       const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-716, 5.4, -1.2), new THREE.Vector3(-719, 4.6, -1), new THREE.Vector3(-723, 2.6, -.6), new THREE.Vector3(-727, 1, -.2), new THREE.Vector3(-731, .6, 0)]);
       c.tap(matG, () => { if (P.y < 4.3) { c.say('🌈 Climb up the grassy steps to the rainbow mat!'); return; } api.startSlide(path); c.disc('hillslide', '🌈 Wheee! Sliding down the grassy hill!'); c.say('🌈 Wheee!'); api.event?.({ type: 'activity', id: 'hill_slide' }); }, -715, { y: 4.8, hintY: 1.4 }); },
@@ -758,8 +748,6 @@ export function initExpansion(G, api) {
       const blow = q => { if (q.gone) return; q.gone = 4; Sound.whoosh(); for (let k = 0; k < 4; k++) setTimeout(() => c.burst(q.x + k * .4, q.h + .3 + k * .15, q.z, ['#ffffff', '#f4f4ff'], 6, 1.6), k * 120); c.say('💨 Whoosh! The seeds fly away on the wind!'); c.disc('dandelion', '💨 Tap the fluffy dandelions and the seeds blow away!'); api.event?.({ type: 'activity', id: 'dandelion' }); };
       puffs.forEach(q => c.tap(q.ball, () => blow(q))); c.tap(c.add(new THREE.Group()), () => blow(puffs.find(q => !q.gone) || puffs[0]), X, { icon: '💨', label: 'Dandelions', action: 'Blow the seeds', disc: 'dandelion' }); // (PAW: the next fluffy one)
       return dt => { for (const q of puffs) { if (q.gone > 0) { q.gone = Math.max(0, q.gone - dt); const k = q.gone > 3 ? 0 : Math.min(1, (3 - q.gone) / 3); q.ball.scale.setScalar(Math.max(.05, k)); } } }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -794, 2.2, -1.4); c.tap(home, () => api.goHome(), -794); },
   ];
 
   // ---------- per frame ----------

@@ -345,9 +345,9 @@ export function initFriends(G, api) {
     while (balloons.length < world.balloons.length) balloons.push(balloonMesh());
     const showB = !(P.ride && P.ride.type === 'slide');
     balloons.forEach((b, i) => {
-      const n = balloons.length, spread = (i - (n - 1) / 2) * .42;
+      const n = balloons.length, spread = (i - (n - 1) / 2) * .3;
       b.mat.color.set(world.balloons[i] || '#ff4f9a'); b.g.visible = b.line.visible = showB;
-      const hx = P.x - P.facing * .3, hy = P.y + 1.2, tx = hx + spread - P.vx * .08 + Math.sin(t * 1.3 + i) * .2, ty = hy + 1.9 + (i % 2) * .35;
+      const hx = P.x - P.facing * .35, hy = P.y + .75, tx = hx + spread - P.vx * .04 + Math.sin(t * 1.3 + i) * .12, ty = P.y + (G.headTop || 1.6) + .7 + (i % 2) * .22; /* (build 62: short strings, the bunch just above the head and in view) */
       b.vel.x += (tx - b.pos.x) * 14 * dt; b.vel.y += (ty - b.pos.y) * 14 * dt; b.vel.z += (P.z - .3 - (i % 3) * .2 - b.pos.z) * 10 * dt; b.vel.multiplyScalar(Math.exp(-dt * 4));
       b.pos.addScaledVector(b.vel, dt); if (Math.abs(b.pos.x - hx) > 10) b.pos.set(hx, ty, P.z);
       b.g.position.copy(b.pos); b.g.rotation.z = -b.vel.x * .1;
