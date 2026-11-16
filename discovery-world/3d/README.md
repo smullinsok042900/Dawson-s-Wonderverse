@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 65: a giant roller coaster on the Moon
+In the Moon's crater valley: tap the pink car at the station. A clicking lift up to 17 m, a big drop, a loop-the-loop (you go upside down!), bunny hops and back to the station.
+
 ## 3D build 64: tidier and friendlier
 - The map shows a real little picture of every place.
 - The rocket shows painted planets with their names.

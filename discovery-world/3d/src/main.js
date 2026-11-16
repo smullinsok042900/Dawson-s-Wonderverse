@@ -349,6 +349,24 @@ G.rideWheel = () => {
   let best = 0, by = 1e9; G.wheel.gondolas.forEach((g, i) => { g.seat.getWorldPosition(V); if (V.y < by) { by = V.y; best = i; } });
   P.ride = { type: 'wheel', i: best, turned: 0 }; P.vx = P.vy = 0; Sound.chime(); discover('wheel', 'Up, up, up on the Ferris wheel!');
 };
+// (build 65) THE MOON ROLLER COASTER: a car on a track (planets.js builds both). A clicking chain lift pulls you up to the
+// top; from there your speed comes from the height you drop (faster down the big drop, slower over the hills), through a
+// loop-the-loop and bunny hops, back to the station. You tilt with the car, upside down at the top of the loop.
+G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, u: 0, v: 3.4, up: new THREE.Vector3(0, 1, 0), clack: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; };
+const CV = { f: new THREE.Vector3(), s: new THREE.Vector3(), u: new THREE.Vector3(), m: new THREE.Matrix4(), cand: new THREE.Vector3() };
+function coasterRide(dt, R) {
+  const P = player, C = R.C, path = C.path;
+  if (R.u < C.uTop) { R.v = 3.4; if ((R.clack -= dt) < 0) { R.clack = .22; Sound.tone(260, .04, 'square', .02, 1); } }
+  else { const y = path.getPointAt(Math.min(1, R.u), V).y; R.v = Math.max(3, Math.min(15, Math.sqrt(3.4 * 3.4 + 2 * 7 * Math.max(0, C.yTop - y)))); if (!R.whee && R.u > C.uTop + .01) { R.whee = 1; Sound.whoosh(); voice.speak('Wheeee!'); } }
+  R.u += R.v / C.len * dt;
+  if (R.u >= 1) { const e = path.getPointAt(1); C.car.position.copy(e); C.car.quaternion.copy(C.carRest); P.ride = null; P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; creature.root.rotation.z = 0; burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast('🎢 What a ride! Tap the car to go again!'); discover('coaster', '🎢 The Moon roller coaster!'); return; }
+  path.getPointAt(R.u, V); const tg = path.getTangentAt(R.u, CV.f);
+  // which way is "up" for the car: perpendicular to the track, chosen to follow on smoothly (so it turns over in the loop)
+  CV.cand.set(tg.y, -tg.x, 0); if (CV.cand.lengthSq() < 1e-4) CV.cand.copy(R.up); else CV.cand.normalize(); if (CV.cand.dot(R.up) < 0) CV.cand.negate(); R.up.lerp(CV.cand, Math.min(1, dt * 12)).normalize();
+  CV.s.crossVectors(tg, R.up).normalize(); CV.u.crossVectors(CV.s, tg).normalize(); CV.m.makeBasis(tg, CV.u, CV.s); C.car.quaternion.setFromRotationMatrix(CV.m); C.car.position.copy(V);
+  P.x = V.x + CV.u.x * .35; P.y = V.y + CV.u.y * .35 - .2; P.z = V.z + .05; P.facing = tg.x >= 0 ? 1 : -1; P.vx = R.v * P.facing; R.roll = Math.atan2(-R.up.x, R.up.y);
+  if (Math.random() < dt * 20) burst(V.x - tg.x * 1.2, V.y, V.z, ['#fff', '#ffe36e', '#9fe6ff'], 1, .5);
+}
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
 function updateRide(dt) {
   const P = player, R = P.ride;
@@ -358,6 +376,7 @@ function updateRide(dt) {
     if (R.u >= 1) { const e = path.getPointAt(1); P.x = e.x + .5; P.y = Math.max(0, e.y - .55); P.z = e.z; endRide(4.5, 3); P.facing = 1; burst(P.x, .5, P.z, ['#fff', '#ffe36e', '#9fe6ff'], 16, 2.5); Sound.boing(); return; }
     path.getPointAt(R.u, V); P.x = V.x; P.y = V.y - .62; P.z = V.z; const tg = path.getTangentAt(R.u); P.facing = tg.x >= 0 ? 1 : -1; P.vx = 6 * P.facing;
     if (Math.random() < dt * 25) burst(P.x - tg.x * .6, P.y + .3, P.z - tg.z * .6, ['#fff', '#ffe36e', '#9fe6ff'], 1, .6);
+  } else if (R.type === 'coaster') { coasterRide(dt, R);
   } else if (R.type === 'rocket') { rocketRide(dt, R);
   } else if (R.type === 'kart' || R.type === 'train') {
     // (moved by kart.js / train.js)
@@ -731,7 +750,7 @@ function jump() {
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
   if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
-  if (P.ride) { if (P.ride.type === 'slide') return; const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
+  if (P.ride) { if (P.ride.type === 'slide' || P.ride.type === 'coaster') return; /* (build 65: no hopping out of the roller coaster mid-air) */ const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
   if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps] * (world.comfort?.relaxed ? 1.08 : 1); P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
 }
@@ -961,7 +980,7 @@ function updateCamera(dt) {
   // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
   // (also a little at the Marble Machine, so its top ramps stay clear of the buttons)
   const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45, Math.max(0, 1 - Math.abs(P.x - (BUILD.x0 + BUILD.cols * BUILD.cw / 2)) / 8) * .7) : 0; /* (build 43: and at the Block Builder, so the whole wall shows) */ camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * ease(dt, 1.5);
-  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
+  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale' || P.ride.type === 'coaster') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
   camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
   camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
@@ -1251,9 +1270,10 @@ function frame() {
   const ix = far ? P.x : prevP.x + (P.x - prevP.x) * a, iy = far ? P.y : prevP.y + (P.y - prevP.y) * a, iz = far ? P.z : prevP.z + (P.z - prevP.z) * a;
   { const sx = P.x, sy = P.y, sz = P.z; P.x = ix; P.y = iy; P.z = iz; updateCamera(raw); P.x = sx; P.y = sy; P.z = sz; }
   creature.root.position.set(ix, iy, iz); creature.root.visible = !G.playerHidden;
-  { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
+  { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
+  creature.root.rotation.z = P.ride && P.ride.type === 'coaster' ? P.ride.roll || 0 : 0; // (build 65: tilt with the coaster car)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)
   P.happy = Math.max(0, P.happy - dt);
@@ -1529,7 +1549,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '64'; G.build = GAME_BUILD;
+const GAME_BUILD = '65'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
