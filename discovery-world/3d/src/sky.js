@@ -79,7 +79,7 @@ export function buildSky(G) {
   const pts = [[SKY.b - .1, SKY.y + .5, SKY.z], [68.2, SKY.y + .1, SKY.z - .5]];
   const cx = 70.6, cz2 = -2.8, R = 1.7, turns = 2.25, steps = 26;
   for (let i = 0; i <= steps; i++) { const k = i / steps, a = Math.PI + k * turns * Math.PI * 2; pts.push([cx + Math.cos(a) * R, SKY.y - .6 - k * (SKY.y - 1.4), cz2 + Math.sin(a) * R]); }
-  pts.push([72.3, .55, -.9], [73.0, .5, -.4]);
+  pts.push([71.5, .55, -.75], [72.1, .5, -.55]); // (build 62: the exit ends just before the first xylophone key, not inside it)
   G.skySlide = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p)), false, 'catmullrom', .3);
   const N = 260, geo = new THREE.TubeGeometry(G.skySlide, N, .85, 20, false);
   { const cols = [], c = new THREE.Color(), segs = 21; for (let i = 0; i <= N; i++) { c.set(RAINBOW[Math.floor(i / N * 7.999) % 8]); for (let j = 0; j < segs; j++) cols.push(c.r, c.g, c.b); } geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); }

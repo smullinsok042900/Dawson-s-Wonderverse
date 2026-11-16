@@ -4,6 +4,31 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 62b — overlaps from the family's video
+- **The family sent a 6-minute screen recording** of the whole world on their phone and asked to fix everything that is messed up or drawn into something else. Every frame was reviewed at full size (one every 4 s).
+- **Fixed:**
+  - **Your character's things:**
+    - the crown now sits ON the head (it floated above it);
+    - the wand is held at the side (it floated 0.7 m away);
+    - the balloons hang on short strings just above the head (they flew 3 m up, behind the buttons at the top).
+  - **Start:** "Loading the 3D world…" no longer shows through the title card.
+  - **Studio:**
+    - the giant rainbow slide's exit ended inside the first xylophone keys; it now ends just before them;
+    - the rainbow arch at x 51 had one foot in the sky ladder and half of it behind the paint wall; it is removed (the arches at 92 and 135 stay).
+  - **Adventure Park:** the ABC learning spot stood under the Ferris wheel's leg. It is now in the clear gap beside the Fluffkin House (x 182).
+  - **Race track:** its front kerb ran onto the path; the oval sits 1 m further back.
+  - **Seaside:** the little boat was moored inside the pier's end; it is anchored 1.6 m further out.
+  - **Gems:** three gems were lined up in front of the pier end, the igloo door and the tractor; they are moved beside them.
+  - **Frosty Peaks:** the ice pond stuck out past the path towards the track (now trimmed). The sled-hill steps are icy blue, not grey boxes.
+  - **Balloon Hills:** the hill's steps are wooden, not green boxes poking out of the green hill.
+  - **West end:** the pink buffer at the end of the track merged with the pink first rainbow step; the buffers are wood-coloured now.
+  - **Adventure Trail stream:** the water stops before the track, and the bridge has one railing at the back (the front one stood over the rails on screen).
+  - **Toy Town tunnel:** it is centred in the gap between the houses. Build 61 had moved it the wrong way, into a house. The floating 🕳️ sign is gone: it showed as a black blob over the cave.
+- **Not changed:**
+  - Dawson steers the sky whale herself, so flying through the cloud castle is her choice.
+  - When floating down from the whale near the Fluffkin House, the camera shows the house wall for about two seconds before catching up. That is a camera follow issue, noted in NEXT_TASKS.
+- **Verified:** screenshots of every fixed place (desktop, software rendering, phone-sized screen, character with crown, wand and three balloons), no page errors; node checks 50/50, learning contracts. FULL_SMOKE_HERE
+
 ## Checkpoint: build 62 — Talk Together: live voices in Play Together
 - **The family asked** for real, live voice between players of a multiplayer room (no text, no recorded messages, no other app), child-safe, on iPhone/iPad Safari and Android Chrome, without slowing the game.
 - **What it is** (`src/voicechat.js`, wired into `src/multiplayer.js`):

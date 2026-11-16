@@ -571,3 +571,6 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
    (phones, since the fourth character), its empty corner used to swallow taps on the world beneath (e.g. the owl) */
 #upperRight,#upperLeft{pointer-events:none}
 #upperRight>*,#upperLeft>*{pointer-events:auto}
+/* (build 62) when loading ends, its star and words vanish at once (only the purple fades): they used to show through
+   the title card for a moment */
+#loading.done>*{opacity:0;transition:none}

@@ -12,7 +12,7 @@ import { toy, ball, starGeometry } from './creatures.js';
 
 export const KART_COLS = ['#ff4f9a', '#3d9bff', '#ffd23f', '#3cc46e', '#a15cff', '#ff9a2e', '#ffffff'];
 export const KART_SHAPES = ['bug', 'rocket', 'bubble'], KART_WHEELS = ['round', 'star', 'big'];
-export const KART = { garage: 265.6, flag: 269.4, cx: 285.5, cz: -6.9, rx: 12.2, rz: 3.6 };
+export const KART = { garage: 265.6, flag: 269.4, cx: 285.5, cz: -7.4, rx: 12.2, rz: 3.3 }; // (build 62: the oval's front kerb no longer touches the path)
 
 export function buildKart(rec) {
   const g = new THREE.Group(), c = KART_COLS[rec.col % KART_COLS.length], shape = KART_SHAPES[rec.shape % 3], wh = KART_WHEELS[rec.wheels % 3];
