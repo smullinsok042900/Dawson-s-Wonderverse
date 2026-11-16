@@ -620,6 +620,9 @@ const hint = new THREE.Group(); hint.userData.dynamic = true; scene.add(hint); /
 { /* (build 43) 'stand here and press the paw': a glowing circle on the path in front of the activity (a cone floating over
      things covered them up) */ const r = new THREE.Mesh(new THREE.TorusGeometry(.62, .08, 10, 36), toy('#ffd84a', { em: '#ffb000', ei: .9 })); r.rotation.x = Math.PI / 2; hint.add(r);
   const r2 = new THREE.Mesh(new THREE.TorusGeometry(.42, .05, 8, 30), toy('#ff6fae', { em: '#ff6fae', ei: .6 })); r2.rotation.x = Math.PI / 2; hint.add(r2); hint.userData.r2 = r2; }
+// (build 62) the block tray goes just below the top-right buttons, however many rows they take on this screen
+function placeBuildTools() { const ur = $('upperRight'), bt = $('buildTools'); if (!ur || !bt) return; const b = ur.getBoundingClientRect().bottom; if (b > 0) bt.style.top = Math.round(b + 8) + 'px'; }
+addEventListener('resize', () => { if ($('buildTools').classList.contains('show')) setTimeout(placeBuildTools, 120); });
 function updateHint(t) {
   const P = player; let best = null, bd = 13;
   if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4 || (it.need && !it.need())) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
@@ -1224,7 +1227,7 @@ function frame() {
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
-  $('buildTools').classList.toggle('show', started && meadow.nearBuild(player));
+  { const bt = $('buildTools'), on = started && meadow.nearBuild(player); if (on && !bt.classList.contains('show')) placeBuildTools(); bt.classList.toggle('show', on); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
   if (world.comfort?.calm) world.flash = 0;

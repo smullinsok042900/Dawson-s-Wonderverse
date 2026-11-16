@@ -27,6 +27,15 @@ are in `PERFORMANCE_LOG.md`.
   - **Fixed an old mistake:** the build 56 rules used `numChildren()`, which Firebase rules do not have, so the full rules could never be published. The 24-line paint limit now uses the line numbers.
   - Checked on Firebase's own Realtime Database emulator: `tests/firebase-rules.emulator.mjs`, **26/26**.
 - **Verified (desktop Chromium, software rendering, separate browser sessions with simulated microphones):** `tests/voicechat.cjs`, 34 checks: the live call connects in under a second; two-way Opus audio (packets and real sound level both ways); the voice plays out loud; speaking lights; mute → the friend hears true silence (level 0.0000), unmute → sound again; volume; blocking (and its messages ignored), unblocking; a stranger in another room can not reach the call; the room connection dropping while the voices keep flowing; a page reload and reconnecting; three players each hearing the other two; leaving, 🎤✖ and the grown-up switch all stop the microphone; the voice timer costs 0.16 ms per check; nothing in the save; no page errors. Final run: **34/34**. Also `node --test` (voicechat.test.mjs and all others) and the existing `tests/multiplayer.cjs`.
+- **Also fixed in build 62 (found by the full smoke test, both older than this build):**
+  - On a phone the top-right buttons wrap onto two rows since the fourth character (build 59). That caused two problems:
+    - the Block Builder's tray sat under 🔊 and ⚙️, which hid its red block;
+    - the empty corner of the button row swallowed taps on the world beneath (the sleepy owl could not be tapped).
+  - Now only the buttons themselves catch taps. The block tray is a two-row strip placed just below the buttons, so it reaches neither 🔊/⚙️ nor the jump button.
+- **Smoke test updates (not weakened):**
+  - The mechanic fox is tapped where it lives since build 60.
+  - The Play Together check now expects 👫 to be shown, since the room service was set up in build 56. It still checks that nothing connects or downloads on its own, and that talking is off.
+  - One narrow console exception: Chromium's own GPU-driver note "GPU stall due to ReadPixels". It comes from the character portraits' one-time readback at start-up (build 56, the Android fix). A better fix (asynchronous readback) is in NEXT_TASKS.
 - **NOT yet tried on real phones or across different networks.** Two devices on the same home Wi-Fi should connect with the built-in STUN servers. Phones on mobile data or strict Wi-Fi may need the optional TURN relay (MULTIPLAYER.md, "Different networks").
 
 ## Checkpoint: build 61 — overlapping graphics fixed across the game

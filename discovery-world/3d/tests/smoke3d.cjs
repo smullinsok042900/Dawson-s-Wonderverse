@@ -19,7 +19,9 @@ const UG_F = -6;
   let page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+  // (the one exception: Chromium's own GPU-driver note about the character portraits' one-time picture readback at start-up; see NEXT_TASKS)
+  const DRIVER_NOTE = /^\[\.WebGL-[0-9a-fx]+\]GL Driver Message \(OpenGL, Performance, [A-Z_]+, High\): GPU stall due to ReadPixels$/;
+  page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !DRIVER_NOTE.test(m.text())) errors.push(m.type() + ': ' + m.text()); });
   const cdp = await ctx.newCDPSession(page);
   const S = () => page.evaluate(() => { const D = __DDW3, P = D.player; return { x: P.x, y: P.y, z: P.z, vx: P.vx, grounded: P.grounded, jumps: P.jumps, creature: P.creature, ride: P.ride ? P.ride.type : null, layer: P.layer, stair: P.stair ? P.stair.k : null, disc: [...D.world.disc], bits: D.world.bits.size, fl: D.fluffs.map(f => f.state), bubbles: D.bubbles(), sound: D.Sound.on, painted: !!D.world.painted, door: D.nearDoor() }; });
   const center = async sel => { const b = await page.locator(sel).boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
@@ -279,7 +281,7 @@ const UG_F = -6;
   await teleport(2016); await tapWorld(2019.5, 2, -3.6); await sleep(600); c = await S(); check('tap the throne inside the castle: sit on it', c.disc.includes('throne') && c.y > .8, `y=${c.y.toFixed(2)}`);
   await shot('27_castle_inside.jpg');
   await teleport(2002); await press('#pawBtn'); await sleep(500); c = await S(); check('the castle door takes you back outside', c.layer === '' && Math.abs(c.x - 407) < .5);
-  await teleport(259.2); await tapWorld(260.8, 1.2, -2.4); await sleep(200); check('the mechanic fox talks', (await S()).disc.includes('fox'));
+  await tapChar(258.6, 1.2, -1.9); await sleep(200); check('the mechanic fox talks', (await S()).disc.includes('fox')); // (build 60 moved the fox's home out of the pink wall; tapped where it is)
   // ---------- studio ----------
   await teleport(61); await sleep(300);
   check('paint palette appears by the paint wall', await page.locator('#paintTools').evaluate(e => e.classList.contains('show')));
@@ -467,7 +469,7 @@ const UG_F = -6;
   // The separate save-reopen regression also verifies close/corrupt/reopen in one context.
   await page.close(); await ctx.close(); ctx = await browser.newContext(contextOptions);
   page = await ctx.newPage(); page.on('pageerror', e => errors.push('pageerror: ' + e.message));
-  page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errors.push(m.type() + ': ' + m.text()); });
+  page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !DRIVER_NOTE.test(m.text())) errors.push(m.type() + ': ' + m.text()); });
   await page.addInitScript(() => {
     const key = 'dawsons-discovery-world-3d-v1';
     window.__brokenSaveTrace = [];
@@ -488,7 +490,7 @@ const UG_F = -6;
     const ok = data.seed === '{broken' && await page.locator('#playBtn').isVisible() && txt.includes("LET'S");
     check('a broken save is ignored safely (fresh start, no crash)', ok, `button="${txt}" save=${(data.raw || '').slice(0, 20)}${ok ? '' : ' seed=' + JSON.stringify(data.seed) + ' trace=' + JSON.stringify(data.trace)}`); }
   // (build 55) Play Together: without a room service set up, the 👫 button is hidden and nothing connects (solo as before)
-  check('Play Together: hidden until set up; the game never connects on its own', await page.evaluate(() => { const b = document.getElementById('mpBtn'); return !!b && getComputedStyle(b).display === 'none' && !__DDW3.G.mp.room; }));
+  check('Play Together: 👫 is there (the family\'s room service is set up), and the game never connects on its own', await page.evaluate(() => { const b = document.getElementById('mpBtn'); return !!b && getComputedStyle(b).display !== 'none' && !__DDW3.G.mp.room && !__DDW3.G.mp.vc.on && !performance.getEntriesByType('resource').some(r => /mp-firebase/.test(r.name)); })); // (build 56 set up the room service; nothing is downloaded or connected until Create or Join)
   check('the ⚙️ panel shows the build number', await page.evaluate(() => /build \w+/.test((document.querySelector('#perfPanel .ppBuild') || {}).textContent || '')));
   // ---------- portrait ----------
   await page.setViewportSize({ width: 390, height: 844 }); await sleep(400);
