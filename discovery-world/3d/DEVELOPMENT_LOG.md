@@ -24,6 +24,7 @@ are in `PERFORMANCE_LOG.md`.
   - **West end:** the pink buffer at the end of the track merged with the pink first rainbow step; the buffers are wood-coloured now.
   - **Adventure Trail stream:** the water stops before the track, and the bridge has one railing at the back (the front one stood over the rails on screen).
   - **Toy Town tunnel:** it is centred in the gap between the houses. Build 61 had moved it the wrong way, into a house. The floating 🕳️ sign is gone: it showed as a black blob over the cave.
+  - **🏠 markers in the world removed** (the family asked): the 🏠 signs at the ends of the Whispering Woods, Frosty Peaks, the farm, Ocean Pier and Balloon Hills, and the rainbow 🏠 portal at the end of the Art Plaza. The 🏠 button (top left) and the map take you home.
 - **Not changed:**
   - Dawson steers the sky whale herself, so flying through the cloud castle is her choice.
   - When floating down from the whale near the Fluffkin House, the camera shows the house wall for about two seconds before catching up. That is a camera follow issue, noted in NEXT_TASKS.
