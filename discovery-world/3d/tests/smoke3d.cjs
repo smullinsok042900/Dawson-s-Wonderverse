@@ -417,7 +417,7 @@ const UG_F = -6;
   await page.evaluate(() => { __DDW3.player.x = 3005; __DDW3.player.y = -1; __DDW3.keys.up = true; }); c = await waitFor(s => s.layer === '', 20000); await page.evaluate(() => { __DDW3.keys.up = false; });
   check('swim up to the top of the pool to climb out', c.layer === '' && Math.abs(c.x + 8) < 1, `layer=${c.layer} x=${c.x.toFixed(1)}`);
   // ---------- build 45: the space rocket, with each place's real gravity ----------
-  await teleport(696); await page.evaluate(() => __DDW3.G.expansion.buildNow(696)); // (build 64: the rocket moved 686 → 693) await sleep(500);
+  await teleport(692); await page.evaluate(() => __DDW3.G.expansion.buildNow(692)); // (build 64: the rocket moved 686 → 693; the bubble fountain is at 698) await sleep(500);
   // (build 48) PAW beside the rocket climbs in (it used to blow the bubble fountain's bubbles: both stood at x 698)
   { const t = await page.evaluate(() => __DDW3.G.actionTarget && __DDW3.G.actionTarget.disc); await press('#pawBtn');
     const r = await page.evaluate(() => new Promise(res => { const t0 = performance.now(); const f = () => { const P = __DDW3.player; if ((P.ride && P.ride.phase === 'in' && document.querySelector('#rocketPanel.show')) || performance.now() - t0 > 30000) res({ ride: P.ride && P.ride.type + ':' + P.ride.phase, hidden: !!__DDW3.G.playerHidden, bubbles: __DDW3.world.disc.has('bubbles') }); else setTimeout(f, 50); }; f(); }));

@@ -22,6 +22,7 @@ are in `PERFORMANCE_LOG.md`.
 - **The map (🗺️) shows real pictures:**
   - every place's button is a small real picture of that place (the house, the slide tower, the Ferris wheel, the castle, the hot-air balloon, the sailboat, the red barn, the igloo, the fox's burrow, the lighthouse, the bridge, Toy Town, the rocket…), with its emoji in the corner; it used to be the same generic drawing for many places;
   - the pictures are made by `tools/make-map-thumbs.cjs` and built into the game (`src/map-thumbs.js`, 16 pictures, 131 KB); re-run it when a place changes a lot.
+- **The rocket's planet picker:** every planet is painted on a starry tile (Earth with land and clouds; cratered Moon, Mercury and Pluto with its heart; Mars with its ice cap; swirly Venus; Jupiter's bands and red spot; Saturn's and Uranus's rings; streaky Neptune) with its name under it, instead of a plain coloured ball. Drawn once on a small canvas when the picker first opens.
 - **From the family's second set of 7 screenshots:**
   - **Grass and flowers** no longer grow on the path or the train track (both are kept clear).
   - **The colouring easels** (the "castle and rainbow" and "butterfly" pictures):

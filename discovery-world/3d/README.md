@@ -14,6 +14,7 @@ Play: open `index.html`. It is one self-contained file and works offline. Once m
 
 ## 3D build 64: tidier and friendlier
 - The map shows a real little picture of every place.
+- The rocket shows painted planets with their names.
 - A birdhouse instead of the floating ear.
 - A real blue whale at the pier.
 - The rocket is off the pond.
