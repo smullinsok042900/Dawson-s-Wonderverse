@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 63: see more
+The camera is further back and a little higher, so whole activities (houses, the block wall, the paint wall, the Ferris wheel) fit on the screen. Look-alike still scenery is merged to keep it fast.
+
 ## 3D build 62b: fixes from the family's video
 - The crown sits on your head, the wand is in your hand, and the balloons stay just above you.
 - About fifteen places no longer overlap, among them the slide and the xylophone, the ABC spot under the Ferris wheel, the race track and the path, the boat and the pier, gems in front of things, the ice, the stream bridge, the rainbow stairs and the Toy Town tunnel.
