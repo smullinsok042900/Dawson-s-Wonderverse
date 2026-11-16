@@ -59,6 +59,7 @@ the build workflow in `.github/workflows/build-3d.yml`, which rebuilds this game
 | `sculpt.js`, `fur.js`, `creatures.js` | Sculpted creatures |
 | `post.js` | Post-processing (`post.lite` on weaker devices) |
 | `multiplayer.js`, `shared.js` | Play Together (builds 55–56): private family rooms with a four-animal picture code, other players' creatures and pets, and a SHARED WORLD (the Block Builder wall and the big paint wall are written as small validated objects, a 👋 wave is the only event, and a room keeps its world when everyone leaves). Firebase or the test relay (`?mp=ws://…`). Setup: `MULTIPLAYER.md`; settings: `src/mp-config.js`; database rules: `firebase-rules.json`; Firebase code: separate `mp-firebase.js`, loaded only on Create/Join. Never touches the saved game (except that shared blocks/lines are part of the world). Test: `node tests/multiplayer.cjs`, `node --test tests/shared.test.mjs` |
+| `voicechat.js` | (build 62) Talk Together: live microphone voices between the players of a room. A WebRTC mesh (≤3 calls per device), Opus mono ~32 kbit/s with FEC and DTX, set up through the room (`voice/<id>`, private inbox `sig/<id>`; the relay forwards `voice`/`sig`). Off until a grown-up allows it in ⚙️ (`ddw3-voice-allowed`); 🎤 in the room panel; 🎤 beside 👫 mutes; tap a friend's dot to block. Speaking lights from WebRTC's audio level on a 150 ms timer (never in the frame loop). Network settings: `VOICE_CONFIG` in `mp-config.js` (STUN; optional TURN). Test: `node tests/voicechat.cjs` |
 
 - **URL flags:**
   - `?test`: light test mode;

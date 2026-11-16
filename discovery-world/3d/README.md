@@ -12,6 +12,16 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 62: talk together
+Players in a Play Together room can now talk to each other live through their microphones while they play.
+- A grown-up turns it on first (hold ⚙️ → 🎤 Talking: On).
+- Then tap 🎤 in the room panel.
+- The 🎤 beside 👫 mutes with one tap.
+- A friend who talks gets a 🗣️ over their head.
+- Tap a friend's dot to stop hearing them.
+
+Setup (new database rules; optional relay for mobile data): `MULTIPLAYER.md`.
+
 ## 3D build 61: no more overlapping pictures
 A whole-game screenshot tour found the places where things were drawn into each other:
 - the pier sea's straight ends are hidden by grassy hills;

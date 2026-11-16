@@ -4,6 +4,31 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 62 — Talk Together: live voices in Play Together
+- **The family asked** for real, live voice between players of a multiplayer room (no text, no recorded messages, no other app), child-safe, on iPhone/iPad Safari and Android Chrome, without slowing the game.
+- **What it is** (`src/voicechat.js`, wired into `src/multiplayer.js`):
+  - **The call:** a WebRTC call between each pair of players in the room (a mesh: at most 3 calls per device). The audio is Opus (mono, ~32 kbit/s, FEC, DTX), always encrypted (DTLS-SRTP). Echo cancellation, noise suppression and automatic gain come from the browser.
+  - **Call set-up:** through the room's own connection: `voice/<id>` (who has talking on) and a private inbox `sig/<id>` per player. The test relay forwards the same messages only inside one room.
+  - **Controls:**
+    - off by default; a grown-up allows it in ⚙️ (held): **🎤 Talking … On**;
+    - in the room panel: 🎤▶ turns it on (the only moment the microphone is asked for); 🔈🔉🔊 volume (remembered); 🎤✖ turns it off;
+    - beside 👫: a 🎤 button with a live red light, one tap mutes (🔇);
+    - tap a friend's dot to block them (🚫): the call between you ends both ways, and their device stops calling until you undo it.
+  - **Speaking lights:** a 🗣️ over a friend who talks, their dot glows in the panel, and my own 🎤 glows green. They are read from WebRTC's own audio level on a 150 ms timer, never in the frame loop.
+  - **Repairs:**
+    - a call in trouble gets an ICE restart after 3 s, and a new call after 12 s;
+    - a friend who drops out of the room for a moment keeps the call (8 s grace);
+    - a microphone taken away (phone call, background) is taken back when the game returns;
+    - a reloaded game starts with talking off again.
+  - **iPhone/iPad volume:** these ignore an audio element's volume, so the in-game volume goes through a Web Audio gain there. It falls back to the plain element if that stays silent.
+  - **Nothing is recorded or stored.**
+- **Database rules** (`firebase-rules.json`):
+  - New `voice` and `sig` sections: only players in the room may write, and only the owner may read an inbox.
+  - **Fixed an old mistake:** the build 56 rules used `numChildren()`, which Firebase rules do not have, so the full rules could never be published. The 24-line paint limit now uses the line numbers.
+  - Checked on Firebase's own Realtime Database emulator: `tests/firebase-rules.emulator.mjs`, **26/26**.
+- **Verified (desktop Chromium, software rendering, separate browser sessions with simulated microphones):** `tests/voicechat.cjs`, 34 checks: the live call connects in under a second; two-way Opus audio (packets and real sound level both ways); the voice plays out loud; speaking lights; mute → the friend hears true silence (level 0.0000), unmute → sound again; volume; blocking (and its messages ignored), unblocking; a stranger in another room can not reach the call; the room connection dropping while the voices keep flowing; a page reload and reconnecting; three players each hearing the other two; leaving, 🎤✖ and the grown-up switch all stop the microphone; the voice timer costs 0.16 ms per check; nothing in the save; no page errors. RERUN_HERE Also `node --test` (voicechat.test.mjs and all others) and the existing `tests/multiplayer.cjs`.
+- **NOT yet tried on real phones or across different networks.** Two devices on the same home Wi-Fi should connect with the built-in STUN servers. Phones on mobile data or strict Wi-Fi may need the optional TURN relay (MULTIPLAYER.md, "Different networks").
+
 ## Checkpoint: build 61 — overlapping graphics fixed across the game
 - **The family asked** to go through the whole game and fix every place where graphics overlap.
 - **How they were found:** a new screenshot tour, every 16 m from x −826 to 940, plus the house (both floors), the castle, underground, the Sky Kingdom, the underwater world and the planets.
