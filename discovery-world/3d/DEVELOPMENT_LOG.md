@@ -32,6 +32,7 @@ are in `PERFORMANCE_LOG.md`.
     - the Block Builder's tray sat under 🔊 and ⚙️, which hid its red block;
     - the empty corner of the button row swallowed taps on the world beneath (the sleepy owl could not be tapped).
   - Now only the buttons themselves catch taps. The block tray is a two-row strip placed just below the buttons, so it reaches neither 🔊/⚙️ nor the jump button.
+- **Full smoke test, run alone on the final build: 198/198 passed** (screenshots and `tests/TEST_RESULTS.json` committed).
 - **Smoke test updates (not weakened):**
   - The mechanic fox is tapped where it lives since build 60.
   - The Play Together check now expects 👫 to be shown, since the room service was set up in build 56. It still checks that nothing connects or downloads on its own, and that talking is off.
