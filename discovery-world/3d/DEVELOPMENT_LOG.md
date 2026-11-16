@@ -4,6 +4,45 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 63 — zoomed out to see whole activities
+- **The family asked** to zoom out more, to see more and do every activity.
+- **Camera:**
+  - 9 → 12.5 m away, 2.15 → 2.9 m up, aimed 1.95 m up instead of 1.15;
+  - whole houses with roofs, the whole Block Builder wall, the top of the paint wall, the Ferris wheel and the hill steps now fit;
+  - a little less of the train track shows.
+- **Paying for the wider view:**
+  - each sky cloud is one mesh (was 5);
+  - the park kiosk is merged (32 pieces → a few);
+  - inside each scenery slice, still pieces that look exactly alike and cannot be tapped are drawn as one mesh (607 pieces → 108 merged meshes);
+  - a safety net (twice a second) restores the original pieces of a group the moment the game moves, hides, re-colours or reshapes one. On a walk through the world 10 groups were restored this way;
+  - `?nomerge` turns merging off for comparison.
+- **Measured (desktop, software rendering; `tests/perf/calls.cjs`, draw calls per frame, build 62b → 63):**
+
+  | Spot | Build 62b | Build 63 |
+  |---|---|---|
+  | Park | 181 | 183 |
+  | Studio | 131 | 149 |
+  | Wonder Lab | 127 | 121 |
+  | Castle | 188 | 195 |
+  | Toy Town | 65 | 69 |
+  | Frosty Peaks | 71 | 79 |
+
+- **`tests/perf/ba.cjs`, build 62b → 63:**
+
+  | Measure | Build 62b | Build 63 |
+  |---|---|---|
+  | Load | 31.0 s | 28.3 s |
+  | Longest start-up stall | 21.7 s | 16.4 s |
+  | Park, script ms/frame | 14.1 | 17.2 |
+  | Creatures, script ms/frame | 12.8 | 9.2 |
+  | Castle, script ms/frame | 17.8 | 15.4 |
+  | Memory | 137 MB | 152 MB |
+
+  - No long tasks in any view, and the map jump lost its 73 ms task. Shader programs are the same (114).
+  - The extra memory is the original pieces, kept for the safety net.
+- **Full smoke test, run alone: 198/198.**
+- **Not yet tried on the iPhone.** Watch the Studio and Frosty Peaks: they draw the most extra. The adaptive graphics still lower quality by themselves if a phone runs slowly.
+
 ## Checkpoint: build 62b — overlaps from the family's video
 - **The family sent a 6-minute screen recording** of the whole world on their phone and asked to fix everything that is messed up or drawn into something else. Every frame was reviewed at full size (one every 4 s).
 - **Fixed:**

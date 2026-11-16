@@ -6,6 +6,33 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+
+## Build 63 (zoomed-out camera)
+- **Draw calls (`calls.cjs`), build 62b → 63:**
+
+  | Spot | Build 62b | Build 63 |
+  |---|---|---|
+  | Park | 181 | 183 |
+  | Studio | 131 | 149 |
+  | Lab | 127 | 121 |
+  | Castle | 188 | 195 |
+  | Toy Town | 65 | 69 |
+  | Frosty Peaks | 71 | 79 |
+
+  Before the merging, the same zoom cost: park 221, Studio 168, castle 231.
+- **`ba.cjs`, build 62b → 63:**
+
+  | Measure | Build 62b | Build 63 |
+  |---|---|---|
+  | Load | 31.0 s | 28.3 s |
+  | Park, script ms/frame | 14.1 | 17.2 |
+  | Creatures, script ms/frame | 12.8 | 9.2 |
+  | Castle, script ms/frame | 17.8 | 15.4 |
+  | Heap | 137 MB | 152 MB |
+
+  No long tasks; the shader programs are the same.
+- **Watch on the iPhone:** the Studio (+14% draws) and Frosty Peaks (+11%).
+
 ## Build 62 (Talk Together: live voice)
 - **Solo play (talking off), build 61 vs 62, `tests/perf/ba.cjs`,** run twice with the order swapped (desktop, software rendering):
 
