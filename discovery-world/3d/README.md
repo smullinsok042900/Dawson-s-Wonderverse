@@ -12,6 +12,14 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 61: no more overlapping pictures
+A whole-game screenshot tour found the places where things were drawn into each other:
+- the pier sea's straight ends are hidden by grassy hills;
+- a gem no longer sits inside the fox's burrow;
+- the tunnel signs float clear of the rock;
+- the Toy Town tunnel is out of the house wall;
+- the learning spots show one glowing ring instead of two.
+
 ## 3D build 60: graphics fixes and a lighter park
 
 - **The fireplace in the house is a real fireplace now,** with the flames burning on logs inside it.

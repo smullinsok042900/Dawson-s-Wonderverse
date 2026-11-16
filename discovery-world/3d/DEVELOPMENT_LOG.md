@@ -4,6 +4,18 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 61 — overlapping graphics fixed across the game
+- **The family asked** to go through the whole game and fix every place where graphics overlap.
+- **How they were found:** a new screenshot tour, every 16 m from x −826 to 940, plus the house (both floors), the castle, underground, the Sky Kingdom, the underwater world and the planets.
+- **Fixed:**
+  - **Ocean Pier (x −669 and −535):** the sea ended in straight cut edges at both ends. Grassy headlands now hide them, like the beach one.
+  - **The Whispering Woods fox burrow (x −263):** gem g12 sat inside the burrow, on top of the fox. It is moved to x −259.5. Saved gems keep their id, so nothing is lost.
+  - **The secret tunnels:** the floating 🕳️ sign touched the top of the rock dome. It now bobs clear above it.
+  - **The Toy Town tunnel (x 612)** was pushed into the corner of a house and against the ball cannon. It is moved to x 609.6, and the tunnel from the woods arrives there.
+  - **The learning spots** (🔢 🔤 🎨 🧩 🔬 🎵 🙂): the yellow "tap here" ring was drawn stacked in front of the spot's own glowing ring, so there were two rings on top of each other. Only the spot's own ring shows now.
+- **Verified:** before and after screenshots of each place (desktop, software rendering), with no page errors.
+- **Not yet tried on the real iPhone.**
+
 ## Checkpoint: restore (2026-11-16) — back to build 59 plus build 60; builds 61–77 undone
 - **The family asked** to undo the graphics changes made by another session after build 59 (builds 61–77: terrain and mountains, instanced park trees, moving water surfaces, box collision and others, then a partial rollback that served a frozen copy of build 59 from `discovery-world/play59/`). They also asked to keep this chat's build 60.
 - **Done as a normal merge (no history rewritten):**
