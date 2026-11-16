@@ -4,6 +4,24 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 64 — fixes from the family's 16 phone screenshots
+- **Pictures the family disliked:**
+  - **Station picture discs** (castle, rainbow, rocket, butterfly…) are removed from all 18 stations. The golden bells stay, and tapping a station still calls the train.
+  - **The floating 👂** in the Whispering Woods is now a little wooden birdhouse on a post. Tapping it plays the owl call as before.
+  - **The pier whale** was a flat grey blob. It is now a friendly blue whale with a pale belly, eyes and a tail fluke that waves; tapping it still spouts.
+- **Overlaps:**
+  - **Rocket:** its pad sat on the colour pond and over the path. The rocket moved 686 → 693, further back, and the pond moved back from the path.
+  - **Toy Town:** the balloon basket stood in front of a house (balloons rose up its wall); it is now in the gap between houses (x 651.5).
+  - **Farm:** the tractor is further from the fence.
+  - **Stream bridge:** it is now a planked wooden bridge with edge beams (one mesh). The stream is as wide as the bridge, so no water shows on the path beside it, and the stepping stones are further upstream.
+- **Looked odd:**
+  - **The ice pond** is an oval, not a hard-edged rectangle.
+  - **The shadow wall** has a purple frame and shows a bunny shadow from the start.
+  - **The spin-art wheel** has paint and a pink rim from the start.
+  - **The sticker wall** has soft polka dots.
+- **Cost:** the whale and the birdhouse are one mesh each (the whale's tail is a second); the 36 station discs are gone. Draw calls at the changed places are the same as build 63 (pier 66, woods 78, Frosty 78, trail 79, Lab 80 vs 84) and lower in the park and Studio.
+- **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. FULL_SMOKE_64
+
 ## Checkpoint: build 63 — zoomed out to see whole activities
 - **The family asked** to zoom out more, to see more and do every activity.
 - **Camera:**

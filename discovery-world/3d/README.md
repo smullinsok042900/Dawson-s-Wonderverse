@@ -12,6 +12,15 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 64: tidier and friendlier
+- No picture discs on the train stations.
+- A birdhouse instead of the floating ear.
+- A real blue whale at the pier.
+- The rocket is off the pond.
+- A wooden plank bridge.
+- An oval ice pond.
+- The shadow wall, spin-art wheel and sticker wall are no longer blank.
+
 ## 3D build 63: see more
 The camera is further back and a little higher, so whole activities (houses, the block wall, the paint wall, the Ferris wheel) fit on the screen. Look-alike still scenery is merged to keep it fast.
 
