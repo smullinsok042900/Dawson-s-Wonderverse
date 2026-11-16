@@ -5,6 +5,7 @@
 // usage: node tests/mp-relay.cjs [port]  (or require it: start(port) -> { close })
 const { WebSocketServer } = require('ws');
 function start(port = 8787) {
+  let relay;
   const wss = new WebSocketServer({ port }), rooms = new Map();
   wss.on('connection', ws => { let room = null, id = null;
     const here = () => rooms.get(room) || new Map();
@@ -14,13 +15,17 @@ function start(port = 8787) {
       if (m.type === 'join') { const r = rooms.get(m.room) || new Map(); if (r.size >= 4 && !r.has(m.id)) { ws.send(JSON.stringify({ type: 'joined', full: true })); return; }
         out(); room = m.room; id = m.id; rooms.set(room, r); r.set(id, { ws, state: m.state }); ws.send(JSON.stringify({ type: 'joined' }));
         for (const [k, obj] of Object.entries(r.objects || {})) ws.send(JSON.stringify({ type: 'obj', key: k, obj }));
-        for (const [k, o] of others()) { ws.send(JSON.stringify({ type: 'player', id: k, state: o.state })); o.ws.send(JSON.stringify({ type: 'player', id, state: m.state })); } }
+        for (const [k, o] of others()) { ws.send(JSON.stringify({ type: 'player', id: k, state: o.state })); o.ws.send(JSON.stringify({ type: 'player', id, state: m.state })); if (o.voice) ws.send(JSON.stringify({ type: 'voice', id: k, on: true })); } }
       if (m.type === 'state' && room) { const me = here().get(id); if (me) me.state = m.state; for (const [, o] of others()) o.ws.send(JSON.stringify({ type: 'player', id, state: m.state })); }
       if (m.type === 'obj' && room) { const r = here(); r.objects = { ...(r.objects || {}) }; if (m.obj == null) delete r.objects[m.key]; else r.objects[m.key] = m.obj; for (const [, o] of others()) o.ws.send(JSON.stringify({ type: 'obj', key: m.key, obj: m.obj })); }
       if (m.type === 'evt' && room) for (const [, o] of others()) o.ws.send(JSON.stringify({ type: 'evt', evt: m.evt }));
+      // (build 62) talking: who has it on, and call set-up messages to ONE player of the same room (never anyone else)
+      if (m.type === 'voice' && room) { const me = here().get(id); if (me) me.voice = !!m.on; for (const [, o] of others()) o.ws.send(JSON.stringify({ type: 'voice', id, on: !!m.on })); }
+      if (m.type === 'sig' && room) { const to = here().get(m.to); if (to && m.to !== id) { to.ws.send(JSON.stringify({ type: 'sig', from: id, msg: m.msg })); relay.signals = (relay.signals || 0) + 1; } }
       if (m.type === 'leave') out(); });
     ws.on('close', out); });
-  return { close: () => wss.close(), rooms };
+  relay = { close: () => wss.close(), rooms };
+  return relay;
 }
 if (require.main === module) { start(+process.argv[2] || 8787); console.log('relay on', +process.argv[2] || 8787); }
 module.exports = { start };

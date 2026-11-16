@@ -620,6 +620,9 @@ const hint = new THREE.Group(); hint.userData.dynamic = true; scene.add(hint); /
 { /* (build 43) 'stand here and press the paw': a glowing circle on the path in front of the activity (a cone floating over
      things covered them up) */ const r = new THREE.Mesh(new THREE.TorusGeometry(.62, .08, 10, 36), toy('#ffd84a', { em: '#ffb000', ei: .9 })); r.rotation.x = Math.PI / 2; hint.add(r);
   const r2 = new THREE.Mesh(new THREE.TorusGeometry(.42, .05, 8, 30), toy('#ff6fae', { em: '#ff6fae', ei: .6 })); r2.rotation.x = Math.PI / 2; hint.add(r2); hint.userData.r2 = r2; }
+// (build 62) the block tray goes just below the top-right buttons, however many rows they take on this screen
+function placeBuildTools() { const ur = $('upperRight'), bt = $('buildTools'); if (!ur || !bt) return; const b = ur.getBoundingClientRect().bottom; if (b > 0) bt.style.top = Math.round(b + 8) + 'px'; }
+addEventListener('resize', () => { if ($('buildTools').classList.contains('show')) setTimeout(placeBuildTools, 120); });
 function updateHint(t) {
   const P = player; let best = null, bd = 13;
   if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4 || (it.need && !it.need())) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
@@ -1224,7 +1227,7 @@ function frame() {
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
-  $('buildTools').classList.toggle('show', started && meadow.nearBuild(player));
+  { const bt = $('buildTools'), on = started && meadow.nearBuild(player); if (on && !bt.classList.contains('show')) placeBuildTools(); bt.classList.toggle('show', on); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('shown'); }
   if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
   if (world.comfort?.calm) world.flash = 0;
@@ -1476,7 +1479,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '61'; G.build = GAME_BUILD;
+const GAME_BUILD = '62'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1500,6 +1503,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   pan.innerHTML = `<div class="pp"><div class="ppHead">Grown-ups: performance <span class="ppBuild">build ${GAME_BUILD}</span> <button data-a="close" aria-label="close">✖</button></div>
     <button data-a="mon">📊 Monitor: <b>off</b></button><button data-a="test">▶ Performance Test (about 30 s)</button><button data-a="copy">📋 Copy Test Results</button><button data-a="voice">🗣️ Test the voice</button><div class="ppTier ppVoices"></div><div class="ppInfo ppVoiceTip">For the most natural voice: on the iPhone open Settings → Accessibility → Spoken Content → Voices → English and download <b>Ava (Premium)</b> or <b>Zoe (Premium)</b> (free, works offline). The game uses it automatically; choose it here to be sure.</div><div class="ppTier">Learning games: <button data-a="t1">1 Super easy</button><button data-a="t2">2 Learning more</button><button data-a="t3">3 Kindergarten ready</button></div>
     <div class="ppInfo"></div><textarea readonly rows="7" placeholder="Run the test, then Copy Test Results and paste them into the chat."></textarea>
+    <div class="ppTier ppTalk">🎤 Talking in Play Together (live microphone, private room only): <button data-a="vc-off">Off</button><button data-a="vc-on">On</button></div>
     <div class="ppTier ppMode">Graphics: <button data-a="m-auto">Auto</button><button data-a="m-quality">Quality</button><button data-a="m-balanced">Balanced</button><button data-a="m-performance">Performance</button></div>
     <button data-a="full" class="small fsOnly">⛶ Full screen</button>
     <button data-a="reset" class="small">↺ Reset automatic graphics</button><button data-a="wipe" class="small danger">🗑️ Start over (erase all progress)</button></div>`;
@@ -1507,7 +1511,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
   const block = document.createElement('div'); block.id = 'perfBlock'; block.innerHTML = '<div>⏱️ <span></span></div>'; document.body.appendChild(block);
   const ta = pan.querySelector('textarea'), info = pan.querySelector('.ppInfo'), monB = pan.querySelector('[data-a=mon] b');
   const refreshVoices = () => { const box = pan.querySelector('.ppVoices'); const vs = voice.voices ? voice.voices() : []; box.innerHTML = vs.length ? 'Voice: ' + vs.map(v => `<button data-a="v:${v.name.replace(/"/g, '')}" class="${v.current ? 'on' : ''}">${v.name}${v.quality ? ' ★' : ''}</button>`).join('') : ''; };
-  const refresh = () => { refreshVoices(); pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', /^m-/.test(b.dataset.a) ? b.dataset.a === 'm-' + (G.gfx || {}).mode : +b.dataset.a[1] === learning.tier())); pan.querySelector('.fsOnly').style.display = fsAvailable() ? '' : 'none'; monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; ${g.mode === 'auto' ? 'changes by itself if the game runs slowly' : 'fixed: ' + g.mode}) · ${DEV.kind}${DEV.ios ? ' (Apple)' : DEV.android ? ' (Android)' : ''}${DEV.standalone ? ', Home Screen app' : ''} · picture ${canvas.width}×${canvas.height}${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
+  const refresh = () => { refreshVoices(); pan.querySelectorAll('.ppTier button').forEach(b => b.classList.toggle('on', /^vc-/.test(b.dataset.a) ? b.dataset.a === (G.mp && G.mp.voiceAllowed ? 'vc-on' : 'vc-off') : /^m-/.test(b.dataset.a) ? b.dataset.a === 'm-' + (G.gfx || {}).mode : +b.dataset.a[1] === learning.tier())); pan.querySelector('.fsOnly').style.display = fsAvailable() ? '' : 'none'; monB.textContent = perfMon.isShown() ? 'on' : 'off'; const g = G.gfx || {}; info.textContent = `Graphics level ${g.level ?? '?'} of 5 (0 = best; ${g.mode === 'auto' ? 'changes by itself if the game runs slowly' : 'fixed: ' + g.mode}) · ${DEV.kind}${DEV.ios ? ' (Apple)' : DEV.android ? ' (Android)' : ''}${DEV.standalone ? ', Home Screen app' : ''} · picture ${canvas.width}×${canvas.height}${g.changes && g.changes.length ? ' · ' + g.changes.slice(-3).join(', ') : ''}`; ta.value = perfMon.report(); };
   // (build 28) iPhone: a long press makes Safari start its own gesture, which CANCELS the touch (pointercancel) even
   // though the finger is still down. So only a real lift ends the hold; a quick tap shows a small "hold me" hint.
   let holdT = null, downAt = 0, opened = false;
@@ -1525,6 +1529,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
       G.erasing = true; try { localStorage.removeItem(SAVE_KEY); } catch (err) { } location.reload(); return; }
     if (/^t[123]$/.test(a)) { learning.setTier(+a[1]); refresh(); }
     if (/^m-/.test(a)) { setGfxMode(a.slice(2)); refresh(); }
+    if (/^vc-/.test(a) && G.mp) { G.mp.setVoiceAllowed(a === 'vc-on'); refresh(); } // (build 62: a grown-up allows live talking; off by default)
     if (/^v:/.test(a)) { if (!Sound.on) setSound(true); voice.unlock(); voice.choose(a.slice(2)); voice.speak('Hi Dawson! Let\'s go and play!'); refreshVoices(); }
     if (a === 'full') { goFullscreen(); pan.classList.remove('show'); }
     if (a === 'voice') { if (!Sound.on) setSound(true); voice.unlock(); voice.speak('Hello! Can you hear me? Let\'s play and learn!'); setTimeout(() => { info.textContent = 'Voice: ' + perfMon.voiceLine(); }, 2500); }

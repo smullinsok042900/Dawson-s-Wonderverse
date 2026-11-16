@@ -23,7 +23,8 @@
 // - Small: a room only ever carries small validated values (see shared.js), so it can never carry text or chat.
 // ===================================================================
 import * as THREE from 'three';
-import { FIREBASE_CONFIG } from './mp-config.js';
+import { FIREBASE_CONFIG, VOICE_CONFIG } from './mp-config.js';
+import { createVoice, voiceSupported, VOICE_ALLOWED_KEY, VOLUMES } from './voicechat.js';
 import { buildPet } from './friends.js';
 import { LIMITS, isCode, codeFromPics, picsFromCode, petKey, recipeFromKey, sanitizeObject, sanitizeEvent, makePaintBatch } from './shared.js';
 
@@ -41,29 +42,34 @@ const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(9)), b => (
 // ---------- the two ways to connect (the same small interface) ----------
 // connect() -> my id; join(code, state) -> { ok, full }; send(state); leave(); setShared(key, obj); sendEvent(evt);
 // events: onPlayer(id, data | null), onStatus(online), onShared(key, obj | null), onEvent(evt)
+// (build 62, talking) setVoice(on) -> Promise; signal(to, msg); events onVoice(id, on), onSignal(from, msg)
 function relayTransport(url) {
-  const id = newId(); let ws = null, room = null, last = null, wantOpen = false, timer = 0;
-  const T = { id, onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { } };
-  const open = () => new Promise(res => { ws = new WebSocket(url); ws.onopen = () => { T.onStatus(true); if (room) ws.send(JSON.stringify({ type: 'join', room, id, state: last })); res(true); };
+  const id = newId(); let ws = null, room = null, last = null, wantOpen = false, timer = 0, voiceOn = false;
+  const T = { id, onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { }, onVoice: () => { }, onSignal: () => { } };
+  const open = () => new Promise(res => { ws = new WebSocket(url); ws.onopen = () => { T.onStatus(true); if (room) { ws.send(JSON.stringify({ type: 'join', room, id, state: last })); if (voiceOn) ws.send(JSON.stringify({ type: 'voice', on: true })); } res(true); };
     ws.onmessage = e => { const m = JSON.parse(e.data);
       if (m.type === 'player') T.onPlayer(m.id, m.state);
       else if (m.type === 'gone') T.onPlayer(m.id, null);
       else if (m.type === 'joined') T._joined && T._joined(m);
       else if (m.type === 'obj') T.onShared(m.key, m.obj);
-      else if (m.type === 'evt') T.onEvent(m.evt); };
+      else if (m.type === 'evt') T.onEvent(m.evt);
+      else if (m.type === 'voice') T.onVoice(m.id, !!m.on);
+      else if (m.type === 'sig') T.onSignal(m.from, m.msg); };
     ws.onclose = () => { T.onStatus(false); if (wantOpen) { clearTimeout(timer); timer = setTimeout(open, 1000); } res(false); }; ws.onerror = () => { }; });
   T.connect = async () => { wantOpen = true; await open(); return id; };
   T.join = async (code, state) => { wantOpen = true; if (!ws || ws.readyState > 1) await open(); return new Promise(res => { room = code; last = state; T._joined = m => res({ ok: !m.full, full: !!m.full }); if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'join', room, id, state })); else res({ ok: false }); }); };
   T.send = state => { last = state; if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'state', state })); };
   T.setShared = (key, obj) => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'obj', key, obj })); };
   T.sendEvent = evt => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'evt', evt })); };
-  T.leave = () => { wantOpen = false; room = null; if (ws) { try { ws.send(JSON.stringify({ type: 'leave' })); } catch (e) { } ws.close(); } };
+  T.setVoice = async on => { voiceOn = !!on; if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'voice', on: voiceOn })); };
+  T.signal = (to, msg) => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'sig', to, msg })); };
+  T.leave = () => { wantOpen = false; room = null; voiceOn = false; if (ws) { try { ws.send(JSON.stringify({ type: 'leave' })); } catch (e) { } ws.close(); } };
   T.drop = () => { if (ws) ws.close(); }; // (tests: simulate losing the connection; it comes back by itself)
   return T;
 }
 function firebaseTransport(cfg) {
-  const T = { onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { } };
-  let fb = null, me = null, meRef = null, room = null, last = null; const offs = [];
+  const T = { onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { }, onVoice: () => { }, onSignal: () => { } };
+  let fb = null, me = null, meRef = null, room = null, last = null, voiceOn = false; const offs = [];
   T.connect = async () => {
     const url = new URL('mp-firebase.js', location.href).href; const M = await import(/* fetched only now */ url); const [{ initializeApp }, A, D] = [M.appMod, M.authMod, M.dbMod];
     const app = initializeApp(cfg, 'ddw3-mp'); const auth = A.getAuth(app); const cred = await A.signInAnonymously(auth); const db = D.getDatabase(app);
@@ -72,7 +78,9 @@ function firebaseTransport(cfg) {
     offs.push(D.onValue(D.ref(db, '.info/connected'), s => { const on = !!s.val(); T.onStatus(on); if (on && room) putMe(); }));
     return me;
   };
-  const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); return D.set(meRef, { ...last, t: D.serverTimestamp() }); };
+  const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); const p = D.set(meRef, { ...last, t: D.serverTimestamp() }); if (voiceOn) p.then(() => putVoice(true)).catch(() => { }); return p; };
+  // (build 62) talking: who has it on (voice/<uid>), and each player's private inbox for setting up calls (sig/<uid>)
+  const putVoice = async on => { const { D, db } = fb, ref = D.ref(db, `${ROOM_PATH}/${room}/voice/${me}`); if (on) { await D.set(ref, true); D.onDisconnect(ref).remove(); } else { D.onDisconnect(ref).cancel(); await D.remove(ref); } };
   T.join = async (code, state) => {
     const { D, db } = fb; const base = `${ROOM_PATH}/${code}`, playersRef = D.ref(db, `${base}/players`);
     const snap = await D.get(playersRef); const n = snap.exists() ? Object.keys(snap.val()).filter(k => k !== me).length : 0;
@@ -84,6 +92,13 @@ function firebaseTransport(cfg) {
     const objectsRef = D.ref(db, `${base}/objects`);
     offs.push(D.onChildAdded(objectsRef, s => T.onShared(s.key, s.val())), D.onChildChanged(objectsRef, s => T.onShared(s.key, s.val())), D.onChildRemoved(objectsRef, s => T.onShared(s.key, null)));
     offs.push(D.onChildAdded(D.ref(db, `${base}/events`), s => T.onEvent(s.val())));
+    // (build 62) talking. The rules let only players of this room write to an inbox, and only its owner read it.
+    const quiet = () => { };
+    const voiceRef = D.ref(db, `${base}/voice`);
+    offs.push(D.onChildAdded(voiceRef, s => { if (s.key !== me) T.onVoice(s.key, true); }, quiet), D.onChildRemoved(voiceRef, s => { if (s.key !== me) T.onVoice(s.key, false); }, quiet));
+    const inbox = D.ref(db, `${base}/sig/${me}`);
+    await D.remove(inbox).catch(quiet); D.onDisconnect(inbox).remove().catch(quiet);
+    offs.push(D.onChildAdded(inbox, s => { const v = s.val(); D.remove(s.ref).catch(quiet); if (!v || typeof v.d !== 'string' || v.d.length > 20000 || typeof v.f !== 'string') return; let msg; try { msg = JSON.parse(v.d); } catch (e) { return; } T.onSignal(v.f, msg); }, quiet));
     return { ok: true };
   };
   T.send = state => { last = state; if (meRef) fb.D.update(meRef, { ...state, t: fb.D.serverTimestamp() }).catch(() => { }); };
@@ -99,7 +114,9 @@ function firebaseTransport(cfg) {
     D.set(ref, { ...evt, by: me, at: D.serverTimestamp() }).catch(() => { });
     setTimeout(() => { try { D.remove(ref).catch(() => { }); } catch (e) { } }, 30000); // (a wave is a moment, not a history)
   };
-  T.leave = () => { for (const f of offs.splice(1)) try { f(); } catch (e) { } if (meRef) { fb.D.onDisconnect(meRef).cancel(); fb.D.remove(meRef).catch(() => { }); } meRef = null; room = null; };
+  T.setVoice = async on => { voiceOn = !!on; if (fb && room) await putVoice(voiceOn); };
+  T.signal = (to, msg) => { if (!fb || !room || typeof to !== 'string' || !/^[\w-]{1,60}$/.test(to)) return; const { D, db } = fb; D.push(D.ref(db, `${ROOM_PATH}/${room}/sig/${to}`), { f: me, d: JSON.stringify(msg), at: D.serverTimestamp() }).catch(() => { }); };
+  T.leave = () => { for (const f of offs.splice(1)) try { f(); } catch (e) { } if (fb && room) { const { D, db } = fb; if (voiceOn) putVoice(false).catch(() => { }); D.remove(D.ref(db, `${ROOM_PATH}/${room}/sig/${me}`)).catch(() => { }); } voiceOn = false; if (meRef) { fb.D.onDisconnect(meRef).cancel(); fb.D.remove(meRef).catch(() => { }); } meRef = null; room = null; };
   T.drop = () => { if (fb) { fb.D.goOffline(fb.db); setTimeout(() => fb.D.goOnline(fb.db), 1500); } };
   return T;
 }
@@ -123,7 +140,7 @@ export function makeInterp(delay = 150) {
 export function initMultiplayer(G, api) {
   const { scene, player: P, makeCreature, toy, Sound } = api; const world = api.world || {}; const make = pickTransport();
   const others = new Map(); let T = null, room = null, online = false, sendT = 0, lastSent = '', myColour = 0, joining = false;
-  let lastPaintAt = 0, waveTex = null;
+  let lastPaintAt = 0;
   const strokeKeys = [], clearedKeys = new Set(); let lastClearAt = 0;
   const say = (m, speak) => api.toast(m, speak);
   // (build 58) A room problem must never crash the game: say what happened, in a picture message, and keep playing.
@@ -146,6 +163,55 @@ export function initMultiplayer(G, api) {
   document.getElementById('upperLeft').appendChild(btn);
   const panel = document.createElement('div'); panel.id = 'mpPanel'; panel.innerHTML = '<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpBody"></div></div>'; document.body.appendChild(panel);
   const body = panel.querySelector('.mpBody'); let pressed = [];
+
+  // ----- (build 62) TALK TOGETHER: live voices between the players of this room (voicechat.js) -----
+  const voiceIds = new Set(); // (friends in the room who have talking turned on)
+  let iceP = null;
+  const loadIce = () => iceP || (iceP = (async () => {
+    const C = VOICE_CONFIG || {}, list = [];
+    if (C.stun && C.stun.length) list.push({ urls: C.stun });
+    for (const t of C.turn || []) if (t && t.urls) list.push(t);
+    if (C.turnCredentialsUrl) { try { const ctl = new AbortController(), k = setTimeout(() => ctl.abort(), 5000); const r = await fetch(C.turnCredentialsUrl, { signal: ctl.signal }); clearTimeout(k); const j = await r.json(); for (const t of Array.isArray(j) ? j : j.iceServers || []) if (t && t.urls) list.push(t); } catch (e) { iceP = null; } }
+    return list; })());
+  const voiceAllowed = () => { try { return localStorage.getItem(VOICE_ALLOWED_KEY) === '1'; } catch (e) { return false; } };
+  const vc = createVoice({
+    signal: (to, msg) => { if (T && T.signal && room) T.signal(to, msg); },
+    myId: () => (T && T.id) || '', allowedPeer: id => !!room && others.has(id), iceServers: loadIce,
+    audioCtx: () => { try { if (!Sound.ac) Sound.ac = new (window.AudioContext || window.webkitAudioContext)(); return Sound.ac; } catch (e) { return null; } },
+    say: m => say(m, true), onChange: () => voiceChanged(),
+  });
+  // the 🎤 button next to 👫, shown while talking is on: one tap mutes / unmutes; it glows while the microphone is live
+  const vcBtn = document.createElement('button'); vcBtn.className = 'pill'; vcBtn.id = 'vcBtn'; vcBtn.setAttribute('aria-label', 'microphone: tap to mute or unmute'); vcBtn.innerHTML = '<span class="vcIc">🎤</span><i class="vcLive"></i>'; vcBtn.style.display = 'none';
+  btn.after(vcBtn); vcBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; toggleMute(); });
+  async function talkOn() {
+    if (!room) return;
+    if (!voiceAllowed()) { say('🔒 Talking is off. A grown-up can turn it on: hold ⚙️, then 🎤.', true); Sound.tone(300, .15, 'sine', .04, 1); return; }
+    if (!voiceSupported()) { say('🎤 This browser can not do talking. Try Safari or Chrome.', true); return; }
+    const ok = await vc.start(); if (!ok || !room) { if (ok) vc.stop(); return; }
+    try { await T.setVoice(true); } catch (e) { vc.stop(); say(/PERMISSION|permission/.test(String(e && (e.code || e.message))) ? '🔒 The room service said no to talking. A grown-up needs to paste the new database rules (MULTIPLAYER.md).' : '📶 Could not start talking. Try again!', true); return; }
+    for (const id of voiceIds) vc.want(id, true);
+    Sound.chime(); say('🎤 Talking is on! Say hello to your friends!', true); api.discover && api.discover('mptalk');
+  }
+  function talkOff(quiet) { if (!vc.on) return; vc.stop(); if (T && T.setVoice) T.setVoice(false).catch(() => { }); if (!quiet) say('🎤 Talking is off.', true); }
+  function toggleMute() { if (!vc.on) return; vc.setMuted(!vc.muted); Sound.tone(vc.muted ? 330 : 660, .12, 'sine', .05, 1); say(vc.muted ? '🔇 Shh! Your friends can not hear you.' : '🎤 Your friends can hear you again!'); }
+  let vcKey = '';
+  function voiceChanged() {
+    vcBtn.style.display = vc.on ? '' : 'none';
+    vcBtn.classList.toggle('muted', vc.muted); vcBtn.classList.toggle('talk', vc.meSpeaking());
+    vcBtn.querySelector('.vcIc').textContent = vc.muted ? '🔇' : '🎤';
+    if (!panel.classList.contains('show') || !room) return;
+    const key = [vc.on, vc.muted, voiceAllowed(), vc.volume].join();
+    if (key !== vcKey) { render('room'); return; }
+    body.querySelectorAll('.mpDot[data-p]').forEach(d => { const id = d.dataset.p; d.classList.toggle('talk', vc.speaking(id)); d.classList.toggle('blocked', vc.isBlocked(id)); d.classList.toggle('vc', voiceIds.has(id)); });
+    const me = body.querySelector('.mpDot.me'); if (me) me.classList.toggle('talk', vc.meSpeaking());
+  }
+  function talkRow() {
+    vcKey = [vc.on, vc.muted, voiceAllowed(), vc.volume].join();
+    if (!vc.on) return `<div class="vcRow"><button class="vcBig${voiceAllowed() ? '' : ' locked'}" data-a="talk" aria-label="Turn on talking">🎤${voiceAllowed() ? '<b>▶</b>' : '<b>🔒</b>'}</button></div>`;
+    return `<div class="vcRow"><button class="vcBig on${vc.muted ? ' muted' : ''}" data-a="mute" aria-label="${vc.muted ? 'unmute' : 'mute'}">${vc.muted ? '🔇' : '🎤'}</button>` +
+      `<span class="vcVol">${VOLUMES.map((v, i) => `<button class="vcV${vc.volume === i ? ' on' : ''}" data-a="vol${i}" aria-label="volume ${i + 1}">${['🔈', '🔉', '🔊'][i]}</button>`).join('')}</span>` +
+      `<button class="vcStop" data-a="talkoff" aria-label="Turn talking off">🎤<b>✖</b></button></div>`;
+  }
   const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   tap(panel.querySelector('.mpX'), () => { panel.classList.remove('show'); Sound.click(); });
   const pics = code => picsFromCode(code).map(i => `<span class="mpPic">${(ANIMALS[i] || ANIMALS[0])[0]}</span>`).join('');
@@ -155,11 +221,13 @@ export function initMultiplayer(G, api) {
       body.innerHTML = `<div class="mpRow"><button class="mpBig" data-a="create" aria-label="Create a room"><span>🏠</span><b>✨</b></button><button class="mpBig" data-a="join" aria-label="Join a room"><span>🔑</span><b>👫</b></button></div>` +
         (validCode(lastRoom) ? `<button class="mpAgain" data-a="again" aria-label="Join the last room again">↩️ ${pics(lastRoom)}</button>` : '') + `<div class="mpNote">${online || !T ? '' : '📶'}</div>`; }
     if (view === 'join') { body.innerHTML = `<div class="mpSlots">${[0, 1, 2, 3].map(k => `<span class="mpSlot">${pressed[k] != null ? ANIMALS[pressed[k]][0] : ''}</span>`).join('')}<button class="mpBack" data-a="back" aria-label="undo">⌫</button></div><div class="mpKeys">${ANIMALS.map((a, i) => `<button class="mpKey" data-k="${i}" aria-label="${a[1]}">${a[0]}</button>`).join('')}</div>`; }
-    if (view === 'room') { const list = [{ c: myColour, me: true }, ...[...others.values()].map(o => ({ c: o.colour }))];
-      body.innerHTML = `<div class="mpCode" aria-label="room code">${pics(room)}</div><div class="mpLetters">${room}</div><div class="mpPlayers">${list.map(p => `<span class="mpDot${p.me ? ' me' : ''}" style="background:${COLOURS[p.c % 4]}"></span>`).join('')}${online ? '' : '<span class="mpOff">📶</span>'}</div>` +
-        `<div class="mpShare" aria-hidden="true">🧱🎨🐾👋</div>` +
+    if (view === 'room') { const list = [{ c: myColour, me: true }, ...[...others.values()].map(o => ({ c: o.colour, id: o.id }))];
+      body.innerHTML = `<div class="mpCode" aria-label="room code">${pics(room)}</div><div class="mpLetters">${room}</div><div class="mpPlayers">${list.map(p => `<span class="mpDot${p.me ? ' me' : ''}${p.id && vc.isBlocked(p.id) ? ' blocked' : ''}${p.id && voiceIds.has(p.id) ? ' vc' : ''}"${p.id ? ` data-p="${p.id}" role="button" aria-label="friend: tap to stop or start hearing them"` : ''} style="background:${COLOURS[p.c % 4]}"></span>`).join('')}${online ? '' : '<span class="mpOff">📶</span>'}</div>` +
+        `<div class="mpShare" aria-hidden="true">🧱🎨🐾👋</div>` + talkRow() +
         `<div class="mpDoors"><button class="mpWave" data-a="wave" aria-label="Wave to your friends">👋</button><button class="mpLeave" data-a="leave" aria-label="Leave the room">🚪</button></div>`; }
     body.querySelectorAll('[data-a]').forEach(b => tap(b, () => action(b.dataset.a)));
+    body.querySelectorAll('.mpDot[data-p]').forEach(d => tap(d, () => { if (!vc.on) return; const id = d.dataset.p, was = vc.isBlocked(id); vc.block(id, !was); Sound.click(); say(was ? '🔊 You can hear this friend again.' : '🚫 You will not hear this friend, and they will not hear you.', true); render('room'); }));
+    if (view === 'room') voiceChanged();
     body.querySelectorAll('[data-k]').forEach(b => tap(b, () => { if (pressed.length >= 4) return; pressed.push(+b.dataset.k); Sound.tone(500 + pressed.length * 90, .1, 'sine', .05, 1.2); api.voice && api.voice.speak(ANIMALS[+b.dataset.k][1]); if (pressed.length === 4) { const code = codeFromPics(pressed); pressed = []; joinRoom(code); } else render('join'); }));
   }
   async function action(a) {
@@ -169,9 +237,14 @@ export function initMultiplayer(G, api) {
     if (a === 'again') { const c = localStorage.getItem(ROOM_KEY); if (validCode(c)) joinRoom(c); }
     if (a === 'wave') wave();
     if (a === 'leave') { leaveRoom(); render('home'); }
+    if (a === 'talk') talkOn();
+    if (a === 'talkoff') { talkOff(); render('room'); }
+    if (a === 'mute') toggleMute();
+    if (/^vol\d$/.test(a)) { vc.setVolume(+a[3]); Sound.click(); }
   }
   async function ensure() { if (T) return true; if (!make) return false; T = make(); T.onStatus = on => { const was = online; online = on; if (room && was !== on) { say(on ? '✅ Connected again!' : '📶 Lost the connection… trying again', true); render(panel.classList.contains('show') ? 'room' : undefined); } };
     T.onPlayer = (id, s) => onPlayer(id, s); T.onShared = (key, obj) => onShared(key, obj); T.onEvent = evt => onEvent(evt);
+    T.onVoice = (id, on) => { if (!room) return; if (on) voiceIds.add(id); else voiceIds.delete(id); vc.want(id, on); voiceChanged(); }; T.onSignal = (from, msg) => { if (room) vc.onSignal(from, msg); };
     try { await T.connect(); return true; } catch (e) { T = null; say(roomProblem(e), true); return false; } }
   async function roomBusy() { return false; } // (with 20,736 codes and family-only use, a fresh random code is all but always free; joining checks for full rooms)
   async function joinRoom(code, created) {
@@ -191,7 +264,7 @@ export function initMultiplayer(G, api) {
     } catch (e) { room = null; say(roomProblem(e), true); render('home'); } // (build 58: never let a room problem crash the game)
     finally { joining = false; } }
   function leaveRoom(quiet) {
-    flushPaint(); if (T) T.leave(); room = null; try { sessionStorage.removeItem(ROOM_KEY); } catch (e) { } /* (the connection object is kept, so joining again reuses it) */
+    flushPaint(); talkOff(true); voiceIds.clear(); vc.clearWanted(); if (T) T.leave(); room = null; vcBtn.style.display = 'none'; try { sessionStorage.removeItem(ROOM_KEY); } catch (e) { } /* (the connection object is kept, so joining again reuses it) */
     strokeKeys.length = 0; clearedKeys.clear(); lastClearAt = 0;
     for (const id of [...others.keys()]) removeOther(id, true);
     if (!quiet) { say('🚪 You left the room. Playing on your own now.', true); } }
@@ -203,7 +276,7 @@ export function initMultiplayer(G, api) {
   function onPlayer(id, s) {
     if (!s) { removeOther(id); return; }
     let o = others.get(id); const now = performance.now();
-    if (!o) { o = { id, interp: makeInterp(), colour: s.k ?? 0, kind: null, model: null, ring: null, mark: null, waveM: null, waveAt: 0, petSig: '', petCodes: '', petModels: [], seen: now }; others.set(id, o); say('👋 A friend joined the room!', true); Sound.chime(); if (panel.classList.contains('show')) render('room'); }
+    if (!o) { o = { id, interp: makeInterp(), colour: s.k ?? 0, kind: null, model: null, ring: null, mark: null, waveM: null, waveAt: 0, petSig: '', petCodes: '', petModels: [], seen: now }; others.set(id, o); say('👋 A friend joined the room!', true); Sound.chime(); if (panel.classList.contains('show')) render('room'); if (voiceIds.has(id)) vc.want(id, true); }
     o.seen = now; o.colour = s.k ?? o.colour;
     o.petSig = typeof s.ps === 'string' ? s.ps : (Array.isArray(s.p) ? s.p.join(',') : '');
     const kind = api.CREATURES && api.CREATURES[s.c] ? s.c : 'pip'; /* (build 59: an unknown creature, e.g. from a newer game, shows as Pip) */
@@ -218,10 +291,10 @@ export function initMultiplayer(G, api) {
     if (!o.ring) { const col = COLOURS[o.colour % 4];
       o.ring = new THREE.Mesh(new THREE.TorusGeometry(.62, .08, 8, 32), toy(col, { em: col, ei: .5 })); o.ring.rotation.x = Math.PI / 2; o.ring.userData = { dynamic: true, c: o.colour }; scene.add(o.ring);
       o.mark = new THREE.Mesh(new THREE.OctahedronGeometry(.22), toy(col, { em: col, ei: .7 })); o.mark.userData.dynamic = true; scene.add(o.mark);
-      o.waveM = waveSprite(); }
+      o.waveM = waveSprite(); o.talkM = waveSprite('🗣️'); }
     api.compile && api.compile(o.model.root);
   }
-  function removeOther(id, quiet) { const o = others.get(id); if (!o) return; others.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM]) if (m) scene.remove(m);
+  function removeOther(id, quiet) { const o = others.get(id); if (!o) return; others.delete(id); vc.drop(id); voiceIds.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM, o.talkM]) if (m) scene.remove(m);
     for (const pet of o.petModels || []) scene.remove(pet.root);
     if (o.ring) { o.ring.geometry.dispose(); o.ring.material.dispose(); o.mark.geometry.dispose(); o.mark.material.dispose(); }
     if (!quiet) { say('👋 A friend left the room.', true); if (o.model && o.model.root.visible) api.burst && api.burst(o.model.root.position.x, o.model.root.position.y + 1, o.model.root.position.z, [COLOURS[o.colour % 4], '#ffffff'], 14, 2.5); }
@@ -245,13 +318,14 @@ export function initMultiplayer(G, api) {
   }
 
   // ----- a 👋 wave (the one moment a room shares) -----
-  function waveSprite() {
-    if (!waveTex) {
+  const spriteTex = {};
+  function waveSprite(icon = '👋') {
+    if (!spriteTex[icon]) {
       const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
-      g.font = '96px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('👋', 64, 70);
-      waveTex = new THREE.CanvasTexture(c); waveTex.colorSpace = THREE.SRGBColorSpace;
+      g.font = '96px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(icon, 64, 70);
+      const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; spriteTex[icon] = tx;
     }
-    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: waveTex, depthTest: false, transparent: true }));
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: spriteTex[icon], depthTest: false, transparent: true }));
     s.scale.set(1.5, 1.5, 1); s.renderOrder = 11; s.visible = false; s.userData.dynamic = true; scene.add(s); return s;
   }
   function wave() {
@@ -338,6 +412,7 @@ export function initMultiplayer(G, api) {
       R.visible = o.ring.visible = o.mark.visible = show;
       for (const pet of o.petModels) pet.root.visible = show;
       if (o.waveM) o.waveM.visible = show && now - (o.waveAt || 0) < 2200;
+      const talking = vc.on && vc.speaking(o.id); if (o.talkM) o.talkM.visible = show && talking && !(o.waveM && o.waveM.visible);
       if (!show) continue;
       R.position.set(st.x, st.y, st.z); o.ring.position.set(st.x, Math.max(0, st.g ? st.y : st.y - 2) + .03, st.z); o.mark.position.set(st.x, st.y + (G.headTop || 2) + .6 + Math.sin(now / 300) * .08, st.z); o.mark.rotation.y = now / 600;
       o.model.update(dt, { vx: st.vx || 0, vy: st.vy || 0, grounded: st.g, seated: st.r, facing: st.f, happy: 0 });
@@ -348,6 +423,7 @@ export function initMultiplayer(G, api) {
         if (pet.tick) pet.tick(dt, now / 1000, Math.abs(st.vx || 0) > .4);
       }
       if (o.waveM) o.waveM.position.set(st.x, st.y + (G.headTop || 2) + 1.1 + Math.sin(now / 220) * .12, st.z);
+      if (talking) { o.talkM.position.set(st.x + .5, st.y + (G.headTop || 2) + 1.1, st.z); const k = 1.1 + Math.sin(now / 90) * .15; o.talkM.scale.set(k, k, 1); o.mark.scale.setScalar(1.35); } else if (o.mark.scale.x !== 1) o.mark.scale.setScalar(1);
     }
   }
   addEventListener('pagehide', () => flushPaint());
@@ -355,9 +431,12 @@ export function initMultiplayer(G, api) {
   { let c = null; try { c = sessionStorage.getItem(ROOM_KEY); } catch (e) { } if (make && validCode(c)) setTimeout(() => { if (!room) joinRoom(c); }, 2500); }
   return {
     update, get room() { return room; }, get count() { return others.size + (room ? 1 : 0); }, others,
-    _join: joinRoom, _leave: leaveRoom, _action: action, _drop: () => T && T.drop && T.drop(), _state: myState,
+    _join: joinRoom, _leave: leaveRoom, _action: action, _drop: () => T && T.drop && T.drop(), _state: myState, _id: () => (T && T.id) || null,
     // (the game's hooks into the shared world; see main.js and meadow.js)
     block, paint, clearPaint, wave,
+    // (build 62) talking
+    vc, talkOn, talkOff, toggleMute, voiceIds, get voiceAllowed() { return voiceAllowed(); },
+    setVoiceAllowed(on) { try { localStorage.setItem(VOICE_ALLOWED_KEY, on ? '1' : '0'); } catch (e) { } if (!on) talkOff(); if (panel.classList.contains('show') && room) render('room'); },
   };
 }
 
@@ -388,6 +467,9 @@ async function runMpCheck() {
       const me = `dw3/rooms/AAAA/players/${uid}`;
       await attempt('write player', () => D.set(D.ref(db, me), { x: 5, y: 0, z: 0, t: D.serverTimestamp(), f: 1, g: true, r: false, l: '', h: false, c: 'pip', k: 0, ps: '' }));
       await attempt('write block', () => D.set(D.ref(db, 'dw3/rooms/AAAA/objects/b0'), { t: 'b', i: 0, v: 2, by: uid, at: D.serverTimestamp() }));
+      // (build 62) talking needs the new rules: the voice switch and a call message to myself
+      await attempt('write talking (build 62 rules)', () => D.set(D.ref(db, `dw3/rooms/AAAA/voice/${uid}`), true));
+      await attempt('write call message (build 62 rules)', () => D.push(D.ref(db, `dw3/rooms/AAAA/sig/${uid}`), { f: uid, d: '{"t":"h"}', at: D.serverTimestamp() }));
       await attempt('clean up', () => D.remove(D.ref(db, 'dw3/rooms/AAAA')));
     }
   } catch (e) { show('check failed: ' + (e.code || short(e.message))); }

@@ -1,0 +1,41 @@
+// (build 62) The database rules, checked on Firebase's own Realtime Database emulator (the real rules engine).
+// usage (needs Java): in a folder with firebase-tools, @firebase/rules-unit-testing and firebase installed, and a firebase.json
+// pointing database.rules at ../firebase-rules.json: npx firebase emulators:exec --only database --project demo-ddw "node <this file>"
+import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
+import { readFileSync } from 'node:fs';
+import { ref, set, push, get, remove, serverTimestamp } from 'firebase/database';
+const env = await initializeTestEnvironment({ projectId: 'demo-ddw', database: { host: '127.0.0.1', port: 9000, rules: readFileSync(new URL('../firebase-rules.json', import.meta.url), 'utf8') } });
+const db = u => env.authenticatedContext(u).database();
+const R = 'dw3/rooms/ABCD';
+const player = { x: 5, y: 0, z: 0, t: serverTimestamp(), f: 1, g: true, r: false, l: '', h: false, c: 'pip', k: 0, ps: '' };
+let pass = 0, fail = 0; const ok = async (name, p) => { try { await p; console.log('PASS', name); pass++; } catch (e) { console.log('FAIL', name, e.message); fail++; } };
+await ok('player u1 joins (unchanged rule)', assertSucceeds(set(ref(db('u1'), `${R}/players/u1`), player)));
+await ok('player u2 joins', assertSucceeds(set(ref(db('u2'), `${R}/players/u2`), { ...player, k: 1 })));
+const msg = f => ({ f, d: '{"t":"h"}', at: serverTimestamp() });
+await ok('u1 (in the room) sends a call message to u2', assertSucceeds(push(ref(db('u1'), `${R}/sig/u2`), msg('u1'))));
+await ok('a stranger (not in the room) can NOT send to u2', assertFails(push(ref(db('stranger'), `${R}/sig/u2`), msg('stranger'))));
+await ok('u1 can NOT pretend to be someone else', assertFails(push(ref(db('u1'), `${R}/sig/u2`), msg('u3'))));
+await ok('u1 can NOT send to someone not in the room', assertFails(push(ref(db('u1'), `${R}/sig/nobody`), msg('u1'))));
+await ok('u1 can NOT read u2\'s inbox', assertFails(get(ref(db('u1'), `${R}/sig/u2`))));
+await ok('a stranger can NOT read u2\'s inbox', assertFails(get(ref(db('stranger'), `${R}/sig/u2`))));
+const s = await get(ref(db('u2'), `${R}/sig/u2`)); await ok('u2 reads its own inbox', s.exists() ? Promise.resolve() : Promise.reject(new Error('empty')));
+const key = Object.keys(s.val())[0];
+await ok('u1 can NOT delete u2\'s messages', assertFails(remove(ref(db('u1'), `${R}/sig/u2/${key}`))));
+await ok('u2 deletes a message it read', assertSucceeds(remove(ref(db('u2'), `${R}/sig/u2/${key}`))));
+await ok('a message can not be huge', assertFails(push(ref(db('u1'), `${R}/sig/u2`), { f: 'u1', d: 'x'.repeat(25000), at: serverTimestamp() })));
+await ok('a message can not carry extra fields', assertFails(push(ref(db('u1'), `${R}/sig/u2`), { ...msg('u1'), text: 'hi' })));
+await ok('u2 clears its whole inbox', assertSucceeds(remove(ref(db('u2'), `${R}/sig/u2`))));
+await ok('u1 turns talking on (voice/u1 = true)', assertSucceeds(set(ref(db('u1'), `${R}/voice/u1`), true)));
+await ok('u1 can NOT switch u2\'s talking', assertFails(set(ref(db('u1'), `${R}/voice/u2`), true)));
+await ok('voice can only be true', assertFails(set(ref(db('u2'), `${R}/voice/u2`), 'hello')));
+await ok('a stranger can NOT turn talking on in the room', assertFails(set(ref(db('stranger'), `${R}/voice/stranger`), true)));
+await ok('room players can see who talks', assertSucceeds(get(ref(db('u2'), `${R}/voice`))));
+await ok('u1 turns talking off', assertSucceeds(remove(ref(db('u1'), `${R}/voice/u1`))));
+await ok('signed-out devices can not read who talks', assertFails(get(ref(env.unauthenticatedContext().database(), `${R}/voice`))));
+await ok('blocks still work (unchanged rule)', assertSucceeds(set(ref(db('u1'), `${R}/objects/b1`), { t: 'b', i: 1, v: 2, by: 'u1', at: serverTimestamp() })));
+const seg = { a: [.1, .1], b: [.2, .2], c: '#ff4f9a', w: 20 };
+await ok('a paint batch of 24 lines is allowed (unchanged limit)', assertSucceeds(set(ref(db('u1'), `${R}/objects/s1`), { t: 's', segs: Array(24).fill(seg), by: 'u1', at: serverTimestamp() })));
+await ok('a paint batch of 25 lines is refused', assertFails(set(ref(db('u1'), `${R}/objects/s2`), { t: 's', segs: Array(25).fill(seg), by: 'u1', at: serverTimestamp() })));
+await ok('a wave is allowed', assertSucceeds(set(ref(db('u1'), `${R}/events/e1`), { t: 'wave', by: 'u1', at: serverTimestamp() })));
+await ok('text in an event is refused', assertFails(set(ref(db('u1'), `${R}/events/e2`), { t: 'hello there', by: 'u1', at: serverTimestamp() })));
+await env.cleanup(); console.log(`${pass}/${pass + fail} rules checks`); process.exit(fail ? 1 : 0);

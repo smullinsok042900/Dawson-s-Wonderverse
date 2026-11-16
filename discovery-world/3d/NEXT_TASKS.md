@@ -3,6 +3,14 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## Talk Together (build 62): needs the family
+- Paste the NEW `firebase-rules.json` (Realtime Database → Rules → Publish). `?mpcheck` must say `allowed` for `write talking` and `write call message`.
+- Try talking on two real devices (iPhone Safari + another phone): same Wi-Fi first, then one on mobile data. If mobile data does not connect, set up the free TURN relay (MULTIPLAYER.md) and put its URL in `src/mp-config.js`.
+- On the iPhone, check that the voices come out of the loudspeaker (not the earpiece), and that game sounds still play.
+
+## Character portraits: read back without a GPU stall
+The portraits (build 56) are drawn once at start-up and read with a synchronous `gl.readPixels`. Chromium logs "GPU stall due to ReadPixels" (the smoke test makes this one exception). Try `renderer.readRenderTargetPixelsAsync` into a render target, measured on the Pixel and iPhone. It must not undo the Android fix.
+
 ## PR #55: build 51 verified, ready for review
 The planet graphics branch now includes main through build 50 and the build 51 flight/preparation fixes. PR #55 remains open; the user reviews and merges it.
 - Sculpted planet scenery and the 330 m Moon/Mars are retained. Construction is sliced into short tasks, shaders are rehearsed before play, cancelled flights cannot move or hide Dawson later, and private ring textures are freed on departure.

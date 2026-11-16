@@ -5,6 +5,25 @@ Rule: the game must never get slower. Measure before and after every change on i
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
 
+
+## Build 62 (Talk Together: live voice)
+- **Solo play (talking off), build 61 vs 62, `tests/perf/ba.cjs`,** run twice with the order swapped (desktop, software rendering):
+
+  | View | Run 1 (61 → 62) | Run 2 (62 first; 61 → 62) |
+  |---|---|---|
+  | Park, draw calls | 197 → 261 | 277 → 271 |
+  | Park, script ms/frame | 12.1 → 13.5 | 13.3 → 13.2 |
+  | Creatures, script ms/frame | 10.1 → 10.2 | 9.2 → 8.5 |
+  | Castle, script ms/frame | 9.2 → 11.5 | 11.4 → 12.4 |
+
+  - The same build 61 park view measured 197 and 277 calls in the two runs, so this view's numbers depend on what had streamed in at that moment, not on the build. Within each run, build 62 is equal or a little better.
+  - No long tasks in any view. Memory is 142–145 MB on both builds, with the same shader programs (114).
+  - In solo play the voice code adds nothing: no meshes, no timer, and the Firebase code is still only loaded on Create/Join.
+- **With talking on** (`tests/voicechat.cjs`, desktop):
+  - the voice timer (speaking lights and repairs, about 7 times a second, never in the frame loop) costs **0.16 ms per check** on average;
+  - the audio is Opus at about 32 kbit/s per friend (≈4 KB/s), much less in silence (DTX);
+  - the per-frame work is only placing a 🗣️ sprite over a friend who talks.
+
 ## Build 61 (overlap fixes)
 - Adds 2 low-detail spheres (the pier headlands, Ocean Pier district only, built and freed with it) and no new materials or shaders. Everything else only moves existing things, or hides the extra hint ring at learning spots (one fewer ring drawn there). Not measured separately: the change is too small to show.
 

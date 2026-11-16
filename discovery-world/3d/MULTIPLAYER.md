@@ -20,6 +20,55 @@ What stays **yours on your device**: your saves, star bits, gems, crown and wand
 adventures and rewards. A room never changes those. The one exception is what the world itself shows: blocks and paint
 lines that are shared are kept in your own saved world too, so they are still there after you leave the room.
 
+## Talking together (build 62): live voices
+
+Players in the same room can **talk to each other through the phone's microphone**, like a phone call, while they play:
+no typing, no chat, no recorded messages and no other app.
+
+- **Off until a grown-up allows it.** Hold ⚙️, then **🎤 Talking … On** (each device). Without it, the 🎤 in the room
+  shows a 🔒 and the microphone is never touched.
+- **Then, in the room (👫):** tap the big **🎤▶**. The phone asks for the microphone once (tap **Allow**). From then on
+  just talk; there is nothing to hold down.
+- **🎤 next to 👫** (only while talking is on): one tap mutes (🔇, red) and unmutes. Its little red light means the
+  microphone is live; it glows green while you speak.
+- **A friend who speaks** shows a 🗣️ over their head, and their dot in the room panel lights up.
+- **Volume:** 🔈 🔉 🔊 in the room panel (remembered). Game sounds keep playing alongside the voices.
+- **Don't want to hear someone?** Tap their dot in the room panel: 🚫. The call between you two ends (neither hears the
+  other). Tap again to undo.
+- **🎤✖** turns talking off; **🚪** leaving the room turns it off too; a grown-up's ⚙️ **Off** stops it at once. A page
+  reload or update always starts with talking off again.
+- **Headphones and Bluetooth:** used automatically when the phone switches to them.
+
+### How it works and what is private
+- Each pair of players in the room has one **WebRTC** call (at most 4 players, so at most 3 calls per device). The
+  sound goes directly between the devices when it can, encrypted (DTLS-SRTP, always on in WebRTC), as **Opus** voice
+  (mono, about 32 kbit/s, with loss recovery and silence suppression).
+- The calls are set up through the room itself: a tiny private "inbox" per player (`dw3/rooms/<CODE>/sig/<id>`). The
+  rules allow writing to it **only by players who are in that room**, and reading it **only by its owner**. Messages
+  are deleted as soon as they are read. Who has talking on is `voice/<id>` (just `true`).
+- **Nothing is recorded or stored.** The audio is never written anywhere; it only exists in the live call.
+- Cost: about 4 KB/s per friend in each direction while someone speaks, much less in silence. The voice work runs on
+  a small timer (about 7 times a second) and inside the browser's own audio engine, never in the game's drawing loop.
+
+### One thing to do once: paste the NEW rules
+**Recommended: the full rules.** The simple rules also let talking work, but with them any signed-in device that knows
+the room's four pictures could read the call messages; the full rules allow each inbox to be read only by its owner.
+Talking needs the updated [`firebase-rules.json`](firebase-rules.json) (it adds `voice` and `sig`). Paste it exactly
+as in step 3 below and press **Publish**. Until then, everything else still works, and the 🎤 says the room service said
+no. `?mpcheck` shows two new lines: `write talking` and `write call message` must both say `allowed`.
+
+### Different networks (TURN): optional, recommended for phones on mobile data
+Two devices on the same Wi-Fi, or at home on most internet connections, connect with the free public **STUN** servers
+already in `src/mp-config.js`. Some networks (many mobile carriers, school or office Wi-Fi) block direct calls; then a
+**TURN relay** is needed, which passes on the (still encrypted) audio. Without one, talking on those networks may not
+connect, while the rest of Play Together still works. Free choice that needs no server of your own:
+1. Make a free account at **metered.ca** → **TURN Server** (the free plan includes 20 GB a month; one hour of two
+   people talking uses about 30 MB).
+2. Create an app; copy its **API key**. The credentials URL looks like
+   `https://<your-app>.metered.live/api/v1/turn/credentials?apiKey=<key>`.
+3. Put it in `src/mp-config.js` as `turnCredentialsUrl: '…'` (or ask Claude to). This key only lets the game use
+   your relay; it cannot read anything.
+
 ## How it works
 
 - The game stays on GitHub Pages (same link). Rooms use **Firebase Realtime Database** (Google) with anonymous sign-in:
@@ -100,6 +149,8 @@ said no**:
 2. The usual cause is that the rules were not published on **the database the game uses**. Compare the `database:` line
    of `?mpcheck` with **Realtime Database** in the console: they must be the same address, and that database's **Rules**
    tab must hold the whole of `firebase-rules.json` (press **Publish**; a red error means it was not accepted).
+   - (Build 62 fixed a mistake in the full rules: before, Firebase refused to publish them with *No such method/property
+     'numChildren'*. They are now checked on Firebase's own database emulator: `tests/firebase-rules.emulator.mjs`.)
    - If publishing the full rules gives an error, paste [`firebase-rules-simple.json`](firebase-rules-simple.json)
      instead: it allows any signed-in device to read and write inside a room, and nothing else. It is less strict
      (no size/shape limits at the database), but the game itself still only ever sends the small checked values, and it

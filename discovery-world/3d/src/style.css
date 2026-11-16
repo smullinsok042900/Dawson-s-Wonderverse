@@ -94,7 +94,7 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 @keyframes nudge{0%,100%{transform:translateX(0)}30%{transform:translateX(22px)}60%{transform:translateX(-22px)}}
 .controls.hintOnly{pointer-events:none}
 /* the block tray sits on the right side (a 3-wide grid) so it never covers the building wall */
-#buildTools{position:fixed;top:calc(max(8px,env(safe-area-inset-top)) + 62px);right:max(10px,env(safe-area-inset-right));display:grid;grid-template-columns:repeat(3,42px);gap:5px;padding:7px;border:2px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(83,52,144,.8);pointer-events:none;opacity:0;transform:translateX(12px);transition:opacity .2s,transform .2s;z-index:9}
+#buildTools{position:fixed;top:calc(max(8px,env(safe-area-inset-top)) + 62px);right:max(10px,env(safe-area-inset-right));display:grid;grid-template-columns:repeat(6,42px);gap:5px;padding:7px;border:2px solid rgba(255,255,255,.9);border-radius:20px;background:rgba(83,52,144,.8);pointer-events:none;opacity:0;transform:translateX(12px);transition:opacity .2s,transform .2s;z-index:9}
 #buildTools.show{opacity:1;pointer-events:auto;transform:translateX(0)}
 .blk{flex:none;width:42px;height:42px;border-radius:10px;border:3px solid #fff;padding:0;font-size:22px;display:grid;place-items:center;background:#fff8ea;transform:scale(.92)}
 .blk.selected{outline:4px solid #ffdc6b;outline-offset:1px;transform:scale(1.08)}
@@ -540,3 +540,34 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 /* (build 58) ?mpcheck: the room self-test, readable on a phone */
 #mpCheck{position:fixed;inset:0;z-index:99999;margin:0;padding:16px;background:#fffdf7;color:#241a3d;font:14px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;overflow:auto;-webkit-user-select:text;user-select:text}
 #mpPanel .mpX{position:absolute;top:-16px;right:-16px;width:52px;height:52px;border-radius:50%;border:4px solid #fff;background:#ff8fc8;color:#fff;font-size:24px;font-weight:900;z-index:2}
+
+/* (build 62) TALK TOGETHER: the microphone in the room panel, the 🎤 button beside 👫, and the speaking lights */
+#mpPanel .vcRow{display:flex;gap:min(14px,2.6vw);justify-content:center;align-items:center;margin:0 0 10px}
+#mpPanel .vcBig{position:relative;width:76px;height:76px;border-radius:24px;border:4px solid #fff;background:#e6ffe9;box-shadow:0 5px 0 #8fd99a;font-size:42px;padding:0}
+#mpPanel .vcBig b{position:absolute;right:-6px;bottom:-6px;font-size:22px;background:#fff;border-radius:50%;width:32px;height:32px;display:grid;place-items:center;box-shadow:0 2px 6px #0003}
+#mpPanel .vcBig.locked{background:#eee8f6;box-shadow:0 5px 0 #c9bde0;filter:saturate(.6)}
+#mpPanel .vcBig.on{background:#d9ffe0;box-shadow:0 0 0 5px #3cc46e,0 5px 0 #8fd99a}
+#mpPanel .vcBig.muted{background:#ffe0e8;box-shadow:0 0 0 5px #ff6f8f,0 5px 0 #f0a8bc}
+#mpPanel .vcVol{display:flex;gap:6px;background:#fff;border-radius:20px;padding:5px}
+#mpPanel .vcV{width:54px;height:54px;border-radius:16px;border:3px solid #fff;background:#f2ecff;font-size:28px;padding:0}
+#mpPanel .vcV.on{background:#ffe9a8;box-shadow:0 0 0 3px #ffb000}
+#mpPanel .vcStop{position:relative;width:62px;height:62px;border-radius:20px;border:4px solid #fff;background:#f3eefc;font-size:30px;padding:0;opacity:.85}
+#mpPanel .vcStop b{position:absolute;right:-4px;bottom:-4px;font-size:18px;color:#ff4f6a}
+#mpPanel .mpDot{position:relative;transition:transform .12s}
+#mpPanel .mpDot.vc::after{content:'🎤';position:absolute;right:-10px;bottom:-10px;font-size:16px}
+#mpPanel .mpDot.talk{transform:scale(1.22);box-shadow:0 0 0 5px #fff,0 0 16px 6px #ffe36e}
+#mpPanel .mpDot.blocked{filter:grayscale(1);opacity:.55}
+#mpPanel .mpDot.blocked::after{content:'🚫';position:absolute;right:-10px;bottom:-10px;font-size:18px}
+#vcBtn{position:relative}
+#vcBtn .vcLive{position:absolute;top:4px;right:4px;width:11px;height:11px;border-radius:50%;background:#ff3b5c;box-shadow:0 0 0 2px #fff;animation:vcBlink 1.6s infinite}
+#vcBtn.muted{background:#ffe0e8}
+#vcBtn.muted .vcLive{display:none}
+#vcBtn.talk{box-shadow:0 0 0 4px #3cc46e,0 0 18px 6px #9dffb5}
+@keyframes vcBlink{50%{opacity:.35}}
+
+/* (build 62) the block tray is two rows wide, placed just under the top-right buttons (they wrap to a second row on
+   phones since the fourth character): it no longer hides 🔊 and ⚙️, nor reaches the jump button */
+/* (build 62) the top button rows: only the buttons themselves catch taps. When the right-hand row wraps onto two lines
+   (phones, since the fourth character), its empty corner used to swallow taps on the world beneath (e.g. the owl) */
+#upperRight,#upperLeft{pointer-events:none}
+#upperRight>*,#upperLeft>*{pointer-events:auto}
