@@ -11,6 +11,45 @@
 // ===================================================================
 import * as THREE from 'three';
 import { toy } from './creatures.js';
+import { makeBatch, shinyMat } from './spacekit.js';
+
+// ---------- (build 65) 🎢 THE GIANT MOON ROLLER COASTER ----------
+// A station by the path; a chain lift up to 16 m, a big drop, a hill, a loop-the-loop, bunny hops, then a swoop round
+// behind and back to the station. Two pink rails with white ties, purple posts. The ride itself is in main.js
+// (G.startCoaster): speed comes from the height you drop, and you tilt with the car (upside down at the top of the loop).
+function moonCoaster(k, B) {
+  const L = B - 64, V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+  const pts = [[B, .9, -2.4], [B - 4, .9, -2.6], [B - 9, 2.2, -3.8], [B - 15, 7, -6.5], [B - 21, 13, -9], [B - 26, 16.5, -10.5], [B - 30, 15.6, -11], [B - 36, 5, -11.5], [B - 41, 2.4, -11.8],
+    [B - 48, 9, -12], [B - 55, 2.6, -12.2], [L + 3, 2.6, -12.3], [L, 2.7, -12.4], [L - 5.5, 8.2, -12.7], [L, 13.7, -13], [L + 5.5, 8.2, -13.3], [L, 2.8, -13.6], [L - 4, 2.6, -13.8],
+    [L - 10, 6, -14], [L - 15, 3, -14.2], [L - 20, 6.5, -14.4], [L - 25, 3.2, -14.6], [L - 30, 4, -16.2], [L - 28, 5, -19], [L - 22, 6, -20], [L - 10, 8, -20], [L + 5, 5, -20],
+    [B - 40, 9, -19.5], [B - 30, 6, -19], [B - 18, 7, -18], [B - 8, 5, -15], [B + 3, 3.5, -11], [B + 6, 2, -6.5], [B + 4, 1.2, -3.6], [B + 1.6, .9, -2.6], [B + .6, .9, -2.4]].map(p => V3(...p));
+  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .4), len = path.getLength();
+  let uTop = 0, yTop = -1; for (let u = 0; u < .45; u += .002) { const y = path.getPointAt(u).y; if (y > yTop) { yTop = y; uTop = u; } }
+  // rails, ties and posts: one mesh for the ties and posts, one tube per rail; frames follow the same "up" rule as the ride
+  const N = Math.ceil(len / .8), up = V3(0, 1, 0), cand = V3(), tg = V3(), side = V3(), u2 = V3(), m = new THREE.Matrix4(), e = new THREE.Euler(), q = new THREE.Quaternion(), rails = [[], []];
+  const b = makeBatch(), tie = new THREE.BoxGeometry(1, 1, 1), post = new THREE.CylinderGeometry(1, 1, 1, 8);
+  for (let i = 0; i <= N; i++) { const u = i / N, p = path.getPointAt(u); path.getTangentAt(u, tg);
+    cand.set(tg.y, -tg.x, 0); if (cand.lengthSq() < 1e-4) cand.copy(up); else cand.normalize(); if (cand.dot(up) < 0) cand.negate(); up.lerp(cand, .5).normalize();
+    side.crossVectors(tg, up).normalize(); u2.crossVectors(side, tg).normalize(); m.makeBasis(tg, u2, side); q.setFromRotationMatrix(m); e.setFromQuaternion(q);
+    for (const [r, sgn] of [[0, 1], [1, -1]]) rails[r].push(p.clone().addScaledVector(side, .45 * sgn).addScaledVector(u2, .08));
+    b.put(tie, p.x, p.y, p.z, '#ffffff', [.14, .07, 1.1], [e.x, e.y, e.z]);
+    if (i % 4 === 0 && p.y > 1.4 && u2.y > .3) b.put(post, p.x, (p.y - .1) / 2, p.z, '#b48cff', [.11, p.y - .1, .11]); }
+  const props = b.mesh(shinyMat()); props.castShadow = true; k.add(props);
+  const railM = toy('#ff4f9a', { r: .35, cc: .6 });
+  for (const r of rails) { const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(r), N * 2, .09, 6, false), railM); tube.castShadow = true; k.add(tube); }
+  // the station: a platform with a striped roof, next to the path
+  k.sbox(B, 0, -2.6, 5, .55, 2.2, '#e8e0ff', { r: .5 }); for (const dx of [-2.2, 2.2]) k.sbox(B + dx, .55, -3.4, .14, 2.6, .14, '#ffffff', { r: .4 });
+  for (let i = 0; i < 6; i++) k.sbox(B - 2.1 + i * .84, 3.15, -2.9, .84, .16, 1.6, i % 2 ? '#ffffff' : '#ff4f9a', { r: .4 });
+  // the car: pink, a seat back, a star on its nose (modelled facing +x, up +y)
+  const car = new THREE.Group(); { const cb = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1);
+    cb.put(box, 0, .1, 0, '#ff4f9a', [1.7, .45, 1.15]); cb.put(box, -.65, .45, 0, '#ff7ab8', [.35, .55, 1.1]); cb.put(new THREE.SphereGeometry(.42, 16, 10), .85, .12, 0, '#ff4f9a', [.6, .55, 1.15]);
+    for (const z of [-.5, .5]) for (const x of [-.55, .55]) cb.put(new THREE.CylinderGeometry(.13, .13, .1, 12), x, -.14, z, '#5a3a8a', 1, [Math.PI / 2, 0, 0]);
+    cb.put(new THREE.OctahedronGeometry(.22), 1.15, .35, 0, '#ffd23f'); car.add(cb.mesh(shinyMat())); }
+  path.getTangentAt(0, tg); car.position.copy(path.getPointAt(0)); car.quaternion.setFromRotationMatrix(m.makeBasis(tg, V3(0, 1, 0), side.crossVectors(tg, V3(0, 1, 0)).normalize())); car.userData.dynamic = true; k.add(car);
+  const C = { path, len, uTop, yTop, car, carRest: car.quaternion.clone(), exitX: B + 2 };
+  const board = () => { const P = k.P; if (P.ride || P.layer !== 'space' || Math.abs(P.x - B) > 8) return; k.say('🎢 Hold on tight! Up, up, up we go!', true); k.G.startCoaster && k.G.startCoaster(C); };
+  k.tapIt(car, board, B, 'coaster');
+}
 
 const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
 const Cap = s => s[0].toUpperCase() + s.slice(1);
@@ -52,6 +91,7 @@ const moon = {
       for (let i = 0; i < 4; i++) { const r = k.sball(X + 70 + i * 3.4 + (i % 2), .25, -1.5 - (i % 2) * .8, .32, .26, .3, ['#d8d8e4', '#a8a8b8', '#e8e0d0', '#c0c8d8'][i], { r: .9 }); samples.push(r);
         k.tapIt(r, () => { if (!r.visible) return; r.visible = false; got++; k.Sound.tone(600 + got * 90, .12, 'triangle', .05, 1.2); k.say(`🪨 ${Cap(NUM[got])} moon rock${got > 1 ? 's' : ''} in the box!`, true); k.disc('moonsamples', '🪨 Collect moon rocks for the explorers!'); if (got === 4) setTimeout(() => { k.say('🎉 Four moon rocks! Thank you, little explorer! More rocks will roll out.', true); got = 0; for (const q of samples) q.visible = true; }, 900); }, i === 0 ? X + 70 : null, i === 0 ? 'moonsamples' : null); }
       k.tapIt(box, () => k.say(got ? `📦 ${Cap(NUM[got])} moon rock${got > 1 ? 's' : ''} so far!` : '📦 Find the moon rocks and tap them!', true));
+      moonCoaster(k, X + 96);
       k.rocketSign(X + 4);
     },
     // ----- area 3: MOON MOUNTAINS and the HIDDEN CAVE -----

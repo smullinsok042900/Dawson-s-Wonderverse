@@ -4,6 +4,22 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 65 — a giant roller coaster on the Moon
+- **The family asked** for a giant roller coaster on the Moon.
+- **Where:** in the Moon's crater valley (area 2), with the station by the path at +96 m (between the moon rocks and the end of the area). Tap the car, or PAW at the station.
+- **The track** (about 330 m, built in `planets.js` `moonCoaster`):
+  - a clicking chain lift up to about 17 m, then a big drop and a camel-back hill;
+  - a full loop-the-loop (a little corkscrewed, so the track never meets itself) and bunny hops;
+  - then a swoop round behind and a long return back to the station;
+  - two pink rails, white ties and purple posts; ties and posts are one mesh.
+- **The ride** (`main.js` `G.startCoaster`, `coasterRide`):
+  - the chain lift is steady, then the speed comes from the height you have dropped (fast down the drop, slower over the hills, up to 15 m/s);
+  - the car follows the track and turns over in the loop, and your character tilts with it (upside down at the top);
+  - PAW cannot drop you out mid-air; the camera follows you behind the scenery;
+  - at the end you step out at the station ("Tap the car to go again!").
+- **Cost:** only on the Moon, only while its crater valley is built: about 12 draw calls (rails 2, ties and posts 1, car 1, station 8 small boxes).
+- **Verified:** a ride in the test browser (desktop, software rendering) reached 16.9 m, went upside down at the loop's top and ended at the station, with no page errors; screenshots. A new smoke check rides it end to end. **Full smoke test, run alone: 199/199.**
+
 ## Checkpoint: build 64 — fixes from the family's 16 phone screenshots
 - **Pictures the family disliked:**
   - (The station picture discs were removed for a moment by mistake; the family meant the colouring pictures. They are back.)
