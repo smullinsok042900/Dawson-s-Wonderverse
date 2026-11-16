@@ -32,7 +32,7 @@ are in `PERFORMANCE_LOG.md`.
   - **Trees inside rainbow arches:** the trees at 138 and 200 are moved back. The arch at 135 is removed: it stood half in the Wonder Lab's wall, with a bush in it.
   - **The Puzzles learning spot** shows a 🧩 puzzle piece instead of a pink 🧠 brain.
 - **Cost:** the whale and the birdhouse are one mesh each (the whale's tail is a second); the 36 station discs are gone. Draw calls at the changed places are the same as build 63 (pier 66, woods 78, Frosty 78, trail 79, Lab 80 vs 84) and lower in the park and Studio.
-- **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. Full smoke test: see below.
+- **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. **Full smoke test, run alone on the final build: 198/198.** Smoke checks follow the moved rocket (PAW at x 692; landing at 695.5); the sky-whale tap is patient (it swims).
 
 ## Checkpoint: build 63 — zoomed out to see whole activities
 - **The family asked** to zoom out more, to see more and do every activity.
