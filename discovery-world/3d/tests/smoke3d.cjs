@@ -456,7 +456,7 @@ const UG_F = -6;
     check(`${id}: only this planet is kept in memory`, r.groups.length === 1 && r.groups[0] === 'space:' + id, r.groups.join(' '));
     const back = await page.evaluate(B => { const it = __DDW3.G.interact.find(i => i.layer === 'space' && i.action === 'Back to the rocket' && i.x > B[0] + 200); if (!it) return null; it.run(); const r = __DDW3.G.rockets[__DDW3.G.spaceHere ? __DDW3.G.spaceHere() : Object.keys(__DDW3.G.rockets).find(k => k !== 'earth')]; return [__DDW3.player.x, r && r.x]; }, B);
     check(`${id}: the little rocket sign takes you back to your rocket`, !!back && back[1] != null && Math.abs(back[0] - back[1] - 2.5) < .5, JSON.stringify(back)); }
-  { await flyTo('earth'); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 688.5) < 3, `layer=${c.layer} x=${c.x.toFixed(1)}`); }
+  { await flyTo('earth'); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 695.5) < 3, /* (build 64: the pad moved 686 → 693) */ `layer=${c.layer} x=${c.x.toFixed(1)}`); }
   // the voice can be chosen by a grown-up (the test browser may have no voices: the panel must still work)
   check('the ⚙️ panel has a voice chooser', await page.evaluate(() => !!document.querySelector('#perfPanel .ppVoices') && typeof __DDW3.G.voice === 'object' ? true : !!document.querySelector('#perfPanel .ppVoices')));
   // ---------- build 27: the learning games work for a child who can't read ----------
