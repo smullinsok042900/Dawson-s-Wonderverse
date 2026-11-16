@@ -553,7 +553,7 @@ export function initLearning(api) {
   } });
 
   // ---------- the Learning Corners ----------
-  const CORNERS = { num: ['🔢', 'Numbers'], abc: ['🔤', 'Letters'], art: ['🎨', 'Colors and shapes'], think: ['🧠', 'Puzzles'], sci: ['🔬', 'Science'], music: ['🎵', 'Music'], me: ['😊', 'Feelings and me'] };
+  const CORNERS = { num: ['🔢', 'Numbers'], abc: ['🔤', 'Letters'], art: ['🎨', 'Colors and shapes'], think: ['🧩', 'Puzzles'] /* (build 64: a puzzle piece; the pink brain looked odd) */, sci: ['🔬', 'Science'], music: ['🎵', 'Music'], me: ['😊', 'Feelings and me'] };
   const available = cat => A.filter(a => a.cat === cat && a.tiers.includes(tier()));
   function showCorner(cat) {
     const list = available(cat), [, nm] = CORNERS[cat];

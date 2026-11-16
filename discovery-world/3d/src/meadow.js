@@ -105,9 +105,11 @@ export function buildMeadow(G, api) {
     ],
     [ // butterfly
       P2(p => p.rect(0, 0, PW, PH)), P2(p => { p.ellipse(110, 80, 70, 30, 0, 0, 7); }), P2(p => { p.ellipse(500, 110, 60, 26, 0, 0, 7); }),
-      P2(p => p.ellipse(205, 165, 115, 95, -.4, 0, 7)), P2(p => p.ellipse(395, 165, 115, 95, .4, 0, 7)), P2(p => p.ellipse(225, 310, 85, 70, .4, 0, 7)), P2(p => p.ellipse(375, 310, 85, 70, -.4, 0, 7)),
-      P2(p => p.arc(190, 160, 32, 0, 7)), P2(p => p.arc(410, 160, 32, 0, 7)), P2(p => p.arc(230, 315, 22, 0, 7)), P2(p => p.arc(370, 315, 22, 0, 7)),
-      P2(p => p.ellipse(300, 245, 22, 120, 0, 0, 7)), P2(p => p.arc(300, 115, 30, 0, 7)),
+      // (build 64) real butterfly wings (curved, meeting at the body), not overlapping ovals; same 13 colourable parts as before
+      ...[1, -1].map(s => P2(p => { const X = x => 300 + s * (x - 300); p.moveTo(X(290), 215); p.bezierCurveTo(X(215), 45, X(75), 55, X(92), 165); p.bezierCurveTo(X(105), 235, X(215), 250, X(290), 235); p.closePath(); })),
+      ...[1, -1].map(s => P2(p => { const X = x => 300 + s * (x - 300); p.moveTo(X(290), 248); p.bezierCurveTo(X(195), 240, X(118), 318, X(160), 378); p.bezierCurveTo(X(205), 425, X(278), 352, X(290), 282); p.closePath(); })),
+      P2(p => p.arc(178, 152, 30, 0, 7)), P2(p => p.arc(422, 152, 30, 0, 7)), P2(p => p.arc(212, 330, 20, 0, 7)), P2(p => p.arc(388, 330, 20, 0, 7)),
+      P2(p => p.ellipse(300, 255, 20, 105, 0, 0, 7)), P2(p => p.arc(300, 132, 28, 0, 7)),
     ],
   ];
   world.colorings = world.colorings || PICTURES.map(pic => pic.map(() => '#ffffff'));
@@ -120,8 +122,9 @@ export function buildMeadow(G, api) {
     for (const dx of [-1.6, 1.6]) { const leg = new THREE.Mesh(new THREE.CylinderGeometry(.08, .1, 1.1, 8), toy('#b06a32')); leg.position.set(COLOR_X[n] + dx, .55, -2.4); add(leg); }
     const draw = () => {
       g.fillStyle = '#ffffff'; g.fillRect(0, 0, PW, PH);
-      pic.forEach((path, k) => { g.fillStyle = world.colorings[n][k] || '#ffffff'; g.fill(path); });
-      g.strokeStyle = '#4a2a6a'; g.lineWidth = 6; g.lineJoin = 'round'; pic.forEach((path, k) => { if (k) g.stroke(path); });
+      g.strokeStyle = '#4a2a6a'; g.lineWidth = 6; g.lineJoin = 'round'; g.lineCap = 'round';
+      pic.forEach((path, k) => { g.fillStyle = world.colorings[n][k] || '#ffffff'; g.fill(path); if (k) g.stroke(path); }); // (build 64: colour then outline, part by part, so hidden lines never show through)
+      if (n === 1) { g.beginPath(); g.moveTo(292, 108); g.quadraticCurveTo(270, 60, 240, 52); g.moveTo(308, 108); g.quadraticCurveTo(330, 60, 360, 52); g.stroke(); for (const x of [240, 360]) { g.beginPath(); g.arc(x, 52, 9, 0, 7); g.fillStyle = '#4a2a6a'; g.fill(); } }
       tex.needsUpdate = true;
     };
     draw();

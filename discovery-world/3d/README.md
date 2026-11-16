@@ -20,6 +20,10 @@ Play: open `index.html`. It is one self-contained file and works offline. Once m
 - A wooden plank bridge.
 - An oval ice pond.
 - The shadow wall, spin-art wheel and sticker wall are no longer blank.
+- No grass or flowers on the path or track.
+- Cleaner colouring pictures (a real butterfly).
+- No trees inside rainbow arches.
+- A puzzle piece instead of the pink brain.
 
 ## 3D build 63: see more
 The camera is further back and a little higher, so whole activities (houses, the block wall, the paint wall, the Ferris wheel) fit on the screen. Look-alike still scenery is merged to keep it fast.

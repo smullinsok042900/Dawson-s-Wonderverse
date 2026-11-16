@@ -19,6 +19,14 @@ are in `PERFORMANCE_LOG.md`.
   - **The shadow wall** has a purple frame and shows a bunny shadow from the start.
   - **The spin-art wheel** has paint and a pink rim from the start.
   - **The sticker wall** has soft polka dots.
+- **From the family's second set of 7 screenshots:**
+  - **Grass and flowers** no longer grow on the path or the train track (both are kept clear).
+  - **The colouring easels** (the "castle and rainbow" and "butterfly" pictures):
+    - each part is now coloured then outlined in turn, so lines of hidden parts no longer show through;
+    - the butterfly has real curved wings and antennae instead of overlapping ovals;
+    - the colourable parts are the same, so saved colours stay.
+  - **Trees inside rainbow arches:** the trees at 138 and 200 are moved back. The arch at 135 is removed: it stood half in the Wonder Lab's wall, with a bush in it.
+  - **The Puzzles learning spot** shows a 🧩 puzzle piece instead of a pink 🧠 brain.
 - **Cost:** the whale and the birdhouse are one mesh each (the whale's tail is a second); the 36 station discs are gone. Draw calls at the changed places are the same as build 63 (pier 66, woods 78, Frosty 78, trail 79, Lab 80 vs 84) and lower in the park and Studio.
 - **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. FULL_SMOKE_64
 

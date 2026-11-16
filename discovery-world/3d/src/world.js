@@ -135,7 +135,7 @@ export function buildWorld(G) {
     const halos = new THREE.Points(geo, new THREE.PointsMaterial({ size: 1.1, map: haloTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: .8 })); add(halos); }
 
   // ---------- rainbow arches between zones ----------
-  for (const x of [92, 135]) { // (build 62: the arch at x 51 is gone: its left foot stood in the sky ladder and its right half went behind the paint wall)
+  for (const x of [92]) { // (build 64: the arch at 135 is gone too: it stood half in the Wonder Lab's wall, a bush in it) (build 62: the arch at x 51 is gone: its left foot stood in the sky ladder and its right half went behind the paint wall)
     for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.TorusGeometry(5.6 - i * .32, .17, 12, 48, Math.PI), M(RAINBOW[i])); t.position.set(x, 0, -3.8); add(t); }
     cyl(x - 5.6, 0, -3.8, .5, .6, 1, '#ffffff'); cyl(x + 5.6, 0, -3.8, .5, .6, 1, '#ffffff');
   }
@@ -236,16 +236,17 @@ export function buildWorld(G) {
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
   const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   const tree = (x, z, s = 1) => makeTree(scene, x, z, s); // build 15: real branching trees
-  [[138, -4.5], [152, -5], [170, -4.2], [178, -5.5], [200, -4.8], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3));
+  [[139, -10.5], [152, -5], [170, -4.2], [178, -5.5], [201, -10.5], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3)); // (build 64: the trees at 138 and 200 stood inside rainbow arches: moved back)
   // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)
   G.grassTime = { value: 0 };
-  G.grassMeshes = grassField(scene, { x0: 136, x1: 394, time: G.grassTime, ok: (x, z) => !(
+  const offWalk = (x, z) => Math.abs(z) < 1.75 || (z > 2.2 && z < 4.3); // (build 64: never on the path or the train track)
+  G.grassMeshes = grassField(scene, { x0: 136, x1: 394, time: G.grassTime, ok: (x, z) => !offWalk(x, z) && !(
     (Math.abs(x - 144) < 5.5 && z < -1 && z > -10.5) || (x > 271.5 && x < 300 && z < -2.4 && z > -11.4) || (x > 325.5 && x < 338.5 && z > -3.6) ||
     (z > 0 && STATION_XS.some(sx => Math.abs(x - sx) < 2.8)) || (x > 183.5 && x < 196.5 && z > -4.6) || (x > 260 && x < 271 && z > -6) || (Math.abs(x - 363.4) < 1.6 && z > -3.6)) });
   // natural rocks
   [[141, -9.5, .5], [168, -10.2, .7], [186, -8.8, .4], [214, -9.6, .6], [252, -10.4, .55], [305, -9.6, .7], [341, -8.9, .45], [359, -9.8, .6], [393, -9.2, .5], [181, 4.25, .22], [233, 4.2, .2], [318, 4.25, .24]].forEach(([x, z, sc]) => makeRock(scene, x, z, sc));
   // flowers and bushes everywhere on the lawns (kept off rides, paths and buildings)
-  G.nature = scatterNature(scene, { x0: 136, x1: 393, ok: (x, z) => !(
+  G.nature = scatterNature(scene, { x0: 136, x1: 393, ok: (x, z) => !offWalk(x, z) && !(
     (Math.abs(x - 144) < 6 && z < -1 && z > -11) ||                // carousel
     (x > 156 && x < 165 && z < -3 && z > -11) ||                   // Ferris wheel
     (x > 183.5 && x < 196.5 && z > -4.8) ||                        // Fluffkin House
