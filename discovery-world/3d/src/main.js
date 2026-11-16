@@ -6,6 +6,7 @@
 // No timers, no losing, no reading needed. Works offline (one HTML file).
 // ===================================================================
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 import { Sound, NOTES } from './audio.js';
 import { initAdventures, destinationArt } from './adventures.js';
@@ -19,7 +20,7 @@ import { makeToyModel } from './toy-models.js';
 import { initSea, SEA } from './sea.js';
 import { initSpace } from './space.js';
 import { makeBatch, paintMat, shinyMat, softMat } from './spacekit.js';
-import { buildWorld, RAINBOW } from './world.js';
+import { buildWorld, RAINBOW, mergeStaticChildren } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
 import { SKY, buildSky } from './sky.js';
@@ -92,7 +93,9 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(400, 32, 16), new THREE.Shad
 }));
 scene.add(sky);
 const cloudMat = toy('#ffffff', { r: .9, cc: 0, em: '#fff4fb', ei: .35 });
-for (let i = 0; i < 16; i++) { const c = new THREE.Group(); for (let k = 0; k < 5; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), cloudMat); s.scale.setScalar(2 + (k % 3) * .8); s.position.set((k - 2) * 2.2, (k % 2) * 1.1, 0); c.add(s); } c.position.set(-20 + i * 16, 18 + (i % 3) * 4, -55 - (i % 2) * 15); scene.add(c); }
+// (build 63) each cloud is ONE mesh (its five puffs merged): 1 draw call instead of 5, so the wider camera view costs less
+const cloudGeo = mergeGeometries([0, 1, 2, 3, 4].map(k => new THREE.SphereGeometry(1, 16, 12).scale(2 + (k % 3) * .8, 2 + (k % 3) * .8, 2 + (k % 3) * .8).translate((k - 2) * 2.2, (k % 2) * 1.1, 0)));
+for (let i = 0; i < 16; i++) { const c = new THREE.Group(); c.add(new THREE.Mesh(cloudGeo, cloudMat)); c.position.set(-20 + i * 16, 18 + (i % 3) * 4, -55 - (i % 2) * 15); scene.add(c); }
 
 // ---------------- game state ----------------
 const G = { scene, renderer, platforms: [], solids: [], taps: [], interact: [], camera };
@@ -912,7 +915,8 @@ function updatePlayer(dt) {
 // ---------------- camera ----------------
 const camT = { x: 5, y: 1.6, look: 0 };
 function viewHalfW(dist) { return Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect; }
-const CAM_DIST = 9.0; // (build 43: zoomed out from 7.6 at the family's request, so whole activities fit on screen)
+const CAM_DIST = 12.5; // (build 43: zoomed out from 7.6 at the family's request, so whole activities fit on screen) (build 63: 9 → 12.5, asked again: see more, do every activity)
+const CAM_UP = 2.9, CAM_LOOK = 1.95; // (build 63: a little higher (2.15 → 2.9), aimed higher (1.15 → 1.95): tall activities fit, less of the track)
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
@@ -934,7 +938,7 @@ function updateCamera(dt) {
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
   camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
-  camera.position.set(camT.x, y + 2.15 + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + 1.15 + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
+  camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
@@ -1225,6 +1229,7 @@ function frame() {
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
+  checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)
   P.happy = Math.max(0, P.happy - dt);
   $('paintTools').classList.toggle('show', started && (nearPaint() || meadow.nearColor(player)));
   { const bt = $('buildTools'), on = started && meadow.nearBuild(player); if (on && !bt.classList.contains('show')) placeBuildTools(); bt.classList.toggle('show', on); }
@@ -1320,6 +1325,25 @@ function chunkInstanced() {
   }
   G.chunked = made;
 }
+// (build 63) MERGED SCENERY: inside each slice, still pieces that look exactly alike (same material settings, no tap) are
+// drawn as one mesh, so the wider camera of build 63 costs fewer draw calls. A safety net keeps every animation: the
+// original pieces are remembered, and twice a second the game checks whether any of them was moved, scaled, hidden,
+// re-coloured or reshaped by the game (e.g. a mushroom cap squashing when you bounce). If so, that group goes back to its
+// original pieces at once. Nothing is ever merged that can be tapped.
+const merged = [];
+function snapOf(m) { const t = m.material || {}; return [m.position.x, m.position.y, m.position.z, m.quaternion.x, m.quaternion.y, m.quaternion.z, m.quaternion.w, m.scale.x, m.scale.y, m.scale.z, m.visible, t.uuid, m.geometry.uuid, m.geometry.attributes.position.version, t.color ? t.color.getHex() : 0, t.emissive ? t.emissive.getHex() : 0, t.emissiveIntensity, t.opacity, !!m.parent].join(); }
+function mergeSlices() {
+  if (/[?&]nomerge/.test(location.search)) return;
+  for (const g of slices) for (const r of mergeStaticChildren(g)) { r.snaps = r.list.map(snapOf); merged.push(r); }
+  G.mergedGroups = merged.length; G.mergedPieces = merged.reduce((n, r) => n + r.list.length, 0);
+}
+let mergeCheckT = 0;
+function checkMerged(dt) {
+  if (!merged.length || (mergeCheckT -= dt) > 0) return; mergeCheckT = .5;
+  for (let i = merged.length - 1; i >= 0; i--) { const r = merged[i];
+    if (r.list.some((m, k) => snapOf(m) !== r.snaps[k])) { r.group.remove(r.mesh); r.mesh.geometry.dispose(); for (const m of r.list) if (!m.parent) r.group.add(m); merged.splice(i, 1); G.unmerged = (G.unmerged || 0) + 1; } }
+}
+G.checkMerged = checkMerged;
 function sliceScenery() {
   const skip = new Set([creature.root, ...LOD.map(i => i.o), ...(G.life ? G.life.agents.map(a => a.root) : [])]);
   const box = new THREE.Box3(), sph = new THREE.Sphere(), byKey = new Map();
@@ -1335,7 +1359,7 @@ function sliceScenery() {
 }
 G.unslice = o => { if (o && o.parent && o.parent.userData.slice) scene.attach(o); }; // (something that starts to follow you leaves its slice)
 function updateSlices() { for (const g of slices) { const near = Math.abs(g.userData.x - camT.x) < 52; if (near && !g.parent) scene.add(g); else if (!near && g.parent) scene.remove(g); } }
-const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { sliceScenery(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
+const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { sliceScenery(); mergeSlices(); updateSlices(); } catch (e) { console.log('slices skipped', e); } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
 // (build 24) shaders: compile everything in the scene before play starts (the light count is now fixed, so these stay
 // valid), then compile the model files' materials as soon as they arrive (in the background where the phone supports
 // parallel compiling), so nothing compiles the first time it comes into view.
@@ -1357,7 +1381,7 @@ function warmPrograms() {
 }
 // (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
 function warmGroup(g) { // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
-  try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, 2.15, CAM_DIST); cam.lookAt(c.x, 1.15, 0); cam.updateMatrixWorld();
+  try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, CAM_UP, CAM_DIST); cam.lookAt(c.x, CAM_LOOK, 0); cam.updateMatrixWorld();
     const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; if (post.enabled && !post.lite) { G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true }); renderer.setRenderTarget(G.warmRT); renderer.render(scene, cam); } renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm; } catch (e) { }
 }
 G.warmGroup = warmGroup;
@@ -1421,7 +1445,7 @@ function warmAreas() { const warmT0 = performance.now();
   try {
     let first = true;
     for (const [x, y] of [[1008, 0], [1012, 4.4], [1020, 0], [20, UG.floor], [45, UG.floor], [54, SKY.y], [406, 0], [2010, 0]]) {
-      cam.position.set(x, y + 2.15, CAM_DIST); cam.lookAt(x, y + 1.15, 0); cam.updateMatrixWorld();
+      cam.position.set(x, y + CAM_UP, CAM_DIST); cam.lookAt(x, y + CAM_LOOK, 0); cam.updateMatrixWorld();
       sun.position.set(x - 7, y + 16, 10); sun.target.position.set(x, y, 0); sun.target.updateMatrixWorld();
       renderer.setRenderTarget(rt); renderer.render(scene, cam); if (first) { renderer.shadowMap.autoUpdate = false; first = false; } // (shadow shaders only need one pass)
     }
@@ -1479,7 +1503,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '62'; G.build = GAME_BUILD;
+const GAME_BUILD = '63'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

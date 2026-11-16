@@ -317,7 +317,7 @@ export function buildWorld(G) {
     const awn = new THREE.Mesh(new THREE.CylinderGeometry(.2, 1.65, .7, 4, 1), new THREE.MeshStandardMaterial({ map: stripe, roughness: .7 })); awn.rotation.y = Math.PI / 4; awn.position.y = 2.25; awn.castShadow = true; K.add(awn);
     for (let i = 0; i < 12; i++) { const side = Math.floor(i / 3), k = (i % 3 - 1) * .7, sc = new THREE.Mesh(new THREE.SphereGeometry(.2, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), toy(i % 2 ? '#ffffff' : '#ff6fb5', { r: .6 })); sc.rotation.x = Math.PI; const pos = [[k, 1.18], [1.18, k], [k, -1.18], [-1.18, k]][side]; sc.position.set(pos[0], 1.92, pos[1]); sc.scale.y = .6; K.add(sc); }
     for (let i = 0; i < 7; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), toy('#fff6b0', { em: '#ffd84a', ei: 1.1 })); b.position.set(-.9 + i * .3, 1.86, 1.25); K.add(b); }
-    const sign = new THREE.Mesh(new THREE.CircleGeometry(.28, 28), new THREE.MeshBasicMaterial({ map: (() => { const cc = document.createElement('canvas'); cc.width = cc.height = 96; const g = cc.getContext('2d'); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(48, 48, 46, 0, 7); g.fill(); g.font = '60px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🎡', 48, 54); const t = new THREE.CanvasTexture(cc); t.colorSpace = THREE.SRGBColorSpace; return t; })() })); sign.position.set(0, 2.72, 0); sign.lookAt(167.5, 2.72, 10); K.add(sign); }
+    const sign = new THREE.Mesh(new THREE.CircleGeometry(.28, 28), new THREE.MeshBasicMaterial({ map: (() => { const cc = document.createElement('canvas'); cc.width = cc.height = 96; const g = cc.getContext('2d'); g.fillStyle = '#ffffff'; g.beginPath(); g.arc(48, 48, 46, 0, 7); g.fill(); g.font = '60px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🎡', 48, 54); const t = new THREE.CanvasTexture(cc); t.colorSpace = THREE.SRGBColorSpace; return t; })() })); sign.position.set(0, 2.72, 0); sign.lookAt(167.5, 2.72, 10); K.add(sign); mergeStaticChildren(K); /* (build 63: 32 pieces → a handful of draw calls) */ }
   plat(166.4, 168.6, 2.0, { z: -2.2 });
   tap(fw, () => G.rideWheel(), { paw: [160, 0], disc: 'wheel', hintY: 2.5 });
   // BOUNCY MUSHROOM up to a tree branch
@@ -424,3 +424,24 @@ export function buildWorld(G) {
   G.secretStar = [12, 3.2];
 }
 function rand(a, b) { return a + Math.random() * (b - a); }
+
+// (build 63) Merge a static decoration's plain pieces that look alike (same material settings) into one mesh each:
+// fewer draw calls for the same picture. Only direct mesh children with no tap, no animation and no children are merged.
+export function mergeStaticChildren(group) {
+  const buckets = new Map(), out = [];
+  for (const m of [...group.children]) {
+    if (!m.isMesh || m.isInstancedMesh || m.isSkinnedMesh || m.userData.tap || m.userData.dynamic || m.children.length || Array.isArray(m.material) || m.morphTargetInfluences) continue;
+    const g = m.geometry, mt = m.material, attrs = Object.keys(g.attributes).sort().join(',') + (g.index ? 'i' : 'n');
+    const key = [mt.type, mt.color && mt.color.getHexString(), mt.emissive && mt.emissive.getHexString(), mt.emissiveIntensity, mt.roughness, mt.metalness, mt.clearcoat, mt.transparent, mt.opacity, mt.map && mt.map.uuid, mt.side, attrs, m.castShadow, m.receiveShadow].join('|');
+    if (!buckets.has(key)) buckets.set(key, []); buckets.get(key).push(m);
+  }
+  for (const list of buckets.values()) {
+    if (list.length < 2) continue;
+    const merged = mergeGeometries(list.map(m => { m.updateMatrix(); return m.geometry.clone().applyMatrix4(m.matrix); }));
+    if (!merged) continue;
+    const mesh = new THREE.Mesh(merged, list[0].material); mesh.castShadow = list[0].castShadow; mesh.receiveShadow = list[0].receiveShadow;
+    for (const m of list) group.remove(m);
+    group.add(mesh); out.push({ group, mesh, list });
+  }
+  return out;
+}
