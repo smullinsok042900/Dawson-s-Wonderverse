@@ -625,7 +625,7 @@ function updateHint(t) {
   if (!P.ride && !P.stair) for (const it of G.interact) { if (it.layer !== P.layer || world.disc.has(it.disc) || Math.abs(it.y - P.y) > 4 || (it.need && !it.need())) continue; const d = Math.abs(it.x - P.x); if (d < bd) { bd = d; best = it; } }
   const actionable = actionTarget(); G.actionTarget=actionable; if (actionable) best = { ...actionable, hintY: actionable.hintY || 2.4 };
   const door = nearDoor(); if (door) best = { x: door.x, y: door.y, hintY: 3.1 };
-  hint.visible = !!best;
+  hint.visible = !!best && !best.ownRing; /* (build 61) a learning spot has its own glowing ring: no second ring stacked on it */
   // (build 43) EVERY activity nearby twinkles now and then (a few sparkles every half second, from the existing particle
   // pool): one consistent picture cue for 'you can play with this', without signs
   if ((G.twinkleT = (G.twinkleT || 0) - 1 / 60) <= 0 && !P.ride && !world.comfort?.calm) { G.twinkleT = .5; const near = G.interact.filter(i => (i.layer || '') === P.layer && Math.abs(i.x - P.x) < 10 && Math.abs((i.y || 0) - P.y) < 5 && (!i.need || i.need()));
@@ -1286,7 +1286,7 @@ G.learning = learning;
     const toyM = makeToyModel(icon); toyM.scale.setScalar(1.3); toyM.position.y = 1.35; g.add(toyM); g.userData.toy = toyM; g.userData.ring = ring;
     const star = new THREE.Mesh(starGeometry(.12, .06, .04, .02, 5), glow); star.position.set(.55, 1.9, 0); g.add(star); g.userData.star = star;
     g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => learning.showCorner(cat); } }); G.taps.push(g);
-    G.interact.push({ x, y: 0, layer: '', disc: 'corner_' + cat, run: () => learning.showCorner(cat), hintY: 2.9 });
+    G.interact.push({ x, y: 0, layer: '', disc: 'corner_' + cat, run: () => learning.showCorner(cat), hintY: 2.9, ownRing: true });
     (G.learnSigns = G.learnSigns || []).push(g);
   } }
 // build 18: one quality pass over the finished world (bevelled edges, round silhouettes, sharp textures, no wet-plastic gloss)
@@ -1476,7 +1476,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '60'; G.build = GAME_BUILD;
+const GAME_BUILD = '61'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

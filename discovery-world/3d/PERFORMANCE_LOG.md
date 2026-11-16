@@ -4,6 +4,10 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+
+## Build 61 (overlap fixes)
+- Adds 2 low-detail spheres (the pier headlands, Ocean Pier district only, built and freed with it) and no new materials or shaders. Everything else only moves existing things, or hides the extra hint ring at learning spots (one fewer ring drawn there). Not measured separately: the change is too small to show.
+
 ## Build 60 — lighter carousel and critters (desktop, software rendering; `ba.cjs 3D_build59 index.html`, plus `calls.cjs` and a per-object count)
 | View | Draw calls 59 → 60 | Triangles 59 → 60 | Script ms/frame 59 → 60 | Long tasks |
 |---|---|---|---|---|

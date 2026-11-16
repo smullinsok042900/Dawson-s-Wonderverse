@@ -27,7 +27,7 @@ export const DISTRICTS = [
   { id: 'labgarden', icon: '🔬', name: 'Lab Gardens', x0: 668, x1: 788, home: 674 },
   { id: 'artplaza', icon: '🖍️', name: 'Art Plaza', x0: 788, x1: 904, home: 794 },
 ];
-const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -263, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9], ['g17', -598, 3.4], ['g18', -652, .9], ['g19', -711, 6.1], ['g20', -771, .9]];
+const GEMS = [['g1', 484.5, 4.7], ['g2', 540, .9], ['g3', 600, 6.2], ['g4', 644, 2.8], ['g5', 690, 1], ['g6', 756, 1.1], ['g7', 830, 2.7], ['g8', 898, .9], ['g9', -95, 5.4], ['g10', -118, 1], ['g11', -226, 1.9], ['g12', -259.5, .9], ['g13', -328, 6], ['g14', -380, .9], ['g15', -466, 4.6], ['g16', -522, .9], ['g17', -598, 3.4], ['g18', -652, .9], ['g19', -711, 6.1], ['g20', -771, .9]];
 const NOTE = [262, 294, 330, 349, 392, 440, 494, 523];
 const RB = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
 const rnd = n => Math.floor(Math.random() * n), pick = a => a[rnd(a.length)];
@@ -277,7 +277,7 @@ export function initExpansion(G, api) {
   // =================== 🧸 TOY TOWN ===================
   builders.toytown = c => [
     () => palAtHome(c, 'robot'), // (build 32) Bolt the toy robot waits here
-    () => tunnelMouth(c, 612, -3.6, 'woods'), // (build 32) a secret tunnel to the Whispering Woods
+    () => tunnelMouth(c, 609.6, -3.4, 'woods'), // (build 32) a secret tunnel to the Whispering Woods
     // toy houses behind
     () => { const list = []; for (let i = 0; i < 9; i++) list.push([554 + i * 13, -8.5, 5, 4 + (i % 3), 4, ['#ffd9e6', '#ffe9b8', '#cfe9ff', '#d9f5d0', '#e8dcff', '#ffe0c8'][i % 6], RB[(i + 3) % 8]]); c.add(toyHouses(list)); /* (build 53: real little houses, all nine in one mesh) */
       let puff = 0; return dt => { if (Math.abs(P.x - 608) > 75) return; puff -= dt; if (puff < 0) { puff = .5; const i = Math.floor(Math.random() * 9), x = 554 + i * 13 + (i % 2 ? 1 : -1) * 1.4; c.burst(x, 4 + (i % 3) + 3.3, -9, ['#ffffff', '#e6e6ee'], 1, .5); } }; }, // (a little smoke from the chimneys)
@@ -427,15 +427,15 @@ export function initExpansion(G, api) {
   const boingIt = o => { o.userData.bt = 1; };
   // (build 32) SECRET TUNNELS: a cave mouth half-hidden behind bushes; tap it (or PAW next to it) and you whoosh through
   // the hill to the tunnel at the other side of the world (a shortcut; the place you arrive at is built at once)
-  const TUNNELS = { woods: { x: -232, back: 'toytown' }, toytown: { x: 612, back: 'woods' } };
+  const TUNNELS = { woods: { x: -232, back: 'toytown' }, toytown: { x: 609.6, back: 'woods' } };
   function tunnelMouth(c, x, z, to) {
     const rock = c.sph(x, 0, z, 1.9, '#8a7f74', { m: { r: .95, cc: 0 } }); rock.scale.set(1.2, .9, .7);
     const hole = c.sph(x, .6, z + 1.25, .95, '#1c1520', { m: { r: 1, cc: 0 } }); hole.scale.set(1, 1, .2);
     for (const dx of [-1.6, 1.6]) { const b = c.sph(x + dx, .5, z + 1.1, .7, '#3f8f4a', { m: { r: .9 } }); b.scale.y = .8; }
-    const sign = c.sign('🕳️', .8, x, 2.2, z + 1.3);
+    const sign = c.sign('🕳️', .8, x, 2.7, z + 1.4); /* (build 61: higher, clear of the rock) */
     const go = () => { const dest = TUNNELS[to]; c.disc('tunnel', '🕳️ A secret tunnel! It is a shortcut across the world!'); api.travelTo(dest.x + 2, '🕳️', 'the other end of the secret tunnel'); };
     c.tap(rock, go, x); c.tap(hole, go); c.tap(sign, go);
-    return (dt, t) => { sign.position.y = 2.2 + Math.sin(t * 2) * .12; };
+    return (dt, t) => { sign.position.y = 2.7 + Math.sin(t * 2) * .12; };
   }
 
   // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
@@ -648,7 +648,7 @@ export function initExpansion(G, api) {
   const FISH = [['🐟', 'a blue fish'], ['🐠', 'a yellow fish'], ['🐡', 'a puffer fish'], ['🐟', 'another blue fish'], ['🐠', 'a stripy fish']];
   builders.pier = c => [
     // the sea behind the pier (one shared-material plane), a foam line and the wooden pier going out over the water
-    () => { const pierSea = makeSea(134, 40, 56, 14), sea = pierSea.mesh; sea.position.set(-602, .02, -26); c.add(sea);
+    () => { const pierSea = makeSea(134, 40, 56, 14), sea = pierSea.mesh; sea.position.set(-602, .02, -26); c.add(sea); /* (build 61: soft grassy headlands hide the sea's straight ends) */ for (const hx of [-671, -533]) { const hd = c.sph(hx, -1.2, -28, 1, '#7fcf7a', { m: { r: .95, cc: 0 } }); hd.scale.set(9, 2.6, 22); hd.castShadow = false; }
       const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
       c.block(-560, .5, -11, 3, .25, 12, '#b07a4a', { r: .04 }); for (const z of [-6, -10, -14, -17]) for (const dx of [-1.3, 1.3]) c.cyl(-560 + dx, 0, z, .14, .14, .8, '#7a5236');
       return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; pierSea.update(t); }; },
