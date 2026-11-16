@@ -10,6 +10,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 
 import { Sound, NOTES } from './audio.js';
 import { initAdventures, destinationArt } from './adventures.js';
+import { MAP_THUMBS } from './map-thumbs.js';
 import { isVisibleTarget } from './interaction-targets.js';
 import { createPlayroomViewport } from './playroom3d.js';
 import { initNursery } from './nursery.js';
@@ -258,7 +259,7 @@ const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => bur
 // (build 29) the new neighbourhoods past the rainbow gate: streamed in as you come near
 const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
 // (build 45) the space rocket: the Moon, the planets and Pluto, with their real gravity
-const ROCKET_PAD = 686;
+const ROCKET_PAD = 693; // (build 64: moved off the colour pond)
 const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
 // (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
@@ -579,10 +580,35 @@ function openRocket() {
   else if (R.phase !== 'in') return;
   showPicker();
 }
+// (build 64) a painted picture of every planet for the rocket's picker (drawn once, on a small canvas): Earth with land and
+// clouds, cratered Moon, Mercury and Pluto (with its heart), dusty Mars with an ice cap, swirly Venus, banded Jupiter with
+// its red spot, ringed Saturn and Uranus, streaky Neptune. Each has its name under it (the voice says it too).
+function planetArt(id) {
+  const c = document.createElement('canvas'); c.width = c.height = 192; const g = c.getContext('2d'), R = 62, cx = 96, cy = 96;
+  const rnd = (k => () => (k = (k * 16807) % 2147483647) / 2147483647)(id.length * 977 + id.charCodeAt(0) * 31);
+  const ring = (front, col, tilt, w, k = 1.55) => { g.save(); g.translate(cx, cy); g.rotate(tilt); g.beginPath(); g.ellipse(0, 0, R * k, R * .42 * k / 1.55, 0, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2); g.strokeStyle = col; g.lineWidth = w; g.stroke(); g.restore(); };
+  if (id === 'saturn') ring(false, '#d9c08a', -.32, 13); if (id === 'uranus') ring(false, '#bff3f6', 1.25, 5, 1.28);
+  g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
+  const base = { earth: ['#4aa8ff', '#1d5fc0'], moon: ['#e8e8ee', '#9a9aa8'], mercury: ['#c9b9a8', '#7d6e62'], venus: ['#ffe39a', '#d9a24a'], mars: ['#ff8a5c', '#b2432a'], jupiter: ['#f3d9b0', '#c58e5a'], saturn: ['#f6e3b0', '#caa465'], uranus: ['#a8f0f2', '#5cc4cc'], neptune: ['#6d8dff', '#2a3fb8'], pluto: ['#e9d3bf', '#a88a74'] }[id] || ['#ddd', '#888'];
+  const gr = g.createRadialGradient(cx - 22, cy - 24, 8, cx, cy, R); gr.addColorStop(0, base[0]); gr.addColorStop(1, base[1]); g.fillStyle = gr; g.fillRect(0, 0, 192, 192);
+  const blob = (x, y, rx, ry, col, a = 0) => { g.fillStyle = col; g.beginPath(); g.ellipse(x, y, rx, ry, a, 0, 7); g.fill(); };
+  if (id === 'earth') { blob(70, 78, 26, 18, '#4fbf5a', .5); blob(84, 112, 14, 24, '#4fbf5a', .3); blob(124, 70, 22, 14, '#5ccf62', -.4); blob(132, 118, 16, 12, '#4fbf5a'); blob(96, 38, 26, 8, '#ffffff'); blob(96, 156, 22, 7, '#ffffff'); g.globalAlpha = .7; blob(108, 92, 30, 6, '#ffffff', .3); blob(64, 130, 20, 5, '#ffffff', -.2); g.globalAlpha = 1; }
+  if (id === 'moon' || id === 'mercury' || id === 'pluto') for (let i = 0; i < 9; i++) { const x = 50 + rnd() * 92, y = 50 + rnd() * 92, r = 5 + rnd() * 11; blob(x, y, r, r, 'rgba(0,0,0,.14)'); blob(x - 1.5, y - 1.5, r * .7, r * .7, 'rgba(255,255,255,.12)'); }
+  if (id === 'pluto') { g.fillStyle = '#fff4e6'; g.beginPath(); g.moveTo(112, 136); g.bezierCurveTo(86, 118, 88, 92, 106, 96); g.bezierCurveTo(112, 90, 122, 92, 122, 100); g.bezierCurveTo(136, 96, 140, 120, 112, 136); g.fill(); }
+  if (id === 'mars') { blob(96, 40, 30, 9, '#ffffff'); for (let i = 0; i < 6; i++) blob(50 + rnd() * 92, 60 + rnd() * 70, 14 + rnd() * 10, 6 + rnd() * 5, 'rgba(120,30,15,.3)', rnd()); }
+  if (id === 'venus') { g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 6; for (let i = 0; i < 5; i++) { g.beginPath(); g.arc(70 + i * 14, 96, 30 + i * 9, -.6, .9); g.stroke(); } }
+  if (id === 'jupiter' || id === 'saturn') { const cols = id === 'jupiter' ? ['#c9875a', '#e8c49a', '#b8714a', '#f0d6b4', '#c28050'] : ['#e2c58e', '#f3e2bc', '#d8b77c']; for (let i = 0; i < 9; i++) { g.fillStyle = cols[i % cols.length]; g.globalAlpha = .55; g.fillRect(0, 36 + i * 14, 192, 7 + (i % 3) * 2); } g.globalAlpha = 1; if (id === 'jupiter') { blob(124, 118, 15, 9, '#c8452e'); blob(124, 118, 9, 5, '#e2674a'); } }
+  if (id === 'uranus') { g.globalAlpha = .25; for (let i = 0; i < 4; i++) blob(96, 60 + i * 24, 70, 5, '#ffffff'); g.globalAlpha = 1; }
+  if (id === 'neptune') { g.globalAlpha = .35; for (let i = 0; i < 4; i++) blob(70 + rnd() * 50, 58 + i * 26, 38, 5, '#bcd0ff', .1); g.globalAlpha = 1; blob(80, 106, 12, 7, '#1b2a8a'); }
+  const sh = g.createRadialGradient(cx - 30, cy - 30, R * .2, cx, cy, R * 1.05); sh.addColorStop(0, 'rgba(255,255,255,.22)'); sh.addColorStop(.6, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,30,.45)'); g.fillStyle = sh; g.fillRect(0, 0, 192, 192);
+  g.restore();
+  if (id === 'saturn') ring(true, '#e8d29a', -.32, 13); if (id === 'uranus') ring(true, '#d8fbfc', 1.25, 5, 1.28);
+  return c.toDataURL();
+}
 function showPicker() {
   if (!rocketPanel) { rocketPanel = document.createElement('div'); rocketPanel.id = 'rocketPanel';
     const tiles = [['earth', ['#5fa8ff', '#2f6fd0']], ...space.places.map(p => [p[0], p[1]])];
-    rocketPanel.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="rkGrid">${tiles.map(([id, [a, b]]) => `<button class="rkT ${id}" data-id="${id}" aria-label="${ROCKET_NAMES[id]}"><i style="background:radial-gradient(circle at 35% 30%, ${a}, ${b})"></i></button>`).join('')}</div></div>`;
+    rocketPanel.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="rkGrid">${tiles.map(([id]) => `<button class="rkT ${id}" data-id="${id}" aria-label="${ROCKET_NAMES[id]}"><img src="${planetArt(id)}" alt=""><span class="rkName">${ROCKET_NAMES[id].replace(/^the /, 'The ')}</span></button>`).join('')}</div></div>`; // (build 64: painted planets with their names)
     document.body.appendChild(rocketPanel);
     rocketPanel.querySelector('.mpX').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); rocketPanel.classList.remove('show'); Sound.click(); const R = seated(); if (R && R.phase === 'in') climbOut(G.rockets[R.key]); });
     rocketPanel.querySelectorAll('.rkT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; launchTo(b.dataset.id); })); }
@@ -1503,7 +1529,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '63'; G.build = GAME_BUILD;
+const GAME_BUILD = '64'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1577,6 +1603,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
 // ---------------- build 29: the picture map (fast travel) and the one-tap home button ----------------
 // Big pictures only: tap one and you are there (with a sparkle and its name spoken). 🏠 always takes you home.
 const TRAVEL = [['🏠', 'home', 190], ['🎪', 'the Playhouse', 8], ['🎨', 'the Studio', 62], ['🔬', 'the Wonder Lab', 100], ['🎡', 'the Adventure Park', 160], ['🏰', 'the castle', 398], ...expansion.districts.map(d => [d.icon === '🔬' ? '🚀' : d.icon, d.name, d.home])];
+G.travelList = TRAVEL;
 function travel([icon, name, x]) {
   cancelFlight();
   const P = player; if (P.ride && P.ride.type === 'kart') parkKart(); if (P.ride && P.ride.type === 'train') train.hopOff();
@@ -1589,7 +1616,7 @@ function travel([icon, name, x]) {
   left.innerHTML = '<button class="pill" id="mapBtn" aria-label="map">🗺️</button><button class="pill" id="homeBtn" aria-label="go home">🏠</button>';
   $('top').insertBefore(left, $('top').firstChild);
   const mp = document.createElement('div'); mp.id = 'mapPanel';
-  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => `<button class="mpT" data-i="${i}">${destinationArt(t[0], i)}<small>${t[1]}</small><span class="mapDiscovery"></span></button>`).join('')}</div></div>`;
+  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => MAP_THUMBS[t[1]] ? `<button class="mpT pic" data-i="${i}" aria-label="${t[1]}"><img src="${MAP_THUMBS[t[1]]}" alt=""><b class="mpEmo">${t[0]}</b><span class="mapDiscovery"></span></button>` /* (build 64: a real picture of the place) */ : `<button class="mpT" data-i="${i}">${destinationArt(t[0], i)}<small>${t[1]}</small><span class="mapDiscovery"></span></button>`).join('')}</div></div>`;
   document.body.appendChild(mp);
   const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   tapEl($('mapBtn'), () => { if (G.activityOpen) return; const P = player, here = P.layer === '' ? TRAVEL.reduce((b, t, i) => Math.abs(t[2] - P.x) < Math.abs(TRAVEL[b][2] - P.x) ? i : b, 1) : -1; mp.querySelectorAll('.mpT').forEach((b, i) => { b.classList.toggle('here', i === here); b.setAttribute('aria-label','Visit '+TRAVEL[i][1]); const id=expansion.districts.find(d=>d.home===TRAVEL[i][2])?.id; const questId=({frosty:'snow',labgarden:'science',artplaza:'art'})[id]||id; const found=(ADVENTURES[questId]?.steps||[]).filter(st=>world.adventures?.events.includes(st.event)).map(st=>st.icon).slice(0,2).join(''); b.querySelector('.mapDiscovery').textContent=found||(world.adventures?.events.includes('visit_'+(id||['home','playhouse','studio','lab','park','castle'][i]))?'⭐':''); }); mp.classList.add('show'); Sound.click(); voice.speak('Where do you want to go? Tap a picture!'); });

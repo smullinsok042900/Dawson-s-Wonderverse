@@ -178,7 +178,7 @@ const UG_F = -6;
   check('the Cloud Kingdom is a new discovery', (await S()).disc.includes('sky'));
   await shot('18_cloud_kingdom.jpg');
   await teleport(50.4, 9.5); { const my = await page.evaluate(() => new Promise(r => { const D = __DDW3; D.keys.right = true; let n = 0, m = 0; const f = () => { m = Math.max(m, D.player.y); if (D.player.x > 51.4) D.keys.right = false; if (m > 13 || ++n > 500) { D.keys.right = false; return r(m); } requestAnimationFrame(f); }; f(); })); check('bouncy cloud puffs bounce you up to the high clouds', my > 13, `highest y=${my.toFixed(1)}`); }
-  await teleport(54.5, 9.5); { const wp = await page.evaluate(() => __DDW3.G.whale.g.position.toArray()); await tapWorld(wp[0], wp[1], wp[2]); } await sleep(300); check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
+  await teleport(54.5, 9.5); for (let k = 0; k < 3 && !(await S()).disc.includes('whale'); k++) { const wp = await page.evaluate(() => __DDW3.G.whale.g.position.toArray()); await tapWorld(wp[0], wp[1], wp[2]); await sleep(300); } /* (patient: the whale swims, and the test browser draws 1-2 frames a second) */ check('tap the sky whale: it sings', (await S()).disc.includes('whale'));
   await teleport(65.8, 9.5);
   { const sl = page.evaluate(() => new Promise(r => { let n = 0, on = false; const f = () => { const P = __DDW3.player; if (P.ride && P.ride.type === 'slide') on = true; if ((on && !P.ride && P.grounded) || ++n > 1200) return r([on, P.x, P.y]); requestAnimationFrame(f); }; f(); }));
     await holdBtn('#rightBtn', 600); const r = await sl; check('walk off the clouds onto the giant rainbow slide, all the way down to the floor', r[0] && r[2] < .6 && r[1] > 71, `slid=${r[0]} landed x=${r[1].toFixed(1)} y=${r[2].toFixed(2)}`); }
@@ -417,7 +417,7 @@ const UG_F = -6;
   await page.evaluate(() => { __DDW3.player.x = 3005; __DDW3.player.y = -1; __DDW3.keys.up = true; }); c = await waitFor(s => s.layer === '', 20000); await page.evaluate(() => { __DDW3.keys.up = false; });
   check('swim up to the top of the pool to climb out', c.layer === '' && Math.abs(c.x + 8) < 1, `layer=${c.layer} x=${c.x.toFixed(1)}`);
   // ---------- build 45: the space rocket, with each place's real gravity ----------
-  await teleport(689); await page.evaluate(() => __DDW3.G.expansion.buildNow(689)); await sleep(500);
+  await teleport(692); await page.evaluate(() => __DDW3.G.expansion.buildNow(692)); // (build 64: the rocket moved 686 → 693; the bubble fountain is at 698) await sleep(500);
   // (build 48) PAW beside the rocket climbs in (it used to blow the bubble fountain's bubbles: both stood at x 698)
   { const t = await page.evaluate(() => __DDW3.G.actionTarget && __DDW3.G.actionTarget.disc); await press('#pawBtn');
     const r = await page.evaluate(() => new Promise(res => { const t0 = performance.now(); const f = () => { const P = __DDW3.player; if ((P.ride && P.ride.phase === 'in' && document.querySelector('#rocketPanel.show')) || performance.now() - t0 > 30000) res({ ride: P.ride && P.ride.type + ':' + P.ride.phase, hidden: !!__DDW3.G.playerHidden, bubbles: __DDW3.world.disc.has('bubbles') }); else setTimeout(f, 50); }; f(); }));
@@ -456,7 +456,7 @@ const UG_F = -6;
     check(`${id}: only this planet is kept in memory`, r.groups.length === 1 && r.groups[0] === 'space:' + id, r.groups.join(' '));
     const back = await page.evaluate(B => { const it = __DDW3.G.interact.find(i => i.layer === 'space' && i.action === 'Back to the rocket' && i.x > B[0] + 200); if (!it) return null; it.run(); const r = __DDW3.G.rockets[__DDW3.G.spaceHere ? __DDW3.G.spaceHere() : Object.keys(__DDW3.G.rockets).find(k => k !== 'earth')]; return [__DDW3.player.x, r && r.x]; }, B);
     check(`${id}: the little rocket sign takes you back to your rocket`, !!back && back[1] != null && Math.abs(back[0] - back[1] - 2.5) < .5, JSON.stringify(back)); }
-  { await flyTo('earth'); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 688.5) < 3, `layer=${c.layer} x=${c.x.toFixed(1)}`); }
+  { await flyTo('earth'); c = await waitFor(s => s.layer === '', 20000); check('fly home to Earth: back at the launch pad', c.layer === '' && Math.abs(c.x - 695.5) < 3, /* (build 64: the pad moved 686 → 693) */ `layer=${c.layer} x=${c.x.toFixed(1)}`); }
   // the voice can be chosen by a grown-up (the test browser may have no voices: the panel must still work)
   check('the ⚙️ panel has a voice chooser', await page.evaluate(() => !!document.querySelector('#perfPanel .ppVoices') && typeof __DDW3.G.voice === 'object' ? true : !!document.querySelector('#perfPanel .ppVoices')));
   // ---------- build 27: the learning games work for a child who can't read ----------

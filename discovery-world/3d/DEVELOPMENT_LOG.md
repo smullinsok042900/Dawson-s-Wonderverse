@@ -4,6 +4,36 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 64 — fixes from the family's 16 phone screenshots
+- **Pictures the family disliked:**
+  - (The station picture discs were removed for a moment by mistake; the family meant the colouring pictures. They are back.)
+  - **The floating 👂** in the Whispering Woods is now a little wooden birdhouse on a post. Tapping it plays the owl call as before.
+  - **The pier whale** was a flat grey blob. It is now a friendly blue whale with a pale belly, eyes and a tail fluke that waves; tapping it still spouts.
+- **Overlaps:**
+  - **Rocket:** its pad sat on the colour pond and over the path. The rocket moved 686 → 693, further back, and the pond moved back from the path.
+  - **Toy Town:** the balloon basket stood in front of a house (balloons rose up its wall); it is now in the gap between houses (x 651.5).
+  - **Farm:** the tractor is further from the fence.
+  - **Stream bridge:** it is now a planked wooden bridge with edge beams (one mesh). The stream is as wide as the bridge, so no water shows on the path beside it, and the stepping stones are further upstream.
+- **Looked odd:**
+  - **The ice pond** is an oval, not a hard-edged rectangle.
+  - **The shadow wall** has a purple frame and shows a bunny shadow from the start.
+  - **The spin-art wheel** has paint and a pink rim from the start.
+  - **The sticker wall** has soft polka dots.
+- **The map (🗺️) shows real pictures:**
+  - every place's button is a small real picture of that place (the house, the slide tower, the Ferris wheel, the castle, the hot-air balloon, the sailboat, the red barn, the igloo, the fox's burrow, the lighthouse, the bridge, Toy Town, the rocket…), with its emoji in the corner; it used to be the same generic drawing for many places;
+  - the pictures are made by `tools/make-map-thumbs.cjs` and built into the game (`src/map-thumbs.js`, 16 pictures, 131 KB); re-run it when a place changes a lot.
+- **The rocket's planet picker:** every planet is painted on a starry tile (Earth with land and clouds; cratered Moon, Mercury and Pluto with its heart; Mars with its ice cap; swirly Venus; Jupiter's bands and red spot; Saturn's and Uranus's rings; streaky Neptune) with its name under it, instead of a plain coloured ball. Drawn once on a small canvas when the picker first opens.
+- **From the family's second set of 7 screenshots:**
+  - **Grass and flowers** no longer grow on the path or the train track (both are kept clear).
+  - **The colouring easels** (the "castle and rainbow" and "butterfly" pictures):
+    - each part is now coloured then outlined in turn, so lines of hidden parts no longer show through;
+    - the butterfly has real curved wings and antennae instead of overlapping ovals;
+    - the colourable parts are the same, so saved colours stay.
+  - **Trees inside rainbow arches:** the trees at 138 and 200 are moved back. The arch at 135 is removed: it stood half in the Wonder Lab's wall, with a bush in it.
+  - **The Puzzles learning spot** shows a 🧩 puzzle piece instead of a pink 🧠 brain.
+- **Cost:** the whale and the birdhouse are one mesh each (the whale's tail is a second); the 36 station discs are gone. Draw calls at the changed places are the same as build 63 (pier 66, woods 78, Frosty 78, trail 79, Lab 80 vs 84) and lower in the park and Studio.
+- **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. **Full smoke test, run alone on the final build: 198/198.** Smoke checks follow the moved rocket (PAW at x 692; landing at 695.5); the sky-whale tap is patient (it swims).
+
 ## Checkpoint: build 63 — zoomed out to see whole activities
 - **The family asked** to zoom out more, to see more and do every activity.
 - **Camera:**
