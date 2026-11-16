@@ -6,7 +6,7 @@ are in `PERFORMANCE_LOG.md`.
 
 ## Checkpoint: build 64 — fixes from the family's 16 phone screenshots
 - **Pictures the family disliked:**
-  - **Station picture discs** (castle, rainbow, rocket, butterfly…) are removed from all 18 stations. The golden bells stay, and tapping a station still calls the train.
+  - (The station picture discs were removed for a moment by mistake; the family meant the colouring pictures. They are back.)
   - **The floating 👂** in the Whispering Woods is now a little wooden birdhouse on a post. Tapping it plays the owl call as before.
   - **The pier whale** was a flat grey blob. It is now a friendly blue whale with a pale belly, eyes and a tail fluke that waves; tapping it still spouts.
 - **Overlaps:**
@@ -19,6 +19,9 @@ are in `PERFORMANCE_LOG.md`.
   - **The shadow wall** has a purple frame and shows a bunny shadow from the start.
   - **The spin-art wheel** has paint and a pink rim from the start.
   - **The sticker wall** has soft polka dots.
+- **The map (🗺️) shows real pictures:**
+  - every place's button is a small real picture of that place (the house, the slide tower, the Ferris wheel, the castle, the hot-air balloon, the sailboat, the red barn, the igloo, the fox's burrow, the lighthouse, the bridge, Toy Town, the rocket…), with its emoji in the corner; it used to be the same generic drawing for many places;
+  - the pictures are made by `tools/make-map-thumbs.cjs` and built into the game (`src/map-thumbs.js`, 16 pictures, 131 KB); re-run it when a place changes a lot.
 - **From the family's second set of 7 screenshots:**
   - **Grass and flowers** no longer grow on the path or the train track (both are kept clear).
   - **The colouring easels** (the "castle and rainbow" and "butterfly" pictures):
@@ -28,7 +31,7 @@ are in `PERFORMANCE_LOG.md`.
   - **Trees inside rainbow arches:** the trees at 138 and 200 are moved back. The arch at 135 is removed: it stood half in the Wonder Lab's wall, with a bush in it.
   - **The Puzzles learning spot** shows a 🧩 puzzle piece instead of a pink 🧠 brain.
 - **Cost:** the whale and the birdhouse are one mesh each (the whale's tail is a second); the 36 station discs are gone. Draw calls at the changed places are the same as build 63 (pier 66, woods 78, Frosty 78, trail 79, Lab 80 vs 84) and lower in the park and Studio.
-- **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. FULL_SMOKE_64
+- **Verified:** screenshots of every place (desktop, software rendering), no page errors; node checks 50/50; learning contracts. Full smoke test: see below.
 
 ## Checkpoint: build 63 — zoomed out to see whole activities
 - **The family asked** to zoom out more, to see more and do every activity.

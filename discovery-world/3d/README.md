@@ -13,7 +13,7 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
 ## 3D build 64: tidier and friendlier
-- No picture discs on the train stations.
+- The map shows a real little picture of every place.
 - A birdhouse instead of the floating ear.
 - A real blue whale at the pier.
 - The rocket is off the pond.

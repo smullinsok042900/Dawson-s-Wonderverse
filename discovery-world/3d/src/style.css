@@ -574,3 +574,9 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 /* (build 62) when loading ends, its star and words vanish at once (only the purple fades): they used to show through
    the title card for a moment */
 #loading.done>*{opacity:0;transition:none}
+/* (build 64) the map shows a real little picture of every place, with its emoji in the corner */
+#mapPanel .mpGrid{grid-template-columns:repeat(4,auto)}
+#mapPanel .mpT.pic{width:min(21vw,150px);height:min(12.5vw,88px);padding:0;border-width:4px;position:relative;overflow:hidden}
+#mapPanel .mpT.pic img{width:100%;height:100%;object-fit:cover;display:block;border-radius:18px}
+#mapPanel .mpT.pic .mpEmo{position:absolute;left:3px;bottom:3px;font-size:min(5vw,28px);line-height:1;background:#fffffff0;border-radius:50%;padding:3px;box-shadow:0 2px 6px #0004}
+@media (max-height:420px){#mapPanel .mpT.pic{width:min(19vw,132px);height:min(10.5vw,74px)}#mapPanel .mpGrid{gap:8px}}

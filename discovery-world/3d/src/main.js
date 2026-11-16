@@ -10,6 +10,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 
 import { Sound, NOTES } from './audio.js';
 import { initAdventures, destinationArt } from './adventures.js';
+import { MAP_THUMBS } from './map-thumbs.js';
 import { isVisibleTarget } from './interaction-targets.js';
 import { createPlayroomViewport } from './playroom3d.js';
 import { initNursery } from './nursery.js';
@@ -1577,6 +1578,7 @@ const perfMon = initPerf({ renderer, G, world, player, keys, fluffs, post, sun, 
 // ---------------- build 29: the picture map (fast travel) and the one-tap home button ----------------
 // Big pictures only: tap one and you are there (with a sparkle and its name spoken). 🏠 always takes you home.
 const TRAVEL = [['🏠', 'home', 190], ['🎪', 'the Playhouse', 8], ['🎨', 'the Studio', 62], ['🔬', 'the Wonder Lab', 100], ['🎡', 'the Adventure Park', 160], ['🏰', 'the castle', 398], ...expansion.districts.map(d => [d.icon === '🔬' ? '🚀' : d.icon, d.name, d.home])];
+G.travelList = TRAVEL;
 function travel([icon, name, x]) {
   cancelFlight();
   const P = player; if (P.ride && P.ride.type === 'kart') parkKart(); if (P.ride && P.ride.type === 'train') train.hopOff();
@@ -1589,7 +1591,7 @@ function travel([icon, name, x]) {
   left.innerHTML = '<button class="pill" id="mapBtn" aria-label="map">🗺️</button><button class="pill" id="homeBtn" aria-label="go home">🏠</button>';
   $('top').insertBefore(left, $('top').firstChild);
   const mp = document.createElement('div'); mp.id = 'mapPanel';
-  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => `<button class="mpT" data-i="${i}">${destinationArt(t[0], i)}<small>${t[1]}</small><span class="mapDiscovery"></span></button>`).join('')}</div></div>`;
+  mp.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid">${TRAVEL.map((t, i) => MAP_THUMBS[t[1]] ? `<button class="mpT pic" data-i="${i}" aria-label="${t[1]}"><img src="${MAP_THUMBS[t[1]]}" alt=""><b class="mpEmo">${t[0]}</b><span class="mapDiscovery"></span></button>` /* (build 64: a real picture of the place) */ : `<button class="mpT" data-i="${i}">${destinationArt(t[0], i)}<small>${t[1]}</small><span class="mapDiscovery"></span></button>`).join('')}</div></div>`;
   document.body.appendChild(mp);
   const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   tapEl($('mapBtn'), () => { if (G.activityOpen) return; const P = player, here = P.layer === '' ? TRAVEL.reduce((b, t, i) => Math.abs(t[2] - P.x) < Math.abs(TRAVEL[b][2] - P.x) ? i : b, 1) : -1; mp.querySelectorAll('.mpT').forEach((b, i) => { b.classList.toggle('here', i === here); b.setAttribute('aria-label','Visit '+TRAVEL[i][1]); const id=expansion.districts.find(d=>d.home===TRAVEL[i][2])?.id; const questId=({frosty:'snow',labgarden:'science',artplaza:'art'})[id]||id; const found=(ADVENTURES[questId]?.steps||[]).filter(st=>world.adventures?.events.includes(st.event)).map(st=>st.icon).slice(0,2).join(''); b.querySelector('.mapDiscovery').textContent=found||(world.adventures?.events.includes('visit_'+(id||['home','playhouse','studio','lab','park','castle'][i]))?'⭐':''); }); mp.classList.add('show'); Sound.click(); voice.speak('Where do you want to go? Tap a picture!'); });
