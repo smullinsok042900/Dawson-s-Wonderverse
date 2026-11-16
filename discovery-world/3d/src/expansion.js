@@ -412,9 +412,7 @@ export function initExpansion(G, api) {
       return (dt, t) => { for (const b of bushes) { b.userData.w = Math.max(0, (b.userData.w || 0) - dt * 2); b.rotation.z = Math.sin(t * 25) * .1 * b.userData.w; } if (found) kid.position.y = 2.2 + Math.abs(Math.sin(t * 6)) * .3; }; },
     // Kiwi the parrot waits here to be befriended
     () => palAtHome(c, 'parrot'),
-    // the rainbow portal home
-    () => { for (let i = 0; i < 6; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(2.2 - i * .22, .14, 10, 36), mat(RB[i], { em: RB[i], ei: .2 })); r.position.set(900, 2.2, -1.5); r.rotation.y = Math.PI / 2; c.add(r); }
-      const hm = c.sign('🏠', 1.2, 900, 2.2, -1.4); c.tap(hm, () => api.goHome(), 900); },
+    // (build 62b: the rainbow 🏠 portal is gone: the family asked; the 🏠 button and the map take you home)
   ];
 
   // a pal waiting at home (inside its neighbourhood): tap it three times to make friends
@@ -521,7 +519,6 @@ export function initExpansion(G, api) {
     () => { for (let i = 0; i < 8; i++) { const pr = c.sign('🐾', .45, -247 - i * 1.6, .03, (i % 2) * .4 - .2);  }
       const den = c.sph(-263, 0, -4.4, 2, '#8a6a4a', { m: { r: .95 } }); den.scale.set(1.3, .7, 1); const hole = c.sph(-263, .4, -2.7, .7, '#3a2a1a', { m: { r: 1 } }); hole.scale.set(1, .8, .3);
       const pal = palAtHome(c, 'fox'); c.tap(den, () => { c.say(X.pals.fox ? '🦊 This is Rusty\'s den!' : '🦊 Somebody lives here... tap the little fox to say hello!'); Sound.click(); });
-      const home = c.sign('🏠', 1, -268, 2.2, -1.4); c.tap(home, () => api.goHome(), -268);
       return (dt, t) => { pal && pal(dt, t); }; },
   ];
 
@@ -566,8 +563,6 @@ export function initExpansion(G, api) {
     // gently falling snow around you while you're here (a small pool of flakes that follows the camera)
     () => { const flakes = []; for (let i = 0; i < 28; i++) { const f = c.toy('❄️', .25 + Math.random() * .2, 0, 0, 0); f.userData.o = [Math.random() * 30 - 15, Math.random() * 10, -Math.random() * 8 + 1]; flakes.push(f); }
       return (dt, t) => { const here = P.x > -406 && P.x < -270; for (const f of flakes) f.visible = here; if (!here) return; /* (build 35: snow only falls in Frosty Peaks, not on the farm next door) */ for (const f of flakes) { const o = f.userData.o; o[1] -= dt * .9; if (o[1] < 0) o[1] += 10; f.position.set(P.x + o[0] + Math.sin(t + o[2]) * .4, o[1], o[2]); } }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -397, 2.2, -1.4); c.tap(home, () => api.goHome(), -397); },
   ];
 
   // =================== 🚜 HAPPY FARM (x -536 to -404) — build 35 ===================
@@ -637,8 +632,6 @@ export function initExpansion(G, api) {
     () => { const cows = [[-438, -9], [-485, -10], [-510, -9.5]].map(([x, z]) => { const s = c.toy('🐄', 1.8, x, .9, z); c.tap(s, () => { Sound.tone(140, .5, 'sawtooth', .03, .6); c.say('🐄 Moooo!'); c.disc('cows'); }); return { s, x }; });
       for (let x = -410; x > -534; x -= 3) c.block(x, 0, -7, .14, 1, .14, '#ffffff', { r: .03 }); c.block(-472, .7, -7, 124, .12, .08, '#ffffff', { r: .02 }); c.block(-472, .35, -7, 124, .12, .08, '#ffffff', { r: .02 });
       return (dt, t) => { for (const q of cows) q.s.position.x = q.x + Math.sin(t * .15 + q.x) * 1.5; }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -530, 2.2, -1.4); c.tap(home, () => api.goHome(), -530); },
   ];
 
   // =================== 🌊 OCEAN PIER (x -668 to -536) — build 38 ===================
@@ -694,8 +687,6 @@ export function initExpansion(G, api) {
     () => { const back = c.sph(-650, -.6, -16, 2.6, '#5a6f8f', { m: { r: .5, cc: .3 } }); back.scale.set(1.8, .6, .9); const eye = c.sph(-646.2, .2, -15.2, .14, '#ffffff'); let spout = 0;
       c.tap(back, () => { spout = 1.4; api.event?.({ type: 'sea', id: 'whale' }); Sound.noise ? Sound.noise(.6, 300, 1400, .05) : Sound.whoosh(); c.say('🐳 Whoosh! The whale says hello!'); c.disc('whale', '🐳 Tap the whale and it spouts water!'); }, -650);
       return (dt, t) => { back.position.y = -.6 + Math.sin(t * .7) * .12; if (spout > 0) { spout -= dt; if (Math.random() < dt * 30) c.burst(-650.6, 1 + Math.random() * 3, -16, ['#cfefff', '#ffffff'], 2, 1.2); } }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -662, 2.2, -1.4); c.tap(home, () => api.goHome(), -662); },
   ];
 
   // =================== 🎈 BALLOON HILLS (x -800 to -668) — build 49 ===================
@@ -757,8 +748,6 @@ export function initExpansion(G, api) {
       const blow = q => { if (q.gone) return; q.gone = 4; Sound.whoosh(); for (let k = 0; k < 4; k++) setTimeout(() => c.burst(q.x + k * .4, q.h + .3 + k * .15, q.z, ['#ffffff', '#f4f4ff'], 6, 1.6), k * 120); c.say('💨 Whoosh! The seeds fly away on the wind!'); c.disc('dandelion', '💨 Tap the fluffy dandelions and the seeds blow away!'); api.event?.({ type: 'activity', id: 'dandelion' }); };
       puffs.forEach(q => c.tap(q.ball, () => blow(q))); c.tap(c.add(new THREE.Group()), () => blow(puffs.find(q => !q.gone) || puffs[0]), X, { icon: '💨', label: 'Dandelions', action: 'Blow the seeds', disc: 'dandelion' }); // (PAW: the next fluffy one)
       return dt => { for (const q of puffs) { if (q.gone > 0) { q.gone = Math.max(0, q.gone - dt); const k = q.gone > 3 ? 0 : Math.min(1, (3 - q.gone) / 3); q.ball.scale.setScalar(Math.max(.05, k)); } } }; },
-    // the end of the line: a 🏠 sign that takes you home
-    () => { const home = c.sign('🏠', 1, -794, 2.2, -1.4); c.tap(home, () => api.goHome(), -794); },
   ];
 
   // ---------- per frame ----------
