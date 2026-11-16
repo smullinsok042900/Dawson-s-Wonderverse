@@ -4,6 +4,16 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: restore (2026-11-16) — back to build 59 plus build 60; builds 61–77 undone
+- **The family asked** to undo the graphics changes made by another session after build 59 (builds 61–77: terrain and mountains, instanced park trees, moving water surfaces, box collision and others, then a partial rollback that served a frozen copy of build 59 from `discovery-world/play59/`). They also asked to keep this chat's build 60.
+- **Done as a normal merge (no history rewritten):**
+  - `discovery-world/3d` is exactly build 60: build 59 plus the build 60 fixes (fireplace, water off the track, beach headland, fox, light eyes).
+  - The files builds 61–77 added (`collision.js`, `terrain.js`, `worldcheck.js` and their tests) are removed.
+  - The automatic rebuild (`.github/workflows/build-3d.yml`) is back as it was at build 59.
+  - `discovery-world/index.html` points to `3d/` again.
+- **Kept:** all backups (including `3D_build74_before_collision_repair_index.html`) and the `play59/` folder, so any Home Screen icon saved with that address still opens. That copy stays on build 59.
+- **To find builds 61–77 again,** see the commits between `adcca07` and `3dbcd61` on `main`.
+
 ## Checkpoint: build 60 — graphics fixes from a whole-game tour, and a lighter carousel and critters
 - **How the problems were found:** a screenshot tour of the whole game (`tour.cjs` in the session; every 20 m across the world, inside the house and castle, underground, the underwater world, the Sky Kingdom and every planet).
 - **Fixed:**
