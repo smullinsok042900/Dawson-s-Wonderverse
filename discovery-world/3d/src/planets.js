@@ -237,8 +237,8 @@ const pluto = {
 // Jupiter's gravity is strong (you can only hop a little), so everything here works by tapping: swings that go higher
 // and higher, a merry-go-round, a seesaw with a teddy, a rocket spring-rider; and a 30 m tower with a glass lift up to a
 // see-through rainbow slide that spirals three times round the tower, then drops, corkscrews and wiggles down to the path.
-function jupiterRide(k, type, step, done) { // a ride the planet drives itself (main.js just pauses walking while P.ride is set)
-  const P = k.P, R = { type, t: 0, noExit: type === 'jlift' }; P.ride = R; P.vx = P.vy = 0;
+function jupiterRide(k, type, step, done, o = {}) { // a ride the planet drives itself (main.js just pauses walking while P.ride is set)
+  const P = k.P, R = { type, t: 0, noExit: o.noExit ?? type === 'jlift' }; P.ride = R; P.vx = P.vy = 0;
   const f = dt => { if (P.ride !== R) return true; R.t += dt; if (step(R, dt)) { if (P.ride === R) { P.ride = null; P.vy = 0; P.grounded = true; } done && done(); return true; } };
   k.U.push((dt) => { if (R.over) return; if (f(dt)) R.over = true; });
 }
@@ -408,6 +408,73 @@ const mercury = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury }; // (build 67: Uranus's ice castle and rink; Mercury's mirror maze) // (build 66: Jupiter's playground and super slide) 
+// ---------- (build 68) 🌬️ NEPTUNE, the windiest planet: WIND SWINGS, BUNGEE JUMPING and a SKYDIVING CHAMBER ----------
+function neptuneWindSwings(k, X) {
+  const P = k.P, near = x => P.layer === 'space' && !P.ride && Math.abs(P.x - x) < 7, sx = X + 26, H = 4.6, L = 3.9;
+  const b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 10);
+  for (const s of [-1, 1]) for (const z of [-1, 1]) b.put(cyl, sx + s * 4.4 - s * .7, H / 2, -3 + z, '#5aa8ff', [.11, H + .3, .11], [0, 0, s * .16]);
+  b.put(cyl, sx, H, -3, '#ffd23f', [.12, 9.4, .12], [0, 0, Math.PI / 2]);
+  const sock = new THREE.Group(); sock.position.set(X + 12, 0, -3.5); k.add(sock); { const sb = makeBatch(); sb.put(cyl, 0, 2, 0, '#ffffff', [.06, 4, .06]); for (let i = 0; i < 4; i++) sb.put(new THREE.CylinderGeometry(.32 - i * .05, .27 - i * .05, .5, 12), .3 + i * .5, 3.8, 0, i % 2 ? '#ffffff' : '#ff6a3c', 1, [0, 0, -Math.PI / 2]); sock.add(sb.mesh(shinyMat())); }
+  k.add(b.mesh(shinyMat()));
+  // white wind streaks blowing across
+  const streakM = toy('#ffffff', { r: .2, em: '#ffffff', ei: .4 }), streaks = [...Array(10)].map((_, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.6, .05, .05), streakM); m.position.set(X + Math.random() * 60, 1 + (i * 1.7) % 6, -2 - (i % 4)); k.add(m); return m; });
+  let gust = 0; k.U.push((dt, t) => { gust = .5 + .5 * Math.sin(t * .6); for (const m of streaks) { m.position.x += dt * (8 + gust * 10); if (m.position.x > X + 70) m.position.x = X + 4; } sock.children[0].rotation.y = Math.sin(t * 2) * .2 * gust; });
+  [-2.6, 0, 2.6].forEach((dx, i) => { const piv = new THREE.Group(); piv.position.set(sx + dx, H, -3); k.add(piv); const pb = makeBatch();
+    for (const z of [-.3, .3]) pb.put(cyl, 0, -L / 2, z, '#d8e0ea', [.025, L, .025]); pb.put(new THREE.BoxGeometry(1, 1, 1), 0, -L, 0, ['#ff6fae', '#7fe0a0', '#ffd23f'][i], [.85, .1, .66]); piv.add(pb.mesh(shinyMat()));
+    let idle = 0; k.U.push((dt, t) => { if (!(P.ride && P.ride.swing === piv)) { idle += dt; piv.rotation.z = Math.sin(t * 1.6 + i) * .12 * gust; } });
+    const go = () => { if (!near(sx + dx)) return; k.fact('🌬️ Neptune has the fastest winds of all the planets! The wind pushes your swing!', 'neptunewind');
+      const ride = jupiterRide(k, 'wswing', (R) => { const push = Math.min(1.25, .3 + R.t * .1 + gust * .35); const a = push * Math.sin(R.t * 1.9) * (R.t > 11 ? Math.max(0, 1 - (R.t - 11)) : 1); piv.rotation.z = a; R.swing = piv;
+        P.x = piv.position.x + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) - .35; P.z = -3; P.facing = Math.cos(R.t * 1.9) >= 0 ? 1 : -1; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
+        if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5); return R.t > 12; }, () => { piv.rotation.z = 0; P.y = 0; P.z = 0; }); };
+    k.tapIt(piv, go, sx + dx, i === 1 ? 'neptuneswing' : null); });
+  k.tapIt(sock, () => k.fact('🌬️ A windsock shows which way the wind blows. On Neptune the wind is super fast!', 'neptunewindsock'), X + 12, 'neptunewindsock');
+}
+function neptuneBungee(k, X) {
+  const P = k.P, bx = X + 76, T = 24, Lc = 10, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 12), box = new THREE.BoxGeometry(1, 1, 1);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.put(cyl, bx + sx * 1.3, T / 2, -4 + sz * 1.3, '#9b6cff', [.16, T, .16]);
+  for (let y = 3; y < T; y += 3) for (const sz of [-1, 1]) b.put(box, bx, y, -4 + sz * 1.3, '#c9a6ff', [2.6, .1, .1]);
+  b.put(box, bx, T, -4, '#ffd23f', [3.4, .3, 3.4]); b.put(box, bx + 2.2, T, -3, '#ff6a3c', [1.6, .25, .9]);          // the platform and the jumping board
+  for (const s of [-1, 1]) b.put(cyl, bx + s * 1.6, T + .6, -2.4, '#ffffff', [.05, 1.2, .05]); b.put(box, bx, T + 1.2, -2.4, '#ffffff', [3.2, .06, .06]);
+  k.add(b.mesh(shinyMat()));
+  const lift = new THREE.Mesh(new THREE.BoxGeometry(1.4, .2, 1.4), toy('#5aa8ff', { r: .3 })); lift.position.set(bx - 2.1, .1, -2.6); k.add(lift);
+  const cord = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 1, 6), toy('#ff4f9a', { r: .4 })); cord.visible = false; k.add(cord); const A = new THREE.Vector3(bx + 2.8, T + .1, -3), Bv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - bx) > 9) return; k.fact('🪢 Bungee jump! Up to the top, then jump: the stretchy cord catches you and bounces you!', 'neptunebungee');
+    let ph = 'lift', vy = 0, y = 0;
+    jupiterRide(k, 'bungee', (R, dt) => {
+      if (ph === 'lift') { lift.position.y = Math.min(T, lift.position.y + dt * 5); P.x = bx - 2.1; P.z = -2.6; P.y = lift.position.y + .1; if (lift.position.y >= T) { ph = 'walk'; R.w = 0; } return false; }
+      if (ph === 'walk') { R.w += dt; P.x = bx - 2.1 + Math.min(1, R.w / 1.2) * 5; P.y = T + .15; P.z = -3; P.facing = 1; if (R.w > 1.8) { ph = 'fall'; vy = 3; y = P.y; cord.visible = true; k.Sound.whoosh && k.Sound.whoosh(); k.say('🪢 Three, two, one... JUMP!', true); R.t0 = R.t; } return false; }
+      if (ph === 'fall') { vy -= 11 * dt; const stretch = (A.y - (y + 1)) - Lc; if (stretch > 0) vy += 9 * stretch * dt; vy *= Math.exp(-dt * .55); y += vy * dt; R.minY = Math.min(R.minY ?? 99, y);
+        if (stretch > 0 && vy > 0 && !R.boing) { R.boing = 1; k.Sound.boing && k.Sound.boing(); } if (vy < 0) R.boing = 0;
+        P.y = y; P.x = A.x; P.z = A.z; R.roll = y < T - .5 ? Math.PI : 0; if (R.t - R.t0 > 9) { ph = 'down'; R.roll = Math.PI; } }
+      if (ph === 'down') { y = Math.max(0, y - dt * 3); P.y = y; if (y <= .5) R.roll = 0; if (y <= 0) { cord.visible = false; lift.position.y = .1; return true; } }
+      Bv.set(P.x, P.y + (R.roll ? .2 : 1.2), P.z); cord.position.copy(A).add(Bv).multiplyScalar(.5); const d = Bv.clone().sub(A); cord.scale.set(1, d.length(), 1); cord.quaternion.setFromUnitVectors(up, d.normalize());
+      return false; }, () => { P.x = bx + 3.6; P.y = 0; P.z = 0; k.api.burst(P.x, 1, 0, ['#ffffff', '#ff4f9a', '#ffd23f'], 16, 2.4); k.say('🪢 What a jump! Tap the tower to go again!', true); }, { noExit: true });
+  };
+  const tw = new THREE.Group(); tw.position.set(bx, 0, -4); k.add(tw); k.tapIt(lift, go, bx, 'neptunebungeego'); k.tapIt(tw, go);
+}
+function neptuneSkydive(k, X) {
+  const P = k.P, cx = X + 40, cz = -3, R0 = 2.4, Hc = 11, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 24);
+  b.put(cyl, cx, .4, cz, '#5a6a8a', [R0 + .6, .8, R0 + .6]); b.put(cyl, cx, Hc + .3, cz, '#5a6a8a', [R0 + .6, .6, R0 + .6]);
+  for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; b.put(new THREE.CylinderGeometry(1, 1, 1, 8), cx + Math.cos(a) * (R0 + .35), Hc / 2 + .4, cz + Math.sin(a) * (R0 + .35), '#c9d6e8', [.1, Hc, .1]); }
+  b.put(new THREE.BoxGeometry(1, 1, 1), cx - R0 - .9, 1.2, cz + 1.2, '#ffd23f', [1.2, 2.4, .3]); k.add(b.mesh(shinyMat()));
+  const glass = new THREE.Mesh(new THREE.CylinderGeometry(R0, R0, Hc, 28, 1, true), new THREE.MeshPhysicalMaterial({ color: '#cfefff', transparent: true, opacity: .22, roughness: .05, side: THREE.DoubleSide, depthWrite: false })); glass.position.set(cx, Hc / 2 + .8, cz); k.add(glass);
+  const fan = new THREE.Group(); fan.position.set(cx, .85, cz); k.add(fan); { const fb = makeBatch(); for (let i = 0; i < 5; i++) fb.put(new THREE.BoxGeometry(1, 1, 1), 0, 0, 0, '#2a3a5a', [2 * R0 - .4, .05, .4], [0, i / 5 * Math.PI, 0]); fb.put(new THREE.CylinderGeometry(.3, .3, .2, 14), 0, .05, 0, '#ffd23f'); fan.add(fb.mesh(shinyMat())); }
+  const airM = toy('#ffffff', { r: .2, em: '#cfefff', ei: .6 }), air = [...Array(12)].map((_, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(.05, 1.2, .05), airM); const a = i * 2.4; m.position.set(cx + Math.cos(a) * (R0 - .6) * ((i % 3) / 3 + .3), 1 + (i * 1.3) % Hc, cz + Math.sin(a) * 1.2); k.add(m); return m; });
+  let on = false, boost = 0; k.U.push((dt) => { fan.rotation.y += dt * (on ? 22 : 6); for (const m of air) { m.position.y += dt * (on ? 9 : 3); if (m.position.y > Hc) m.position.y = 1; } });
+  const go = () => { if (P.layer !== 'space') return; if (P.ride && P.ride.type === 'skydive') { boost = 1.2; k.Sound.whoosh && k.Sound.whoosh(); return; } if (P.ride || Math.abs(P.x - cx) > 8) return;
+    k.fact('🪂 A skydiving chamber! A giant fan blows air up so you float, just like flying through the sky. Tap to zoom up!', 'neptuneskydive'); on = true; let y = .9;
+    jupiterRide(k, 'skydive', (R, dt) => { const target = 3.2 + Math.sin(R.t * 1.3) * 1.2 + boost * 4; boost = Math.max(0, boost - dt * .7);
+      if (R.t > 15) y = Math.max(.9, y - dt * 2.5); else y += (target - y) * Math.min(1, dt * 2.2); /* (the fan slows: float gently down to the floor) */ P.y = y; P.x = cx + Math.sin(R.t * .9) * .9; P.z = cz + Math.cos(R.t * .7) * .5; R.roll = R.t > 15 && y < 1.4 ? 0 : (Math.PI / 2) * (Math.sin(R.t * .5) > 0 ? 1 : -1) + Math.sin(R.t * 3) * .15; R.maxY = Math.max(R.maxY || 0, y);
+        if (Math.random() < .1) k.api.burst(P.x, P.y - .4, P.z, ['#ffffff', '#cfefff'], 2, 1.2); return R.t > 15 && y <= .95; }, () => { on = false; P.x = cx - R0 - 1.6; P.y = 0; P.z = 0; k.say('🪂 You flew! Tap the chamber to fly again!', true); }, { noExit: true }); };
+  k.tapIt(glass, go, cx, 'neptuneskydivego'); k.tapIt(fan, go);
+}
+const neptune = {
+  sections: [
+    k => { neptuneWindSwings(k, k.s0); neptuneBungee(k, k.s0); k.rocketSign(k.s0 + 4); },   // area 2: the wind swings and the bungee tower
+    k => { neptuneSkydive(k, k.s0); k.rocketSign(k.s0 + 100); },                             // area 3: the skydiving chamber
+  ],
+};
+
+export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune }; // (build 68: Neptune's wind swings, bungee and skydiving chamber)  // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;

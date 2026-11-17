@@ -4,6 +4,23 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 68 — Neptune: wind swings, bungee jumping and a skydiving chamber
+- **The family asked** for swings the wind helps push, bungee jumping and a skydiving simulation chamber on Neptune. Neptune is now a big place (330 m).
+- **Area 2, wind swings:**
+  - three swings on a tall frame, a windsock, and white wind streaks blowing across;
+  - tap a swing and the gusts push you higher and higher (measured up to 1.25 rad, about 72°), then it slows and you hop off.
+- **Area 2, bungee tower:**
+  - a 24 m tower with a lift and a jumping board;
+  - the lift goes up, you walk out, "three, two, one, JUMP", and you fall upside down on a stretchy pink cord;
+  - you bounce a few times, then are lowered gently to the ground (cannot hop out mid-air).
+- **Area 3, skydiving chamber:**
+  - a glass wind tunnel with a big spinning fan and rushing air;
+  - you float in a skydiving pose, bobbing and turning; tap again to zoom higher;
+  - after about 15 s the fan slows and you float down to the floor.
+- **Game change:** any ride can tilt your character (`ride.roll`), not only the coaster.
+- **A mistake found by the test ride:** a `//` comment in the middle of a line turned the rest of the line into a comment, so the skydiver did not move. Now fixed.
+- **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. FULL_SMOKE_68
+
 ## Checkpoint: build 67 — an ice castle and a skating rink on Uranus; a funhouse mirror maze on Mercury
 - **The family asked** for an ice castle and an ice skating rink on Uranus, and a funhouse mirror maze on Mercury. Both planets are now big places (330 m, `PLANET_EXTRA`).
 - **Uranus, area 2: the ice castle:**
