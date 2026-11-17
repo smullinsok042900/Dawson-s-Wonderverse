@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-17T15:59:10.531Z",
+  "date": "2026-11-17T18:32:09.240Z",
   "environment": "Playwright Chromium headless, SwiftShader software WebGL, 844x390 touch viewport — NOT a physical iPhone",
-  "passed": 208,
-  "total": 208,
+  "passed": 219,
+  "total": 219,
   "results": [
     {
       "name": "3D title screen shows the three creatures and a play button",
@@ -57,12 +57,12 @@
     {
       "name": "multi-touch: walk and jump at the same time",
       "ok": true,
-      "detail": "x 0.8→4.9, y 1.60"
+      "detail": "x 0.6→6.4, y 1.60"
     },
     {
       "name": "tap ▲ to jump",
       "ok": true,
-      "detail": "rose to y=1.64"
+      "detail": "rose to y=1.71"
     },
     {
       "name": "holding ▶ walks at a normal speed (never too fast)",
@@ -92,12 +92,12 @@
     {
       "name": "Jelly squishes flat when it lands",
       "ok": true,
-      "detail": "body squashed to 55% height"
+      "detail": "body squashed to 70% height"
     },
     {
       "name": "tap your creature to tickle it",
       "ok": true,
-      "detail": "tap at 341,249 lands on: game [[\"Mesh\",\"11.40\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"SkinnedMesh\",\"12.51\",\"creature\",\"0.0\",\"creature\",\"Group@9.0\"],[\"Mesh\",\"13.74\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"Mesh\",\"14.10\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"]] P=8.99,0.00,0.00"
+      "detail": "tap at 341,249 lands on: game [[\"Mesh\",\"11.64\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"],[\"SkinnedMesh\",\"12.51\",\"creature\",\"0.0\",\"creature\",\"Group@8.7\"],[\"Mesh\",\"13.54\",\"tap\",\"0.0\",\"tap\",\"Mesh@0.0\"]] P=8.70,0.00,0.00"
     },
     {
       "name": "tap the ball pit: splash",
@@ -117,12 +117,12 @@
     {
       "name": "walk onto the trampoline: big bounce",
       "ok": true,
-      "detail": "highest y=3.36"
+      "detail": "highest y=3.25"
     },
     {
       "name": "walk into the climbing blocks: you hop up onto them (not through them)",
       "ok": true,
-      "detail": "x=42.1 y=3.08"
+      "detail": "x=41.6 y=3.72"
     },
     {
       "name": "walk back left past the slide tower: nothing blocks the way",
@@ -132,7 +132,7 @@
     {
       "name": "walk into the ball pit: hop over its edge into the balls",
       "ok": true,
-      "detail": "x=11.4"
+      "detail": "x=10.4"
     },
     {
       "name": "a picture bubble by the deep part of the ball pit",
@@ -147,7 +147,7 @@
     {
       "name": "tap JUMP to swim up through the balls",
       "ok": true,
-      "detail": "y -5.11 → -3.56"
+      "detail": "y -6.00 → -4.45"
     },
     {
       "name": "sink all the way down into the secret underground",
@@ -162,12 +162,12 @@
     {
       "name": "the bounce mushroom pops you back up into the ball shaft",
       "ok": true,
-      "detail": "y=-0.63"
+      "detail": "y=-0.74"
     },
     {
       "name": "swim up and climb out of the ball pit",
       "ok": true,
-      "detail": "x=9.7 y=0.00"
+      "detail": "x=10.2 y=0.00"
     },
     {
       "name": "walk past the singing crystals and they play",
@@ -182,7 +182,7 @@
     {
       "name": "crawl all the way through the tunnel",
       "ok": true,
-      "detail": "x=37.9"
+      "detail": "x=37.8"
     },
     {
       "name": "find the lost Fluffkin in the underground gem room",
@@ -287,7 +287,7 @@
     {
       "name": "walk off the clouds onto the giant rainbow slide, all the way down to the floor",
       "ok": true,
-      "detail": "slid=true landed x=72.9 y=0.00"
+      "detail": "slid=true landed x=72.9 y=0.22"
     },
     {
       "name": "one bounce on the second spring pad lands you on the purple shelf",
@@ -357,7 +357,7 @@
     {
       "name": "the kart drives round the track",
       "ok": true,
-      "detail": "u 0.050 → 1.028, z=-4.1"
+      "detail": "u 0.054 → 1.056, z=-4.2"
     },
     {
       "name": "JUMP makes the kart hop",
@@ -387,7 +387,7 @@
     {
       "name": "hold ▶ to drive the train yourself",
       "ok": true,
-      "detail": "x 170.0 → 171.1"
+      "detail": "x 170.0 → 171.0"
     },
     {
       "name": "let go and the train stops",
@@ -452,12 +452,12 @@
     {
       "name": "tap Biscuit the puppy: he follows you everywhere",
       "ok": true,
-      "detail": "followers 2 → 3; in front of him: buddy_biscuit "
+      "detail": "followers 2 → 3; in front of him: buddy_biscuit buddy_biscuit buddy_biscuit "
     },
     {
       "name": "tap Twinkle the fairy: she flies along with you",
       "ok": true,
-      "detail": "in front of her: buddy_twinkle "
+      "detail": "in front of her: Group@198.0 Group@198.0 buddy_twinkle "
     },
     {
       "name": "tap a hatched baby dino: it follows you too",
@@ -477,7 +477,7 @@
     {
       "name": "tap the sky whale: ride on its back",
       "ok": true,
-      "detail": "ride=whale y=12.8"
+      "detail": "ride=whale y=13.0"
     },
     {
       "name": "JUMP hops off the whale onto the clouds",
@@ -542,7 +542,7 @@
     {
       "name": "spring pad bounces you up high",
       "ok": true,
-      "detail": "y=5.25"
+      "detail": "y=4.02"
     },
     {
       "name": "tap the carousel to ride",
@@ -562,12 +562,12 @@
     {
       "name": "the Ferris wheel lifts you up",
       "ok": true,
-      "detail": "y=1.63"
+      "detail": "y=1.65"
     },
     {
       "name": "walk through star bits to collect them",
       "ok": true,
-      "detail": "49 → 53"
+      "detail": "48 → 51"
     },
     {
       "name": "find a baby Fluffkin: it follows you",
@@ -602,7 +602,7 @@
     {
       "name": "hold ▶ to walk up part-way, let go to stop",
       "ok": true,
-      "detail": "k=0.6178215519319011"
+      "detail": "k=0.5148512932765844"
     },
     {
       "name": "walk off the top onto the upstairs floor",
@@ -672,7 +672,7 @@
     {
       "name": "reload keeps creature, star bits, Fluffkins and painting",
       "ok": true,
-      "detail": "{\"cr\":\"jelly\",\"bits\":53,\"fl\":3,\"p\":true}"
+      "detail": "{\"cr\":\"jelly\",\"bits\":51,\"fl\":3,\"p\":true}"
     },
     {
       "name": "🗺️ opens the picture map",
@@ -807,7 +807,7 @@
     {
       "name": "the Block Builder wall fits on screen, top row included",
       "ok": true,
-      "detail": "{\"top\":147,\"bot\":319,\"h\":390}"
+      "detail": "{\"top\":147,\"bot\":320,\"h\":390}"
     },
     {
       "name": "the learning corners are play spots with a floating toy (no signposts)",
@@ -817,12 +817,12 @@
     {
       "name": "the seesaw rocks you up and down",
       "ok": true,
-      "detail": "highest y=1.91"
+      "detail": "highest y=1.90"
     },
     {
       "name": "the rainbow stairs at the end of the world lead up into the Sky Kingdom",
       "ok": true,
-      "detail": "x=42.1 y=9.5"
+      "detail": "x=42.5 y=9.5"
     },
     {
       "name": "the bigger Sky Kingdom: moon and stars, cloud sheep, colour balloons",
@@ -832,7 +832,7 @@
     {
       "name": "steer the sky whale: it flies where you point (and stays visible: never in a scenery section)",
       "ok": true,
-      "detail": "x 57.7 → 67.7, y 16.8, whale in the scene: true"
+      "detail": "x 56.3 → 66.3, y 16.9, whale in the scene: true"
     },
     {
       "name": "JUMP hops off the flying whale and you float gently down",
@@ -847,7 +847,7 @@
     {
       "name": "swim down and through the tunnel at the bottom into the underwater world",
       "ok": true,
-      "detail": "x=3012.3"
+      "detail": "x=3012.6"
     },
     {
       "name": "the sea creatures answer when tapped (coral, fish, turtle, octopus, jellyfish, treasure, clam, dolphins, sea floor)",
@@ -957,7 +957,7 @@
     {
       "name": "Pluto: the giant bounce castle bounces you super high, again and again",
       "ok": true,
-      "detail": "{\"maxY\":18.469303431872348,\"lands\":2}"
+      "detail": "{\"maxY\":18.468644240570956,\"lands\":2}"
     },
     {
       "name": "pluto: the little rocket sign takes you back to your rocket",
@@ -977,17 +977,72 @@
     {
       "name": "Jupiter: ride a playground swing (higher and higher, then off)",
       "ok": true,
-      "detail": "{\"seen\":true,\"maxY\":1.3534411512194855,\"x\":6726.8,\"y\":0,\"done\":true}"
+      "detail": "{\"seen\":true,\"maxY\":1.3404659884111427,\"x\":6726.8,\"y\":0,\"done\":true}"
     },
     {
       "name": "Jupiter: the glass lift goes up the 30 m tower and the super slide whooshes all the way down to the path",
       "ok": true,
-      "detail": "{\"seen\":true,\"maxY\":29.936666666666515,\"x\":6923.675,\"y\":0.19891946992864393,\"done\":true}"
+      "detail": "{\"seen\":true,\"maxY\":29.936666666666515,\"x\":6923.716666666667,\"y\":0.18153244988107342,\"done\":true}"
     },
     {
       "name": "jupiter: the little rocket sign takes you back to your rocket",
       "ok": true,
       "detail": "[6610.5,6608]"
+    },
+    {
+      "name": "uranus: a big place (330 m) whose new areas have their own activities",
+      "ok": true,
+      "detail": "length 328 m, missing: none"
+    },
+    {
+      "name": "uranus: only this planet is kept in memory",
+      "ok": true,
+      "detail": "space:uranus"
+    },
+    {
+      "name": "Uranus: walk off the ice castle rampart and slide down the ice slide",
+      "ok": true,
+      "detail": "{\"seen\":true,\"y\":0.2259836901121305}"
+    },
+    {
+      "name": "Uranus: on the skating rink you keep gliding after you let go",
+      "ok": true,
+      "detail": "glided 9.57 m"
+    },
+    {
+      "name": "uranus: the little rocket sign takes you back to your rocket",
+      "ok": true,
+      "detail": "[7410.5,7408]"
+    },
+    {
+      "name": "mercury: a big place (330 m) whose new areas have their own activities",
+      "ok": true,
+      "detail": "length 328 m, missing: none"
+    },
+    {
+      "name": "mercury: only this planet is kept in memory",
+      "ok": true,
+      "detail": "space:mercury"
+    },
+    {
+      "name": "Mercury: a mirror door blocks the way until you tap it",
+      "ok": true,
+      "detail": "stopped at +17.3 m (door at +18)"
+    },
+    {
+      "name": "Mercury: the funhouse mirror shows your character, funnily stretched",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Mercury: tap the three mirror doors open and walk through the maze to the golden star",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "mercury: the little rocket sign takes you back to your rocket",
+      "ok": true,
+      "detail": "[5410.5,5408]"
     },
     {
       "name": "fly home to Earth: back at the launch pad",

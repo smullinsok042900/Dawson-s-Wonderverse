@@ -21,7 +21,7 @@ are in `PERFORMANCE_LOG.md`.
 - **Verified (desktop, software rendering):**
   - Uranus: slid down from the rampart; glided 7.9 m after letting go.
   - Mercury: a door stopped her at +17.4 m (door at +18); the doors opened and she reached the star; the stretched reflection is visible in the screenshots.
-  - no page errors; new smoke checks. FULL_SMOKE_67
+  - no page errors; new smoke checks. **Full smoke test, run alone: 219/219.**
 
 ## Checkpoint: build 66 — bounce castles on Pluto; a playground and a super-duper tall slide on Jupiter
 - **The family asked** for super bouncy bounce castles on Pluto, and a playground and a super tall crazy slide on Jupiter.
