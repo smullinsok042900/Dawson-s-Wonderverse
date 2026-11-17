@@ -552,7 +552,7 @@ function rocketRide(dt, R) {
   if (G.rkLog) { G.rkLog.phases.add(R.phase); G.rkLog.top = Math.max(G.rkLog.top, g.position.y - r.baseY); } // (test record: every phase really run, the highest point)
   if (R.phase === 'board') { // walk up to the door and hop in
     const k = Math.min(1, t / RK.board); P.x = R.x0 + (r.x - R.x0) * k; P.z = R.z0 + (gz + 1.05 - R.z0) * k; P.y = R.y0 + (r.baseY + .2 - R.y0) * k + Math.sin(k * Math.PI) * .8; P.facing = r.x >= R.x0 ? 1 : -1;
-    if (k >= 1) { R.phase = 'in'; G.playerHidden = true; showFace(r, true); Sound.chime(); burst(r.x, r.baseY + 3.6, gz + 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 10, 1.6); showPicker(); }
+    if (k >= 1) { R.phase = 'in'; G.playerHidden = true; showFace(r, true); Sound.chime(); burst(r.x, r.baseY + 3.6, gz + 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 10, 1.6); if (R.wantDest) { const d = R.wantDest; R.wantDest = null; launchTo(d, true); } else showPicker(); }
     return;
   }
   P.x = r.x; P.y = r.baseY; P.z = gz + 1.05; P.vx = P.vy = 0; P.grounded = true;
@@ -641,7 +641,7 @@ function launchTo(id, go) {
   if (launching) return; if (rocketPanel) rocketPanel.classList.remove('show');
   const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
   if (go && !seated() && !player.ride) { const k = nearRocket(); if (k) boardRocket(k, true); }
-  const R = seated(); if (R) { if (R.phase !== 'in') return; R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
+  const R = seated(); if (R) { if (R.phase !== 'in') { R.wantDest = id; return; } /* (build 68: a planet chosen while still climbing in is remembered, and the rocket goes as soon as she is inside) */ R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
   launching = true; const flight = ++flightSequence; if (id !== 'earth') space.prepare(id); voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
   Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
   for (let k = 0; k < 8; k++) setTimeout(() => burst(player.x, .5, player.z - 1, ['#ffd23f', '#ff9a2e', '#ffffff'], 6, 2.5), k * 150);
