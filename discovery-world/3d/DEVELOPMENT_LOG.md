@@ -35,11 +35,17 @@ are in `PERFORMANCE_LOG.md`.
     - a giant Saturn hangs in the sky with real-looking ring bands, ice chunks and a racetrack round its rings (red and white kerbs, a chequered line);
     - a rocket kart on a launch pad flies you up, races two laps (hold ► to go faster), and flies you back down;
     - Saturn is now a big place (330 m).
+  - **Mars: a giant climbing wall and a giant trampoline:**
+    - a 22 m red rock cliff with colourful handholds and safety ropes at the end of the crater valley;
+    - tap it (or PAW): she climbs up its front, faster while you hold ▲; at the top a flag and a cheer;
+    - walk off the right edge and you fall onto a giant trampoline that keeps bouncing you about 12 m high (Mars gravity is low); walk off to stop;
+    - measured: reached 22.3 m, then bounces of 18, 11.7 and 11.7 m.
+    - (a mix-up found in the test ride: the ride was first named like the Sky Kingdom rope ladder, so the game moved her as if she were on the ladder; now named `rockclimb`.)
   - **Measured (Saturn test rides):** Star Blaster top 35.3 m at full spin; race 2 laps, top 43.5 m, 22 m/s; no page errors.
   - **Measured in test rides:** coaster top 33.1 m and 21.5 m/s; log ride top 18.8 m, top speed 17 m/s, splash; no page errors.
 - **Rocket bug fixed** (found by the full smoke test): if a planet was chosen while she was still climbing into the rocket, the choice was quietly ignored and the rocket never left. The rocket now remembers it and blasts off as soon as she is inside. Verified: PAW at the rocket, choose the Moon at once, and she arrives.
 - **A mistake found by the test ride:** a `//` comment in the middle of a line turned the rest of the line into a comment, so the skydiver did not move. Now fixed.
-- **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. FULL_SMOKE_68
+- **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. **Full smoke test, run alone:** see the line below.
 
 ## Checkpoint: build 67 — an ice castle and a skating rink on Uranus; a funhouse mirror maze on Mercury
 - **The family asked** for an ice castle and an ice skating rink on Uranus, and a funhouse mirror maze on Mercury. Both planets are now big places (330 m, `PLANET_EXTRA`).

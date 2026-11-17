@@ -55,6 +55,38 @@ function moonCoaster(k, B) {
   k.tapIt(car, board, B, 'coaster');
 }
 
+
+// ---------- (build 68) 🧗 MARS: THE GIANT CLIMBING WALL and the GIANT TRAMPOLINE ----------
+// A 22 m red rock cliff with colourful handholds. Tap it (or PAW): she climbs up the front of it, faster while you hold ▲.
+// At the top she stands on the cliff; walk off the right edge and you fall onto a giant trampoline that bounces you high
+// (Mars gravity is low, so the bounces are big). Walk off the trampoline to stop.
+function marsClimbWall(k, X) {
+  const P = k.P, wx = X + 92.5, H = 22, b = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1);
+  b.put(box, wx, H / 2, -2, '#b8573a', [5, H, 3.2]); b.put(box, wx, H + .15, -2, '#d06a44', [5.3, .3, 3.4]);
+  for (let i = 0; i < 8; i++) b.put(box, wx - 2.2 + (i * 1.7) % 4.4, 1 + i * 2.7, -.38, '#8f3f28', [1.1, .9, .3], [0, 0, i * .7]); // rocky lumps
+  const HC = ['#ff4f6a', '#ffd23f', '#3cc46e', '#2fa8ff', '#9b6cff', '#ff9a2e'];
+  for (let i = 0; i < 36; i++) { const y = .8 + i * .6, x = wx + Math.sin(i * 2.3) * 1.3; b.put(new THREE.SphereGeometry(.2, 8, 6), x, y, -.38, HC[i % HC.length], [1.2, .9, .8]); }
+  for (const s of [-1, 1]) b.put(new THREE.CylinderGeometry(.03, .03, H + 1.2, 6), wx + s * .25, (H + 1.2) / 2, -.3, '#ffffff'); // safety ropes
+  const cliff = b.mesh(shinyMat()); cliff.castShadow = true; k.add(cliff);
+  k.plat(wx - 2.5, wx + 2.5, H + .3, { z: -1.2 });
+  const flag = k.sbox(wx - 1.8, H + .3, -2.6, .06, 1.6, .06, '#ffffff'); k.sbox(wx - 1.5, H + 1.5, -2.6, .6, .38, .03, '#ffd23f');
+  // the giant trampoline, right of the cliff
+  const tx0 = wx + 4, tx1 = wx + 16.5, tc = (tx0 + tx1) / 2, tb = makeBatch();
+  for (const x of [tx0, tc, tx1]) for (const z of [-.2, -3]) tb.put(new THREE.CylinderGeometry(.12, .12, 1, 8), x, .5, z, '#5a6a8a');
+  tb.put(box, tc, 1, -.2, '#2fa8ff', [tx1 - tx0 + .4, .25, .3]); tb.put(box, tc, 1, -3, '#2fa8ff', [tx1 - tx0 + .4, .25, .3]); for (const x of [tx0, tx1]) tb.put(box, x, 1, -1.6, '#2fa8ff', [.3, .25, 3]);
+  for (let i = 0; i < 14; i++) tb.put(new THREE.CylinderGeometry(.05, .05, .35, 6), tx0 + .4 + i * (tx1 - tx0 - .8) / 13, 1, -.35, '#ffd23f', 1, [Math.PI / 2, 0, 0]);
+  k.add(tb.mesh(shinyMat()));
+  const mat = k.sbox(tc, .85, -1.6, tx1 - tx0 - .4, .1, 2.5, '#1d1d2b', { r: .5 }); let squash = 0, n = 0;
+  k.U.push(dt => { squash = Math.max(0, squash - dt * 3); mat.position.y = .85 + .05 - Math.sin(squash * Math.PI) * .45; });
+  k.plat(tx0 + .2, tx1 - .2, 1, { z: -1.2, pad: true, bounce: 14, onLand: () => { squash = 1; n++; if (n === 1) k.fact('🤸 BOING! A giant trampoline! Mars gravity is low, so you bounce super high!', 'marstramp'); if (n % 5 === 0) k.say(`🤸 ${n} bounces!`); } });
+  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - wx) > 6 || P.y > 2) return; k.say('🧗 Climb up the giant rock wall! Hold ▲ to climb faster!', true);
+    jupiterRide(k, 'rockclimb', (R, dt) => { const fast = k.api.keysUp && k.api.keysUp(); const y0 = P.y; P.y = Math.min(H + .3, P.y + dt * (fast ? 2.6 : 1.2)); P.x = wx + Math.sin(P.y * 1.1) * .6; P.z = -.05; R.roll = Math.sin(P.y * 2.2) * .15; P.facing = Math.sin(P.y * 1.1 + 1.5) > 0 ? 1 : -1;
+      if (Math.floor(P.y / 1.2) !== Math.floor(y0 / 1.2)) k.Sound.tone(300 + P.y * 25, .06, 'triangle', .03, 1); R.maxY = Math.max(R.maxY || 0, P.y); return P.y >= H + .3; },
+      () => { P.y = H + .3; P.x = wx + .5; P.z = 0; P.vy = 0; P.grounded = true; k.api.burst(P.x, H + 1.5, -1, ['#ffd23f', '#ffffff', '#ff4f6a'], 24, 2.6); k.Sound.chime && k.Sound.chime(); k.say('🏔️ You made it to the top! Now walk off the edge onto the giant trampoline!', true); k.disc('marsclimbtop'); }, { noExit: true }); };
+  k.tapIt(cliff, go, wx, 'marsclimbgo');
+  k.tapIt(mat, () => k.fact('🤸 The giant trampoline! Climb the rock wall and jump off the top onto it!', 'marstrampoline'), tc, 'marstrampoline');
+}
+
 const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
 const Cap = s => s[0].toUpperCase() + s.slice(1);
 
@@ -163,6 +195,7 @@ const mars = {
       const red = new THREE.Color('#b8794a'), blue = new THREE.Color('#5f7fb8'), tmp = new THREE.Color();
       k.U.push(dt => { if (dusk <= 0) return; dusk = Math.max(0, dusk - dt); const a = Math.min(1, Math.min(dusk, 6 - dusk) / 1.2); tmp.copy(red).lerp(blue, a); k.setSkyColor(tmp); sun.position.y = 9 - a * 3; });
       k.placeAlien(X + 26, -2, 3); k.placeAlien(X + 76, -2.4, 4);
+      marsClimbWall(k, X); // (build 68)
       k.rocketSign(X + 4);
     },
     // ----- area 3: THE EXPLORER STATION (pretend) -----

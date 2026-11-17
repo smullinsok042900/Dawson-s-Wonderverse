@@ -494,6 +494,13 @@ const UG_F = -6;
       const sw = await ride(B[0] + 126, 'jupiterswing', 'jswing'); check('Jupiter: ride a playground swing (higher and higher, then off)', sw.seen && sw.done && sw.maxY > 1, JSON.stringify(sw));
       await page.evaluate(x => { __DDW3.player.x = x; }, B[0] + 233); await sleep(2500);
       const sl = await ride(B[0] + 233, 'jupiterslide', null); check('Jupiter: the glass lift goes up the 30 m tower and the super slide whooshes all the way down to the path', sl.seen && sl.done && sl.maxY > 28 && sl.x > B[0] + 300 && sl.y < .5, JSON.stringify(sl)); }
+    if (id === 'mars') { // (build 68) climb the giant rock wall to the top, walk off the edge onto the giant trampoline, bounce
+      const wx = B[0] + 201.5; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; P.ride = null; P.grounded = true; }, wx); await sleep(2000);
+      await page.evaluate(() => { __DDW3.G.interact.find(i => i.disc === 'marsclimbgo').run(); __DDW3.keys.up = true; });
+      const top = await page.waitForFunction(() => !__DDW3.player.ride && __DDW3.player.y > 21, null, { timeout: 120000 }).then(() => true, () => false); await page.evaluate(() => { __DDW3.keys.up = false; });
+      await page.evaluate(() => { __DDW3.keys.right = true; }); await page.waitForFunction(() => __DDW3.player.y < 18, null, { timeout: 30000 }).catch(() => {}); await page.evaluate(() => { __DDW3.keys.right = false; });
+      const tr = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let lands = 0, up = true, pk = 0, peaks = []; const f = () => { if (P.y > 3) { up = true; pk = Math.max(pk, P.y); } if (up && P.y < 1.6) { lands++; up = false; peaks.push(pk); pk = 0; } if (lands >= 3 || performance.now() - t0 > 60000) return res({ lands, peaks }); requestAnimationFrame(f); }; f(); }));
+      check('Mars: climb the giant rock wall to the top, then jump off onto the giant trampoline and bounce, again and again', top && tr.lands >= 3 && tr.peaks[1] > 8 && tr.peaks[2] > 8, JSON.stringify({ top, ...tr })); }
     if (id === 'pluto') { // (build 66) the super bouncy bounce castles: walk onto the giant one and you bounce up high, again and again
       const cx = B[0] + 183; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 2; P.vy = 0; P.grounded = false; }, cx); 
       const bo = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0, lands = 0, wasUp = false; const f = () => { maxY = Math.max(maxY, P.y); if (P.y > 3) wasUp = true; if (wasUp && P.y < 1.2) { lands++; wasUp = false; } if (lands >= 2 || performance.now() - t0 > 60000) return res({ maxY, lands }); requestAnimationFrame(f); }; f(); }));
