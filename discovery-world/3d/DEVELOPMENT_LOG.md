@@ -28,7 +28,7 @@ are in `PERFORMANCE_LOG.md`.
   - bounce heights measured;
   - a swing ride, and a lift-and-slide ride (top 30.1 m, slid to the end, about 23 s);
   - screenshots; no page errors;
-  - new smoke checks for both planets. FULL_SMOKE_66
+  - new smoke checks for both planets. **Full smoke test, run alone: 208/208.**
 
 ## Checkpoint: build 65 — a giant roller coaster on the Moon
 - **The family asked** for a giant roller coaster on the Moon.
