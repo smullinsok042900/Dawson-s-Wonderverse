@@ -19,10 +19,14 @@ import { makeBatch, shinyMat } from './spacekit.js';
 // (G.startCoaster): speed comes from the height you drop, and you tilt with the car (upside down at the top of the loop).
 function moonCoaster(k, B) {
   const L = B - 64, V3 = (x, y, z) => new THREE.Vector3(x, y, z);
-  const pts = [[B, .9, -2.4], [B - 4, .9, -2.6], [B - 9, 2.2, -3.8], [B - 15, 7, -6.5], [B - 21, 13, -9], [B - 26, 16.5, -10.5], [B - 30, 15.6, -11], [B - 36, 5, -11.5], [B - 41, 2.4, -11.8],
-    [B - 48, 9, -12], [B - 55, 2.6, -12.2], [L + 3, 2.6, -12.3], [L, 2.7, -12.4], [L - 5.5, 8.2, -12.7], [L, 13.7, -13], [L + 5.5, 8.2, -13.3], [L, 2.8, -13.6], [L - 4, 2.6, -13.8],
-    [L - 10, 6, -14], [L - 15, 3, -14.2], [L - 20, 6.5, -14.4], [L - 25, 3.2, -14.6], [L - 30, 4, -16.2], [L - 28, 5, -19], [L - 22, 6, -20], [L - 10, 8, -20], [L + 5, 5, -20],
-    [B - 40, 9, -19.5], [B - 30, 6, -19], [B - 18, 7, -18], [B - 8, 5, -15], [B + 3, 3.5, -11], [B + 6, 2, -6.5], [B + 4, 1.2, -3.6], [B + 1.6, .9, -2.6], [B + .6, .9, -2.4]].map(p => V3(...p));
+  // (build 68) BIGGER, CRAZIER, FASTER: a 32 m lift, a giant drop, TWO loop-the-loops, a camel hill, a turnaround, speed
+  // hills and a corkscrew helix, then back to the station
+  const loop = (c, z0, R) => [[c, 2.7, z0], [c - R, 2.7 + R, z0 - .3], [c, 2.7 + 2 * R, z0 - .6], [c + R, 2.7 + R, z0 - .9], [c, 2.8, z0 - 1.2]];
+  const helix = []; for (let i = 0; i <= 12; i++) { const a = Math.PI + i / 12 * Math.PI * 3; helix.push([B - 30 + Math.cos(a) * 5, 10 - i / 12 * 6, -22 + Math.sin(a) * 5]); }
+  const pts = [[B, .9, -2.4], [B - 4, .9, -2.6], [B - 9, 3, -4], [B - 16, 12, -7], [B - 23, 22, -9.5], [B - 28, 30, -11], [B - 31, 32.5, -11.5], [B - 34, 31.5, -11.8], [B - 40, 14, -12], [B - 45, 3, -12.2],
+    [B - 48, 2.6, -12.3], ...loop(B - 52, -12.4, 7), [B - 57, 2.6, -13.8], [B - 63, 12, -14], [B - 69, 3, -14.2], ...loop(B - 76, -14.4, 6), [B - 81, 2.6, -15.8],
+    [B - 88, 6, -17.5], [B - 91, 9, -21], [B - 87, 10, -24.5], [B - 80, 8, -25], [B - 70, 14, -25], [B - 62, 4, -24.5], [B - 54, 11, -24], [B - 46, 6, -23.5], [B - 39, 10, -22.5], ...helix,
+    [B - 18, 7, -19], [B - 8, 5, -15], [B + 3, 3.5, -11], [B + 6, 2, -6.5], [B + 4, 1.2, -3.6], [B + 1.6, .9, -2.6], [B + .6, .9, -2.4]].map(p => V3(...p));
   const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .4), len = path.getLength();
   let uTop = 0, yTop = -1; for (let u = 0; u < .45; u += .002) { const y = path.getPointAt(u).y; if (y > yTop) { yTop = y; uTop = u; } }
   // rails, ties and posts: one mesh for the ties and posts, one tube per rail; frames follow the same "up" rule as the ride
@@ -46,7 +50,7 @@ function moonCoaster(k, B) {
     for (const z of [-.5, .5]) for (const x of [-.55, .55]) cb.put(new THREE.CylinderGeometry(.13, .13, .1, 12), x, -.14, z, '#5a3a8a', 1, [Math.PI / 2, 0, 0]);
     cb.put(new THREE.OctahedronGeometry(.22), 1.15, .35, 0, '#ffd23f'); car.add(cb.mesh(shinyMat())); }
   path.getTangentAt(0, tg); car.position.copy(path.getPointAt(0)); car.quaternion.setFromRotationMatrix(m.makeBasis(tg, V3(0, 1, 0), side.crossVectors(tg, V3(0, 1, 0)).normalize())); car.userData.dynamic = true; k.add(car);
-  const C = { path, len, uTop, yTop, car, carRest: car.quaternion.clone(), exitX: B + 2 };
+  const C = { path, len, uTop, yTop, car, carRest: car.quaternion.clone(), exitX: B + 2, vmax: 24, lift: 5 };
   const board = () => { const P = k.P; if (P.ride || P.layer !== 'space' || Math.abs(P.x - B) > 8) return; k.say('🎢 Hold on tight! Up, up, up we go!', true); k.G.startCoaster && k.G.startCoaster(C); };
   k.tapIt(car, board, B, 'coaster');
 }
@@ -475,6 +479,57 @@ const neptune = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune }; // (build 68: Neptune's wind swings, bungee and skydiving chamber)  // (build 66: Jupiter's playground and super slide) 
+// ---------- (build 68) 🪵 VENUS: THE GIANT LOG RIDE ----------
+// Sit in a hollow log at the station; it floats up a lift to 18 m, winds along a high water channel, then plunges down
+// a giant drop into the splash pool: SPLASH! (pretend water: real Venus is far too hot for water)
+function venusLogRide(k, X) {
+  const P = k.P, st = X + 20, V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+  const pts = [[st, .6, -2.4], [st + 5, .6, -3], [st + 9, 1.5, -5], [st + 14, 7, -7], [st + 19, 13, -8.5], [st + 23, 18, -9.5], [st + 27, 18.5, -10.5], [st + 30, 18.4, -13.5], [st + 26, 18.2, -16], [st + 18, 18, -16.5],
+    [st + 14, 17.8, -19], [st + 18, 17.6, -21.5], [st + 28, 17.4, -21.5], [st + 36, 17, -19], [st + 42, 9, -15], [st + 46, 2, -12], [st + 50, .5, -9.5], [st + 54, .4, -7.5], [st + 58, .4, -5], [st + 61, .4, -3.2]].map(p => V3(...p));
+  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .4), len = path.getLength();
+  let uTop = 0, yTop = -1; for (let u = 0; u < .4; u += .002) { const y = path.getPointAt(u).y; if (y > yTop) { yTop = y; uTop = u; } }
+  // the flume: a water ribbon between two wooden walls, on posts (one mesh for the wood, one for the water)
+  const N = Math.ceil(len / .7), wb = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1), cyl = new THREE.CylinderGeometry(1, 1, 1, 8), tg = V3(), side = V3(), wpos = [], widx = [];
+  for (let i = 0; i <= N; i++) { const u = i / N, p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize(); const yaw = Math.atan2(-tg.z, tg.x), pitch = Math.asin(Math.max(-1, Math.min(1, tg.y)));
+    for (const sg of [-1, 1]) wb.put(box, p.x + side.x * .85 * sg, p.y + .15, p.z + side.z * .85 * sg, i % 2 ? '#a8703f' : '#bf8650', [.75, .5, .12], [0, yaw, pitch]);
+    wb.put(box, p.x, p.y - .12, p.z, '#8a5a2a', [.75, .1, 1.8], [0, yaw, pitch]);
+    if (i % 3 === 0 && p.y > 1.2) for (const sg of [-1, 1]) wb.put(cyl, p.x + side.x * .8 * sg, (p.y - .2) / 2, p.z + side.z * .8 * sg, '#7a4a22', [.09, p.y - .2, .09]);
+    for (const sg of [-1, 1]) wpos.push(p.x + side.x * .78 * sg, p.y - .02, p.z + side.z * .78 * sg); if (i < N) { const a = i * 2; widx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
+  const wood = wb.mesh(shinyMat()); wood.castShadow = true; k.add(wood);
+  const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wpos, 3)); wg.setIndex(widx); wg.computeVertexNormals();
+  const water = new THREE.Mesh(wg, new THREE.MeshPhysicalMaterial({ color: '#4fb8ff', roughness: .1, clearcoat: 1, transparent: true, opacity: .85, side: THREE.DoubleSide })); k.add(water);
+  // the splash pool with a rocky rim, and the station with a striped roof
+  const pc = path.getPointAt(.93); const pool = k.sball(pc.x, -.25, pc.z - 1, 6.5, .35, 4.2, '#3f9fe8', { r: .1, cc: .8 });
+  for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; k.sball(pc.x + Math.cos(a) * 6.6, .1, pc.z - 1 + Math.sin(a) * 4.3, .7, .45, .6, '#d8a060', { r: .9 }); }
+  k.sbox(st, 0, -2.6, 4, .5, 2.2, '#e8c89a', { r: .5 }); for (const dx of [-1.8, 1.8]) k.sbox(st + dx, .5, -3.4, .14, 2.5, .14, '#ffffff', { r: .4 });
+  for (let i = 0; i < 5; i++) k.sbox(st - 1.7 + i * .85, 3, -2.9, .85, .16, 1.6, i % 2 ? '#ffffff' : '#ff9a2e', { r: .4 });
+  // the log: hollow with lighter ends and a seat (modelled along +x)
+  const log = new THREE.Group(); { const lb = makeBatch(); lb.put(new THREE.CylinderGeometry(.62, .62, 2.6, 18, 1, true), 0, .35, 0, '#8a5a3a', 1, [0, 0, Math.PI / 2]); for (const sx of [-1.3, 1.3]) lb.put(new THREE.CylinderGeometry(.62, .62, .08, 18), sx, .35, 0, '#e8c08a', 1, [0, 0, Math.PI / 2]);
+    lb.put(new THREE.BoxGeometry(1, 1, 1), 0, .2, 0, '#6a4024', [2.4, .12, 1.1]); lb.put(new THREE.SphereGeometry(.2, 10, 8), 1.4, .9, 0, '#7fe0a0', [1, .6, 1]); log.add(lb.mesh(shinyMat())); }
+  log.position.copy(path.getPointAt(0)); log.userData.dynamic = true; k.add(log);
+  const place = u => { const p = path.getPointAt(u); path.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
+  place(0);
+  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
+    let u = 0, v = 3, splashed = false;
+    jupiterRide(k, 'logride', (R, dt) => {
+      if (u < uTop) { v = 3; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
+      else if (!splashed) v = Math.max(2.5, Math.min(17, Math.sqrt(6.25 + 2 * 9 * Math.max(0, yTop - path.getPointAt(u).y))));
+      else v = Math.max(2.2, v - dt * 14);
+      u = Math.min(1, u + v / len * dt); const p = place(u); R.maxY = Math.max(R.maxY || 0, p.y); R.maxV = Math.max(R.maxV || 0, v);
+      if (!splashed && u > uTop + .05 && p.y < 1 && v > 6) { splashed = true; R.splashed = true; for (let i = 0; i < 4; i++) k.api.burst(p.x + (Math.random() - .5) * 2, .6 + i * .5, p.z, ['#ffffff', '#cfefff', '#4fb8ff'], 30, 5); k.Sound.whoosh && k.Sound.whoosh(); k.say('🌊 SPLAAASH!', true); k.disc('venussplash'); }
+      if (!R.whee && u > uTop + .3 && v > 8) { R.whee = 1; k.Sound.whoosh && k.Sound.whoosh(); }
+      P.x = p.x; P.y = p.y + .25; P.z = p.z; P.facing = tg.x >= 0 ? 1 : -1; R.roll = Math.max(-.6, Math.min(.6, Math.asin(Math.max(-1, Math.min(1, tg.y))) * (tg.x >= 0 ? 1 : -1)));
+      return u >= 1; }, () => { P.x = st + 63; P.y = 0; P.z = 0; place(0); k.say('🪵 What a splash! Tap the log to ride again!', true); }, { noExit: true }); };
+  k.tapIt(log, go, st, 'venuslogride');
+  k.tapIt(pool, () => k.fact('🌊 The splash pool! Real Venus is far too hot for water, so this water is pretend!', 'venuspool'), pc.x, 'venuspool');
+}
+const venus = {
+  sections: [
+    k => { venusLogRide(k, k.s0); k.rocketSign(k.s0 + 4); },   // area 2: the giant log ride
+    k => { const X = k.s0; for (let i = 0; i < 6; i++) k.sball(X + 14 + i * 15, .4, -7 - (i % 3) * 2, 2 + (i % 2), 1.2, 1.6, '#d8a060', { r: .9 }); k.rocketSign(X + 100); },
+  ],
+};
+
+export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus }; // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;

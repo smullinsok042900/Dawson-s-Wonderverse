@@ -18,6 +18,10 @@ On Neptune, the windiest planet:
 - a 24 m bungee tower (jump, bounce upside down on the cord);
 - a glass skydiving wind tunnel where you float and fly.
 
+Also:
+- **The Moon roller coaster is now giant:** a 32 m lift, two loops, a corkscrew, and much faster.
+- **Venus has a giant log ride** that plunges down into a splash pool.
+
 ## 3D build 67: an ice castle and a skating rink on Uranus, a mirror maze on Mercury
 - **Uranus:** climb the ice castle and slide down; glide on the skating rink with the snowy skaters.
 - **Mercury:** a funhouse with funny mirrors (you look tall, wide, tiny, wobbly, upside down…) and mirror doors that spin open on the way to a golden star.

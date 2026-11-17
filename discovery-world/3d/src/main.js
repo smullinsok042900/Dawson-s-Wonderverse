@@ -356,8 +356,8 @@ G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type:
 const CV = { f: new THREE.Vector3(), s: new THREE.Vector3(), u: new THREE.Vector3(), m: new THREE.Matrix4(), cand: new THREE.Vector3() };
 function coasterRide(dt, R) {
   const P = player, C = R.C, path = C.path;
-  if (R.u < C.uTop) { R.v = 3.4; if ((R.clack -= dt) < 0) { R.clack = .22; Sound.tone(260, .04, 'square', .02, 1); } }
-  else { const y = path.getPointAt(Math.min(1, R.u), V).y; R.v = Math.max(3, Math.min(15, Math.sqrt(3.4 * 3.4 + 2 * 7 * Math.max(0, C.yTop - y)))); if (!R.whee && R.u > C.uTop + .01) { R.whee = 1; Sound.whoosh(); voice.speak('Wheeee!'); } }
+  if (R.u < C.uTop) { R.v = C.lift || 3.4; if ((R.clack -= dt) < 0) { R.clack = .22; Sound.tone(260, .04, 'square', .02, 1); } }
+  else { const y = path.getPointAt(Math.min(1, R.u), V).y; R.v = Math.max(3, Math.min(C.vmax || 15, Math.sqrt(3.4 * 3.4 + 2 * 7 * Math.max(0, C.yTop - y)))); R.maxV = Math.max(R.maxV || 0, R.v); if (!R.whee && R.u > C.uTop + .01) { R.whee = 1; Sound.whoosh(); voice.speak('Wheeee!'); } }
   R.u += R.v / C.len * dt;
   if (R.u >= 1) { const e = path.getPointAt(1); C.car.position.copy(e); C.car.quaternion.copy(C.carRest); P.ride = null; P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; creature.root.rotation.z = 0; burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast('🎢 What a ride! Tap the car to go again!'); discover('coaster', '🎢 The Moon roller coaster!'); return; }
   path.getPointAt(R.u, V); const tg = path.getTangentAt(R.u, CV.f);
