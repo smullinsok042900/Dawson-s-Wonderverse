@@ -260,7 +260,7 @@ const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => bur
 const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
 // (build 45) the space rocket: the Moon, the planets and Pluto, with their real gravity
 const ROCKET_PAD = 693; // (build 64: moved off the colour pond)
-const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
+const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
 // (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
 // the sun stands (low and from the side on the airless worlds, for long shadows). Only numbers change: no new shaders.
@@ -1550,7 +1550,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '66'; G.build = GAME_BUILD;
+const GAME_BUILD = '67'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

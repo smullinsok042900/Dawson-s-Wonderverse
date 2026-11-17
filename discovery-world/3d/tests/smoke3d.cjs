@@ -448,12 +448,29 @@ const UG_F = -6;
     check('every planet has its own aliens and at least 2 activities of its own', missing.length === 0, (missing.length ? 'MISSING ' + missing.join(' ') + ' | ' : '') + found.join(' ')); }
   // (build 50) BIGGER PLANETS: the Moon and Mars are 330 m long; their new areas are built as you walk there; their
   // activities work; the little rocket signs take you back to the rocket; only the planet you are on is in memory
-  for (const [id, ds] of [['moon', ['moonbounce', 'moonradio', 'moonphases', 'moonsamples', 'mooncave', 'moonshapes', 'moonbuggy']], ['mars', ['marsrocks', 'marsice', 'marssunset', 'marsbase', 'marsgarden', 'marsheli', 'marsmoons', 'marsflags']], ['pluto', ['plutocastle']], ['jupiter', ['jupiterseesaw', 'jupiterrider']]]) {
+  for (const [id, ds] of [['moon', ['moonbounce', 'moonradio', 'moonphases', 'moonsamples', 'mooncave', 'moonshapes', 'moonbuggy']], ['mars', ['marsrocks', 'marsice', 'marssunset', 'marsbase', 'marsgarden', 'marsheli', 'marsmoons', 'marsflags']], ['pluto', ['plutocastle']], ['jupiter', ['jupiterseesaw', 'jupiterrider']], ['uranus', ['uranuscastle', 'uranusrink']], ['mercury', ['mercuryfunhouse']]]) {
     await flyTo(id); const B = await page.evaluate(() => __DDW3.G.spaceBounds);
     for (const x of [B[0] + 60, B[0] + 120, B[0] + 180, B[0] + 240, B[0] + 300]) { await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; }, x); await sleep(1500); }
     const r = await page.evaluate(([B, ds]) => { __DDW3.G.interact.filter(i => i.layer === 'space' && i.x > B[0] + 108 && i.x < B[1] && i.disc && ds.includes(i.disc)).forEach(i => i.run()); return new Promise(res => setTimeout(() => res({ len: Math.round(B[1] - B[0]), miss: ds.filter(d => !__DDW3.world.disc.has(d)), groups: __DDW3.G.scene.children.filter(o => /^space:/.test(o.name)).map(o => o.name) }), 1500)); }, [B, ds]);
     check(`${id}: a big place (330 m) whose new areas have their own activities`, r.len >= 320 && r.miss.length === 0, `length ${r.len} m, missing: ${r.miss.join(' ') || 'none'}`);
     check(`${id}: only this planet is kept in memory`, r.groups.length === 1 && r.groups[0] === 'space:' + id, r.groups.join(' '));
+    if (id === 'uranus') { // (build 67) slide down from the ice castle's rampart; glide on the skating rink after letting go
+      const cx = B[0] + 149; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 4.8; P.vy = 0; P.grounded = true; P.ride = null; __DDW3.keys.right = true; }, cx + 6);
+      const sl = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let seen = false; const f = () => { if (P.ride && P.ride.type === 'slide') { seen = true; __DDW3.keys.right = false; } if ((seen && !P.ride) || performance.now() - t0 > 60000) { __DDW3.keys.right = false; return res({ seen, y: P.y }); } requestAnimationFrame(f); }; f(); }));
+      check('Uranus: walk off the ice castle rampart and slide down the ice slide', sl.seen && sl.y < .5, JSON.stringify(sl));
+      await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; P.grounded = true; P.ride = null; }, B[0] + 259); await sleep(2500);
+      await page.evaluate(() => { __DDW3.keys.right = true; }); await waitFor(s => s.x > 0, 500).catch(() => {}); await sleep(1500); await page.evaluate(() => { __DDW3.keys.right = false; });
+      const g0 = await page.evaluate(() => __DDW3.player.x); await sleep(2000); const g1 = await page.evaluate(() => __DDW3.player.x);
+      check('Uranus: on the skating rink you keep gliding after you let go', g1 - g0 > 1, `glided ${(g1 - g0).toFixed(2)} m`); }
+    if (id === 'mercury') { // (build 67) the mirror doors block the way until tapped; the funny reflection shows; the golden star at the end
+      const x0 = B[0] + 123; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; P.grounded = true; P.ride = null; }, x0 + 16); await sleep(2000);
+      await page.evaluate(() => { __DDW3.keys.right = true; }); await sleep(3000); await page.evaluate(() => { __DDW3.keys.right = false; }); const stopped = await page.evaluate(() => __DDW3.player.x);
+      check('Mercury: a mirror door blocks the way until you tap it', stopped < x0 + 18, `stopped at +${(stopped - x0).toFixed(1)} m (door at +18)`);
+      await page.evaluate(x => { __DDW3.player.x = x; }, x0 + 6); await sleep(2500); const seenRefl = await page.evaluate(() => { let v = false; __DDW3.G.scene.traverse(o => { if (o.visible && o.position && Math.abs(o.position.z + 3.95) < .01 && o.children && o.children.length) v = true; }); return v; });
+      check('Mercury: the funhouse mirror shows your character, funnily stretched', seenRefl);
+      for (let i = 0; i < 3; i++) await page.evaluate(i => __DDW3.G.interact.find(it => it.disc === 'mercurydoor' + i).run(), i);
+      await page.evaluate(() => { __DDW3.keys.right = true; }); await waitFor(s => s.disc.includes('mercurymaze'), 120000); await page.evaluate(() => { __DDW3.keys.right = false; });
+      check('Mercury: tap the three mirror doors open and walk through the maze to the golden star', (await S()).disc.includes('mercurymaze')); }
     if (id === 'jupiter') { // (build 66) the playground swing, and the lift up the 30 m tower and the super slide all the way down
       const ride = (x, disc, type) => page.evaluate(([x, disc, type]) => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; P.ride = null; return new Promise(res => { const it = __DDW3.G.interact.find(i => i.disc === disc); if (!it) return res({ none: true }); it.run(); const t0 = performance.now(); let maxY = 0, seen = false;
         const f = () => { if (P.ride && (!type || P.ride.type === type)) seen = true; maxY = Math.max(maxY, P.y); if ((seen && !P.ride) || performance.now() - t0 > 150000) return res({ seen, maxY, x: P.x, y: P.y, done: !P.ride }); requestAnimationFrame(f); }; f(); }); }, [x, disc, type]);
