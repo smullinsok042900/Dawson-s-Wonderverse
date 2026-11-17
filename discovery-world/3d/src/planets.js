@@ -193,6 +193,46 @@ const mars = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars };
+
+// ---------- (build 66) 🏰 PLUTO: SUPER BOUNCY BOUNCE CASTLES ----------
+// Three inflatable castles, each bouncier than the last. Walk onto the floor and you bounce on your own, over and over;
+// with Pluto's tiny gravity the bounces go very high (about 6 m, 11 m and 18 m) and you float down slowly.
+// Walk off the edge to stop. Each castle's walls, towers and flags are one mesh; its floor squashes when you land.
+function bounceCastle(k, cx, w, cols, v, big) {
+  const b = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1), ball = new THREE.SphereGeometry(1, 16, 12), cyl = new THREE.CylinderGeometry(1, 1, 1, 16), cone = new THREE.ConeGeometry(1, 1, 16);
+  const d = 4.2, z = -2.6, H = big ? 3.4 : 2.6, h = w / 2;
+  b.put(box, cx, .22, z, cols[0], [w + .6, .44, d + .6]);                                                   // the puffy base
+  b.put(box, cx, .44 + H / 2, z - d / 2, cols[1], [w, H, .5]);                                              // back wall
+  for (const s of [-1, 1]) b.put(box, cx + s * h, .44 + H * .32, z, cols[1], [.5, H * .64, d]);            // low side walls
+  for (let i = 0; i < Math.round(w / 1.2); i++) b.put(ball, cx - h + .6 + i * 1.2, .44 + H, z - d / 2, i % 2 ? cols[2] : cols[3], [.38, .32, .32]); // puffy battlements
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const tx = cx + sx * h, tz = z + sz * d / 2, th = H + 1.4;
+    b.put(cyl, tx, .44 + th / 2, tz, cols[sz < 0 ? 2 : 3], [.6, th, .6]); b.put(cone, tx, .44 + th + .55, tz, cols[0], [.75, 1.1, .75]); b.put(ball, tx, .44 + th + 1.2, tz, '#ffffff', .16);
+    b.put(box, tx + .35, .44 + th + .85, tz, cols[2], [.5, .3, .04]); }                                   // little flags
+  b.put(box, cx, .44 + H + .9, z - d / 2, cols[3], [1.6, 1, .5]); b.put(ball, cx, .44 + H + 1.5, z - d / 2, cols[2], [.5, .45, .45]); // the middle gable
+  const m = b.mesh(shinyMat()); m.castShadow = true; k.add(m);
+  const floor = k.sbox(cx, .3, z + .1, w - .4, .18, d - .4, cols[2], { r: .35, cc: .6 });                 // the bouncy floor (squashes)
+  let squash = 0, n = 0;
+  k.U.push(dt => { squash = Math.max(0, squash - dt * 3); floor.scale.y = .18 * (1 - Math.sin(squash * Math.PI) * .6); });
+  k.plat(cx - h + .1, cx + h - .1, .48, { z: -1.2, step: true, stepMax: .6, pad: true, bounce: v, onLand: () => { squash = 1; n++; if (n === 1) k.fact('🏰 Boing! On Pluto you bounce super high, because Pluto\'s gravity is so tiny!', 'plutobounce'); if (n % 5 === 0) k.say(`🏰 ${n} bounces! Wheee!`); } });
+  k.tapIt(m, () => k.fact('🏰 Hop on the bouncy floor and bounce!', 'plutocastle'), cx, big ? 'plutocastle' : null);
+}
+const pluto = {
+  sections: [
+    // ----- area 2: THE BOUNCE CASTLE PARK -----
+    k => { const X = k.s0;
+      bounceCastle(k, X + 22, 7, ['#ff9fd2', '#ff6fae', '#fff3a6', '#c9a6ff'], 4.3);
+      bounceCastle(k, X + 46, 9, ['#9fd8ff', '#5aa8ff', '#fff3a6', '#ffb35c'], 5.8);
+      bounceCastle(k, X + 74, 12, ['#ffd23f', '#ff6fae', '#7fe0a0', '#5aa8ff'], 7.4, true);
+      k.rocketSign(X + 4);
+    },
+    // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----
+    k => { const X = k.s0;
+      for (let i = 0; i < 7; i++) { const x = X + 14 + i * 13 + (i % 2) * 3, hh = 2.5 + (i * 7 % 5); k.sball(x, hh * .45, -6 - (i % 3) * 3, .7, hh, .7, i % 2 ? '#dcecff' : '#bcd4f2', { r: .2, cc: .8 }); }
+      k.rocketSign(X + 4);
+    },
+  ],
+};
+
+export const PLANET_EXTRA = { moon, mars, pluto }; // (build 66: Pluto is a big place too, with the bounce castles)
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;

@@ -448,12 +448,16 @@ const UG_F = -6;
     check('every planet has its own aliens and at least 2 activities of its own', missing.length === 0, (missing.length ? 'MISSING ' + missing.join(' ') + ' | ' : '') + found.join(' ')); }
   // (build 50) BIGGER PLANETS: the Moon and Mars are 330 m long; their new areas are built as you walk there; their
   // activities work; the little rocket signs take you back to the rocket; only the planet you are on is in memory
-  for (const [id, ds] of [['moon', ['moonbounce', 'moonradio', 'moonphases', 'moonsamples', 'mooncave', 'moonshapes', 'moonbuggy']], ['mars', ['marsrocks', 'marsice', 'marssunset', 'marsbase', 'marsgarden', 'marsheli', 'marsmoons', 'marsflags']]]) {
+  for (const [id, ds] of [['moon', ['moonbounce', 'moonradio', 'moonphases', 'moonsamples', 'mooncave', 'moonshapes', 'moonbuggy']], ['mars', ['marsrocks', 'marsice', 'marssunset', 'marsbase', 'marsgarden', 'marsheli', 'marsmoons', 'marsflags']], ['pluto', ['plutocastle']]]) {
     await flyTo(id); const B = await page.evaluate(() => __DDW3.G.spaceBounds);
     for (const x of [B[0] + 60, B[0] + 120, B[0] + 180, B[0] + 240, B[0] + 300]) { await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; }, x); await sleep(1500); }
     const r = await page.evaluate(([B, ds]) => { __DDW3.G.interact.filter(i => i.layer === 'space' && i.x > B[0] + 108 && i.x < B[1] && i.disc && ds.includes(i.disc)).forEach(i => i.run()); return new Promise(res => setTimeout(() => res({ len: Math.round(B[1] - B[0]), miss: ds.filter(d => !__DDW3.world.disc.has(d)), groups: __DDW3.G.scene.children.filter(o => /^space:/.test(o.name)).map(o => o.name) }), 1500)); }, [B, ds]);
     check(`${id}: a big place (330 m) whose new areas have their own activities`, r.len >= 320 && r.miss.length === 0, `length ${r.len} m, missing: ${r.miss.join(' ') || 'none'}`);
     check(`${id}: only this planet is kept in memory`, r.groups.length === 1 && r.groups[0] === 'space:' + id, r.groups.join(' '));
+    if (id === 'pluto') { // (build 66) the super bouncy bounce castles: walk onto the giant one and you bounce up high, again and again
+      const cx = B[0] + 183; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 2; P.vy = 0; P.grounded = false; }, cx); 
+      const bo = await page.evaluate(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0, lands = 0, wasUp = false; const f = () => { maxY = Math.max(maxY, P.y); if (P.y > 3) wasUp = true; if (wasUp && P.y < 1.2) { lands++; wasUp = false; } if (lands >= 2 || performance.now() - t0 > 60000) return res({ maxY, lands }); requestAnimationFrame(f); }; f(); }));
+      check('Pluto: the giant bounce castle bounces you super high, again and again', bo.maxY > 12 && bo.lands >= 2, JSON.stringify(bo)); }
     if (id === 'moon') { // (build 65) the giant Moon roller coaster: up the lift, upside down in the loop, back to the station
       const st = B[0] + 205; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; }, st); await sleep(1500);
       const ride = await page.evaluate(st => new Promise(res => { const it = __DDW3.G.interact.find(i => i.disc === 'coaster' && Math.abs(i.x - st) < 3); if (!it) return res({ none: true }); it.run(); const P = __DDW3.player, t0 = performance.now(); let maxY = 0, flip = false, rode = false;
