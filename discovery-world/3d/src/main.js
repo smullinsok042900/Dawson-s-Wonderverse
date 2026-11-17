@@ -260,7 +260,7 @@ const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => bur
 const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
 // (build 45) the space rocket: the Moon, the planets and Pluto, with their real gravity
 const ROCKET_PAD = 693; // (build 64: moved off the colour pond)
-const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
+const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, keysUp: () => !!(keys.up || (stick && stick.active && stick.dy < -25)), /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
 // (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
 // the sun stands (low and from the side on the airless worlds, for long shadows). Only numbers change: no new shaders.
@@ -356,8 +356,8 @@ G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type:
 const CV = { f: new THREE.Vector3(), s: new THREE.Vector3(), u: new THREE.Vector3(), m: new THREE.Matrix4(), cand: new THREE.Vector3() };
 function coasterRide(dt, R) {
   const P = player, C = R.C, path = C.path;
-  if (R.u < C.uTop) { R.v = 3.4; if ((R.clack -= dt) < 0) { R.clack = .22; Sound.tone(260, .04, 'square', .02, 1); } }
-  else { const y = path.getPointAt(Math.min(1, R.u), V).y; R.v = Math.max(3, Math.min(15, Math.sqrt(3.4 * 3.4 + 2 * 7 * Math.max(0, C.yTop - y)))); if (!R.whee && R.u > C.uTop + .01) { R.whee = 1; Sound.whoosh(); voice.speak('Wheeee!'); } }
+  if (R.u < C.uTop) { R.v = C.lift || 3.4; if ((R.clack -= dt) < 0) { R.clack = .22; Sound.tone(260, .04, 'square', .02, 1); } }
+  else { const y = path.getPointAt(Math.min(1, R.u), V).y; R.v = Math.max(3, Math.min(C.vmax || 15, Math.sqrt(3.4 * 3.4 + 2 * 7 * Math.max(0, C.yTop - y)))); R.maxV = Math.max(R.maxV || 0, R.v); if (!R.whee && R.u > C.uTop + .01) { R.whee = 1; Sound.whoosh(); voice.speak('Wheeee!'); } }
   R.u += R.v / C.len * dt;
   if (R.u >= 1) { const e = path.getPointAt(1); C.car.position.copy(e); C.car.quaternion.copy(C.carRest); P.ride = null; P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; creature.root.rotation.z = 0; burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast('🎢 What a ride! Tap the car to go again!'); discover('coaster', '🎢 The Moon roller coaster!'); return; }
   path.getPointAt(R.u, V); const tg = path.getTangentAt(R.u, CV.f);
@@ -552,7 +552,7 @@ function rocketRide(dt, R) {
   if (G.rkLog) { G.rkLog.phases.add(R.phase); G.rkLog.top = Math.max(G.rkLog.top, g.position.y - r.baseY); } // (test record: every phase really run, the highest point)
   if (R.phase === 'board') { // walk up to the door and hop in
     const k = Math.min(1, t / RK.board); P.x = R.x0 + (r.x - R.x0) * k; P.z = R.z0 + (gz + 1.05 - R.z0) * k; P.y = R.y0 + (r.baseY + .2 - R.y0) * k + Math.sin(k * Math.PI) * .8; P.facing = r.x >= R.x0 ? 1 : -1;
-    if (k >= 1) { R.phase = 'in'; G.playerHidden = true; showFace(r, true); Sound.chime(); burst(r.x, r.baseY + 3.6, gz + 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 10, 1.6); showPicker(); }
+    if (k >= 1) { R.phase = 'in'; G.playerHidden = true; showFace(r, true); Sound.chime(); burst(r.x, r.baseY + 3.6, gz + 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 10, 1.6); if (R.wantDest) { const d = R.wantDest; R.wantDest = null; launchTo(d, true); } else showPicker(); }
     return;
   }
   P.x = r.x; P.y = r.baseY; P.z = gz + 1.05; P.vx = P.vy = 0; P.grounded = true;
@@ -641,7 +641,7 @@ function launchTo(id, go) {
   if (launching) return; if (rocketPanel) rocketPanel.classList.remove('show');
   const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
   if (go && !seated() && !player.ride) { const k = nearRocket(); if (k) boardRocket(k, true); }
-  const R = seated(); if (R) { if (R.phase !== 'in') return; R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
+  const R = seated(); if (R) { if (R.phase !== 'in') { R.wantDest = id; return; } /* (build 68: a planet chosen while still climbing in is remembered, and the rocket goes as soon as she is inside) */ R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
   launching = true; const flight = ++flightSequence; if (id !== 'earth') space.prepare(id); voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
   Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
   for (let k = 0; k < 8; k++) setTimeout(() => burst(player.x, .5, player.z - 1, ['#ffd23f', '#ff9a2e', '#ffffff'], 6, 2.5), k * 150);
@@ -981,7 +981,7 @@ function updateCamera(dt) {
   // build 16: near the castle the camera steps back and looks up, so you can see the whole castle
   // (also a little at the Marble Machine, so its top ramps stay clear of the buttons)
   const castleK = P.layer === '' && !P.ride ? Math.max(Math.max(0, 1 - Math.abs(P.x - KINGDOM.castle) / 9), Math.max(0, 1 - Math.abs(P.x - 332) / 7) * .45, Math.max(0, 1 - Math.abs(P.x - (BUILD.x0 + BUILD.cols * BUILD.cw / 2)) / 8) * .7) : 0; /* (build 43: and at the Block Builder, so the whole wall shows) */ camT.cz = (camT.cz ?? 0) + (castleK - (camT.cz ?? 0)) * ease(dt, 1.5);
-  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale' || P.ride.type === 'coaster') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
+  const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale' || P.ride.type === 'coaster' || P.ride.type === 'ringrace') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
   camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
   camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
@@ -1274,7 +1274,7 @@ function frame() {
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sy = P.crawl ? .6 : sliding ? .62 : 1, sx = P.crawl ? 1.15 : sliding ? .62 : 1; creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
-  creature.root.rotation.z = P.ride && P.ride.type === 'coaster' ? P.ride.roll || 0 : 0; // (build 65: tilt with the coaster car)
+  creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)
   P.happy = Math.max(0, P.happy - dt);
@@ -1550,7 +1550,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '67'; G.build = GAME_BUILD;
+const GAME_BUILD = '68'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

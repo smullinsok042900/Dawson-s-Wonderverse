@@ -4,6 +4,49 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 68 — Neptune: wind swings, bungee jumping and a skydiving chamber
+- **The family asked** for swings the wind helps push, bungee jumping and a skydiving simulation chamber on Neptune. Neptune is now a big place (330 m).
+- **Area 2, wind swings:**
+  - three swings on a tall frame, a windsock, and white wind streaks blowing across;
+  - tap a swing and the gusts push you higher and higher (measured up to 1.25 rad, about 72°), then it slows and you hop off.
+- **Area 2, bungee tower:**
+  - a 24 m tower with a lift and a jumping board;
+  - the lift goes up, you walk out, "three, two, one, JUMP", and you fall upside down on a stretchy pink cord;
+  - you bounce a few times, then are lowered gently to the ground (cannot hop out mid-air).
+- **Area 3, skydiving chamber:**
+  - a glass wind tunnel with a big spinning fan and rushing air;
+  - you float in a skydiving pose, bobbing and turning; tap again to zoom higher;
+  - after about 15 s the fan slows and you float down to the floor.
+- **Game change:** any ride can tilt your character (`ride.roll`), not only the coaster.
+- **Also in build 68 (asked while it was being tested):**
+  - **The Moon roller coaster is much bigger, crazier and faster:**
+    - a 32 m lift (was 16 m) and a giant drop;
+    - TWO loop-the-loops, a camel hill, a turnaround, speed hills and a corkscrew helix;
+    - top speed about 21.5 m/s (was 15); the lift itself climbs faster.
+  - **Venus: a giant log ride:**
+    - sit in a hollow log at the station; it floats up a lift to 18 m and winds along a high wooden water channel;
+    - then it plunges down a giant drop into the splash pool: SPLAAASH (a big spray);
+    - you step out by the pool and tap the log to ride again;
+    - Venus is now a big place (330 m); the water is said to be pretend (real Venus is far too hot).
+  - **Saturn: the Star Blaster:**
+    - a 38 m striped tower with a ring of seats;
+    - it spins faster and faster, shoots you up the tower ("WHOOOOSH"), hangs, drops you back down with a bounce, then slows to a stop.
+  - **Saturn: the Ring Raceway:**
+    - a giant Saturn hangs in the sky with real-looking ring bands, ice chunks and a racetrack round its rings (red and white kerbs, a chequered line);
+    - a rocket kart on a launch pad flies you up, races two laps (hold ► to go faster), and flies you back down;
+    - Saturn is now a big place (330 m).
+  - **Mars: a giant climbing wall and a giant trampoline:**
+    - a 22 m red rock cliff with colourful handholds and safety ropes at the end of the crater valley;
+    - tap it (or PAW): she climbs up its front, faster while you hold ▲; at the top a flag and a cheer;
+    - walk off the right edge and you fall onto a giant trampoline that keeps bouncing you about 12 m high (Mars gravity is low); walk off to stop;
+    - measured: reached 22.3 m, then bounces of 18, 11.7 and 11.7 m.
+    - (a mix-up found in the test ride: the ride was first named like the Sky Kingdom rope ladder, so the game moved her as if she were on the ladder; now named `rockclimb`.)
+  - **Measured (Saturn test rides):** Star Blaster top 35.3 m at full spin; race 2 laps, top 43.5 m, 22 m/s; no page errors.
+  - **Measured in test rides:** coaster top 33.1 m and 21.5 m/s; log ride top 18.8 m, top speed 17 m/s, splash; no page errors.
+- **Rocket bug fixed** (found by the full smoke test): if a planet was chosen while she was still climbing into the rocket, the choice was quietly ignored and the rocket never left. The rocket now remembers it and blasts off as soon as she is inside. Verified: PAW at the rocket, choose the Moon at once, and she arrives.
+- **A mistake found by the test ride:** a `//` comment in the middle of a line turned the rest of the line into a comment, so the skydiver did not move. Now fixed.
+- **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. **Full smoke test, run alone on the final build: 235/235.**
+
 ## Checkpoint: build 67 — an ice castle and a skating rink on Uranus; a funhouse mirror maze on Mercury
 - **The family asked** for an ice castle and an ice skating rink on Uranus, and a funhouse mirror maze on Mercury. Both planets are now big places (330 m, `PLANET_EXTRA`).
 - **Uranus, area 2: the ice castle:**

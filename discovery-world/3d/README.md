@@ -12,6 +12,18 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 68: Neptune's wind swings, bungee jump and skydiving chamber
+On Neptune, the windiest planet:
+- swings the wind pushes higher and higher;
+- a 24 m bungee tower (jump, bounce upside down on the cord);
+- a glass skydiving wind tunnel where you float and fly.
+
+Also:
+- **The Moon roller coaster is now giant:** a 32 m lift, two loops, a corkscrew, and much faster.
+- **Venus has a giant log ride** that plunges down into a splash pool.
+- **Mars has a giant climbing wall:** climb to the top of a 22 m cliff, then jump off onto a giant trampoline.
+- **Saturn has the Star Blaster** (spins, shoots up a 38 m tower, drops) **and a Ring Raceway** that races round Saturn's rings in the sky.
+
 ## 3D build 67: an ice castle and a skating rink on Uranus, a mirror maze on Mercury
 - **Uranus:** climb the ice castle and slide down; glide on the skating rink with the snowy skaters.
 - **Mercury:** a funhouse with funny mirrors (you look tall, wide, tiny, wobbly, upside down…) and mirror doors that spin open on the way to a golden star.
