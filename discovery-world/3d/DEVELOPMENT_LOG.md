@@ -45,7 +45,7 @@ are in `PERFORMANCE_LOG.md`.
   - **Measured in test rides:** coaster top 33.1 m and 21.5 m/s; log ride top 18.8 m, top speed 17 m/s, splash; no page errors.
 - **Rocket bug fixed** (found by the full smoke test): if a planet was chosen while she was still climbing into the rocket, the choice was quietly ignored and the rocket never left. The rocket now remembers it and blasts off as soon as she is inside. Verified: PAW at the rocket, choose the Moon at once, and she arrives.
 - **A mistake found by the test ride:** a `//` comment in the middle of a line turned the rest of the line into a comment, so the skydiver did not move. Now fixed.
-- **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. **Full smoke test, run alone:** see the line below.
+- **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. **Full smoke test, run alone on the final build: 235/235.**
 
 ## Checkpoint: build 67 — an ice castle and a skating rink on Uranus; a funhouse mirror maze on Mercury
 - **The family asked** for an ice castle and an ice skating rink on Uranus, and a funhouse mirror maze on Mercury. Both planets are now big places (330 m, `PLANET_EXTRA`).
