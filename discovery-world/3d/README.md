@@ -21,6 +21,7 @@ On Neptune, the windiest planet:
 Also:
 - **The Moon roller coaster is now giant:** a 32 m lift, two loops, a corkscrew, and much faster.
 - **Venus has a giant log ride** that plunges down into a splash pool.
+- **Saturn has the Star Blaster** (spins, shoots up a 38 m tower, drops) **and a Ring Raceway** that races round Saturn's rings in the sky.
 
 ## 3D build 67: an ice castle and a skating rink on Uranus, a mirror maze on Mercury
 - **Uranus:** climb the ice castle and slide down; glide on the skating rink with the snowy skaters.

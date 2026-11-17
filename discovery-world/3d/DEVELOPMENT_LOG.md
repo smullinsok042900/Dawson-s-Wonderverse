@@ -28,6 +28,14 @@ are in `PERFORMANCE_LOG.md`.
     - then it plunges down a giant drop into the splash pool: SPLAAASH (a big spray);
     - you step out by the pool and tap the log to ride again;
     - Venus is now a big place (330 m); the water is said to be pretend (real Venus is far too hot).
+  - **Saturn: the Star Blaster:**
+    - a 38 m striped tower with a ring of seats;
+    - it spins faster and faster, shoots you up the tower ("WHOOOOSH"), hangs, drops you back down with a bounce, then slows to a stop.
+  - **Saturn: the Ring Raceway:**
+    - a giant Saturn hangs in the sky with real-looking ring bands, ice chunks and a racetrack round its rings (red and white kerbs, a chequered line);
+    - a rocket kart on a launch pad flies you up, races two laps (hold ► to go faster), and flies you back down;
+    - Saturn is now a big place (330 m).
+  - **Measured (Saturn test rides):** Star Blaster top 35.3 m at full spin; race 2 laps, top 43.5 m, 22 m/s; no page errors.
   - **Measured in test rides:** coaster top 33.1 m and 21.5 m/s; log ride top 18.8 m, top speed 17 m/s, splash; no page errors.
 - **A mistake found by the test ride:** a `//` comment in the middle of a line turned the rest of the line into a comment, so the skydiver did not move. Now fixed.
 - **Verified (desktop, software rendering):** all three rides end to end, no page errors, screenshots; new smoke checks. FULL_SMOKE_68
