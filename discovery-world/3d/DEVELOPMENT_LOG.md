@@ -4,6 +4,32 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 66 — bounce castles on Pluto; a playground and a super-duper tall slide on Jupiter
+- **The family asked** for super bouncy bounce castles on Pluto, and a playground and a super tall crazy slide on Jupiter.
+- **Pluto and Jupiter are now big places (330 m)** through `planets.js` (`PLANET_EXTRA`), like the Moon and Mars. Their new areas are built as you walk near and freed when you fly away.
+- **Pluto, area 2: three inflatable bounce castles** (pink, blue, giant rainbow):
+  - walk onto the floor and you bounce by yourself, again and again; walk off the edge to stop;
+  - with Pluto's tiny gravity the bounces reach about 6.5 m, 11.5 m and 18.5 m (measured), and you float down slowly; the floor squashes when you land;
+  - Pluto's area 3 has icy spires and a sign back to the rocket.
+- **Jupiter, area 2: the playground** (all by tapping, since Jupiter's strong gravity only allows tiny hops):
+  - two swings that go higher and higher (about 10 s);
+  - a merry-go-round you ride round and round;
+  - a seesaw with a teddy;
+  - a wobbly rocket spring-rider.
+- **Jupiter, area 3: the super-duper tall crazy slide:**
+  - a 30 m striped tower with a glass lift;
+  - a see-through rainbow tube that spirals three times round the tower, then drops, corkscrews and wiggles about 90 m to the path, up to 13 m/s;
+  - you cannot hop out of the lift.
+- **Game changes** (`main.js`): slides can be given a faster top speed (`G.startSlide(path, { vmax, acc })`); rides marked `noExit` ignore PAW; the planets drive their own small rides (swing, merry-go-round, lift).
+- **Cost:** only on those planets, only while those areas are built:
+  - Pluto: 2 meshes per castle;
+  - Jupiter: about 14 (the slide tube, the posts and tower as one mesh, the glass, the lift, the playground pieces batched).
+- **Verified (desktop, software rendering):**
+  - bounce heights measured;
+  - a swing ride, and a lift-and-slide ride (top 30.1 m, slid to the end, about 23 s);
+  - screenshots; no page errors;
+  - new smoke checks for both planets. **Full smoke test, run alone: 208/208.**
+
 ## Checkpoint: build 65 — a giant roller coaster on the Moon
 - **The family asked** for a giant roller coaster on the Moon.
 - **Where:** in the Moon's crater valley (area 2), with the station by the path at +96 m (between the moon rocks and the end of the area). Tap the car, or PAW at the station.
