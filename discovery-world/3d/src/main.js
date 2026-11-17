@@ -336,7 +336,7 @@ G.tapMobile = () => { world.mobileT = 4; Sound.withMusic(() => [4, 2, 0, 2, 4, 4
 G.tapBed = j => { const f = fluffs[j]; if (f.state === 'home') { world.wake[j] = 2; Sound.giggle(); discover('fluffbed', 'Wake up, little Fluffkin! Bounce!'); } else { Sound.click(); burst(G.beds[j].x, IN.f2 + 1, -2.8, ['#fff', '#e3b0ee'], 8, 2); discover('emptybed', 'This bed is waiting for a lost Fluffkin.'); } };
 
 // ---------------- rides: slide, carousel, Ferris wheel ----------------
-function startSlide(path = G.slidePath) { const P = player; P.ride = { type: 'slide', u: 0, v: 1.5, path, len: path.getLength() }; P.vx = P.vy = 0; Sound.whoosh(); if (path === G.skySlide) discover('skyslide', 'The GIANT rainbow slide! Wheee!'); else discover('slide', 'Wheee! The twisty slide!'); }
+function startSlide(path = G.slidePath, o = {}) { const P = player; P.ride = { type: 'slide', u: 0, v: 1.5, path, len: path.getLength(), vmax: o.vmax, acc: o.acc }; /* (build 66: a slide can be faster: the Jupiter super slide) */ P.vx = P.vy = 0; Sound.whoosh(); if (path === G.skySlide) discover('skyslide', 'The GIANT rainbow slide! Wheee!'); else discover('slide', 'Wheee! The twisty slide!'); }
 G.startSkySlide = () => { const P = player; if (P.ride || Math.abs(P.x - SKY.b) > 3 || Math.abs(P.y - SKY.y) > 1) { Sound.click(); return; } P.x = SKY.b - .1; P.y = SKY.y; startSlide(G.skySlide); };
 G.startSlideTap = () => { const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 25) > 9) { Sound.click(); return; } P.x = 23.2; P.y = 3.8; P.z = -1.9; startSlide(); };
 G.rideCarousel = () => {
@@ -368,11 +368,12 @@ function coasterRide(dt, R) {
   if (Math.random() < dt * 20) burst(V.x - tg.x * 1.2, V.y, V.z, ['#fff', '#ffe36e', '#9fe6ff'], 1, .5);
 }
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
+G.startSlide = (path, o) => startSlide(path, o); // (build 66: the planets' slides)
 function updateRide(dt) {
   const P = player, R = P.ride;
   if (R.type === 'slide') {
     // inside the tube: speed up as you go, sit on the bottom of the tube, face the way you slide
-    const path = R.path || G.slidePath; R.v = Math.min(8.5, R.v + dt * 5); R.u += R.v / R.len * dt;
+    const path = R.path || G.slidePath; R.v = Math.min(R.vmax || 8.5, R.v + dt * (R.acc || 5)); R.u += R.v / R.len * dt;
     if (R.u >= 1) { const e = path.getPointAt(1); P.x = e.x + .5; P.y = Math.max(0, e.y - .55); P.z = e.z; endRide(4.5, 3); P.facing = 1; burst(P.x, .5, P.z, ['#fff', '#ffe36e', '#9fe6ff'], 16, 2.5); Sound.boing(); return; }
     path.getPointAt(R.u, V); P.x = V.x; P.y = V.y - .62; P.z = V.z; const tg = path.getTangentAt(R.u); P.facing = tg.x >= 0 ? 1 : -1; P.vx = 6 * P.facing;
     if (Math.random() < dt * 25) burst(P.x - tg.x * .6, P.y + .3, P.z - tg.z * .6, ['#fff', '#ffe36e', '#9fe6ff'], 1, .6);
@@ -750,7 +751,7 @@ function jump() {
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
   if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
-  if (P.ride) { if (P.ride.type === 'slide' || P.ride.type === 'coaster') return; /* (build 65: no hopping out of the roller coaster mid-air) */ const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
+  if (P.ride) { if (P.ride.type === 'slide' || P.ride.type === 'coaster' || P.ride.noExit) return; /* (build 65: no hopping out of the roller coaster mid-air) */ const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
   if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps] * (world.comfort?.relaxed ? 1.08 : 1); P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
 }
@@ -1549,7 +1550,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '65'; G.build = GAME_BUILD;
+const GAME_BUILD = '66'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
