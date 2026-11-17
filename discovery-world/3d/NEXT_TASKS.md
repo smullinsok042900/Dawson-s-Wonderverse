@@ -9,7 +9,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - On the iPhone, check that the voices come out of the loudspeaker (not the earpiece), and that game sounds still play.
 
 ## Camera after floating down from the whale
-In the family's video (3:50), jumping off the whale above the Fluffkin House let the camera show the house wall for about 2 s while it caught up. Make the camera follow height faster while floating (`P.floaty`), measured.
+In the family's video (3:50), jumping off the whale above the Fluffkin House let the camera show the house wall for about 2 s while it caught up. Make the camera follow height faster while floating (`P.floaty`), measured. (2026-11-17: tried to reproduce in the test browser, but at its 1–2 frames a second she lands within half a second and the camera is fine; it needs a real phone, or a test that steps the game at 60 frames a second, before changing the camera.)
 
 ## Character portraits: read back without a GPU stall
 The portraits (build 56) are drawn once at start-up and read with a synchronous `gl.readPixels`. Chromium logs "GPU stall due to ReadPixels" (the smoke test makes this one exception). Try `renderer.readRenderTargetPixelsAsync` into a render target, measured on the Pixel and iPhone. It must not undo the Android fix.
