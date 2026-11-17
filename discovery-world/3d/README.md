@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 67: an ice castle and a skating rink on Uranus, a mirror maze on Mercury
+- **Uranus:** climb the ice castle and slide down; glide on the skating rink with the snowy skaters.
+- **Mercury:** a funhouse with funny mirrors (you look tall, wide, tiny, wobbly, upside down…) and mirror doors that spin open on the way to a golden star.
+
 ## 3D build 66: bounce castles on Pluto, a playground and a giant slide on Jupiter
 - **Pluto:** three super bouncy bounce castles. With Pluto's tiny gravity you bounce up to about 18 m!
 - **Jupiter:** a playground (swings, a merry-go-round, a seesaw, a rocket rider) and a 30 m tower with a glass lift up to a rainbow slide that spirals, drops and wiggles all the way down.

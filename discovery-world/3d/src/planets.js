@@ -303,6 +303,111 @@ const jupiter = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars, pluto, jupiter }; // (build 66: Jupiter's playground and super slide) 
+// ---------- (build 67) 🧊 URANUS: an ICE CASTLE and an ICE SKATING RINK ----------
+const ICE_SLIDE_MAT = () => new THREE.MeshPhysicalMaterial({ vertexColors: true, transparent: true, opacity: .55, roughness: .08, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false });
+function uranusIceCastle(k, cx) {
+  const P = k.P, b = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1), cyl = new THREE.CylinderGeometry(1, 1, 1, 18), cone = new THREE.ConeGeometry(1, 1, 18), ice = '#bfe6ff', pale = '#e8f6ff', deep = '#7fbde8';
+  b.put(box, cx, 3, -6, ice, [16, 6, .9]);                                                       // the back wall
+  for (const s of [-1, 1]) { b.put(cyl, cx + s * 8, 4.5, -5.6, pale, [1.3, 9, 1.3]); b.put(cone, cx + s * 8, 10.2, -5.6, deep, [1.6, 2.4, 1.6]); b.put(new THREE.OctahedronGeometry(1), cx + s * 8, 11.8, -5.6, '#ffffff', .3); }
+  b.put(cyl, cx, 5.5, -6.3, pale, [1.7, 11, 1.7]); b.put(cone, cx, 12.4, -6.3, deep, [2, 2.8, 2]); b.put(new THREE.OctahedronGeometry(1), cx, 14.3, -6.3, '#ffffff', .45);
+  b.put(box, cx, 1.6, -5.5, '#3f6f9e', [2.6, 3.2, .2]); b.put(new THREE.CylinderGeometry(1.3, 1.3, .2, 20, 1, false, 0, Math.PI), cx, 3.2, -5.5, '#3f6f9e', 1, [Math.PI / 2, 0, Math.PI / 2]); // the gate
+  for (let i = 0; i < 12; i++) { const x = cx - 7 + i * 1.27; b.put(box, x, 6.35, -6, pale, [.7, .7, 1]); b.put(cone, x + .6, 5.6, -5.45, '#ffffff', [.12, .7, .12], [Math.PI, 0, 0]); } // battlements and icicles
+  for (const x of [cx - 4.5, cx + 4.5]) for (const y of [2.2, 4.4]) b.put(box, x, y, -5.5, '#9fd8ff', [1.2, 1.2, .1]);  // frosty windows
+  // stairs up on the left and a long rampart along the front, with an ice slide down on the right
+  const steps = [[cx - 12, 1.2], [cx - 10.8, 2.4], [cx - 9.6, 3.6], [cx - 8.4, 4.8]];
+  for (const [x, h] of steps) { b.put(box, x, h / 2, -1.6, i2c(h), [1.2, h, 1.6]); k.plat(x - .6, x + .6, h, { z: -1.2, step: true, stepMax: 1.3 }); }
+  b.put(box, cx, 4.65, -1.6, pale, [15.2, .3, 1.6]); k.plat(cx - 7.6, cx + 7.6, 4.8, { z: -1.2 });
+  for (let x = cx - 7.5; x <= cx + 7.5; x += 1.5) b.put(cyl, x, 4.8 + .45, -2.3, '#ffffff', [.06, .9, .06]); b.put(box, cx, 5.7, -2.3, ice, [15.2, .1, .1]);
+  for (let x = cx - 6; x <= cx + 6; x += 4) b.put(cyl, x, 2.3, -1.6, pale, [.25, 4.6, .25]);
+  const m = b.mesh(shinyMat()); m.castShadow = true; k.add(m);
+  function i2c(h) { return ['#dff4ff', '#cfeeff', '#bfe6ff', '#afdcff'][Math.round(h / 1.2) - 1] || ice; }
+  const path = new THREE.CatmullRomCurve3([[cx + 7.6, 5.4, -1.4], [cx + 10, 4.6, -1.6], [cx + 12.5, 2.8, -2.6], [cx + 13.5, 1.6, -4.4], [cx + 15.5, 1, -4.2], [cx + 17, .7, -2], [cx + 18.5, .6, -.6]].map(p => new THREE.Vector3(...p)), false, 'catmullrom', .4);
+  const geo = new THREE.TubeGeometry(path, 90, .85, 14, false); { const cols = [], c = new THREE.Color(); for (let i = 0; i <= 90; i++) { c.set(i % 18 < 9 ? '#bfe6ff' : '#ffffff'); for (let j = 0; j < 15; j++) cols.push(c.r, c.g, c.b); } geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); }
+  const tube = new THREE.Mesh(geo, ICE_SLIDE_MAT()); tube.renderOrder = 2; k.add(tube);
+  let fired = 0; k.U.push(dt => { fired = Math.max(0, fired - dt); if (!fired && P.layer === 'space' && !P.ride && Math.abs(P.y - 4.8) < .1 && P.x > cx + 7.3 && P.x < cx + 8.5 && P.vx > .5) { fired = 2; k.G.startSlide(path, { vmax: 9 }); k.Sound.whoosh && k.Sound.whoosh(); } });
+  k.tapIt(m, () => k.fact('🏰 An ice castle! Uranus is an ice giant: deep down it is full of icy water. Climb the steps and slide down!', 'uranuscastle'), cx, 'uranuscastle');
+}
+function uranusRink(k, cx) {
+  const P = k.P, rx = 22, rz = 4.4, cz = -2.6, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 64);
+  b.put(cyl, cx, .03, cz, '#8fd0ff', [rx, .06, rz]); b.put(cyl, cx, .035, cz, '#c9ecff', [rx - 1.2, .06, rz - .7]); /* (a blue rink with a pale centre: it stands out from the icy ground) */
+  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, x = cx + Math.cos(a) * (rx + .3), z = cz + Math.sin(a) * (rz + .25); if (z > .6) continue; b.put(new THREE.CylinderGeometry(1, 1, 1, 8), x, .4, z, i % 2 ? '#5aa8ff' : '#ffffff', [.09, .8, .09]); }
+  b.put(new THREE.TorusGeometry(1, .03, 6, 64), cx, .82, cz, '#ffffff', [rx + .3, rz + .25, 1], [Math.PI / 2, 0, 0]);
+  const rink = b.mesh(shinyMat()); rink.receiveShadow = true; k.add(rink);
+  // three snowy skaters gliding round and round
+  const skaters = [0, 1, 2].map(i => { const g = new THREE.Group(), sb = makeBatch(), ball = new THREE.SphereGeometry(1, 14, 10); sb.put(ball, 0, .5, 0, '#ffffff', .45); sb.put(ball, 0, 1.15, 0, '#ffffff', .32); sb.put(new THREE.TorusGeometry(.26, .07, 6, 14), 0, .92, 0, ['#ff4f6a', '#5aa8ff', '#ffd23f'][i], 1, [Math.PI / 2, 0, 0]);
+    sb.put(new THREE.ConeGeometry(.06, .25, 8), .32, 1.15, 0, '#ff9a2e', 1, [0, 0, -Math.PI / 2]); for (const z of [-.1, .1]) sb.put(ball, .26, 1.24, z, '#1d1d2b', .04); g.add(sb.mesh(shinyMat())); k.add(g); return { g, a: i * 2.1 }; });
+  let glide = 0, said = false;
+  k.U.push((dt, t) => {
+    for (const s of skaters) { s.a += dt * .35; const x = cx + Math.cos(s.a) * (rx - 4), z = cz + Math.sin(s.a) * (rz - 1.4); s.g.position.set(x, .06, z); s.g.rotation.y = -s.a - Math.PI / 2; s.g.rotation.z = Math.sin(t * 4 + s.a) * .08; }
+    const on = P.layer === 'space' && P.grounded && !P.ride && Math.pow((P.x - cx) / rx, 2) + Math.pow((P.z - cz) / rz, 2) < 1;
+    if (!on) { glide = 0; return; }
+    if (!said) { said = true; k.fact('⛸️ Skating on Uranus! Walk, then let go: you glide on the ice!', 'uranusskate'); }
+    const held = k.api.keysHeld && k.api.keysHeld();
+    if (held && Math.abs(P.vx) > .5) glide = P.vx * 1.15; else if (Math.abs(glide) > .25) { const nx = P.x + glide * dt; if (Math.abs(nx - cx) < rx - 1) P.x = nx; else glide = 0; glide *= Math.exp(-dt * .35); P.facing = glide > 0 ? 1 : -1; if (Math.random() < dt * 10) k.api.burst(P.x - Math.sign(glide) * .4, .1, P.z, ['#ffffff', '#cfefff'], 1, .6); }
+  });
+  k.tapIt(rink, () => { k.Sound.twinkle && k.Sound.twinkle(); k.api.burst(P.x, 1.6, P.z, ['#ffffff', '#cfefff', '#ffd23f'], 16, 2); k.fact('⛸️ Wheee! Walk onto the ice and let go to glide!', 'uranusrink'); }, cx, 'uranusrink');
+}
+const uranus = {
+  sections: [
+    k => { uranusIceCastle(k, k.s0 + 40); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle
+    k => { uranusRink(k, k.s0 + 50); k.rocketSign(k.s0 + 100); },       // area 3: the skating rink
+  ],
+};
+
+// ---------- (build 67) 🪞 MERCURY: THE FUNHOUSE MIRROR MAZE ----------
+// A striped funhouse; inside, big mirrors on the back wall show YOUR character, funnily changed (tall, wide, tiny, giant,
+// wobbly, upside down, squiggly). Three mirror doors stand across the way, at an angle like a maze: tap one and it spins
+// open. At the end a golden star waits. One copy of your character is moved to whichever mirror you stand at.
+function mercuryMirrorMaze(k, X) {
+  const P = k.P, b = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1), cone = new THREE.ConeGeometry(1, 1, 16), x0 = X + 14, x1 = X + 90;
+  // the entrance arch (stripes and a pointed roof) and the hall: chequered floor, a back wall, posts
+  for (let i = 0; i < 7; i++) b.put(box, x0 - 1.5 + i * .5, 3.5, -1.6, i % 2 ? '#ffffff' : '#ff4f9a', [.5, 7, .6]);
+  b.put(cone, x0, 8.6, -1.6, '#ffd23f', [2.6, 2.4, 1.2]); b.put(new THREE.SphereGeometry(1, 12, 8), x0, 10, -1.6, '#ff4f9a', .3);
+  for (let i = 0; i < 38; i++) b.put(box, x0 + 1 + i * 2, .02, -2.2, i % 2 ? '#ffe3f1' : '#e3f3ff', [2, .04, 4.4]);
+  b.put(box, (x0 + x1) / 2, 2.8, -4.5, '#4a2a6a', [x1 - x0, 5.6, .3]); b.put(box, (x0 + x1) / 2, 5.75, -4.3, '#ffd23f', [x1 - x0, .3, .6]);
+  for (let x = x0 + 4; x < x1; x += 8) b.put(box, x, 2.8, -4.2, '#ff9fd2', [.3, 5.6, .3]);
+  const hall = b.mesh(shinyMat()); hall.castShadow = true; k.add(hall);
+  // the wall mirrors, each with its own funny shape
+  const SHAPES = [[.7, 1.55, .7], [1.55, .7, 1.4], [.55, .55, .55], [1.3, 1.3, 1.3], 'wobble', 'upside', 'squiggle'];
+  const glassM = toy('#eef8ff', { r: .04, m: .15, cc: 1, em: '#bfe0ff', ei: .35 }), frameB = makeBatch(), mirrors = [];
+  SHAPES.forEach((sh, i) => { const mx = x0 + 6 + i * 10.5; frameB.put(box, mx, 2.2, -4.25, '#ffd23f', [2.8, 4.2, .12]); frameB.put(new THREE.SphereGeometry(1, 10, 8), mx, 4.5, -4.2, ['#ff4f9a', '#5aa8ff', '#7fe0a0'][i % 3], .28);
+    const g = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.8), glassM); g.position.set(mx, 2.2, -4.18); k.add(g); mirrors.push({ x: mx, sh, g }); });
+  k.add(frameB.mesh(shinyMat()));
+  // three mirror doors across the way (solid until tapped), turned at an angle like a maze
+  const doors = [x0 + 18, x0 + 39, x0 + 60].map((dx, i) => { const piv = new THREE.Group(); piv.position.set(dx, 0, -.6); piv.rotation.y = .7; k.add(piv);
+    const db = makeBatch(); db.put(box, 0, 1.9, 0, '#ffd23f', [.18, 3.8, 2.8]); db.put(new THREE.SphereGeometry(1, 10, 8), 0, 4, 0, ['#ff4f9a', '#5aa8ff', '#7fe0a0'][i], .3); piv.add(db.mesh(shinyMat()));
+    const gl = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 3.4), glassM); gl.rotation.y = Math.PI / 2; gl.position.set(.1, 1.9, 0); piv.add(gl); const gl2 = gl.clone(); gl2.rotation.y = -Math.PI / 2; gl2.position.x = -.1; piv.add(gl2);
+    for (const o of k.G.solids.filter(s => s.key === 'mercdoor' + i)) k.G.solids.splice(k.G.solids.indexOf(o), 1);
+    const solid = { a: dx - .3, b: dx + .3, top: 4.2, layer: 'space', key: 'mercdoor' + i }; k.G.solids.push(solid);
+    const d = { piv, solid, open: 0, opened: false, x: dx };
+    k.tapIt(piv, () => { if (d.opened) return; d.opened = true; const j = k.G.solids.indexOf(solid); if (j >= 0) k.G.solids.splice(j, 1); k.Sound.chime && k.Sound.chime(); k.say(['🪞 The mirror spins! Go through!', '🪞 Whoosh! Another mirror opens!', '🪞 The last mirror! Find the golden star!'][i], true); k.disc('mercurydoor' + i); }, dx, 'mercurydoor' + i);
+    return d; });
+  // the golden star at the end
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toy('#ffd23f', { em: '#ffb000', ei: .8, m: .3 })); star.position.set(x1 - 3, 2, -2); k.add(star); let won = false;
+  // your reflection: one copy of your character, moved to the mirror you stand at
+  let refl = null, kind = '';
+  k.U.push((dt, t) => {
+    for (const d of doors) if (d.opened && d.open < 1) { d.open = Math.min(1, d.open + dt * 1.6); d.piv.rotation.y = .7 + d.open * (Math.PI / 2 - .7) ; d.piv.position.y = d.open * 3.2; }
+    star.rotation.y = t * 1.5; star.position.y = 2 + Math.sin(t * 2) * .2;
+    if (!won && P.layer === 'space' && Math.abs(P.x - (x1 - 3)) < 1.5 && P.y < 3) { won = true; k.api.burst(x1 - 3, 2.2, -2, ['#ffd23f', '#ffffff', '#ff9fd2'], 30, 3); k.Sound.chime && k.Sound.chime(); k.fact('⭐ You found your way through the mirror maze! Mercury is the planet closest to the Sun.', 'mercurymaze'); }
+    const mi = P.layer === 'space' && !P.ride ? mirrors.find(m => Math.abs(P.x - m.x) < 2.2) : null;
+    if (!mi) { if (refl) refl.root.visible = false; return; }
+    const want = k.api.creatureKind ? k.api.creatureKind() : 'pip';
+    if (!refl || kind !== want) { if (refl) refl.root.parent && refl.root.parent.remove(refl.root); refl = k.api.makeCreature(want); kind = want; refl.root.traverse(o => { o.userData.dynamic = true; o.castShadow = false; }); k.add(refl.root); }
+    const R = refl.root; R.visible = true; let sx = 1, sy = 1, sz = 1, rz = 0, oy = .35;
+    if (Array.isArray(mi.sh)) [sx, sy, sz] = mi.sh; else if (mi.sh === 'wobble') { sx = 1 + Math.sin(t * 5) * .3; sy = 1 - Math.sin(t * 5) * .25; sz = sx; } else if (mi.sh === 'upside') { rz = Math.PI; oy = 3.9; } else if (mi.sh === 'squiggle') { sx = .8 + Math.sin(t * 9) * .15; sy = 1.25; rz = Math.sin(t * 3) * .35; }
+    R.scale.set(sx, sy, sz); R.position.set(mi.x + Math.max(-.9, Math.min(.9, (P.x - mi.x))), oy, -3.95); R.rotation.set(0, 0, rz);
+    refl.update(dt, { vx: P.vx, vy: 0, grounded: true, facing: P.facing, happy: 0 });
+  });
+  k.tapIt(hall, () => k.fact('🪞 The funhouse mirror maze! Look in the mirrors, and tap the mirror doors to open them.', 'mercuryfunhouse'), x0, 'mercuryfunhouse');
+}
+const mercury = {
+  sections: [
+    k => { mercuryMirrorMaze(k, k.s0); k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze
+    k => { const X = k.s0; for (let i = 0; i < 8; i++) k.sball(X + 12 + i * 11, .2, -6 - (i % 3) * 2.5, 1.4 + (i % 3) * .6, .5, 1.2, '#9a8a7a', { r: .95 }); k.rocketSign(X + 100); }, // area 3: rocky craters
+  ],
+};
+
+export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury }; // (build 67: Uranus's ice castle and rink; Mercury's mirror maze) // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;

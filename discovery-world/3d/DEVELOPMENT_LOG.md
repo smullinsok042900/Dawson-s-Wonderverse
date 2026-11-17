@@ -4,6 +4,25 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 67 — an ice castle and a skating rink on Uranus; a funhouse mirror maze on Mercury
+- **The family asked** for an ice castle and an ice skating rink on Uranus, and a funhouse mirror maze on Mercury. Both planets are now big places (330 m, `PLANET_EXTRA`).
+- **Uranus, area 2: the ice castle:**
+  - towers with pointed roofs, battlements with icicles and frosty windows;
+  - steps up to a long rampart; walk off its right end and you whoosh down a see-through ice slide.
+- **Uranus, area 3: the skating rink:**
+  - a big oval rink with a fence, and three snowy skaters gliding round;
+  - walk onto the ice, then let go: you keep gliding (measured 7.9 m) and leave sparkles.
+- **Mercury, area 2: the funhouse mirror maze:**
+  - a striped funhouse entrance and a hall with seven big mirrors that show YOUR character, funnily changed (tall, wide, tiny, giant, wobbly, upside down, squiggly);
+  - one copy of your character is moved to the mirror you stand at;
+  - three mirror doors stand across the way at an angle; they are solid until you tap them, then they spin up and open;
+  - a golden star waits at the end.
+- **Game change** (`main.js`): the planets can make a copy of your character (`makeCreature`, `creatureKind` in the space api).
+- **Verified (desktop, software rendering):**
+  - Uranus: slid down from the rampart; glided 7.9 m after letting go.
+  - Mercury: a door stopped her at +17.4 m (door at +18); the doors opened and she reached the star; the stretched reflection is visible in the screenshots.
+  - no page errors; new smoke checks. FULL_SMOKE_67
+
 ## Checkpoint: build 66 — bounce castles on Pluto; a playground and a super-duper tall slide on Jupiter
 - **The family asked** for super bouncy bounce castles on Pluto, and a playground and a super tall crazy slide on Jupiter.
 - **Pluto and Jupiter are now big places (330 m)** through `planets.js` (`PLANET_EXTRA`), like the Moon and Mars. Their new areas are built as you walk near and freed when you fly away.
