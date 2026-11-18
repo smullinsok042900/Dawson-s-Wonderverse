@@ -7,6 +7,30 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 69 (the giant Moon coaster)
+Desktop, software rendering (SwiftShader), iPhone-sized 844 × 390 view. `cperf4.cjs` (Moon station view 12 s, boarding, 20 s of riding), build 68 and build 69 run alternately, twice each:
+
+| Measure | Build 68 | Build 69 |
+|---|---|---|
+| Station: median frame | 144.5 / 145.7 ms | 144.5 / 127.8 ms |
+| Station: draw calls | 75 | 68 |
+| Station: triangles | 94k | 80k |
+| Boarding (tap until 2 frames) | 343 / 204 ms | 210 / 195 ms |
+| Ride: median frame | 140.5 / 143.3 ms | 150.4 / 139.1 ms |
+| Ride: long tasks | 0 | 0 |
+
+- **The ride view is not the same view:** build 69 looks across the whole Moon from up to 227 m; build 68 rode 32 m high. Its average (145 against 142 ms) is within the run-to-run noise.
+- **Before the speed work,** the first build 69 was 194 against 138 ms at the station. The coaster's own cost was found by hiding its parts in one page; the fixes are in `DEVELOPMENT_LOG.md`.
+- **`tests/perf/planet-shaders.cjs`:**
+
+  | Measure | Build 68 | Build 69 |
+  |---|---|---|
+  | Shader waits | 3 (1678, 80 and 249 ms) | **0** |
+  | New Moon shaders | 0 | 0 |
+
+  - Before the material fix, build 69 had a 2.2 s wait on landing on the Moon.
+  - The gate still reports one clearcoat shader variant at Jupiter, Saturn and Neptune, as in build 68 (from the build 66–68 rides). It is drawn outside the main scene and caused no measured wait (see `NEXT_TASKS.md`).
+
 ## Build 63 (zoomed-out camera)
 - **Draw calls (`calls.cjs`), build 62b → 63:**
 

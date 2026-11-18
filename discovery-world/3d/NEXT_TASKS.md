@@ -8,6 +8,9 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 - Does the first-visit camera sweep (6.5 s) feel good, or too long?
 - The coaster fills the Moon's 330 × 170 m area. If the Moon grows, the course (`src/coaster-course.js`, checked by `tests/coaster-course-check.mjs`) can grow with it.
 
+## Shader gate: one clearcoat variant at Jupiter, Saturn and Neptune (since builds 66–68)
+`tests/perf/planet-shaders.cjs` reports a `physical` (clearcoat) program compiled on arrival at these planets, rendered outside the main scene (output `srgb`, not the post target), probably a creature or portrait made for a ride. Find it and prepare it at start (`warmPaint` in `main.js`), measured. No wait was measured in build 69's run.
+
 ## Talk Together (build 62): needs the family
 - Paste the NEW `firebase-rules.json` (Realtime Database → Rules → Publish). `?mpcheck` must say `allowed` for `write talking` and `write call message`.
 - Try talking on two real devices (iPhone Safari + another phone): same Wi-Fi first, then one on mobile data. If mobile data does not connect, set up the free TURN relay (MULTIPLAYER.md) and put its URL in `src/mp-config.js`.
