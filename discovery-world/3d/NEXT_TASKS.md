@@ -3,6 +3,20 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## Speed found in the 2026-11-18 measurements (do these first)
+Desktop, software rendering; milliseconds per frame, build 69 (before) → build 72/73:
+
+| Spot | Build 69 | Now |
+|---|---|---|
+| Mercury: Hall of Infinite Mirrors (+231) | 130 | 198 |
+| Mercury: other funhouse rooms (+260 to +310) | | +15 to +28% |
+| Jupiter: busiest spots (+150 to +205) | | +7 to +14% |
+
+- **Mercury's Hall of Infinite Mirrors:**
+  - the mirror copy of her character is about 55 draw calls (the maze's mirrors cost the same, as they have since build 67: spot +150 has 114 calls);
+  - next: a lighter "mirror double" (one merged mesh made from the character: no fur and no separate parts), used by the maze and the hall.
+- **Jupiter:** merging still pieces in 30 m zones changed nothing (most pieces are tappable or moving). Next: shared hit boxes for taps, so the visible pieces can merge.
+
 ## THE FAMILY'S GAME-WIDE REQUEST (2026-11-18): every attraction up to the Moon coaster / Jupiter playground standard
 Bigger, more interactive (steer, jump, climb, choose routes, collect, secrets), each planet unique, easy for a 5-year-old who cannot read,
 and NEVER slower. Work through this list one item per cycle (inspect, fix, expand, interact, test, measure, checkpoint):

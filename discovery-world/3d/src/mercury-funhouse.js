@@ -65,9 +65,9 @@ export function mercuryFunhouse(k) {
     // (the room is z 0 … −5 and the mirror is at −5: its image is z −5 … −10, mirrored; then the image of the image
     //  (z −10 … −15, the right way round) and the next (z −15 … −20, mirrored), each behind a darker glass)
     const refl = new THREE.Group(); k.add(refl); const shadeG = painted(new THREE.PlaneGeometry(c - a, F2), '#3a2a6a');
-    for (const [sz, pz] of [[-1, 2 * ZB], [1, 2 * ZB], [-1, 4 * ZB]]) { const m = new THREE.Mesh(geo, shinyMat()); m.scale.z = sz; m.position.z = pz; refl.add(m); }
-    for (const z of [2 * ZB - .02, 3 * ZB - .02]) { const sh = new THREE.Mesh(shadeG, glass(.35)); sh.position.set(x((a + c) / 2), F2 / 2, z); refl.add(sh); }
-    const back = makeBatch(); back.put(G0.box, x((a + c) / 2), F2 / 2, 4 * ZB - .2, '#1a1430', [c - a, F2, .2]); refl.add(back.mesh(shinyMat()));
+    // (build 73 speed: one mirrored room, then a dark back wall, instead of three copies and two tinted panes)
+    { const m = new THREE.Mesh(geo, shinyMat()); m.scale.z = -1; m.position.z = 2 * ZB; refl.add(m); }
+    const back = makeBatch(); back.put(G0.box, x((a + c) / 2), F2 / 2, 2 * ZB - .2, '#1a1430', [c - a, F2, .2]); refl.add(back.mesh(shinyMat()));
     const pane = new THREE.Mesh(painted(new THREE.PlaneGeometry(c - a, F2), '#cfe8ff'), glass(.12)); pane.position.set(x((a + c) / 2), F2 / 2, ZB); k.add(pane);
     const frame = makeBatch(); frame.put(G0.box, x((a + c) / 2), F2 - .1, ZB, '#ffd23f', [c - a, .25, .3]); frame.put(G0.box, x((a + c) / 2), .1, ZB, '#ffd23f', [c - a, .25, .3]); k.add(mesh(frame, shinyMat()));
     let me = null, kind = '', said = false;
