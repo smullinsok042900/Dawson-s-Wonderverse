@@ -147,8 +147,8 @@ export function marsClimbPark(k, X) {
       if (!ring.hit && P.layer === 'space' && Math.abs(P.x - ring.x) < 1 && Math.abs(P.y + .6 - ring.y) < .8) { ring.hit = 1.2; k.Sound.tone(700, .2, 'sine', .07, 1.5); k.api.burst(ring.x, ring.y, -1.2, RB, 14, 2); k.disc('marshoops', '🤸 Bounce up through the hoops!'); } });
     k.tapIt(mat, () => k.fact('🤸 A giant trampoline! Hold ▲ when you land to bounce higher!', 'marstrampoline'), tc, null); };
   tramp(wx + 6, wx + 16.5, 1, 14, '#2fa8ff');        // the big one on the ground (hold ▲: up to the middle one)
-  tramp(wx + 5.4, wx + 12.8, 20, 10, '#ff6fae');      // the middle one, right of the cliff (hold ▲: back up to the cliff top!)
-  tramp(wx + 13.2, wx + 16.6, 10, 11, '#ffd23f');    // the small high one
+  tramp(wx + 5.3, wx + 14.2, 20, 10, '#ff6fae');      // the middle one, right of the cliff (hold ▲: back up to the cliff top!)
+  tramp(wx + 14.6, wx + 17.4, 10, 11, '#ffd23f');    // the small high one
   k.add(tb.mesh(shinyMat())); k.add(hb.mesh(glowMat()));
   starField(k, [[wx + 9, 9, -1], [wx + 14.5, 16, -1], [wx + 8, 25, -1], [wx + 11, 14, -1]], () => { k.Sound.chime(); k.say('⭐ All the trampoline stars!', true); k.disc('marstrampstars'); });
 }
