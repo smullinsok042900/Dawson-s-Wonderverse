@@ -3,6 +3,32 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## THE FAMILY'S GAME-WIDE REQUEST (2026-11-18): every attraction up to the Moon coaster / Jupiter playground standard
+Bigger, more interactive (steer, jump, climb, choose routes, collect, secrets), each planet unique, easy for a 5-year-old who cannot read,
+and NEVER slower. Work through this list one item per cycle (inspect, fix, expand, interact, test, measure, checkpoint):
+1. **Speed first.**
+   - Jupiter's busiest new spots were 10–20% slower in build 70. Build 72 thins the slides; measure again.
+   - Then measure Mercury, Venus, Pluto, Uranus, Saturn, Neptune and Mars (spots on the walking line, build N−1 against N: `pplanet.cjs`-style).
+   - Fix any view that got slower.
+2. **Mercury:** the mirror maze itself (area 2) is still the build 67 hall:
+   - make it a real maze with branching corridors, rotating mirror walls, hidden doors and coloured light per section;
+   - connect it into the funhouse;
+   - add more funhouse rooms (a crawl tunnel, a forced-perspective hallway).
+3. **Earth:** inspect every activity and district.
+   - Go through the Toy Town / Art Plaza / farm / pier / hills / trail / Sky Kingdom attractions.
+   - Bring the biggest ones up to standard: more levels, routes and interactions.
+4. **Saturn:** the raceway is still one ring (3 laps, lanes, boosts, stars, 2 jump ramps).
+   - Add a second (outer) ring route chosen by lane at a fork, a tunnel, and a loop.
+   - Add free-drive and easy-race modes as two big picture buttons.
+5. **Uranus:**
+   - Ice Palace: add a second floor of rooms, a frozen bookcase secret passage, and an underground ice tunnel network.
+   - Rink: add steering in depth (z) and winding ice trails beyond the oval.
+6. **Neptune:** bungee: pick a gentle or a big cord (two jumping boards). Sky dive: more cloud routes and floating platforms.
+7. **Mars:** more climbing routes (a second wall with a cave tunnel through it), and a bigger trampoline network.
+8. **Pluto:** more inflatable structures (a second tower, an inflatable maze, a matching game).
+9. **Venus:** a branching route on the flume (left or right at a fork), and better animated water (scrolling foam, waterfalls).
+10. **Moon / Jupiter:** polish (keep as the benchmarks).
+
 ## Build 70 follow-ups (do first)
 - Run the full smoke test on build 70 and fix anything it finds.
 - Jupiter speed: the busiest new spots (x +150 to +205) measured about 10–20% slower than build 69 (desktop). Try:

@@ -47,7 +47,7 @@ export function rideTo(k, type, step, done, o) { // (the same as planets.js jupi
 // (build 70 speed: an open, solid HALF-PIPE: the bottom of the tube only, painted inside and out. It is opaque (much cheaper
 //  to draw than see-through glass), has fewer triangles, and she is always in view while she slides)
 export function halfPipe(path, segs, r, cols, bands) {
-  const RS = 10, tg = new THREE.TubeGeometry(path, segs, r, RS, false), c = new THREE.Color(), cs = [];
+  const RS = 8, tg = new THREE.TubeGeometry(path, segs, r, RS, false), c = new THREE.Color(), cs = [];
   for (let i = 0; i <= segs; i++) { c.set(cols[Math.floor(i / segs * bands) % cols.length]); for (let j = 0; j <= RS; j++) cs.push(c.r, c.g, c.b); }
   tg.setAttribute('color', new THREE.Float32BufferAttribute(cs, 3)); const g = tg.toNonIndexed(); tg.dispose();
   const P0 = g.attributes.position.array, N0 = g.attributes.normal.array, C0 = g.attributes.color.array, pos = [], nor = [], col = [];
@@ -131,7 +131,7 @@ export function jupiterSkyArea2(k) {
   { const cx = X + 173, cz = -2.6, r = 3, pts = [V3(X + 166.2, 12.5, -1.2)];
     for (let i = 0; i <= 40; i++) { const a = Math.PI + i / 40 * Math.PI * 4.5; pts.push(V3(cx + Math.cos(a) * r, 12.1 - i / 40 * 11, cz + Math.sin(a) * r)); }
     pts.push(V3(X + 176.5, .9, -.3), V3(X + 179, .75, -.5));
-    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .3); slideTube(k, path, { segs: 170, cols: ['#ff6fae', '#ffffff'], bands: 18 });
+    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .3); slideTube(k, path, { segs: 120, cols: ['#ff6fae', '#ffffff'], bands: 18 });
     const b = makeBatch(); for (let i = 0; i < 4; i++) b.put(G0.cyl, cx, i * 3 + 1.5, cz, i % 2 ? '#ffffff' : '#ff6fae', [1.2, 3, 1.2]); b.put(G0.cone, cx, 13.4, cz, '#ff6fae', [1.6, 2, 1.6]); b.put(G0.ball, cx, 14.7, cz, '#ffd23f', .45);
     const tw = mesh(b, shinyMat(), true); k.add(tw);
     const go = () => { if (P.ride || !onPlanet(P) || Math.abs(P.y - 12) > 1 || Math.abs(P.x - (X + 166)) > 4) return false; P.x = X + 166.2; P.y = 12; k.G.startSlide(path, { vmax: 10, acc: 6 }); k.disc('jupiterspiral', '🍭 Round and round down the Candy Tower slide!'); return true; };
@@ -230,7 +230,7 @@ export function jupiterSkyArea3(k) {
   { const cx = X + 297, cz = -2.2, r = 2.6, pts = [V3(LX1 + .2, LY + .5, -1.2)];
     for (let i = 0; i <= 54; i++) { const a = Math.PI + i / 54 * Math.PI * 6.5; pts.push(V3(cx + Math.cos(a) * r, LY - .3 - i / 54 * 16.4, cz + Math.sin(a) * r)); }
     pts.push(V3(X + 299.5, .9, 0), V3(X + 302, .75, 0));
-    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .3); slideTube(k, path, { segs: 210, rings: 14, cols: ['#9b6cff', '#5aa8ff'], bands: 26 });
+    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .3); slideTube(k, path, { segs: 160, rings: 14, cols: ['#9b6cff', '#5aa8ff'], bands: 26 });
     const mouth = new THREE.Mesh(G0.torus, toy('#ffd23f', { r: .3, ei: .4 })); mouth.position.set(LX1 - .2, LY + .9, -1.2); mouth.rotation.y = Math.PI / 2; mouth.scale.setScalar(1.1); k.add(mouth);
     const go = () => { if (!near(P, LX1, LY, 3.5, 1.2)) return false; P.x = LX1 + .2; P.y = LY; k.G.startSlide(path, { vmax: 11, acc: 6 }); k.disc('jupitertwister', '🌀 Round and round inside the Twister Tube!'); return true; };
     let cool = 0; k.U.push(dt => { cool = Math.max(0, cool - dt); if (!cool && onPlanet(P) && !P.ride && P.grounded && Math.abs(P.y - LY) < .1 && P.x > LX1 - .4 && P.vx > .5 && go()) cool = 2; });
@@ -238,7 +238,7 @@ export function jupiterSkyArea3(k) {
   // ---------- THE GREAT RED SPOT SLIDE: the biggest one, from the lookout all the way back to the ball pit ----------
   { const pts = [[LX0 - .2, LY + .5, -1.2], [X + 272, 18, -5], [X + 268, 17.2, -13], [X + 258, 16, -19], [X + 244, 14, -20.5], [X + 232, 12.5, -19.5], [X + 220, 10.5, -18], [X + 209, 9.5, -14],
       [X + 200, 9, -16], [X + 191, 7.5, -12.5], [X + 186, 5.5, -7], [X + 191, 4.2, -4.6], [X + 197, 2.7, -3.3], [X + 203.5, .75, -1.4]].map(p => V3(...p));
-    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35), tube = slideTube(k, path, { segs: 380, r: 1, postEvery: .05, bands: 21 });
+    const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35), tube = slideTube(k, path, { segs: 260, r: 1, postEvery: .05, bands: 21 });
     // glowing hoops to slide through (they ring as you pass), and clouds round the far part of the ride
     const hu = [.12, .24, .36, .48, .6, .72, .84], hoops = [], q = new THREE.Quaternion(), e = new THREE.Euler(), Z = V3(0, 0, 1), hb = makeBatch(), cb = makeBatch();
     for (const [i, u] of hu.entries()) { const p = path.getPointAt(u), t = path.getTangentAt(u); q.setFromUnitVectors(Z, t); e.setFromQuaternion(q); hb.put(G0.torus, p.x, p.y, p.z, RB[i % 7], 1.9, [e.x, e.y, e.z]); hoops.push(u); }

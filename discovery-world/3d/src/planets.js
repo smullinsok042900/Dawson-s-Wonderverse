@@ -593,7 +593,9 @@ function saturnRingRace(k, X) {
   ringG.add(tb.mesh(shinyMat())); const smat = toy('#ffd23f', { em: '#ffb000', ei: .8 });
   for (let i = 0; i < 12; i++) { const sa = (i / 12) * Math.PI * 2 + .12, l = [1.6, -1.6, 0, .8][i % 4], m = new THREE.Mesh(new THREE.OctahedronGeometry(.45), smat); m.position.set(Math.cos(-sa) * (RR + l), 1.1, Math.sin(-sa) * (RR + l)); ringG.add(m); stars.push({ a: sa, l, m }); }
   const rivals = [['#ff4f6a', -1.6], ['#7fe0a0', 1.6]].map(([c, l]) => { const m = new THREE.Group(); const rb2 = makeBatch(); rb2.put(new THREE.BoxGeometry(1, 1, 1), 0, .25, 0, c, [2, .4, 1.1]); rb2.put(new THREE.ConeGeometry(.4, .9, 10), 1.2, .3, 0, '#ffffff', 1, [0, 0, -Math.PI / 2]); m.add(rb2.mesh(shinyMat())); m.visible = false; m.userData.dynamic = true; k.add(m); return { m, l, a: 0, v: 14 }; });
-  let lane = 0, boost = 0;
+  // (build 72) two JUMP RAMPS on the outside lane: drive over them (▲ to the outside) and the kart flies through the air
+  const ramps = [Math.PI * .55, Math.PI * 1.45], rb3 = makeBatch(); for (const ra of ramps) rb3.put(new THREE.BoxGeometry(1, 1, 1), Math.cos(-ra) * (RR + 1.6), .35, Math.sin(-ra) * (RR + 1.6), '#ffd23f', [2.6, .7, 1.4], [0, ra, .25]);
+  ringG.add(rb3.mesh(shinyMat())); let lane = 0, boost = 0, hop = 0, hv = 0;
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - pad) > 7) return; k.fact('🏁 The Ring Raceway! YOU drive: ► to go faster, ◄ to slow down, ▲ ▼ to change lanes. Drive over the blue pads to BOOST and catch the stars!', 'saturnrace');
     let ph = 'up', a = 0, laps = 0, v = 0; const start = kart.position.clone(), top = on(0, .4);
     jupiterRide(k, 'ringrace', (R, dt) => {
@@ -605,7 +607,9 @@ function saturnRingRace(k, X) {
         for (const s of stars) if (!s.got && Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - s.a) < .025 && Math.abs(lane - s.l) < .9) { s.got = true; s.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(600 + R.stars * 50, .15, 'sine', .07, 1.5); }
         for (const o of rivals) { o.a -= o.v / (RR + o.l) * dt; o.v = 14 + Math.sin(R.t * .7 + o.l) * 4 + (o.a > a ? 3 : -2); o.m.position.copy(on(o.a, .4, o.l)); o.m.lookAt(on(o.a - .05, .4, o.l)); o.m.rotateY(-Math.PI / 2); }
         if (a <= -(laps + 1) * Math.PI * 2) { laps++; R.laps = laps; k.Sound.chime && k.Sound.chime(); k.say(laps < 3 ? `🏁 Lap ${laps}! Keep going!` : `🏆 You finished the race around Saturn's rings${R.stars ? ' with ' + R.stars + ' stars' : ''}! Everybody wins!`, true); if (laps >= 3) { ph = 'down'; R.d = R.t; } }
-        kart.position.copy(on(a, .4, lane)); const ahead = on(a - .05, .4, lane); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
+        const na = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)); if (!hop) for (const ra of ramps) if (Math.abs(na - ra) < .02 && lane > 1 && v > 10) { hop = .001; hv = 7 + v * .15; R.jumps = (R.jumps || 0) + 1; k.Sound.whoosh(); k.api.burst(kart.position.x, kart.position.y, kart.position.z, ['#ffd23f', '#ffffff'], 12, 2); }
+        if (hop) { hv -= 14 * dt; hop += hv * dt; if (hop <= 0) { hop = 0; k.Sound.boing(); } }
+        kart.position.copy(on(a, .4 + hop, lane)); const ahead = on(a - .05, .4 + hop, lane); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
       else if (ph === 'down') { for (const o of rivals) o.m.visible = false; const q = Math.min(1, (R.t - R.d) / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(top, start, e); kart.position.y += Math.sin(q * Math.PI) * 8; if (q >= 1) { kart.rotation.set(0, 0, 0); return true; } }
       P.x = kart.position.x; P.y = kart.position.y + .35; P.z = kart.position.z; P.facing = 1; R.maxY = Math.max(R.maxY || 0, P.y); return false;
     }, () => { P.x = pad + 3; P.y = 0; P.z = 0; kart.position.copy(start); k.say('🏆 What a race! Tap the rocket kart to race again!', true); }, { noExit: true }); };

@@ -4,6 +4,34 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 72 — Saturn jump ramps, lighter Jupiter slides, smoke checks for the build 71 rides
+- **Build 71** (merged in PRs #76 and #77):
+  - Neptune: the bungee you control, and the Big Sky Dive;
+  - Mars: the 30 m climbing wall climbed with the joystick, and the trampoline park;
+  - Saturn: a 60 m Star Blaster, spun up with JUMP; the Ring Raceway you drive;
+  - Venus: a log flume three times longer, steered;
+  - Pluto: the inflatable park;
+  - Uranus: the Ice Palace and a bigger rink.
+  - Ride tests: `control-rides` 11/11, `saturn-rides` 5/5, `venus-flume` 3/3, `parks` 14/14.
+  - Full smoke test **234/236**. The two failures were old checks for the build 68 versions of the Star Blaster (no JUMP presses) and the Mars trampoline (the old cliff edge). Both checks are updated in build 72 to test the new behaviour just as strictly.
+- **Build 72:**
+  - Saturn: two jump ramps on the outside lane (`saturn-rides` 5/5, 3 jumps in a race);
+  - Jupiter: lighter slide half-pipes (8 sides; 120/160/260 segments).
+- **Jupiter speed** (desktop, software rendering; average of 2 alternating runs; ms per frame):
+
+  | Spot | Build 69 | Build 72 |
+  |---|---|---|
+  | +125 | 178 | 180 |
+  | +150 | 163 | 176 |
+  | +185 | 147 | 167 (build 70: +24%) |
+  | +205 | 151 | 161 |
+  | +240 | 170 | 167 |
+  | +260 | 170 | 175 |
+  | +300 | 160 | 151 |
+
+  Still slower around +150 to +205: about 10 more draw calls. In NEXT_TASKS.
+- **Not on the iPhone yet.**
+
 ## Checkpoint: build 70 — Jupiter Sky Playground, Mercury carnival funhouse, pink line removed
 - **New modules:** `src/jupiter-world.js` and `src/mercury-funhouse.js`, built in the planets' areas 2–3 and freed when she leaves. The full list is in README.md.
 - **Game changes:**
