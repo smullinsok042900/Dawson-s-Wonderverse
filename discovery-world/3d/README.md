@@ -12,6 +12,19 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 70: the Jupiter Sky Playground and the Mercury carnival funhouse
+- **Jupiter:** the playground grew into a floating sky world:
+  - the Sunrise Tower (tap: up the rainbow stairs), a rope bridge, cloud islands, a launch pad and a cloud elevator;
+  - the Candy Tower spiral slide, a musical floor, a colour game, a ball pit, bounce targets and a bubble machine;
+  - a secret cloud, the Floaty Bubble (low gravity, catch the stars), and a wind fan up to the Sky Lookout with a Great Red Spot telescope;
+  - the Twister Tube and the giant Great Red Spot Slide, plus travel balloons.
+- **Mercury:** a three-floor carnival funhouse after the mirror maze:
+  - the Hall of Infinite Mirrors, moving floors, a spinning disc, a bouncy foam room, a spinning tunnel;
+  - find-the-real-door, a giant-and-tiny room, an upside-down room, a light game and a shape game;
+  - an endless corridor, a mirror tunnel and a secret mirror door;
+  - lifts, stairs and the Big Top Slide, and a six-star treasure hunt.
+- **Earth:** the pink line across the bottom of the screen is gone.
+
 ## 3D build 69: the GIANT Moon roller coaster
 The Moon coaster is now a 4.7 km ride that lasts over three minutes (about 8× the build 68 coaster):
 - a spiral lift that climbs round a glowing lunar spire to 227 m, then a 195 m first drop;

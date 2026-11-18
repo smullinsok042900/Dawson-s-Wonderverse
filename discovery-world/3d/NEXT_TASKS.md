@@ -3,6 +3,21 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## Build 70 follow-ups (do first)
+- Run the full smoke test on build 70 and fix anything it finds.
+- Jupiter speed: the busiest new spots (x +150 to +205) measured about 10–20% slower than build 69 (desktop). Try:
+  - hiding far zones by distance;
+  - lighter slides (fewer segments; this was tried but not yet committed);
+  - fewer ball-pit balls.
+- Measure Mercury the same way (`/tmp` script `pplanet.cjs mercury`).
+- Queued family requests:
+  - Uranus: an explorable ice castle and a big skating area;
+  - Neptune: a controllable bungee and skydive;
+  - Mars: a big climbing wall with real climbing, and a trampoline park;
+  - Pluto: a huge inflatable park;
+  - Venus: a giant log flume;
+  - Saturn: a giant launch ride and a drivable ring racetrack.
+
 ## Giant Moon coaster (build 69): check on the real iPhone
 - Ride it from start to end on the iPhone: is it smooth all the way, especially the spiral lift, the tunnel and the cave? Use ⚙️ → Performance Test at the Moon station.
 - Does the first-visit camera sweep (6.5 s) feel good, or too long?

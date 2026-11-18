@@ -4,6 +4,21 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 70 — Jupiter Sky Playground, Mercury carnival funhouse, pink line removed
+- **New modules:** `src/jupiter-world.js` and `src/mercury-funhouse.js`, built in the planets' areas 2–3 and freed when she leaves. The full list is in README.md.
+- **Game changes:**
+  - `P.sizeMul` (the giant-and-tiny room; it only applies on a planet);
+  - the Jupiter super slide is now an open rainbow half-pipe (no extra shader, cheaper to draw);
+  - the pink kerb along the front of the Earth world was removed (the family's screenshot).
+- **Verified (desktop, software rendering):**
+  - `tests/jupiter-world.cjs` **20/20**: the stairs and bridge; the launch pad onto the high island; the Candy slide; the musical floor; the ball pit; the elevator; bubbles; the secret; the colour game; bounce targets; the Floaty Bubble and its stars; the wind fan; the telescope; the Great Red Spot Slide through all 7 hoops; the Twister; a travel balloon; and that walking along the ground still reaches the old playground.
+  - `tests/mercury-funhouse.cjs` **17/17**: every room, both lifts, the stairs, the slide and all six stars.
+- **Speed (Jupiter, build 69 → 70):**
+  - the spots with lots of new things in view are about 10–20% slower;
+  - the others are the same or faster.
+  - Recorded in NEXT_TASKS for the next build.
+- **Full smoke test:** not run yet for this build (the family asked for it now); run it next.
+
 ## Checkpoint: build 69 — the GIANT Moon roller coaster
 - **The family asked** for the Moon coaster to be made absolutely massive (10–20× bigger, hundreds of metres tall, minutes long), with a giant climb and first drop, loops, corkscrews, spirals, a mountain tunnel, a crater drop, a glowing cave, high sections and a finale. It had to work perfectly, be easy for a 5-year-old, and not make the game slower.
 - **How big:**
