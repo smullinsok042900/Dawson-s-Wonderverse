@@ -24,7 +24,7 @@ function ride(k, type, step, done) {
   return R;
 }
 // stars you collect by touching them (one shared material); returns { list, left() }
-function starField(k, pts, onAll) {
+export function starField(k, pts, onAll) {
   const G0 = GEO(), mat = toy('#ffd23f', { em: '#ffb000', ei: .8, m: .3 }), list = pts.map(([x, y, z]) => { const m = new THREE.Mesh(G0.oct, mat); m.scale.set(.4, .52, .16); m.position.set(x, y, z ?? -.2); k.add(m); return { m, x, y, z: z ?? -.2, got: false }; });
   let n = 0;
   k.U.push((dt, t) => { const P = k.P; for (const s of list) { if (s.got) continue; s.m.rotation.y = t * 2;
