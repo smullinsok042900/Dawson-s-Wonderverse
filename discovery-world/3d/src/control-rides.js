@@ -38,20 +38,21 @@ export function neptuneBungee2(k, X) {
   const P = k.P, G0 = GEO(), bx = X + 76, T = 24, b = makeBatch();
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.put(G0.cyl, bx + sx * 1.3, T / 2, -4 + sz * 1.3, '#9b6cff', [.16, T, .16]);
   for (let y = 3; y < T; y += 3) for (const sz of [-1, 1]) b.put(G0.box, bx, y, -4 + sz * 1.3, '#c9a6ff', [2.6, .1, .1]);
-  b.put(G0.box, bx, T, -4, '#ffd23f', [3.4, .3, 3.4]); b.put(G0.box, bx + 2.4, T, -3, '#ff6a3c', [2.2, .3, 1.4]);          // the platform and a BIG jumping board
+  b.put(G0.box, bx, T, -4, '#ffd23f', [3.4, .3, 3.4]); b.put(G0.box, bx + 2.4, T, -3, '#ff6a3c', [2.2, .3, 1.4]); b.put(G0.box, bx - 2.4, T, -3, '#7fe0a0', [2.2, .3, 1.4]); // (build 76: the GENTLE board on the left, the BIG board on the right)          // the platform and a BIG jumping board
   for (const s of [-1, 1]) b.put(G0.cyl, bx + s * 1.6, T + .6, -2.4, '#ffffff', [.05, 1.2, .05]); b.put(G0.box, bx, T + 1.2, -2.4, '#ffffff', [3.2, .06, .06]);
   b.put(G0.cyl, bx + 3, .05, -3, '#5aa8ff', [3.4, .1, 3.4]); b.put(G0.cyl, bx + 3, .07, -3, '#ffffff', [2.2, .1, 2.2]); b.put(G0.cyl, bx + 3, .09, -3, '#ff4f6a', [1, .1, 1]); // a soft landing mat
   k.add(b.mesh(shinyMat()));
   const lift = new THREE.Mesh(new THREE.BoxGeometry(1.4, .2, 1.4), toy('#5aa8ff', { r: .3 })); lift.position.set(bx - 2.1, .1, -2.6); k.add(lift);
   const cord = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 1, 6), toy('#ff4f9a', { r: .4 })); cord.visible = false; k.add(cord);
-  const A = new THREE.Vector3(bx + 3, T + .1, -3), Bv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), Lc = 9;
+  const A = new THREE.Vector3(bx + 3, T + .1, -3), Bv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0); let Lc = 9, big = true;
   const stars = starField(k, [[bx + 3 - 2.4, T - 9, -3], [bx + 3 + 2.4, T - 12, -3], [bx + 3 - 1.8, T - 15, -3], [bx + 3 + 2, T - 18, -3], [bx + 3, T - 20.5, -3]], () => { k.Sound.chime(); k.say('⭐ You caught all the bungee stars!', true); k.disc('neptunebungeestars'); });
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - bx) > 9) return; k.fact('🪢 Bungee jump! Ride up to the top. When you are ready, press the JUMP button!', 'neptunebungee');
     let ph = 'lift', vy = 0, y = 0, sway = 0, vs = 0, wait = 0;
     const R = ride(k, 'bungee', (R, dt) => {
       if (ph === 'lift') { lift.position.y = Math.min(T, lift.position.y + dt * 5); P.x = bx - 2.1; P.z = -2.6; P.y = lift.position.y + .1; if (lift.position.y >= T) { ph = 'walk'; R.w = 0; } return false; }
-      if (ph === 'walk') { R.w += dt; P.x = bx - 2.1 + Math.min(1, R.w / 1.2) * 5.1; P.y = T + .15; P.z = -3; P.facing = 1; if (R.w > 1.3) { ph = 'ready'; wait = 0; k.say('🪢 Press JUMP when you are ready!', true); } return false; }
-      if (ph === 'ready') { wait += dt; P.y = T + .15 + Math.abs(Math.sin(R.t * 3)) * .06; if (wait > 12 || R.jumpNow) { ph = 'fall'; vy = 3.5; y = P.y; cord.visible = true; k.Sound.whoosh(); k.say('🪢 JUMP! Use ◀ ▶ to catch the stars! Press JUMP at the bottom to bounce higher!', true); R.t0 = R.t; } }
+      if (ph === 'walk') { R.w += dt; P.x = bx - 2.1 + Math.min(1, R.w / 1.2) * 5.1; P.y = T + .15; P.z = -3; P.facing = 1; if (R.w > 1.3) { ph = 'ready'; wait = 0; k.say('🪢 Big jump here! Or push ◀ for the gentle jump. Press JUMP when you are ready!', true); } return false; }
+      if (ph === 'ready') { wait += dt; P.y = T + .15 + Math.abs(Math.sin(R.t * 3)) * .06; const sc = stick(k); if (sc.x < -.5 && big) { big = false; k.Sound.tone(392, .12, 'triangle', .05, 1); k.say('🪢 The gentle jump: a short cord.', false); } else if (sc.x > .5 && !big) { big = true; k.Sound.tone(587, .12, 'triangle', .05, 1); k.say('🪢 The BIG jump: a long cord!', false); }
+        const bxT = big ? bx + 3 : bx - 3; P.x += (bxT - P.x) * Math.min(1, dt * 4); P.facing = big ? 1 : -1; A.x = bxT; Lc = big ? 9 : 5; R.big = big; if (wait > 12 || R.jumpNow) { ph = 'fall'; vy = 3.5; y = P.y; cord.visible = true; k.Sound.whoosh(); k.say('🪢 JUMP! Use ◀ ▶ to catch the stars! Press JUMP at the bottom to bounce higher!', true); R.t0 = R.t; } }
       if (ph === 'fall') { const st = stick(k); vs += (st.x * 5 - sway * 1.2) * dt; vs *= Math.exp(-dt * 1.2); sway = Math.max(-3, Math.min(3, sway + vs * dt));
         vy -= 11 * dt; const stretch = (A.y - (y + 1)) - Lc; if (stretch > 0) vy += 9 * stretch * dt; vy *= Math.exp(-dt * .45); y += vy * dt; y = Math.max(.6, y); R.minY = Math.min(R.minY ?? 99, y);
         if (stretch > 0 && vy > 0 && !R.boing) { R.boing = 1; R.bounces = (R.bounces || 0) + 1; k.Sound.boing(); } if (vy < 0) R.boing = 0;

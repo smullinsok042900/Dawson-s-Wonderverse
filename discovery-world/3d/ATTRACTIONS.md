@@ -31,7 +31,7 @@
 | 7 | Saturn | Star Blaster (60 m) | PLAYABLE | Camera view buttons; a "gentle" picture button. |
 | 8 | Uranus | Ice Palace | PLAYABLE | A second floor of rooms, a frozen-bookcase secret passage and an underground tunnel network. |
 | 9 | Uranus | Skating rink | PLAYABLE | Steering in depth (z), and winding ice trails beyond the oval. |
-| 10 | Neptune | Bungee | PLAYABLE | Gentle or big cord (two boards). |
+| 10 | Neptune | Bungee | PLAYABLE | Build 76: two jumping boards: ◀ the GENTLE one (short cord, lowest point 13.8 m) or ▶ the BIG one (long cord, 8.5 m). JUMP when ready, steer for stars, JUMP at the bottom to bounce higher (`control-rides` checks it). Next: a bigger tower, and a rebound game with targets. |
 | 11 | Neptune | Big Sky Dive | PLAYABLE | More cloud routes and floating platforms. |
 | 12 | Mars | Climbing wall (30 m) | PLAYABLE | A second wall with a cave tunnel through it; route choices. |
 | 13 | Mars | Trampoline park | PLAYABLE | More trampolines and a bouncing route along the canyon. |

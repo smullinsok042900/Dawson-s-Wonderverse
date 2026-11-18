@@ -20,11 +20,15 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await page.waitForFunction(() => __DDW3.G.bungee && __DDW3.G.bungee.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
   const waited = await ev(() => __DDW3.G.bungee.ph); await sleep(1500); const still = await ev(() => __DDW3.G.bungee.ph);
   await ev(() => __DDW3.player.ride.onJump()); await keys({ right: true });
-  const bj = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let minY = 99, maxDx = 0, x0 = null, bounces = 0; const f = () => { const R = P.ride; if (R && R.type === 'bungee') { minY = Math.min(minY, P.y); if (x0 == null) x0 = P.x; maxDx = Math.max(maxDx, Math.abs(P.x - x0)); bounces = R.bounces || 0; if (R.boing) R.onJump(); }
-    if (!P.ride || performance.now() - t0 > 120000) return res({ minY, maxDx, bounces, y: P.y, done: !P.ride }); requestAnimationFrame(f); }; f(); }));
+  const bj = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let minY = 99, minYfall = 99, maxDx = 0, x0 = null, bounces = 0; const f = () => { const R = P.ride; if (R && R.type === 'bungee') { minY = Math.min(minY, P.y); if (__DDW3.G.bungee.ph === 'fall') minYfall = Math.min(minYfall, P.y); if (x0 == null) x0 = P.x; maxDx = Math.max(maxDx, Math.abs(P.x - x0)); bounces = R.bounces || 0; if (R.boing) R.onJump(); }
+    if (!P.ride || performance.now() - t0 > 120000) return res({ minY, minYfall, maxDx, bounces, y: P.y, done: !P.ride }); requestAnimationFrame(f); }; f(); }));
   await keys({ right: false });
   check('bungee: waits on the board until YOU press JUMP', waited === 'ready' && still === 'ready');
   check('bungee: you fall on the cord, steer sideways, bounce, and are lowered to the ground', bj.done && bj.minY < 12 && bj.maxDx > 1 && bj.bounces >= 1 && bj.y < .3, JSON.stringify(bj));
+  await put(X + 186); await sleep(1000); await run('neptunebungeego'); await page.waitForFunction(() => __DDW3.G.bungee && __DDW3.G.bungee.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
+  await keys({ left: true }); await sleep(800); await keys({ left: false }); const isGentle = await ev(() => __DDW3.player.ride && __DDW3.player.ride.big === false); await ev(() => __DDW3.player.ride.onJump());
+  const gj = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let minY = 99, falling = true; const f = () => { const R = P.ride; if (R && R.type === 'bungee' && __DDW3.G.bungee.ph === 'fall') minY = Math.min(minY, P.y); if (!P.ride || performance.now() - t0 > 120000) return res({ minY, done: !P.ride, y: P.y }); requestAnimationFrame(f); }; f(); }));
+  check('bungee: push ◀ for the GENTLE board: a shorter cord, a smaller fall, and back down', isGentle && gj.done && gj.minY > bj.minYfall + 2 && gj.y < .3, JSON.stringify({ isGentle, ...gj, bigMinY: bj.minYfall }));
   await put(X + 294); await sleep(1500); await run('neptuneskydivego2');
   await page.waitForFunction(() => __DDW3.G.skyDive && __DDW3.G.skyDive.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
   const top = await ev(() => __DDW3.player.y); await ev(() => __DDW3.player.ride.onJump()); await keys({ left: true });
