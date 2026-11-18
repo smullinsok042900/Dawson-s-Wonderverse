@@ -70,12 +70,20 @@ export function mercuryFunhouse(k) {
     const back = makeBatch(); back.put(G0.box, x((a + c) / 2), F2 / 2, 2 * ZB - .2, '#1a1430', [c - a, F2, .2]); refl.add(back.mesh(shinyMat()));
     const pane = new THREE.Mesh(painted(new THREE.PlaneGeometry(c - a, F2), '#cfe8ff'), glass(.12)); pane.position.set(x((a + c) / 2), F2 / 2, ZB); k.add(pane);
     const frame = makeBatch(); frame.put(G0.box, x((a + c) / 2), F2 - .1, ZB, '#ffd23f', [c - a, .25, .3]); frame.put(G0.box, x((a + c) / 2), .1, ZB, '#ffd23f', [c - a, .25, .3]); k.add(mesh(frame, shinyMat()));
-    let me = null, kind = '', said = false;
-    k.U.push(dt => { const inRoom = onPlanet(P) && P.x > x(a) - 4 && P.x < x(c) + 4 && P.y < F2 - .5; refl.visible = inRoom; if (me) me.root.visible = inRoom;
+    // (build 73 speed) the mirror shows a PICTURE of you, refreshed every third frame by a little camera at the mirror that
+    // sees only you (one draw call on screen, instead of a whole second character: about 55 draw calls)
+    const MW = 2.2, MH = 2.6, rt = new THREE.WebGLRenderTarget(176, 208), mcam = new THREE.PerspectiveCamera(40, MW / MH, .2, 20), LAYER = 5;
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(MW, MH), new THREE.MeshBasicMaterial({ map: rt.texture, fog: false, toneMapped: false })); pic.scale.x = -1; pic.visible = false; k.add(pic); mcam.layers.set(LAYER);
+    let said = false, fno = 0, tagged = null; const bg = new THREE.Color('#cfe3ff');
+    k.U.push(() => { const inRoom = onPlanet(P) && P.x > x(a) - 4 && P.x < x(c) + 4 && P.y < F2 - .5; refl.visible = inRoom; pic.visible = inRoom;
       if (!inRoom) return; if (!said) { said = true; k.fact('🪞 The Hall of Infinite Mirrors! The mirror shows you, and the mirror in the mirror, again and again, forever!', 'mercuryinfinite'); }
-      const want = k.api.creatureKind ? k.api.creatureKind() : 'pip';
-      if (!me || kind !== want) { if (me) me.root.parent && me.root.parent.remove(me.root); me = k.api.makeCreature(want); kind = want; me.root.traverse(o => { o.userData.dynamic = true; o.castShadow = false; }); k.add(me.root); }
-      me.root.position.set(P.x, P.y + .35, 2 * ZB - P.z); me.root.scale.set(1, 1, -1); me.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded, facing: P.facing, happy: 0 }); }); }
+      pic.position.set(P.x, P.y + MH / 2, ZB + .03);
+      if (fno++ % 3) return; const body = G.playerBody, R = G.renderer; if (!body || !R) return;
+      if (tagged !== body) { body.traverse(o => o.layers.enable(LAYER)); tagged = body; }
+      mcam.position.set(P.x, P.y + MH / 2, ZB); mcam.lookAt(P.x, P.y + MH / 2, P.z || 0);
+      const prev = R.getRenderTarget(), pbg = G.scene.background, pc = R.getClearColor(new THREE.Color()), pa = R.getClearAlpha(), sm = R.shadowMap.autoUpdate;
+      G.scene.background = null; R.shadowMap.autoUpdate = false; R.setClearColor(bg, 1); R.setRenderTarget(rt); R.clear(); R.render(G.scene, mcam); R.setRenderTarget(prev); R.setClearColor(pc, pa); G.scene.background = pbg; R.shadowMap.autoUpdate = sm; G.mirrorPics = (G.mirrorPics || 0) + 1; });
+  }
   // ---------------- G2: WOBBLY WALKWAYS (238–254): two moving floors and a wobbly bridge ----------------
   { const belts = [[238.5, 243.5, 1.6, '#5aa8ff'], [243.8, 248.8, -1.1, '#ff9a2e']], bb = makeBatch(), stripes = [];
     for (const [a, c, , cl] of belts) bb.put(G0.box, x((a + c) / 2), .06, -1.2, cl, [c - a, .12, 2.4]); k.add(mesh(bb, shinyMat()));

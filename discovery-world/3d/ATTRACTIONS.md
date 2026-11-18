@@ -22,7 +22,7 @@
 
 | # | Planet | Attraction | Status | What is left |
 |---|---|---|---|---|
-| 1 | Mercury | Hall of Infinite Mirrors + maze mirrors | PLAYABLE (slow) | A lighter "mirror double" of the character (now about 55 draw calls). Hall: 198 ms against 130 before the funhouse. |
+| 1 | Mercury | Hall of Infinite Mirrors + maze mirrors | PLAYABLE | Hall (build 73): a live picture of her on the glass, refreshed every 3rd frame, instead of a 2nd character. 120 → 83 draw calls; frame time the same on desktop. Next: use the same picture for the maze's 7 funny mirrors. |
 | 2 | Jupiter | Sky Playground | PLAYABLE (+7 to +14% at +150 to +205) | Shared invisible tap boxes so the visible pieces can merge; fewer meshes. |
 | 3 | Mercury | Mirror maze (area 2) | TODO | It is still the build 67 hall. Make it a real maze: branching corridors, rotating mirror walls, hidden doors, coloured light per section, and a link into the funhouse. |
 | 4 | Mercury | Carnival funhouse | PLAYABLE (+15 to +28%) | More rooms: a crawl tunnel and a forced-perspective hallway. Speed. |
