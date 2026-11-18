@@ -16,7 +16,7 @@ import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField } from './control-rides.js';
-import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame } from './big-parks.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -352,7 +352,7 @@ function uranusRink(k, cx) {
 }
 const uranus = {
   sections: [
-    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
+    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
     k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
   ],
 };

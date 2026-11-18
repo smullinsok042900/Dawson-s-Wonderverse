@@ -34,6 +34,9 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await sleep(3000); check('Uranus: ring the crystals small to big and the secret door opens', await ev(() => __DDW3.G.icePalace.open) && await has('uranussecret'));
   await put(U0 + 88.5); await sleep(1500); check('Uranus: walk to the treasure in the ice tunnel', await has('uranustreasure'));
   await put(U0 + 66); await sleep(500); await run('uranusstairsup'); const st = await watch(20000); check('Uranus: one tap up the ice stairs to the balcony', Math.abs(st.y - 6) < .3, JSON.stringify(st));
+  await put(U0 + 76, 6); await sleep(500); await run('uranussnowmachine'); check('Uranus: the snowflake machine upstairs', await has('uranussnowflakes'));
+  await put(U0 + 88, 6); await sleep(500); await run('uranussecretswitch'); await sleep(2500); await ev(() => { for (let i = 0; i < 5; i++) __DDW3.G.icePalaceUp.bell(i); });
+  check('Uranus: the snowflake switch slides the frozen bookcase away; play the five ice bells in the secret music room', await has('uranusbookcase') && await has('uranusbells'));
   await put(U0 + 105, 6); await sleep(500); await run('uranusslidego'); const is = await watch(40000); check('Uranus: the ice slide from the balcony down', is.seen && is.y < 1, JSON.stringify(is));
   await put(X + 220 + 50 - 30); await sleep(2500); await ev(() => { __DDW3.keys.right = true; }); await page.waitForFunction(x => __DDW3.player.x > x, X + 220 + 50 + 28, { timeout: 60000 }).catch(() => {}); await ev(() => { __DDW3.keys.right = false; });
   check('Uranus: skate through all six hoops on the bigger rink', await has('uranushoops'));
