@@ -27,7 +27,7 @@
 | 3 | Mercury | Mirror maze (area 2) | PLAYABLE | Build 74: coloured light per section; the UPPER MIRROR GALLERY (a 2nd route over the doors, reached by the one-tap mirror stairs); the LIGHT-BEAM PUZZLE (turn 3 mirrors) that opens a HIDDEN MIRROR DOOR to a treasure; a path of lights to the funhouse (`tests/mercury-maze.cjs` 5/5). Costs about 5 extra draw calls near the puzzle; desktop frame times are within the noise. Next: branching corridors and rotating mirror walls on the ground route. |
 | 4 | Mercury | Carnival funhouse | PLAYABLE (+15 to +28%) | More rooms: a crawl tunnel and a forced-perspective hallway. Speed. |
 | 5 | Earth | Every district's activities | TODO | Audit Toy Town, Art Plaza, farm, pier, hills, trail and the Sky Kingdom. Bring the biggest up to standard. |
-| 6 | Saturn | Ring Raceway | PLAYABLE | Add an outer ring route chosen at a fork, a tunnel and a loop, and free-drive / easy-race buttons. |
+| 6 | Saturn | Ring Raceway | PLAYABLE | Build 75: the OUTER RING ROUTE: stay on the outside lane at the glowing fork gate to take a second ring for half a lap, through a star tunnel, with its own stars (`saturn-rides` 5/5: taken 3 times, 7 stars). Also: you drive it, with lanes, boosts, 2 jump ramps and friendly racers. Desktop speed is unchanged (+2 draw calls). Next: free-drive / easy-race picture buttons, a loop. |
 | 7 | Saturn | Star Blaster (60 m) | PLAYABLE | Camera view buttons; a "gentle" picture button. |
 | 8 | Uranus | Ice Palace | PLAYABLE | A second floor of rooms, a frozen-bookcase secret passage and an underground tunnel network. |
 | 9 | Uranus | Skating rink | PLAYABLE | Steering in depth (z), and winding ice trails beyond the oval. |

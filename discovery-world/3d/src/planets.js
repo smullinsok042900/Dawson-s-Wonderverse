@@ -600,21 +600,34 @@ function saturnRingRace(k, X) {
   const rivals = [['#ff4f6a', -1.6], ['#7fe0a0', 1.6]].map(([c, l]) => { const m = new THREE.Group(); const rb2 = makeBatch(); rb2.put(new THREE.BoxGeometry(1, 1, 1), 0, .25, 0, c, [2, .4, 1.1]); rb2.put(new THREE.ConeGeometry(.4, .9, 10), 1.2, .3, 0, '#ffffff', 1, [0, 0, -Math.PI / 2]); m.add(rb2.mesh(shinyMat())); m.visible = false; m.userData.dynamic = true; k.add(m); return { m, l, a: 0, v: 14 }; });
   // (build 72) two JUMP RAMPS on the outside lane: drive over them (▲ to the outside) and the kart flies through the air
   const ramps = [Math.PI * .55, Math.PI * 1.45], rb3 = makeBatch(); for (const ra of ramps) rb3.put(new THREE.BoxGeometry(1, 1, 1), Math.cos(-ra) * (RR + 1.6), .35, Math.sin(-ra) * (RR + 1.6), '#ffd23f', [2.6, .7, 1.4], [0, ra, .25]);
-  ringG.add(rb3.mesh(shinyMat())); let lane = 0, boost = 0, hop = 0, hv = 0;
+  ringG.add(rb3.mesh(shinyMat()));
+  // (build 75) THE OUTER RING ROUTE: at the fork (a glowing gate), stay on the OUTSIDE lane and you swing out onto a second ring
+  //  for half a lap: through a starry tunnel, past its own stars, then back onto the main track
+  const OA = Math.PI * .2, OB = Math.PI * 1.2, OR = 8, ob = makeBatch(), og = makeBatch();
+  { const arc = new THREE.TorusGeometry(RR + OR, 2.2, 3, 70, OB - OA - .3); ob.put(arc, 0, -.05, 0, '#3a6a9a', [1, 1, .06], [Math.PI / 2, 0, -(OA + .15)]);
+    for (let i = 0; i < 9; i++) { const ta = OA + .35 + i * .08; og.put(new THREE.TorusGeometry(3, .2, 4, 16, Math.PI), Math.cos(-ta) * (RR + OR), 0, Math.sin(-ta) * (RR + OR), i % 2 ? '#62f0ff' : '#ff6fd8', 1, [0, ta, 0]); }
+    for (const fa of [OA, OB]) og.put(new THREE.TorusGeometry(3.4, .25, 6, 20), Math.cos(-fa) * (RR + 3), 1, Math.sin(-fa) * (RR + 3), '#ffd23f', 1, [0, fa, 0]); }
+  ringG.add(ob.mesh(shinyMat())); ringG.add(og.mesh(glowMat()));
+  for (let i = 0; i < 4; i++) { const sa = OA + .9 + i * .45, m = new THREE.Mesh(new THREE.OctahedronGeometry(.45), smat); m.position.set(Math.cos(-sa) * (RR + OR), 1.1, Math.sin(-sa) * (RR + OR)); ringG.add(m); stars.push({ a: sa, l: OR, m, outer: true }); }
+  let lane = 0, boost = 0, hop = 0, hv = 0, outer = 0, onOuter = false;
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - pad) > 7) return; k.fact('🏁 The Ring Raceway! YOU drive: ► to go faster, ◄ to slow down, ▲ ▼ to change lanes. Drive over the blue pads to BOOST and catch the stars!', 'saturnrace');
     let ph = 'up', a = 0, laps = 0, v = 0; const start = kart.position.clone(), top = on(0, .4);
     jupiterRide(k, 'ringrace', (R, dt) => {
-      if (ph === 'up') { if (R.t < .05) { lane = 0; boost = 0; for (const s of stars) { s.got = false; s.m.visible = true; } for (const o of rivals) { o.a = .02 * (o.l > 0 ? 1 : -1); o.m.visible = true; } } const q = Math.min(1, R.t / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(start, top, e); kart.position.y += Math.sin(q * Math.PI) * 10; if (q >= 1) { ph = 'race'; k.say('🏁 Three, two, one... GO!', true); k.Sound.chime && k.Sound.chime(); } }
+      if (ph === 'up') { if (R.t < .05) { lane = 0; boost = 0; outer = 0; onOuter = false; for (const s of stars) { s.got = false; s.m.visible = true; } for (const o of rivals) { o.a = .02 * (o.l > 0 ? 1 : -1); o.m.visible = true; } } const q = Math.min(1, R.t / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(start, top, e); kart.position.y += Math.sin(q * Math.PI) * 10; if (q >= 1) { ph = 'race'; k.say('🏁 Three, two, one... GO!', true); k.Sound.chime && k.Sound.chime(); } }
       else if (ph === 'race') { // (build 71) YOU DRIVE: ► faster, ◄ brake (no input: a gentle cruise), ▲ ▼ change lane; boost pads and stars
         const st = k.api.stick ? k.api.stick() : { x: 0, y: 0 }, want = st.x > .2 ? 32 : st.x < -.2 ? 4 : 13; v += (want + boost - v) * Math.min(1, dt * (st.x < -.2 ? 2.5 : 1.2)); boost = Math.max(0, boost - dt * 6);
         lane = Math.max(-2, Math.min(2, lane + st.y * dt * 3)); const da = v / (RR + lane) * dt; a -= da; R.maxV = Math.max(R.maxV || 0, v); R.lanes = Math.max(R.lanes || 0, Math.abs(lane));
         for (const p of pads) if (Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - p.a) < .03 && Math.abs(lane - p.l) < .9 && R.t - (p.t || -9) > 2) { p.t = R.t; boost = 16; R.boosts = (R.boosts || 0) + 1; k.Sound.whoosh(); k.say('⚡ BOOST!', false); }
-        for (const s of stars) if (!s.got && Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - s.a) < .025 && Math.abs(lane - s.l) < .9) { s.got = true; s.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(600 + R.stars * 50, .15, 'sine', .07, 1.5); }
+        for (const s of stars) if (!s.got && Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - s.a) < .025 && Math.abs(lane + outer - s.l) < .9) { s.got = true; s.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(600 + R.stars * 50, .15, 'sine', .07, 1.5); }
         for (const o of rivals) { o.a -= o.v / (RR + o.l) * dt; o.v = 14 + Math.sin(R.t * .7 + o.l) * 4 + (o.a > a ? 3 : -2); o.m.position.copy(on(o.a, .4, o.l)); o.m.lookAt(on(o.a - .05, .4, o.l)); o.m.rotateY(-Math.PI / 2); }
         if (a <= -(laps + 1) * Math.PI * 2) { laps++; R.laps = laps; k.Sound.chime && k.Sound.chime(); k.say(laps < 3 ? `🏁 Lap ${laps}! Keep going!` : `🏆 You finished the race around Saturn's rings${R.stars ? ' with ' + R.stars + ' stars' : ''}! Everybody wins!`, true); if (laps >= 3) { ph = 'down'; R.d = R.t; } }
         const na = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)); if (!hop) for (const ra of ramps) if (Math.abs(na - ra) < .02 && lane > 1 && v > 10) { hop = .001; hv = 7 + v * .15; R.jumps = (R.jumps || 0) + 1; k.Sound.whoosh(); k.api.burst(kart.position.x, kart.position.y, kart.position.z, ['#ffd23f', '#ffffff'], 12, 2); }
         if (hop) { hv -= 14 * dt; hop += hv * dt; if (hop <= 0) { hop = 0; k.Sound.boing(); } }
-        kart.position.copy(on(a, .4 + hop, lane)); const ahead = on(a - .05, .4 + hop, lane); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
+        const nb = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI));
+        if (!onOuter && Math.abs(nb - OA) < .03 && lane > 1.2) { onOuter = true; R.outer = (R.outer || 0) + 1; k.Sound.chime(); k.say('🌌 The outer ring route! Through the star tunnel!', false); }
+        if (onOuter && nb > OB - .02 && nb < OB + .3) onOuter = false;
+        outer += ((onOuter ? OR - lane : 0) - outer) * Math.min(1, dt * 1.5);
+        kart.position.copy(on(a, .4 + hop, lane + outer)); const ahead = on(a - .05, .4 + hop, lane + outer); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
       else if (ph === 'down') { for (const o of rivals) o.m.visible = false; const q = Math.min(1, (R.t - R.d) / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(top, start, e); kart.position.y += Math.sin(q * Math.PI) * 8; if (q >= 1) { kart.rotation.set(0, 0, 0); return true; } }
       P.x = kart.position.x; P.y = kart.position.y + .35; P.z = kart.position.z; P.facing = 1; R.maxY = Math.max(R.maxY || 0, P.y); return false;
     }, () => { P.x = pad + 3; P.y = 0; P.z = 0; kart.position.copy(start); k.say('🏆 What a race! Tap the rocket kart to race again!', true); }, { noExit: true }); };
