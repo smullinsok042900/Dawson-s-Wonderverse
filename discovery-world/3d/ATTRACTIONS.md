@@ -32,7 +32,7 @@
 | 8 | Uranus | Ice Palace | PLAYABLE | A second floor of rooms, a frozen-bookcase secret passage and an underground tunnel network. |
 | 9 | Uranus | Skating rink | PLAYABLE | Steering in depth (z), and winding ice trails beyond the oval. |
 | 10 | Neptune | Bungee | PLAYABLE | Build 76: two jumping boards: ◀ the GENTLE one (short cord, lowest point 13.8 m) or ▶ the BIG one (long cord, 8.5 m). JUMP when ready, steer for stars, JUMP at the bottom to bounce higher (`control-rides` checks it). Next: a bigger tower, and a rebound game with targets. |
-| 11 | Neptune | Big Sky Dive | PLAYABLE | More cloud routes and floating platforms. |
+| 11 | Neptune | Big Sky Dive | PLAYABLE | Build 79: three FLOATING CLOUD ISLANDS (46, 33, 21 m): land on one, walk about, then JUMP to dive on; plus a second line of golden hoops (`control-rides` checks it). No extra draw calls (part of the sky mesh); desktop frame time unchanged. Next: wind gusts that push you, and a picture button for the camera view. |
 | 12 | Mars | Climbing wall (30 m) | PLAYABLE | A second wall with a cave tunnel through it; route choices. |
 | 13 | Mars | Trampoline park | PLAYABLE | More trampolines and a bouncing route along the canyon. |
 | 14 | Pluto | Inflatable park | PLAYABLE | Build 78: the PUFFY PICTURE-MATCHING GAME (6 cards, 3 pairs; wrong pairs turn back; win → party, reshuffle; `parks` checks it). Each card is one mesh: +8 draw calls; desktop frame time within the noise. Next: a second tower and an inflatable maze. |

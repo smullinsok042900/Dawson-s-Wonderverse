@@ -31,6 +31,7 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('bungee: push ◀ for the GENTLE board: a shorter cord, a smaller fall, and back down', isGentle && gj.done && gj.minY > bj.minYfall + 2 && gj.y < .3, JSON.stringify({ isGentle, ...gj, bigMinY: bj.minYfall }));
   await put(X + 294); await sleep(1500); await run('neptuneskydivego2');
   await page.waitForFunction(() => __DDW3.G.skyDive && __DDW3.G.skyDive.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
+  await ev(() => { window.__rests = 0; const end = performance.now() + 900000; let t0 = 0; const f = () => { const S = __DDW3.G.skyDive, R = __DDW3.player.ride; if (S && R && S.ph === 'rest') { if (!t0) { t0 = performance.now(); window.__rests++; } else if (performance.now() - t0 > 1500) { R.onJump(); t0 = 0; } } if (performance.now() < end) requestAnimationFrame(f); }; f(); }); // (build 79: rest on a cloud island, then dive on)
   const top = await ev(() => __DDW3.player.y); await ev(() => __DDW3.player.ride.onJump()); await keys({ left: true });
   await page.waitForFunction(() => __DDW3.player.y < 50, null, { timeout: 60000 }).catch(() => {}); const xa = await ev(() => __DDW3.player.x); await keys({ left: false, right: true });
   await page.waitForFunction(() => __DDW3.player.y < 35, null, { timeout: 60000 }).catch(() => {}); const xb = await ev(() => __DDW3.player.x); await keys({ right: false });
@@ -41,6 +42,10 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('sky dive: you steer left and right while falling', xb - xa > 2, `moved ${(xb - xa).toFixed(1)} m right after going left`);
   check('sky dive: JUMP opens the parachute', chute === 'chute');
   check('sky dive: you steer to the target and land', land.done && land.y < .2 && Math.abs(land.dx) < 3.5 && await ev(() => __DDW3.world.disc.has('neptunebullseye')), JSON.stringify(land));
+  await put(X + 294); await sleep(1500); await run('neptuneskydivego2'); await page.waitForFunction(() => __DDW3.G.skyDive && __DDW3.G.skyDive.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
+  const restOk = await ev(() => new Promise(res => { const S = __DDW3.G.skyDive, P = __DDW3.player; P.x = S.tx - 18; P.z = -3; S.R.onJump(); const t0 = performance.now(); let rested = false, tr = 0;
+    const f = () => { if (S.ph === 'rest' && !rested) { rested = true; tr = performance.now(); } if (rested && S.ph === 'rest' && performance.now() - tr > 1500) S.R.onJump(); if ((rested && !P.ride) || performance.now() - t0 > 150000) return res({ rested, ride: !!P.ride, ph: S.ph, y: +P.y.toFixed(1), x: +(P.x - S.tx).toFixed(1) }); requestAnimationFrame(f); }; f(); }));
+  check('sky dive: land on a floating cloud island, rest, then JUMP to dive on and land', restOk.rested && !restOk.ride && restOk.y < .3, JSON.stringify(restOk));
   }
   // ---- MARS ----
   X = await fly('mars'); await put(X + 150); await sleep(2000); await put(X + 250); await sleep(2500);

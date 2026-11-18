@@ -75,27 +75,33 @@ export function neptuneSkyDive(k, X) {
   for (const [i, [x, y, z]] of hoopPts.entries()) gb.put(G0.torus, x, y, z, RB[i % 7], 2.6, [Math.PI / 2, 0, 0]);
   for (let i = 0; i < 26; i++) { const x = bx - 14 + (i * 7.3) % 34, y = 18 + (i * 11.7) % 46, z = -9 + (i * 3.1) % 8; for (const [dx, s] of [[0, 1], [1.6, .75], [-1.5, .7]]) gb.put(G0.lo, x + dx, y, z, i % 4 ? '#ffffff' : '#cfe3ff', [2.2 * s, 1.2 * s, 1.6 * s]); }
   gb.put(G0.cyl, tx, .04, -1, '#ffffff', [4.5, .08, 4.5]); gb.put(G0.cyl, tx, .06, -1, '#ff4f6a', [3.2, .08, 3.2]); gb.put(G0.cyl, tx, .08, -1, '#ffffff', [2, .08, 2]); gb.put(G0.cyl, tx, .1, -1, '#ff4f6a', [.9, .08, .9]);
+  // (build 79) three FLOATING CLOUD ISLANDS to land on (rest, then JUMP to dive on), and a second line of golden hoops
+  const islands = [[bx - 8, 46, -3, 3.2], [bx + 9, 33, -1, 3.4], [bx - 4, 21, 1, 3.6]].map(([ix, iy, iz, ir]) => { for (const [dx, dz, s] of [[0, 0, 1], [-1.8, .6, .7], [1.7, -.5, .75], [.4, 1.4, .6], [-.6, -1.5, .65]]) gb.put(G0.lo, ix + dx, iy - .6, iz + dz, '#ffffff', [ir * .65 * s + .4, .9 * s, ir * .6 * s + .3]); return { x: ix, y: iy, z: iz, r: ir }; });
+  const hoopPts2 = [[bx - 10, 55, 0], [bx - 12, 40, -4], [bx - 9, 27, 2]]; for (const [hx, hy, hz] of hoopPts2) gb.put(G0.torus, hx, hy, hz, '#ffd23f', 2.4, [Math.PI / 2, 0, 0]); hoopPts.push(...hoopPts2);
   const sky = gb.mesh(glowMat()); k.add(sky);
   const stars = starField(k, [[bx + 2, 63, -1], [bx - 5, 53, -2], [bx + 7, 44, 0], [bx - 1, 35, -4], [bx + 5, 26, 1], [bx + 10, 15, -2]].map(([x, y, z]) => [x, y, z]), () => { k.Sound.chime(); k.say('⭐ All the sky stars!', true); k.disc('neptuneskystars'); });
   // the parachute (a colourful dome over her when it opens)
   const chute = new THREE.Group(); chute.visible = false; k.add(chute); { const cb = makeBatch(); for (let i = 0; i < 8; i++) cb.put(new THREE.SphereGeometry(1, 6, 4, i * Math.PI / 4, Math.PI / 4, 0, Math.PI / 2), 0, 3, 0, RB[i % 7], [2.4, 1.3, 2.4]); for (let i = 0; i < 4; i++) cb.put(G0.cyl, Math.cos(i * 1.57) * 1.2, 2, Math.sin(i * 1.57) * 1.2, '#ffffff', [.02, 2.2, .02], [Math.sin(i * 1.57) * .5, 0, -Math.cos(i * 1.57) * .5]); chute.add(cb.mesh(shinyMat())); }
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - bx) > 7) return; k.fact('🪂 The Big Sky Dive! The balloon takes you way up high. Press JUMP to dive!', 'neptuneskydiver');
-    let ph = 'up', vx = 0, vz = 0, vy = 0, hoopsGot = 0, wait = 0; const hit = hoopPts.map(() => false);
+    let ph = 'up', vx = 0, vz = 0, vy = 0, hoopsGot = 0, wait = 0, rest = null; const hit = hoopPts.map(() => false);
     const R = ride(k, 'skydrop', (R, dt) => {
       if (ph === 'up') { bal.position.y = Math.min(TOP, bal.position.y + dt * 12); P.x = bx; P.z = -2.5; P.y = bal.position.y + 1.6; if (bal.position.y >= TOP) { ph = 'ready'; wait = 0; k.say('🪂 So high! Press JUMP to dive!', true); } return false; }
       if (ph === 'ready') { wait += dt; if (wait > 8 || R.go) { ph = 'fall'; vy = 0; k.Sound.whoosh(); k.say('🪂 Wheee! Steer with the joystick through the hoops! Press JUMP to open your parachute!', true); } return false; }
+      if (ph === 'rest') { const sr = stick(k); P.x = Math.max(rest.x - rest.r + .5, Math.min(rest.x + rest.r - .5, P.x + sr.x * 3 * dt)); P.z = Math.max(rest.z - rest.r + .5, Math.min(rest.z + rest.r - .5, P.z - sr.y * 2 * dt)); P.y = rest.y + Math.sin(R.t * 3) * .04; R.roll = 0; P.facing = sr.x >= 0 ? 1 : -1; chute.visible = false;
+        if (R.go2) { R.go2 = false; ph = 'fall'; vy = 4; R.open = false; R.left = rest; R.leftT = R.t; k.Sound.whoosh(); } return false; }
       const st = stick(k), chuteOn = ph === 'chute', sp = chuteOn ? 3 : 7;
       vx += (st.x * sp - vx) * Math.min(1, dt * 2); vz += (-st.y * sp * .7 - vz) * Math.min(1, dt * 2);
       vy += ((chuteOn ? -3 : -13) - vy) * Math.min(1, dt * (chuteOn ? 2.5 : .9));                    // gentle air resistance: a steady fall, then slow under the parachute
       P.x = Math.max(X + 20, Math.min(X + 108, P.x + vx * dt)); P.z = Math.max(-7, Math.min(4, P.z + vz * dt)); P.y += vy * dt;
       R.roll = chuteOn ? 0 : Math.PI / 2 * .9 + st.x * .25; P.facing = vx >= 0 ? 1 : -1;
       for (const [i, [hx, hy, hz]] of hoopPts.entries()) if (!hit[i] && Math.abs(P.y + .6 - hy) < 1.2 && Math.hypot(P.x - hx, P.z - hz) < 2.8) { hit[i] = true; hoopsGot++; k.Sound.tone(520 + hoopsGot * 80, .2, 'sine', .07, 1.5); k.api.burst(hx, hy, hz, RB, 16, 2.4); if (hoopsGot === hoopPts.length) k.say('🎉 Through every hoop!', true); }
+      for (const isl of islands) if (!(isl === R.left && R.t - R.leftT < 2) && vy < 0 && P.y - vy * dt >= isl.y - .1 && P.y <= isl.y + .1 && Math.hypot(P.x - isl.x, P.z - isl.z) < isl.r) /* (her height before and after this step) */ { ph = 'rest'; rest = isl; P.y = isl.y; vy = 0; vx = vz = 0; R.rests = (R.rests || 0) + 1; k.Sound.boing(); k.api.burst(P.x, P.y, P.z, ['#ffffff'], 12, 1.6); k.say('☁️ A cloud island! Walk about, then press JUMP to dive again!', true); return false; }
       if (ph === 'fall' && (R.open || P.y < 18)) { ph = 'chute'; chute.visible = true; k.Sound.boing(); k.say('🪂 Parachute open! Steer to the red target!', true); }
       if (chute.visible) chute.position.set(P.x, P.y + .6, P.z);
       if (P.y <= 0) { P.y = 0; return true; } return false; },
       R => { chute.visible = false; bal.position.y = 0; P.vy = 0; const bull = Math.hypot(P.x - tx, (P.z || 0) + 1) < 3.3; P.z = 0; k.api.burst(P.x, .6, 0, RB, bull ? 30 : 12, 2.6); k.Sound.chime();
         k.say(bull ? '🎯 BULLSEYE! A perfect landing on the target!' : '🪂 You landed! Tap the balloon to dive again!', true); k.disc(bull ? 'neptunebullseye' : 'neptuneskydived'); G_last.hoops = hoopsGot; G_last.bull = bull; });
-    R.onJump = () => { if (ph === 'ready') R.go = true; else if (ph === 'fall') R.open = true; };
+    R.onJump = () => { if (ph === 'ready') R.go = true; else if (ph === 'rest') R.go2 = true; else if (ph === 'fall') R.open = true; };
     k.G.skyDive = { R, get ph() { return ph; }, hoops: hoopPts, tx }; };
   const G_last = k.G.skyDiveLast = {};
   k.tapIt(bal, go, bx, 'neptuneskydivego2');
