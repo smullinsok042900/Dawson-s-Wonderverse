@@ -979,7 +979,7 @@ function updatePlayer(dt) {
   }
   // the floor: normally y 0; under the floor (or down the deep shaft) it is the underground floor
   const gy = P.layer === 'sea' ? SEA.floor : P.layer !== '' ? 0 : (P.y > UG.ceil + .05 && !inShaftX(P.x)) ? 0 : UG.floor;
-  if (P.y <= gy) { if (!P.grounded && P.vy < -6) Sound.land(); P.y = gy; P.vy = 0; P.grounded = true; P.groundZ = 0; if (gy < 0) discover('underground', 'A secret underground world! Explore the caves.'); }
+  if (P.y <= gy) { if (!P.grounded && P.vy < -6) Sound.land(); P.y = gy; P.vy = 0; P.grounded = true; P.groundZ = (P.layer === 'space' && G.iceZ != null && G.space && G.space.here() === 'uranus') ? G.iceZ : 0; /* (build 85: the Uranus rink steers your depth) */ if (gy < 0) discover('underground', 'A secret underground world! Explore the caves.'); }
   if (P.layer === '' && P.y < UG.ceil - .05) { // underground ceilings (low in the crawl tunnel, open under the shaft)
     const tun = P.x > UG.tunnel[0] && P.x < UG.tunnel[1], c = tun ? UG.tunnelCeil : inShaftX(P.x) ? null : UG.ceil, Hh = tun ? .9 : 1.5;
     if (c != null && P.y + Hh > c) { P.y = c - Hh; P.vy = Math.min(P.vy, 0); }
@@ -1588,7 +1588,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '84'; G.build = GAME_BUILD;
+const GAME_BUILD = '85'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

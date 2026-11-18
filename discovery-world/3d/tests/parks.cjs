@@ -40,6 +40,8 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(U0 + 105, 6); await sleep(500); await run('uranusslidego'); const is = await watch(40000); check('Uranus: the ice slide from the balcony down', is.seen && is.y < 1, JSON.stringify(is));
   await put(X + 220 + 50 - 30); await sleep(2500); await ev(() => { __DDW3.keys.right = true; }); await page.waitForFunction(x => __DDW3.player.x > x, X + 220 + 50 + 28, { timeout: 60000 }).catch(() => {}); await ev(() => { __DDW3.keys.right = false; });
   check('Uranus: skate through all six hoops on the bigger rink', await has('uranushoops'));
+  await put(X + 220 + 50); await sleep(800); await ev(() => { __DDW3.keys.up = true; }); await sleep(2500); const zf = await ev(() => __DDW3.G.rinkZ); await ev(() => { __DDW3.keys.up = false; __DDW3.keys.down = true; }); await sleep(2500); const zn = await ev(() => __DDW3.G.rinkZ); await ev(() => { __DDW3.keys.down = false; });
+  check('Uranus: on the rink, ▲ glides you far across the ice and ▼ back again', zf < -4.5 && zn > zf + 3, JSON.stringify({ zf, zn, dbg: await ev(() => __DDW3.G.rinkDbg) }));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();
