@@ -15,6 +15,7 @@ import { makeBatch, shinyMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse } from './mercury-funhouse.js';
+import { neptuneBungee2, neptuneSkyDive, marsClimbPark } from './control-rides.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -157,7 +158,7 @@ const mars = {
       const red = new THREE.Color('#b8794a'), blue = new THREE.Color('#5f7fb8'), tmp = new THREE.Color();
       k.U.push(dt => { if (dusk <= 0) return; dusk = Math.max(0, dusk - dt); const a = Math.min(1, Math.min(dusk, 6 - dusk) / 1.2); tmp.copy(red).lerp(blue, a); k.setSkyColor(tmp); sun.position.y = 9 - a * 3; });
       k.placeAlien(X + 26, -2, 3); k.placeAlien(X + 76, -2.4, 4);
-      marsClimbWall(k, X); // (build 68)
+      marsClimbPark(k, X); // (build 71: the climbing wall you climb yourself, and the trampoline park; was marsClimbWall)
       k.rocketSign(X + 4);
     },
     // ----- area 3: THE EXPLORER STATION (pretend) -----
@@ -469,8 +470,8 @@ function neptuneSkydive(k, X) {
 }
 const neptune = {
   sections: [
-    k => { neptuneWindSwings(k, k.s0); neptuneBungee(k, k.s0); k.rocketSign(k.s0 + 4); },   // area 2: the wind swings and the bungee tower
-    k => { neptuneSkydive(k, k.s0); k.rocketSign(k.s0 + 100); },                             // area 3: the skydiving chamber
+    k => { neptuneWindSwings(k, k.s0); neptuneBungee2(k, k.s0); k.rocketSign(k.s0 + 4); },  // (build 71: the bungee you control)   // area 2: the wind swings and the bungee tower
+    k => { neptuneSkydive(k, k.s0); neptuneSkyDive(k, k.s0); k.rocketSign(k.s0 + 100); },  // (build 71: + the Big Sky Dive you steer)                             // area 3: the skydiving chamber
   ],
 };
 

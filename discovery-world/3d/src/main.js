@@ -260,7 +260,8 @@ const kingdom = initKingdom(G, { scene, Sound, burst: (x, y, z, c, n, sp) => bur
 const sea = initSea(G, { scene, Sound, player, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g) }); G.deepSea = sea; // (build 43: the deep pool and the underwater world)
 // (build 45) the space rocket: the Moon, the planets and Pluto, with their real gravity
 const ROCKET_PAD = 693; // (build 64: moved off the colour pond)
-const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, keysUp: () => !!(keys.up || (stick && stick.active && stick.dy < -25)), /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
+const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, keysUp: () => !!(keys.up || (stick && stick.active && stick.dy < -25)),
+  stick: () => { const sd = stick && stick.active ? stick : null; return { x: (keys.right ? 1 : 0) - (keys.left ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, sd.dx / 55)) : 0), y: (keys.up ? 1 : 0) - (keys.down ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, -sd.dy / 55)) : 0) }; }, /* (build 71: steer planet rides) */ /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
 // (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
 // the sun stands (low and from the side on the airless worlds, for long shadows). Only numbers change: no new shaders.
@@ -784,6 +785,7 @@ function jump() {
   const P = player; if (!started || G.activityOpen || P.stair) return;
   if (P.ride && P.ride.type === 'rocket') { if (P.ride.phase === 'in') { climbOut(G.rockets[P.ride.key]); Sound.jump(1); } return; } // (build 48: JUMP climbs out before take-off)
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
+  if (P.ride && P.ride.onJump) { P.ride.onJump(); return; } // (build 71: a planet ride can use the JUMP button: bungee jump, parachute, launch...)
   if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
   if (P.ride) { if (P.ride.type === 'slide' || P.ride.type === 'coaster' || P.ride.noExit) return; /* (build 65: no hopping out of the roller coaster mid-air) */ const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
@@ -1586,7 +1588,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '70'; G.build = GAME_BUILD;
+const GAME_BUILD = '71'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

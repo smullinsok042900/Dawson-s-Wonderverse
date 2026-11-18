@@ -12,6 +12,12 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 71: rides you control (Neptune, Mars)
+- **Neptune bungee:** you press JUMP when ready, steer ◀ ▶ to catch stars, and press JUMP at the bottom to bounce higher.
+- **Neptune Big Sky Dive (new):** a balloon takes you up 70 m. Press JUMP to dive, steer with the joystick through hoops and stars, press JUMP for the parachute, and land on the target.
+- **Mars climbing wall:** now 30 m tall and 10 m wide. Climb yourself with the joystick (up, down, left, right), collect gems, rest on ledges (with a secret cave), and press JUMP to let go safely.
+- **Mars trampoline park:** three trampolines with hoops; hold ▲ when you land to bounce much higher, even back up to the cliff.
+
 ## 3D build 70: the Jupiter Sky Playground and the Mercury carnival funhouse
 - **Jupiter:** the playground grew into a floating sky world:
   - the Sunrise Tower (tap: up the rainbow stairs), a rope bridge, cloud islands, a launch pad and a cloud elevator;
