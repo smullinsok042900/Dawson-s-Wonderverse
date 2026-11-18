@@ -14,6 +14,10 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   const blast = jump => ev(jump => new Promise(res => { const D = __DDW3, P = D.player; D.G.interact.find(i => i.disc === 'saturnblaster').run(); const t0 = performance.now(); let maxY = 0, seen = false;
     const f = () => { const R = P.ride; if (R && R.type === 'blaster') { seen = true; if (jump && R.onJump && R.t < 5) R.onJump(); } maxY = Math.max(maxY, P.y); if ((seen && !P.ride) || performance.now() - t0 > 120000) return res({ seen, maxY, done: !P.ride, y: P.y }); requestAnimationFrame(f); }; f(); }), jump);
   await put(X + 150); await sleep(1500); const gentle = await blast(false); await put(X + 150); await sleep(800); const wild = await blast(true);
+  await put(X + 150); await sleep(800);
+  const cv = await ev(() => new Promise(res => { const D = __DDW3, P = D.player; D.G.interact.find(i => i.disc === 'saturnblaster').run(); const t0 = performance.now(); let wide = false, seen = false;
+    const f = () => { const R = P.ride; if (R && R.type === 'blaster') { seen = true; D.keys.right = R.t > 1 && R.t < 4; if (D.G.camOverride && D.G.camOverride.blaster) wide = true; } if ((seen && !P.ride) || performance.now() - t0 > 120000) { D.keys.right = false; return res({ wide, cleared: !(D.G.camOverride && D.G.camOverride.blaster) }); } requestAnimationFrame(f); }; f(); }));
+  check('Star Blaster: push ▶ for the wide view of the whole tower; the camera comes back after the ride', cv.wide && cv.cleared, JSON.stringify(cv));
   check('Star Blaster: a full ride, back on the ground', gentle.done && gentle.y < .3, JSON.stringify(gentle));
   check('Star Blaster: pressing JUMP while it spins launches you much higher', wild.maxY > gentle.maxY + 5 && wild.maxY > 50, JSON.stringify({ gentle: gentle.maxY, wild: wild.maxY }));
   await put(X + 240); await sleep(1500);

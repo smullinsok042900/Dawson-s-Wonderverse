@@ -580,7 +580,7 @@ function saturnStarBlaster(k, X) {
     for (let i = 0; i < 4; i++) rb.put(new THREE.BoxGeometry(1, 1, 1), 0, 0, 0, '#c9a6ff', [6.4, .12, .2], [0, i * Math.PI / 4, 0]); rig.add(rb.mesh(shinyMat())); }
   let idle = .4; k.U.push(dt => { if (!(P.ride && P.ride.type === 'blaster')) { rig.rotation.y += dt * idle; rig.position.y += (1.2 - rig.position.y) * Math.min(1, dt * 3); } });
   starField(k, [...Array(10)].map((_, i) => { const a = i / 10 * Math.PI * 2; return [cx + Math.cos(a) * 3.2, 30 + (i % 3) * 11, cz - Math.sin(a) * 3.2]; }), () => { k.Sound.chime(); k.say('⭐ You caught all the Star Blaster stars!', true); k.disc('saturnblasterstars'); });
-  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - cx) > 9) return; k.say('🌀 Buckle up! Press JUMP to spin faster: the faster you spin, the higher you BLAST OFF!', true);
+  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - cx) > 9) return; k.say('🌀 Buckle up! Press JUMP to spin faster: the faster you spin, the higher you BLAST OFF! Push ▶ to see the whole tower.', true);
     let ph = 'spin', w = 0, y = 1.2, vy = 0, wMax = 5;
     const RR = jupiterRide(k, 'blaster', (R, dt) => {
       if (ph === 'spin') { w = Math.min(wMax, w + dt * 2.2); if (R.t > 5.5) { ph = 'up'; vy = 14 + w * 3; R.wLaunch = w; k.Sound.whoosh && k.Sound.whoosh(); k.say('🚀 WHOOOOSH! Up we go!', true); } }
@@ -590,9 +590,11 @@ function saturnStarBlaster(k, X) {
       else if (ph === 'bounce') { vy -= 14 * dt; y += vy * dt; if (y <= 1.2) { y = 1.2; ph = 'slow'; } }
       else if (ph === 'slow') { w = Math.max(0, w - dt * 2.5); if (w <= .2) return true; }
       rig.rotation.y += w * dt; rig.position.y = y; R.maxY = Math.max(R.maxY || 0, y); R.maxW = Math.max(R.maxW || 0, w);
+      { const sc = k.api.stick ? k.api.stick() : { x: 0 }; if (sc.x > .5 && !R.wide) { R.wide = true; R.views = (R.views || 0) + 1; } else if (sc.x < -.5 && R.wide) R.wide = false; /* (build 84: ▶ the WIDE view of the whole tower, ◀ back close) */
+        if (R.wide) k.G.camOverride = { blaster: true, pos: [cx + 24, y + 6, cz + 36], look: [cx, y, cz] }; else if (k.G.camOverride && k.G.camOverride.blaster) k.G.camOverride = null; }
       const a = -rig.rotation.y; P.x = cx + Math.cos(a) * 3.2; P.z = cz + Math.sin(a) * 3.2; P.y = y + .3; P.facing = Math.sin(a) > 0 ? -1 : 1; R.roll = Math.min(.5, w * .07);
       if (w > 4 && Math.random() < .15) k.api.burst(P.x, P.y + .5, P.z, ['#ffffff', '#ffd23f', '#c9a6ff'], 2, 1.5); return false;
-    }, () => { P.x = cx + 4.6; P.y = 0; P.z = 0; k.say('🌀 Wow! Tap the Star Blaster to go again!', true); }, { noExit: true });
+    }, () => { if (k.G.camOverride && k.G.camOverride.blaster) k.G.camOverride = null; P.x = cx + 4.6; P.y = 0; P.z = 0; k.say('🌀 Wow! Tap the Star Blaster to go again!', true); }, { noExit: true });
     const RP = P.ride; if (RP) RP.onJump = () => { if (ph === 'spin') { wMax = Math.min(10, wMax + 1.2); w = Math.min(wMax, w + .8); k.Sound.tone(300 + wMax * 40, .1, 'triangle', .05, 2); k.api.burst(P.x, P.y + .5, P.z, ['#ffd23f', '#c9a6ff'], 6, 1.4); } }; };
   k.tapIt(rig, go, cx, 'saturnblaster'); k.tapIt(tw, go);
 }
