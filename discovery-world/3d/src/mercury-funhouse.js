@@ -219,6 +219,13 @@ export function mercuryFunhouse(k) {
     const go = () => { if (P.ride || !onPlanet(P) || Math.abs(P.y - F3) > 1 || P.x < x(306)) return false; P.x = x(309.5); P.y = F3; k.G.startSlide(path, { vmax: 11, acc: 6 }); k.say('🎪 The Big Top Slide! Wheeeee!', true); k.disc('mercurybigtop'); return true; };
     let cool = 0; k.U.push(dt => { cool = Math.max(0, cool - dt); if (!cool && onPlanet(P) && !P.ride && P.grounded && Math.abs(P.y - F3) < .1 && P.x > x(311.4) && P.vx > .5 && go()) cool = 2; });
     k.tapIt(tube, go); G.interact.push({ x: x(310), y: F3, layer: 'space', disc: 'mercurybigtopgo', run: go, hintY: 2.4 }); G.funhouseSlide = path; }
+  // ---------------- (build 80) THE CRAWL TUNNEL (ground, 300–306): a low rainbow tunnel; she crawls through, the lights follow her ----------------
+  { const a = 300.5, c = 306, tb = makeBatch(), lb = makeBatch(); for (let i = 0; i <= 8; i++) tb.put(G0.torus, x(a + i * (c - a) / 8), .1, -1.2, RB[i % 7], [1.05, 1.05, 2.2], [0, Math.PI / 2, 0]);
+    tb.put(G0.box, x((a + c) / 2), 1.25, -1.2, '#c9a6ff', [c - a, .12, 2.4]); k.add(mesh(tb, shinyMat()));
+    for (let i = 0; i < 10; i++) lb.put(G0.lo, x(a + .3 + i * .55), 1.05, -.2, RB[i % 7], .12); const lights = lb.mesh(glowMat()); k.add(lights);
+    let inside = false, done = false; G.crawlZone = Q => Q.x > x(a) && Q.x < x(c) && Q.y < 1;
+    k.U.push((dt, t) => { const now = onPlanet(P) && G.crawlZone(P); if (now && !inside) k.say('🐛 A tiny tunnel! Crawl through!', false); inside = now; lights.position.y = now ? Math.sin(t * 8) * .05 : 0;
+      if (now && !done && P.x > x(c) - .8) { done = true; S.giggle(); k.api.burst(P.x + .5, 1, -1, RB, 26, 2.4); k.fact('🎉 You crawled all the way through the tiny tunnel!', 'mercurycrawl'); } if (!now && P.x < x(a) - 2) done = false; }); }
   // the star hunt: walk into a star to collect it; it flies to its place on the prize board
   let got = 0;
   k.U.push((dt, t) => { for (const s of stars) { if (s.got || s.hidden) continue; s.m.rotation.y = t * 2; s.m.position.y = s.y + Math.sin(t * 2 + s.x) * .15;
