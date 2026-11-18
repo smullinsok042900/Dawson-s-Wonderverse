@@ -16,7 +16,7 @@ import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField } from './control-rides.js';
-import { plutoInflatablePark, uranusIcePalace, uranusRinkFun } from './big-parks.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -224,6 +224,7 @@ const pluto = {
       bounceCastle(k, X + 22, 7, ['#ff9fd2', '#ff6fae', '#fff3a6', '#c9a6ff'], 4.3);
       bounceCastle(k, X + 46, 9, ['#9fd8ff', '#5aa8ff', '#fff3a6', '#ffb35c'], 5.8);
       bounceCastle(k, X + 74, 12, ['#ffd23f', '#ff6fae', '#7fe0a0', '#5aa8ff'], 7.4, true);
+      plutoMatchGame(k); // (build 78) the puffy picture-matching game
       k.rocketSign(X + 4);
     },
     // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----

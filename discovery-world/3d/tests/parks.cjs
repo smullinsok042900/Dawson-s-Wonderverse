@@ -21,6 +21,11 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(S0 + 53, 14); await sleep(500); await run('plutoslidego'); const sl = await watch(60000); check('Pluto: the giant inflatable slide goes from the 14 m top down to the bounce pit', sl.seen && sl.x - S0 > 80 && sl.maxY > 13, JSON.stringify({ ...sl, x: sl.x - S0 }));
   await put(S0 + 107); await sleep(500); await run('plutosurprise'); check('Pluto: the surprise room', await has('plutosurprise'));
   await put(S0 + 57.2); await sleep(500); await run('plutoclimbwall'); await ev(() => { __DDW3.keys.up = true; }); const cw = await watch(40000); await ev(() => { __DDW3.keys.up = false; }); check('Pluto: climb the soft wall with the joystick to the top', cw.y > 13.5, JSON.stringify(cw));
+  await put(X + 150); await page.waitForFunction(() => !!__DDW3.G.plutoMatch, null, { timeout: 30000 }).catch(() => {}); await put(X + 110 + 89); await sleep(800);
+  const mg = await ev(() => new Promise(async res => { const M = __DDW3.G.plutoMatch; if (!M) return res({ none: true }); const wait = ms => new Promise(r => setTimeout(r, ms));
+    const ks = M.cards.map(c => c.kind); M.tap(ks.indexOf(0)); M.tap(ks.indexOf(1)); await wait(1600); const afterWrong = M.cards.filter(c => c.open).length;
+    for (const kd of [0, 1, 2]) { const i = ks.indexOf(kd), j = ks.lastIndexOf(kd); M.tap(i); M.tap(j); await wait(400); } res({ afterWrong, rounds: M.rounds }); }));
+  check('Pluto: the picture-matching game: wrong cards turn back, and matching all three pairs wins', mg.afterWrong === 0 && mg.rounds === 1 && await has('plutomatch'), JSON.stringify(mg));
   // ---- URANUS ----
   X = await fly('uranus'); await put(X + 150); await sleep(3000); const U0 = X + 110;
   check('Uranus: the Ice Palace is built', await ev(() => !!__DDW3.G.icePalace));

@@ -122,3 +122,27 @@ export function uranusRinkFun(k, cx, rx) {
     const ti = P.y < .5 && Math.abs(P.z + 3.6) < 1.5 ? Math.round((P.x - (cx - 9)) / 6) : -1; if (ti >= 0 && ti < 4 && ti !== lastTile) S.tone(notes[ti], .3, 'triangle', .06, 1); lastTile = ti; });
   starField(k, [[cx - rx + 9, 1.1, -.6], [cx - 3, 1.1, -.6], [cx + 6, 1.1, -.6], [cx + rx - 8, 1.1, -.6]], () => { S.chime(); k.say('⭐ All the rink stars!', true); k.disc('uranusrinkstars'); });
 }
+
+// =================== (build 78) PLUTO: THE PUFFY PICTURE-MATCHING GAME (area 2, after the bounce castles) ===================
+// Six puffy cards. Tap one: it turns round and shows a picture. Tap another: the same picture? They stay turned, hooray!
+// Not the same? They turn back (try again, as often as you like). All three pairs → a party, then the cards are shuffled.
+export function plutoMatchGame(k) {
+  const P = k.P, G = k.G, S = k.Sound, G0 = GEO(), x0 = k.s0 + 87, pics = ['star', 'heart', 'moon'], cols = ['#ffd23f', '#ff4f6a', '#9fd8ff'];
+  const heart = (() => { const sh = new THREE.Shape(); sh.moveTo(0, -.6); sh.bezierCurveTo(-1.1, .1, -.6, .9, 0, .45); sh.bezierCurveTo(.6, .9, 1.1, .1, 0, -.6); return new THREE.ExtrudeGeometry(sh, { depth: .12, bevelEnabled: false, curveSegments: 6 }); })();
+  const symbol = (sb, j) => { sb.put(G0.ball, 0, 0, -.25, '#ffffff', [.9, .9, .2]); if (j === 0) sb.put(G0.oct, 0, 0, -.45, cols[0], [.42, .55, .12]); else if (j === 1) sb.put(heart, 0, 0, -.53, cols[1], .5); else { sb.put(G0.ball, 0, 0, -.45, cols[2], [.45, .45, .1]); sb.put(G0.ball, .2, .08, -.49, '#ffffff', [.38, .4, .1]); } };
+  // (each card is ONE mesh: the puffy back and its picture; it is remade when the cards are dealt)
+  const cardGeo = j => { const b = makeBatch(); b.put(G0.ball, 0, 0, 0, '#c9a6ff', [1, 1, .35]); b.put(G0.ball, 0, 0, -.05, '#ffffff', [.75, .75, .3]); symbol(b, j); return b.geometry(); };
+  const cards = [], deal = () => { const order = [0, 0, 1, 1, 2, 2].sort(() => Math.random() - .5); cards.forEach((c, i) => { c.kind = order[i]; c.open = false; c.done = false; const old = c.m.geometry; c.m.geometry = cardGeo(c.kind); old.dispose(); }); };
+  for (let i = 0; i < 6; i++) { const g = new THREE.Group(); g.position.set(x0 + (i % 3) * 2.6, 1.3 + Math.floor(i / 3) * 2.3, -2.4); k.add(g);
+    const m = new THREE.Mesh(cardGeo(0), shinyMat()); g.add(m); cards.push({ g, m, kind: 0, open: false, done: false, turn: 0 }); }
+  deal(); let first = null, busy = 0, pairs = 0, rounds = 0;
+  cards.forEach(c => k.tapIt(c.g, () => { if (busy > 0 || c.open || c.done || P.layer !== 'space' || Math.abs(P.x - (x0 + 2.6)) > 9) return; c.open = true; S.tone(520, .1, 'triangle', .05, 1);
+    if (!first) { first = c; if (!rounds && !pairs) k.say('🎴 Find two the same! Tap another card.', true); return; }
+    const a = first; first = null;
+    if (a.kind === c.kind) { a.done = c.done = true; pairs++; S.chime(); k.api.burst(c.g.position.x, c.g.position.y, -2, [cols[c.kind], '#ffffff'], 18, 2); k.say(['⭐ Two stars!', '❤️ Two hearts!', '🌙 Two moons!'][c.kind], false);
+      if (pairs === 3) { rounds++; pairs = 0; k.api.burst(x0 + 2.6, 3, -2, ['#ffd23f', '#ff4f6a', '#9fd8ff', '#ffffff'], 40, 3); k.fact('🎉 You matched them all! You have a great memory!', 'plutomatch'); busy = 3; setTimeout(deal, 3000); } }
+    else { busy = 1; S.boing(); setTimeout(() => { a.open = false; c.open = false; }, 1000); } }));
+  k.G.interact.push({ x: x0 + 2.6, y: 0, layer: 'space', disc: 'plutomatchgame', run: () => k.say('🎴 Tap two cards to find the same pictures!', true), hintY: 2.4 });
+  G.plutoMatch = { cards, tap: i => cards[i].g.children[0].userData.tap(), get pairs() { return pairs; }, get rounds() { return rounds; } };
+  k.U.push((dt, t) => { busy = Math.max(0, busy - dt); for (const c of cards) { const want = c.open || c.done ? Math.PI : 0; c.turn += (want - c.turn) * Math.min(1, dt * 8); c.g.rotation.y = c.turn; c.g.position.z = -2.4 + Math.sin(t * 2 + c.g.position.x) * .05; } });
+}
