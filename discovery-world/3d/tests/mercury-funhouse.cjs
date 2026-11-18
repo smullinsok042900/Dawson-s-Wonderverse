@@ -60,6 +60,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await put(X + 310, 13); await sleep(300); await run('mercurybigtopgo'); const sl = await rideEnd(90000); check('the Big Top Slide spirals from floor 3 down to the ground', sl.seen && sl.y < 1 && sl.maxY > 12, JSON.stringify({ ...sl, x: sl.x - X }));
   // lift B to floor 3
   await put(X + 315); await sleep(300); await run('mercurylift3'); const lb = await rideEnd(); check('lift B takes you from the ground up to floor 3', lb.seen && Math.abs(lb.y - 13) < .3, JSON.stringify(lb));
+  await put(X + 299); await sleep(400); await ev(() => { __DDW3.keys.right = true; });
+  const cr = await ev(X => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let crawled = false; const f = () => { if (P.crawl) crawled = true; if (P.x > X + 307 || performance.now() - t0 > 30000) { __DDW3.keys.right = false; return res({ crawled, x: P.x - X }); } requestAnimationFrame(f); }; f(); }), X);
+  check('the crawl tunnel: she crawls through it to the surprise at the end', cr.crawled && cr.x > 307 && await has('mercurycrawl'), JSON.stringify(cr));
   // collect all six funhouse stars → the trophy
   const sts = await ev(() => __DDW3.G.funhouse.stars.map(s => ({ x: s.x, y: s.y, hidden: s.hidden, got: s.got })));
   for (const s of sts) if (!s.got) { await ev(s => { const P = __DDW3.player; P.ride = null; P.x = s.x; P.y = s.y - .6; P.vy = 0; }, s); await frames(2); }
