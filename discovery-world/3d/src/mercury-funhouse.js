@@ -70,12 +70,20 @@ export function mercuryFunhouse(k) {
     const back = makeBatch(); back.put(G0.box, x((a + c) / 2), F2 / 2, 2 * ZB - .2, '#1a1430', [c - a, F2, .2]); refl.add(back.mesh(shinyMat()));
     const pane = new THREE.Mesh(painted(new THREE.PlaneGeometry(c - a, F2), '#cfe8ff'), glass(.12)); pane.position.set(x((a + c) / 2), F2 / 2, ZB); k.add(pane);
     const frame = makeBatch(); frame.put(G0.box, x((a + c) / 2), F2 - .1, ZB, '#ffd23f', [c - a, .25, .3]); frame.put(G0.box, x((a + c) / 2), .1, ZB, '#ffd23f', [c - a, .25, .3]); k.add(mesh(frame, shinyMat()));
-    let me = null, kind = '', said = false;
-    k.U.push(dt => { const inRoom = onPlanet(P) && P.x > x(a) - 4 && P.x < x(c) + 4 && P.y < F2 - .5; refl.visible = inRoom; if (me) me.root.visible = inRoom;
+    // (build 73 speed) the mirror shows a PICTURE of you, refreshed every third frame by a little camera at the mirror that
+    // sees only you (one draw call on screen, instead of a whole second character: about 55 draw calls)
+    const MW = 2.2, MH = 2.6, rt = new THREE.WebGLRenderTarget(176, 208), mcam = new THREE.PerspectiveCamera(40, MW / MH, .2, 20), LAYER = 5;
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(MW, MH), new THREE.MeshBasicMaterial({ map: rt.texture, fog: false, toneMapped: false })); pic.scale.x = -1; pic.visible = false; k.add(pic); mcam.layers.set(LAYER);
+    let said = false, fno = 0, tagged = null; const bg = new THREE.Color('#cfe3ff');
+    k.U.push(() => { const inRoom = onPlanet(P) && P.x > x(a) - 4 && P.x < x(c) + 4 && P.y < F2 - .5; refl.visible = inRoom; pic.visible = inRoom;
       if (!inRoom) return; if (!said) { said = true; k.fact('🪞 The Hall of Infinite Mirrors! The mirror shows you, and the mirror in the mirror, again and again, forever!', 'mercuryinfinite'); }
-      const want = k.api.creatureKind ? k.api.creatureKind() : 'pip';
-      if (!me || kind !== want) { if (me) me.root.parent && me.root.parent.remove(me.root); me = k.api.makeCreature(want); kind = want; me.root.traverse(o => { o.userData.dynamic = true; o.castShadow = false; }); k.add(me.root); }
-      me.root.position.set(P.x, P.y + .35, 2 * ZB - P.z); me.root.scale.set(1, 1, -1); me.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded, facing: P.facing, happy: 0 }); }); }
+      pic.position.set(P.x, P.y + MH / 2, ZB + .03);
+      if (fno++ % 3) return; const body = G.playerBody, R = G.renderer; if (!body || !R) return;
+      if (tagged !== body) { body.traverse(o => o.layers.enable(LAYER)); tagged = body; }
+      mcam.position.set(P.x, P.y + MH / 2, ZB); mcam.lookAt(P.x, P.y + MH / 2, P.z || 0);
+      const prev = R.getRenderTarget(), pbg = G.scene.background, pc = R.getClearColor(new THREE.Color()), pa = R.getClearAlpha(), sm = R.shadowMap.autoUpdate;
+      G.scene.background = null; R.shadowMap.autoUpdate = false; R.setClearColor(bg, 1); R.setRenderTarget(rt); R.clear(); R.render(G.scene, mcam); R.setRenderTarget(prev); R.setClearColor(pc, pa); G.scene.background = pbg; R.shadowMap.autoUpdate = sm; G.mirrorPics = (G.mirrorPics || 0) + 1; });
+  }
   // ---------------- G2: WOBBLY WALKWAYS (238–254): two moving floors and a wobbly bridge ----------------
   { const belts = [[238.5, 243.5, 1.6, '#5aa8ff'], [243.8, 248.8, -1.1, '#ff9a2e']], bb = makeBatch(), stripes = [];
     for (const [a, c, , cl] of belts) bb.put(G0.box, x((a + c) / 2), .06, -1.2, cl, [c - a, .12, 2.4]); k.add(mesh(bb, shinyMat()));
@@ -211,10 +219,61 @@ export function mercuryFunhouse(k) {
     const go = () => { if (P.ride || !onPlanet(P) || Math.abs(P.y - F3) > 1 || P.x < x(306)) return false; P.x = x(309.5); P.y = F3; k.G.startSlide(path, { vmax: 11, acc: 6 }); k.say('🎪 The Big Top Slide! Wheeeee!', true); k.disc('mercurybigtop'); return true; };
     let cool = 0; k.U.push(dt => { cool = Math.max(0, cool - dt); if (!cool && onPlanet(P) && !P.ride && P.grounded && Math.abs(P.y - F3) < .1 && P.x > x(311.4) && P.vx > .5 && go()) cool = 2; });
     k.tapIt(tube, go); G.interact.push({ x: x(310), y: F3, layer: 'space', disc: 'mercurybigtopgo', run: go, hintY: 2.4 }); G.funhouseSlide = path; }
+  // ---------------- (build 80) THE CRAWL TUNNEL (ground, 300–306): a low rainbow tunnel; she crawls through, the lights follow her ----------------
+  { const a = 300.5, c = 306, tb = makeBatch(), lb = makeBatch(); for (let i = 0; i <= 8; i++) tb.put(G0.torus, x(a + i * (c - a) / 8), .1, -1.2, RB[i % 7], [1.05, 1.05, 2.2], [0, Math.PI / 2, 0]);
+    tb.put(G0.box, x((a + c) / 2), 1.25, -1.2, '#c9a6ff', [c - a, .12, 2.4]); k.add(mesh(tb, shinyMat()));
+    for (let i = 0; i < 10; i++) lb.put(G0.lo, x(a + .3 + i * .55), 1.05, -.2, RB[i % 7], .12); const lights = lb.mesh(glowMat()); k.add(lights);
+    let inside = false, done = false; G.crawlZone = Q => Q.x > x(a) && Q.x < x(c) && Q.y < 1;
+    k.U.push((dt, t) => { const now = onPlanet(P) && G.crawlZone(P); if (now && !inside) k.say('🐛 A tiny tunnel! Crawl through!', false); inside = now; lights.position.y = now ? Math.sin(t * 8) * .05 : 0;
+      if (now && !done && P.x > x(c) - .8) { done = true; S.giggle(); k.api.burst(P.x + .5, 1, -1, RB, 26, 2.4); k.fact('🎉 You crawled all the way through the tiny tunnel!', 'mercurycrawl'); } if (!now && P.x < x(a) - 2) done = false; }); }
   // the star hunt: walk into a star to collect it; it flies to its place on the prize board
   let got = 0;
   k.U.push((dt, t) => { for (const s of stars) { if (s.got || s.hidden) continue; s.m.rotation.y = t * 2; s.m.position.y = s.y + Math.sin(t * 2 + s.x) * .15;
     if (onPlanet(P) && Math.abs(P.x - s.x) < .9 && Math.abs(P.y + .6 - s.y) < 1.3) { s.got = true; s.m.visible = false; prize[got] && (prize[got].visible = true); got++; S.tone(520 + got * 80, .2, 'sine', .07, 1.5); k.api.burst(s.x, s.y, -1, ['#ffd23f', '#ffffff'], 16, 2);
       if (got === stars.length) { S.chime(); G.funhouse.trophy.visible = true; k.api.burst(x(309), 4, -2.6, RB, 50, 3.4); k.fact('🏆 You found ALL SIX funhouse stars! You are a funhouse champion!', 'mercurychampion'); }
       else k.say(`⭐ A funhouse star! ${got} of ${stars.length}!`, true); } } });
+}
+
+// ===================================================================
+// (build 74) THE MIRROR MAZE GROWS (area 2, beside the build 67 hall: x0 = X + 124 … x1 = X + 200):
+//   • coloured light that changes in each section;
+//   • the UPPER MIRROR GALLERY (4.6 m), a second route over the mirror doors (one tap: up the mirror stairs);
+//   • the LIGHT-BEAM PUZZLE up there: tap the three mirrors to turn them; when all three point the right way, a beam of
+//     light shines through them, the crystal lights up, and a HIDDEN MIRROR DOOR below slides open: a treasure chest!
+//   • a path of lights from the maze to the carnival funhouse.
+// ===================================================================
+export function mercuryMazePlus(k) {
+  const P = k.P, G = k.G, S = k.Sound, X = k.X, x0 = X + 124, G0 = GEO(), gb = makeBatch(), b = makeBatch(), GY = 4.6;
+  // coloured light per section (top strip and floor edge)
+  [[0, 18, '#ff6fd8'], [18, 39, '#62f0ff'], [39, 60, '#7dffb0'], [60, 76, '#ffd23f']].forEach(([a, c, cl]) => { gb.put(G0.box, x0 + (a + c) / 2, 5.45, -4.15, cl, [c - a - .4, .18, .1]); gb.put(G0.box, x0 + (a + c) / 2, .03, .08, cl, [c - a - .4, .04, .16]); });
+  // the upper gallery: a mirrored walkway over the doors, with a railing
+  b.put(G0.box, x0 + 39, GY - .15, -1.6, '#e8e0ff', [38, .3, 2.6]); k.plat(x0 + 20, x0 + 58, GY, { z: -1.2 });
+  for (let gx = x0 + 20.5; gx < x0 + 58; gx += 2) b.put(G0.cyl, gx, GY + .45, -.35, '#ffd23f', [.04, .9, .04]); b.put(G0.box, x0 + 39, GY + .9, -.35, '#ffd23f', [38, .06, .06]);
+  for (const sx of [x0 + 21, x0 + 57]) b.put(G0.cyl, sx, GY / 2, -2.8, '#ff9fd2', [.18, GY, .18]);
+  // the mirror stairs (one tap: up or down)
+  for (let i = 0; i < 8; i++) b.put(G0.box, x0 + 19 + i * .8, (i + 1) * GY / 16, -3.4, i % 2 ? '#dff1ff' : '#b8dcff', [.8, (i + 1) * GY / 8, 1]);
+  const stairs = new THREE.Mesh(new THREE.BoxGeometry(6.6, GY, 1.4), new THREE.MeshBasicMaterial({ visible: false })); stairs.position.set(x0 + 22.2, GY / 2, -3.4); k.add(stairs);
+  const climb = () => { if (P.ride || !onPlanet(P) || P.x < x0 + 13 || P.x > x0 + 30) return; const up = P.y < 1; if (!up && Math.abs(P.y - GY) > 1) return; k.disc('mercurygallery', '🪞 Up the mirror stairs to the gallery!');
+    rideTo(k, 'mstairs2', R => { const f = Math.min(1, R.t / 2.2), g = up ? f : 1 - f; P.x = x0 + 18.6 + g * 6.8; P.y = Math.min(GY, Math.ceil(g * 8) * GY / 8); P.z = -3.4 * Math.min(1, R.t * 3) * (f < .97 ? 1 : 0); P.facing = up ? 1 : -1; return f >= 1; }, () => { P.y = up ? GY : 0; P.x = up ? x0 + 26 : x0 + 17.6; P.z = 0; P.grounded = true; }); };
+  k.tapIt(stairs, climb, x0 + 20, 'mercurygalleryup'); G.interact.push({ x: x0 + 26, y: GY, layer: 'space', disc: 'mercurygallerydown', run: climb, hintY: 2.4 });
+  // the light-beam puzzle: three turning mirrors (each tap turns 90°); all three at position 1 = solved
+  const goal = 1, turn = [0, 2, 3], mirrors = [28, 38, 48].map((mx, i) => { const piv = new THREE.Group(); piv.position.set(x0 + mx, GY, -2.7); k.add(piv); const mb = makeBatch(); mb.put(G0.cyl, 0, .5, 0, '#ffd23f', [.5, .14, .5]); mb.put(G0.box, 0, 1.3, 0, '#ffd23f', [1.5, 1.5, .12]); mb.put(G0.box, 0, 1.3, .07, '#e6f4ff', [1.3, 1.3, .02]); piv.add(mb.mesh(shinyMat())); /* (frame and glass: one mesh) */ piv.rotation.y = turn[i] * Math.PI / 2; return piv; });
+  const beam = makeBatch(); for (const [a, c] of [[20.5, 28], [28, 38], [38, 48], [48, 56]]) beam.put(G0.box, x0 + (a + c) / 2, GY + 1.3, -2.7, '#fff3a6', [c - a, .12, .12]); const beamM = beam.mesh(glowMat()); beamM.visible = false; k.add(beamM);
+  gb.put(G0.oct, x0 + 56.5, GY + 1.3, -2.7, '#9fe6ff', [.4, .7, .4]); const crystal = new THREE.Mesh(G0.oct, toy('#ffffff', { em: '#9fe6ff', ei: 1.6 })); crystal.scale.set(.5, .85, .5); crystal.position.set(x0 + 56.5, GY + 1.3, -2.7); crystal.visible = false; k.add(crystal); /* (the bright one appears when solved) */
+  let solved = false, open = 0, said = false;
+  mirrors.forEach((piv, i) => k.tapIt(piv, () => { if (!onPlanet(P) || Math.abs(P.y - GY) > 1.5 || solved) return; turn[i] = (turn[i] + 1) % 4; S.tone(500 + turn[i] * 90, .12, 'triangle', .06, 1);
+    if (!said) { said = true; k.say('🔦 Turn the mirrors so the light can shine all the way to the crystal!', true); }
+    if (turn.every(t => t === goal)) { solved = true; beamM.visible = true; crystal.visible = true; chest.visible = true; S.twinkle(); k.fact('✨ The light shines through all the mirrors! Look down: a hidden mirror door is opening!', 'mercurybeam'); } }));
+  G.interact.push({ x: x0 + 38, y: GY, layer: 'space', disc: 'mercurybeampuzzle', run: () => k.say('🔦 Tap the mirrors to turn them, until the light shines to the crystal!', true), hintY: 2.4 });
+  G.mazePlus = { turn: i => mirrors[i].children[0].userData.tap(), get solved() { return solved; }, get turns() { return [...turn]; } };
+  // the hidden mirror door (ground level, in the back wall) and its treasure chest
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.6, .12), toy('#eef8ff', { r: .04, m: .15, cc: 1, em: '#bfe0ff', ei: .35 })); door.position.set(x0 + 66, 1.8, -4.15); k.add(door);
+  const chest = new THREE.Group(); chest.position.set(x0 + 66, 0, -4.6); chest.visible = false; k.add(chest); { const cb = makeBatch(); cb.put(G0.box, 0, .35, 0, '#b8742e', [1.2, .7, .8]); cb.put(G0.box, 0, .8, 0, '#c98a4a', [1.2, .25, .8]); cb.put(G0.box, 0, .5, .41, '#ffd23f', [.2, .3, .04]); chest.add(mesh(cb, shinyMat())); }
+  let found = false;
+  k.U.push((dt, t) => { mirrors.forEach((piv, i) => { piv.rotation.y += (turn[i] * Math.PI / 2 - piv.rotation.y) * Math.min(1, dt * 6); }); crystal.rotation.y = t;
+    if (solved && open < 1) { open = Math.min(1, open + dt * .6); door.position.x = x0 + 66 + open * 2.6; chest.position.z = -4.6 + open * 2.4; if (open >= 1) door.visible = false; }
+    if (open >= 1 && !found && onPlanet(P) && Math.abs(P.x - (x0 + 66)) < 1.5 && P.y < 1.5) { found = true; S.chime(); k.api.burst(x0 + 66, 1.4, -2.2, ['#ffd23f', '#ffffff', '#ff6fd8'], 34, 2.8); k.fact('💎 The hidden mirror door! You found the maze treasure!', 'mercurymazetreasure'); } });
+  // the path of lights from the maze to the funhouse (x 200 → 224)
+  for (let i = 0; i < 12; i++) { const px = X + 201 + i * 2; gb.put(G0.cone, px, .06, .6, RB[i % 7], [.35, .08, .25], [0, 0, -Math.PI / 2]); gb.put(G0.lo, px, 3.2 + Math.sin(i * .8) * .3, -1.8, RB[(i + 3) % 7], .18); }
+  k.add(mesh(b, shinyMat(), true)); k.add(gb.mesh(glowMat()));
 }

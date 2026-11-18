@@ -21,6 +21,11 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(S0 + 53, 14); await sleep(500); await run('plutoslidego'); const sl = await watch(60000); check('Pluto: the giant inflatable slide goes from the 14 m top down to the bounce pit', sl.seen && sl.x - S0 > 80 && sl.maxY > 13, JSON.stringify({ ...sl, x: sl.x - S0 }));
   await put(S0 + 107); await sleep(500); await run('plutosurprise'); check('Pluto: the surprise room', await has('plutosurprise'));
   await put(S0 + 57.2); await sleep(500); await run('plutoclimbwall'); await ev(() => { __DDW3.keys.up = true; }); const cw = await watch(40000); await ev(() => { __DDW3.keys.up = false; }); check('Pluto: climb the soft wall with the joystick to the top', cw.y > 13.5, JSON.stringify(cw));
+  await put(X + 150); await page.waitForFunction(() => !!__DDW3.G.plutoMatch, null, { timeout: 30000 }).catch(() => {}); await put(X + 110 + 89); await sleep(800);
+  const mg = await ev(() => new Promise(async res => { const M = __DDW3.G.plutoMatch; if (!M) return res({ none: true }); const wait = ms => new Promise(r => setTimeout(r, ms));
+    const ks = M.cards.map(c => c.kind); M.tap(ks.indexOf(0)); M.tap(ks.indexOf(1)); await wait(1600); const afterWrong = M.cards.filter(c => c.open).length;
+    for (const kd of [0, 1, 2]) { const i = ks.indexOf(kd), j = ks.lastIndexOf(kd); M.tap(i); M.tap(j); await wait(400); } res({ afterWrong, rounds: M.rounds }); }));
+  check('Pluto: the picture-matching game: wrong cards turn back, and matching all three pairs wins', mg.afterWrong === 0 && mg.rounds === 1 && await has('plutomatch'), JSON.stringify(mg));
   // ---- URANUS ----
   X = await fly('uranus'); await put(X + 150); await sleep(3000); const U0 = X + 110;
   check('Uranus: the Ice Palace is built', await ev(() => !!__DDW3.G.icePalace));
@@ -29,6 +34,9 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await sleep(3000); check('Uranus: ring the crystals small to big and the secret door opens', await ev(() => __DDW3.G.icePalace.open) && await has('uranussecret'));
   await put(U0 + 88.5); await sleep(1500); check('Uranus: walk to the treasure in the ice tunnel', await has('uranustreasure'));
   await put(U0 + 66); await sleep(500); await run('uranusstairsup'); const st = await watch(20000); check('Uranus: one tap up the ice stairs to the balcony', Math.abs(st.y - 6) < .3, JSON.stringify(st));
+  await put(U0 + 76, 6); await sleep(500); await run('uranussnowmachine'); check('Uranus: the snowflake machine upstairs', await has('uranussnowflakes'));
+  await put(U0 + 88, 6); await sleep(500); await run('uranussecretswitch'); await sleep(2500); await ev(() => { for (let i = 0; i < 5; i++) __DDW3.G.icePalaceUp.bell(i); });
+  check('Uranus: the snowflake switch slides the frozen bookcase away; play the five ice bells in the secret music room', await has('uranusbookcase') && await has('uranusbells'));
   await put(U0 + 105, 6); await sleep(500); await run('uranusslidego'); const is = await watch(40000); check('Uranus: the ice slide from the balcony down', is.seen && is.y < 1, JSON.stringify(is));
   await put(X + 220 + 50 - 30); await sleep(2500); await ev(() => { __DDW3.keys.right = true; }); await page.waitForFunction(x => __DDW3.player.x > x, X + 220 + 50 + 28, { timeout: 60000 }).catch(() => {}); await ev(() => { __DDW3.keys.right = false; });
   check('Uranus: skate through all six hoops on the bigger rink', await has('uranushoops'));

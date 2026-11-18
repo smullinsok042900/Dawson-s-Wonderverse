@@ -122,3 +122,55 @@ export function uranusRinkFun(k, cx, rx) {
     const ti = P.y < .5 && Math.abs(P.z + 3.6) < 1.5 ? Math.round((P.x - (cx - 9)) / 6) : -1; if (ti >= 0 && ti < 4 && ti !== lastTile) S.tone(notes[ti], .3, 'triangle', .06, 1); lastTile = ti; });
   starField(k, [[cx - rx + 9, 1.1, -.6], [cx - 3, 1.1, -.6], [cx + 6, 1.1, -.6], [cx + rx - 8, 1.1, -.6]], () => { S.chime(); k.say('⭐ All the rink stars!', true); k.disc('uranusrinkstars'); });
 }
+
+// =================== (build 78) PLUTO: THE PUFFY PICTURE-MATCHING GAME (area 2, after the bounce castles) ===================
+// Six puffy cards. Tap one: it turns round and shows a picture. Tap another: the same picture? They stay turned, hooray!
+// Not the same? They turn back (try again, as often as you like). All three pairs → a party, then the cards are shuffled.
+export function plutoMatchGame(k) {
+  const P = k.P, G = k.G, S = k.Sound, G0 = GEO(), x0 = k.s0 + 87, pics = ['star', 'heart', 'moon'], cols = ['#ffd23f', '#ff4f6a', '#9fd8ff'];
+  const heart = (() => { const sh = new THREE.Shape(); sh.moveTo(0, -.6); sh.bezierCurveTo(-1.1, .1, -.6, .9, 0, .45); sh.bezierCurveTo(.6, .9, 1.1, .1, 0, -.6); return new THREE.ExtrudeGeometry(sh, { depth: .12, bevelEnabled: false, curveSegments: 6 }); })();
+  const symbol = (sb, j) => { sb.put(G0.ball, 0, 0, -.25, '#ffffff', [.9, .9, .2]); if (j === 0) sb.put(G0.oct, 0, 0, -.45, cols[0], [.42, .55, .12]); else if (j === 1) sb.put(heart, 0, 0, -.53, cols[1], .5); else { sb.put(G0.ball, 0, 0, -.45, cols[2], [.45, .45, .1]); sb.put(G0.ball, .2, .08, -.49, '#ffffff', [.38, .4, .1]); } };
+  // (each card is ONE mesh: the puffy back and its picture; it is remade when the cards are dealt)
+  const cardGeo = j => { const b = makeBatch(); b.put(G0.ball, 0, 0, 0, '#c9a6ff', [1, 1, .35]); b.put(G0.ball, 0, 0, -.05, '#ffffff', [.75, .75, .3]); symbol(b, j); return b.geometry(); };
+  const cards = [], deal = () => { const order = [0, 0, 1, 1, 2, 2].sort(() => Math.random() - .5); cards.forEach((c, i) => { c.kind = order[i]; c.open = false; c.done = false; const old = c.m.geometry; c.m.geometry = cardGeo(c.kind); old.dispose(); }); };
+  for (let i = 0; i < 6; i++) { const g = new THREE.Group(); g.position.set(x0 + (i % 3) * 2.6, 1.3 + Math.floor(i / 3) * 2.3, -2.4); k.add(g);
+    const m = new THREE.Mesh(cardGeo(0), shinyMat()); g.add(m); cards.push({ g, m, kind: 0, open: false, done: false, turn: 0 }); }
+  deal(); let first = null, busy = 0, pairs = 0, rounds = 0;
+  cards.forEach(c => k.tapIt(c.g, () => { if (busy > 0 || c.open || c.done || P.layer !== 'space' || Math.abs(P.x - (x0 + 2.6)) > 9) return; c.open = true; S.tone(520, .1, 'triangle', .05, 1);
+    if (!first) { first = c; if (!rounds && !pairs) k.say('🎴 Find two the same! Tap another card.', true); return; }
+    const a = first; first = null;
+    if (a.kind === c.kind) { a.done = c.done = true; pairs++; S.chime(); k.api.burst(c.g.position.x, c.g.position.y, -2, [cols[c.kind], '#ffffff'], 18, 2); k.say(['⭐ Two stars!', '❤️ Two hearts!', '🌙 Two moons!'][c.kind], false);
+      if (pairs === 3) { rounds++; pairs = 0; k.api.burst(x0 + 2.6, 3, -2, ['#ffd23f', '#ff4f6a', '#9fd8ff', '#ffffff'], 40, 3); k.fact('🎉 You matched them all! You have a great memory!', 'plutomatch'); busy = 3; setTimeout(deal, 3000); } }
+    else { busy = 1; S.boing(); setTimeout(() => { a.open = false; c.open = false; }, 1000); } }));
+  k.G.interact.push({ x: x0 + 2.6, y: 0, layer: 'space', disc: 'plutomatchgame', run: () => k.say('🎴 Tap two cards to find the same pictures!', true), hintY: 2.4 });
+  G.plutoMatch = { cards, tap: i => cards[i].g.children[0].userData.tap(), get pairs() { return pairs; }, get rounds() { return rounds; } };
+  k.U.push((dt, t) => { busy = Math.max(0, busy - dt); for (const c of cards) { const want = c.open || c.done ? Math.PI : 0; c.turn += (want - c.turn) * Math.min(1, dt * 8); c.g.rotation.y = c.turn; c.g.position.z = -2.4 + Math.sin(t * 2 + c.g.position.x) * .05; } });
+}
+
+// =================== (build 81) URANUS: THE ICE PALACE UPSTAIRS ===================
+// On the balcony (6 m): the SNOWFLAKE WORKSHOP (tap the machine: snowflakes swirl out), the FROZEN BOOKCASE (tap the
+// glowing snowflake switch and it slides aside) and, behind it, the SECRET MUSIC ROOM with five ice bells to play.
+export function uranusPalaceUpstairs(k) {
+  const P = k.P, G = k.G, S = k.Sound, G0 = GEO(), x = v => k.s0 + v, F2 = 6, b = makeBatch(), gb = makeBatch();
+  const up = () => P.layer === 'space' && Math.abs(P.y - F2) < 1.5;
+  // the snowflake workshop (x 74–80): a machine with a funnel
+  b.put(G0.cyl, x(76), F2 + .6, -4.2, '#9fd8ff', [.8, 1.2, .8]); b.put(G0.cone, x(76), F2 + 1.6, -4.2, '#e8f6ff', [.6, .8, .6], [Math.PI, 0, 0]); b.put(G0.torus, x(76), F2 + 1.2, -4.2, '#ffffff', [.7, .7, 1], [Math.PI / 2, 0, 0]);
+  const machine = new THREE.Mesh(new THREE.BoxGeometry(2, 2.4, 2), new THREE.MeshBasicMaterial({ visible: false })); machine.position.set(x(76), F2 + 1.2, -4.2); k.add(machine);
+  let made = 0; k.tapIt(machine, () => { if (!up()) return; made++; S.twinkle(); for (let i = 0; i < 3; i++) k.api.burst(x(76) + (Math.random() - .5) * 2, F2 + 2 + i * .5, -3.5, ['#ffffff', '#cfefff', '#9fd8ff'], 14, 2.2); if (made === 1) k.fact('❄️ The snowflake machine! Every snowflake is different, just like on Uranus where it is icy cold.', 'uranussnowflakes'); }, x(76), null);
+  G.interact.push({ x: x(76), y: F2, layer: 'space', disc: 'uranussnowmachine', run: () => machine.userData.tap(), hintY: 2.4 });
+  // the frozen bookcase (x 84–88) and its snowflake switch (x 90)
+  const shelf = new THREE.Group(); shelf.position.set(x(86), F2, -4.6); k.add(shelf); const sb = makeBatch(); sb.put(G0.box, 0, 1.6, 0, '#bfe6ff', [3.4, 3.2, .5]);
+  for (let r = 0; r < 3; r++) for (let i = 0; i < 9; i++) sb.put(G0.box, -1.4 + i * .35, .6 + r * 1, .28, ['#ff6fae', '#5aa8ff', '#ffd23f', '#7fe0a0', '#9b6cff'][(i + r) % 5], [.26, .8, .2]); shelf.add(sb.mesh(shinyMat()));
+  const sw = new THREE.Mesh(G0.oct, toy('#ffffff', { em: '#9fe6ff', ei: .9 })); sw.scale.set(.35, .35, .1); sw.position.set(x(90), F2 + 1.6, -4.3); k.add(sw);
+  // the secret music room behind it: five ice bells
+  b.put(G0.box, x(86), F2 + 1.6, -5.25, '#2a4a7a', [3.6, 3.2, .1]); /* (the dark recess behind the bookcase) */
+  const notes = [523, 587, 659, 784, 880], bells = notes.map((f, i) => { const m = new THREE.Mesh(G0.cone, toy(['#cfefff', '#bfe6ff', '#afdcff', '#9fd2ff', '#8fc8ff'][i], { cc: 1, em: '#bfe6ff', ei: .2 })); m.scale.set(.26 + i * .02, .42 + i * .04, .26 + i * .02); m.position.set(x(84.4 + i * .8), F2 + 1.3, -4.95); m.visible = false; k.add(m); return { m, f, ring: 0 }; });
+  let open = 0, opened = false, played = 0;
+  k.tapIt(sw, () => { if (!up() || opened) return; opened = true; S.chime(); k.api.burst(x(90), F2 + 1.6, -4, ['#ffffff', '#9fe6ff'], 16, 1.8); k.fact('📚 The snowflake switch! The frozen bookcase slides away... a secret music room!', 'uranusbookcase'); bells.forEach(bl => { bl.m.visible = true; }); }, x(90), null);
+  G.interact.push({ x: x(90), y: F2, layer: 'space', disc: 'uranussecretswitch', run: () => sw.userData.tap(), hintY: 2.4 });
+  bells.forEach((bl, i) => k.tapIt(bl.m, () => { if (!opened || !up()) return; bl.ring = 1; S.tone(bl.f, .6, 'sine', .07, 1); played++; if (played === 5) k.fact('🔔 Ice bells! You played a song in the secret music room!', 'uranusbells'); }));
+  G.icePalaceUp = { bell: i => bells[i].m.userData.tap(), get opened() { return opened; } };
+  k.U.push((dt, t) => { if (opened && open < 1) { open = Math.min(1, open + dt * .7); shelf.position.x = x(86) + open * 3.6; } sw.rotation.z = t * (opened ? 3 : .8);
+    for (const bl of bells) { bl.ring = Math.max(0, bl.ring - dt * 2); bl.m.rotation.z = Math.sin(t * 20) * .2 * bl.ring; } });
+  k.add(b.mesh(shinyMat())); if (gb.count()) k.add(gb.mesh(glowMat()));
+}

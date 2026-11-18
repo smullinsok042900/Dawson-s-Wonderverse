@@ -14,9 +14,9 @@ import { toy } from './creatures.js';
 import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
-import { mercuryFunhouse } from './mercury-funhouse.js';
+import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField } from './control-rides.js';
-import { plutoInflatablePark, uranusIcePalace, uranusRinkFun } from './big-parks.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -224,6 +224,7 @@ const pluto = {
       bounceCastle(k, X + 22, 7, ['#ff9fd2', '#ff6fae', '#fff3a6', '#c9a6ff'], 4.3);
       bounceCastle(k, X + 46, 9, ['#9fd8ff', '#5aa8ff', '#fff3a6', '#ffb35c'], 5.8);
       bounceCastle(k, X + 74, 12, ['#ffd23f', '#ff6fae', '#7fe0a0', '#5aa8ff'], 7.4, true);
+      plutoMatchGame(k); // (build 78) the puffy picture-matching game
       k.rocketSign(X + 4);
     },
     // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----
@@ -351,7 +352,7 @@ function uranusRink(k, cx) {
 }
 const uranus = {
   sections: [
-    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
+    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
     k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
   ],
 };
@@ -386,26 +387,31 @@ function mercuryMirrorMaze(k, X) {
     return d; });
   // the golden star at the end
   const star = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toy('#ffd23f', { em: '#ffb000', ei: .8, m: .3 })); star.position.set(x1 - 3, 2, -2); k.add(star); let won = false;
-  // your reflection: one copy of your character, moved to the mirror you stand at
-  let refl = null, kind = '';
+  // your reflection (build 73): a live PICTURE of you on the mirror you stand at, funnily stretched; a little camera at the
+  // mirror sees only you and refreshes it every third frame (one draw call, instead of a whole second character)
+  const MW = 2.2, MH = 2.6, rt = new THREE.WebGLRenderTarget(176, 208), mcam = new THREE.PerspectiveCamera(40, MW / MH, .2, 20), LAYER = 5, mbg = new THREE.Color('#e6f4ff');
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(MW, MH), new THREE.MeshBasicMaterial({ map: rt.texture, fog: false, toneMapped: false })); pic.visible = false; k.add(pic); mcam.layers.set(LAYER);
+  let fno = 0, tagged = null;
   k.U.push((dt, t) => {
     for (const d of doors) if (d.opened && d.open < 1) { d.open = Math.min(1, d.open + dt * 1.6); d.piv.rotation.y = .7 + d.open * (Math.PI / 2 - .7) ; d.piv.position.y = d.open * 3.2; }
     star.rotation.y = t * 1.5; star.position.y = 2 + Math.sin(t * 2) * .2;
     if (!won && P.layer === 'space' && Math.abs(P.x - (x1 - 3)) < 1.5 && P.y < 3) { won = true; k.api.burst(x1 - 3, 2.2, -2, ['#ffd23f', '#ffffff', '#ff9fd2'], 30, 3); k.Sound.chime && k.Sound.chime(); k.fact('⭐ You found your way through the mirror maze! Mercury is the planet closest to the Sun.', 'mercurymaze'); }
     const mi = P.layer === 'space' && !P.ride ? mirrors.find(m => Math.abs(P.x - m.x) < 2.2) : null;
-    if (!mi) { if (refl) refl.root.visible = false; return; }
-    const want = k.api.creatureKind ? k.api.creatureKind() : 'pip';
-    if (!refl || kind !== want) { if (refl) refl.root.parent && refl.root.parent.remove(refl.root); refl = k.api.makeCreature(want); kind = want; refl.root.traverse(o => { o.userData.dynamic = true; o.castShadow = false; }); k.add(refl.root); }
-    const R = refl.root; R.visible = true; let sx = 1, sy = 1, sz = 1, rz = 0, oy = .35;
-    if (Array.isArray(mi.sh)) [sx, sy, sz] = mi.sh; else if (mi.sh === 'wobble') { sx = 1 + Math.sin(t * 5) * .3; sy = 1 - Math.sin(t * 5) * .25; sz = sx; } else if (mi.sh === 'upside') { rz = Math.PI; oy = 3.9; } else if (mi.sh === 'squiggle') { sx = .8 + Math.sin(t * 9) * .15; sy = 1.25; rz = Math.sin(t * 3) * .35; }
-    R.scale.set(sx, sy, sz); R.position.set(mi.x + Math.max(-.9, Math.min(.9, (P.x - mi.x))), oy, -3.95); R.rotation.set(0, 0, rz);
-    refl.update(dt, { vx: P.vx, vy: 0, grounded: true, facing: P.facing, happy: 0 });
+    if (!mi) { pic.visible = false; return; }
+    let sx = 1, sy = 1, rz = 0;
+    if (Array.isArray(mi.sh)) [sx, sy] = mi.sh; else if (mi.sh === 'wobble') { sx = 1 + Math.sin(t * 5) * .3; sy = 1 - Math.sin(t * 5) * .25; } else if (mi.sh === 'upside') rz = Math.PI; else if (mi.sh === 'squiggle') { sx = .8 + Math.sin(t * 9) * .15; sy = 1.25; rz = Math.sin(t * 3) * .35; }
+    pic.visible = true; pic.position.set(mi.x, 2.2, -4.12); pic.scale.set(-Math.min(1.15, sx) * .95, Math.min(1.4, sy) * .95, 1); pic.rotation.set(0, 0, rz);
+    if (fno++ % 3) return; const body = k.G.playerBody, R = k.G.renderer; if (!body || !R) return;
+    if (tagged !== body) { body.traverse(o => o.layers.enable(LAYER)); tagged = body; }
+    mcam.position.set(P.x, P.y + 1.2, -4.18); mcam.lookAt(P.x, P.y + 1.2, P.z || 0);
+    const prev = R.getRenderTarget(), pbg = k.G.scene.background, pc = R.getClearColor(new THREE.Color()), pa = R.getClearAlpha(), sm = R.shadowMap.autoUpdate;
+    k.G.scene.background = null; R.shadowMap.autoUpdate = false; R.setClearColor(mbg, 1); R.setRenderTarget(rt); R.clear(); R.render(k.G.scene, mcam); R.setRenderTarget(prev); R.setClearColor(pc, pa); k.G.scene.background = pbg; R.shadowMap.autoUpdate = sm; k.G.mirrorPics = (k.G.mirrorPics || 0) + 1;
   });
   k.tapIt(hall, () => k.fact('🪞 The funhouse mirror maze! Look in the mirrors, and tap the mirror doors to open them.', 'mercuryfunhouse'), x0, 'mercuryfunhouse');
 }
 const mercury = {
   sections: [
-    k => { mercuryMirrorMaze(k, k.s0); k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze
+    k => { mercuryMirrorMaze(k, k.s0); mercuryMazePlus(k); k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze + (build 74) the gallery, light-beam puzzle, hidden door
     k => { mercuryFunhouse(k); k.rocketSign(k.s0 + 108); }, // area 3: (build 71) the giant carnival funhouse (it replaces the rocks)
   ],
 };
@@ -418,6 +424,7 @@ function neptuneWindSwings(k, X) {
   b.put(cyl, sx, H, -3, '#ffd23f', [.12, 9.4, .12], [0, 0, Math.PI / 2]);
   const sock = new THREE.Group(); sock.position.set(X + 12, 0, -3.5); k.add(sock); { const sb = makeBatch(); sb.put(cyl, 0, 2, 0, '#ffffff', [.06, 4, .06]); for (let i = 0; i < 4; i++) sb.put(new THREE.CylinderGeometry(.32 - i * .05, .27 - i * .05, .5, 12), .3 + i * .5, 3.8, 0, i % 2 ? '#ffffff' : '#ff6a3c', 1, [0, 0, -Math.PI / 2]); sock.add(sb.mesh(shinyMat())); }
   k.add(b.mesh(shinyMat()));
+  { const cb = makeBatch(), lo = new THREE.SphereGeometry(1, 8, 6); for (let i = 0; i < 6; i++) cb.put(lo, sx + 9 + i * 1.3, .25, -1.4 + (i % 2) * .5, '#ffffff', [1.2, .45, 1.1]); k.add(cb.mesh(glowMat())); } // (build 82: the soft cloud cushion you fly onto)
   // white wind streaks blowing across
   const streakM = toy('#ffffff', { r: .2, em: '#ffffff', ei: .4 }), streaks = [...Array(10)].map((_, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.6, .05, .05), streakM); m.position.set(X + Math.random() * 60, 1 + (i * 1.7) % 6, -2 - (i % 4)); k.add(m); return m; });
   let gust = 0; k.U.push((dt, t) => { gust = .5 + .5 * Math.sin(t * .6); for (const m of streaks) { m.position.x += dt * (8 + gust * 10); if (m.position.x > X + 70) m.position.x = X + 4; } sock.children[0].rotation.y = Math.sin(t * 2) * .2 * gust; });
@@ -425,9 +432,17 @@ function neptuneWindSwings(k, X) {
     for (const z of [-.3, .3]) pb.put(cyl, 0, -L / 2, z, '#d8e0ea', [.025, L, .025]); pb.put(new THREE.BoxGeometry(1, 1, 1), 0, -L, 0, ['#ff6fae', '#7fe0a0', '#ffd23f'][i], [.85, .1, .66]); piv.add(pb.mesh(shinyMat()));
     let idle = 0; k.U.push((dt, t) => { if (!(P.ride && P.ride.swing === piv)) { idle += dt; piv.rotation.z = Math.sin(t * 1.6 + i) * .12 * gust; } });
     const go = () => { if (!near(sx + dx)) return; k.fact('🌬️ Neptune has the fastest winds of all the planets! The wind pushes your swing!', 'neptunewind');
-      const ride = jupiterRide(k, 'wswing', (R) => { const push = Math.min(1.25, .3 + R.t * .1 + gust * .35); const a = push * Math.sin(R.t * 1.9) * (R.t > 11 ? Math.max(0, 1 - (R.t - 11)) : 1); piv.rotation.z = a; R.swing = piv;
-        P.x = piv.position.x + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) - .35; P.z = -3; P.facing = Math.cos(R.t * 1.9) >= 0 ? 1 : -1; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
-        if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5); return R.t > 12; }, () => { piv.rotation.z = 0; P.y = 0; P.z = 0; }); };
+      // (build 82) YOU pump the swing: press JUMP and it goes higher (the wind helps a little). When it is really high,
+      //  press JUMP at the top of a forward swing to LET GO and fly onto the soft cloud cushion.
+      let amp = .25, th = 0, flew = false, idleT = 0;
+      jupiterRide(k, 'wswing', (R, dt) => { th += dt * 1.9; idleT += dt; amp = Math.max(.2, Math.min(1.3, amp + gust * .012 * dt * 60 * .1 - (idleT > 4 ? dt * .03 : 0)));
+        const a = amp * Math.sin(th); piv.rotation.z = a; R.swing = piv; R.amp = amp;
+        P.x = piv.position.x + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) - .35; P.z = -3; P.facing = Math.cos(th) >= 0 ? 1 : -1; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
+        if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5);
+        if (R.letGo) { flew = true; return true; } return idleT > 8; },
+        () => { piv.rotation.z = 0; P.z = 0; if (flew) { P.vy = 7; P.vx = 7; P.drift = 7; P.driftT = 1.2; P.grounded = false; k.Sound.whoosh(); k.say('🌬️ WHEEE! You let go and flew!', true); k.disc('neptuneswingfly'); } else P.y = 0; });
+      P.ride.onJump = () => { const R = P.ride; idleT = 0; if (amp > 1.1 && Math.cos(th) > 0 && Math.abs(Math.sin(th)) > .8 && Math.sin(th) > 0) { R.letGo = true; return; } amp = Math.min(1.3, amp + .14); k.Sound.tone(300 + amp * 300, .08, 'triangle', .05, 1.5); if (amp > 1.1) k.say('🌬️ So high! Press JUMP at the top to let go and fly!', false); };
+      k.say('🌬️ Press JUMP to swing higher and higher!', true); };
     k.tapIt(piv, go, sx + dx, i === 1 ? 'neptuneswing' : null); });
   k.tapIt(sock, () => k.fact('🌬️ A windsock shows which way the wind blows. On Neptune the wind is super fast!', 'neptunewindsock'), X + 12, 'neptunewindsock');
 }
@@ -514,12 +529,22 @@ function venusLogRide(k, X) {
   const log = new THREE.Group(); { const lb = makeBatch(); lb.put(new THREE.CylinderGeometry(.62, .62, 2.6, 18, 1, true), 0, .35, 0, '#8a5a3a', 1, [0, 0, Math.PI / 2]); for (const sx of [-1.3, 1.3]) lb.put(new THREE.CylinderGeometry(.62, .62, .08, 18), sx, .35, 0, '#e8c08a', 1, [0, 0, Math.PI / 2]);
     lb.put(new THREE.BoxGeometry(1, 1, 1), 0, .2, 0, '#6a4024', [2.4, .12, 1.1]); lb.put(new THREE.SphereGeometry(.2, 10, 8), 1.4, .9, 0, '#7fe0a0', [1, .6, 1]); log.add(lb.mesh(shinyMat())); }
   log.position.copy(path.getPointAt(0)); log.userData.dynamic = true; k.add(log);
-  const place = u => { const p = path.getPointAt(u); path.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
+  // (build 77) THE WATERFALL SHORTCUT: at the fork (a glowing arch on the high channel), steer ◀ and the log takes a short
+  //  waterfall chute straight down to the rapids; go straight on for the long way round
+  const nearU = (x, y, z) => { let bu = 0, bd = 1e9; for (let i = 0; i <= 600; i++) { const q = path.getPointAt(i / 600), d = (q.x - x) ** 2 + (q.y - y) ** 2 + (q.z - z) ** 2; if (d < bd) { bd = d; bu = i / 600; } } return bu; };
+  const uF = nearU(st + 28, 21.5, -19), uJ = nearU(st + 34, 9, -24), PF = path.getPointAt(uF), PJ = path.getPointAt(uJ);
+  const pathB = new THREE.CatmullRomCurve3([PF.clone(), V3(st + 29.5, 20.5, -21), V3(st + 31, 15, -22.5), V3(st + 32.5, 11, -23.5), PJ.clone()], false, 'catmullrom', .4), lenB = pathB.getLength();
+  { const hp = new THREE.Mesh(halfPipe(pathB, 70, .95, ['#4fb8ff', '#cfefff'], 8), shinyMat()); k.add(hp); const fb = makeBatch(); for (let i = 0; i < 8; i++) { const q = pathB.getPointAt(.25 + i * .08); fb.put(new THREE.BoxGeometry(1, 1, 1), q.x + 1.2, q.y - 1.2, q.z, i % 2 ? '#ffffff' : '#9fd8ff', [.15, 2.4, 1.6]); }
+    fb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF.x, PF.y, PF.z, '#62f0ff', 1, [0, Math.atan2(-(PJ.z - PF.z), PJ.x - PF.x) + Math.PI / 2, 0]); k.add(fb.mesh(glowMat())); }
+  const place = (u, pth = path) => { const p = pth.getPointAt(u); pth.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
   place(0);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
-    let u = 0, v = 3, splashed = false, crest = .6, off = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; }
+    let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; }
     k.say('🪵 Steer the log with ◀ ▶ to catch the stars! Press JUMP to SPLASH!', true);
     jupiterRide(k, 'logride', (R, dt) => {
+      if (onB) { vb = Math.min(16, vb + dt * 9); ub = Math.min(1, ub + vb / lenB * dt); const pb = place(ub, pathB); P.x = pb.x; P.y = pb.y + .25; P.z = pb.z; R.roll = -.5; if (Math.random() < dt * 12) k.api.burst(pb.x, pb.y, pb.z, ['#ffffff', '#cfefff'], 2, 1.4);
+        if (ub >= 1) { onB = false; u = uJ; v = vb; crest = PJ.y + vb * vb / 18; k.api.burst(pb.x, pb.y + .4, pb.z, ['#ffffff', '#4fb8ff'], 20, 3); k.Sound.boing(); } return false; }
+      if (!R.forked && u >= uF - .002 && u <= uF + .01) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
       path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
       if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
       else { crest = Math.max(y0, crest - dt * .35); v = Math.max(2.6, Math.min(17, Math.sqrt(7 + 2 * 9 * Math.max(0, crest - y0)))); if (splashed) v = Math.max(2.2, v - dt * 14); }
@@ -595,21 +620,34 @@ function saturnRingRace(k, X) {
   const rivals = [['#ff4f6a', -1.6], ['#7fe0a0', 1.6]].map(([c, l]) => { const m = new THREE.Group(); const rb2 = makeBatch(); rb2.put(new THREE.BoxGeometry(1, 1, 1), 0, .25, 0, c, [2, .4, 1.1]); rb2.put(new THREE.ConeGeometry(.4, .9, 10), 1.2, .3, 0, '#ffffff', 1, [0, 0, -Math.PI / 2]); m.add(rb2.mesh(shinyMat())); m.visible = false; m.userData.dynamic = true; k.add(m); return { m, l, a: 0, v: 14 }; });
   // (build 72) two JUMP RAMPS on the outside lane: drive over them (▲ to the outside) and the kart flies through the air
   const ramps = [Math.PI * .55, Math.PI * 1.45], rb3 = makeBatch(); for (const ra of ramps) rb3.put(new THREE.BoxGeometry(1, 1, 1), Math.cos(-ra) * (RR + 1.6), .35, Math.sin(-ra) * (RR + 1.6), '#ffd23f', [2.6, .7, 1.4], [0, ra, .25]);
-  ringG.add(rb3.mesh(shinyMat())); let lane = 0, boost = 0, hop = 0, hv = 0;
+  ringG.add(rb3.mesh(shinyMat()));
+  // (build 75) THE OUTER RING ROUTE: at the fork (a glowing gate), stay on the OUTSIDE lane and you swing out onto a second ring
+  //  for half a lap: through a starry tunnel, past its own stars, then back onto the main track
+  const OA = Math.PI * .2, OB = Math.PI * 1.2, OR = 8, ob = makeBatch(), og = makeBatch();
+  { const arc = new THREE.TorusGeometry(RR + OR, 2.2, 3, 70, OB - OA - .3); ob.put(arc, 0, -.05, 0, '#3a6a9a', [1, 1, .06], [Math.PI / 2, 0, -(OA + .15)]);
+    for (let i = 0; i < 9; i++) { const ta = OA + .35 + i * .08; og.put(new THREE.TorusGeometry(3, .2, 4, 16, Math.PI), Math.cos(-ta) * (RR + OR), 0, Math.sin(-ta) * (RR + OR), i % 2 ? '#62f0ff' : '#ff6fd8', 1, [0, ta, 0]); }
+    for (const fa of [OA, OB]) og.put(new THREE.TorusGeometry(3.4, .25, 6, 20), Math.cos(-fa) * (RR + 3), 1, Math.sin(-fa) * (RR + 3), '#ffd23f', 1, [0, fa, 0]); }
+  ringG.add(ob.mesh(shinyMat())); ringG.add(og.mesh(glowMat()));
+  for (let i = 0; i < 4; i++) { const sa = OA + .9 + i * .45, m = new THREE.Mesh(new THREE.OctahedronGeometry(.45), smat); m.position.set(Math.cos(-sa) * (RR + OR), 1.1, Math.sin(-sa) * (RR + OR)); ringG.add(m); stars.push({ a: sa, l: OR, m, outer: true }); }
+  let lane = 0, boost = 0, hop = 0, hv = 0, outer = 0, onOuter = false;
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - pad) > 7) return; k.fact('🏁 The Ring Raceway! YOU drive: ► to go faster, ◄ to slow down, ▲ ▼ to change lanes. Drive over the blue pads to BOOST and catch the stars!', 'saturnrace');
     let ph = 'up', a = 0, laps = 0, v = 0; const start = kart.position.clone(), top = on(0, .4);
     jupiterRide(k, 'ringrace', (R, dt) => {
-      if (ph === 'up') { if (R.t < .05) { lane = 0; boost = 0; for (const s of stars) { s.got = false; s.m.visible = true; } for (const o of rivals) { o.a = .02 * (o.l > 0 ? 1 : -1); o.m.visible = true; } } const q = Math.min(1, R.t / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(start, top, e); kart.position.y += Math.sin(q * Math.PI) * 10; if (q >= 1) { ph = 'race'; k.say('🏁 Three, two, one... GO!', true); k.Sound.chime && k.Sound.chime(); } }
+      if (ph === 'up') { if (R.t < .05) { lane = 0; boost = 0; outer = 0; onOuter = false; for (const s of stars) { s.got = false; s.m.visible = true; } for (const o of rivals) { o.a = .02 * (o.l > 0 ? 1 : -1); o.m.visible = true; } } const q = Math.min(1, R.t / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(start, top, e); kart.position.y += Math.sin(q * Math.PI) * 10; if (q >= 1) { ph = 'race'; k.say('🏁 Three, two, one... GO!', true); k.Sound.chime && k.Sound.chime(); } }
       else if (ph === 'race') { // (build 71) YOU DRIVE: ► faster, ◄ brake (no input: a gentle cruise), ▲ ▼ change lane; boost pads and stars
         const st = k.api.stick ? k.api.stick() : { x: 0, y: 0 }, want = st.x > .2 ? 32 : st.x < -.2 ? 4 : 13; v += (want + boost - v) * Math.min(1, dt * (st.x < -.2 ? 2.5 : 1.2)); boost = Math.max(0, boost - dt * 6);
         lane = Math.max(-2, Math.min(2, lane + st.y * dt * 3)); const da = v / (RR + lane) * dt; a -= da; R.maxV = Math.max(R.maxV || 0, v); R.lanes = Math.max(R.lanes || 0, Math.abs(lane));
         for (const p of pads) if (Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - p.a) < .03 && Math.abs(lane - p.l) < .9 && R.t - (p.t || -9) > 2) { p.t = R.t; boost = 16; R.boosts = (R.boosts || 0) + 1; k.Sound.whoosh(); k.say('⚡ BOOST!', false); }
-        for (const s of stars) if (!s.got && Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - s.a) < .025 && Math.abs(lane - s.l) < .9) { s.got = true; s.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(600 + R.stars * 50, .15, 'sine', .07, 1.5); }
+        for (const s of stars) if (!s.got && Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - s.a) < .025 && Math.abs(lane + outer - s.l) < .9) { s.got = true; s.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(600 + R.stars * 50, .15, 'sine', .07, 1.5); }
         for (const o of rivals) { o.a -= o.v / (RR + o.l) * dt; o.v = 14 + Math.sin(R.t * .7 + o.l) * 4 + (o.a > a ? 3 : -2); o.m.position.copy(on(o.a, .4, o.l)); o.m.lookAt(on(o.a - .05, .4, o.l)); o.m.rotateY(-Math.PI / 2); }
         if (a <= -(laps + 1) * Math.PI * 2) { laps++; R.laps = laps; k.Sound.chime && k.Sound.chime(); k.say(laps < 3 ? `🏁 Lap ${laps}! Keep going!` : `🏆 You finished the race around Saturn's rings${R.stars ? ' with ' + R.stars + ' stars' : ''}! Everybody wins!`, true); if (laps >= 3) { ph = 'down'; R.d = R.t; } }
         const na = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)); if (!hop) for (const ra of ramps) if (Math.abs(na - ra) < .02 && lane > 1 && v > 10) { hop = .001; hv = 7 + v * .15; R.jumps = (R.jumps || 0) + 1; k.Sound.whoosh(); k.api.burst(kart.position.x, kart.position.y, kart.position.z, ['#ffd23f', '#ffffff'], 12, 2); }
         if (hop) { hv -= 14 * dt; hop += hv * dt; if (hop <= 0) { hop = 0; k.Sound.boing(); } }
-        kart.position.copy(on(a, .4 + hop, lane)); const ahead = on(a - .05, .4 + hop, lane); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
+        const nb = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI));
+        if (!onOuter && Math.abs(nb - OA) < .03 && lane > 1.2) { onOuter = true; R.outer = (R.outer || 0) + 1; k.Sound.chime(); k.say('🌌 The outer ring route! Through the star tunnel!', false); }
+        if (onOuter && nb > OB - .02 && nb < OB + .3) onOuter = false;
+        outer += ((onOuter ? OR - lane : 0) - outer) * Math.min(1, dt * 1.5);
+        kart.position.copy(on(a, .4 + hop, lane + outer)); const ahead = on(a - .05, .4 + hop, lane + outer); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
       else if (ph === 'down') { for (const o of rivals) o.m.visible = false; const q = Math.min(1, (R.t - R.d) / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(top, start, e); kart.position.y += Math.sin(q * Math.PI) * 8; if (q >= 1) { kart.rotation.set(0, 0, 0); return true; } }
       P.x = kart.position.x; P.y = kart.position.y + .35; P.z = kart.position.z; P.facing = 1; R.maxY = Math.max(R.maxY || 0, P.y); return false;
     }, () => { P.x = pad + 3; P.y = 0; P.z = 0; kart.position.copy(start); k.say('🏆 What a race! Tap the rocket kart to race again!', true); }, { noExit: true }); };

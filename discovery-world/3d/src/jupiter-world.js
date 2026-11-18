@@ -162,7 +162,7 @@ export function jupiterSkyArea2(k) {
   // ---------- the BALL PIT: wade in and the balls fly; tap it and they all jump ----------
   { const x0 = X + 199, x1 = X + 208, b = makeBatch(), gb = makeBatch();
     for (const z of [-3.6, .6]) b.put(G0.box, (x0 + x1) / 2, .45, z, '#ff6fae', [x1 - x0, .9, .3]); for (const x of [x0, x1]) b.put(G0.box, x, .45, -1.5, '#5aa8ff', [.3, .9, 4.5]);
-    for (let i = 0; i < 44; i++) { const x = x0 + .4 + (i * 1.37) % (x1 - x0 - .8), z = -3.2 + (i * .91) % 3.5, y = .25 + (i % 3) * .16; gb.put(G0.lo, x, y, z, RB[i % 7], .27); }
+    for (let i = 0; i < 30; i++) { const x = x0 + .4 + (i * 1.37) % (x1 - x0 - .8), z = -3.2 + (i * .91) % 3.5, y = .25 + (i % 3) * .16; gb.put(G0.lo, x, y, z, RB[i % 7], .27); }
     const pit = mesh(b, shinyMat(), true); k.add(pit); k.add(gb.mesh(glowMat())); let inside = false, puff = 0;
     k.U.push(dt => { const now = onPlanet(P) && P.x > x0 && P.x < x1 && P.y < 1; if (now && !inside) { k.api.burst(P.x, .6, -1, RB, 14, 2); S.pop(); k.disc('jupiterballpit', '🔴 Splash into the ball pit!'); }
       inside = now; if (now && Math.abs(P.vx) > .5 && (puff -= dt) < 0) { puff = .25; k.api.burst(P.x, .5, -1, RB, 3, 1.2); } });
@@ -240,9 +240,9 @@ export function jupiterSkyArea3(k) {
       [X + 200, 9, -16], [X + 191, 7.5, -12.5], [X + 186, 5.5, -7], [X + 191, 4.2, -4.6], [X + 197, 2.7, -3.3], [X + 203.5, .75, -1.4]].map(p => V3(...p));
     const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35), tube = slideTube(k, path, { segs: 260, r: 1, postEvery: .05, bands: 21 });
     // glowing hoops to slide through (they ring as you pass), and clouds round the far part of the ride
-    const hu = [.12, .24, .36, .48, .6, .72, .84], hoops = [], q = new THREE.Quaternion(), e = new THREE.Euler(), Z = V3(0, 0, 1), hb = makeBatch(), cb = makeBatch();
-    for (const [i, u] of hu.entries()) { const p = path.getPointAt(u), t = path.getTangentAt(u); q.setFromUnitVectors(Z, t); e.setFromQuaternion(q); hb.put(G0.torus, p.x, p.y, p.z, RB[i % 7], 1.9, [e.x, e.y, e.z]); hoops.push(u); }
-    for (let u = .25; u < .7; u += .035) { const p = path.getPointAt(u); for (const [dy, dz, s] of [[-2.2, -2.2, 1.6], [-1.6, 2.4, 1.2], [-2.8, .4, 1.9]]) cb.put(G0.lo, p.x + (u * 97 % 2), p.y + dy, p.z + dz, '#fff7ee', [s * 1.4, s * .7, s]); }
+    const hoopG = new THREE.TorusGeometry(1, .09, 4, 18), hu = [.12, .24, .36, .48, .6, .72, .84], hoops = [], q = new THREE.Quaternion(), e = new THREE.Euler(), Z = V3(0, 0, 1), hb = makeBatch(), cb = makeBatch();
+    for (const [i, u] of hu.entries()) { const p = path.getPointAt(u), t = path.getTangentAt(u); q.setFromUnitVectors(Z, t); e.setFromQuaternion(q); hb.put(hoopG, p.x, p.y, p.z, RB[i % 7], 1.9, [e.x, e.y, e.z]); hoops.push(u); }
+    for (let u = .25; u < .7; u += .05) { const p = path.getPointAt(u); for (const [dy, dz, s] of [[-2.2, -2.2, 1.6], [-2.8, .4, 1.9]]) cb.put(G0.lo, p.x + (u * 97 % 2), p.y + dy, p.z + dz, '#fff7ee', [s * 1.4, s * .7, s]); }
     k.add(hb.mesh(glowMat())); k.add(cb.mesh(glowMat()));
     const mouth = new THREE.Mesh(G0.torus, toy('#ff4f6a', { r: .3, ei: .4 })); mouth.position.set(LX0 + .2, LY + .9, -1.2); mouth.rotation.y = Math.PI / 2; mouth.scale.setScalar(1.15); k.add(mouth);
     let next = 0;
