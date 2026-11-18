@@ -38,7 +38,7 @@
 | 14 | Pluto | Inflatable park | PLAYABLE | Build 78: the PUFFY PICTURE-MATCHING GAME (6 cards, 3 pairs; wrong pairs turn back; win → party, reshuffle; `parks` checks it). Each card is one mesh: +8 draw calls; desktop frame time within the noise. Next: a second tower and an inflatable maze. |
 | 15 | Venus | Log flume (3× longer) | PLAYABLE | Build 77: THE WATERFALL SHORTCUT: steer ◀ at the glowing fork on the high channel and the log drops down a waterfall chute to the rapids (42 s against 49 s the long way; `venus-flume` 4/4 checks both routes). +2 draw calls (the next spot is the same; +6% at +190 is within the noise). Next: animated water (foam, flowing stripes). |
 | 16 | Moon | Giant coaster | DONE (benchmark) | Polish only. |
-| 17 | Neptune | Wind swings | TODO | Inspect against the standard. |
+| 17 | Neptune | Wind swings | PLAYABLE | Build 82: YOU pump the swing with JUMP (the wind helps a little); when it is really high, JUMP at the top of a forward swing lets go and you fly onto the soft cloud cushion (`control-rides` checks it; the smoke check pumps it too). +1 draw call; the spot past the swings measures the same. |
 | 18 | Venus / Mars / others | Older small activities (rocks, geysers, alien games) | TODO | Inspect each one; expand the best ones. |
 
 Measurements so far: `PERFORMANCE_LOG.md` and `DEVELOPMENT_LOG.md` (builds 69–73).

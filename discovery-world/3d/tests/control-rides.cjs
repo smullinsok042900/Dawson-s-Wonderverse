@@ -16,6 +16,11 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   let X;
   if (process.env.ONLY !== 'mars') {
   X = await fly('neptune'); await put(X + 150); await sleep(2000); await put(X + 250); await sleep(2500);
+  await put(X + 136); await sleep(1500); await run('neptuneswing');
+  const sw = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxA = 0, last = 0, flew = false; const f = () => { const R = P.ride;
+    if (R && R.type === 'wswing') { maxA = Math.max(maxA, R.maxA || 0); if (performance.now() - last > 500) { last = performance.now(); R.onJump(); } }
+    if (__DDW3.world.disc.has('neptuneswingfly')) flew = true; if ((!P.ride && performance.now() - t0 > 1000) || performance.now() - t0 > 90000) return res({ maxA, flew: flew || __DDW3.world.disc.has('neptuneswingfly') }); requestAnimationFrame(f); }; f(); }));
+  check('wind swings: press JUMP to pump the swing higher, then let go at the top and fly onto the cloud cushion', sw.maxA > 1 && sw.flew, JSON.stringify(sw));
   await put(X + 186); await sleep(1500); await run('neptunebungeego');
   await page.waitForFunction(() => __DDW3.G.bungee && __DDW3.G.bungee.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
   const waited = await ev(() => __DDW3.G.bungee.ph); await sleep(1500); const still = await ev(() => __DDW3.G.bungee.ph);

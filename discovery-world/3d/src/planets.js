@@ -424,6 +424,7 @@ function neptuneWindSwings(k, X) {
   b.put(cyl, sx, H, -3, '#ffd23f', [.12, 9.4, .12], [0, 0, Math.PI / 2]);
   const sock = new THREE.Group(); sock.position.set(X + 12, 0, -3.5); k.add(sock); { const sb = makeBatch(); sb.put(cyl, 0, 2, 0, '#ffffff', [.06, 4, .06]); for (let i = 0; i < 4; i++) sb.put(new THREE.CylinderGeometry(.32 - i * .05, .27 - i * .05, .5, 12), .3 + i * .5, 3.8, 0, i % 2 ? '#ffffff' : '#ff6a3c', 1, [0, 0, -Math.PI / 2]); sock.add(sb.mesh(shinyMat())); }
   k.add(b.mesh(shinyMat()));
+  { const cb = makeBatch(), lo = new THREE.SphereGeometry(1, 8, 6); for (let i = 0; i < 6; i++) cb.put(lo, sx + 9 + i * 1.3, .25, -1.4 + (i % 2) * .5, '#ffffff', [1.2, .45, 1.1]); k.add(cb.mesh(glowMat())); } // (build 82: the soft cloud cushion you fly onto)
   // white wind streaks blowing across
   const streakM = toy('#ffffff', { r: .2, em: '#ffffff', ei: .4 }), streaks = [...Array(10)].map((_, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.6, .05, .05), streakM); m.position.set(X + Math.random() * 60, 1 + (i * 1.7) % 6, -2 - (i % 4)); k.add(m); return m; });
   let gust = 0; k.U.push((dt, t) => { gust = .5 + .5 * Math.sin(t * .6); for (const m of streaks) { m.position.x += dt * (8 + gust * 10); if (m.position.x > X + 70) m.position.x = X + 4; } sock.children[0].rotation.y = Math.sin(t * 2) * .2 * gust; });
@@ -431,9 +432,17 @@ function neptuneWindSwings(k, X) {
     for (const z of [-.3, .3]) pb.put(cyl, 0, -L / 2, z, '#d8e0ea', [.025, L, .025]); pb.put(new THREE.BoxGeometry(1, 1, 1), 0, -L, 0, ['#ff6fae', '#7fe0a0', '#ffd23f'][i], [.85, .1, .66]); piv.add(pb.mesh(shinyMat()));
     let idle = 0; k.U.push((dt, t) => { if (!(P.ride && P.ride.swing === piv)) { idle += dt; piv.rotation.z = Math.sin(t * 1.6 + i) * .12 * gust; } });
     const go = () => { if (!near(sx + dx)) return; k.fact('🌬️ Neptune has the fastest winds of all the planets! The wind pushes your swing!', 'neptunewind');
-      const ride = jupiterRide(k, 'wswing', (R) => { const push = Math.min(1.25, .3 + R.t * .1 + gust * .35); const a = push * Math.sin(R.t * 1.9) * (R.t > 11 ? Math.max(0, 1 - (R.t - 11)) : 1); piv.rotation.z = a; R.swing = piv;
-        P.x = piv.position.x + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) - .35; P.z = -3; P.facing = Math.cos(R.t * 1.9) >= 0 ? 1 : -1; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
-        if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5); return R.t > 12; }, () => { piv.rotation.z = 0; P.y = 0; P.z = 0; }); };
+      // (build 82) YOU pump the swing: press JUMP and it goes higher (the wind helps a little). When it is really high,
+      //  press JUMP at the top of a forward swing to LET GO and fly onto the soft cloud cushion.
+      let amp = .25, th = 0, flew = false, idleT = 0;
+      jupiterRide(k, 'wswing', (R, dt) => { th += dt * 1.9; idleT += dt; amp = Math.max(.2, Math.min(1.3, amp + gust * .012 * dt * 60 * .1 - (idleT > 4 ? dt * .03 : 0)));
+        const a = amp * Math.sin(th); piv.rotation.z = a; R.swing = piv; R.amp = amp;
+        P.x = piv.position.x + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) - .35; P.z = -3; P.facing = Math.cos(th) >= 0 ? 1 : -1; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
+        if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5);
+        if (R.letGo) { flew = true; return true; } return idleT > 8; },
+        () => { piv.rotation.z = 0; P.z = 0; if (flew) { P.vy = 7; P.vx = 7; P.drift = 7; P.driftT = 1.2; P.grounded = false; k.Sound.whoosh(); k.say('🌬️ WHEEE! You let go and flew!', true); k.disc('neptuneswingfly'); } else P.y = 0; });
+      P.ride.onJump = () => { const R = P.ride; idleT = 0; if (amp > .95 && Math.cos(th) > 0 && Math.abs(Math.sin(th)) > .8 && Math.sin(th) > 0) { R.letGo = true; return; } amp = Math.min(1.3, amp + .14); k.Sound.tone(300 + amp * 300, .08, 'triangle', .05, 1.5); if (amp > .95) k.say('🌬️ So high! Press JUMP at the top to let go and fly!', false); };
+      k.say('🌬️ Press JUMP to swing higher and higher!', true); };
     k.tapIt(piv, go, sx + dx, i === 1 ? 'neptuneswing' : null); });
   k.tapIt(sock, () => k.fact('🌬️ A windsock shows which way the wind blows. On Neptune the wind is super fast!', 'neptunewindsock'), X + 12, 'neptunewindsock');
 }
