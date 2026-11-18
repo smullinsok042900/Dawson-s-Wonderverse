@@ -101,8 +101,8 @@ export function buildWorld(G) {
     const path = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, 3), macroVariation(new THREE.MeshStandardMaterial({ map, normalMap: nm, normalScale: new THREE.Vector2(.75, .75), roughness: rm ? 1 : .82, roughnessMap: rm }), { scale: .13, amount: .08 }));
     path.rotation.x = -Math.PI / 2; path.position.set((x0 + x1) / 2, .006, 0); path.receiveShadow = true; add(path);
     for (const z of [-1.55, 1.55]) { const edge = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .07, .14), M('#fff6ea', { r: .6, cc: .2 })); edge.position.set((x0 + x1) / 2, .035, z); edge.receiveShadow = true; add(edge); } }
-  // front edge of the floor (a rounded rail, so the world has a nice edge)
-  block(144, -.6, 4.6, 328, .6, .8, '#ffb8de', { r: .3, cast: false }); block(370, -.6, 4.6, 124, .6, .8, '#ffb8de', { r: .3, cast: false }); block(669, -.6, 4.6, 474, .6, .8, '#ffb8de', { r: .3, cast: false }); block(-147, -.6, 4.6, 254, .6, .8, '#ffb8de', { r: .3, cast: false }); block(-340, -.6, 4.6, 132, .6, .8, '#ffb8de', { r: .3, cast: false }); block(-472, -.6, 4.6, 132, .6, .8, '#ffb8de', { r: .3, cast: false }); block(-604, -.6, 4.6, 132, .6, .8, '#ffb8de', { r: .3, cast: false }); block(-736, -.6, 4.6, 132, .6, .8, '#ffb8de', { r: .3, cast: false }); /* (build 49: Balloon Hills) */ // (build 35: the farm; build 38: the pier) // (build 30: and to the left) // (build 29: on to the new neighbourhoods)
+  // (build 70: the pink rounded rail along the front edge of the floor was removed at the family's request: it showed as a
+  //  pink line across the bottom of the screen)
 
   // ---------- back walls ----------
   const wallAO = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, map: (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(50,15,70,.32)'); gr.addColorStop(.45, 'rgba(50,15,70,.1)'); gr.addColorStop(1, 'rgba(50,15,70,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); return new THREE.CanvasTexture(c); })() });

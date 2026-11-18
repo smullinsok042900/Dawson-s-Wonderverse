@@ -13,6 +13,8 @@ import * as THREE from 'three';
 import { toy } from './creatures.js';
 import { makeBatch, shinyMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
+import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
+import { mercuryFunhouse } from './mercury-funhouse.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -275,9 +277,9 @@ function jupiterSuperSlide(k, X) {
   for (let i = 0; i <= 36; i++) { const a = Math.PI / 2 + i / 36 * Math.PI * 6, r = 4.2; pts.push(V3(tx + Math.cos(a) * r, TOP - .6 - i / 36 * 14, -6 + Math.sin(a) * r)); }
   for (const p of [[tx + 10, 14, -8], [tx + 16, 9, -10], [tx + 22, 13, -10.5], [tx + 28, 6, -9], [tx + 34, 10, -6.5], [tx + 40, 5, -8.5], [tx + 44, 7, -11], [tx + 46, 9, -8], [tx + 44, 7.5, -5.5], [tx + 48, 5, -4],
     [tx + 56, 4.5, -7], [tx + 62, 6, -10], [tx + 70, 3.5, -8], [tx + 76, 4.2, -4.5], [tx + 82, 2, -3], [tx + 86, 1, -2], [tx + 89, .7, -1.5]]) pts.push(V3(...p));
-  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35), N = 520, geo = new THREE.TubeGeometry(path, N, .9, 18, false);
-  { const cols = [], c = new THREE.Color(), RB = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#7fe0a0', '#5aa8ff', '#9b6cff', '#ff6fae']; for (let i = 0; i <= N; i++) { c.set(RB[Math.floor(i / N * 13.999) % 7]); for (let j = 0; j < 19; j++) cols.push(c.r, c.g, c.b); } geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); }
-  const tube = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ vertexColors: true, transparent: true, opacity: .55, roughness: .08, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false })); tube.renderOrder = 2; k.add(tube);
+  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35);
+  // (build 70: an open rainbow half-pipe with the shared material, instead of a see-through clearcoat tube: much cheaper to draw, no extra shader)
+  const tube = new THREE.Mesh(halfPipe(path, 300, .9, ['#ff4f6a', '#ff9a2e', '#ffd23f', '#7fe0a0', '#5aa8ff', '#9b6cff', '#ff6fae'], 14), shinyMat()); tube.castShadow = true; k.add(tube);
   // posts under the slide and the tower itself (one mesh), a glass lift tube, the lift car
   const b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 12);
   for (let u = .02; u < .98; u += .025) { const p = path.getPointAt(u); if (p.y > 1.6 && Math.hypot(p.x - tx, p.z + 6) > 3) b.put(cyl, p.x, (p.y - .9) / 2, p.z, '#ffd23f', [.12, p.y - .9, .12]); }
@@ -285,7 +287,7 @@ function jupiterSuperSlide(k, X) {
   b.put(cyl, tx, TOP + .15, -6, '#ffd23f', [2.6, .3, 2.6]); b.put(new THREE.ConeGeometry(1, 1, 20), tx, TOP + 2.4, -6, '#9b6cff', [2.4, 2.6, 2.4]); b.put(new THREE.SphereGeometry(1, 14, 10), tx, TOP + 3.9, -6, '#ffd23f', .35);
   for (const s of [-1, 1]) b.put(cyl, tx + s * .9, TOP + .9, -6 + 1.2, '#ffffff', [.06, 1.5, .06]);
   const tw = b.mesh(shinyMat()); tw.castShadow = true; k.add(tw);
-  const glass = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, TOP + 1, 20, 1, true), new THREE.MeshPhysicalMaterial({ color: '#cfefff', transparent: true, opacity: .25, roughness: .05, side: THREE.DoubleSide, depthWrite: false })); glass.position.set(tx - 2.4, (TOP + 1) / 2, -2.6); k.add(glass);
+  const glass = new THREE.Mesh(painted(new THREE.CylinderGeometry(1, 1, TOP + 1, 20, 1, true), '#cfefff'), seeThrough(.25)); glass.position.set(tx - 2.4, (TOP + 1) / 2, -2.6); k.add(glass);
   const car = new THREE.Mesh(new THREE.CylinderGeometry(.95, .95, .25, 20), toy('#5aa8ff', { r: .3, cc: .8 })); car.position.set(tx - 2.4, .12, -2.6); k.add(car);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - tx) > 9) return; k.fact('🛝 Up, up, up to the top of the super slide!', 'jupiterslide'); P.x = tx - 2.4; P.z = -2.6;
     jupiterRide(k, 'jlift', (R, dt) => { car.position.y = Math.min(TOP, car.position.y + dt * 5); P.y = car.position.y + .15; P.x = tx - 2.4; P.z = -2.6; if (R.t % .5 < dt) k.Sound.tone(300 + car.position.y * 15, .06, 'sine', .03, 1); return car.position.y >= TOP; },
@@ -295,8 +297,8 @@ function jupiterSuperSlide(k, X) {
 }
 const jupiter = {
   sections: [
-    k => { jupiterPlayground(k, k.s0); k.rocketSign(k.s0 + 4); },          // area 2: the playground
-    k => { jupiterSuperSlide(k, k.s0); k.rocketSign(k.s0 + 104); },         // area 3: the super-duper tall crazy slide
+    k => { jupiterPlayground(k, k.s0); jupiterSkyArea2(k); k.rocketSign(k.s0 + 1); },   // area 2: the playground + (build 70) the Sky Playground's towers, islands and games
+    k => { jupiterSuperSlide(k, k.s0); jupiterSkyArea3(k); k.rocketSign(k.s0 + 104); },  // area 3: the super slide + (build 70) the Floaty Bubble, the Sky Lookout and its slides
   ],
 };
 
@@ -401,7 +403,7 @@ function mercuryMirrorMaze(k, X) {
 const mercury = {
   sections: [
     k => { mercuryMirrorMaze(k, k.s0); k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze
-    k => { const X = k.s0; for (let i = 0; i < 8; i++) k.sball(X + 12 + i * 11, .2, -6 - (i % 3) * 2.5, 1.4 + (i % 3) * .6, .5, 1.2, '#9a8a7a', { r: .95 }); k.rocketSign(X + 100); }, // area 3: rocky craters
+    k => { mercuryFunhouse(k); k.rocketSign(k.s0 + 108); }, // area 3: (build 71) the giant carnival funhouse (it replaces the rocks)
   ],
 };
 
