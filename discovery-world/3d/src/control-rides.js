@@ -138,6 +138,16 @@ export function marsClimbPark(k, X) {
         else P.y = 0; });
     R.onJump = () => { R.end = 'let'; };
     k.G.marsClimb = { R }; };
+  // (build 83) THE CAVE TUNNEL: from the first ledge, tap the cave mouth and crawl right through the rock to a new ledge on
+  //  the other side of the wall (a second way across, with a gem waiting inside)
+  { const tb = makeBatch(); tb.put(G0.box, wx + W + 1.2, 10, -1.4, '#c8653f', [2.6, .5, 2.4]); tb.put(G0.ball, wx + W + .3, 11.4, -2.6, '#2a1410', [1.1, 1.3, .6]); k.add(tb.mesh(shinyMat()));
+    k.plat(wx + W - .1, wx + W + 2.5, 10.25, { z: -1.2 });
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(2, 2.4, 1.6), new THREE.MeshBasicMaterial({ visible: false })); mouth.position.set(wx - W - .3, 11.4, -2.4); k.add(mouth);
+    const gem = new THREE.Mesh(G0.oct, toy('#ff6fd8', { em: '#ff6fd8', ei: .8 })); gem.scale.set(.3, .45, .3); gem.position.set(wx, 11, -3.4); k.add(gem);
+    const crawl = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.y - 10.25) > 1 || P.x > wx - W + 2 || P.x < wx - W - 4) return; k.say('🕳️ Into the cave tunnel! Crawl through the mountain!', true); k.disc('marscavetunnel');
+      ride(k, 'cavetunnel', R => { const f = Math.min(1, R.t / 4.5); P.x = wx - W - .6 + f * (2 * W + 2.2); P.y = 10.25 + Math.sin(f * Math.PI) * .3; P.z = -2.6 * Math.min(1, R.t * 2) * (f < .95 ? 1 : 0); R.roll = Math.sin(R.t * 6) * .08; P.facing = 1;
+        if (gem.visible && f > .48) { gem.visible = false; k.Sound.chime(); k.api.burst(wx, 11, -2.6, ['#ff6fd8', '#ffffff'], 16, 1.8); k.say('💎 A cave gem!', false); R.gem = true; } return f >= 1; }, R => { P.y = 10.25; P.z = 0; P.x = wx + W + 1.4; P.grounded = true; k.say('🧗 Out the other side! Climb on, or drop down to the trampoline!', true); if (R.gem) k.disc('marscavegem'); }); };
+    k.tapIt(mouth, crawl); k.G.interact.push({ x: wx - W - 1, y: 10.25, layer: 'space', disc: 'marscavetunnelgo', run: crawl, hintY: 2.4 }); }
   // letting go away from a ledge: float down gently (never a hard fall)
   k.U.push(dt => { if (!P.floatDown) return; if (P.ride || P.grounded) { P.floatDown = false; return; } P.vy = Math.max(P.vy, -3); });
   k.tapIt(cliff, climb, wx, 'marsclimbgo');

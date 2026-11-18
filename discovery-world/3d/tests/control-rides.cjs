@@ -62,6 +62,9 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(wx - 3); await sleep(500); await run('marsclimbgo'); await keys({ up: true }); await page.waitForFunction(() => __DDW3.player.y > 10.6, null, { timeout: 60000 }).catch(() => {}); await keys({ up: false, left: true }); await sleep(1500); await keys({ left: false });
   await ev(() => __DDW3.player.ride && __DDW3.player.ride.onJump()); await sleep(2500); const ledge = await ev(() => [__DDW3.player.y, __DDW3.player.grounded]);
   check('climbing: let go near the ledge and you rest on it', Math.abs(ledge[0] - 10.25) < .3, JSON.stringify(ledge));
+  await put(wx - 6, 10.25); await sleep(500); await run('marscavetunnelgo'); await page.waitForFunction(() => __DDW3.player.ride, null, { timeout: 5000 }).catch(() => {});
+  await page.waitForFunction(() => !__DDW3.player.ride, null, { timeout: 60000 }).catch(() => {}); const tun = await ev(() => [__DDW3.player.x, __DDW3.player.y]);
+  check('the cave tunnel: from the first ledge, crawl through the rock to the new ledge on the other side, and find the cave gem', tun[0] > wx + 5 && Math.abs(tun[1] - 10.25) < .3 && await ev(() => __DDW3.world.disc.has('marscavegem')), JSON.stringify({ x: tun[0] - wx, y: tun[1] }));
   await put(wx + 10, 3); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; __DDW3.keys.up = true; });
   const tr = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0; const f = () => { maxY = Math.max(maxY, P.y); if (performance.now() - t0 > 12000) return res({ maxY, y: P.y }); requestAnimationFrame(f); }; f(); })); await keys({ up: false });
   check('trampolines: hold ▲ to bounce much higher, up onto the high trampoline', tr.maxY > 19, JSON.stringify(tr));
