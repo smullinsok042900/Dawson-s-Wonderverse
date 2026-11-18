@@ -46,7 +46,7 @@ are in `PERFORMANCE_LOG.md`.
     - she never goes backwards or jumps, and the camera stays near her;
     - she ends at the station and the camera is freed;
     - 🏁 works mid-ride, and the map works mid-ride.
-  - **Full smoke test:** see below.
+  - **Full smoke test (run alone): 236/236 passed**, including the whole-ride coaster check (227 m top, −22 m bottom, loops, every section, back at the station) and the 🏁 skip.
   - **Not yet tried on the real iPhone.**
 
 ## Checkpoint: build 68 — Neptune: wind swings, bungee jumping and a skydiving chamber
