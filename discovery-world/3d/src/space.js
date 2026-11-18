@@ -430,7 +430,7 @@ export function initSpace(G, api) {
     for (let k = G.taps.length - 1; k >= 0; k--) if (mine.has(G.taps[k])) G.taps.splice(k, 1);
     for (let k = G.interact.length - 1; k >= 0; k--) { const it = G.interact[k]; if (it.layer === 'space' && it.x >= X - 30 && it.x <= X2 + 30) G.interact.splice(k, 1); }
     for (let k = G.platforms.length - 1; k >= 0; k--) { const it = G.platforms[k]; if (it.layer === 'space' && it.a >= X - 30 && it.b <= X2 + 30) G.platforms.splice(k, 1); }
-    g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m !== K.paintMat() && m !== K.shinyMat() && m !== K.softMat()) m.dispose(); }); });
+    g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m !== K.paintMat() && m !== K.shinyMat() && m !== K.softMat() && m !== K.glowMat()) m.dispose(); }); });
     for (const texture of g.userData.ownedTextures || []) texture.dispose();
     areaSteps.length = 0; delete groups[id]; delete ups[id]; delete skies[id]; delete kits[id]; delete secs[id]; built[id] = false; if (G.rockets) delete G.rockets[id];
   }

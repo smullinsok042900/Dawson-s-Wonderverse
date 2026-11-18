@@ -51,6 +51,9 @@ export const paintMat = () => PAINT_M || (PAINT_M = new THREE.MeshStandardMateri
 /** glossy painted things: ice, the rocket, machines */
 export const shinyMat = () => PAINT_SHINY || (PAINT_SHINY = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .34, metalness: .08 }));
 /** soft things: clouds, aliens */
+/** (build 69) unlit painted things whose light and shade are painted into the colours (the giant Moon coaster) */
+let PAINT_GLOW = null;
+export const glowMat = () => PAINT_GLOW || (PAINT_GLOW = new THREE.MeshBasicMaterial({ vertexColors: true }));
 export const softMat = () => PAINT_SOFT || (PAINT_SOFT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .62, metalness: 0 }));
 
 // ---------- a batch: many shapes merged into one mesh with painted colours ----------

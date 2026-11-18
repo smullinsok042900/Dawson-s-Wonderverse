@@ -10,19 +10,22 @@
 // The heavy one-time work (the spine, the supports) is done in small slices over several frames, never in one go.
 // ===================================================================
 import * as THREE from 'three';
-import { makeBatch, shinyMat } from './spacekit.js';
+import { makeBatch, shinyMat, col, glowMat as sharedGlow } from './spacekit.js';
 import { toy } from './creatures.js';
 import { buildCourse, STATION } from './coaster-course.js';
 
 const SECTION = 240;             // samples per streamed piece (120 m)
-const NEAR = 70, NEAR_RIDE = 110, FAR = 200, MAX_PIECES = 3, MAX_RIDE = 4; // (only the nearest few pieces have rails and ties)
+const NEAR = 45, NEAR_RIDE = 90, FAR = 200, MAX_PIECES = 2, MAX_RIDE = 3; // (only the nearest few pieces have rails and ties)
 
 export function buildMoonCoaster(k) {
   const X = k.X, P = k.P, G = k.G, ground = k.ground || (() => 0);
   const C = buildCourse(X), { N, pos, tan, up, flag } = C;
   const V = (i, arr = pos, o = new THREE.Vector3()) => o.set(arr[i * 3], arr[i * 3 + 1], arr[i * 3 + 2]);
   const root = new THREE.Group(); root.name = 'moonCoaster'; root.userData.dynamic = true; k.add(root);
-  const glowMat = new THREE.MeshBasicMaterial({ vertexColors: true });
+  const glowMat = sharedGlow(); // (shared, and prepared when the game starts: no shader pause on the Moon)
+  { // (a tiny mesh with that material is there from the start, so the rocket flight already prepares its shader: no pause on landing)
+    const wg = new THREE.BufferGeometry(); for (const n of ['position', 'normal', 'color']) wg.setAttribute(n, new THREE.Float32BufferAttribute(new Float32Array(9), 3));
+    const w = new THREE.Mesh(wg, glowMat); w.frustumCulled = false; w.receiveShadow = false; root.add(w); }
   const jobs = [];                // slices of one-time work, done a few milliseconds per frame
   const tA = new THREE.Vector3(), uA = new THREE.Vector3(), sA = new THREE.Vector3(), pA = new THREE.Vector3(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
   const frame = i => { V(i, tan, tA); V(i, up, uA); sA.crossVectors(tA, uA).normalize(); m4.makeBasis(tA, uA, sA); q.setFromRotationMatrix(m4); e.setFromQuaternion(q); return e; };
@@ -31,22 +34,26 @@ export function buildMoonCoaster(k) {
   const ringCyl = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true), torusT = new THREE.TorusGeometry(6.2, .2, 4, 20), torusC = new THREE.TorusGeometry(8, .45, 4, 22), spireRing = new THREE.TorusGeometry(1, .14, 3, 12);
 
   // ---------- the always-on skeleton: spine + glowing beads + supports (built in slices) ----------
-  const skel = makeBatch(), glow = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1), cyl = new THREE.CylinderGeometry(1, 1, 1, 6), bead = new THREE.TorusGeometry(.42, .08, 3, 6), post = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true), oct = new THREE.OctahedronGeometry(1);
+  // (the whole structure is drawn with ONE cheap unlit material: its light and shade are painted into the colours once, here,
+  //  instead of being worked out for every pixel of every frame. It looks lit, and costs far less to draw.)
+  const glow = makeBatch(), LD = new THREE.Vector3(.35, .85, .4).normalize(), litC = {};
+  const lit = hex => litC[hex] || (litC[hex] = (x, y, z, nx, ny, nz, out) => { const d = Math.max(0, nx * LD.x + ny * LD.y + nz * LD.z), k = Math.min(1.05, .4 + .52 * d + .12 * (ny * .5 + .5)); out.copy(col(hex)).multiplyScalar(k); });
+  const skel = { put: (g, x, y, z, c, s, r) => glow.put(g, x, y, z, lit(c), s, r), add: (g, m, c) => glow.add(g, m, lit(c)) }, box = new THREE.BoxGeometry(1, 1, 1), cyl = new THREE.CylinderGeometry(1, 1, 1, 6), bead = new THREE.TorusGeometry(.42, .08, 3, 6), post = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true), oct = new THREE.OctahedronGeometry(1);
   { const spinePts = []; for (let i = 0; i < N; i += 8) spinePts.push(V(i)); spinePts.push(V(N - 1));
     const curve = new THREE.CatmullRomCurve3(spinePts.map(p => p.clone().addScaledVector(Y0(), 0)), false, 'catmullrom', .1);
     jobs.push(() => { skel.add(new THREE.TubeGeometry(curve, Math.ceil(spinePts.length * .55), .28, 3, false), null, '#dfe6f6'); }); } // (3 sides: from a distance it is a thin line; the streamed rails show the detail near her)
   for (let i0 = 0; i0 < N; i0 += 600) jobs.push(() => {
     for (let i = i0; i < Math.min(N, i0 + 600); i++) {
-      if (i % 90 === 0) { V(i, pos, pA); glow.put(bead, pA.x, pA.y, pA.z, (i / 90) % 3 ? '#62f0ff' : '#ff6fd8', 1, ringRot(i)); }
-      if (i % 64 !== 0 || flag[i] === 'C' || flag[i] === 'T' || flag[i] === 'L' || flag[i] === 'S') continue;
+      if (i % 120 === 0) { V(i, pos, pA); glow.put(bead, pA.x, pA.y, pA.z, (i / 120) % 3 ? '#62f0ff' : '#ff6fd8', 1, ringRot(i)); }
+      if (i % 128 !== 0 || flag[i] === 'C' || flag[i] === 'T' || flag[i] === 'L' || flag[i] === 'S') continue;
       V(i, pos, pA); V(i, up, uA); if (uA.y < .35) continue;                        // (no posts under upside-down track)
       if (pA.z > -9) continue;                                                       // (never on the path or the activities)
       const g = ground(pA.x, pA.z), h = pA.y - .45 - g; if (h < 1.2) continue;
       const r = .18 + Math.min(.6, h * .004);
       skel.put(post, pA.x, g + h / 2, pA.z, '#eef2ff', [r, h, r]);
       skel.put(cyl, pA.x, g + .3, pA.z, '#8a93a8', [r * 2.2, .6, r * 2.2]);                     // the foot
-      for (let y = 24; y < h - 6; y += 40) glow.put(ringCyl, pA.x, g + y, pA.z, '#62f0ff', [r * 1.35, .18, r * 1.35]); // glowing rings up the tall towers
-      if (h > 70) for (const s of [-1, 1]) skel.put(post, pA.x + s * h * .07, g + h * .2, pA.z, '#dfe6f8', [r * .55, h * .42, r * .55], [0, 0, -s * .3]); // braces on the tallest
+      for (let y = 24; y < h - 6; y += 60) glow.put(ringCyl, pA.x, g + y, pA.z, '#62f0ff', [r * 1.35, .18, r * 1.35]); // glowing rings up the tall towers
+      // (no diagonal braces: long slanted shapes are slow to draw on some phones)
     } });
   // ---------- THE LUNAR SPIRE in the middle of the spiral lift, with arms holding the track ----------
   { let sx = 0, sz = 0, n = 0, top = 0; for (let i = 0; i < N; i++) if (flag[i] === 'L') { sx += pos[i * 3]; sz += pos[i * 3 + 2]; n++; top = Math.max(top, pos[i * 3 + 1]); }
@@ -58,27 +65,31 @@ export function buildMoonCoaster(k) {
         for (let i = 0; i < N; i += 30) if (flag[i] === 'L') { V(i, pos, pA); const dx = pA.x - sx, dz = pA.z - sz, L = Math.hypot(dx, dz);
           skel.put(box, sx + dx / 2, pA.y - .5, sz + dz / 2, '#c9d2e6', [L, .35, .5], [0, -Math.atan2(dz, dx), 0]); } }); } }
   // ---------- THE LUNAR MOUNTAIN the track tunnels through, and the tunnel inside ----------
-  const tubeAround = (f, r, col, emis, ext = 0) => { const idx = []; let a = -1, b = -1; for (let i = 0; i < N; i++) if (flag[i] === f) { if (a < 0) a = i; b = i; } if (a < 0 || b - a < 10) return null; for (let i = Math.max(0, a - ext); i <= Math.min(N - 1, b + ext); i++) idx.push(i);
+  const tubeAround = (f, r, colr, ext = 0) => { const idx = []; let a = -1, b = -1; for (let i = 0; i < N; i++) if (flag[i] === f) { if (a < 0) a = i; b = i; } if (a < 0 || b - a < 10) return null; for (let i = Math.max(0, a - ext); i <= Math.min(N - 1, b + ext); i++) idx.push(i);
     const pts = []; for (let j = 0; j < idx.length; j += 6) pts.push(V(idx[j])); pts.push(V(idx[idx.length - 1]));
-    const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.ceil(pts.length * 1.5), r, 8, false), new THREE.MeshStandardMaterial({ color: col, emissive: emis, emissiveIntensity: .9, roughness: .9, side: THREE.BackSide }));
+    // (the walls face inwards: the tube is turned inside out once here, and painted with the same unlit material as the
+    //  rest of the coaster, so the tunnel and the cave need no new shader when you ride into them)
+    const tg = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.ceil(pts.length * 1.5), r, 8, false), ia = tg.index.array, na = tg.attributes.normal.array;
+    for (let t = 0; t < ia.length; t += 3) { const w = ia[t + 1]; ia[t + 1] = ia[t + 2]; ia[t + 2] = w; } for (let t = 0; t < na.length; t++) na[t] = -na[t];
+    const wb = makeBatch(); wb.add(tg, null, (x, y, z, nx, ny, nz, out) => { out.copy(col(colr)).multiplyScalar(.75 + .35 * Math.max(0, -ny) + .15 * Math.max(0, nx)); }); tg.dispose();
+    const m = wb.mesh(glowMat); m.receiveShadow = false;
     const grp = new THREE.Group(); grp.add(m); root.add(grp); m.geometry.computeBoundingSphere(); hidden.push({ grp, c: m.geometry.boundingSphere.center.clone(), r: m.geometry.boundingSphere.radius }); idx.grp = grp; return idx; };
   const hidden = []; // (the tunnel's inside and the cave are only drawn when the camera is near them)
-  jobs.push(() => { const idx = tubeAround('T', 6.5, '#4a4a5a', '#141428', 64); if (!idx) return; const mb = makeBatch(), ball = new THREE.SphereGeometry(1, 12, 8);
-    for (let j = 64 + 20; j < idx.length - 64 - 20; j += 30) { V(idx[j], pos, pA); mb.put(ball, pA.x, pA.y - 8, pA.z, j % 60 ? '#9a9aa8' : '#b4b4c0', [20, 24, 20]); }
+  jobs.push(() => { const idx = tubeAround('T', 6.5, '#55556e', 64); if (!idx) return; const ball = new THREE.SphereGeometry(1, 12, 8);
+    for (let j = 64 + 20; j < idx.length - 64 - 20; j += 30) { V(idx[j], pos, pA); skel.put(ball, pA.x, pA.y - 8, pA.z, j % 60 ? '#9a9aa8' : '#b4b4c0', [20, 24, 20]); }
     const tg = makeBatch(); for (let j = 0; j < idx.length; j += 20) { V(idx[j], pos, pA); tg.put(torusT, pA.x, pA.y, pA.z, j % 40 ? '#ffe36e' : '#62f0ff', 1, ringRot(idx[j])); } idx.grp.add(tg.mesh(glowMat));
-    const mtn = mb.mesh(shinyMat()); mtn.receiveShadow = true; root.add(mtn); });
+  });
   // ---------- THE GLOWING UNDERGROUND CAVE: a purple cave lit by crystals ----------
-  jobs.push(() => { const idx = tubeAround('C', 7.5, '#3a1f66', '#24104a'); if (!idx) return; const cg = makeBatch();
+  jobs.push(() => { const idx = tubeAround('C', 7.5, '#4a2a86'); if (!idx) return; const cg = makeBatch();
     for (let j = 0; j < idx.length; j += 7) { V(idx[j], pos, pA); const a = j * 2.39, r = 6.6; cg.put(oct, pA.x + Math.cos(a) * r, pA.y + 1 + Math.sin(a) * r * .8, pA.z + Math.sin(a * 1.7) * 2, ['#b07bff', '#62f0ff', '#ff6fd8', '#7dffb0'][j % 4], [.5, 1.3, .5], [a, a * .5, 0]); }
     idx.grp.add(cg.mesh(glowMat)); for (const j of [0, idx.length - 1]) { V(idx[j], pos, pA); glow.put(torusC, pA.x, pA.y, pA.z, '#b07bff', 1, ringRot(idx[j])); } });
   // ---------- the station: a long platform with a striped roof and big glowing arches ----------
-  { const sx = X + STATION.dx, sb = makeBatch();
+  { const sx = X + STATION.dx, sb = skel;
     sb.put(box, sx - 4, .35, -.6, '#e8e0ff', [16, .7, 2.6]); for (let i = 0; i < 9; i++) sb.put(box, sx - 11.5 + i * 2, 4.4, -2.2, i % 2 ? '#ffffff' : '#ff4f9a', [2, .2, 4.4]);
     for (const dx of [-11.5, 3.5]) { sb.put(cyl, sx + dx, 2.2, -.4, '#ffffff', [.16, 4.4, .16]); sb.put(cyl, sx + dx, 2.2, -4, '#ffffff', [.16, 4.4, .16]); }
-    const st = sb.mesh(shinyMat()); st.castShadow = true; root.add(st);
     for (const dx of [-12, 4]) glow.put(new THREE.TorusGeometry(3.4, .16, 6, 30, Math.PI), sx + dx, 0, -2.4, '#62f0ff', 1, [0, Math.PI / 2, 0]); }
   // when all slices are done, the skeleton becomes two meshes
-  jobs.push(() => { const s = skel.mesh(shinyMat()); s.name = 'coasterSkeleton'; root.add(s); const g2 = glow.mesh(glowMat); g2.name = 'coasterGlow'; root.add(g2); for (const h of hidden) h.grp.visible = true; try { k.api.compile && k.api.compile(root); } catch (e) { } check = 0; C.ready = true; });
+  jobs.push(() => { const g2 = glow.mesh(glowMat); g2.name = 'coasterSkeleton'; g2.receiveShadow = false; root.add(g2); for (const h of hidden) h.grp.visible = true; try { k.api.compile && k.api.compile(root); } catch (e) { } check = 0; C.ready = true; });
   k.U.push(() => { const t0 = performance.now(); while (jobs.length && performance.now() - t0 < 4) jobs.shift()(); });
 
   // ---------- the detailed rails and ties, streamed in 120 m pieces near the camera ----------
@@ -87,9 +98,9 @@ export function buildMoonCoaster(k) {
   function buildPiece(s) {
     const a = s * SECTION, b = Math.min(N - 1, a + SECTION), rb = makeBatch(), tie = new THREE.BoxGeometry(1, 1, 1);
     for (const sg of [-1, 1]) { const pts = []; for (let i = a; i <= b; i += 4) { V(i, tan, tA); V(i, up, uA); sA.crossVectors(tA, uA).normalize(); pts.push(V(i).addScaledVector(sA, .62 * sg).addScaledVector(uA, .12)); }
-      rb.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.ceil(pts.length * 1.5), .12, 4, false), null, '#ff4f9a'); }
-    for (let i = a; i <= b; i += 4) { const f = frame(i); V(i, pos, pA); V(i, up, uA); rb.put(tie, pA.x + uA.x * .02, pA.y + uA.y * .02, pA.z + uA.z * .02, '#ffffff', [.18, .1, 1.45], [f.x, f.y, f.z]); }
-    const m = rb.mesh(shinyMat()); m.castShadow = false; root.add(m); return m;
+      rb.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.ceil(pts.length * 1.5), .12, 4, false), null, lit('#ff4f9a')); }
+    for (let i = a; i <= b; i += 4) { const f = frame(i); V(i, pos, pA); V(i, up, uA); rb.put(tie, pA.x + uA.x * .02, pA.y + uA.y * .02, pA.z + uA.z * .02, lit('#ffffff'), [.18, .1, 1.45], [f.x, f.y, f.z]); }
+    const m = rb.mesh(glowMat); m.receiveShadow = false; root.add(m); return m;
   }
   let check = 0;
   const wantNear = [];

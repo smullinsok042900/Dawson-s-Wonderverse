@@ -20,7 +20,7 @@ import { CREATURES, makeCreature, makeFluff, toy, starGeometry } from './creatur
 import { makeToyModel } from './toy-models.js';
 import { initSea, SEA } from './sea.js';
 import { initSpace } from './space.js';
-import { makeBatch, paintMat, shinyMat, softMat } from './spacekit.js';
+import { makeBatch, paintMat, shinyMat, softMat, glowMat } from './spacekit.js';
 import { buildWorld, RAINBOW, mergeStaticChildren } from './world.js';
 import { UG, inShaftX, buildUnderground } from './underground.js';
 import { initFriends, PET_COLS, EARS, TAILS, PATS } from './friends.js';
@@ -1475,7 +1475,7 @@ function warmPaint() {
   const batch = makeBatch(); batch.put(new THREE.SphereGeometry(.2, 4, 3), 0, 0, 0, '#ffffff');
   const painted = batch.geometry(), round = new THREE.SphereGeometry(.2, 4, 3);
   const add = (material, geometry = painted) => { const mesh = new THREE.Mesh(geometry, material); mesh.castShadow = mesh.receiveShadow = true; g.add(mesh); };
-  for (const material of [paintMat(), shinyMat(), softMat()]) add(material);
+  for (const material of [paintMat(), shinyMat(), softMat(), glowMat()]) add(material); // (glowMat: build 69, the Moon coaster)
   // Small resident representatives keep these programs alive when a planet is freed.
   const farPaint = paintMat().clone(); farPaint.fog = false; add(farPaint);
   const ice = shinyMat().clone(); ice.transparent = true; ice.opacity = .55; add(ice);
