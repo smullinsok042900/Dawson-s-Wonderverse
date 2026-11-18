@@ -18,6 +18,18 @@ Play: open `index.html`. It is one self-contained file and works offline. Once m
 - **Mars climbing wall:** now 30 m tall and 10 m wide. Climb yourself with the joystick (up, down, left, right), collect gems, rest on ledges (with a secret cave), and press JUMP to let go safely.
 - **Mars trampoline park:** three trampolines with hoops; hold ▲ when you land to bounce much higher, even back up to the cliff.
 
+- **Saturn:**
+  - the Star Blaster is now 60 m tall: press JUMP to spin faster and blast higher, and catch stars;
+  - the Ring Raceway is one you DRIVE: ► faster, ◄ slower, ▲ ▼ change lanes, with boost pads, stars, two friendly racers and 3 laps.
+- **Venus:** the log flume is three times longer. It has two lifts (up to 30 m), jungle rapids, a crystal tunnel through a mountain, a high water bridge and a giant final drop. Steer the log ◀ ▶ for stars and press JUMP to splash.
+- **Pluto:** a giant inflatable park with:
+  - musical bounce pads and an inflatable obstacle course;
+  - a 14 m inflatable tower (bounce up, or climb its soft wall);
+  - a giant inflatable slide, a bounce pit with hoops, a puffy tunnel and a surprise room.
+- **Uranus:**
+  - the Ice Palace has a throne room, a crystal hall with a secret door to a treasure tunnel, a ballroom, ice stairs and an ice slide;
+  - the skating rink is bigger, with hoops, stars and musical ice.
+
 ## 3D build 70: the Jupiter Sky Playground and the Mercury carnival funhouse
 - **Jupiter:** the playground grew into a floating sky world:
   - the Sunrise Tower (tap: up the rainbow stairs), a rope bridge, cloud islands, a launch pad and a cloud elevator;

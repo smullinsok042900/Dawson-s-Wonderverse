@@ -11,11 +11,12 @@
 // ===================================================================
 import * as THREE from 'three';
 import { toy } from './creatures.js';
-import { makeBatch, shinyMat } from './spacekit.js';
+import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField } from './control-rides.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -228,6 +229,7 @@ const pluto = {
     // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----
     k => { const X = k.s0;
       for (let i = 0; i < 7; i++) { const x = X + 14 + i * 13 + (i % 2) * 3, hh = 2.5 + (i * 7 % 5); k.sball(x, hh * .45, -6 - (i % 3) * 3, .7, hh, .7, i % 2 ? '#dcecff' : '#bcd4f2', { r: .2, cc: .8 }); }
+      plutoInflatablePark(k); // (build 71) the giant inflatable park
       k.rocketSign(X + 4);
     },
   ],
@@ -328,7 +330,7 @@ function uranusIceCastle(k, cx) {
   k.tapIt(m, () => k.fact('🏰 An ice castle! Uranus is an ice giant: deep down it is full of icy water. Climb the steps and slide down!', 'uranuscastle'), cx, 'uranuscastle');
 }
 function uranusRink(k, cx) {
-  const P = k.P, rx = 22, rz = 4.4, cz = -2.6, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 64);
+  const P = k.P, rx = 32, rz = 5, cz = -2.6, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 64); /* (build 71: rx 32, was 22) */
   b.put(cyl, cx, .03, cz, '#8fd0ff', [rx, .06, rz]); b.put(cyl, cx, .035, cz, '#c9ecff', [rx - 1.2, .06, rz - .7]); /* (a blue rink with a pale centre: it stands out from the icy ground) */
   for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, x = cx + Math.cos(a) * (rx + .3), z = cz + Math.sin(a) * (rz + .25); if (z > .6) continue; b.put(new THREE.CylinderGeometry(1, 1, 1, 8), x, .4, z, i % 2 ? '#5aa8ff' : '#ffffff', [.09, .8, .09]); }
   b.put(new THREE.TorusGeometry(1, .03, 6, 64), cx, .82, cz, '#ffffff', [rx + .3, rz + .25, 1], [Math.PI / 2, 0, 0]);
@@ -349,8 +351,8 @@ function uranusRink(k, cx) {
 }
 const uranus = {
   sections: [
-    k => { uranusIceCastle(k, k.s0 + 40); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle
-    k => { uranusRink(k, k.s0 + 50); k.rocketSign(k.s0 + 100); },       // area 3: the skating rink
+    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
+    k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
   ],
 };
 
@@ -480,8 +482,11 @@ const neptune = {
 // a giant drop into the splash pool: SPLASH! (pretend water: real Venus is far too hot for water)
 function venusLogRide(k, X) {
   const P = k.P, st = X + 20, V3 = (x, y, z) => new THREE.Vector3(x, y, z);
-  const pts = [[st, .6, -2.4], [st + 5, .6, -3], [st + 9, 1.5, -5], [st + 14, 7, -7], [st + 19, 13, -8.5], [st + 23, 18, -9.5], [st + 27, 18.5, -10.5], [st + 30, 18.4, -13.5], [st + 26, 18.2, -16], [st + 18, 18, -16.5],
-    [st + 14, 17.8, -19], [st + 18, 17.6, -21.5], [st + 28, 17.4, -21.5], [st + 36, 17, -19], [st + 42, 9, -15], [st + 46, 2, -12], [st + 50, .5, -9.5], [st + 54, .4, -7.5], [st + 58, .4, -5], [st + 61, .4, -3.2]].map(p => V3(...p));
+  // (build 71) a route about three times longer: lift 1 (22 m), a high channel, a drop, the jungle rapids, a crystal tunnel
+  //  through a mountain, lift 2 (30 m), a high water bridge and a giant final drop into the splash pool
+  const pts = [[st, .6, -2.4], [st + 5, .6, -3], [st + 9, 2, -5], [st + 14, 9, -7], [st + 19, 16, -8.5], [st + 23, 22, -9.5], [st + 28, 22.3, -11], [st + 32, 22, -15], [st + 28, 21.5, -19], [st + 20, 21, -20],
+    [st + 14, 19, -23], [st + 12, 15, -27], [st + 18, 10.5, -29], [st + 26, 10, -27], [st + 34, 9, -24], [st + 42, 7, -26], [st + 48, 5, -23], [st + 54, 4, -26], [st + 60, 4, -29], [st + 68, 4.2, -27],
+    [st + 74, 10, -24], [st + 78, 18, -21], [st + 82, 26, -18], [st + 86, 30, -15], [st + 88, 30, -11], [st + 84, 29.6, -8], [st + 76, 29.3, -7], [st + 70, 22, -8], [st + 66, 10, -8.5], [st + 62, 2, -9], [st + 58, .5, -7], [st + 60, .4, -5], [st + 63, .4, -3.2]].map(p => V3(...p));
   const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .4), len = path.getLength();
   let uTop = 0, yTop = -1; for (let u = 0; u < .4; u += .002) { const y = path.getPointAt(u).y; if (y > yTop) { yTop = y; uTop = u; } }
   // the flume: a water ribbon between two wooden walls, on posts (one mesh for the wood, one for the water)
@@ -495,10 +500,16 @@ function venusLogRide(k, X) {
   const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wpos, 3)); wg.setIndex(widx); wg.computeVertexNormals();
   const water = new THREE.Mesh(wg, new THREE.MeshPhysicalMaterial({ color: '#4fb8ff', roughness: .1, clearcoat: 1, transparent: true, opacity: .85, side: THREE.DoubleSide })); k.add(water);
   // the splash pool with a rocky rim, and the station with a striped roof
-  const pc = path.getPointAt(.93); const pool = k.sball(pc.x, -.25, pc.z - 1, 6.5, .35, 4.2, '#3f9fe8', { r: .1, cc: .8 });
+  const pc = path.getPointAt(.965); const pool = k.sball(pc.x, -.25, pc.z - 1, 6.5, .35, 4.2, '#3f9fe8', { r: .1, cc: .8 });
   for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; k.sball(pc.x + Math.cos(a) * 6.6, .1, pc.z - 1 + Math.sin(a) * 4.3, .7, .45, .6, '#d8a060', { r: .9 }); }
   k.sbox(st, 0, -2.6, 4, .5, 2.2, '#e8c89a', { r: .5 }); for (const dx of [-1.8, 1.8]) k.sbox(st + dx, .5, -3.4, .14, 2.5, .14, '#ffffff', { r: .4 });
   for (let i = 0; i < 5; i++) k.sbox(st - 1.7 + i * .85, 3, -2.9, .85, .16, 1.6, i % 2 ? '#ffffff' : '#ff9a2e', { r: .4 });
+  // (build 71) the mountain the flume tunnels through (with glowing crystals inside), jungle plants along the rapids
+  { const mb = makeBatch(), ball = new THREE.SphereGeometry(1, 12, 9), oct = new THREE.OctahedronGeometry(1); mb.put(ball, st + 57, 4, -31, '#c98a4a', [9, 9, 6]); mb.put(ball, st + 63, 3, -32.5, '#b87a3a', [7, 7.5, 5]);
+    const cb = makeBatch(); for (let i = 0; i < 14; i++) { const x = st + 52 + i * 1.2, z = -27.5 + (i % 2 ? -1.6 : 1.6) * .9; cb.put(oct, x, 5.6 + (i % 3) * .5, z, ['#b07bff', '#62f0ff', '#ff6fd8', '#7dffb0'][i % 4], [.25, .6, .25]); }
+    for (let i = 0; i < 16; i++) { const x = st + 30 + i * 1.6, z = -22 + (i % 2) * -6.5; cb.put(ball, x, 6 + (i % 3) * .6, z, ['#3cc46e', '#7fe0a0', '#ff6fae', '#ffd23f'][i % 4], [.9, 1.4, .9]); cb.put(new THREE.CylinderGeometry(1, 1, 1, 6), x, 3, z, '#6a8a2a', [.12, 6, .12]); }
+    k.add(mb.mesh(shinyMat())); k.add(cb.mesh(glowMat())); }
+  const flumeStars = []; { const sm = toy('#ffd23f', { em: '#ffb000', ei: .8 }); for (const [u, off] of [[.2, -.4], [.27, .4], [.36, -.4], [.43, .4], [.5, -.35], [.58, .4], [.75, -.4], [.82, .4]]) { const p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize(); const m = new THREE.Mesh(new THREE.OctahedronGeometry(.3), sm); m.position.set(p.x + side.x * off, p.y + 1.1, p.z + side.z * off); k.add(m); flumeStars.push({ u, off, m, got: false }); } }
   // the log: hollow with lighter ends and a seat (modelled along +x)
   const log = new THREE.Group(); { const lb = makeBatch(); lb.put(new THREE.CylinderGeometry(.62, .62, 2.6, 18, 1, true), 0, .35, 0, '#8a5a3a', 1, [0, 0, Math.PI / 2]); for (const sx of [-1.3, 1.3]) lb.put(new THREE.CylinderGeometry(.62, .62, .08, 18), sx, .35, 0, '#e8c08a', 1, [0, 0, Math.PI / 2]);
     lb.put(new THREE.BoxGeometry(1, 1, 1), 0, .2, 0, '#6a4024', [2.4, .12, 1.1]); lb.put(new THREE.SphereGeometry(.2, 10, 8), 1.4, .9, 0, '#7fe0a0', [1, .6, 1]); log.add(lb.mesh(shinyMat())); }
@@ -506,16 +517,22 @@ function venusLogRide(k, X) {
   const place = u => { const p = path.getPointAt(u); path.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
   place(0);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
-    let u = 0, v = 3, splashed = false;
+    let u = 0, v = 3, splashed = false, crest = .6, off = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; }
+    k.say('🪵 Steer the log with ◀ ▶ to catch the stars! Press JUMP to SPLASH!', true);
     jupiterRide(k, 'logride', (R, dt) => {
-      if (u < uTop) { v = 3; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
-      else if (!splashed) v = Math.max(2.5, Math.min(17, Math.sqrt(6.25 + 2 * 9 * Math.max(0, yTop - path.getPointAt(u).y))));
-      else v = Math.max(2.2, v - dt * 14);
+      path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
+      if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
+      else { crest = Math.max(y0, crest - dt * .35); v = Math.max(2.6, Math.min(17, Math.sqrt(7 + 2 * 9 * Math.max(0, crest - y0)))); if (splashed) v = Math.max(2.2, v - dt * 14); }
       u = Math.min(1, u + v / len * dt); const p = place(u); R.maxY = Math.max(R.maxY || 0, p.y); R.maxV = Math.max(R.maxV || 0, v);
-      if (!splashed && u > uTop + .05 && p.y < 1 && v > 6) { splashed = true; R.splashed = true; for (let i = 0; i < 4; i++) k.api.burst(p.x + (Math.random() - .5) * 2, .6 + i * .5, p.z, ['#ffffff', '#cfefff', '#4fb8ff'], 30, 5); k.Sound.whoosh && k.Sound.whoosh(); k.say('🌊 SPLAAASH!', true); k.disc('venussplash'); }
-      if (!R.whee && u > uTop + .3 && v > 8) { R.whee = 1; k.Sound.whoosh && k.Sound.whoosh(); }
+      const sx = k.api.stick ? k.api.stick().x : 0; off = Math.max(-.45, Math.min(.45, off + sx * dt * 1.6 * (lift ? 0 : 1))); if (lift || u > .95) off *= .9;
+      side.set(-tg.z, 0, tg.x).normalize(); log.position.x += side.x * off; log.position.z += side.z * off; p.x += side.x * off; p.z += side.z * off; R.offMax = Math.max(R.offMax || 0, Math.abs(off));
+      for (const f of flumeStars) if (!f.got && Math.abs(u - f.u) < .006 && Math.abs(off - f.off) < .3) { f.got = true; f.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(560 + R.stars * 60, .15, 'sine', .07, 1.5); k.api.burst(f.m.position.x, f.m.position.y, f.m.position.z, ['#ffd23f', '#ffffff'], 10, 1.6); }
+      if (u > .4 && u < .55 && Math.random() < dt * 4) k.api.burst(p.x + (Math.random() - .5), p.y + .2, p.z, ['#ffffff', '#cfefff'], 3, 1.2);   // foam on the rapids
+      if (!splashed && u > .93 && p.y < 1 && v > 6) { splashed = true; R.splashed = true; for (let i = 0; i < 4; i++) k.api.burst(p.x + (Math.random() - .5) * 2, .6 + i * .5, p.z, ['#ffffff', '#cfefff', '#4fb8ff'], 30, 5); k.Sound.whoosh && k.Sound.whoosh(); k.say('💦 SPLAAASH!', true); }
+      if (!R.whee && u > .6 && v > 10) { R.whee = 1; k.Sound.whoosh && k.Sound.whoosh(); }
       P.x = p.x; P.y = p.y + .25; P.z = p.z; P.facing = tg.x >= 0 ? 1 : -1; R.roll = Math.max(-.6, Math.min(.6, Math.asin(Math.max(-1, Math.min(1, tg.y))) * (tg.x >= 0 ? 1 : -1)));
-      return u >= 1; }, () => { P.x = st + 63; P.y = 0; P.z = 0; place(0); k.say('🪵 What a splash! Tap the log to ride again!', true); }, { noExit: true }); };
+      return u >= 1; }, () => { P.x = st + 66; P.y = 0; P.z = 0; place(0); k.say('🪵 What a ride! Tap the log to ride again!', true); }, { noExit: true });
+    if (P.ride) P.ride.onJump = () => { k.api.burst(P.x, P.y + .6, P.z, ['#ffffff', '#cfefff', '#4fb8ff'], 18, 3); k.Sound.pop && k.Sound.pop(); P.ride.splashes = (P.ride.splashes || 0) + 1; }; };
   k.tapIt(log, go, st, 'venuslogride');
   k.tapIt(pool, () => k.fact('🌊 The splash pool! Real Venus is far too hot for water, so this water is pretend!', 'venuspool'), pc.x, 'venuspool');
 }
