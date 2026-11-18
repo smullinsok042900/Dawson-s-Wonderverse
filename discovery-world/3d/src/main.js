@@ -352,21 +352,56 @@ G.rideWheel = () => {
 // (build 65) THE MOON ROLLER COASTER: a car on a track (planets.js builds both). A clicking chain lift pulls you up to the
 // top; from there your speed comes from the height you drop (faster down the big drop, slower over the hills), through a
 // loop-the-loop and bunny hops, back to the station. You tilt with the car, upside down at the top of the loop.
-G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, u: 0, v: 3.4, up: new THREE.Vector3(0, 1, 0), clack: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; };
-const CV = { f: new THREE.Vector3(), s: new THREE.Vector3(), u: new THREE.Vector3(), m: new THREE.Matrix4(), cand: new THREE.Vector3() };
-function coasterRide(dt, R) {
-  const P = player, C = R.C, path = C.path;
-  if (R.u < C.uTop) { R.v = C.lift || 3.4; if ((R.clack -= dt) < 0) { R.clack = .22; Sound.tone(260, .04, 'square', .02, 1); } }
-  else { const y = path.getPointAt(Math.min(1, R.u), V).y; R.v = Math.max(3, Math.min(C.vmax || 15, Math.sqrt(3.4 * 3.4 + 2 * 7 * Math.max(0, C.yTop - y)))); R.maxV = Math.max(R.maxV || 0, R.v); if (!R.whee && R.u > C.uTop + .01) { R.whee = 1; Sound.whoosh(); voice.speak('Wheeee!'); } }
-  R.u += R.v / C.len * dt;
-  if (R.u >= 1) { const e = path.getPointAt(1); C.car.position.copy(e); C.car.quaternion.copy(C.carRest); P.ride = null; P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; creature.root.rotation.z = 0; burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast('🎢 What a ride! Tap the car to go again!'); discover('coaster', '🎢 The Moon roller coaster!'); return; }
-  path.getPointAt(R.u, V); const tg = path.getTangentAt(R.u, CV.f);
-  // which way is "up" for the car: perpendicular to the track, chosen to follow on smoothly (so it turns over in the loop)
-  CV.cand.set(tg.y, -tg.x, 0); if (CV.cand.lengthSq() < 1e-4) CV.cand.copy(R.up); else CV.cand.normalize(); if (CV.cand.dot(R.up) < 0) CV.cand.negate(); R.up.lerp(CV.cand, Math.min(1, dt * 12)).normalize();
-  CV.s.crossVectors(tg, R.up).normalize(); CV.u.crossVectors(CV.s, tg).normalize(); CV.m.makeBasis(tg, CV.u, CV.s); C.car.quaternion.setFromRotationMatrix(CV.m); C.car.position.copy(V);
-  P.x = V.x + CV.u.x * .35; P.y = V.y + CV.u.y * .35 - .2; P.z = V.z + .05; P.facing = tg.x >= 0 ? 1 : -1; P.vx = R.v * P.facing; R.roll = Math.atan2(-R.up.x, R.up.y);
-  if (Math.random() < dt * 20) burst(V.x - tg.x * 1.2, V.y, V.z, ['#fff', '#ffe36e', '#9fe6ff'], 1, .5);
+// (build 69) THE GIANT MOON ROLLER COASTER ride (the course and the model are in coaster-course.js and moon-coaster.js).
+// The train follows the precomputed course: no curve maths per frame, just reading two neighbouring samples. A smooth
+// chase camera rides behind and above the train (it never rolls with the car, so loops are comfortable to watch); in the
+// tunnel and the cave it moves along the track itself, so it always stays inside. A big ⏩ button skips back to the
+// station at any time; with the grown-ups' calm mode the whole ride runs slower.
+let coasterBtn = null;
+function coasterButton(show) {
+  if (!coasterBtn) { coasterBtn = document.createElement('button'); coasterBtn.id = 'coasterSkip'; coasterBtn.className = 'pill'; coasterBtn.setAttribute('aria-label', 'get off the roller coaster'); coasterBtn.textContent = '🏁';
+    coasterBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const R = player.ride; if (R && R.type === 'coaster') { R.skip = true; Sound.click(); } }); document.body.appendChild(coasterBtn); }
+  coasterBtn.classList.toggle('show', !!show);
 }
+G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: C.homeI || 0, clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
+const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3() };
+function coasterSample(C, i, arr, out) { const N = C.N, j0 = Math.max(0, Math.min(N - 1, Math.floor(i))), j1 = Math.min(N - 1, j0 + 1), f = Math.max(0, Math.min(1, i - j0)); return out.set(arr[j0 * 3] + (arr[j1 * 3] - arr[j0 * 3]) * f, arr[j0 * 3 + 1] + (arr[j1 * 3 + 1] - arr[j0 * 3 + 1]) * f, arr[j0 * 3 + 2] + (arr[j1 * 3 + 2] - arr[j0 * 3 + 2]) * f); }
+const COASTER_SAYS = { L: '🎢 Up, up, up! Look how high we go!', K: '🌋 Down into the GIANT crater!', T: '⛰️ Into the mountain tunnel!', C: '💎 Ooooh! A glowing crystal cave!', B: '🚀 BOOST! Zoom!' };
+function endCoaster(R) {
+  const P = player, C = R.C; C.placeTrain(C.homeI); P.ride = null; G.camOverride = null; coasterButton(false);
+  P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; creature.root.rotation.z = 0; snapCamera();
+  burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast(R.skip ? '🎢 Back at the station! Tap the train to ride again.' : '🎢 WOW! What a ride! Tap the train to go again!'); discover('coaster', '🎢 The GIANT Moon roller coaster!');
+}
+function coasterRide(dt, R) {
+  const P = player, C = R.C, N = C.N;
+  if (R.skip) { endCoaster(R); return; }
+  R.t += dt;
+  const gentle = world.comfort?.calm ? .62 : 1, j = Math.max(0, Math.min(N - 1, Math.floor(R.i))), f = C.flag[j], v = C.v[j] * gentle;
+  R.i += v * dt / C.STEP;
+  if (R.i >= N - 1) { endCoaster(R); return; }
+  if (f === 'L' && (R.clack -= dt) < 0) { R.clack = .2; Sound.tone(240, .035, 'square', .02, 1); }
+  if (f && f !== R.said && f !== 'S' && COASTER_SAYS[f]) { R.said = f; toast(COASTER_SAYS[f]); if (f === 'K' || f === 'B') Sound.whoosh(); }
+  if (!f && R.said) R.said = '';
+  if (!R.drop && j > 10 && C.flag[j - 10] === 'L' && f !== 'L') { R.drop = 1; Sound.whoosh(); voice.speak('Wheeeeee!'); }
+  C.placeTrain(R.i);
+  const pos = coasterSample(C, R.i, C.pos, CV.a), tg = coasterSample(C, R.i, C.tan, CV.t).normalize(), up = coasterSample(C, R.i, C.up, CV.u).normalize();
+  P.x = pos.x + up.x * .55; P.y = pos.y + up.y * .55 - .25; P.z = pos.z + up.z * .55; P.facing = tg.x >= 0 ? 1 : -1; P.vx = v * P.facing; R.roll = Math.atan2(-up.x, up.y) * (P.facing > 0 ? 1 : 1);
+  R.maxY = Math.max(R.maxY, pos.y); R.maxV = Math.max(R.maxV, v);
+  // the chase camera: inside the tunnel and the cave it sits on the track just behind the train; outside it rides behind
+  // and above, along the way the train is going (smoothed), and never rolls
+  const inside = f === 'T' || f === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C'));
+  let want;
+  if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); }
+  else { const back = coasterSample(C, Math.max(0, R.i - 26), C.pos, CV.b); CV.d.subVectors(pos, back).setY(0); if (CV.d.lengthSq() < .01) CV.d.set(P.facing, 0, 0); CV.d.normalize();
+    want = CV.w.copy(pos).addScaledVector(CV.d, -12).add(CV.b.set(0, 5.5, 0)); want.z += 2.5; want.y = Math.max(want.y, pos.y + 3); }
+  const lookAt = coasterSample(C, Math.min(N - 1, R.i + 10), C.pos, CV.b);
+  if (!R.cam) { R.cam = want.clone(); R.look = lookAt.clone(); }
+  const kc = 1 - Math.exp(-dt * (inside ? 9 : 4.5)), kl = 1 - Math.exp(-dt * 7);
+  R.cam.lerp(want, kc); R.look.lerp(lookAt, kl);
+  G.camOverride = { coaster: true, pos: [R.cam.x, R.cam.y, R.cam.z], look: [R.look.x, R.look.y, R.look.z] };
+  if (v > 22 && Math.random() < dt * 14) burst(pos.x - tg.x * 2, pos.y + .1, pos.z - tg.z * 2, ['#ffffff', '#62f0ff', '#ff6fd8'], 1, .6);
+}
+G.coasterOff = () => { G.camOverride = null; coasterButton(false); };
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
 G.startSlide = (path, o) => startSlide(path, o); // (build 66: the planets' slides)
 function updateRide(dt) {
@@ -986,6 +1021,7 @@ function updateCamera(dt) {
   camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
   camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
+  if (G.camOverride && G.camOverride.coaster && !(player.ride && player.ride.type === 'coaster')) G.coasterOff(); // (build 69: left the coaster another way, e.g. the map)
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
   { const tex = 26 / 2048, sx = Math.round(camT.x / tex) * tex, sy = Math.round(Math.max(0, camT.y) / tex) * tex; const o = G.sunOff; if (o) sun.position.set(sx + o[0], o[1] + sy, o[2]); else sun.position.set(sx - 7, 16 + sy, 10); sun.target.position.set(sx, sy, 0); } // (snapped to shadow texels: no shimmering)
@@ -1550,7 +1586,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '68'; G.build = GAME_BUILD;
+const GAME_BUILD = '69'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

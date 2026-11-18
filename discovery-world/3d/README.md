@@ -12,6 +12,15 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 69: the GIANT Moon roller coaster
+The Moon coaster is now a 4.7 km ride that lasts over three minutes (about 8× the build 68 coaster):
+- a spiral lift that climbs round a glowing lunar spire to 227 m, then a 195 m first drop;
+- three loop-the-loops, three corkscrews, camel hills, a spiral descent, sweeping banked turns and speed boosters;
+- a tunnel through a lunar mountain, a plunge into an enormous new crater (22 m below the ground), and a glowing purple crystal cave;
+- a high run over the whole Moon, then back to the station.
+
+Tap a car to ride (one tap); tap 🏁 to get off at any moment. Calm mode makes it gentler. The track is built a piece at a time near her, so walking on the Moon stays as fast as before.
+
 ## 3D build 68: Neptune's wind swings, bungee jump and skydiving chamber
 On Neptune, the windiest planet:
 - swings the wind pushes higher and higher;

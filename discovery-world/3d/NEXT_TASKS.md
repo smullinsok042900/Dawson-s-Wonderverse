@@ -3,6 +3,11 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## Giant Moon coaster (build 69): check on the real iPhone
+- Ride it from start to end on the iPhone: is it smooth all the way, especially the spiral lift, the tunnel and the cave? Use ⚙️ → Performance Test at the Moon station.
+- Does the first-visit camera sweep (6.5 s) feel good, or too long?
+- The coaster fills the Moon's 330 × 170 m area. If the Moon grows, the course (`src/coaster-course.js`, checked by `tests/coaster-course-check.mjs`) can grow with it.
+
 ## Talk Together (build 62): needs the family
 - Paste the NEW `firebase-rules.json` (Realtime Database → Rules → Publish). `?mpcheck` must say `allowed` for `write talking` and `write call message`.
 - Try talking on two real devices (iPhone Safari + another phone): same Wi-Fi first, then one on mobile data. If mobile data does not connect, set up the free TURN relay (MULTIPLAYER.md) and put its URL in `src/mp-config.js`.
