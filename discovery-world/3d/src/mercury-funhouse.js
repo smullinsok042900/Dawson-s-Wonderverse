@@ -226,3 +226,47 @@ export function mercuryFunhouse(k) {
       if (got === stars.length) { S.chime(); G.funhouse.trophy.visible = true; k.api.burst(x(309), 4, -2.6, RB, 50, 3.4); k.fact('🏆 You found ALL SIX funhouse stars! You are a funhouse champion!', 'mercurychampion'); }
       else k.say(`⭐ A funhouse star! ${got} of ${stars.length}!`, true); } } });
 }
+
+// ===================================================================
+// (build 74) THE MIRROR MAZE GROWS (area 2, beside the build 67 hall: x0 = X + 124 … x1 = X + 200):
+//   • coloured light that changes in each section;
+//   • the UPPER MIRROR GALLERY (4.6 m), a second route over the mirror doors (one tap: up the mirror stairs);
+//   • the LIGHT-BEAM PUZZLE up there: tap the three mirrors to turn them; when all three point the right way, a beam of
+//     light shines through them, the crystal lights up, and a HIDDEN MIRROR DOOR below slides open: a treasure chest!
+//   • a path of lights from the maze to the carnival funhouse.
+// ===================================================================
+export function mercuryMazePlus(k) {
+  const P = k.P, G = k.G, S = k.Sound, X = k.X, x0 = X + 124, G0 = GEO(), gb = makeBatch(), b = makeBatch(), GY = 4.6;
+  // coloured light per section (top strip and floor edge)
+  [[0, 18, '#ff6fd8'], [18, 39, '#62f0ff'], [39, 60, '#7dffb0'], [60, 76, '#ffd23f']].forEach(([a, c, cl]) => { gb.put(G0.box, x0 + (a + c) / 2, 5.45, -4.15, cl, [c - a - .4, .18, .1]); gb.put(G0.box, x0 + (a + c) / 2, .03, .08, cl, [c - a - .4, .04, .16]); });
+  // the upper gallery: a mirrored walkway over the doors, with a railing
+  b.put(G0.box, x0 + 39, GY - .15, -1.6, '#e8e0ff', [38, .3, 2.6]); k.plat(x0 + 20, x0 + 58, GY, { z: -1.2 });
+  for (let gx = x0 + 20.5; gx < x0 + 58; gx += 2) b.put(G0.cyl, gx, GY + .45, -.35, '#ffd23f', [.04, .9, .04]); b.put(G0.box, x0 + 39, GY + .9, -.35, '#ffd23f', [38, .06, .06]);
+  for (const sx of [x0 + 21, x0 + 57]) b.put(G0.cyl, sx, GY / 2, -2.8, '#ff9fd2', [.18, GY, .18]);
+  // the mirror stairs (one tap: up or down)
+  for (let i = 0; i < 8; i++) b.put(G0.box, x0 + 19 + i * .8, (i + 1) * GY / 16, -3.4, i % 2 ? '#dff1ff' : '#b8dcff', [.8, (i + 1) * GY / 8, 1]);
+  const stairs = new THREE.Mesh(new THREE.BoxGeometry(6.6, GY, 1.4), new THREE.MeshBasicMaterial({ visible: false })); stairs.position.set(x0 + 22.2, GY / 2, -3.4); k.add(stairs);
+  const climb = () => { if (P.ride || !onPlanet(P) || P.x < x0 + 13 || P.x > x0 + 30) return; const up = P.y < 1; if (!up && Math.abs(P.y - GY) > 1) return; k.disc('mercurygallery', '🪞 Up the mirror stairs to the gallery!');
+    rideTo(k, 'mstairs2', R => { const f = Math.min(1, R.t / 2.2), g = up ? f : 1 - f; P.x = x0 + 18.6 + g * 6.8; P.y = Math.min(GY, Math.ceil(g * 8) * GY / 8); P.z = -3.4 * Math.min(1, R.t * 3) * (f < .97 ? 1 : 0); P.facing = up ? 1 : -1; return f >= 1; }, () => { P.y = up ? GY : 0; P.x = up ? x0 + 26 : x0 + 17.6; P.z = 0; P.grounded = true; }); };
+  k.tapIt(stairs, climb, x0 + 20, 'mercurygalleryup'); G.interact.push({ x: x0 + 26, y: GY, layer: 'space', disc: 'mercurygallerydown', run: climb, hintY: 2.4 });
+  // the light-beam puzzle: three turning mirrors (each tap turns 90°); all three at position 1 = solved
+  const goal = 1, turn = [0, 2, 3], mirrors = [28, 38, 48].map((mx, i) => { const piv = new THREE.Group(); piv.position.set(x0 + mx, GY, -2.7); k.add(piv); const mb = makeBatch(); mb.put(G0.cyl, 0, .5, 0, '#ffd23f', [.5, .14, .5]); mb.put(G0.box, 0, 1.3, 0, '#ffd23f', [1.5, 1.5, .12]); mb.put(G0.box, 0, 1.3, .07, '#e6f4ff', [1.3, 1.3, .02]); piv.add(mb.mesh(shinyMat())); /* (frame and glass: one mesh) */ piv.rotation.y = turn[i] * Math.PI / 2; return piv; });
+  const beam = makeBatch(); for (const [a, c] of [[20.5, 28], [28, 38], [38, 48], [48, 56]]) beam.put(G0.box, x0 + (a + c) / 2, GY + 1.3, -2.7, '#fff3a6', [c - a, .12, .12]); const beamM = beam.mesh(glowMat()); beamM.visible = false; k.add(beamM);
+  gb.put(G0.oct, x0 + 56.5, GY + 1.3, -2.7, '#9fe6ff', [.4, .7, .4]); const crystal = new THREE.Mesh(G0.oct, toy('#ffffff', { em: '#9fe6ff', ei: 1.6 })); crystal.scale.set(.5, .85, .5); crystal.position.set(x0 + 56.5, GY + 1.3, -2.7); crystal.visible = false; k.add(crystal); /* (the bright one appears when solved) */
+  let solved = false, open = 0, said = false;
+  mirrors.forEach((piv, i) => k.tapIt(piv, () => { if (!onPlanet(P) || Math.abs(P.y - GY) > 1.5 || solved) return; turn[i] = (turn[i] + 1) % 4; S.tone(500 + turn[i] * 90, .12, 'triangle', .06, 1);
+    if (!said) { said = true; k.say('🔦 Turn the mirrors so the light can shine all the way to the crystal!', true); }
+    if (turn.every(t => t === goal)) { solved = true; beamM.visible = true; crystal.visible = true; chest.visible = true; S.twinkle(); k.fact('✨ The light shines through all the mirrors! Look down: a hidden mirror door is opening!', 'mercurybeam'); } }));
+  G.interact.push({ x: x0 + 38, y: GY, layer: 'space', disc: 'mercurybeampuzzle', run: () => k.say('🔦 Tap the mirrors to turn them, until the light shines to the crystal!', true), hintY: 2.4 });
+  G.mazePlus = { turn: i => mirrors[i].children[0].userData.tap(), get solved() { return solved; }, get turns() { return [...turn]; } };
+  // the hidden mirror door (ground level, in the back wall) and its treasure chest
+  const door = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.6, .12), toy('#eef8ff', { r: .04, m: .15, cc: 1, em: '#bfe0ff', ei: .35 })); door.position.set(x0 + 66, 1.8, -4.15); k.add(door);
+  const chest = new THREE.Group(); chest.position.set(x0 + 66, 0, -4.6); chest.visible = false; k.add(chest); { const cb = makeBatch(); cb.put(G0.box, 0, .35, 0, '#b8742e', [1.2, .7, .8]); cb.put(G0.box, 0, .8, 0, '#c98a4a', [1.2, .25, .8]); cb.put(G0.box, 0, .5, .41, '#ffd23f', [.2, .3, .04]); chest.add(mesh(cb, shinyMat())); }
+  let found = false;
+  k.U.push((dt, t) => { mirrors.forEach((piv, i) => { piv.rotation.y += (turn[i] * Math.PI / 2 - piv.rotation.y) * Math.min(1, dt * 6); }); crystal.rotation.y = t;
+    if (solved && open < 1) { open = Math.min(1, open + dt * .6); door.position.x = x0 + 66 + open * 2.6; chest.position.z = -4.6 + open * 2.4; if (open >= 1) door.visible = false; }
+    if (open >= 1 && !found && onPlanet(P) && Math.abs(P.x - (x0 + 66)) < 1.5 && P.y < 1.5) { found = true; S.chime(); k.api.burst(x0 + 66, 1.4, -2.2, ['#ffd23f', '#ffffff', '#ff6fd8'], 34, 2.8); k.fact('💎 The hidden mirror door! You found the maze treasure!', 'mercurymazetreasure'); } });
+  // the path of lights from the maze to the funhouse (x 200 → 224)
+  for (let i = 0; i < 12; i++) { const px = X + 201 + i * 2; gb.put(G0.cone, px, .06, .6, RB[i % 7], [.35, .08, .25], [0, 0, -Math.PI / 2]); gb.put(G0.lo, px, 3.2 + Math.sin(i * .8) * .3, -1.8, RB[(i + 3) % 7], .18); }
+  k.add(mesh(b, shinyMat(), true)); k.add(gb.mesh(glowMat()));
+}
