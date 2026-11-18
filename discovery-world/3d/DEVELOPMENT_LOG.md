@@ -4,6 +4,66 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 70 — Jupiter Sky Playground, Mercury carnival funhouse, pink line removed
+- **New modules:** `src/jupiter-world.js` and `src/mercury-funhouse.js`, built in the planets' areas 2–3 and freed when she leaves. The full list is in README.md.
+- **Game changes:**
+  - `P.sizeMul` (the giant-and-tiny room; it only applies on a planet);
+  - the Jupiter super slide is now an open rainbow half-pipe (no extra shader, cheaper to draw);
+  - the pink kerb along the front of the Earth world was removed (the family's screenshot).
+- **Verified (desktop, software rendering):**
+  - `tests/jupiter-world.cjs` **20/20**: the stairs and bridge; the launch pad onto the high island; the Candy slide; the musical floor; the ball pit; the elevator; bubbles; the secret; the colour game; bounce targets; the Floaty Bubble and its stars; the wind fan; the telescope; the Great Red Spot Slide through all 7 hoops; the Twister; a travel balloon; and that walking along the ground still reaches the old playground.
+  - `tests/mercury-funhouse.cjs` **17/17**: every room, both lifts, the stairs, the slide and all six stars.
+- **Speed (Jupiter, build 69 → 70):**
+  - the spots with lots of new things in view are about 10–20% slower;
+  - the others are the same or faster.
+  - Recorded in NEXT_TASKS for the next build.
+- **Full smoke test:** not run yet for this build (the family asked for it now); run it next.
+
+## Checkpoint: build 69 — the GIANT Moon roller coaster
+- **The family asked** for the Moon coaster to be made absolutely massive (10–20× bigger, hundreds of metres tall, minutes long), with a giant climb and first drop, loops, corkscrews, spirals, a mountain tunnel, a crater drop, a glowing cave, high sections and a finale. It had to work perfectly, be easy for a 5-year-old, and not make the game slower.
+- **How big:**
+  - the new course is **4.73 km long**: about 8× the build 68 coaster and about 14× the original (build 65);
+  - **3 min 14 s** per ride at normal speed; the track tops out at **227 m** and dives to **22 m below** the ground;
+  - it fills the whole Moon (330 × 170 m), which is the limit for now; the course can grow when the Moon does.
+- **The ride, in order:**
+  1. the station, then a spiral lift climbing round a 240 m glowing lunar spire;
+  2. the 195 m first drop, loop 1 and a camel hill;
+  3. a tunnel through a new lunar mountain, then corkscrew 1;
+  4. a booster and a climbing turn to a high viewpoint;
+  5. a plunge into a new enormous crater, out again, loop 2;
+  6. a spiral descent and the glowing purple crystal cave underground;
+  7. loop 3 and corkscrew 2 with camel hills;
+  8. a long high run across the whole Moon;
+  9. a finale spiral and corkscrew 3 back into the station.
+- **How it is made** (`src/coaster-course.js`, `src/moon-coaster.js`):
+  - **The course:** pieces plus fixed anchor points, sampled once every 0.5 m (position, direction, banking and speed) in about 8 ms.
+  - **Every frame:** nothing is recalculated; the train only looks up the cached samples.
+  - **Speed:** comes from height (energy), so it is slow over the tops and fast at the bottoms (11–34 m/s), with gentle brakes into the station.
+  - **The structure (spine, towers, spire, mountain, station):** built in slices of 4 ms per frame, one mesh in all.
+  - **Rails and ties:** streamed in 120 m pieces near her (2 while walking, 3 while riding; at most one piece built every 0.2 s), and freed again behind.
+  - **Tunnel and cave walls:** drawn only when the camera is near them.
+- **Riding:**
+  - one tap on any car (or 🐾) boards; 🏁 gets off at any moment, at the station;
+  - the chase camera is smoothed and sits low inside the tunnel and cave;
+  - calm mode rides it at 62% speed;
+  - no shaking or flashing; the first Moon visit shows a 6.5 s camera sweep of the whole coaster.
+- **Speed work in this build** (desktop software rendering): the first version made the Moon station frames about 35% slower. Fixes:
+  - **Painted light:** the whole structure is drawn with one cheap unlit material whose light and shade are painted into its colours;
+  - **Less geometry:** half as many towers, no diagonal braces, a lighter spine, fewer beads and lighter rails;
+  - **No new shaders:** the tunnel and cave walls are turned inside out instead of needing a new shader;
+  - **Shader warmed at start:** the shared material is prepared on the loading screen, so landing on the Moon no longer has a shader pause (2.2 s before the fix).
+- **Also fixed:** the Mars climbing wall's code (build 68) had been deleted by mistake while this coaster was being built (Mars would have stopped with an error). It is restored exactly as it was, and the planet shader check caught it.
+- **Verified (desktop, software rendering):**
+  - **Course check** (`tests/coaster-course-check.mjs`, also run by `node --test`): no gaps; never closer than 5.16 m to itself; clear of the ground, the activities and the mountain; 272 upside-down samples.
+  - **A real browser ride from start to end:**
+    - she reaches 227 m and −22 m and loops upside down;
+    - she passes the booster, cave, crater, lift and tunnel sections;
+    - she never goes backwards or jumps, and the camera stays near her;
+    - she ends at the station and the camera is freed;
+    - 🏁 works mid-ride, and the map works mid-ride.
+  - **Full smoke test (run alone): 236/236 passed**, including the whole-ride coaster check (227 m top, −22 m bottom, loops, every section, back at the station) and the 🏁 skip.
+  - **Not yet tried on the real iPhone.**
+
 ## Checkpoint: build 68 — Neptune: wind swings, bungee jumping and a skydiving chamber
 - **The family asked** for swings the wind helps push, bungee jumping and a skydiving simulation chamber on Neptune. Neptune is now a big place (330 m).
 - **Area 2, wind swings:**

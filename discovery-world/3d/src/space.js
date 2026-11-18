@@ -19,6 +19,7 @@ import { toy } from './creatures.js';
 import * as K from './spacekit.js';
 import { runInSlices } from './stream-work.js';
 import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
+import { BIG_CRATER } from './coaster-course.js';
 
 export const SPACE = { ox: 5000, gap: 400, w: 110 }; // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
 // [id, picture colours for the menu, gravity m/s², gas giant?, what the voice says when you arrive]
@@ -104,7 +105,7 @@ export function initSpace(G, api) {
     yield;
     if (id === 'moon') {
       const cr = []; for (let k = 0; k < 30; k++) { const z = -9 - Math.pow(R(k + 50), 1.4) * 105, r = 1.6 + R(k + 60) * 2.4 + (-z) * .06; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .34, rim: .13, peak: r > 6 }); }
-      cr.push({ x: X + 61, z: -15, r: 6.5, depth: .3, rim: .15, peak: true }, { x: X + 24, z: -11, r: 3.4, depth: .3, rim: .14 }, { x: X + 88, z: -10.5, r: 3, depth: .32, rim: .14 });
+      cr.push({ x: X + BIG_CRATER.dx, z: BIG_CRATER.z, r: BIG_CRATER.r, depth: BIG_CRATER.depth, rim: BIG_CRATER.rim }, /* (build 69: the giant coaster's crater) */ { x: X + 61, z: -15, r: 6.5, depth: .3, rim: .15, peak: true }, { x: X + 24, z: -11, r: 3.4, depth: .3, rim: .14 }, { x: X + 88, z: -10.5, r: 3, depth: .32, rim: .14 });
       H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 1.3 + K.sstep(-60, -150, z) * (K.fbm2(x * .017 + 3, z * .017, 3) * 22 - 5); for (const c of cr) h += K.craterH(c, x, z); return h; },
         color: (x, z, h, ny, o) => { let s = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; }
           const mare = K.sstep(.5, .4, K.fbm2(x * .021 + 9, z * .021 + 2, 3)), n = K.fbm2(x * .9, z * .9, 3), pit = K.sstep(.74, .8, K.noise2(x * .8 + 5, z * .8)) * K.sstep(-5.5, -3, z);
@@ -389,7 +390,7 @@ export function initSpace(G, api) {
     g.traverse(o => { o.userData.dynamic = true; });
     g.userData.tris = matte.count() + props.count() + soft.count();
     // (build 50) the toolkit the new areas use (planets.js), and anything that spans the whole planet (Moon footprints)
-    kits[id] = { X, g, add, tapIt, fact, say, disc, Sound, U, P, G, api, setSkyColor: color => sky.set({ ...LOOK[id].sky, mid: "#" + color.getHexString(), hor: "#" + color.getHexString() }), placeAlien: (x, z, k) => placeAlien(x, z, k, null) };
+    kits[id] = { X, g, add, tapIt, fact, say, disc, Sound, U, P, G, api, ground: (x, z) => (typeof H === 'function' ? H(x, z) : 0), /* (build 69) */ setSkyColor: color => sky.set({ ...LOOK[id].sky, mid: "#" + color.getHexString(), hor: "#" + color.getHexString() }), placeAlien: (x, z, k) => placeAlien(x, z, k, null) };
     secs[id] = [true]; if (PLANET_EXTRA[id] && PLANET_EXTRA[id].all) PLANET_EXTRA[id].all(areaKit(id, 0, g));
     scene.add(g); return g;
   }
@@ -429,7 +430,7 @@ export function initSpace(G, api) {
     for (let k = G.taps.length - 1; k >= 0; k--) if (mine.has(G.taps[k])) G.taps.splice(k, 1);
     for (let k = G.interact.length - 1; k >= 0; k--) { const it = G.interact[k]; if (it.layer === 'space' && it.x >= X - 30 && it.x <= X2 + 30) G.interact.splice(k, 1); }
     for (let k = G.platforms.length - 1; k >= 0; k--) { const it = G.platforms[k]; if (it.layer === 'space' && it.a >= X - 30 && it.b <= X2 + 30) G.platforms.splice(k, 1); }
-    g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m !== K.paintMat() && m !== K.shinyMat() && m !== K.softMat()) m.dispose(); }); });
+    g.parent && g.parent.remove(g); g.traverse(o => { if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m !== K.paintMat() && m !== K.shinyMat() && m !== K.softMat() && m !== K.glowMat()) m.dispose(); }); });
     for (const texture of g.userData.ownedTextures || []) texture.dispose();
     areaSteps.length = 0; delete groups[id]; delete ups[id]; delete skies[id]; delete kits[id]; delete secs[id]; built[id] = false; if (G.rockets) delete G.rockets[id];
   }

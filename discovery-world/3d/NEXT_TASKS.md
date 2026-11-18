@@ -3,6 +3,29 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## Build 70 follow-ups (do first)
+- Run the full smoke test on build 70 and fix anything it finds.
+- Jupiter speed: the busiest new spots (x +150 to +205) measured about 10–20% slower than build 69 (desktop). Try:
+  - hiding far zones by distance;
+  - lighter slides (fewer segments; this was tried but not yet committed);
+  - fewer ball-pit balls.
+- Measure Mercury the same way (`/tmp` script `pplanet.cjs mercury`).
+- Queued family requests:
+  - Uranus: an explorable ice castle and a big skating area;
+  - Neptune: a controllable bungee and skydive;
+  - Mars: a big climbing wall with real climbing, and a trampoline park;
+  - Pluto: a huge inflatable park;
+  - Venus: a giant log flume;
+  - Saturn: a giant launch ride and a drivable ring racetrack.
+
+## Giant Moon coaster (build 69): check on the real iPhone
+- Ride it from start to end on the iPhone: is it smooth all the way, especially the spiral lift, the tunnel and the cave? Use ⚙️ → Performance Test at the Moon station.
+- Does the first-visit camera sweep (6.5 s) feel good, or too long?
+- The coaster fills the Moon's 330 × 170 m area. If the Moon grows, the course (`src/coaster-course.js`, checked by `tests/coaster-course-check.mjs`) can grow with it.
+
+## Shader gate: one clearcoat variant at Jupiter, Saturn and Neptune (since builds 66–68)
+`tests/perf/planet-shaders.cjs` reports a `physical` (clearcoat) program compiled on arrival at these planets, rendered outside the main scene (output `srgb`, not the post target), probably a creature or portrait made for a ride. Find it and prepare it at start (`warmPaint` in `main.js`), measured. No wait was measured in build 69's run.
+
 ## Talk Together (build 62): needs the family
 - Paste the NEW `firebase-rules.json` (Realtime Database → Rules → Publish). `?mpcheck` must say `allowed` for `write talking` and `write call message`.
 - Try talking on two real devices (iPhone Safari + another phone): same Wi-Fi first, then one on mobile data. If mobile data does not connect, set up the free TURN relay (MULTIPLAYER.md) and put its URL in `src/mp-config.js`.

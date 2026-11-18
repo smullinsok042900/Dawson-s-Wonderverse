@@ -586,3 +586,6 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 #rocketPanel .rkT img{width:100%;aspect-ratio:1;display:block;position:relative;filter:drop-shadow(0 3px 6px #0008)}
 #rocketPanel .rkT i,#rocketPanel .rkT.saturn::after{display:none}
 #rocketPanel .rkName{position:relative;font:800 min(3.2vw,15px)/1.1 system-ui;color:#fff;text-shadow:0 1px 3px #000;margin-top:-4px;white-space:nowrap}
+/* (build 69) the giant Moon coaster: a big 🏁 button to get off (back to the station) at any time */
+#coasterSkip{display:none;position:fixed;right:max(16px,env(safe-area-inset-right));top:calc(max(8px,env(safe-area-inset-top)) + 132px);z-index:30;font-size:40px;min-width:76px;min-height:76px;border-radius:24px}
+#coasterSkip.show{display:flex}

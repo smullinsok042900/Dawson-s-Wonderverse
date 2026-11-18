@@ -12,49 +12,11 @@
 import * as THREE from 'three';
 import { toy } from './creatures.js';
 import { makeBatch, shinyMat } from './spacekit.js';
+import { buildMoonCoaster } from './moon-coaster.js';
+import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
+import { mercuryFunhouse } from './mercury-funhouse.js';
 
-// ---------- (build 65) 🎢 THE GIANT MOON ROLLER COASTER ----------
-// A station by the path; a chain lift up to 16 m, a big drop, a hill, a loop-the-loop, bunny hops, then a swoop round
-// behind and back to the station. Two pink rails with white ties, purple posts. The ride itself is in main.js
-// (G.startCoaster): speed comes from the height you drop, and you tilt with the car (upside down at the top of the loop).
-function moonCoaster(k, B) {
-  const L = B - 64, V3 = (x, y, z) => new THREE.Vector3(x, y, z);
-  // (build 68) BIGGER, CRAZIER, FASTER: a 32 m lift, a giant drop, TWO loop-the-loops, a camel hill, a turnaround, speed
-  // hills and a corkscrew helix, then back to the station
-  const loop = (c, z0, R) => [[c, 2.7, z0], [c - R, 2.7 + R, z0 - .3], [c, 2.7 + 2 * R, z0 - .6], [c + R, 2.7 + R, z0 - .9], [c, 2.8, z0 - 1.2]];
-  const helix = []; for (let i = 0; i <= 12; i++) { const a = Math.PI + i / 12 * Math.PI * 3; helix.push([B - 30 + Math.cos(a) * 5, 10 - i / 12 * 6, -22 + Math.sin(a) * 5]); }
-  const pts = [[B, .9, -2.4], [B - 4, .9, -2.6], [B - 9, 3, -4], [B - 16, 12, -7], [B - 23, 22, -9.5], [B - 28, 30, -11], [B - 31, 32.5, -11.5], [B - 34, 31.5, -11.8], [B - 40, 14, -12], [B - 45, 3, -12.2],
-    [B - 48, 2.6, -12.3], ...loop(B - 52, -12.4, 7), [B - 57, 2.6, -13.8], [B - 63, 12, -14], [B - 69, 3, -14.2], ...loop(B - 76, -14.4, 6), [B - 81, 2.6, -15.8],
-    [B - 88, 6, -17.5], [B - 91, 9, -21], [B - 87, 10, -24.5], [B - 80, 8, -25], [B - 70, 14, -25], [B - 62, 4, -24.5], [B - 54, 11, -24], [B - 46, 6, -23.5], [B - 39, 10, -22.5], ...helix,
-    [B - 18, 7, -19], [B - 8, 5, -15], [B + 3, 3.5, -11], [B + 6, 2, -6.5], [B + 4, 1.2, -3.6], [B + 1.6, .9, -2.6], [B + .6, .9, -2.4]].map(p => V3(...p));
-  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .4), len = path.getLength();
-  let uTop = 0, yTop = -1; for (let u = 0; u < .45; u += .002) { const y = path.getPointAt(u).y; if (y > yTop) { yTop = y; uTop = u; } }
-  // rails, ties and posts: one mesh for the ties and posts, one tube per rail; frames follow the same "up" rule as the ride
-  const N = Math.ceil(len / .8), up = V3(0, 1, 0), cand = V3(), tg = V3(), side = V3(), u2 = V3(), m = new THREE.Matrix4(), e = new THREE.Euler(), q = new THREE.Quaternion(), rails = [[], []];
-  const b = makeBatch(), tie = new THREE.BoxGeometry(1, 1, 1), post = new THREE.CylinderGeometry(1, 1, 1, 8);
-  for (let i = 0; i <= N; i++) { const u = i / N, p = path.getPointAt(u); path.getTangentAt(u, tg);
-    cand.set(tg.y, -tg.x, 0); if (cand.lengthSq() < 1e-4) cand.copy(up); else cand.normalize(); if (cand.dot(up) < 0) cand.negate(); up.lerp(cand, .5).normalize();
-    side.crossVectors(tg, up).normalize(); u2.crossVectors(side, tg).normalize(); m.makeBasis(tg, u2, side); q.setFromRotationMatrix(m); e.setFromQuaternion(q);
-    for (const [r, sgn] of [[0, 1], [1, -1]]) rails[r].push(p.clone().addScaledVector(side, .45 * sgn).addScaledVector(u2, .08));
-    b.put(tie, p.x, p.y, p.z, '#ffffff', [.14, .07, 1.1], [e.x, e.y, e.z]);
-    if (i % 4 === 0 && p.y > 1.4 && u2.y > .3) b.put(post, p.x, (p.y - .1) / 2, p.z, '#b48cff', [.11, p.y - .1, .11]); }
-  const props = b.mesh(shinyMat()); props.castShadow = true; k.add(props);
-  const railM = toy('#ff4f9a', { r: .35, cc: .6 });
-  for (const r of rails) { const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(r), N * 2, .09, 6, false), railM); tube.castShadow = true; k.add(tube); }
-  // the station: a platform with a striped roof, next to the path
-  k.sbox(B, 0, -2.6, 5, .55, 2.2, '#e8e0ff', { r: .5 }); for (const dx of [-2.2, 2.2]) k.sbox(B + dx, .55, -3.4, .14, 2.6, .14, '#ffffff', { r: .4 });
-  for (let i = 0; i < 6; i++) k.sbox(B - 2.1 + i * .84, 3.15, -2.9, .84, .16, 1.6, i % 2 ? '#ffffff' : '#ff4f9a', { r: .4 });
-  // the car: pink, a seat back, a star on its nose (modelled facing +x, up +y)
-  const car = new THREE.Group(); { const cb = makeBatch(), box = new THREE.BoxGeometry(1, 1, 1);
-    cb.put(box, 0, .1, 0, '#ff4f9a', [1.7, .45, 1.15]); cb.put(box, -.65, .45, 0, '#ff7ab8', [.35, .55, 1.1]); cb.put(new THREE.SphereGeometry(.42, 16, 10), .85, .12, 0, '#ff4f9a', [.6, .55, 1.15]);
-    for (const z of [-.5, .5]) for (const x of [-.55, .55]) cb.put(new THREE.CylinderGeometry(.13, .13, .1, 12), x, -.14, z, '#5a3a8a', 1, [Math.PI / 2, 0, 0]);
-    cb.put(new THREE.OctahedronGeometry(.22), 1.15, .35, 0, '#ffd23f'); car.add(cb.mesh(shinyMat())); }
-  path.getTangentAt(0, tg); car.position.copy(path.getPointAt(0)); car.quaternion.setFromRotationMatrix(m.makeBasis(tg, V3(0, 1, 0), side.crossVectors(tg, V3(0, 1, 0)).normalize())); car.userData.dynamic = true; k.add(car);
-  const C = { path, len, uTop, yTop, car, carRest: car.quaternion.clone(), exitX: B + 2, vmax: 24, lift: 5 };
-  const board = () => { const P = k.P; if (P.ride || P.layer !== 'space' || Math.abs(P.x - B) > 8) return; k.say('🎢 Hold on tight! Up, up, up we go!', true); k.G.startCoaster && k.G.startCoaster(C); };
-  k.tapIt(car, board, B, 'coaster');
-}
-
+// (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
 // ---------- (build 68) 🧗 MARS: THE GIANT CLIMBING WALL and the GIANT TRAMPOLINE ----------
 // A 22 m red rock cliff with colourful handholds. Tap it (or PAW): she climbs up the front of it, faster while you hold ▲.
@@ -92,7 +54,8 @@ const Cap = s => s[0].toUpperCase() + s.slice(1);
 
 // ---------- 🌕 THE MOON: crater valley and the explorer station; moon mountains and the hidden cave ----------
 const moon = {
-  all(k) { // footprints in the moon dust wherever you walk (one shared instanced mesh: 40 prints, the oldest fades away)
+  all(k) { buildMoonCoaster(k); // (build 69) THE GIANT ROLLER COASTER: built with the Moon itself, so you see it from anywhere on it
+ // footprints in the moon dust wherever you walk (one shared instanced mesh: 40 prints, the oldest fades away)
     const N = 40, prints = new THREE.InstancedMesh(new THREE.CircleGeometry(.16, 12), toy('#8a8a96', { r: 1 }), N); prints.count = 0; prints.frustumCulled = false; k.add(prints);
     const m = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), s = new THREE.Vector3(1, 1.5, 1), v = new THREE.Vector3(); let last = null, n = 0, side = 1;
     k.U.push(() => { const P = k.P; if (!P.grounded || P.y > .05 || P.layer !== 'space') return; if (last === null) last = P.x; if (Math.abs(P.x - last) < .55) return; last = P.x; side = -side;
@@ -127,7 +90,6 @@ const moon = {
       for (let i = 0; i < 4; i++) { const r = k.sball(X + 70 + i * 3.4 + (i % 2), .25, -1.5 - (i % 2) * .8, .32, .26, .3, ['#d8d8e4', '#a8a8b8', '#e8e0d0', '#c0c8d8'][i], { r: .9 }); samples.push(r);
         k.tapIt(r, () => { if (!r.visible) return; r.visible = false; got++; k.Sound.tone(600 + got * 90, .12, 'triangle', .05, 1.2); k.say(`🪨 ${Cap(NUM[got])} moon rock${got > 1 ? 's' : ''} in the box!`, true); k.disc('moonsamples', '🪨 Collect moon rocks for the explorers!'); if (got === 4) setTimeout(() => { k.say('🎉 Four moon rocks! Thank you, little explorer! More rocks will roll out.', true); got = 0; for (const q of samples) q.visible = true; }, 900); }, i === 0 ? X + 70 : null, i === 0 ? 'moonsamples' : null); }
       k.tapIt(box, () => k.say(got ? `📦 ${Cap(NUM[got])} moon rock${got > 1 ? 's' : ''} so far!` : '📦 Find the moon rocks and tap them!', true));
-      moonCoaster(k, X + 96);
       k.rocketSign(X + 4);
     },
     // ----- area 3: MOON MOUNTAINS and the HIDDEN CAVE -----
@@ -315,9 +277,9 @@ function jupiterSuperSlide(k, X) {
   for (let i = 0; i <= 36; i++) { const a = Math.PI / 2 + i / 36 * Math.PI * 6, r = 4.2; pts.push(V3(tx + Math.cos(a) * r, TOP - .6 - i / 36 * 14, -6 + Math.sin(a) * r)); }
   for (const p of [[tx + 10, 14, -8], [tx + 16, 9, -10], [tx + 22, 13, -10.5], [tx + 28, 6, -9], [tx + 34, 10, -6.5], [tx + 40, 5, -8.5], [tx + 44, 7, -11], [tx + 46, 9, -8], [tx + 44, 7.5, -5.5], [tx + 48, 5, -4],
     [tx + 56, 4.5, -7], [tx + 62, 6, -10], [tx + 70, 3.5, -8], [tx + 76, 4.2, -4.5], [tx + 82, 2, -3], [tx + 86, 1, -2], [tx + 89, .7, -1.5]]) pts.push(V3(...p));
-  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35), N = 520, geo = new THREE.TubeGeometry(path, N, .9, 18, false);
-  { const cols = [], c = new THREE.Color(), RB = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#7fe0a0', '#5aa8ff', '#9b6cff', '#ff6fae']; for (let i = 0; i <= N; i++) { c.set(RB[Math.floor(i / N * 13.999) % 7]); for (let j = 0; j < 19; j++) cols.push(c.r, c.g, c.b); } geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); }
-  const tube = new THREE.Mesh(geo, new THREE.MeshPhysicalMaterial({ vertexColors: true, transparent: true, opacity: .55, roughness: .08, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false })); tube.renderOrder = 2; k.add(tube);
+  const path = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .35);
+  // (build 70: an open rainbow half-pipe with the shared material, instead of a see-through clearcoat tube: much cheaper to draw, no extra shader)
+  const tube = new THREE.Mesh(halfPipe(path, 300, .9, ['#ff4f6a', '#ff9a2e', '#ffd23f', '#7fe0a0', '#5aa8ff', '#9b6cff', '#ff6fae'], 14), shinyMat()); tube.castShadow = true; k.add(tube);
   // posts under the slide and the tower itself (one mesh), a glass lift tube, the lift car
   const b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 12);
   for (let u = .02; u < .98; u += .025) { const p = path.getPointAt(u); if (p.y > 1.6 && Math.hypot(p.x - tx, p.z + 6) > 3) b.put(cyl, p.x, (p.y - .9) / 2, p.z, '#ffd23f', [.12, p.y - .9, .12]); }
@@ -325,7 +287,7 @@ function jupiterSuperSlide(k, X) {
   b.put(cyl, tx, TOP + .15, -6, '#ffd23f', [2.6, .3, 2.6]); b.put(new THREE.ConeGeometry(1, 1, 20), tx, TOP + 2.4, -6, '#9b6cff', [2.4, 2.6, 2.4]); b.put(new THREE.SphereGeometry(1, 14, 10), tx, TOP + 3.9, -6, '#ffd23f', .35);
   for (const s of [-1, 1]) b.put(cyl, tx + s * .9, TOP + .9, -6 + 1.2, '#ffffff', [.06, 1.5, .06]);
   const tw = b.mesh(shinyMat()); tw.castShadow = true; k.add(tw);
-  const glass = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, TOP + 1, 20, 1, true), new THREE.MeshPhysicalMaterial({ color: '#cfefff', transparent: true, opacity: .25, roughness: .05, side: THREE.DoubleSide, depthWrite: false })); glass.position.set(tx - 2.4, (TOP + 1) / 2, -2.6); k.add(glass);
+  const glass = new THREE.Mesh(painted(new THREE.CylinderGeometry(1, 1, TOP + 1, 20, 1, true), '#cfefff'), seeThrough(.25)); glass.position.set(tx - 2.4, (TOP + 1) / 2, -2.6); k.add(glass);
   const car = new THREE.Mesh(new THREE.CylinderGeometry(.95, .95, .25, 20), toy('#5aa8ff', { r: .3, cc: .8 })); car.position.set(tx - 2.4, .12, -2.6); k.add(car);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - tx) > 9) return; k.fact('🛝 Up, up, up to the top of the super slide!', 'jupiterslide'); P.x = tx - 2.4; P.z = -2.6;
     jupiterRide(k, 'jlift', (R, dt) => { car.position.y = Math.min(TOP, car.position.y + dt * 5); P.y = car.position.y + .15; P.x = tx - 2.4; P.z = -2.6; if (R.t % .5 < dt) k.Sound.tone(300 + car.position.y * 15, .06, 'sine', .03, 1); return car.position.y >= TOP; },
@@ -335,8 +297,8 @@ function jupiterSuperSlide(k, X) {
 }
 const jupiter = {
   sections: [
-    k => { jupiterPlayground(k, k.s0); k.rocketSign(k.s0 + 4); },          // area 2: the playground
-    k => { jupiterSuperSlide(k, k.s0); k.rocketSign(k.s0 + 104); },         // area 3: the super-duper tall crazy slide
+    k => { jupiterPlayground(k, k.s0); jupiterSkyArea2(k); k.rocketSign(k.s0 + 1); },   // area 2: the playground + (build 70) the Sky Playground's towers, islands and games
+    k => { jupiterSuperSlide(k, k.s0); jupiterSkyArea3(k); k.rocketSign(k.s0 + 104); },  // area 3: the super slide + (build 70) the Floaty Bubble, the Sky Lookout and its slides
   ],
 };
 
@@ -441,7 +403,7 @@ function mercuryMirrorMaze(k, X) {
 const mercury = {
   sections: [
     k => { mercuryMirrorMaze(k, k.s0); k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze
-    k => { const X = k.s0; for (let i = 0; i < 8; i++) k.sball(X + 12 + i * 11, .2, -6 - (i % 3) * 2.5, 1.4 + (i % 3) * .6, .5, 1.2, '#9a8a7a', { r: .95 }); k.rocketSign(X + 100); }, // area 3: rocky craters
+    k => { mercuryFunhouse(k); k.rocketSign(k.s0 + 108); }, // area 3: (build 71) the giant carnival funhouse (it replaces the rocks)
   ],
 };
 
