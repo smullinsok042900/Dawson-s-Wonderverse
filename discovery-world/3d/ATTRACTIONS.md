@@ -36,7 +36,7 @@
 | 12 | Mars | Climbing wall (30 m) | PLAYABLE | A second wall with a cave tunnel through it; route choices. |
 | 13 | Mars | Trampoline park | PLAYABLE | More trampolines and a bouncing route along the canyon. |
 | 14 | Pluto | Inflatable park | PLAYABLE | A second tower, an inflatable maze and a matching game. |
-| 15 | Venus | Log flume (3× longer) | PLAYABLE | A branching route at a fork; animated water (foam, waterfalls). |
+| 15 | Venus | Log flume (3× longer) | PLAYABLE | Build 77: THE WATERFALL SHORTCUT: steer ◀ at the glowing fork on the high channel and the log drops down a waterfall chute to the rapids (42 s against 49 s the long way; `venus-flume` 4/4 checks both routes). +2 draw calls (the next spot is the same; +6% at +190 is within the noise). Next: animated water (foam, flowing stripes). |
 | 16 | Moon | Giant coaster | DONE (benchmark) | Polish only. |
 | 17 | Neptune | Wind swings | TODO | Inspect against the standard. |
 | 18 | Venus / Mars / others | Older small activities (rocks, geysers, alien games) | TODO | Inspect each one; expand the best ones. |

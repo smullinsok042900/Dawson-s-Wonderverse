@@ -519,12 +519,22 @@ function venusLogRide(k, X) {
   const log = new THREE.Group(); { const lb = makeBatch(); lb.put(new THREE.CylinderGeometry(.62, .62, 2.6, 18, 1, true), 0, .35, 0, '#8a5a3a', 1, [0, 0, Math.PI / 2]); for (const sx of [-1.3, 1.3]) lb.put(new THREE.CylinderGeometry(.62, .62, .08, 18), sx, .35, 0, '#e8c08a', 1, [0, 0, Math.PI / 2]);
     lb.put(new THREE.BoxGeometry(1, 1, 1), 0, .2, 0, '#6a4024', [2.4, .12, 1.1]); lb.put(new THREE.SphereGeometry(.2, 10, 8), 1.4, .9, 0, '#7fe0a0', [1, .6, 1]); log.add(lb.mesh(shinyMat())); }
   log.position.copy(path.getPointAt(0)); log.userData.dynamic = true; k.add(log);
-  const place = u => { const p = path.getPointAt(u); path.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
+  // (build 77) THE WATERFALL SHORTCUT: at the fork (a glowing arch on the high channel), steer ◀ and the log takes a short
+  //  waterfall chute straight down to the rapids; go straight on for the long way round
+  const nearU = (x, y, z) => { let bu = 0, bd = 1e9; for (let i = 0; i <= 600; i++) { const q = path.getPointAt(i / 600), d = (q.x - x) ** 2 + (q.y - y) ** 2 + (q.z - z) ** 2; if (d < bd) { bd = d; bu = i / 600; } } return bu; };
+  const uF = nearU(st + 28, 21.5, -19), uJ = nearU(st + 34, 9, -24), PF = path.getPointAt(uF), PJ = path.getPointAt(uJ);
+  const pathB = new THREE.CatmullRomCurve3([PF.clone(), V3(st + 29.5, 20.5, -21), V3(st + 31, 15, -22.5), V3(st + 32.5, 11, -23.5), PJ.clone()], false, 'catmullrom', .4), lenB = pathB.getLength();
+  { const hp = new THREE.Mesh(halfPipe(pathB, 70, .95, ['#4fb8ff', '#cfefff'], 8), shinyMat()); k.add(hp); const fb = makeBatch(); for (let i = 0; i < 8; i++) { const q = pathB.getPointAt(.25 + i * .08); fb.put(new THREE.BoxGeometry(1, 1, 1), q.x + 1.2, q.y - 1.2, q.z, i % 2 ? '#ffffff' : '#9fd8ff', [.15, 2.4, 1.6]); }
+    fb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF.x, PF.y, PF.z, '#62f0ff', 1, [0, Math.atan2(-(PJ.z - PF.z), PJ.x - PF.x) + Math.PI / 2, 0]); k.add(fb.mesh(glowMat())); }
+  const place = (u, pth = path) => { const p = pth.getPointAt(u); pth.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
   place(0);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
-    let u = 0, v = 3, splashed = false, crest = .6, off = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; }
+    let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; }
     k.say('🪵 Steer the log with ◀ ▶ to catch the stars! Press JUMP to SPLASH!', true);
     jupiterRide(k, 'logride', (R, dt) => {
+      if (onB) { vb = Math.min(16, vb + dt * 9); ub = Math.min(1, ub + vb / lenB * dt); const pb = place(ub, pathB); P.x = pb.x; P.y = pb.y + .25; P.z = pb.z; R.roll = -.5; if (Math.random() < dt * 12) k.api.burst(pb.x, pb.y, pb.z, ['#ffffff', '#cfefff'], 2, 1.4);
+        if (ub >= 1) { onB = false; u = uJ; v = vb; crest = PJ.y + vb * vb / 18; k.api.burst(pb.x, pb.y + .4, pb.z, ['#ffffff', '#4fb8ff'], 20, 3); k.Sound.boing(); } return false; }
+      if (!R.forked && u >= uF - .002 && u <= uF + .01) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
       path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
       if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
       else { crest = Math.max(y0, crest - dt * .35); v = Math.max(2.6, Math.min(17, Math.sqrt(7 + 2 * 9 * Math.max(0, crest - y0)))); if (splashed) v = Math.max(2.2, v - dt * 14); }
