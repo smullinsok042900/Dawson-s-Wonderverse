@@ -483,7 +483,7 @@ const UG_F = -6;
       const x0 = B[0] + 123; await page.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.vy = 0; P.grounded = true; P.ride = null; }, x0 + 16); await sleep(2000);
       await page.evaluate(() => { __DDW3.keys.right = true; }); await sleep(3000); await page.evaluate(() => { __DDW3.keys.right = false; }); const stopped = await page.evaluate(() => __DDW3.player.x);
       check('Mercury: a mirror door blocks the way until you tap it', stopped < x0 + 18, `stopped at +${(stopped - x0).toFixed(1)} m (door at +18)`);
-      await page.evaluate(x => { __DDW3.player.x = x; }, x0 + 6); await sleep(2500); const seenRefl = await page.evaluate(() => { let v = false; __DDW3.G.scene.traverse(o => { if (o.visible && o.position && Math.abs(o.position.z + 3.95) < .01 && o.children && o.children.length) v = true; }); return v; });
+      await page.evaluate(x => { __DDW3.player.x = x; }, x0 + 6); await sleep(2500); const p0 = await page.evaluate(() => __DDW3.G.mirrorPics || 0); await sleep(1500); const seenRefl = await page.evaluate(p0 => { let v = false; __DDW3.G.scene.traverse(o => { if (o.visible && o.isMesh && o.position && Math.abs(o.position.z + 4.12) < .01 && o.material.map && o.material.map.isRenderTargetTexture) v = true; }); return v && (__DDW3.G.mirrorPics || 0) > p0; }, p0); // (build 73: a live picture of you)
       check('Mercury: the funhouse mirror shows your character, funnily stretched', seenRefl);
       for (let i = 0; i < 3; i++) await page.evaluate(i => __DDW3.G.interact.find(it => it.disc === 'mercurydoor' + i).run(), i);
       await page.evaluate(() => { __DDW3.keys.right = true; }); await waitFor(s => s.disc.includes('mercurymaze'), 120000); await page.evaluate(() => { __DDW3.keys.right = false; });

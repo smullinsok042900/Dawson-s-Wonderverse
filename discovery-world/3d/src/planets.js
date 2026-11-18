@@ -386,20 +386,25 @@ function mercuryMirrorMaze(k, X) {
     return d; });
   // the golden star at the end
   const star = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toy('#ffd23f', { em: '#ffb000', ei: .8, m: .3 })); star.position.set(x1 - 3, 2, -2); k.add(star); let won = false;
-  // your reflection: one copy of your character, moved to the mirror you stand at
-  let refl = null, kind = '';
+  // your reflection (build 73): a live PICTURE of you on the mirror you stand at, funnily stretched; a little camera at the
+  // mirror sees only you and refreshes it every third frame (one draw call, instead of a whole second character)
+  const MW = 2.2, MH = 2.6, rt = new THREE.WebGLRenderTarget(176, 208), mcam = new THREE.PerspectiveCamera(40, MW / MH, .2, 20), LAYER = 5, mbg = new THREE.Color('#e6f4ff');
+  const pic = new THREE.Mesh(new THREE.PlaneGeometry(MW, MH), new THREE.MeshBasicMaterial({ map: rt.texture, fog: false, toneMapped: false })); pic.visible = false; k.add(pic); mcam.layers.set(LAYER);
+  let fno = 0, tagged = null;
   k.U.push((dt, t) => {
     for (const d of doors) if (d.opened && d.open < 1) { d.open = Math.min(1, d.open + dt * 1.6); d.piv.rotation.y = .7 + d.open * (Math.PI / 2 - .7) ; d.piv.position.y = d.open * 3.2; }
     star.rotation.y = t * 1.5; star.position.y = 2 + Math.sin(t * 2) * .2;
     if (!won && P.layer === 'space' && Math.abs(P.x - (x1 - 3)) < 1.5 && P.y < 3) { won = true; k.api.burst(x1 - 3, 2.2, -2, ['#ffd23f', '#ffffff', '#ff9fd2'], 30, 3); k.Sound.chime && k.Sound.chime(); k.fact('⭐ You found your way through the mirror maze! Mercury is the planet closest to the Sun.', 'mercurymaze'); }
     const mi = P.layer === 'space' && !P.ride ? mirrors.find(m => Math.abs(P.x - m.x) < 2.2) : null;
-    if (!mi) { if (refl) refl.root.visible = false; return; }
-    const want = k.api.creatureKind ? k.api.creatureKind() : 'pip';
-    if (!refl || kind !== want) { if (refl) refl.root.parent && refl.root.parent.remove(refl.root); refl = k.api.makeCreature(want); kind = want; refl.root.traverse(o => { o.userData.dynamic = true; o.castShadow = false; }); k.add(refl.root); }
-    const R = refl.root; R.visible = true; let sx = 1, sy = 1, sz = 1, rz = 0, oy = .35;
-    if (Array.isArray(mi.sh)) [sx, sy, sz] = mi.sh; else if (mi.sh === 'wobble') { sx = 1 + Math.sin(t * 5) * .3; sy = 1 - Math.sin(t * 5) * .25; sz = sx; } else if (mi.sh === 'upside') { rz = Math.PI; oy = 3.9; } else if (mi.sh === 'squiggle') { sx = .8 + Math.sin(t * 9) * .15; sy = 1.25; rz = Math.sin(t * 3) * .35; }
-    R.scale.set(sx, sy, sz); R.position.set(mi.x + Math.max(-.9, Math.min(.9, (P.x - mi.x))), oy, -3.95); R.rotation.set(0, 0, rz);
-    refl.update(dt, { vx: P.vx, vy: 0, grounded: true, facing: P.facing, happy: 0 });
+    if (!mi) { pic.visible = false; return; }
+    let sx = 1, sy = 1, rz = 0;
+    if (Array.isArray(mi.sh)) [sx, sy] = mi.sh; else if (mi.sh === 'wobble') { sx = 1 + Math.sin(t * 5) * .3; sy = 1 - Math.sin(t * 5) * .25; } else if (mi.sh === 'upside') rz = Math.PI; else if (mi.sh === 'squiggle') { sx = .8 + Math.sin(t * 9) * .15; sy = 1.25; rz = Math.sin(t * 3) * .35; }
+    pic.visible = true; pic.position.set(mi.x, 2.2, -4.12); pic.scale.set(-Math.min(1.15, sx) * .95, Math.min(1.4, sy) * .95, 1); pic.rotation.set(0, 0, rz);
+    if (fno++ % 3) return; const body = k.G.playerBody, R = k.G.renderer; if (!body || !R) return;
+    if (tagged !== body) { body.traverse(o => o.layers.enable(LAYER)); tagged = body; }
+    mcam.position.set(P.x, P.y + 1.2, -4.18); mcam.lookAt(P.x, P.y + 1.2, P.z || 0);
+    const prev = R.getRenderTarget(), pbg = k.G.scene.background, pc = R.getClearColor(new THREE.Color()), pa = R.getClearAlpha(), sm = R.shadowMap.autoUpdate;
+    k.G.scene.background = null; R.shadowMap.autoUpdate = false; R.setClearColor(mbg, 1); R.setRenderTarget(rt); R.clear(); R.render(k.G.scene, mcam); R.setRenderTarget(prev); R.setClearColor(pc, pa); k.G.scene.background = pbg; R.shadowMap.autoUpdate = sm; k.G.mirrorPics = (k.G.mirrorPics || 0) + 1;
   });
   k.tapIt(hall, () => k.fact('🪞 The funhouse mirror maze! Look in the mirrors, and tap the mirror doors to open them.', 'mercuryfunhouse'), x0, 'mercuryfunhouse');
 }
