@@ -441,7 +441,7 @@ function neptuneWindSwings(k, X) {
         if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5);
         if (R.letGo) { flew = true; return true; } return idleT > 8; },
         () => { piv.rotation.z = 0; P.z = 0; if (flew) { P.vy = 7; P.vx = 7; P.drift = 7; P.driftT = 1.2; P.grounded = false; k.Sound.whoosh(); k.say('🌬️ WHEEE! You let go and flew!', true); k.disc('neptuneswingfly'); } else P.y = 0; });
-      P.ride.onJump = () => { const R = P.ride; idleT = 0; if (amp > .95 && Math.cos(th) > 0 && Math.abs(Math.sin(th)) > .8 && Math.sin(th) > 0) { R.letGo = true; return; } amp = Math.min(1.3, amp + .14); k.Sound.tone(300 + amp * 300, .08, 'triangle', .05, 1.5); if (amp > .95) k.say('🌬️ So high! Press JUMP at the top to let go and fly!', false); };
+      P.ride.onJump = () => { const R = P.ride; idleT = 0; if (amp > 1.1 && Math.cos(th) > 0 && Math.abs(Math.sin(th)) > .8 && Math.sin(th) > 0) { R.letGo = true; return; } amp = Math.min(1.3, amp + .14); k.Sound.tone(300 + amp * 300, .08, 'triangle', .05, 1.5); if (amp > 1.1) k.say('🌬️ So high! Press JUMP at the top to let go and fly!', false); };
       k.say('🌬️ Press JUMP to swing higher and higher!', true); };
     k.tapIt(piv, go, sx + dx, i === 1 ? 'neptuneswing' : null); });
   k.tapIt(sock, () => k.fact('🌬️ A windsock shows which way the wind blows. On Neptune the wind is super fast!', 'neptunewindsock'), X + 12, 'neptunewindsock');
