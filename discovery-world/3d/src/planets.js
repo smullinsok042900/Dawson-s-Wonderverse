@@ -16,6 +16,7 @@ import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField } from './control-rides.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -228,6 +229,7 @@ const pluto = {
     // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----
     k => { const X = k.s0;
       for (let i = 0; i < 7; i++) { const x = X + 14 + i * 13 + (i % 2) * 3, hh = 2.5 + (i * 7 % 5); k.sball(x, hh * .45, -6 - (i % 3) * 3, .7, hh, .7, i % 2 ? '#dcecff' : '#bcd4f2', { r: .2, cc: .8 }); }
+      plutoInflatablePark(k); // (build 71) the giant inflatable park
       k.rocketSign(X + 4);
     },
   ],
@@ -328,7 +330,7 @@ function uranusIceCastle(k, cx) {
   k.tapIt(m, () => k.fact('🏰 An ice castle! Uranus is an ice giant: deep down it is full of icy water. Climb the steps and slide down!', 'uranuscastle'), cx, 'uranuscastle');
 }
 function uranusRink(k, cx) {
-  const P = k.P, rx = 22, rz = 4.4, cz = -2.6, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 64);
+  const P = k.P, rx = 32, rz = 5, cz = -2.6, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 64); /* (build 71: rx 32, was 22) */
   b.put(cyl, cx, .03, cz, '#8fd0ff', [rx, .06, rz]); b.put(cyl, cx, .035, cz, '#c9ecff', [rx - 1.2, .06, rz - .7]); /* (a blue rink with a pale centre: it stands out from the icy ground) */
   for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, x = cx + Math.cos(a) * (rx + .3), z = cz + Math.sin(a) * (rz + .25); if (z > .6) continue; b.put(new THREE.CylinderGeometry(1, 1, 1, 8), x, .4, z, i % 2 ? '#5aa8ff' : '#ffffff', [.09, .8, .09]); }
   b.put(new THREE.TorusGeometry(1, .03, 6, 64), cx, .82, cz, '#ffffff', [rx + .3, rz + .25, 1], [Math.PI / 2, 0, 0]);
@@ -349,8 +351,8 @@ function uranusRink(k, cx) {
 }
 const uranus = {
   sections: [
-    k => { uranusIceCastle(k, k.s0 + 40); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle
-    k => { uranusRink(k, k.s0 + 50); k.rocketSign(k.s0 + 100); },       // area 3: the skating rink
+    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
+    k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
   ],
 };
 

@@ -1,0 +1,37 @@
+// (build 71) Pluto's inflatable park and Uranus's Ice Palace + rink (desktop, software rendering).
+const { chromium } = require('playwright'); const path = require('node:path'); const sleep = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+  const file = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.html'));
+  const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+  const page = await (await b.newContext({ viewport: { width: 844, height: 390 } })).newPage(); const errs = []; page.on('pageerror', e => errs.push(e.message));
+  await page.goto('file://' + file + '?test', { timeout: 600000 }); await page.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 });
+  await page.locator('#playBtn').click(); await sleep(2500);
+  let fails = 0; const check = (n, ok, info = '') => { console.log((ok ? 'PASS ' : 'FAIL ') + n + (info ? '  — ' + info : '')); if (!ok) fails++; };
+  const ev = (f, a) => page.evaluate(f, a);
+  const fly = async id => { await ev(id => __DDW3.G.space.goTo(__DDW3.G.space.places.findIndex(p => p[0] === id)), id); await page.waitForFunction(() => __DDW3.player.layer === 'space' && !__DDW3.player.ride, null, { timeout: 240000 }); return ev(() => __DDW3.G.spaceBounds[0] - 1); };
+  const put = (x, y = 0) => ev(([x, y]) => { const P = __DDW3.player; P.ride = null; P.x = x; P.y = y; P.vx = P.vy = 0; P.z = 0; P.grounded = true; }, [x, y]);
+  const run = d => ev(d => { const it = __DDW3.G.interact.find(i => i.disc === d); if (!it) return false; it.run(); return true; }, d);
+  const has = d => ev(d => __DDW3.world.disc.has(d), d);
+  const watch = ms => ev(ms => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0, seen = false; const f = () => { if (P.ride) seen = true; maxY = Math.max(maxY, P.y); if ((seen && !P.ride) || performance.now() - t0 > ms) return res({ maxY, seen, x: P.x, y: P.y }); requestAnimationFrame(f); }; f(); }), ms);
+  // ---- PLUTO ----
+  let X = await fly('pluto'); await put(X + 150); await sleep(2000); await put(X + 250); await sleep(3000); const S0 = X + 220;
+  check('Pluto: the inflatable park is built', await ev(() => __DDW3.G.interact.some(i => i.disc === 'plutopark')));
+  await put(S0 + 9.2, .5); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; }); await sleep(2500); check('Pluto: a musical bounce pad bounces you and sings', await has('plutomusicpads'));
+  await put(S0 + 44.5, .5); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; }); const tw = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0, top = false; const f = () => { maxY = Math.max(maxY, P.y); if (P.grounded && P.y > 13.5) top = true; if (top || performance.now() - t0 > 40000) return res({ maxY, top, y: P.y }); requestAnimationFrame(f); }; f(); })); check('Pluto: the tower bounce pads take you up the inflatable tower', tw.maxY > 7.2 && await has('plutotowerbounce'), JSON.stringify(tw));
+  await put(S0 + 53, 14); await sleep(500); await run('plutoslidego'); const sl = await watch(60000); check('Pluto: the giant inflatable slide goes from the 14 m top down to the bounce pit', sl.seen && sl.x - S0 > 80 && sl.maxY > 13, JSON.stringify({ ...sl, x: sl.x - S0 }));
+  await put(S0 + 107); await sleep(500); await run('plutosurprise'); check('Pluto: the surprise room', await has('plutosurprise'));
+  await put(S0 + 57.2); await sleep(500); await run('plutoclimbwall'); await ev(() => { __DDW3.keys.up = true; }); const cw = await watch(40000); await ev(() => { __DDW3.keys.up = false; }); check('Pluto: climb the soft wall with the joystick to the top', cw.y > 13.5, JSON.stringify(cw));
+  // ---- URANUS ----
+  X = await fly('uranus'); await put(X + 150); await sleep(3000); const U0 = X + 110;
+  check('Uranus: the Ice Palace is built', await ev(() => !!__DDW3.G.icePalace));
+  await put(U0 + 70); await sleep(500); await run('uranusthrone'); const th = await watch(20000); check('Uranus: sit on the ice throne', th.seen && await has('uranusthrone'));
+  await put(U0 + 82); await sleep(500); await ev(() => { const I = __DDW3.G.icePalace, order = I.sizes.map((s, i) => [s, i]).sort((a, b) => a[0] - b[0]).map(p => p[1]); for (const i of order) I.ring(i); });
+  await sleep(3000); check('Uranus: ring the crystals small to big and the secret door opens', await ev(() => __DDW3.G.icePalace.open) && await has('uranussecret'));
+  await put(U0 + 88.5); await sleep(1500); check('Uranus: walk to the treasure in the ice tunnel', await has('uranustreasure'));
+  await put(U0 + 66); await sleep(500); await run('uranusstairsup'); const st = await watch(20000); check('Uranus: one tap up the ice stairs to the balcony', Math.abs(st.y - 6) < .3, JSON.stringify(st));
+  await put(U0 + 105, 6); await sleep(500); await run('uranusslidego'); const is = await watch(40000); check('Uranus: the ice slide from the balcony down', is.seen && is.y < 1, JSON.stringify(is));
+  await put(X + 220 + 50 - 30); await sleep(2500); await ev(() => { __DDW3.keys.right = true; }); await page.waitForFunction(x => __DDW3.player.x > x, X + 220 + 50 + 28, { timeout: 60000 }).catch(() => {}); await ev(() => { __DDW3.keys.right = false; });
+  check('Uranus: skate through all six hoops on the bigger rink', await has('uranushoops'));
+  check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
+  console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
+})();

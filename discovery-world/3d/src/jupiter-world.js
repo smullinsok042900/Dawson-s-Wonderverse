@@ -34,12 +34,12 @@ const onPlanet = P => P.layer === 'space';
 const platOf = (k, a, b, y, o) => { k.plat(a, b, y, o); return k.G.platforms[k.G.platforms.length - 1]; };
 const near = (P, x, y, dx = 6, dy = 2.5) => onPlanet(P) && !P.ride && Math.abs(P.x - x) < dx && Math.abs(P.y - y) < dy;
 // a pad that throws you up (and along) when you walk onto it OR land on it (the game's own pads only fire on landing)
-function launcher(k, a, b, y, vy, vx, onGo) {
+export function launcher(k, a, b, y, vy, vx, onGo) {
   const P = k.P; let cool = 0;
   k.U.push(dt => { cool = Math.max(0, cool - dt); if (cool || !onPlanet(P) || P.ride || !P.grounded || Math.abs(P.y - y) > .3 || P.x < a || P.x > b) return;
     cool = .4; P.y = y + .05; P.vy = vy; P.grounded = false; P.jumps = 1; if (vx) { P.vx = vx; P.driftT = 1.1; P.drift = vx; P.hopX = 0; } onGo && onGo(); });
 }
-function rideTo(k, type, step, done, o) { // (the same as planets.js jupiterRide: the planet drives the ride, walking pauses)
+export function rideTo(k, type, step, done, o) { // (the same as planets.js jupiterRide: the planet drives the ride, walking pauses)
   const P = k.P, R = { type, t: 0, noExit: o?.noExit ?? true }; P.ride = R; P.vx = P.vy = 0;
   k.U.push(dt => { if (R.over) return; if (P.ride !== R) { R.over = true; return; } R.t += dt; if (step(R, dt)) { R.over = true; if (P.ride === R) { P.ride = null; P.vy = 0; P.grounded = true; } done && done(); } });
 }
@@ -55,7 +55,7 @@ export function halfPipe(path, segs, r, cols, bands) {
     for (const side of [1, -1]) { const order = side > 0 ? [0, 1, 2] : [0, 2, 1]; for (const v of order) { const o = t + v * 3, sh = side > 0 ? 1 : .92; pos.push(P0[o], P0[o + 1], P0[o + 2]); nor.push(N0[o] * side, N0[o + 1] * side, N0[o + 2] * side); col.push(C0[o] * sh, C0[o + 1] * sh, C0[o + 2] * sh); } } }
   g.dispose(); const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); out.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); out.computeBoundingSphere(); return out;
 }
-function slideTube(k, path, { segs = 300, r = .9, rings = 0, ringCols = RB, postEvery = 0, cols = RB, bands = 12 } = {}) {
+export function slideTube(k, path, { segs = 300, r = .9, rings = 0, ringCols = RB, postEvery = 0, cols = RB, bands = 12 } = {}) {
   const tube = new THREE.Mesh(halfPipe(path, segs, r, cols, bands), shinyMat()); tube.castShadow = true; k.add(tube);
   const sb = makeBatch(), gb = makeBatch(), G0 = GEO(), q = new THREE.Quaternion(), e = new THREE.Euler(), Z = V3(0, 0, 1);
   if (postEvery) for (let u = .02; u < .98; u += postEvery) { const p = path.getPointAt(u); if (p.y > 1.8) sb.put(G0.cyl, p.x, (p.y - r) / 2, p.z, '#ffd23f', [.13, p.y - r, .13]); }
