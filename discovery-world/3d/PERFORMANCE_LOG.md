@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 95 (the giant bungee tower)
+Desktop, software rendering; `pplanet.cjs`, builds 94 and 95 alternately, twice each. ms per frame / draw calls: Neptune +150 187 / 69 → 188 / 70; +158 186 / 67 → 187 / 67; +186 (bungee) 177 / 64 → 176 / 64.
+
 ## Build 94 (the winding ice trail on Uranus)
 Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 93 and 94 alternately, twice each. ms per frame / draw calls (averages):
 
