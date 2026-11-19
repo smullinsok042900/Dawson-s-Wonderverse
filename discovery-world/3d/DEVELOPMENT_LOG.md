@@ -15,6 +15,7 @@ are in `PERFORMANCE_LOG.md`.
   - **The Moon coaster together:** standing on the platform when a friend's train sets off, you hop on in the next seat; each sees the other in their seat on the same train; while you watch, your train follows your friends. `coaster-together` all passed.
   - `firebase-rules.json` has the new `live` rules (`MULTIPLAYER.md` explains). Until the family publishes them, shared rides do not appear and everything else in a room works as before. The existing `multiplayer` test: 20/20.
 - **Pluto: THE PUFFY SQUISH MAZE** (`parks` checks it). Bug found and fixed: the prize counted if she had ever been past it; it now counts only when she walks in through the walls.
+- **Full smoke test: 236/236** (with the new check: the camera never under the cart, over the whole ride).
 - Desktop (software rendering) speed: Moon the same (see `PERFORMANCE_LOG.md`). Not tried on an iPhone or with live Firebase.
 
 ## Checkpoint: build 99 — rotating mirror walls in the Mercury maze
