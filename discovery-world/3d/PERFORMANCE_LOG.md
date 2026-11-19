@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 102 (four more friends)
+Desktop, software rendering; builds 101 and 102 alternately, twice each: Moon +30 204 → 207 ms, +50 176 → 176, +79 170 → 168; draw calls the same. New friends' pictures (first time only): the first about 11 s on this software renderer (preparing the friends' materials), then about 1 s each, one per frame. Background sculpting was measured at 5–11 s per picture and dropped.
+
 ## Build 101 (dress-up and four new friends)
 Desktop, software rendering; `pplanet.cjs`, builds 100 and 101 alternately, four times each on a quiet machine. Moon +30 199 → 197 ms, +50 175 → 174, +79 173 → 177; draw calls and triangles the same. Worn things: one draw call each, only while worn. Opening 👗: 6 ms; the first time only, each new friend's picture costs one pause of about 0.6–0.85 s while it is sculpted (one per frame; then kept).
 

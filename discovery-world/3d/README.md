@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 102: four more friends
+- **Glimmer** (crystal shards), **Pompom** (a fluffy ball on big feet), **Bibble** (huge dish ears) and **Cosmo** (stars and a planet ring): twelve friends to pick and dress up in 👗.
+
 ## 3D build 101: dress-up, and four new friends
 - **👗 Dress up:** tap pictures to put on crowns, bows, party hats, glasses, scarves, wings, capes and more; 🧺 takes it all off. Each friend keeps its own outfit. Some surprises are found on the planets.
 - **New friends:** Puffle the cloud, Luna the moon, Bloop the rainbow gumdrop and Zip the comet (pick them in 👗).

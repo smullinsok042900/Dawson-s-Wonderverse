@@ -4,6 +4,11 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 102 — four more friends (twelve in all)
+- **GLIMMER** a soft lavender crystal friend with glowing crystal shards on its head and back; **POMPOM** a round fluffy ball on big floppy feet with a tuft on top (bounces everywhere); **BIBBLE** a tall bean with huge round dish ears and curly antennae (waddles, ears flapping); **COSMO** a tiny deep-blue cosmic friend painted with stars and a swirl, with a gold planet ring round its middle. Each has its fitting points for dress-up.
+- Tried and dropped: sculpting new friends in the background workers. It made each new friend's picture take 5–11 s to draw instead of about 1 s (measured), so the pictures are drawn one per frame as in build 101.
+- Tests (desktop, software rendering): `dressup` on all twelve friends (every slot on the right bone, hats above the eyes, glasses at the eyes, 🧺, reload, surprises): all passed, with pictures. Speed (Moon, builds 101 and 102 alternately): +30 204 → 207 ms, +50 176 → 176, +79 170 → 168, the same draw calls. **Full smoke test: 236/236.** Not tried on an iPhone.
+
 ## Checkpoint: build 101 — dress-up and four new friends
 - **DRESS-UP (👗):** big picture buttons only. Pick a friend; then 🎩 head, 👓 face, 🧣 neck, 🦋 back; one tap wears a thing, another tap takes it off; 🧺 takes everything off; swipe on the right to turn her round. Saved for each friend separately (and kept after a reload: the save loader checks every item).
   - 22 things to wear: crown, tiara, bow, party hat, flower crown, top hat, star headband, unicorn horn, space helmet; sunglasses, heart glasses, star glasses, round glasses, goggles, a mask; scarf, pearl necklace, bow tie, medal; butterfly wings, cape, backpack, rocket pack.
