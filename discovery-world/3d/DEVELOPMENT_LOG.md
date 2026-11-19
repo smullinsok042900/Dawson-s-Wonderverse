@@ -14,6 +14,7 @@ are in `PERFORMANCE_LOG.md`.
   - Venus flume: THE RAPIDS SPLASH GAME. Five targets beside the rapids; steer toward one and press JUMP to splash it (`venus-flume`: 5 of 5).
   - Pluto: a second tower (the rainbow tower with a spiral slide) is written and passes its tests, but is switched OFF. It was 7–15 % slower where it is in view, even after three rounds of trimming.
   - Test fix: the wind button check waits for the next frame instead of a fixed 300 ms (the test browser runs at 1–2 fps).
+  - **Build 92 full smoke test: 236/236** (Biscuit's check passed this time).
   - Build 91 full smoke test: 233/236. All 3 failures come from one missed test tap on Biscuit; a separate run shows tapping him works.
 
 ## Checkpoint: build 72 — Saturn jump ramps, lighter Jupiter slides, smoke checks for the build 71 rides
