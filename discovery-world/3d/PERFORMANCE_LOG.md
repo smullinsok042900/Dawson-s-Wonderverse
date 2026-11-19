@@ -7,6 +7,17 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 93 (sky dive wind gusts, the flume's crystal-cave fork)
+Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 92 and 93 alternately, twice each. ms per frame / draw calls (averages):
+
+| Spot | Build 92 | Build 93 |
+|---|---|---|
+| Neptune +150 | 186 / 69 | 186 / 69 |
+| Neptune +158 | 190 / 67 | 186 / 67 |
+| Neptune +186 | 176 / 65 | 175 / 65 |
+| Venus +160 | 202 / 74 | 198 / 76 |
+| Venus +190 | 219 / 91 | 215 / 94 |
+
 ## Build 92 (bungee balloons, double swing, trampoline switch, splash game, rainbow wall)
 Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 91 and 92 run alternately (2 runs each for Neptune and Venus). Each cell: ms per frame / draw calls; the first spot after arriving varies a lot, so it is left out.
 

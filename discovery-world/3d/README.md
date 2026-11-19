@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 93: wind gusts on the sky dive, and a crystal cave on the log flume
+- **Neptune sky dive:** bands of wind push you sideways on the way down; steer against them.
+- **Venus log flume:** steer ◀ at the second arch to ride through a sparkling crystal cave.
+
 ## 3D build 92: balloons, a double swing, a feather/rocket switch, a splash game and a rainbow wall
 - **Neptune bungee:** after the first bounce, three balloons appear; steer and bounce to pop them.
 - **Neptune double swing:** swing beside a little Neptune friend; JUMP pumps it higher.

@@ -4,6 +4,14 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 93 — sky dive wind gusts, the flume's crystal-cave fork
+- **Neptune sky dive: WIND GUSTS.** Three bands of white wind streaks; diving through one pushes her sideways, and she steers against it (`control-rides` all passed: 3 gusts, then a bullseye).
+- **Venus flume: THE CRYSTAL-CAVE FORK.** Steer ◀ at the second arch, after the rapids, to ride through a sparkling crystal cave behind the mountain (`venus-flume` 6/6).
+  - Bug found and fixed: on the fast rapids one big step (a slow frame) could jump right over the fork's narrow window, so the steering was never checked. Both forks now trigger on the first step at or past their arch.
+  - The splash targets moved onto the rapids before the fork, with the last one on the right, so aiming at them never sends the log into the cave by accident.
+  - Test fix: the flume test pressed JUMP only between 3.0 and 3.2 s of the ride (a window that can be skipped at 1–2 fps); it now presses once at the first frame after 3 s.
+- Desktop (software rendering) speed: Neptune and Venus the same as build 92 (see `PERFORMANCE_LOG.md`). Not tried on an iPhone.
+
 ## Checkpoint: build 92 — bungee balloons, double swing, trampoline switch, splash game, rainbow wall
 - **Builds 73–91** are recorded row by row in `ATTRACTIONS.md` (each with its own test and full smoke result).
 - **Build 92** (desktop, software rendering; not tried on an iPhone):
