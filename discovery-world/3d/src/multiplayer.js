@@ -440,7 +440,7 @@ export function initMultiplayer(G, api) {
     if (mine && !P.ride.passenger) { // I drive: friends riding with me sit in the seats behind me, in order
       const sx = TR.seatX(), near = rs.filter(r => Math.abs(r.st.x - sx) < 9).sort((a, b) => Math.abs(a.st.x - sx) - Math.abs(b.st.x - sx));
       near.forEach((r, i) => { const w = TR.seatWorld(Math.min(3, i + 1), trainSnap); r.o.snap = [w.x, w.y - .05, w.z]; }); TR.followFriend(null); return; }
-    if (mine && P.ride.passenger) { const d = rs.find(r => r.o.id === trainWith); if (!d) { trainWith = null; TR.followFriend(null); return; } TR.followFriend(d.st.x, d.st.vx);
+    if (mine && P.ride.passenger) { const d = rs.find(r => r.o.id === trainWith); if (!d) { trainWith = null; TR.followFriend(null); return; } TR.followFriend(d.st.x + (d.st.vx || 0) * .27, d.st.vx);
       rs.filter(r => r !== d).sort((a, b) => Math.abs(a.st.x - d.st.x) - Math.abs(b.st.x - d.st.x)).forEach((r, i) => { const k = i + 1 >= P.ride.seat ? i + 2 : i + 1; const w = TR.seatWorld(Math.min(3, k), trainSnap); r.o.snap = [w.x, w.y - .05, w.z]; }); return; }
     // watching: the driver is the rider at the front (the way they are going); my train follows them
     if (!rs.length) { if (TR.following) TR.followFriend(null); trainWith = null; return; }
