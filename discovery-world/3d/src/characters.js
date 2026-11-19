@@ -9,7 +9,7 @@
 // a wiggly tickle reaction, and squash and stretch on landing.
 // ===================================================================
 import * as THREE from 'three';
-import { sculpt, sculptAsync, makeSkeleton, attach, skin } from './sculpt.js';
+import { sculpt, makeSkeleton, attach, skin } from './sculpt.js';
 import { plushNormal } from './nature.js';
 import { addFur } from './fur.js';
 
@@ -278,10 +278,6 @@ function sproutSpec(body) {
 //  shape (spec), material, eyes and mouth (face), and their own way of moving (animate). The four first friends are unchanged.
 export const FRIENDS = {};
 export function registerFriend(kind, def) { FRIENDS[kind] = def; }
-// (build 102) sculpt a new friend in the background (the game's small pool of workers), so showing its picture or picking it
-//  for the first time does not pause the game; resolves when its body is ready (then building it is quick)
-export function prewarmFriend(kind, bodyCol) { const def = FRIENDS[kind]; if (!def) return Promise.resolve(); const body = bodyCol || def.body, key = kind + body;
-  if (geoCache.has(key)) return Promise.resolve(); return sculptAsync(def.spec(body)).then(geo => { if (!geoCache.has(key)) geoCache.set(key, geo); }); }
 function buildFriend(kind, style) {
   const def = FRIENDS[kind], body = style.body || def.body, spec = def.spec(body);
   const geo = cached(kind + body, () => sculpt(spec)); const sk = makeSkeleton(spec.bones), B = sk.bones;
