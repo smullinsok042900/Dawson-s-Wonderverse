@@ -4,6 +4,11 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 96 — the 📷 camera button on the sky dive
+- **Neptune sky dive: THE 📷 PICTURE BUTTON.** It appears only during the sky dive (the joystick steers and JUMP opens the parachute, so the view needs its own button). Tap it for a HIGH VIEW looking down at her and the landing target; tap again (🔍) for the close view. It hides itself when the dive ends, however it ends (`control-rides` all passed).
+- Found by the test and fixed: the first version only changed the view while falling (the waiting part of the ride returns early); the view is now set at the start of every ride step.
+- Desktop (software rendering) only; not tried on an iPhone.
+
 ## Checkpoint: build 95 — the giant bungee tower
 - **Neptune bungee: THE GIANT TOWER.** 10 m more on top (34 m) with its own red jumping board. On the top board, push ▲ to climb up to it; JUMP for a long fall (lowest point about 8 m), bounces, then she is lowered down (`control-rides` all passed).
 - Bug found and fixed before shipping: the text used to insert the giant-jump code also matched in the sky dive, so a copy landed there and froze the sky dive at the top (`giant is not defined`). Found by the ride test; the copy is removed.

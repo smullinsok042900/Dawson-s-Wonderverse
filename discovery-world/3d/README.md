@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 96: a 📷 camera button on the sky dive
+- During the Neptune sky dive, tap 📷 to look down from high above; tap 🔍 to come back close.
+
 ## 3D build 95: the giant bungee tower on Neptune
 - On the bungee's top board, push ▲ to climb 10 m higher (34 m) for the GIANT jump.
 
