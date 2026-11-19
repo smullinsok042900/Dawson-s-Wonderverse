@@ -159,11 +159,11 @@ export function initTrain(G, api) {
     const toward = (goal, vmax) => { const sx = seatX(), d = goal - sx, dir = Math.sign(d) || 1, stopV = Math.sqrt(Math.max(0, 2 * ACC * Math.abs(d)));
       let sp = Math.abs(T.vs); sp = Math.min(vmax, stopV + .3, sp + ACC * dt); T.vs = dir * sp; let nx = sx + T.vs * dt;
       if ((goal - nx) * dir <= 0 || Math.abs(d) < .02) { nx = goal; T.vs = 0; seatAt(nx); return true; } seatAt(nx); return false; };
-    if (follow) { const pv = seatX(); seatAt(follow.x); T.vs = follow.vs || (follow.x - pv) / Math.max(dt, .001) * .5; T.mode = riding && P.ride.passenger ? 'driving' : 'remote'; if (Math.random() < dt * (1 + Math.abs(T.vs) * .8)) puff(); }
+    if (follow) { const pv = seatX(); seatAt(follow.x); T.vs = follow.vs || (follow.x - pv) / Math.max(dt, .001) * .5; T.mode = riding && P.ride && P.ride.passenger ? 'driving' : 'remote'; if (Math.random() < dt * (1 + Math.abs(T.vs) * .8)) puff(); }
     else if (T.mode === 'arriving') {
       if (toward(STATIONS[T.target].x, 13)) board(T.target);
       if (Math.random() < dt * (2 + Math.abs(T.vs))) puff();
-    } else if (T.mode === 'driving' && !(riding && P.ride.passenger)) {
+    } else if (T.mode === 'driving' && !(riding && P.ride && P.ride.passenger)) {
       let d = 0;
       if (stick && stick.active) { if (stick.dx > 30) d = 1; else if (stick.dx < -30) d = -1; }
       if (keys.right) d = 1; if (keys.left) d = -1;
@@ -185,7 +185,7 @@ export function initTrain(G, api) {
     const bob = T.v > .5 ? Math.sin(t * 22) * .012 : 0; train.position.y = bob;
     train.userData.wheels.forEach(w => { w.rotation.z -= T.vs * T.dir * dt / .2; });
     for (const p of puffs) if (p.life > 0) { p.life -= dt * 1.05; p.m.position.y += dt * (1.6 + (1 - p.life) * 1.4); p.m.position.x += p.vx * dt; p.m.scale.setScalar(1 + (1 - p.life) * 2.4); p.m.material.opacity = Math.max(0, p.life) * .8; if (p.life <= 0) p.m.visible = false; }
-    if (riding) { train.updateMatrixWorld(true); train.userData.seats[P.ride.passenger ? P.ride.seat : 0].getWorldPosition(V); P.x = V.x; P.y = V.y - .05; P.z = V.z; P.facing = T.vs > .3 ? 1 : T.vs < -.3 ? -1 : P.facing; P.vx = T.vs; P.grounded = true; }
+    if (riding && P.ride) { train.updateMatrixWorld(true); /* (build 103: the ride can end this very frame, e.g. on arriving) */ train.userData.seats[P.ride && P.ride.passenger ? P.ride.seat : 0].getWorldPosition(V); P.x = V.x; P.y = V.y - .05; P.z = V.z; P.facing = T.vs > .3 ? 1 : T.vs < -.3 ? -1 : P.facing; P.vx = T.vs; P.grounded = true; }
   }
   // (build 102) RIDING THE TRAIN TOGETHER (Play Together): a friend's train is the shared one. While a friend drives, this
   //  train follows the friend's seat (it is the same train on every screen); you can hop on as a passenger (your own seat)
