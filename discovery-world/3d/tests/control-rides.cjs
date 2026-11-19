@@ -16,7 +16,7 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   let X;
   if (process.env.ONLY !== 'mars') {
   X = await fly('neptune'); await put(X + 150); await sleep(2000); await put(X + 250); await sleep(2500);
-  await put(X + 128); await sleep(1500); await run('neptunewindbutton'); await sleep(300); const wb = await ev(() => [__DDW3.G.windBlow, __DDW3.world.disc.has('neptunewindbutton')]);
+  await put(X + 128); await sleep(1500); await run('neptunewindbutton'); await page.waitForFunction(() => __DDW3.G.windBlow > 0, null, { timeout: 5000 }).catch(() => {}); /* (the gust is read on the next frame: at 1–2 fps that can be later than 300 ms) */ const wb = await ev(() => [__DDW3.G.windBlow, __DDW3.world.disc.has('neptunewindbutton')]);
   check('the wind button: tap the big fan and a strong gust blows the swings', wb[0] > 3 && wb[1], JSON.stringify(wb));
   await put(X + 136); await sleep(1500); await run('neptuneswing');
   const sw = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxA = 0, last = 0, flew = false; const f = () => { const R = P.ride;
