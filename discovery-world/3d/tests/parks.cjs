@@ -50,6 +50,12 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('Uranus: skate through all six hoops on the bigger rink', await has('uranushoops'));
   await put(X + 220 + 50); await sleep(800); await ev(() => { __DDW3.keys.up = true; }); await sleep(2500); const zf = await ev(() => __DDW3.G.rinkZ); await ev(() => { __DDW3.keys.up = false; __DDW3.keys.down = true; }); await sleep(2500); const zn = await ev(() => __DDW3.G.rinkZ); await ev(() => { __DDW3.keys.down = false; });
   check('Uranus: on the rink, ▲ glides you far across the ice and ▼ back again', zf < -4.5 && zn > zf + 3, JSON.stringify({ zf, zn, dbg: await ev(() => __DDW3.G.rinkDbg) }));
+  // (build 97) the ice tunnel doors: ❄️ (palace ground floor) → ⭐ (upstairs) → 🌙 (by the rink) → ❄️
+  const A2u = X + 110; const tun = [];
+  for (const [d, dx, dy] of [['snow', 66, 0], ['star', 101, 6], ['moon', 122, 0]]) { await put(A2u + dx, dy); await sleep(600); await run('uranusdoor' + d);
+    const r = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let seen = false; const f = () => { if (P.ride && P.ride.type === 'icetunnel') seen = true; if ((seen && !P.ride) || performance.now() - t0 > 30000) return res({ seen, out: __DDW3.G.iceTunnelLast, x: P.x, y: P.y }); requestAnimationFrame(f); }; f(); }));
+    tun.push({ from: d, out: r.out, x: Math.round(r.x - A2u), y: Math.round(r.y), seen: r.seen }); }
+  check('Uranus: the ice tunnel doors take you round: ❄️ to ⭐ upstairs, ⭐ to 🌙 by the rink, 🌙 back to ❄️', tun.map(t => t.out).join() === 'star,moon,snow' && tun[0].y === 6 && tun.every(t => t.seen), JSON.stringify(tun));
   // (build 94) the winding ice trail: tap the snowflake gate, hold ▶ to skate fast, under all six arches and back
   await ev(() => { __DDW3.keys.up = __DDW3.keys.down = false; }); await put(X + 220 + 86); await sleep(800); await run('uranusicetrail'); await ev(() => { __DDW3.keys.right = true; });
   const it = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let seen = false, minZ = 0, maxV = 0; const f = () => { const R = P.ride; if (R && R.type === 'icetrail') { seen = true; minZ = Math.min(minZ, P.z); maxV = Math.max(maxV, R.maxV || 0); if (R.t > 4 && !R.hopped) { R.hopped = 1; R.onJump(); } }

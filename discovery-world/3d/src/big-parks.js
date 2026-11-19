@@ -158,6 +158,28 @@ export function uranusRinkFun(k, cx, rx) {
     gz = Math.max(z0, Math.min(z1, gz + vz * dt)); if (gz <= z0 || gz >= z1) vz *= -.3; k.G.iceZ = gz; P.groundZ = gz; k.G.rinkZ = gz; });
 }
 
+// =================== (build 97) URANUS: THE ICE TUNNEL DOORS (the palace, area 2) ===================
+// Three round ice doors, each with its own picture: ❄️ on the palace ground floor, ⭐ upstairs, 🌙 out by the rink. Tap a
+// door: she dives into the ice tunnel (whoosh, sparkles, an echoing chime) and pops out of the NEXT door: ❄️ → ⭐ → 🌙 → ❄️.
+export function uranusIceTunnels(k) {
+  const P = k.P, S = k.Sound, G0 = GEO(), x = v => k.s0 + v, F2 = 6, b = makeBatch();
+  const doors = [{ x: x(66), y: 0, pic: 'snow', col: '#9fd8ff' }, { x: x(101), y: F2, pic: 'star', col: '#ffd23f' }, { x: x(122), y: 0, pic: 'moon', col: '#c9a6ff' }];
+  for (const d of doors) { const z = d.x > x(110) ? -2.6 : -5.2;
+    b.put(G0.torus, d.x, d.y + 1.3, z, '#e8f6ff', [1.1, 1.3, .9]); b.put(G0.cyl, d.x, d.y + 1.3, z - .1, '#1f3f7a', [1, .08, 1.2], [Math.PI / 2, 0, 0]);
+    const py = d.y + 3.1; if (d.pic === 'snow') { for (let i = 0; i < 3; i++) b.put(G0.box, d.x, py, z + .1, d.col, [.9, .1, .06], [0, 0, i * Math.PI / 3]); }
+    else if (d.pic === 'star') b.put(G0.oct, d.x, py, z + .1, d.col, [.42, .5, .1]); else { b.put(G0.ball, d.x, py, z + .1, d.col, [.42, .42, .08]); b.put(G0.ball, d.x + .2, py + .08, z + .14, '#e8f6ff', [.34, .36, .08]); }
+    d.z = z; }
+  const m = b.mesh(shinyMat()); k.add(m);
+  let busy = false;
+  const go = i => { if (P.layer !== 'space' || P.ride || busy) return; const a = doors[i], d = doors[(i + 1) % 3]; if (Math.abs(P.x - a.x) > 3.5 || Math.abs(P.y - a.y) > 1.2) return;
+    busy = true; k.fact('🧊 An ice tunnel! Where will it take you?', 'uranusicetunnel'); S.whoosh && S.whoosh();
+    rideTo(k, 'icetunnel', R => { const f = Math.min(1, R.t / 3); if (f < .25) { const g = f / .25; P.x = a.x; P.y = a.y; P.z = g * (a.z - .3); R.roll = g * .4; }
+      else if (f < .8) { const g = (f - .25) / .55; P.x = a.x + (d.x - a.x) * g; P.y = a.y + (d.y - a.y) * g + Math.sin(g * Math.PI) * -1.5; P.z = -9; if (Math.random() < .3) k.api.burst(P.x, P.y + 1, -6, ['#9fd8ff', '#ffffff', '#c9a6ff'], 2, 1); }
+      else { const g = (f - .8) / .2; P.x = d.x; P.y = d.y; P.z = (d.z - .3) * (1 - g); R.roll = 0; if (!R.out) { R.out = 1; S.tone(784, .3, 'sine', .06, 1.5); S.tone(1046, .4, 'sine', .04, 1.5); k.api.burst(d.x, d.y + 1.3, d.z + .5, ['#ffffff', d.col, '#9fd8ff'], 16, 2); } }
+      return f >= 1; }, () => { busy = false; P.z = 0; P.x = d.x + 1.2; P.y = d.y; P.grounded = true; k.say(d.pic === 'star' ? '⭐ You came out upstairs!' : d.pic === 'moon' ? '🌙 You came out by the skating rink!' : '❄️ Back in the palace!', true); k.disc('uranustunnel' + d.pic); k.G.iceTunnelLast = d.pic; }); };
+  doors.forEach((d, i) => { const hit = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.8, 1), new THREE.MeshBasicMaterial({ visible: false })); hit.position.set(d.x, d.y + 1.3, d.z + .4); k.add(hit); k.tapIt(hit, () => go(i), d.x, 'uranusdoor' + d.pic); k.G.interact[k.G.interact.length - 1].y = d.y; });
+}
+
 // =================== (build 94) URANUS: THE WINDING ICE TRAIL (area 3, starts at the rink's east end) ===================
 // Tap the glowing snowflake gate and skate a long winding trail far behind the rink, past snow banks and under glowing ice
 // arches (each one chimes), then back. YOU skate: hold ▶ to go faster, ◀ to slow down; JUMP makes a little hop.
