@@ -36,6 +36,7 @@ import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
+import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
@@ -987,7 +988,8 @@ function renderStyle() {
 }
 // (build 101) DRESS-UP: the 👗 button opens big picture buttons: pick a friend, then hats, glasses, scarves, wings... one tap to
 //  wear, one tap to take off, 🧺 takes everything off; swipe on the right to turn her round. Saved for each friend.
-const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => Object.keys(CREATURES).map(k => [k, portraits[k]]), kind: () => player.creature,
+function newFriendPictures() { const miss = Object.keys(CREATURES).filter(k => !portraits[k]); if (!miss.length) return; try { Object.assign(portraits, renderPortraits(miss)); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { console.log('friend pictures later', e.message); } }
+const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
   setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
   Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; } });
 G.dress = dress; G.me = () => creature; /* (tests: her character) */
@@ -1162,6 +1164,7 @@ function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
     const d = { nursery: world.nursery, adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
+    if (world.wear) d.wear = world.wear; if (world.wearFound) d.wearFound = world.wearFound; /* (build 101: dress-up, for each friend) */
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -1190,6 +1193,8 @@ function restore(d) {
   if (Array.isArray(d.colorings) && d.colorings.length === meadow.PICTURES.length && d.colorings.every((a, n) => Array.isArray(a) && a.length === meadow.PICTURES[n].length && a.every(hex))) world.colorings = d.colorings.map(a => a.slice());
   if (d.styles && typeof d.styles === 'object') { world.styles = {}; for (const k of Object.keys(CREATURES)) if (hex(d.styles[k])) world.styles[k] = d.styles[k]; }
   world.sparkle = d.sparkle === true;
+  if (d.wear && typeof d.wear === 'object') { world.wear = {}; for (const k of Object.keys(CREATURES)) { const o = d.wear[k]; if (!o || typeof o !== 'object') continue; const c = {}; for (const [slot, id] of Object.entries(o)) if (typeof id === 'string' && WEAR_ITEMS.some(q => q[0] === id && q[1] === slot)) c[slot] = id; world.wear[k] = c; } } /* (build 101) */
+  if (d.wearFound && typeof d.wearFound === 'object') { world.wearFound = {}; for (const [id, v] of Object.entries(d.wearFound)) if (v === true && WEAR_ITEMS.some(q => q[0] === id)) world.wearFound[id] = true; }
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
   if (d.crown === true) world.crown = true;
   if (d.wand === true) world.wand = true; // (build 33)
@@ -1206,7 +1211,7 @@ function setSound(on) { Sound.on = on; $('soundBtn').classList.toggle('muted', !
 $('soundBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; setSound(!Sound.on); if (Sound.on) Sound.click(); save(); });
 
 // ---------------- creature portraits (rendered once, in 3D) ----------------
-function renderPortraits() {
+function renderPortraits(kinds = Object.keys(CREATURES).filter(k => !CREATURES[k].isNew)) { /* (build 101: the first four at start-up; new friends when needed) */
   const s = new THREE.Scene(); s.environment = scene.environment; s.environmentIntensity = .7; s.background = new THREE.Color('#fff6ee');
   s.add(new THREE.HemisphereLight('#ffffff', '#c9a6ff', 1.4)); const l = new THREE.DirectionalLight('#fff', 2); l.position.set(2, 4, 5); s.add(l);
   const cam = new THREE.PerspectiveCamera(30, 1, .1, 50); cam.position.set(0, 1.3, 4.6); cam.lookAt(0, .95, 0);
@@ -1217,7 +1222,7 @@ function renderPortraits() {
   try {
     renderer.setRenderTarget(null); renderer.shadowMap.enabled = false;
     renderer.setScissorTest(true); renderer.setViewport(0, 0, css, css); renderer.setScissor(0, 0, css, css);
-    for (const k of Object.keys(CREATURES)) {
+    for (const k of kinds) {
       const c = makeCreature(k); s.add(c.root); c.update(.016, { grounded: true, facing: 1, vx: 0, vy: 0 }); c.root.rotation.y = .35;
       renderer.render(s, cam);
       // Read synchronously before the browser can discard the drawing buffer.
@@ -1302,7 +1307,7 @@ const PORTRAIT_KEY = 'ddw3-portraits-readback-v1'; // Regenerate pictures cached
 let portraits = {};
 try { portraits = JSON.parse(localStorage.getItem(PORTRAIT_KEY) || '{}'); } catch (e) { portraits = {}; }
 const applyPortraits = () => document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
-const needPortraits = Object.keys(CREATURES).some(k => !portraits[k]);
+const needPortraits = Object.keys(CREATURES).some(k => !CREATURES[k].isNew && !portraits[k]); /* (build 101: new friends' pictures are made only when the dress-up panel shows them) */
 if (!needPortraits) applyPortraits();
 // (build 26) AUTOMATIC QUALITY, a ladder of steps. None of them recompiles shaders (no freeze when it changes):
 //   0 full  ·  1 lighter shadows (1024 px, drawn every 3rd frame)  ·  2 lite effects (no 4x AA buffer, no glow)
