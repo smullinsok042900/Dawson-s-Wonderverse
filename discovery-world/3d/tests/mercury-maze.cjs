@@ -22,7 +22,8 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('the light-beam puzzle: turn the three mirrors and the light shines through', pz.solved && await has('mercurybeam'), JSON.stringify(pz));
   await sleep(3000); await put(x0 + 66); await sleep(1500); check('the hidden mirror door opens to the maze treasure', await has('mercurymazetreasure'));
   // (build 99) the rotating mirror walls: walk right along the ground route from x0+30; each wall blocks you while it faces you, then turns and lets you through
-  await put(x0 + 30); await sleep(800); const bl = await ev(() => { __DDW3.keys.right = true; return true; });
+  await ev(() => { const it = __DDW3.G.interact.find(i => i.disc === 'mercurydoor1'); it && it.run(); }); /* (the mirror door at +39 opens only when tapped) */
+  await put(x0 + 30); await sleep(800); await ev(() => { for (const w of __DDW3.G.mazeRot) w.passed = false; __DDW3.keys.right = true; });
   const rw = await ev(x0 => new Promise(res => { const P = __DDW3.player, W = __DDW3.G.mazeRot, t0 = performance.now(); let blocked = 0, lastX = P.x; const f = () => { const w = W.find(w => Math.abs(P.x - w.wx) < 1.2); if (w && w.closed && Math.abs(P.x - lastX) < .01) blocked++; lastX = P.x;
     if (P.x > x0 + 52 || performance.now() - t0 > 90000) { __DDW3.keys.right = false; return res({ x: P.x - x0, blocked, passed: W.map(w => w.passed), disc: __DDW3.world.disc.has('mercuryrotwalls') }); } requestAnimationFrame(f); }; f(); }), x0);
   check('the rotating mirror walls: they block you while they face you, then turn and let you through', rw.x > 52 && rw.passed.every(Boolean) && rw.disc, JSON.stringify(rw));

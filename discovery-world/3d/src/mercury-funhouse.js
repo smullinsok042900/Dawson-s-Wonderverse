@@ -288,10 +288,10 @@ export function mercuryRotatingWalls(k) {
     b.put(G0.cyl, 0, 1.9, 0, '#ff9fd2', [.12, 4.2, .12]); b.put(G0.ball, 0, 4.15, 0, ['#ff6fd8', '#62f0ff'][i], .3); piv.add(b.mesh(shinyMat()));
     for (const o of G.solids.filter(s => s.key === 'mercrot' + i)) G.solids.splice(G.solids.indexOf(o), 1);
     walls.push({ piv, wx, solid: { a: wx - .35, b: wx + .35, top: 4.2, layer: 'space', key: 'mercrot' + i }, closed: false, passed: false, i }); }
-  let hinted = 0;
-  k.U.push((dt, t) => { for (const w of walls) { const th = t * .7 + w.i * 1.3; w.piv.rotation.y = th; const closed = Math.abs(Math.cos(th)) > .7;
+  let hinted = 0, px = null;
+  k.U.push((dt, t) => { const x0p = px ?? P.x; px = P.x; for (const w of walls) { const th = t * .7 + w.i * 1.3; w.piv.rotation.y = th; const closed = Math.abs(Math.cos(th)) > .7;
       if (closed !== w.closed) { w.closed = closed; const j = G.solids.indexOf(w.solid); if (closed && j < 0) G.solids.push(w.solid); else if (!closed && j >= 0) G.solids.splice(j, 1); }
-      if (P.layer === 'space' && !w.passed && P.y < 2 && P.x > w.wx + .6) { w.passed = true; S.tone(660 + w.i * 120, .2, 'sine', .06, 1.5); k.api.burst(w.wx, 2, -1, ['#dff1ff', '#ffffff', '#ff6fd8'], 10, 1.6); if (walls.every(q => q.passed)) k.disc('mercuryrotwalls', '🪞 You got past the turning mirror walls!'); }
+      if (P.layer === 'space' && !w.passed && P.y < 2 && x0p <= w.wx + .6 && P.x > w.wx + .6 && P.x - x0p < 3) { /* (walked through it from the left this frame, not teleported past) */ w.passed = true; S.tone(660 + w.i * 120, .2, 'sine', .06, 1.5); k.api.burst(w.wx, 2, -1, ['#dff1ff', '#ffffff', '#ff6fd8'], 10, 1.6); if (walls.every(q => q.passed)) k.disc('mercuryrotwalls', '🪞 You got past the turning mirror walls!'); }
       if (closed && P.layer === 'space' && P.y < 2 && Math.abs(P.x - (w.wx - .8)) < .6 && t - hinted > 8) { hinted = t; k.say('🪞 The mirror is turning... wait for the gap, then walk through!', true); } } });
   G.mazeRot = walls;
 }
