@@ -29,9 +29,9 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('the rapids splash game: steer toward the targets and press JUMP to splash them; all five wins', sg.done && sg.hits >= 4 && !sg.shortcut, JSON.stringify(sg));
   // (build 93) the crystal-cave fork: steer ◀ at the second arch (after the rapids) and the log goes through the crystal cave
   await ev(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.ride = null; }, X + 131); await sleep(1500);
-  const cv = await ev(() => new Promise(res => { const D = __DDW3, P = D.player; D.G.interact.find(i => i.disc === 'venuslogride').run(); const t0 = performance.now(); let seen = false, R0 = null, minZ = 0;
-    const f = () => { const R = P.ride; if (R && R.type === 'logride') { seen = true; R0 = R; const u = R.pu || 0; D.keys.left = u > .46; D.keys.right = u <= .46; minZ = Math.min(minZ, P.z); }
-      if ((seen && !P.ride) || performance.now() - t0 > 400000) { D.keys.left = D.keys.right = false; return res({ done: !P.ride, cave: !!(R0 && R0.cave), shortcut: !!(R0 && R0.shortcut), minZ, splashed: !!(R0 && R0.splashed) }); } requestAnimationFrame(f); }; f(); }));
+  const cv = await ev(() => new Promise(res => { const D = __DDW3, P = D.player; D.G.interact.find(i => i.disc === 'venuslogride').run(); const t0 = performance.now(); let seen = false, R0 = null, minZ = 0, fu = null, cu = null;
+    const f = () => { const R = P.ride; if (R && R.type === 'logride') { seen = true; R0 = R; const u = R.pu || 0; /* (past the first fork, going right: then steer ◀ for the cave fork; the course grew since build 93, so no fixed spot) */ D.keys.left = !!R.forked; D.keys.right = !R.forked; if (R.forked && fu == null) fu = +u.toFixed(3); if (R.forked2 && cu == null) cu = +u.toFixed(3); minZ = Math.min(minZ, P.z); }
+      if ((seen && !P.ride) || performance.now() - t0 > 400000) { D.keys.left = D.keys.right = false; return res({ done: !P.ride, cave: !!(R0 && R0.cave), shortcut: !!(R0 && R0.shortcut), minZ, splashed: !!(R0 && R0.splashed), fu, cu }); } requestAnimationFrame(f); }; f(); }));
   check('the crystal-cave fork: steer ◀ at the second arch, ride through the crystal cave, and on to the splash pool', cv.done && cv.cave && !cv.shortcut && cv.minZ < -33 && cv.splashed, JSON.stringify(cv));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
