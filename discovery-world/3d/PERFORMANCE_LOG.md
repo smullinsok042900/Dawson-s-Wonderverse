@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 101 (dress-up and four new friends)
+Desktop, software rendering; `pplanet.cjs`, builds 100 and 101 alternately, four times each on a quiet machine. Moon +30 199 → 197 ms, +50 175 → 174, +79 173 → 177; draw calls and triangles the same. Worn things: one draw call each, only while worn. Opening 👗: 6 ms; the first time only, each new friend's picture costs one pause of about 0.6–0.85 s while it is sculpted (one per frame; then kept).
+
 ## Build 100 (Moon coaster fixes and the station near the rocket; shared rides)
 Desktop, software rendering; `pplanet.cjs`, builds 99 and 100 alternately, twice each. ms per frame / draw calls: Moon +30 249 / 67–83 → 210 / 67; +50 179 / 74 → 182 / 73; +79 (the new station) 176 / 64 → 186 / 69 (runs 168 → 174 and 183 → 198: noise); +150 193 / 86 → 200 / 86. (+20 is the first spot after landing and varies too much: 655 → 606.) Shared rides cost nothing when not in a room; in a room, a few small records per ride.
 
