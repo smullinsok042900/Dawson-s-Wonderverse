@@ -7,6 +7,7 @@ are in `PERFORMANCE_LOG.md`.
 ## Checkpoint: build 97 — the ice tunnel doors in the Uranus palace
 - **Uranus Ice Palace: THE ICE TUNNEL DOORS.** Three round ice doors, each with its own picture: ❄️ on the palace ground floor, ⭐ upstairs, 🌙 out by the skating rink. Tap one: she dives into the ice tunnel (whoosh, sparkles, an echoing chime) and pops out of the next door (`parks`: ❄️ → ⭐ → 🌙 → ❄️, all passed).
 - The game is seen from the side, so a tunnel behind the palace wall could not be seen; the tunnels are a short ride between doors instead of rooms to walk.
+- **Full smoke test: 236/236.**
 - Desktop (software rendering) speed: Uranus within the noise of build 96 (see `PERFORMANCE_LOG.md`). Not tried on an iPhone.
 
 ## Checkpoint: build 96 — the 📷 camera button on the sky dive
