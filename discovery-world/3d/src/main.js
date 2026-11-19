@@ -36,6 +36,8 @@ import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
+import './new-friends.js'; // (build 101) more playable friends (they register themselves)
+import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD, makeTree } from './nature.js';
@@ -169,7 +171,7 @@ const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.
 function groundUnder(x, y) { if (player.layer === 'sea') return SEA.floor; let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
-  player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root);
+  player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root); wear(creature.parts, kind, (world.wear || {})[kind]); /* (build 101: her outfit for this friend) */
   { const bb = new THREE.Box3().setFromObject(creature.root); G.headTop = bb.max.y - creature.root.position.y; } // (for the princess crown)
   document.querySelectorAll('.creatureChoice').forEach(b => b.classList.toggle('chosen', b.dataset.c === kind));
 }
@@ -984,6 +986,22 @@ function renderStyle() {
   });
   $('sparkleBtn').classList.toggle('on', !!world.sparkle);
 }
+// (build 101) DRESS-UP: the 👗 button opens big picture buttons: pick a friend, then hats, glasses, scarves, wings... one tap to
+//  wear, one tap to take off, 🧺 takes everything off; swipe on the right to turn her round. Saved for each friend.
+let picBusy = false; // (one new friend's picture per frame, so opening the panel never freezes the game; ❔ until it is ready)
+function newFriendPictures() { if (picBusy) return; const miss = Object.keys(CREATURES).filter(k => !portraits[k]); if (!miss.length) return; picBusy = true;
+  const next = () => { const k = Object.keys(CREATURES).find(q => !portraits[q]); if (!k) { picBusy = false; try { localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } return; }
+    try { Object.assign(portraits, renderPortraits([k])); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); };
+  requestAnimationFrame(next); }
+const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
+  setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
+  Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; } });
+G.dress = dress; G.me = () => creature; /* (tests: her character) */
+{ const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
+  b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
+let wearHere = null; // planet surprises: landing on some planets finds a new thing to wear
+function wearFind() { const h = player.layer === 'space' ? space.here() : null; if (h === wearHere) return; wearHere = h; if (!h || !WEAR_FOUND[h]) return; const id = dress.find(h); if (!id) return;
+  const it = WEAR_ITEMS.find(q => q[0] === id); toast(`🎁 ${it ? it[2] : ''} A surprise to wear! Tap 👗`); Sound.chime(); discover('wear_' + id); }
 $('styleBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; renderStyle(); $('stylePanel').classList.add('show'); Sound.click(); });
 $('styleDone').addEventListener('pointerdown', e => { e.preventDefault(); $('stylePanel').classList.remove('show'); Sound.click(); });
 $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world.sparkle = !world.sparkle; renderStyle(); Sound.twinkle(); discover('sparkle', 'A sparkle trail!'); save(); });
@@ -1100,7 +1118,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
-  space.update(dt, t); rkWatchFrame(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
+  space.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
@@ -1150,6 +1168,7 @@ function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
     const d = { nursery: world.nursery, adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
+    if (world.wear) d.wear = world.wear; if (world.wearFound) d.wearFound = world.wearFound; /* (build 101: dress-up, for each friend) */
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
     localStorage.setItem(SAVE_KEY, JSON.stringify(d));
@@ -1178,6 +1197,8 @@ function restore(d) {
   if (Array.isArray(d.colorings) && d.colorings.length === meadow.PICTURES.length && d.colorings.every((a, n) => Array.isArray(a) && a.length === meadow.PICTURES[n].length && a.every(hex))) world.colorings = d.colorings.map(a => a.slice());
   if (d.styles && typeof d.styles === 'object') { world.styles = {}; for (const k of Object.keys(CREATURES)) if (hex(d.styles[k])) world.styles[k] = d.styles[k]; }
   world.sparkle = d.sparkle === true;
+  if (d.wear && typeof d.wear === 'object') { world.wear = {}; for (const k of Object.keys(CREATURES)) { const o = d.wear[k]; if (!o || typeof o !== 'object') continue; const c = {}; for (const [slot, id] of Object.entries(o)) if (typeof id === 'string' && WEAR_ITEMS.some(q => q[0] === id && q[1] === slot)) c[slot] = id; world.wear[k] = c; } } /* (build 101) */
+  if (d.wearFound && typeof d.wearFound === 'object') { world.wearFound = {}; for (const [id, v] of Object.entries(d.wearFound)) if (v === true && WEAR_ITEMS.some(q => q[0] === id)) world.wearFound[id] = true; }
   if (d.kart && [['col', KART_COLS.length], ['shape', 3], ['wheels', 3]].every(([k, n]) => Number.isInteger(d.kart[k]) && d.kart[k] >= 0 && d.kart[k] < n)) world.kart = { col: d.kart.col, shape: d.kart.shape, wheels: d.kart.wheels };
   if (d.crown === true) world.crown = true;
   if (d.wand === true) world.wand = true; // (build 33)
@@ -1194,7 +1215,7 @@ function setSound(on) { Sound.on = on; $('soundBtn').classList.toggle('muted', !
 $('soundBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; setSound(!Sound.on); if (Sound.on) Sound.click(); save(); });
 
 // ---------------- creature portraits (rendered once, in 3D) ----------------
-function renderPortraits() {
+function renderPortraits(kinds = Object.keys(CREATURES).filter(k => !CREATURES[k].isNew)) { /* (build 101: the first four at start-up; new friends when needed) */
   const s = new THREE.Scene(); s.environment = scene.environment; s.environmentIntensity = .7; s.background = new THREE.Color('#fff6ee');
   s.add(new THREE.HemisphereLight('#ffffff', '#c9a6ff', 1.4)); const l = new THREE.DirectionalLight('#fff', 2); l.position.set(2, 4, 5); s.add(l);
   const cam = new THREE.PerspectiveCamera(30, 1, .1, 50); cam.position.set(0, 1.3, 4.6); cam.lookAt(0, .95, 0);
@@ -1205,7 +1226,7 @@ function renderPortraits() {
   try {
     renderer.setRenderTarget(null); renderer.shadowMap.enabled = false;
     renderer.setScissorTest(true); renderer.setViewport(0, 0, css, css); renderer.setScissor(0, 0, css, css);
-    for (const k of Object.keys(CREATURES)) {
+    for (const k of kinds) {
       const c = makeCreature(k); s.add(c.root); c.update(.016, { grounded: true, facing: 1, vx: 0, vy: 0 }); c.root.rotation.y = .35;
       renderer.render(s, cam);
       // Read synchronously before the browser can discard the drawing buffer.
@@ -1290,7 +1311,7 @@ const PORTRAIT_KEY = 'ddw3-portraits-readback-v1'; // Regenerate pictures cached
 let portraits = {};
 try { portraits = JSON.parse(localStorage.getItem(PORTRAIT_KEY) || '{}'); } catch (e) { portraits = {}; }
 const applyPortraits = () => document.querySelectorAll('[data-c]').forEach(el => { const img = el.querySelector('img'); if (img && portraits[el.dataset.c]) img.src = portraits[el.dataset.c]; });
-const needPortraits = Object.keys(CREATURES).some(k => !portraits[k]);
+const needPortraits = Object.keys(CREATURES).some(k => !CREATURES[k].isNew && !portraits[k]); /* (build 101: new friends' pictures are made only when the dress-up panel shows them) */
 if (!needPortraits) applyPortraits();
 // (build 26) AUTOMATIC QUALITY, a ladder of steps. None of them recompiles shaders (no freeze when it changes):
 //   0 full  ·  1 lighter shadows (1024 px, drawn every 3rd frame)  ·  2 lite effects (no 4x AA buffer, no glow)
@@ -1380,7 +1401,7 @@ function frame() {
   creature.root.position.set(ix, iy, iz); creature.root.visible = !G.playerHidden;
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
-  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
+  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy }); tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
   creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)
@@ -1657,7 +1678,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '100'; G.build = GAME_BUILD;
+const GAME_BUILD = '101'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

@@ -151,7 +151,7 @@ export function makeCreature(kind, style = {}) {
     A.prevGround = s.grounded; A.prevVy = s.vy || 0;
     if (kind === 'jelly' && A.run > .2) { const st = Math.floor(A.phase / Math.PI); if (st !== A.lastStep) { A.lastStep = st; A.squash.v -= 4.5 * A.run; } }
     // idle actions after standing still for a while
-    if (A.run < .05 && s.grounded && !s.seated && !A.act) { A.idle += dt; if (A.idle > 4.5) { A.idle = 0; A.act = { pip: ['wave', 'look', 'hop'], sprout: ['wave', 'look', 'hop'], zuzu: ['twirl', 'look', 'hop'], jelly: ['jiggle', 'look', 'hop'] }[kind][Math.floor(Math.random() * 3)]; A.actT = 0; } } else if (A.run > .05 || !s.grounded) A.idle = 0;
+    if (A.run < .05 && s.grounded && !s.seated && !A.act) { A.idle += dt; if (A.idle > 4.5) { A.idle = 0; A.act = ({ pip: ['wave', 'look', 'hop'], sprout: ['wave', 'look', 'hop'], zuzu: ['twirl', 'look', 'hop'], jelly: ['jiggle', 'look', 'hop'] }[kind] || ['twirl', 'look', 'hop'])[Math.floor(Math.random() * 3)]; A.actT = 0; } } else if (A.run > .05 || !s.grounded) A.idle = 0;
     if (A.act) { A.actT += dt; if (A.actT > 1.6) A.act = null; }
     const act = A.act, ak = A.actT;
     if (act === 'hop' && ak < .05) A.squash.v += 7;

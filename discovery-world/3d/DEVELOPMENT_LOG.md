@@ -4,6 +4,18 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 101 — dress-up and four new friends
+- **DRESS-UP (👗):** big picture buttons only. Pick a friend; then 🎩 head, 👓 face, 🧣 neck, 🦋 back; one tap wears a thing, another tap takes it off; 🧺 takes everything off; swipe on the right to turn her round. Saved for each friend separately (and kept after a reload: the save loader checks every item).
+  - 22 things to wear: crown, tiara, bow, party hat, flower crown, top hat, star headband, unicorn horn, space helmet; sunglasses, heart glasses, star glasses, round glasses, goggles, a mask; scarf, pearl necklace, bow tie, medal; butterfly wings, cape, backpack, rocket pack.
+  - Five are SURPRISES found on planets (wrapped 🎁 until then): the helmet on the Moon, the star headband on Saturn, the flower crown on Pluto, the wings on Neptune, the rocket pack on Mars.
+  - Each friend has its own FITTING POINTS (a bone, a place, a size and a tilt for each slot), so a hat sits on each head and glasses on each pair of eyes, and everything moves with her (it hangs from her bones). A friend with no sensible place for a slot does not offer it (its picture is greyed).
+  - Each thing is one small mesh with the game's shared material (one draw call each, only while worn; no new shader).
+- **FOUR NEW FRIENDS**, sculpted in the same way as the first four, each with its own shape, face and movement: **Puffle** the little cloud (floats, dangling raindrop feet), **Luna** the moon (soft craters, a star on an antenna, a crescent tail, floaty hops), **Bloop** the rainbow gumdrop (squishes and bounces), **Zip** the comet (a long swept tail that streams behind, leans into its zooms). They are sculpted only when someone picks them or the dress-up pictures need them (one per frame, then kept).
+- **Play Together:** friends see your friend and your outfit (a short code in your player state). Rooms whose rules are older than build 101 refuse the field: the game then simply stops sending it (nothing else breaks). `firebase-rules.json` has the new field.
+- Tests (desktop, software rendering): `dressup` (all eight friends: every slot on the right bone, the hat above the eyes, the glasses within 2 cm of the eyes; 🧺; reload; surprises) all passed, with a picture of each friend dressed (`screenshots/dress-*.jpg`); `dress-together` (two browsers: B sees A as Bloop in a crown and sunglasses, and sees the glasses come off) all passed.
+- **Full smoke test: 236/236.** Desktop speed (Moon, builds 100 and 101 alternately, four times each): +30 199 → 197 ms, +50 175 → 174, +79 173 → 177, the same draw calls (an earlier run that looked slower was taken while a build was running at the same time).
+- Measured: opening the panel 6 ms; the first time, each new friend's picture costs one pause of about 0.6–0.85 s on this desktop while it is sculpted (once; then kept). Next: sculpt in a background worker so there is no pause at all.
+
 ## Checkpoint: build 100 — the Moon coaster fixed, the station near the rocket, and the first SHARED rides (Play Together)
 - **The Moon coaster (the family's report):**
   - "Some parts view it from under the cart": a ride probe (every frame of the whole 4.7 km ride) found the camera below the cart in 242 of 2,471 frames on build 99 (in the loop-the-loops and inside the mountain tunnel). Fixed: inside the tunnel and cave the camera never looks up from under the cart, and the smoothed camera never drops below it. Build 100: 0 frames (closest 0.9 m above her). The full smoke test now checks it on every run.

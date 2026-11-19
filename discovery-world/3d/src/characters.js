@@ -274,7 +274,26 @@ function sproutSpec(body) {
 }
 
 // ---------------------------------------------------------------- build
+// (build 101) MORE FRIENDS: new playable friends live in new-friends.js and register themselves here: their own sculpted
+//  shape (spec), material, eyes and mouth (face), and their own way of moving (animate). The four first friends are unchanged.
+export const FRIENDS = {};
+export function registerFriend(kind, def) { FRIENDS[kind] = def; }
+function buildFriend(kind, style) {
+  const def = FRIENDS[kind], body = style.body || def.body, spec = def.spec(body);
+  const geo = cached(kind + body, () => sculpt(spec)); const sk = makeSkeleton(spec.bones), B = sk.bones;
+  const mat = def.material ? def.material(body) : new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .6, sheen: .6, sheenRoughness: .5, sheenColor: new THREE.Color('#ffffff'), clearcoat: .3 });
+  const mesh = new THREE.SkinnedMesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
+  mesh.add(sk.root); mesh.updateMatrixWorld(true); sk.skeleton.calculateInverses(); mesh.bind(sk.skeleton, mesh.matrixWorld);
+  const root = new THREE.Group(), bodyG = new THREE.Group(); root.add(bodyG); bodyG.add(mesh);
+  const lidMat = new THREE.MeshPhysicalMaterial({ color: def.lid ? def.lid(body) : body, roughness: .5, sheen: .5, clearcoat: .4 });
+  const P = { root, body: bodyG, mesh, B, eyes: [], extras: {} };
+  def.face(P, B, { makeEye, makeMouth, attach, lidMat, body });
+  if (!P.mouth) P.mouth = new THREE.Group(); P.mouth.scale.setScalar(.001);
+  root.traverse(o => { if (o.isMesh) o.userData.creature = true; });
+  return P;
+}
 export function buildCharacter(kind, style = {}) {
+  if (FRIENDS[kind]) return buildFriend(kind, style);
   const def = { pip: '#f2c2ff', zuzu: '#ffd84a', jelly: '#7ef0c8', sprout: '#a3e88f' }[kind], body = style.body || def;
   const spec = kind === 'pip' ? pipSpec(body) : kind === 'zuzu' ? zuzuSpec(body) : kind === 'sprout' ? sproutSpec(body) : jellySpec(body);
   const geo = cached(kind + body, () => sculpt(spec));
@@ -401,6 +420,7 @@ export function animateCharacter(kind, P, A, s, dt, extra) {
     B.sprout.rotation.z = sway * .5 + sin(t * 2.6) * .08; B.sprout.rotation.x = -(s.vy || 0) * .03 + sin(t * 2.1) * .05;
     B.tail.rotation.y = sway * .4 + sin(t * 2.8) * .12; B.tail.rotation.x = -.15;
     if (P.flower) P.flower.rotation.y += dt * (r > 0 || air ? 9 : .6);
+  } else if (FRIENDS[kind]) { FRIENDS[kind].animate(P, A, s, dt, extra, stepSpring); /* (build 101: the new friends move their own way) */
   } else {
     // Jelly: everything wobbles a little behind everything else
     const wob = stepSpring(A.tailS, -(s.vx || 0) * .05 + (r > 0 ? sin(t * 18) * 1.2 : 0), 60, 3, dt);

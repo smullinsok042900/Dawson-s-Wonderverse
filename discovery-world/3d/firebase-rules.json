@@ -47,6 +47,9 @@
               "t": {
                 ".validate": true
               },
+              "a": {
+                ".validate": "newData.isString() && newData.val().length < 60"
+              },
               "$other": {
                 ".validate": false
               }

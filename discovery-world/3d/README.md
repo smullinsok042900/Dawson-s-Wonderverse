@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 101: dress-up, and four new friends
+- **👗 Dress up:** tap pictures to put on crowns, bows, party hats, glasses, scarves, wings, capes and more; 🧺 takes it all off. Each friend keeps its own outfit. Some surprises are found on the planets.
+- **New friends:** Puffle the cloud, Luna the moon, Bloop the rainbow gumdrop and Zip the comet (pick them in 👗).
+- Friends in Play Together see your outfit too.
+
 ## 3D build 100: the Moon coaster fixed, its station by the rocket, and riding together
 - **Moon coaster:** the camera never looks from under the cart any more; real tunnel and cave openings (no more diving into solid rock); the station is now close to the rocket.
 - **Play Together:** climb into the same rocket together (your own seat, your face in a window, one countdown, land together), and hop on the Moon coaster with friends. Needs the new database rules once (see `MULTIPLAYER.md`).
