@@ -7,6 +7,7 @@ are in `PERFORMANCE_LOG.md`.
 ## Checkpoint: build 94 — the winding ice trail on Uranus
 - **Uranus rink: THE WINDING ICE TRAIL.** Tap the snowflake gate at the rink's east end. She skates a long trail that winds far behind the rink and back, under six glowing ice arches that chime as she passes; ▶ faster, ◀ slower, JUMP hops (`parks`: 20 m back, top speed 9 m/s, all six arches).
 - Speed: the first version (a flat ice ribbon over the ground and many snow banks) was 8–12 % slower where the trail is in view on desktop. It was slimmed three times: one mesh, thin arches, no ribbon (Uranus's ground is icy already), a few snow banks. Now within the noise (see `PERFORMANCE_LOG.md`).
+- **Full smoke test: 236/236.**
 - Test: the Pluto rainbow tower checks print SKIP while that tower is switched off, instead of failing.
 - Desktop (software rendering) only; not tried on an iPhone.
 
