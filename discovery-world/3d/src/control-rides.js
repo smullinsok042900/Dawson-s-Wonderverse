@@ -135,8 +135,6 @@ export function neptuneSkyDive(k, X) {
     let ph = 'up', vx = 0, vz = 0, vy = 0, hoopsGot = 0, wait = 0, rest = null; const hit = hoopPts.map(() => false);
     const R = ride(k, 'skydrop', (R, dt) => {
       if (ph === 'up') { bal.position.y = Math.min(TOP, bal.position.y + dt * 12); P.x = bx; P.z = -2.5; P.y = bal.position.y + 1.6; if (bal.position.y >= TOP) { ph = 'ready'; wait = 0; k.say('🪂 So high! Press JUMP to dive!', true); } return false; }
-      if (ph === 'up2') { R.w += dt; const f = Math.min(1, R.w / 3); P.x = bx + 3 + (f < .5 ? -f * 4 : -2 + (f - .5) * 3.6); P.y = T + .15 + f * (T2 - T); P.z = -3; R.roll = Math.sin(R.t * 6) * .1; if (f >= 1) { ph = 'ready'; wait = 0; R.roll = 0; giant = true; big = true; k.Sound.chime(); k.say('🪢 The GIANT jump! 34 metres up! Press JUMP when you are ready!', true); } return false; }
-      if (ph === 'ready' && !giant && stick(k).y > .5) { ph = 'up2'; R.w = 0; k.Sound.tone(660, .15, 'triangle', .05, 1); return false; }
       if (ph === 'ready') { wait += dt; if (wait > 8 || R.go) { ph = 'fall'; vy = 0; k.Sound.whoosh(); k.say('🪂 Wheee! Steer with the joystick through the hoops! Press JUMP to open your parachute!', true); } return false; }
       if (ph === 'rest') { const sr = stick(k); P.x = Math.max(rest.x - rest.r + .5, Math.min(rest.x + rest.r - .5, P.x + sr.x * 3 * dt)); P.z = Math.max(rest.z - rest.r + .5, Math.min(rest.z + rest.r - .5, P.z - sr.y * 2 * dt)); P.y = rest.y + Math.sin(R.t * 3) * .04; R.roll = 0; P.facing = sr.x >= 0 ? 1 : -1; chute.visible = false;
         if (R.go2) { R.go2 = false; ph = 'fall'; vy = 4; R.open = false; R.left = rest; R.leftT = R.t; k.Sound.whoosh(); } return false; }
