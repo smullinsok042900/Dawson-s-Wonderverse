@@ -168,7 +168,7 @@ export function uranusIceTrail(k) {
   const N = Math.ceil(len / 1.2), tg = V3(), sd = V3(), pos = [], idx = [], bb = makeBatch(), bank = new THREE.SphereGeometry(1, 6, 4);
   for (let i = 0; i <= N; i++) { const u = i / N, p = path.getPointAt(u); path.getTangentAt(u, tg); sd.set(-tg.z, 0, tg.x).normalize();
     for (const s of [-1, 1]) pos.push(p.x + sd.x * 1.3 * s, .05, p.z + sd.z * 1.3 * s); if (i < N) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
-    if (i % 5 === 0) for (const s of [-1, 1]) bb.put(bank, p.x + sd.x * 1.9 * s, .15, p.z + sd.z * 1.9 * s, i % 2 ? '#ffffff' : '#e8f6ff', [.8, .35, .6]); }
+    if (i % 16 === 0) for (const s of [-1, 1]) bb.put(bank, p.x + sd.x * 1.9 * s, .15, p.z + sd.z * 1.9 * s, i % 2 ? '#ffffff' : '#e8f6ff', [.8, .35, .6]); }
   const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); rg.setIndex(idx); rg.computeVertexNormals();
   /* (build 94: no ice ribbon; Uranus's ground is icy already, and a big flat ribbon over it cost 10 % on desktop. The snow banks mark the trail) */   /* (the ribbon, the banks, the arches and the gate are ONE mesh with the shared material: one draw call, no shader pause) */
   // glowing ice arches (one mesh) and the start gate
