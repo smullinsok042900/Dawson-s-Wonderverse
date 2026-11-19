@@ -188,3 +188,22 @@ export function marsCanyonTramp(k) {
   k.tapIt(mat, () => k.fact('🤸 Bounce on the canyon trampoline! Hold ▲ to bounce up onto the mesas!', 'marscanyontramp'), (a + c) / 2, 'marscanyontramp');
   starField(k, [[a + 1.5, 6, -1.2], [c - 1.5, 8, -1.2], [(a + c) / 2, 3.5, -1.2]], () => { k.Sound.chime(); k.say('⭐ All the canyon stars!', true); k.disc('marscanyonstars'); });
 }
+
+// =================== (build 89) MARS: THE BOUNCE RACE ===================
+// Five little trampolines in a row (area 2, x 47–60). Bounce along them: each one you land on lights its ring. Light all
+// five in a row (left to right) and the stars burst out. Then they reset, so you can bounce the row again.
+export function marsBounceRace(k) {
+  const P = k.P, G0 = GEO(), X = k.s0, y = .4, v = 6, tb = makeBatch(), xs = [47.5, 50.5, 53.5, 56.5, 59.5].map(d => X + d);
+  for (const [i, tx] of xs.entries()) { tb.put(G0.cyl, tx, y / 2, -1.2, '#5a6a8a', [.95, y, .95]); tb.put(G0.cyl, tx, y + .02, -1.2, RB[i % 7], [.8, .05, .8]); }
+  k.add(tb.mesh(shinyMat()));
+  const ringMat = toy('#ffffff', { em: '#ffffff', ei: .1 }), rings = xs.map((tx, i) => { const m = new THREE.Mesh(G0.torus, ringMat.clone()); m.position.set(tx, 2.8, -1.4); m.scale.setScalar(.7); m.material.emissive.set(RB[i % 7]); k.add(m); return m; });
+  let next = 0, cool = 0, wins = 0;
+  const reset = () => { next = 0; rings.forEach(r => { r.material.emissiveIntensity = .1; }); };
+  for (const tx of xs) k.plat(tx - .9, tx + .9, y, { z: -1.2, step: true, stepMax: .6 });
+  k.U.push(dt => { cool = Math.max(0, cool - dt); if (cool || P.layer !== 'space' || P.ride || !P.grounded || Math.abs(P.y - y) > .3) return; const i = xs.findIndex(tx => Math.abs(P.x - tx) < .9); if (i < 0) return;
+    cool = .3; P.y = y + .05; P.vy = v; P.grounded = false; P.jumps = 1; { const dir = Math.sign(P.vx || 0) || (k.api.stick ? Math.sign(k.api.stick().x) : 0); P.vx = dir * 2.25; P.drift = dir * 2.25; P.driftT = 1.3; P.hopX = 0; } /* (one trampoline per bounce) */ k.Sound.tone(392 + i * 60, .12, 'triangle', .06, 1.5);
+    if (i === next) { rings[i].material.emissiveIntensity = 1.4; next++; if (next === 1 && !wins) k.fact('🤸 The bounce race! Bounce along all five trampolines to light their rings!', 'marsbouncerace');
+      if (next === 5) { wins++; k.Sound.chime(); for (const tx of xs) k.api.burst(tx, 2.8, -1.4, RB, 12, 2.2); k.say('⭐ All five! You won the bounce race!', true); k.disc('marsbouncewin'); setTimeout(reset, 2500); } }
+    else if (i < next - 1 || i > next) reset(); });
+  k.G.bounceRace = { get next() { return next; }, get wins() { return wins; }, xs };
+}
