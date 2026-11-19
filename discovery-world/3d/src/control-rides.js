@@ -46,8 +46,10 @@ export function neptuneBungee2(k, X) {
   const cord = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 1, 6), toy('#ff4f9a', { r: .4 })); cord.visible = false; k.add(cord);
   const A = new THREE.Vector3(bx + 3, T + .1, -3), Bv = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0); let Lc = 9, big = true;
   const stars = starField(k, [[bx + 3 - 2.4, T - 9, -3], [bx + 3 + 2.4, T - 12, -3], [bx + 3 - 1.8, T - 15, -3], [bx + 3 + 2, T - 18, -3], [bx + 3, T - 20.5, -3]], () => { k.Sound.chime(); k.say('⭐ You caught all the bungee stars!', true); k.disc('neptunebungeestars'); });
+  // (build 92) THE REBOUND GAME: after the first bounce three balloons appear around the cord's end; steer ◀ ▶ and bounce to pop them
+  const balMat = toy('#ff4f9a', { em: '#ff2f7a', ei: .35, r: .3 }), balloons = [[-1.8, -2.5], [1.8, 0], [0, 2.8]].map(([dx, dy]) => { const m = new THREE.Mesh(G0.ball, balMat); m.scale.set(.55, .7, .55); m.visible = false; k.add(m); return { m, dx, dy, got: false }; });
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - bx) > 9) return; k.fact('🪢 Bungee jump! Ride up to the top. When you are ready, press the JUMP button!', 'neptunebungee');
-    let ph = 'lift', vy = 0, y = 0, sway = 0, vs = 0, wait = 0;
+    let ph = 'lift', vy = 0, y = 0, sway = 0, vs = 0, wait = 0; for (const q of balloons) { q.got = false; q.m.visible = false; }
     const R = ride(k, 'bungee', (R, dt) => {
       if (ph === 'lift') { lift.position.y = Math.min(T, lift.position.y + dt * 5); P.x = bx - 2.1; P.z = -2.6; P.y = lift.position.y + .1; if (lift.position.y >= T) { ph = 'walk'; R.w = 0; } return false; }
       if (ph === 'walk') { R.w += dt; P.x = bx - 2.1 + Math.min(1, R.w / 1.2) * 5.1; P.y = T + .15; P.z = -3; P.facing = 1; if (R.w > 1.3) { ph = 'ready'; wait = 0; k.say('🪢 Big jump here! Or push ◀ for the gentle jump. Press JUMP when you are ready!', true); } return false; }
@@ -56,13 +58,53 @@ export function neptuneBungee2(k, X) {
       if (ph === 'fall') { const st = stick(k); vs += (st.x * 5 - sway * 1.2) * dt; vs *= Math.exp(-dt * 1.2); sway = Math.max(-3, Math.min(3, sway + vs * dt));
         vy -= 11 * dt; const stretch = (A.y - (y + 1)) - Lc; if (stretch > 0) vy += 9 * stretch * dt; vy *= Math.exp(-dt * .45); y += vy * dt; y = Math.max(.6, y); R.minY = Math.min(R.minY ?? 99, y);
         if (stretch > 0 && vy > 0 && !R.boing) { R.boing = 1; R.bounces = (R.bounces || 0) + 1; k.Sound.boing(); } if (vy < 0) R.boing = 0;
-        P.y = y; P.x = A.x + sway; P.z = A.z; R.roll = y < T - .5 ? Math.PI + sway * .15 : 0; if (R.t - R.t0 > 14 && Math.abs(vy) < 6) { ph = 'down'; R.roll = Math.PI; } }
-      if (ph === 'down') { y = Math.max(0, y - dt * 3); sway *= .97; P.x = A.x + sway; P.y = y; if (y <= .5) R.roll = 0; if (y <= 0) { cord.visible = false; lift.position.y = .1; return true; } }
+        P.y = y; P.x = A.x + sway; P.z = A.z;
+        if (R.bounces >= 1) { const ey = A.y - 1 - Lc; if (!R.balShown) { R.balShown = 1; R.pops = 0; for (const q of balloons) { q.m.position.set(A.x + q.dx, ey + q.dy, A.z); q.m.visible = true; } k.say('🎈 Balloons! Steer ◀ ▶ and bounce to pop them!', true); }
+          for (const q of balloons) { if (q.got) continue; q.m.position.y = ey + q.dy + Math.sin(R.t * 2 + q.dx) * .15; if (Math.abs(P.x - q.m.position.x) < 1.1 && Math.abs(P.y - q.m.position.y) < 1.6) { q.got = true; q.m.visible = false; R.pops++; k.Sound.tone(700 + R.pops * 90, .12, 'square', .06, 2); k.api.burst(q.m.position.x, q.m.position.y, A.z, RB, 12, 2);
+            if (R.pops === balloons.length) { k.Sound.chime(); k.say('🎈 You popped all the balloons!', true); k.disc('neptunebungeeballoons'); } } } }
+        R.roll = y < T - .5 ? Math.PI + sway * .15 : 0; if (R.t - R.t0 > 14 && Math.abs(vy) < 6) { ph = 'down'; R.roll = Math.PI; } }
+      if (ph === 'down') { y = Math.max(0, y - dt * 3); sway *= .97; P.x = A.x + sway; P.y = y; if (y <= .5) R.roll = 0; if (y <= 0) { cord.visible = false; lift.position.y = .1; for (const q of balloons) q.m.visible = false; return true; } }
       if (cord.visible) { Bv.set(P.x, P.y + (R.roll ? .2 : 1.2), P.z); cord.position.copy(A).add(Bv).multiplyScalar(.5); const d = Bv.clone().sub(A); cord.scale.set(1, d.length(), 1); cord.quaternion.setFromUnitVectors(up, d.normalize()); }
       return false; }, R => { P.x = bx + 5.5; P.y = 0; P.z = 0; k.api.burst(P.x, 1, 0, ['#ffffff', '#ff4f9a', '#ffd23f'], 16, 2.4); k.say(`🪢 ${R.bounces || 0} bounces! Tap the tower to jump again!`, true); k.disc('neptunebungeedone'); });
     R.onJump = () => { if (ph === 'ready') R.jumpNow = true; else if (ph === 'fall') { const stretch = (A.y - (y + 1)) - Lc; if (stretch > 0 && vy > -2) { vy += 5; k.Sound.tone(660, .12, 'triangle', .06, 2); k.api.burst(P.x, P.y, P.z, RB, 8, 1.6); } } };
-    k.G.bungee = { R, get ph() { return ph; } }; };
+    k.G.bungee = { R, balloons, get ph() { return ph; } }; };
   const tw = new THREE.Group(); tw.position.set(bx, 0, -4); k.add(tw); k.tapIt(lift, go, bx, 'neptunebungeego'); k.tapIt(tw, go);
+}
+
+// =================== MARS: THE RAINBOW WALL AND ZIP LINE (build 92; area 3, x 53–76) ===================
+// A second climbing wall (16 m, rainbow handholds). Climb with the joystick (she climbs on slowly by herself if you stop);
+// at the top the bell rings, and she grabs the ZIP LINE and whizzes down the rope to the ground. JUMP lets go (float down).
+export function marsZipWall(k) {
+  const P = k.P, G0 = GEO(), X = k.s0, wx = X + 56, W = 3, H = 16, zx = X + 77, b = makeBatch();
+  b.put(G0.box, wx, H / 2, -2.2, '#c86a48', [2 * W, H, 3.2]); b.put(G0.box, wx, H + .15, -2.2, '#e08a5a', [2 * W + .4, .3, 3.4]);
+  for (let r = 0; r < 13; r++) for (let c = 0; c < 4; c++) { const x = wx - W + .7 + c * 1.5 + (r % 2) * .7; if (x > wx + W - .4) continue; b.put(G0.ball, x, .8 + r * 1.2, -.5, RB[(r + c) % 7], [.24, .19, .15]); }
+  for (const s of [-1, 1]) b.put(G0.cyl, wx + W + .8 + s * .5, (H + 3) / 2, -1, '#d8e0ea', [.1, H + 3, .1]);           // the zip tower post
+  b.put(G0.cyl, zx, 2, -1, '#d8e0ea', [.12, 4, .12]); b.put(G0.cyl, zx, .1, -1, '#7fe0a0', [1.6, .2, 1.6]);          // the low end post and a landing mat
+  const top = new THREE.Vector3(wx + W + .8, H + 2.6, -1), bot = new THREE.Vector3(zx, 3.6, -1), d = bot.clone().sub(top);
+  b.put(G0.cyl, (top.x + bot.x) / 2, (top.y + bot.y) / 2, -1, '#ffffff', [.04, d.length(), .04], [0, 0, Math.atan2(-d.x, d.y)]);
+  b.put(G0.cyl, wx - W + .8, H + 1, -1.6, '#5a6a8a', [.05, 1.6, .05]);   // the bell post
+  const cliff = b.mesh(shinyMat()); cliff.castShadow = true; k.add(cliff); k.plat(wx - W, wx + W + 1.4, H + .3, { z: -1.2 });
+  const bell = new THREE.Mesh(new THREE.ConeGeometry(.45, .7, 14, 1, true), toy('#ffd23f', { m: .6, r: .3, em: '#ffb000', ei: .2 })); bell.position.set(wx - W + .8, H + 1.6, -1.6); k.add(bell);
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(.3, .05, 6, 16), toy('#ff4f6a', { r: .3 })); handle.position.copy(top); handle.position.y -= .4; handle.userData.dynamic = true; k.add(handle);
+  starField(k, [[wx - 1.5, 5, -.1], [wx + 1.5, 10, -.1], [X + 67, 9, -1], [X + 72, 6, -1]], () => { k.Sound.chime(); k.say('⭐ All the rainbow wall stars!', true); k.disc('marszipstars'); });
+  let ring = 0; k.U.push((dt, t) => { ring = Math.max(0, ring - dt); bell.rotation.z = Math.sin(t * 14) * ring * .35; });
+  const zip = () => { k.say('🪢 Grab the zip line! WHEEE!', true); k.disc('marszip'); handle.position.copy(top); handle.position.y -= .4;
+    ride(k, 'zipline', (R, dt) => { R.f = Math.min(1, (R.f || 0) + dt * (.06 + (R.f || 0) * .2)); handle.position.copy(top).addScaledVector(d, R.f); handle.position.y -= .4; P.x = handle.position.x; P.y = handle.position.y - 2.1; P.z = -1; P.facing = 1; R.roll = Math.sin(R.t * 3) * .1;
+      if (Math.random() < dt * 6) k.api.burst(P.x, P.y + 2, -1, ['#ffffff', '#ffd23f'], 2, 1); return R.f >= 1 || R.letGo; },
+      R => { P.z = 0; handle.position.copy(top); handle.position.y -= .4; if (R.letGo) { P.vy = 0; P.grounded = false; P.floatDown = true; } else { P.y = 0; P.x = zx + 1; k.api.burst(P.x, 1, 0, RB, 16, 2.2); k.Sound.boing(); k.say('🪢 What a zip! Climb the rainbow wall again!', true); } });
+    P.ride.onJump = () => { if (P.ride && P.ride.type === 'zipline' && P.y < 6) P.ride.letGo = true; }; };
+  const climb = () => { if (P.layer !== 'space' || P.ride || P.x < wx - W - 2 || P.x > wx + W + 2 || P.y > H - 1) return;
+    k.say('🧗 The rainbow wall! Climb up to ring the bell!', true); k.disc('marszipwall'); let idle = 0; P.x = Math.max(wx - W + .5, Math.min(wx + W - .5, P.x)); P.y = Math.max(.3, P.y);
+    const R = ride(k, 'rockclimb2', (R, dt) => { const st = stick(k), moving = Math.abs(st.x) > .2 || Math.abs(st.y) > .2; idle = moving ? 0 : idle + dt;
+      let vy = st.y * 2.4, vx = st.x * 2; if (!moving && idle > 3) vy = .7;
+      P.y = Math.max(0, Math.min(H + .3, P.y + vy * dt)); P.x = Math.max(wx - W + .4, Math.min(wx + W - .4, P.x + vx * dt)); P.z = -.05; R.reach = (R.reach || 0) + dt * 6; R.roll = Math.sin(R.reach) * .12; R.maxY = Math.max(R.maxY || 0, P.y);
+      if (P.y >= H + .3) { R.end = 'top'; return true; } if (P.y <= 0 && st.y < -.2) { R.end = 'ground'; return true; } return !!R.end; },
+      R => { P.z = 0; if (R.end === 'top') { P.y = H + .3; P.x = wx; P.grounded = true; ring = 2; k.Sound.chime(); k.api.burst(bell.position.x, bell.position.y, -1.6, ['#ffd23f', '#ffffff'], 20, 2.2); k.say('🔔 DING DONG! You rang the bell! Now the zip line!', true); k.disc('marszipbell'); setTimeout(() => { if (!P.ride && P.layer === 'space' && P.y > H - .5) zip(); }, 1600); }
+        else if (R.end === 'let') { P.vy = 0; P.grounded = false; P.floatDown = true; } else P.y = 0; });
+    R.onJump = () => { R.end = 'let'; }; };
+  k.tapIt(cliff, climb, wx, 'marszipwallgo');
+  k.G.interact.push({ x: wx + W + .8, y: H + .3, layer: 'space', disc: 'marszipgo', run: () => { if (!P.ride && Math.abs(P.y - H - .3) < 1) zip(); }, hintY: 2.4 });
+  k.U.push(dt => { if (!P.floatDown) return; if (P.ride || P.grounded) { P.floatDown = false; return; } P.vy = Math.max(P.vy, -3); });
 }
 
 // =================== NEPTUNE: THE BIG SKY DIVE ===================
@@ -153,13 +195,22 @@ export function marsClimbPark(k, X) {
   k.tapIt(cliff, climb, wx, 'marsclimbgo');
   // ---- THE TRAMPOLINE PARK: ground, middle and high trampolines; hold ▲ / JUMP on landing to bounce higher; hoops ----
   const g = 24 * 3.71 / 9.81, hb = makeBatch(), tb = makeBatch(), rings = [];
+  // (build 92) THE GENTLE / HIGH PICTURE SWITCH beside the ground trampoline: tap it to flip between a FEATHER (soft little
+  //  bounces, for a calm play) and a ROCKET (the big bounces). It starts on the rocket.
+  let soft = false; const sw = new THREE.Group(); sw.position.set(wx + 18.6, 0, -1.6); k.add(sw);
+  { const pb = makeBatch(); pb.put(G0.cyl, 0, .9, 0, '#5a6a8a', [.08, 1.8, .08]); pb.put(G0.cyl, 0, 2.1, 0, '#ffffff', [.75, .1, .75], [Math.PI / 2, 0, 0]); sw.add(pb.mesh(shinyMat()));
+    const fb = makeBatch(); fb.put(G0.ball, 0, 2.1, .1, '#9fe8b8', [.18, .5, .06], [0, 0, .5]); fb.put(G0.cyl, .1, 1.85, .12, '#ffffff', [.02, .5, .02], [0, 0, .5]); const feather = fb.mesh(shinyMat());
+    const rb = makeBatch(); rb.put(G0.cyl, 0, 2.1, .1, '#ff6a3c', [.15, .55, .06]); rb.put(G0.ball, 0, 2.42, .1, '#ffd23f', [.15, .18, .06]); rb.put(G0.box, -.18, 1.88, .1, '#5aa8ff', [.12, .2, .05]); rb.put(G0.box, .18, 1.88, .1, '#5aa8ff', [.12, .2, .05]); const rocket = rb.mesh(shinyMat());
+    feather.visible = false; sw.add(feather, rocket); sw.userData.set = s => { soft = s; feather.visible = s; rocket.visible = !s; }; }
+  k.tapIt(sw, () => { if (P.layer !== 'space') return; sw.userData.set(!soft); k.Sound.tone(soft ? 392 : 660, .15, 'triangle', .06, 1.5); k.fact(soft ? '🪶 The feather: soft little bounces.' : '🚀 The rocket: BIG bounces!', soft ? 'marstrampsoft' : 'marstramphigh'); }, wx + 18.6, 'marstrampswitch');
+  k.G.marsTrampSwitch = { get soft() { return soft; } };
   const tramp = (x0, x1, y, v, col) => { const tc = (x0 + x1) / 2; for (const x of [x0, x1]) for (const z of [-.2, -3]) tb.put(G0.cyl, x, y / 2, z, '#5a6a8a', [.12, Math.max(.3, y), .12]);
     for (const z of [-.2, -3]) tb.put(G0.box, tc, y, z, col, [x1 - x0 + .4, .25, .3]); for (const x of [x0, x1]) tb.put(G0.box, x, y, -1.6, col, [.3, .25, 3]);
     const mat = k.sbox(tc, y - .15, -1.6, x1 - x0 - .4, .1, 2.5, '#1d1d2b', { r: .5 }); let sq = 0, n = 0; const top = v * v / (2 * g);
     hb.put(G0.torus, tc, y + top * .8, -1.2, col, 1.1, [0, 0, 0]); const ring = { x: tc, y: y + top * .8, hit: 0 }; rings.push(ring);
     k.plat(x0 + .2, x1 - .2, y, { z: -1.2 }); let cool = 0;
     k.U.push(dt => { sq = Math.max(0, sq - dt * 3); mat.position.y = y - .1 - Math.sin(sq * Math.PI) * .45; cool = Math.max(0, cool - dt); ring.hit = Math.max(0, ring.hit - dt);
-      if (!cool && P.layer === 'space' && !P.ride && P.grounded && Math.abs(P.y - y) < .3 && P.x > x0 + .2 && P.x < x1 - .2) { const big = k.api.keysUp && k.api.keysUp(); cool = .3; P.y = y + .05; P.vy = v * (big ? 1.4 : 1); P.grounded = false; P.jumps = 1; sq = 1; n++; k.Sound.boing();
+      if (!cool && P.layer === 'space' && !P.ride && P.grounded && Math.abs(P.y - y) < .3 && P.x > x0 + .2 && P.x < x1 - .2) { const big = !soft && k.api.keysUp && k.api.keysUp(); cool = .3; P.y = y + .05; P.vy = v * (soft ? .55 : big ? 1.4 : 1); P.grounded = false; P.jumps = 1; sq = 1; n++; k.Sound.boing();
         if (n === 1) k.fact('🤸 BOING! Hold ▲ (or JUMP) as you land to bounce MUCH higher!', 'marstramp'); if (big) k.api.burst(P.x, y + .3, -1, RB, 8, 1.8); }
       if (!ring.hit && P.layer === 'space' && Math.abs(P.x - ring.x) < 1 && Math.abs(P.y + .6 - ring.y) < .8) { ring.hit = 1.2; k.Sound.tone(700, .2, 'sine', .07, 1.5); k.api.burst(ring.x, ring.y, -1.2, RB, 14, 2); k.disc('marshoops', '🤸 Bounce up through the hoops!'); } });
     k.tapIt(mat, () => k.fact('🤸 A giant trampoline! Hold ▲ when you land to bounce higher!', 'marstrampoline'), tc, null); };

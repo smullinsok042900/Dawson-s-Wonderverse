@@ -20,6 +20,13 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   const sc = await ev(() => new Promise(res => { const D = __DDW3, P = D.player; D.G.interact.find(i => i.disc === 'venuslogride').run(); const t0 = performance.now(); let seen = false, R0 = null;
     const f = () => { const R = P.ride; if (R && R.type === 'logride') { seen = true; R0 = R; D.keys.left = true; } if ((seen && !P.ride) || performance.now() - t0 > 400000) { D.keys.left = false; return res({ done: !P.ride, shortcut: !!(R0 && R0.shortcut), s: R0 && R0.t, maxY: R0 && R0.maxY }); } requestAnimationFrame(f); }; f(); }));
   check('the waterfall shortcut: steer ◀ at the fork and the log drops down the waterfall chute, then rides on to the end', sc.done && sc.shortcut && sc.s < r.s && sc.maxY > 29, JSON.stringify({ ...sc, longRide: r.s, longShortcut: r.shortcut }));
+  // (build 92) the rapids splash game: steer toward each target and press JUMP
+  await ev(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.ride = null; }, X + 131); await sleep(1500);
+  const sg = await ev(() => new Promise(res => { const D = __DDW3, P = D.player, T = D.G.venusSplash; D.G.interact.find(i => i.disc === 'venuslogride').run(); const t0 = performance.now(); let seen = false, R0 = null;
+    const f = () => { const R = P.ride; if (R && R.type === 'logride') { seen = true; R0 = R; const u = R.pu || 0, q = T.find(q => !q.hit && u < q.u + .012);
+        if (q && u > q.u - .06) { D.keys.left = q.sd < 0; D.keys.right = q.sd > 0; if (u > q.u - .03) R.onJump(); } else { D.keys.left = false; D.keys.right = true; } }
+      if ((seen && !P.ride) || performance.now() - t0 > 400000) { D.keys.left = D.keys.right = false; return res({ done: !P.ride, hits: R0 && R0.hits, all: D.world.disc.has('venussplashgame'), shortcut: !!(R0 && R0.shortcut) }); } requestAnimationFrame(f); }; f(); }));
+  check('the rapids splash game: steer toward the targets and press JUMP to splash them; all five wins', sg.done && sg.hits >= 4 && !sg.shortcut, JSON.stringify(sg));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();

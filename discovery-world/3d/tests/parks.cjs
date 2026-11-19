@@ -26,6 +26,12 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
     const ks = M.cards.map(c => c.kind); M.tap(ks.indexOf(0)); M.tap(ks.indexOf(1)); await wait(1600); const afterWrong = M.cards.filter(c => c.open).length;
     for (const kd of [0, 1, 2]) { const i = ks.indexOf(kd), j = ks.lastIndexOf(kd); M.tap(i); M.tap(j); await wait(400); } res({ afterWrong, rounds: M.rounds }); }));
   check('Pluto: the picture-matching game: wrong cards turn back, and matching all three pairs wins', mg.afterWrong === 0 && mg.rounds === 1 && await has('plutomatch'), JSON.stringify(mg));
+  // (build 92) the rainbow tower: bounce pads up to the 14 m deck, then the spiral slide down
+  const A2 = X + 110; await put(A2 + 96.5, .5); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; });
+  const rt = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0, top = false; const f = () => { maxY = Math.max(maxY, P.y); if (P.grounded && P.y > 13.5) top = true; if (top || performance.now() - t0 > 40000) return res({ maxY, top, y: P.y, x: P.x }); requestAnimationFrame(f); }; f(); }));
+  check('Pluto: the rainbow tower: the green bounce pads take you up', rt.maxY > 7.2 && await has('plutotower2bounce'), JSON.stringify({ ...rt, x: rt.x - A2 }));
+  await put(A2 + 105, 14); await sleep(500); await run('plutospiralgo'); const sp = await watch(60000);
+  check('Pluto: the spiral slide winds from the rainbow tower top down to the ground', sp.seen && sp.maxY > 13 && sp.y < 1.5 && await has('plutospiralslide'), JSON.stringify({ ...sp, x: sp.x - A2 }));
   // ---- URANUS ----
   X = await fly('uranus'); await put(X + 150); await sleep(3000); const U0 = X + 110;
   check('Uranus: the Ice Palace is built', await ev(() => !!__DDW3.G.icePalace));

@@ -65,6 +65,33 @@ export function plutoInflatablePark(k) {
   k.tapIt(park, () => k.fact('🎈 The giant inflatable park! On Pluto you bounce super high and float down slowly.', 'plutopark'), x(10), 'plutopark');
 }
 
+// =================== PLUTO: THE RAINBOW TOWER (build 92; area 2, x 95–108) ===================
+// A second inflatable tower: bounce pad → the 7 m ledge → bounce pad → the 14 m top deck with a star, then a TWISTY
+// SPIRAL SLIDE that winds round and round behind the tower down to the ground. Walk off the deck (or tap) to slide.
+export function plutoRainbowTower(k) {
+  const P = k.P, G = k.G, S = k.Sound, G0 = GEO(), x = v => k.s0 + v, b = makeBatch();
+  const puff = (px, py, pz, c, sx, sy, sz) => b.put(G0.ball, px, py, pz, c, [sx, sy, sz]);
+  const tx = x(102.5); for (let i = 0; i < 5; i++) puff(tx, 1.5 + i * 2.8, -4.2, RB[i], 3.9 - i * .25, 1.9, 2.3);
+  puff(tx, 15.2, -4.2, '#ffffff', 2.4, 1.3, 1.9); puff(tx, 17, -4.2, '#ff6fae', .8, .8, .8);
+  b.put(G0.box, x(100), 6.9, -1.6, '#9fd8ff', [4.4, .6, 2.6]); b.put(G0.box, x(104.5), 13.7, -1.6, '#ff9a2e', [6.4, .6, 2.8]);   // the ledge (7 m) and the top deck (14 m)
+  for (const s of [-1, 1]) puff(x(104.5) + s * 3, 14.6, -2.9, '#ffd23f', .5, .6, .5);
+  k.plat(x(97.8), x(102.2), 7.2, { z: -1.2 }); k.plat(x(101.4), x(107.6), 14, { z: -1.2 });
+  b.put(G0.cyl, x(96.5), .2, -1.2, '#7fe0a0', [.85, .4, .85]); b.put(G0.cyl, x(100.8), 7.4, -1.2, '#7fe0a0', [.75, .3, .75]);
+  launcher(k, x(95.8), x(97.2), 0, 5.2, 1.6, () => { S.boing(); k.disc('plutotower2bounce', '🌈 Bounce up the rainbow tower!'); });
+  launcher(k, x(100.2), x(101.4), 7.2, 5.2, 1.2, () => S.boing());
+  // the spiral slide: two turns round behind the tower
+  const pts = [[107.6, 14.5, -1.2], [109, 14, -2.6]]; for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI * 4; pts.push([104.8 + 3.6 * Math.sin(a + 1.2), 13.2 - i * .72, -6 + 3.4 * Math.cos(a + 1.2)]); }
+  pts.push([107.5, 1.3, -2.2], [109, .8, -1.2]);
+  const path = new THREE.CatmullRomCurve3(pts.map(([a, y, z]) => V3(x(a), y, z)), false, 'catmullrom', .35);
+  slideTube(k, path, { segs: 170, r: 1.1, cols: ['#9b6cff', '#5aa8ff', '#7fe0a0', '#ffd23f', '#ff6fae'], bands: 20, postEvery: .12 });
+  const go = () => { G.startSlide(path, { vmax: 8, acc: 3.5 }); k.say('🌈 Round and round the spiral slide!', true); k.disc('plutospiralslide'); };
+  let cool = 0; k.U.push(dt => { cool = Math.max(0, cool - dt); if (!cool && P.layer === 'space' && !P.ride && P.grounded && Math.abs(P.y - 14) < .2 && P.x > x(107.3) && P.vx > .3) { cool = 2; go(); } });
+  G.interact.push({ x: x(105), y: 14, layer: 'space', disc: 'plutospiralgo', run: () => { if (Math.abs(P.y - 14) < 1) { P.x = x(107.6); go(); } }, hintY: 2.4 });
+  starField(k, [[x(104.5), 16, -1.2], [x(98.5), 10, -1.2]], () => { S.chime(); k.say('⭐ The rainbow tower stars!', true); k.disc('plutotower2stars'); });
+  const m = b.mesh(shinyMat()); m.castShadow = true; k.add(m);
+  k.tapIt(m, () => k.fact('🌈 The rainbow tower! Bounce on the green pads to go up, then slide down the spiral!', 'plutotower2'), x(97), 'plutotower2');
+}
+
 // =================== URANUS: THE ICE PALACE ===================
 export function uranusIcePalace(k) {
   const P = k.P, G = k.G, X0 = k.s0, G0 = GEO(), S = k.Sound, x = v => X0 + v, F2 = 6, b = makeBatch(), gb = makeBatch(), ice = '#bfe6ff', pale = '#e8f6ff', deep = '#7fbde8';
