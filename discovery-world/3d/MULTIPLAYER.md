@@ -102,6 +102,8 @@ Everyone in the room uses **the same rocket** on each launch pad:
 - **The Earth train (build 103):** when a friend drives the train, it is the same train on every screen. Tap it at the
   station to hop on in a seat behind them (up to three friends); you ride together and get off together. Nothing new is
   sent, so it needs no new rules.
+- **The Venus log ride (build 104):** the log holds two. Standing at the log station when a friend sets off, you hop in
+  behind them (or tap the log); you ride the whole flume together and get out together. No new rules either.
 
 **Needs the new rules (once):** shared rides use a new part of the room, `live`. Until the rules below are published
 again, the shared rocket simply does not appear (each phone flies its own rocket, as before) and everything else in a

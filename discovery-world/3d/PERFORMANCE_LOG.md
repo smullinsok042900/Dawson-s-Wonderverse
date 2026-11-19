@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 104 (the Venus log ride together)
+Desktop, software rendering; `pplanet.cjs venus`, builds 103 and 104, four rounds each in both orders. ms per frame (average) / draw calls: +160 216 → 218 / 76; +190 221 → 226 / 93–94 (each build ranges about 15 ms at these spots: 218–227 and 221–233). +131 is the first spot after landing (291–625) and is not compared. The new code runs only inside a Play Together room.
+
 ## Build 103 (riding the Earth train together)
 Desktop, software rendering; `tests/perf/ba.cjs`, builds 102 and 103, four rounds each in both orders. Script ms per frame (average): park 14.4 → 15.6 (each build ranges 12.8–17.4), creatures 10.3 → 10.3, castle 14.2 → 14.6; shader programs 115 → 115; draw calls and triangles the same; no new long tasks. The new code runs only inside a Play Together room.
 

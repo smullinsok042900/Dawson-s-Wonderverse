@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 104: the log ride together
+- **Play Together on Venus:** the log holds two. Stand at the log station when a friend sets off and you hop in behind them; ride the whole flume together and get out together.
+
 ## 3D build 103: riding the train together
 - **Play Together:** when a friend drives the Earth train, it is the same train on your screen. Tap it at the station to hop on in the seat behind them, ride together, and get off together.
 
