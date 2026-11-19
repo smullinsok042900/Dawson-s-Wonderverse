@@ -19,13 +19,13 @@ let fail = 0; const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS
   for (const p of [A, B]) await p.evaluate(() => { const pn = document.getElementById('mpPanel'); pn && pn.classList.remove('show'); });
   // A dresses up Bloop
   await A.locator('#dressBtn').tap(); await sleep(500); await A.locator('#dressPanel .dKid[aria-label="bloop"]').tap(); await sleep(800);
-  await A.locator('#dressPanel .dTab[aria-label="head"]').tap(); await A.locator('#dressPanel button[aria-label="crown"]').tap(); await sleep(200);
-  await A.locator('#dressPanel .dTab[aria-label="face"]').tap(); await A.locator('#dressPanel button[aria-label="sunglasses"]').tap(); await sleep(200);
-  await A.locator('#dressPanel .dDone').tap();
+  await A.locator('#dressPanel .dTab[aria-label="hats"]').tap(); await A.locator('#dressPanel button[aria-label="crown"]').tap(); await sleep(200);
+  await A.locator('#dressPanel .dTab[aria-label="glasses"]').tap(); await A.locator('#dressPanel button[aria-label="sunglasses"]').tap(); await sleep(200);
+  await A.locator('#dressDone').tap();
   const seen = await until(B, () => { const o = [...__DDW3.G.mp.others.values()][0]; const w = o && o.model && o.model.parts && o.model.parts.worn; return !!(o && o.kind === 'bloop' && w && w.head && w.head.userData.acc === 'crown' && w.face && w.face.userData.acc === 'sunglasses'); }, null, 30000);
   check('on B\'s screen, A is Bloop wearing the crown and the sunglasses', seen, JSON.stringify(await B.evaluate(() => { const o = [...__DDW3.G.mp.others.values()][0]; const w = (o && o.model && o.model.parts && o.model.parts.worn) || {}; return { kind: o && o.kind, head: w.head && w.head.userData.acc, face: w.face && w.face.userData.acc }; })));
   // A takes the glasses off: B sees them go
-  await A.locator('#dressBtn').tap(); await sleep(400); await A.locator('#dressPanel .dTab[aria-label="face"]').tap(); await A.locator('#dressPanel button[aria-label="sunglasses"]').tap(); await A.locator('#dressPanel .dDone').tap();
+  await A.locator('#dressBtn').tap(); await sleep(400); await A.locator('#dressPanel .dTab[aria-label="glasses"]').tap(); await A.locator('#dressPanel button[aria-label="sunglasses"]').tap(); await A.locator('#dressDone').tap();
   check('A takes the sunglasses off: B sees them go (the crown stays)', await until(B, () => { const o = [...__DDW3.G.mp.others.values()][0], w = o && o.model && o.model.parts && o.model.parts.worn; return !!(w && !w.face && w.head); }, null, 30000));
   check('no page errors', !A.errs.length && !B.errs.length, [...A.errs, ...B.errs].slice(0, 3).join(' | '));
   console.log(fail ? `${fail} FAILED` : 'ALL PASSED'); await b.close(); relay.close(); process.exit(fail ? 1 : 0);

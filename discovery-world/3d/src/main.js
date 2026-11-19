@@ -38,7 +38,8 @@ import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import './new-friends-2.js'; // (build 102) four more
-import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
+import { PICS as WEAR_PICS } from './accessory-pictures.js';
+import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS, accessoryMesh, CATS as WEAR_CATS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD, makeTree } from './nature.js';
@@ -998,8 +999,10 @@ function newFriendPictures() { if (picBusy) return; const miss = Object.keys(CRE
   requestAnimationFrame(next); }
 const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
   setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
-  Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; } });
-G.dress = dress; G.me = () => creature; /* (tests: her character) */
+  Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; },
+  opened: on => { G.dressOpen = on; if (on) { for (const kk in keys) keys[kk] = false; player.vx = 0; } }, /* (build 105: close-up of her friend beside the panel; no walking off while dressing) */
+  cheer: slot => { const m = creature.parts && creature.parts.worn && creature.parts.worn[slot]; if (!m) return; m.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld); burst(p.x, p.y, p.z, ['#fff', '#ffe36e', '#ff9fd8', '#9fd8ff'], 14, 2.2); } });
+G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
 { const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
   b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
 let wearHere = null; // planet surprises: landing on some planets finds a new thing to wear
@@ -1086,7 +1089,7 @@ function updatePlayer(dt) {
 }
 
 // ---------------- camera ----------------
-const camT = { x: 5, y: 1.6, look: 0 };
+const camT = { x: 5, y: 1.6, look: 0 }; const camLook = new THREE.Vector3(), dressCam = new THREE.Vector3(), dressLook = new THREE.Vector3();
 function viewHalfW(dist) { return Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect; }
 const CAM_DIST = 12.5; // (build 43: zoomed out from 7.6 at the family's request, so whole activities fit on screen) (build 63: 9 → 12.5, asked again: see more, do every activity)
 const CAM_UP = 2.9, CAM_LOOK = 1.95; // (build 63: a little higher (2.15 → 2.9), aimed higher (1.15 → 1.95): tall activities fit, less of the track)
@@ -1111,7 +1114,11 @@ function updateCamera(dt) {
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale' || P.ride.type === 'coaster' || P.ride.type === 'ringrace') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
   camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
-  camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
+  camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camLook.set(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
+  // (build 105) DRESSING UP: the camera comes close to her friend and puts it in the middle of the free right side of the screen
+  camT.dr = (camT.dr ?? 0) + ((G.dressOpen && !P.ride ? 1 : 0) - (camT.dr ?? 0)) * ease(dt, 5); if (camT.dr < .002) camT.dr = 0;
+  if (camT.dr) { const d = 4.2, k = camT.dr, cx = P.x - viewHalfW(d) * .55, cz = (P.z || 0); dressCam.set(cx, P.y + 1.05, cz + d); dressLook.set(cx, P.y + .82, cz); camera.position.lerp(dressCam, k); camLook.lerp(dressLook, k); }
+  camera.lookAt(camLook);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride && G.camOverride.coaster && !(player.ride && player.ride.type === 'coaster')) G.coasterOff(); // (build 69: left the coaster another way, e.g. the map)
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
