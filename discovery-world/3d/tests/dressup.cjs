@@ -15,12 +15,12 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   const wrapped = await ev(() => [...document.querySelectorAll('#dressPanel button')].some(b => b.textContent === '🎁'));
   const want = { head: ['crown', 'partyhat'], face: ['sunglasses', 'heartglasses'], neck: ['scarf', 'necklace'], back: ['wings', 'cape'] };
   const shots = [];
-  for (const kind of ['pip', 'zuzu', 'jelly', 'sprout']) {
+  for (const kind of ['pip', 'zuzu', 'jelly', 'sprout', 'puffle', 'luna', 'bloop', 'zip']) {
     await page.locator(`#dressPanel .dKid[aria-label="${kind}"]`).tap(); await sleep(800);
     const r = { kind, worn: {} };
     for (const slot of ['head', 'face', 'neck', 'back']) {
       const tab = page.locator(`#dressPanel .dTab[aria-label="${slot}"]`); if (await tab.evaluate(el => el.classList.contains('no'))) { r.worn[slot] = 'n/a'; continue; }
-      await tab.tap(); await sleep(250); const id = want[slot][kind === 'zuzu' ? 1 : 0]; await page.locator(`#dressPanel button[aria-label="${id}"]`).tap(); await sleep(300);
+      await tab.tap(); await sleep(250); const id = want[slot][['zuzu', 'luna', 'zip'].includes(kind) ? 1 : 0]; await page.locator(`#dressPanel button[aria-label="${id}"]`).tap(); await sleep(300);
       r.worn[slot] = await ev(([slot, id]) => { const P = __DDW3.G.me().parts, m = P.worn && P.worn[slot]; if (!m) return 'none'; let q = m.parent, bone = false; while (q) { if (q.isBone) { bone = true; break; } q = q.parent; } return m.userData.acc === id && bone ? 'ok' : 'bad'; }, [slot, id]);
     }
     // where the hat and glasses really are: the hat above the eyes, the glasses at the eyes (in world space, standing still)
