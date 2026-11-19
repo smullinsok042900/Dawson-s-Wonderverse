@@ -45,7 +45,7 @@ const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(9)), b => (
 // (build 62, talking) setVoice(on) -> Promise; signal(to, msg); events onVoice(id, on), onSignal(from, msg)
 function relayTransport(url) {
   const id = newId(); let ws = null, room = null, last = null, wantOpen = false, timer = 0, voiceOn = false;
-  const T = { id, onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { }, onVoice: () => { }, onSignal: () => { } };
+  const T = { id, onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { }, onVoice: () => { }, onSignal: () => { }, onLive: () => { }, offset: 0 };
   const open = () => new Promise(res => { ws = new WebSocket(url); ws.onopen = () => { T.onStatus(true); if (room) { ws.send(JSON.stringify({ type: 'join', room, id, state: last })); if (voiceOn) ws.send(JSON.stringify({ type: 'voice', on: true })); } res(true); };
     ws.onmessage = e => { const m = JSON.parse(e.data);
       if (m.type === 'player') T.onPlayer(m.id, m.state);
@@ -54,13 +54,17 @@ function relayTransport(url) {
       else if (m.type === 'obj') T.onShared(m.key, m.obj);
       else if (m.type === 'evt') T.onEvent(m.evt);
       else if (m.type === 'voice') T.onVoice(m.id, !!m.on);
-      else if (m.type === 'sig') T.onSignal(m.from, m.msg); };
+      else if (m.type === 'sig') T.onSignal(m.from, m.msg);
+      else if (m.type === 'live') T.onLive(m.key, m.obj);           /* (build 100) shared rides: one small record per vehicle and per seat */
+      else if (m.type === 'clock') T.offset = m.t - Date.now(); };
     ws.onclose = () => { T.onStatus(false); if (wantOpen) { clearTimeout(timer); timer = setTimeout(open, 1000); } res(false); }; ws.onerror = () => { }; });
   T.connect = async () => { wantOpen = true; await open(); return id; };
   T.join = async (code, state) => { wantOpen = true; if (!ws || ws.readyState > 1) await open(); return new Promise(res => { room = code; last = state; T._joined = m => res({ ok: !m.full, full: !!m.full }); if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'join', room, id, state })); else res({ ok: false }); }); };
   T.send = state => { last = state; if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'state', state })); };
   T.setShared = (key, obj) => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'obj', key, obj })); };
   T.sendEvent = evt => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'evt', evt })); };
+  T.setLive = (key, obj) => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'live', key, obj: obj == null ? null : { ...obj, at: T.serverNow() } })); };
+  T.serverNow = () => Date.now() + (T.offset || 0);
   T.setVoice = async on => { voiceOn = !!on; if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'voice', on: voiceOn })); };
   T.signal = (to, msg) => { if (ws && ws.readyState === 1 && room) ws.send(JSON.stringify({ type: 'sig', to, msg })); };
   T.leave = () => { wantOpen = false; room = null; voiceOn = false; if (ws) { try { ws.send(JSON.stringify({ type: 'leave' })); } catch (e) { } ws.close(); } };
@@ -68,7 +72,7 @@ function relayTransport(url) {
   return T;
 }
 function firebaseTransport(cfg) {
-  const T = { onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { }, onVoice: () => { }, onSignal: () => { } };
+  const T = { onPlayer: () => { }, onStatus: () => { }, onShared: () => { }, onEvent: () => { }, onVoice: () => { }, onSignal: () => { }, onLive: () => { }, offset: 0 };
   let fb = null, me = null, meRef = null, room = null, last = null, voiceOn = false; const offs = [];
   T.connect = async () => {
     const url = new URL('mp-firebase.js', location.href).href; const M = await import(/* fetched only now */ url); const [{ initializeApp }, A, D] = [M.appMod, M.authMod, M.dbMod];
@@ -76,6 +80,7 @@ function firebaseTransport(cfg) {
     fb = { D, db }; me = cred.user.uid; T.id = me;
     // (the connection comes and goes on phones: when it comes back, put myself back in the room)
     offs.push(D.onValue(D.ref(db, '.info/connected'), s => { const on = !!s.val(); T.onStatus(on); if (on && room) putMe(); }));
+    offs.push(D.onValue(D.ref(db, '.info/serverTimeOffset'), s => { T.offset = Number(s.val()) || 0; })); /* (build 100: one clock for everyone, for shared rides) */
     return me;
   };
   const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); const p = D.set(meRef, { ...last, t: D.serverTimestamp() }); if (voiceOn) p.then(() => putVoice(true)).catch(() => { }); return p; };
@@ -92,6 +97,10 @@ function firebaseTransport(cfg) {
     const objectsRef = D.ref(db, `${base}/objects`);
     offs.push(D.onChildAdded(objectsRef, s => T.onShared(s.key, s.val())), D.onChildChanged(objectsRef, s => T.onShared(s.key, s.val())), D.onChildRemoved(objectsRef, s => T.onShared(s.key, null)));
     offs.push(D.onChildAdded(D.ref(db, `${base}/events`), s => T.onEvent(s.val())));
+    // (build 100) SHARED RIDES: live/<key>: a vehicle record (f_...) or one player's seat (s_<uid>). Quiet if the room's rules are
+    //  older than build 100 (then shared rides just do not appear, and everything else works as before).
+    { const liveRef = D.ref(db, `${base}/live`), quietL = () => { };
+      offs.push(D.onChildAdded(liveRef, s => T.onLive(s.key, s.val()), quietL), D.onChildChanged(liveRef, s => T.onLive(s.key, s.val()), quietL), D.onChildRemoved(liveRef, s => T.onLive(s.key, null), quietL)); }
     // (build 62) talking. The rules let only players of this room write to an inbox, and only its owner read it.
     const quiet = () => { };
     const voiceRef = D.ref(db, `${base}/voice`);
@@ -114,6 +123,13 @@ function firebaseTransport(cfg) {
     D.set(ref, { ...evt, by: me, at: D.serverTimestamp() }).catch(() => { });
     setTimeout(() => { try { D.remove(ref).catch(() => { }); } catch (e) { } }, 30000); // (a wave is a moment, not a history)
   };
+  T.setLive = (key, obj) => {
+    if (!fb || !room || !/^[fs]_[\w-]{1,60}$/.test(key)) return;
+    const { D, db } = fb, ref = D.ref(db, `${ROOM_PATH}/${room}/live/${key}`);
+    if (obj == null) { D.onDisconnect(ref).cancel().catch(() => { }); D.remove(ref).catch(() => { }); return; }
+    D.set(ref, { ...obj, at: D.serverTimestamp() }).catch(() => { }); D.onDisconnect(ref).remove().catch(() => { }); /* (a seat or a vehicle never outlives its player's connection) */
+  };
+  T.serverNow = () => Date.now() + (T.offset || 0);
   T.setVoice = async on => { voiceOn = !!on; if (fb && room) await putVoice(voiceOn); };
   T.signal = (to, msg) => { if (!fb || !room || typeof to !== 'string' || !/^[\w-]{1,60}$/.test(to)) return; const { D, db } = fb; D.push(D.ref(db, `${ROOM_PATH}/${room}/sig/${to}`), { f: me, d: JSON.stringify(msg), at: D.serverTimestamp() }).catch(() => { }); };
   T.leave = () => { for (const f of offs.splice(1)) try { f(); } catch (e) { } if (fb && room) { const { D, db } = fb; if (voiceOn) putVoice(false).catch(() => { }); D.remove(D.ref(db, `${ROOM_PATH}/${room}/sig/${me}`)).catch(() => { }); } voiceOn = false; if (meRef) { fb.D.onDisconnect(meRef).cancel(); fb.D.remove(meRef).catch(() => { }); } meRef = null; room = null; };
@@ -243,7 +259,7 @@ export function initMultiplayer(G, api) {
     if (/^vol\d$/.test(a)) { vc.setVolume(+a[3]); Sound.click(); }
   }
   async function ensure() { if (T) return true; if (!make) return false; T = make(); T.onStatus = on => { const was = online; online = on; if (room && was !== on) { say(on ? '✅ Connected again!' : '📶 Lost the connection… trying again', true); render(panel.classList.contains('show') ? 'room' : undefined); } };
-    T.onPlayer = (id, s) => onPlayer(id, s); T.onShared = (key, obj) => onShared(key, obj); T.onEvent = evt => onEvent(evt);
+    T.onPlayer = (id, s) => onPlayer(id, s); T.onShared = (key, obj) => onShared(key, obj); T.onEvent = evt => onEvent(evt); T.onLive = (key, obj) => onLive(key, obj);
     T.onVoice = (id, on) => { if (!room) return; if (on) voiceIds.add(id); else voiceIds.delete(id); vc.want(id, on); voiceChanged(); }; T.onSignal = (from, msg) => { if (room) vc.onSignal(from, msg); };
     try { await T.connect(); return true; } catch (e) { T = null; say(roomProblem(e), true); return false; } }
   async function roomBusy() { return false; } // (with 20,736 codes and family-only use, a fresh random code is all but always free; joining checks for full rooms)
@@ -264,6 +280,7 @@ export function initMultiplayer(G, api) {
     } catch (e) { room = null; say(roomProblem(e), true); render('home'); } // (build 58: never let a room problem crash the game)
     finally { joining = false; } }
   function leaveRoom(quiet) {
+    if (T && T.setLive && T.id) T.setLive('s_' + T.id, null); for (const k of [...live.keys()]) onLive(k, null); /* (build 100: no seat kept, nothing left over) */
     flushPaint(); talkOff(true); voiceIds.clear(); vc.clearWanted(); if (T) T.leave(); room = null; vcBtn.style.display = 'none'; try { sessionStorage.removeItem(ROOM_KEY); } catch (e) { } /* (the connection object is kept, so joining again reuses it) */
     strokeKeys.length = 0; clearedKeys.clear(); lastClearAt = 0;
     for (const id of [...others.keys()]) removeOther(id, true);
@@ -397,6 +414,17 @@ export function initMultiplayer(G, api) {
   }
 
   // ----- what I send: where I am, what I'm doing and my pets (8 times a second while moving, every 2 s when still) -----
+  // ----- (build 100) SHARED RIDES: the room's live records -----
+  // f_<vehicle>: one shared vehicle (who started it, what it is doing, when, where to); s_<player>: that player's seat.
+  // Every device keeps the same small table and runs the vehicle from the same start time on the room's one clock.
+  const live = new Map(), liveFns = [];
+  function onLive(key, obj) { if (typeof key !== 'string' || !/^[fs]_[\w-]{1,60}$/.test(key)) return; if (obj == null) live.delete(key); else if (typeof obj === 'object') live.set(key, obj); else return; for (const fn of liveFns) { try { fn(key, obj); } catch (e) { console.error(e); } } }
+  G.mpLive = {
+    get on() { return !!(room && T && online); }, me: () => (T && T.id) || null, now: () => (T && T.serverNow ? T.serverNow() : Date.now()),
+    set: (key, obj) => { if (!room || !T || !T.setLive) return; T.setLive(key, obj); onLive(key, obj == null ? null : { ...obj, at: T.serverNow ? T.serverNow() : Date.now() }); },
+    get: key => live.get(key), all: () => live, listen: fn => liveFns.push(fn),
+    peer: id => { const o = others.get(id); return o ? { kind: o.kind, colour: o.colour, st: o.interp.at(performance.now()) } : null; }, peers: () => [...others.keys()],
+  };
   // ----- (build 100) RIDING THE MOON COASTER TOGETHER -----
   // Nothing new is sent: a friend is on the coaster when their "riding" flag is on and they are right on the track. Their
   // place along the track tells which car they are in (the front of the train is the rider furthest along).

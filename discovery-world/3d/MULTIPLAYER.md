@@ -83,6 +83,27 @@ connect, while the rest of Play Together still works. Free choice that needs no 
 - The family's Firebase project is already set up in `src/mp-config.js`. Its values are public by design (they end up in
   the game page); what protects the rooms is the database's rules.
 
+## Shared rides (build 100): the rocket you fly in TOGETHER
+
+Everyone in the room uses **the same rocket** on each launch pad:
+
+- **Climb in** (tap the rocket): you take the next free seat (click-click: seatbelt on) and **your face shows in your own
+  round window** of the rocket, on every friend's screen.
+- **The first one in picks the planet** (the big pictures). Friends who climb in after see that planet on their big
+  button, and press it when they are ready (✋).
+- **The pilot's big button starts ONE countdown for everybody.** If a friend has not pressed ready after a short wait,
+  the rocket goes anyway (nobody is stuck). Every passenger's phone flies the same rocket at the same moment, to the
+  same planet, lands together, and everyone climbs out side by side.
+- **Friends who stay on the pad** watch the rocket lift off; on the other planet, friends there see it come down.
+- **Disconnecting:** a seat (or a pilot) that loses the connection is removed by the database itself, so the others are
+  never stuck. Climbing out (✖ or JUMP) before the countdown gives your seat back.
+- **The Moon coaster:** friends standing on the station platform when the train sets off hop on in the next seats, and
+  each one sees the others in their seats on the same train.
+
+**Needs the new rules (once):** shared rides use a new part of the room, `live`. Until the rules below are published
+again, the shared rocket simply does not appear (each phone flies its own rocket, as before) and everything else in a
+room works exactly as it did. After publishing, it works at once (no update needed on the phones).
+
 ## The one thing left to do once: paste the rules
 
 1. Go to **console.firebase.google.com** and open the project (`dawsons-world`).
@@ -98,6 +119,10 @@ connect, while the rest of Play Together still works. Free choice that needs no 
 What the rules do: only a signed-in game device can read a room, and only if it knows its four-letter code; each device
 can write only its own player entry; a room holds at most 4 players; and `objects`/`events` only accept the three small
 shared shapes (a block, a paint batch of at most 24 lines, a wave). Text is refused.
+(Build 100) `live` holds the shared rides: each player may write only their **own** seat (`s_<their id>`: which vehicle,
+which seat, ready or not); a vehicle record (`f_…`: who is the pilot, boarding or going, the planet, the start time) may
+be written only by its pilot, and anyone in the room may clear one away. Both are removed by the database when their
+player disconnects, and only small numbers and short words are accepted.
 
 ## Cost and free limits (Firebase "Spark" plan: free, no credit card)
 

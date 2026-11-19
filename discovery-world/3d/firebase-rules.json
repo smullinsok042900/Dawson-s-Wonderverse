@@ -130,6 +130,43 @@
                 }
               }
             }
+          },
+          "live": {
+            ".read": "auth != null",
+            "$key": {
+              ".write": "auth != null && ($key.beginsWith('s_') ? $key === 's_' + auth.uid : (!data.exists() || !newData.exists() || data.child('host').val() === auth.uid || newData.child('host').val() === auth.uid))",
+              ".validate": "$key.length < 64 && (($key.beginsWith('s_') && newData.hasChildren(['v', 'seat', 'at'])) || ($key.beginsWith('f_') && newData.hasChildren(['host', 'st', 'at']) && newData.child('host').val() === auth.uid))",
+              "v": {
+                ".validate": "newData.isString() && newData.val().length < 40"
+              },
+              "seat": {
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < 6"
+              },
+              "rd": {
+                ".validate": "newData.isNumber() && (newData.val() === 0 || newData.val() === 1)"
+              },
+              "host": {
+                ".validate": "newData.isString() && newData.val().length < 60"
+              },
+              "st": {
+                ".validate": "newData.val() === 'board' || newData.val() === 'go'"
+              },
+              "d": {
+                ".validate": "newData.isString() && newData.val().length < 12"
+              },
+              "n": {
+                ".validate": "newData.isNumber()"
+              },
+              "t0": {
+                ".validate": "newData.isNumber()"
+              },
+              "at": {
+                ".validate": true
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
           }
         }
       }
