@@ -61,6 +61,7 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('sky dive: the balloon takes you up high and waits for JUMP', top > 60, `top ${top.toFixed(1)}`);
   check('sky dive: you steer left and right while falling', xb - xa > 2, `moved ${(xb - xa).toFixed(1)} m right after going left`);
   check('sky dive: JUMP opens the parachute', chute === 'chute');
+  check('sky dive: wind gusts push you sideways on the way down', await ev(() => (__DDW3.G.skyDiveLast.gusts || 0) >= 1), JSON.stringify(await ev(() => __DDW3.G.skyDiveLast)));
   check('sky dive: you steer to the target and land', land.done && land.y < .2 && Math.abs(land.dx) < 3.5 && await ev(() => __DDW3.world.disc.has('neptunebullseye')), JSON.stringify(land));
   await put(X + 294); await sleep(1500); await run('neptuneskydivego2'); await page.waitForFunction(() => __DDW3.G.skyDive && __DDW3.G.skyDive.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
   const restOk = await ev(() => new Promise(res => { const S = __DDW3.G.skyDive, P = __DDW3.player; P.x = S.tx - 18; P.z = -3; S.R.onJump(); const t0 = performance.now(); let rested = false, tr = 0;
