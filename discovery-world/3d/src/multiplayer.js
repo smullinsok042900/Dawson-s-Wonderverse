@@ -448,6 +448,24 @@ export function initMultiplayer(G, api) {
     TR.followFriend(d.st.x, d.st.vx); trainWith = d.o.id;
     rs.filter(r => r !== d).sort((a, b) => Math.abs(a.st.x - d.st.x) - Math.abs(b.st.x - d.st.x)).forEach((r, i) => { const w = TR.seatWorld(Math.min(3, i + 1), trainSnap); r.o.snap = [w.x, w.y - .05, w.z]; });
   }
+  // ----- (build 104) THE LOG RIDE TOGETHER (the Venus flume) -----
+  // Nothing new is sent: a friend riding along the water channel is on the log. The log holds two: while you ride, a friend
+  // on the log with you sits behind you; while you watch, your log carries the friend; standing at the station as a friend
+  // sets off, you hop in behind them (or tap the log), and you get out together at the end.
+  let logOut = false, logJoinedAt = -1e9, logWas = false, logCand = null;
+  function logTogether(now) {
+    const L = G.venusLog; logCand = null; if (!L || P.layer !== 'space' || !L.alive()) { logOut = false; return; }
+    const rs = []; for (const o of others.values()) { const st = o.interp.at(now); if (!st || !st.r || st.l !== 'space' || Math.abs(st.x - P.x) > 120 || !L.onFlume(st.x, st.y, st.z)) continue; rs.push({ o, st }); }
+    const mine = P.ride && P.ride.type === 'logride'; if (logWas && !mine) logJoinedAt = now; logWas = mine;
+    if (mine) { if (P.ride.passenger) return; let n = null, nd = 5; for (const r of rs) { const d = Math.hypot(r.st.x - P.x, r.st.y - P.y, r.st.z - P.z); if (d < nd) { nd = d; n = r; } }
+      if (n) n.o.snap = L.seatBehind(n.o.snapL || (n.o.snapL = [0, 0, 0])); logOut = false; return; }
+    if (!rs.length) { if (logOut) { L.reset(); logOut = false; } return; }
+    rs.sort((a, b) => b.st.x - a.st.x); const d = rs[0]; L.showAt(d.st); logOut = true; if (rs[1]) rs[1].o.snap = L.seatBehind(rs[1].o.snapL || (rs[1].o.snapL = [0, 0, 0]));
+    if (rs.length < 2 && L.nearStart(d.st.x) && !P.ride && now - logJoinedAt > 20000) { logCand = d.o.id; if (L.atStation(P.x) && P.y < 1.6) logHop(now); }
+  }
+  function logHop(now) { const L = G.venusLog, id = logCand; if (!L || id == null) return false; logJoinedAt = now; logOut = false;
+    return L.join(() => { const o = others.get(id); if (!o) return null; const s = o.interp.at(performance.now()); return s && s.r && s.l === 'space' && L.onFlume(s.x, s.y, s.z) ? s : null; }); }
+  if (!G.venusLogTap) G.venusLogTap = () => logCand != null && logHop(performance.now());
   G.trainJoin = () => { const TR = G.train; if (!TR || !trainWith || P.ride) return; const sx = TR.seatX(); if (Math.abs(P.x - sx) > 7 || Math.abs(TR.state.vs) > 1) { say('🚂 Wait for the train to stop at your station!', true); return; }
     const taken = trainRiders(performance.now()).length; TR.boardPassenger(Math.min(3, taken)); };
   // ----- (build 100) RIDING THE MOON COASTER TOGETHER -----
@@ -482,11 +500,11 @@ export function initMultiplayer(G, api) {
   function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']) }; }
   function myPets() { const list = Array.isArray(world.pets) ? world.pets : []; return list.slice(0, LIMITS.pets).map(petKey); }
   function update(dt) {
-    if (!room) return; const now = performance.now();
+    if (!room) { if (logOut && G.venusLog) { G.venusLog.reset(); logOut = false; } return; } const now = performance.now();
     sendT -= dt; const s = myState(), key = JSON.stringify(s);
     if (T && online && ((key !== lastSent && sendT <= 0) || sendT < -2)) { T.send(s); lastSent = key; sendT = .125; }
     if (paintBatch.pending() && now - lastPaintAt > 400) paintBatch.flush(now);
-    coasterTogether(now); trainTogether(now);
+    coasterTogether(now); trainTogether(now); logTogether(now);
     for (const o of others.values()) {
       if (now - o.seen > 20000) { removeOther(o.id); continue; } // (a phone that vanished without saying goodbye)
       syncPeerPets(o);
