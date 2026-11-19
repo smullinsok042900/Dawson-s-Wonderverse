@@ -36,6 +36,7 @@ import { initLearning } from './learn.js';
 import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
+import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD, makeTree } from './nature.js';
@@ -169,7 +170,7 @@ const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.
 function groundUnder(x, y) { if (player.layer === 'sea') return SEA.floor; let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
   if (creature) scene.remove(creature.root);
-  player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root);
+  player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root); wear(creature.parts, kind, (world.wear || {})[kind]); /* (build 101: her outfit for this friend) */
   { const bb = new THREE.Box3().setFromObject(creature.root); G.headTop = bb.max.y - creature.root.position.y; } // (for the princess crown)
   document.querySelectorAll('.creatureChoice').forEach(b => b.classList.toggle('chosen', b.dataset.c === kind));
 }
@@ -984,6 +985,17 @@ function renderStyle() {
   });
   $('sparkleBtn').classList.toggle('on', !!world.sparkle);
 }
+// (build 101) DRESS-UP: the 👗 button opens big picture buttons: pick a friend, then hats, glasses, scarves, wings... one tap to
+//  wear, one tap to take off, 🧺 takes everything off; swipe on the right to turn her round. Saved for each friend.
+const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => Object.keys(CREATURES).map(k => [k, portraits[k]]), kind: () => player.creature,
+  setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
+  Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; } });
+G.dress = dress; G.me = () => creature; /* (tests: her character) */
+{ const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
+  b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
+let wearHere = null; // planet surprises: landing on some planets finds a new thing to wear
+function wearFind() { const h = player.layer === 'space' ? space.here() : null; if (h === wearHere) return; wearHere = h; if (!h || !WEAR_FOUND[h]) return; const id = dress.find(h); if (!id) return;
+  const it = WEAR_ITEMS.find(q => q[0] === id); toast(`🎁 ${it ? it[2] : ''} A surprise to wear! Tap 👗`); Sound.chime(); discover('wear_' + id); }
 $('styleBtn').addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; renderStyle(); $('stylePanel').classList.add('show'); Sound.click(); });
 $('styleDone').addEventListener('pointerdown', e => { e.preventDefault(); $('stylePanel').classList.remove('show'); Sound.click(); });
 $('sparkleBtn').addEventListener('pointerdown', e => { e.preventDefault(); world.sparkle = !world.sparkle; renderStyle(); Sound.twinkle(); discover('sparkle', 'A sparkle trail!'); save(); });
@@ -1100,7 +1112,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
-  space.update(dt, t); rkWatchFrame(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
+  space.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
@@ -1380,7 +1392,7 @@ function frame() {
   creature.root.position.set(ix, iy, iz); creature.root.visible = !G.playerHidden;
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
-  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy });
+  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy }); tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
   creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)

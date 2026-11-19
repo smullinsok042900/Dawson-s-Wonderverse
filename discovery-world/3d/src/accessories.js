@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
 import { attach } from './sculpt.js';
+import { glass as glassMat } from './jupiter-world.js';
 
 // where things sit on each friend (positions on the character at rest, as in characters.js)
 export const FIT = {
@@ -62,7 +63,7 @@ export const FOUND = { moon: 'helmet', saturn: 'starband', pluto: 'flowers', nep
 const built = new Map(); let G0 = null;
 function itemMesh(id) { if (built.has(id)) return built.get(id); const it = ITEMS.find(q => q[0] === id); if (!it) return null; G0 = G0 || G();
   const b = makeBatch(); it[3](b, G0); const m = b.mesh(shinyMat()); m.castShadow = true; m.userData.acc = id; m.userData.opts = it[4] || {};
-  if (it[4] && it[4].bubble) { const glass = new THREE.Mesh(new THREE.SphereGeometry(.46, 24, 16), new THREE.MeshStandardMaterial({ color: '#dff4ff', transparent: true, opacity: .22, roughness: .05, depthWrite: false })); glass.position.y = -.32; m.add(glass); }
+  if (it[4] && it[4].bubble) { const gb = makeBatch(); gb.put(new THREE.SphereGeometry(.46, 24, 16), 0, 0, 0, '#dff4ff'); const glass = gb.mesh(glassMat(.22)); /* (the shared see-through material the game prepares at start: no shader pause) */ glass.position.y = -.32; m.add(glass); }
   built.set(id, m); return m; }
 export const slotOf = id => (ITEMS.find(q => q[0] === id) || [])[1] || null;
 export const fits = (kind, id) => { const sl = slotOf(id); return !!(sl && FIT[kind] && FIT[kind][sl]); };
