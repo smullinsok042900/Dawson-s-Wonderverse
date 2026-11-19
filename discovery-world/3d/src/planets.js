@@ -591,7 +591,9 @@ function venusLogRide(k, X) {
     cb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF2.x, PF2.y, PF2.z, '#ff6fd8', 1, [0, Math.atan2(-(PJ2.z - PF2.z), PJ2.x - PF2.x) + Math.PI / 2, 0]); k.add(cb.mesh(glowMat())); }
   const place = (u, pth = path) => { const p = pth.getPointAt(u); pth.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
   place(0);
-  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
+  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return;
+    if (TOG.busy) { if (TOG.tapJoin && TOG.tapJoin()) return; k.say('🪵 Your friend is riding the log! Wait here and hop in next time!', true); return; } /* (build 104: a friend's log is out) */
+    k.say('🪵 All aboard the log! Hold on tight!', true);
     let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0, onC = false, uc = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; } for (const q of splashT) { q.hit = false; q.m.material.emissiveIntensity = .2; } let hits = 0;
     k.say('🪵 Steer the log with ◀ ▶ to catch the stars! Press JUMP to SPLASH!', true);
     jupiterRide(k, 'logride', (R, dt) => {
@@ -620,6 +622,26 @@ function venusLogRide(k, X) {
       k.Sound.tone(520 + hits * 80, .15, 'triangle', .07, 1.5); if (hits === 1) k.say('💦 SPLASH! You hit a target! Steer toward the next one!', false);
       if (hits === splashT.length) { k.Sound.chime(); k.say('💦 You splashed all five targets!', true); k.disc('venussplashgame'); } }; };
   k.tapIt(log, go, st, 'venuslogride');
+  // (build 104) THE LOG RIDE TOGETHER (Play Together): the log holds two. Standing at the station when a friend sets off, you
+  //  hop in behind them; friends who watch see the log carry its riders (multiplayer.js moves this log). Nothing new is sent:
+  //  a friend on the log is known from where they are (on the water channel) and their riding flag.
+  const samples = []; for (const [pth, n] of [[path, 600], [pathB, 60], [pathC, 60]]) for (let i = 0; i <= n; i++) { const p = pth.getPointAt(i / n); samples.push([p.x, p.y, p.z, i / n, pth]); }
+  const nearest = (x, y, z) => { let b = null, bd = 9; for (const q of samples) { const dx = q[0] - x, dy = q[1] + .25 - y, dz = q[2] - z, d = dx * dx + dy * dy + dz * dz; if (d < bd) { bd = d; b = q; } } return b; }; // (within 3 m of the channel)
+  const seatV = new THREE.Vector3(), P0 = path.getPointAt(0);
+  const putAt = s => { const q = nearest(s.x, s.y, s.z); if (q) place(q[3], q[4]); log.position.set(s.x, s.y - .25, s.z); log.updateMatrixWorld(); };
+  const TOG = k.G.venusLog = {
+    log, st, busy: false, tapJoin: () => !!(k.G.venusLogTap && k.G.venusLogTap()),
+    alive: () => { let o = log; while (o.parent) o = o.parent; return !!o.isScene; },
+    onFlume: (x, y, z) => !!nearest(x, y, z),
+    nearStart: x => Math.abs(x - P0.x) < 12, atStation: x => Math.abs(x - st) < 8,
+    showAt: s => { if (P.ride && P.ride.type === 'logride') return; TOG.busy = true; putAt(s); },
+    reset: () => { TOG.busy = false; if (!P.ride || P.ride.type !== 'logride') place(0); },
+    seatBehind: out => { log.updateMatrixWorld(); log.localToWorld(seatV.set(-.85, .25, 0)); out[0] = seatV.x; out[1] = seatV.y - .05; out[2] = seatV.z; return out; },
+    join: friend => { if (P.layer !== 'space' || P.ride) return false; TOG.busy = false; k.say('🪵 You hop in the log behind your friend! Hold on tight!', true); k.Sound.chime && k.Sound.chime();
+      jupiterRide(k, 'logride', (R, dt) => { const s = friend(); if (!s) return true; putAt(s); log.localToWorld(seatV.set(-.85, .25, 0)); P.x = seatV.x; P.y = seatV.y; P.z = seatV.z; P.facing = s.vx < 0 ? -1 : 1; R.roll = 0; return false; },
+        () => { P.x = st + 64.8; P.y = 0; P.z = 0; place(0); k.say('🪵 What a ride together!', true); }, { noExit: true });
+      P.ride.passenger = true; P.ride.onJump = () => { k.api.burst(P.x, P.y + .6, P.z, ['#ffffff', '#cfefff', '#4fb8ff'], 18, 3); k.Sound.pop && k.Sound.pop(); }; return true; },
+  };
   k.tapIt(pool, () => k.fact('🌊 The splash pool! Real Venus is far too hot for water, so this water is pretend!', 'venuspool'), pc.x, 'venuspool');
 }
 const venus = {
