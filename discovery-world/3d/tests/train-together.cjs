@@ -31,9 +31,11 @@ let fail = 0; const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS
   // A drives to the 🌈 station; on the way B stays in the same train, and each sees the other in their seat
   const rb = await A.evaluate(() => __DDW3.train.STATIONS.findIndex(s => s.e === '🌈')); await A.evaluate(i => __DDW3.train.goTo(i), rb);
   await sleep(6000);
-  const mid = { A: await A.evaluate(() => ({ x: __DDW3.player.x })), B: await B.evaluate(() => ({ x: __DDW3.player.x, riding: !!__DDW3.player.ride })) };
+  // (each screen is compared with itself, in one frame: the two pages run at 1–2 fps, so their own clocks differ by a second)
+  const mid = await B.evaluate(() => { const TR = __DDW3.G.train, o = [...__DDW3.G.mp.others.values()][0], w = TR.seatWorld(__DDW3.player.ride ? __DDW3.player.ride.seat : 1, new __DDW3.THREE.Vector3());
+    return { riding: !!(__DDW3.player.ride && __DDW3.player.ride.passenger), following: TR.following, inSeat: +Math.abs(__DDW3.player.x - w.x).toFixed(2), trainToA: o ? +Math.abs(TR.seatX() - o.model.root.position.x).toFixed(2) : null, moving: Math.abs(TR.state.vs) }; });
   const snapA = await A.evaluate(() => { const o = [...__DDW3.G.mp.others.values()][0], w = __DDW3.G.train.seatWorld(1, new __DDW3.THREE.Vector3()); return o && o.snap ? +Math.abs(o.model.root.position.x - w.x).toFixed(2) : null; });
-  check('on the way, B rides along in the same train (close behind A), and A sees B in the seat behind', mid.B.riding && Math.abs(mid.A.x - mid.B.x) < 6 && snapA != null && snapA < .5, JSON.stringify({ ...mid, snapA }));
+  check('on the way, B rides in its seat on the same train as A (on B\'s screen the train is where A is), and A sees B in the seat behind', mid.riding && mid.following && mid.inSeat < .5 && mid.trainToA != null && mid.trainToA < 3 && snapA != null && snapA < .5, JSON.stringify({ ...mid, snapA }));
   const arrivedA = await until(A, i => Math.abs(__DDW3.train.seatX() - __DDW3.train.STATIONS[i].x) < .6, rb, 180000);
   await sleep(1500); await A.evaluate(() => __DDW3.train.hopOff());
   const bOff = await until(B, () => !__DDW3.player.ride, null, 20000), bx = await B.evaluate(() => __DDW3.player.x), sx = await A.evaluate(i => __DDW3.train.STATIONS[i].x, rb);
