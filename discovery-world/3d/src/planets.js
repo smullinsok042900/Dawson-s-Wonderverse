@@ -227,7 +227,7 @@ const pluto = {
       bounceCastle(k, X + 46, 9, ['#9fd8ff', '#5aa8ff', '#fff3a6', '#ffb35c'], 5.8);
       bounceCastle(k, X + 74, 12, ['#ffd23f', '#ff6fae', '#7fe0a0', '#5aa8ff'], 7.4, true);
       plutoMatchGame(k); // (build 78) the puffy picture-matching game
-      plutoRainbowTower(k); // (build 92) the second tower with the spiral slide
+      // plutoRainbowTower(k); // (build 92: written and tested, but 7-15% slower where it is in view on desktop; off until it is lighter)
       k.rocketSign(X + 4);
     },
     // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----
