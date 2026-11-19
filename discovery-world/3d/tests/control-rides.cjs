@@ -16,6 +16,8 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   let X;
   if (process.env.ONLY !== 'mars') {
   X = await fly('neptune'); await put(X + 150); await sleep(2000); await put(X + 250); await sleep(2500);
+  await put(X + 128); await sleep(1500); await run('neptunewindbutton'); await sleep(300); const wb = await ev(() => [__DDW3.G.windBlow, __DDW3.world.disc.has('neptunewindbutton')]);
+  check('the wind button: tap the big fan and a strong gust blows the swings', wb[0] > 3 && wb[1], JSON.stringify(wb));
   await put(X + 136); await sleep(1500); await run('neptuneswing');
   const sw = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxA = 0, last = 0, flew = false; const f = () => { const R = P.ride;
     if (R && R.type === 'wswing') { maxA = Math.max(maxA, R.maxA || 0); if (performance.now() - last > 500) { last = performance.now(); R.onJump(); } }
@@ -74,6 +76,9 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(X + 135, 2); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; __DDW3.keys.up = true; });
   const ctr = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0; const f = () => { maxY = Math.max(maxY, P.y); if (performance.now() - t0 > 9000) return res({ maxY }); requestAnimationFrame(f); }; f(); })); await keys({ up: false });
   check("the canyon trampoline: hold ▲ to bounce high enough for the mesas, through the hoop", ctr.maxY > 9 && await ev(() => __DDW3.world.disc.has("marscanyonhoop")), JSON.stringify(ctr));
+  await put(X + 110 + 45); await sleep(600); await keys({ right: true });
+  const br = await ev(() => new Promise(res => { const t0 = performance.now(); const f = () => { if (__DDW3.world.disc.has('marsbouncewin') || performance.now() - t0 > 40000) return res({ won: __DDW3.world.disc.has('marsbouncewin'), next: __DDW3.G.bounceRace && __DDW3.G.bounceRace.next, x: __DDW3.player.x }); requestAnimationFrame(f); }; f(); })); await keys({ right: false });
+  check('the bounce race: hold ▶ and bounce along all five trampolines, one each bounce, to win', br.won, JSON.stringify(br));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();
