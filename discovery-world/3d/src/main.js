@@ -38,6 +38,7 @@ import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import './new-friends-2.js'; // (build 102) four more
+import { prewarmFriend } from './characters.js'; // (build 102) new friends are sculpted in the background
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
@@ -992,7 +993,8 @@ function renderStyle() {
 let picBusy = false; // (one new friend's picture per frame, so opening the panel never freezes the game; ❔ until it is ready)
 function newFriendPictures() { if (picBusy) return; const miss = Object.keys(CREATURES).filter(k => !portraits[k]); if (!miss.length) return; picBusy = true;
   const next = () => { const k = Object.keys(CREATURES).find(q => !portraits[q]); if (!k) { picBusy = false; try { localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } return; }
-    try { Object.assign(portraits, renderPortraits([k])); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); };
+    prewarmFriend(k).then(() => requestAnimationFrame(() => { /* (build 102: sculpted in the background first; drawing the picture is then quick) */
+      try { Object.assign(portraits, renderPortraits([k])); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); })); };
   requestAnimationFrame(next); }
 const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
   setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
@@ -1679,7 +1681,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '101'; G.build = GAME_BUILD;
+const GAME_BUILD = '102'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
