@@ -7,6 +7,20 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 92 (bungee balloons, double swing, trampoline switch, splash game, rainbow wall)
+Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 91 and 92 run alternately (2 runs each for Neptune and Venus). Each cell: ms per frame / draw calls; the first spot after arriving varies a lot, so it is left out.
+
+| Spot | Build 91 | Build 92 |
+|---|---|---|
+| Neptune +150 (wind swings) | 181 / 65 | 186 / 69 |
+| Neptune +158 (double swing) | 176 / 63 | 181 / 67 |
+| Neptune +186 (bungee) | 172 / 65 | 175 / 65 (balloons are hidden until the ride) |
+| Mars +221 (trampoline switch) | 169 / 74 | 176 / 76 |
+| Mars +276 (rainbow wall) | 152 / 69 | 157 / 70 (low-detail handholds, no stars, no shadow; first try was 163 / 72) |
+| Venus +160 (rapids) | 199 / 69 | 204 / 75 |
+| Venus +190 | 219 / 86 | 216 / 91 |
+| Pluto +199 / +211 (rainbow tower) | 189 / 178 | 203 / 204 → tower **switched off** in build 92 |
+
 ## Build 69 (the giant Moon coaster)
 Desktop, software rendering (SwiftShader), iPhone-sized 844 × 390 view. `cperf4.cjs` (Moon station view 12 s, boarding, 20 s of riding), build 68 and build 69 run alternately, twice each:
 

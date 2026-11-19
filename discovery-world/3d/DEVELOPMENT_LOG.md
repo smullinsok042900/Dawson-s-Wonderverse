@@ -4,6 +4,18 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 92 — bungee balloons, double swing, trampoline switch, splash game, rainbow wall
+- **Builds 73–91** are recorded row by row in `ATTRACTIONS.md` (each with its own test and full smoke result).
+- **Build 92** (desktop, software rendering; not tried on an iPhone):
+  - Neptune bungee: THE REBOUND GAME. After the first bounce, three balloons appear around the cord's end; steer ◀ ▶ and bounce to pop them (`control-rides`: 3 popped).
+  - Neptune: THE DOUBLE SWING. A wide seat shared with a little Neptune friend; JUMP pumps it higher; swing high together (`control-rides`: 1.15 rad).
+  - Mars trampoline park: THE GENTLE / HIGH PICTURE SWITCH (feather or rocket). On the feather a bounce reaches 4.3 m, even holding ▲; on the rocket 30.7 m (`control-rides`).
+  - Mars, area 3: THE RAINBOW WALL. A second climbing wall (16 m); the bell rings at the top, then the ZIP LINE takes her down to a landing mat (`control-rides`).
+  - Venus flume: THE RAPIDS SPLASH GAME. Five targets beside the rapids; steer toward one and press JUMP to splash it (`venus-flume`: 5 of 5).
+  - Pluto: a second tower (the rainbow tower with a spiral slide) is written and passes its tests, but is switched OFF. It was 7–15 % slower where it is in view, even after three rounds of trimming.
+  - Test fix: the wind button check waits for the next frame instead of a fixed 300 ms (the test browser runs at 1–2 fps).
+  - Build 91 full smoke test: 233/236. All 3 failures come from one missed test tap on Biscuit; a separate run shows tapping him works.
+
 ## Checkpoint: build 72 — Saturn jump ramps, lighter Jupiter slides, smoke checks for the build 71 rides
 - **Build 71** (merged in PRs #76 and #77):
   - Neptune: the bungee you control, and the Big Sky Dive;
