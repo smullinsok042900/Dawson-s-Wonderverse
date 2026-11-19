@@ -281,11 +281,12 @@ export function plutoSquishMaze(k) {
     const w = { g, wx, i, flat: 0, solid: { a: wx - .5, b: wx + .5, top: 3, layer: 'space', key: 'plutosquish' + i } }; G.solids.push(w.solid); walls.push(w);
     k.tapIt(g, () => { if (P.layer !== 'space' || w.flat > 0) return; w.flat = 5; const j = G.solids.indexOf(w.solid); if (j >= 0) G.solids.splice(j, 1); S.boing(); S.tone(180, .25, 'sawtooth', .04, .6); k.api.burst(wx, .6, -1, RB, 10, 1.6); if (i === 0) k.fact('🎈 The puffy squish maze! Tap a wall to SQUISH it, then walk over it!', 'plutosquishmaze'); }, wx, 'plutosquish' + i); });
   // the prize balloon at the end
-  const prize = new THREE.Mesh(G0.ball, toy('#ff4f6a', { r: .3, em: '#ff2f5a', ei: .25 })); prize.scale.set(.6, .75, .6); prize.position.set(x(108.6), 2.4, -1.2); k.add(prize); let won = false;
+  const prize = new THREE.Mesh(G0.ball, toy('#ff4f6a', { r: .3, em: '#ff2f5a', ei: .25 })); prize.scale.set(.6, .75, .6); prize.position.set(x(108.6), 2.4, -1.2); k.add(prize); let won = false, entered = false;
   k.U.push((dt, t) => { for (const w of walls) { if (w.flat > 0) { w.flat = Math.max(0, w.flat - dt); if (w.flat === 0) { if (Math.abs(P.x - w.wx) < .7 && P.y < 2) { w.flat = .5; continue; } /* (never puff up under her) */ G.solids.push(w.solid); S.tone(520, .15, 'sine', .04, 1.4); } }
       const sq = w.flat > 0 ? Math.max(.12, 1 - Math.min(1, (5 - w.flat) * 6)) : Math.min(1, w.g.scale.y + dt * 3); w.g.scale.y = w.flat > 0 ? sq : sq; }
     prize.position.y = 2.4 + Math.sin(t * 2) * .15;
-    if (!won && P.layer === 'space' && P.x > x(107.8) && P.y < 3) { won = true; S.chime(); k.api.burst(prize.position.x, prize.position.y, -1.2, RB, 30, 2.6); k.say('🎈 You got through the puffy squish maze! A prize balloon for you!', true); k.disc('plutosquishwin'); }
+    if (P.layer === 'space' && P.y < 3 && P.x > x(95) && P.x < x(97.2)) entered = true; /* (the prize is won only by walking in at the start, through the walls) */
+    if (!won && entered && P.layer === 'space' && P.x > x(107.8) && P.y < 3) { won = true; entered = false; G.squishWins = (G.squishWins || 0) + 1; S.chime(); k.api.burst(prize.position.x, prize.position.y, -1.2, RB, 30, 2.6); k.say('🎈 You got through the puffy squish maze! A prize balloon for you!', true); k.disc('plutosquishwin'); }
     if (won && P.x < x(96)) won = false; });
   G.squishMaze = walls;
 }

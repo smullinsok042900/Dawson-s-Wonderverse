@@ -82,3 +82,52 @@ export function tickWorn(P, t, run = 0) { if (!P || !P.worn) return; const w = P
 // a compact code for an outfit (for Play Together): "crown.sunglasses..wings" (head.face.neck.back)
 export const outfitCode = o => SLOTS.map(([s]) => (o && o[s]) || '').join('.');
 export const outfitFrom = code => { const o = {}; if (typeof code !== 'string' || code.length > 60) return o; code.split('.').forEach((id, i) => { if (id && ITEMS.some(q => q[0] === id && q[1] === SLOTS[i][0])) o[SLOTS[i][0]] = id; }); return o; };
+
+// ---------- the DRESS-UP panel: pictures only (no reading), one tap to wear or take off ----------
+// api: { world, save(), kinds: () => [[kind, pictureURL]], kind: () => current, setKind(k), rewear(), Sound, speak(text), spin(dx) }
+export function initDressUp(api) {
+  const css = `#dressPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:50%;transform:translateY(-50%) translateX(-110%);transition:transform .25s;z-index:31;width:min(48vw,440px);max-height:88vh;overflow-y:auto;background:linear-gradient(160deg,#fffdf6,#f2e8ff);border:5px solid #fff;border-radius:28px;padding:10px;box-shadow:0 10px 0 #47216c55,0 24px 50px #29104c88;display:grid;gap:8px;touch-action:pan-y}
+#dressPanel.show{transform:translateY(-50%) translateX(0)}
+#dressPanel .dRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+#dressPanel button{border:none;border-radius:18px;background:#fff;box-shadow:0 4px 0 #c9b6e8;min-width:62px;min-height:62px;font-size:34px;padding:4px;line-height:1}
+#dressPanel button.on{background:#ffe36e;box-shadow:0 4px 0 #e0a800,0 0 0 4px #ff9fd2 inset}
+#dressPanel button.no{opacity:.28}
+#dressPanel .dKid img{width:54px;height:54px;border-radius:50%;display:block}
+#dressPanel .dKid.on{background:#c9f0ff;box-shadow:0 4px 0 #5aa8ff,0 0 0 4px #5aa8ff inset}
+#dressPanel .dTab{font-size:30px;min-width:56px;min-height:56px;background:#f4ecff}
+#dressPanel .dTab.on{background:#c9a6ff}
+#dressPanel .dDone{background:#7fe0a0;box-shadow:0 4px 0 #3a9a5a;font-size:36px;min-width:88px}
+#dressSpin{position:fixed;right:0;top:0;bottom:0;width:50vw;z-index:30;display:none;touch-action:none}
+#dressSpin.show{display:block}`;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  const panel = document.createElement('div'); panel.id = 'dressPanel'; document.body.appendChild(panel);
+  const spin = document.createElement('div'); spin.id = 'dressSpin'; document.body.appendChild(spin);
+  let slot = 'head', lastX = null;
+  const W = () => { const w = api.world; w.wear = w.wear || {}; w.wearFound = w.wearFound || {}; return w; };
+  const outfit = () => { const w = W(), k = api.kind(); return (w.wear[k] = w.wear[k] || {}); };
+  const found = id => { const locked = Object.values(FOUND).includes(id); return !locked || !!W().wearFound[id]; };
+  const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
+  function render() {
+    const k = api.kind(), o = outfit(); panel.innerHTML = '';
+    const kids = document.createElement('div'); kids.className = 'dRow';
+    for (const [kind, pic] of api.kinds()) { const b = document.createElement('button'); b.className = 'dKid' + (kind === k ? ' on' : ''); b.setAttribute('aria-label', kind); b.innerHTML = pic ? `<img src="${pic}" alt="">` : '❔'; tap(b, () => { api.setKind(kind); api.Sound && api.Sound.chime && api.Sound.chime(); render(); }); kids.appendChild(b); }
+    panel.appendChild(kids);
+    const tabs = document.createElement('div'); tabs.className = 'dRow';
+    for (const [s, icon] of SLOTS) { const b = document.createElement('button'); b.className = 'dTab' + (s === slot ? ' on' : '') + (FIT[k] && FIT[k][s] ? '' : ' no'); b.textContent = icon; b.setAttribute('aria-label', s); tap(b, () => { if (!(FIT[k] && FIT[k][s])) { api.speak && api.speak('That one does not fit this friend. Try another!'); return; } slot = s; api.Sound && api.Sound.click && api.Sound.click(); render(); }); tabs.appendChild(b); }
+    const off = document.createElement('button'); off.className = 'dTab'; off.textContent = '🧺'; off.setAttribute('aria-label', 'take everything off'); tap(off, () => { for (const [s] of SLOTS) delete o[s]; api.rewear(); api.save(); api.Sound && api.Sound.whoosh && api.Sound.whoosh(); render(); }); tabs.appendChild(off);
+    panel.appendChild(tabs);
+    const grid = document.createElement('div'); grid.className = 'dRow';
+    for (const [id, s, icon] of ITEMS) { if (s !== slot) continue; const b = document.createElement('button'), have = found(id), ok = fits(k, id); b.className = (o[s] === id ? 'on' : '') + (ok ? '' : ' no'); b.textContent = have ? icon : '🎁'; b.setAttribute('aria-label', id);
+      tap(b, () => { if (!have) { api.speak && api.speak('A surprise! Find it on a planet!'); api.Sound && api.Sound.twinkle && api.Sound.twinkle(); return; } if (!ok) return; if (o[s] === id) delete o[s]; else o[s] = id; api.rewear(); api.save(); api.Sound && api.Sound.tone && api.Sound.tone(o[s] ? 660 : 440, .12, 'triangle', .05, 1.4); render(); });
+      grid.appendChild(b); }
+    panel.appendChild(grid);
+    const done = document.createElement('div'); done.className = 'dRow'; const d = document.createElement('button'); d.className = 'dDone'; d.textContent = '✓'; d.setAttribute('aria-label', 'done'); tap(d, close); done.appendChild(d); panel.appendChild(done);
+  }
+  function open() { render(); panel.classList.add('show'); spin.classList.add('show'); api.Sound && api.Sound.click && api.Sound.click(); api.speak && api.speak('Dress up! Tap a picture to wear it.'); }
+  function close() { panel.classList.remove('show'); spin.classList.remove('show'); api.spin && api.spin(null); api.Sound && api.Sound.click && api.Sound.click(); }
+  spin.addEventListener('pointerdown', e => { lastX = e.clientX; spin.setPointerCapture(e.pointerId); });
+  spin.addEventListener('pointermove', e => { if (lastX == null) return; const dx = e.clientX - lastX; lastX = e.clientX; api.spin && api.spin(dx); });
+  spin.addEventListener('pointerup', () => { lastX = null; });
+  return { open, close, render, get isOpen() { return panel.classList.contains('show'); },
+    find(planet) { const id = FOUND[planet]; if (!id) return null; const w = W(); if (w.wearFound[id]) return null; w.wearFound[id] = true; api.save(); return id; } };
+}
