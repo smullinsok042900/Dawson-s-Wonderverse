@@ -21,6 +21,11 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   const pz = await ev(() => { const M = __DDW3.G.mazePlus; for (let i = 0; i < 3; i++) { let n = 0; while (M.turns[i] !== 1 && n++ < 4) M.turn(i); } return { solved: M.solved, turns: M.turns }; });
   check('the light-beam puzzle: turn the three mirrors and the light shines through', pz.solved && await has('mercurybeam'), JSON.stringify(pz));
   await sleep(3000); await put(x0 + 66); await sleep(1500); check('the hidden mirror door opens to the maze treasure', await has('mercurymazetreasure'));
+  // (build 99) the rotating mirror walls: walk right along the ground route from x0+30; each wall blocks you while it faces you, then turns and lets you through
+  await put(x0 + 30); await sleep(800); const bl = await ev(() => { __DDW3.keys.right = true; return true; });
+  const rw = await ev(x0 => new Promise(res => { const P = __DDW3.player, W = __DDW3.G.mazeRot, t0 = performance.now(); let blocked = 0, lastX = P.x; const f = () => { const w = W.find(w => Math.abs(P.x - w.wx) < 1.2); if (w && w.closed && Math.abs(P.x - lastX) < .01) blocked++; lastX = P.x;
+    if (P.x > x0 + 52 || performance.now() - t0 > 90000) { __DDW3.keys.right = false; return res({ x: P.x - x0, blocked, passed: W.map(w => w.passed), disc: __DDW3.world.disc.has('mercuryrotwalls') }); } requestAnimationFrame(f); }; f(); }), x0);
+  check('the rotating mirror walls: they block you while they face you, then turn and let you through', rw.x > 52 && rw.passed.every(Boolean) && rw.disc, JSON.stringify(rw));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();

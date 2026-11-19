@@ -14,7 +14,7 @@ import { toy } from './creatures.js';
 import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
-import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
+import { mercuryFunhouse, mercuryMazePlus, mercuryRotatingWalls } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField, marsCanyonTramp, marsBounceRace, marsZipWall } from './control-rides.js';
 import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs, plutoRainbowTower, uranusIceTrail, uranusIceTunnels } from './big-parks.js';
 
@@ -414,7 +414,7 @@ function mercuryMirrorMaze(k, X) {
 }
 const mercury = {
   sections: [
-    k => { mercuryMirrorMaze(k, k.s0); mercuryMazePlus(k); k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze + (build 74) the gallery, light-beam puzzle, hidden door
+    k => { mercuryMirrorMaze(k, k.s0); mercuryMazePlus(k); mercuryRotatingWalls(k); /* (build 99) */ k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze + (build 74) the gallery, light-beam puzzle, hidden door
     k => { mercuryFunhouse(k); k.rocketSign(k.s0 + 108); }, // area 3: (build 71) the giant carnival funhouse (it replaces the rocks)
   ],
 };
