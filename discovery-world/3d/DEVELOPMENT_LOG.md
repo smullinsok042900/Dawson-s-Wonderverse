@@ -4,6 +4,10 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 98 — a loop-the-loop on Saturn's outer ring
+- **Saturn Ring Raceway: THE LOOP-THE-LOOP.** Near the end of the outer ring route, after its last star, the kart rides right round a glowing loop (with sparkles and a chime), then carries on round the ring (`saturn-rides` all passed: the outer route 3 times, 3 loops).
+- Desktop (software rendering) speed: Saturn the same, draw calls unchanged (see `PERFORMANCE_LOG.md`). Not tried on an iPhone.
+
 ## Checkpoint: build 97 — the ice tunnel doors in the Uranus palace
 - **Uranus Ice Palace: THE ICE TUNNEL DOORS.** Three round ice doors, each with its own picture: ❄️ on the palace ground floor, ⭐ upstairs, 🌙 out by the skating rink. Tap one: she dives into the ice tunnel (whoosh, sparkles, an echoing chime) and pops out of the next door (`parks`: ❄️ → ⭐ → 🌙 → ❄️, all passed).
 - The game is seen from the side, so a tunnel behind the palace wall could not be seen; the tunnels are a short ride between doors instead of rooms to walk.
