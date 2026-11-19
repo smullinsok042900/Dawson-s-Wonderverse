@@ -599,7 +599,7 @@ function venusLogRide(k, X) {
       if (onC) { uc = Math.min(1, uc + Math.max(3.5, v) / lenC * dt); const pc = place(uc, pathC); P.x = pc.x; P.y = pc.y + .25; P.z = pc.z; R.roll = 0; if (Math.random() < dt * 5) k.api.burst(pc.x, pc.y + 1.5, pc.z, ['#b07bff', '#62f0ff', '#ff6fd8', '#ffffff'], 2, 1.2);
         if (uc >= 1) { onC = false; u = uJ2; R.pu = u; k.Sound.chime(); } return false; }
       if (!R.forked2 && u >= uF2 - .002 && u <= uF2 + .05) { /* (the first step at or past the arch, however big the step) */ R.forked2 = true; if (off < -.2) { onC = true; uc = 0; R.cave = true; k.Sound.twinkle && k.Sound.twinkle(); k.say('💎 The crystal cave! Look at all the sparkles!', true); k.disc('venuscrystalcave'); return false; } }
-      if (!R.forked && u >= uF - .002 && u <= uF + .01) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
+      if (!R.forked && u >= uF - .002 && u <= uF + .05) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
       path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
       if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
       else { crest = Math.max(y0, crest - dt * .35); v = Math.max(2.6, Math.min(17, Math.sqrt(7 + 2 * 9 * Math.max(0, crest - y0)))); if (splashed) v = Math.max(2.2, v - dt * 14); }
@@ -614,7 +614,7 @@ function venusLogRide(k, X) {
       return u >= 1; }, () => { P.x = st + 66; P.y = 0; P.z = 0; place(0); k.say('🪵 What a ride! Tap the log to ride again!', true); }, { noExit: true });
     if (P.ride) P.ride.onJump = () => { k.api.burst(P.x, P.y + .6, P.z, ['#ffffff', '#cfefff', '#4fb8ff'], 18, 3); k.Sound.pop && k.Sound.pop(); P.ride.splashes = (P.ride.splashes || 0) + 1;
       /* (build 92) the splash game: a jet of water hits the nearest target on the side you steer toward */
-      if (onB) return; const q = splashT.find(q => !q.hit && u > q.u - .02 && u < q.u + .008 && off * q.sd >= -.05); if (!q) return; q.hit = true; q.spin = 1.2; q.m.material.emissiveIntensity = 1.3; hits++; P.ride.hits = hits;
+      if (onB) return; const q = splashT.find(q => !q.hit && u > q.u - .03 && u < q.u + .012 && off * q.sd >= -.05); if (!q) return; q.hit = true; q.spin = 1.2; q.m.material.emissiveIntensity = 1.3; hits++; P.ride.hits = hits;
       const a = q.m.position; for (let i = 1; i <= 4; i++) k.api.burst(P.x + (a.x - P.x) * i / 4, P.y + .8 + (a.y - P.y - .8) * i / 4, P.z + (a.z - P.z) * i / 4, ['#ffffff', '#4fb8ff'], 5, 1.2);
       k.Sound.tone(520 + hits * 80, .15, 'triangle', .07, 1.5); if (hits === 1) k.say('💦 SPLASH! You hit a target! Steer toward the next one!', false);
       if (hits === splashT.length) { k.Sound.chime(); k.say('💦 You splashed all five targets!', true); k.disc('venussplashgame'); } }; };
