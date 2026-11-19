@@ -112,8 +112,19 @@ export function marsZipWall(k) {
   k.U.push(dt => { if (!P.floatDown) return; if (P.ride || P.grounded) { P.floatDown = false; return; } P.vy = Math.max(P.vy, -3); });
 }
 
+// (build 96) the 📷 picture button for the sky dive: tap it for a HIGH VIEW looking down at you and the landing target,
+//  tap again for the close view. It shows only during the sky dive. (A button, because the joystick steers and JUMP opens the parachute.)
+let camEl = null;
+function camBtn(k, R) {
+  if (!camEl) { camEl = document.createElement('button'); camEl.id = 'camViewBtn'; camEl.className = 'pill'; camEl.setAttribute('aria-label', 'camera view'); camEl.textContent = '📷';
+    Object.assign(camEl.style, { display: 'none', position: 'fixed', right: 'max(16px, env(safe-area-inset-right))', top: 'calc(max(8px, env(safe-area-inset-top)) + 132px)', zIndex: 30, fontSize: '40px', minWidth: '76px', minHeight: '76px', borderRadius: '24px', alignItems: 'center', justifyContent: 'center' });
+    camEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const r = camEl._ride; if (!r || r.over) return; r.far = !r.far; r.views = (r.views || 0) + 1; k.Sound.click ? k.Sound.click() : k.Sound.tone(660, .08, 'triangle', .05, 1); camEl.textContent = r.far ? '🔍' : '📷'; });
+    document.body.appendChild(camEl); }
+  camEl._ride = R; camEl.textContent = '📷'; camEl.style.display = R ? 'flex' : 'none';
+}
 // =================== NEPTUNE: THE BIG SKY DIVE ===================
 export function neptuneSkyDive(k, X) {
+  k.U.push(() => { if (camEl && camEl._ride && (camEl._ride.over || k.P.ride !== camEl._ride)) camBtn(k, null); });   /* (build 96: hide the 📷 button if the dive ended another way) */
   const P = k.P, G0 = GEO(), bx = X + 74, TOP = 70, tx = X + 84;   // the balloon at bx, the landing target at tx
   // the balloon and basket, the target, clouds, hoops (all made once; two meshes)
   const bal = new THREE.Group(); bal.position.set(bx, 0, -2.5); k.add(bal); { const b = makeBatch(); b.put(G0.ball, 0, 5, 0, '#5aa8ff', [2.2, 2.6, 2.2]); for (let i = 0; i < 8; i++) b.put(G0.box, Math.cos(i * .785) * 2, 5, Math.sin(i * .785) * 2, i % 2 ? '#ffffff' : '#ffd23f', [.12, 4.6, .12], [0, -i * .785, 0]);
@@ -148,9 +159,11 @@ export function neptuneSkyDive(k, X) {
       for (const isl of islands) if (!(isl === R.left && R.t - R.leftT < 2) && vy < 0 && P.y - vy * dt >= isl.y - .1 && P.y <= isl.y + .1 && Math.hypot(P.x - isl.x, P.z - isl.z) < isl.r) /* (her height before and after this step) */ { ph = 'rest'; rest = isl; P.y = isl.y; vy = 0; vx = vz = 0; R.rests = (R.rests || 0) + 1; k.Sound.boing(); k.api.burst(P.x, P.y, P.z, ['#ffffff'], 12, 1.6); k.say('☁️ A cloud island! Walk about, then press JUMP to dive again!', true); return false; }
       if (ph === 'fall' && (R.open || P.y < 18)) { ph = 'chute'; chute.visible = true; k.Sound.boing(); k.say('🪂 Parachute open! Steer to the red target!', true); }
       if (chute.visible) chute.position.set(P.x, P.y + .6, P.z);
+      if (R.far) k.G.camOverride = { skydive: true, pos: [P.x + 5, P.y + 18, P.z + 26], look: [P.x, Math.max(0, P.y - 16), P.z - 1] }; else if (k.G.camOverride && k.G.camOverride.skydive) k.G.camOverride = null;   /* (build 96: the 📷 high view) */
       if (P.y <= 0) { P.y = 0; return true; } return false; },
-      R => { chute.visible = false; bal.position.y = 0; P.vy = 0; const bull = Math.hypot(P.x - tx, (P.z || 0) + 1) < 3.3; P.z = 0; k.api.burst(P.x, .6, 0, RB, bull ? 30 : 12, 2.6); k.Sound.chime();
+      R => { camBtn(k, null); if (k.G.camOverride && k.G.camOverride.skydive) k.G.camOverride = null; chute.visible = false; bal.position.y = 0; P.vy = 0; const bull = Math.hypot(P.x - tx, (P.z || 0) + 1) < 3.3; P.z = 0; k.api.burst(P.x, .6, 0, RB, bull ? 30 : 12, 2.6); k.Sound.chime();
         k.say(bull ? '🎯 BULLSEYE! A perfect landing on the target!' : '🪂 You landed! Tap the balloon to dive again!', true); k.disc(bull ? 'neptunebullseye' : 'neptuneskydived'); G_last.hoops = hoopsGot; G_last.bull = bull; G_last.gusts = R.gusts || 0; });
+    camBtn(k, R);
     R.onJump = () => { if (ph === 'ready') R.go = true; else if (ph === 'rest') R.go2 = true; else if (ph === 'fall') R.open = true; };
     k.G.skyDive = { R, get ph() { return ph; }, hoops: hoopPts, tx }; };
   const G_last = k.G.skyDiveLast = {};

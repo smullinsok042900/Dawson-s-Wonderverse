@@ -58,13 +58,18 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(X + 294); await sleep(1500); await run('neptuneskydivego2');
   await page.waitForFunction(() => __DDW3.G.skyDive && __DDW3.G.skyDive.ph === 'ready', null, { timeout: 60000 }).catch(() => {});
   await ev(() => { window.__rests = 0; const end = performance.now() + 900000; let t0 = 0; const f = () => { const S = __DDW3.G.skyDive, R = __DDW3.player.ride; if (S && R && S.ph === 'rest') { if (!t0) { t0 = performance.now(); window.__rests++; } else if (performance.now() - t0 > 1500) { R.onJump(); t0 = 0; } } if (performance.now() < end) requestAnimationFrame(f); }; f(); }); // (build 79: rest on a cloud island, then dive on)
-  const top = await ev(() => __DDW3.player.y); await ev(() => __DDW3.player.ride.onJump()); await keys({ left: true });
+  const top = await ev(() => __DDW3.player.y);
+  const cam = await ev(() => new Promise(res => { const el = document.getElementById('camViewBtn'), shown = !!el && el.style.display === 'flex'; if (!shown) return res({ shown });
+    el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); requestAnimationFrame(() => requestAnimationFrame(() => { const far = !!(__DDW3.G.camOverride && __DDW3.G.camOverride.skydive);
+      el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); requestAnimationFrame(() => requestAnimationFrame(() => res({ shown, far, back: !(__DDW3.G.camOverride && __DDW3.G.camOverride.skydive) }))); })); }));
+  await ev(() => __DDW3.player.ride.onJump()); await keys({ left: true });
   await page.waitForFunction(() => __DDW3.player.y < 50, null, { timeout: 60000 }).catch(() => {}); const xa = await ev(() => __DDW3.player.x); await keys({ left: false, right: true });
   await page.waitForFunction(() => __DDW3.player.y < 35, null, { timeout: 60000 }).catch(() => {}); const xb = await ev(() => __DDW3.player.x); await keys({ right: false });
   await ev(() => __DDW3.player.ride && __DDW3.player.ride.onJump()); await sleep(800); const chute = await ev(() => __DDW3.G.skyDive.ph);
   const tx = await ev(() => __DDW3.G.skyDive.tx);
   const land = await ev(tx => new Promise(res => { const D = __DDW3, P = D.player, t0 = performance.now(); const f = () => { D.keys.left = P.x > tx + .5; D.keys.right = P.x < tx - .5; if (!P.ride || performance.now() - t0 > 90000) { D.keys.left = D.keys.right = false; return res({ y: P.y, dx: P.x - tx, done: !P.ride }); } requestAnimationFrame(f); }; f(); }), tx);
   check('sky dive: the balloon takes you up high and waits for JUMP', top > 60, `top ${top.toFixed(1)}`);
+  check('sky dive: the 📷 picture button shows the high view, and tapping again goes back', cam.shown && cam.far && cam.back, JSON.stringify(cam));
   check('sky dive: you steer left and right while falling', xb - xa > 2, `moved ${(xb - xa).toFixed(1)} m right after going left`);
   check('sky dive: JUMP opens the parachute', chute === 'chute');
   check('sky dive: wind gusts push you sideways on the way down', await ev(() => (__DDW3.G.skyDiveLast.gusts || 0) >= 1), JSON.stringify(await ev(() => __DDW3.G.skyDiveLast)));
