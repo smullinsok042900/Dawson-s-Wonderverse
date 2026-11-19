@@ -67,6 +67,7 @@ function buildTrain() {
     const spoke = new THREE.Mesh(new THREE.BoxGeometry(.34, .04, .13), hubM); w.add(spoke);
   }
   const seat = new THREE.Object3D(); seat.position.set(-TRAIN.seat, .62, 0); T.add(seat); T.userData.seat = seat;
+  T.userData.seats = [seat, ...[[-TRAIN.seat - .62, 0], [-4.35 + .32, 0], [-4.35 - .42, 0]].map(([x, z]) => { const o = new THREE.Object3D(); o.position.set(x, .62, z); T.add(o); return o; })]; // (build 102: friends ride along)
   T.userData.chimneyTop = new THREE.Vector3(.72, 1.5, 0);
   T.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
   return T;
@@ -104,7 +105,7 @@ export function initTrain(G, api) {
 
   // ---------- the train itself ----------
   const train = buildTrain(); add(train);
-  api.tap(train, () => { const P = api.player; if (P.ride && P.ride.type === 'train') { whistle(); return; } const i = nearestStation(P.x); if (Math.abs(STATIONS[i].x - P.x) < 6) call(i); });
+  api.tap(train, () => { const P = api.player; if (P.ride && P.ride.type === 'train') { whistle(); return; } if (follow) { if (G.trainJoin) G.trainJoin(); return; } /* (build 102: a friend is driving: hop on with them) */ const i = nearestStation(P.x); if (Math.abs(STATIONS[i].x - P.x) < 6) call(i); });
   // T.x is the engine's position; the seat is TRAIN.seat behind it
   const HOME = Math.max(0, STATIONS.findIndex(s => s.e === '🏠')), T = { x: STATIONS[HOME].x + TRAIN.seat, dir: 1, v: 0, vs: 0, mode: 'parked', at: HOME, target: 0, wait: 0, pending: -1, dest: -1 };
   const seatX = () => T.x - T.dir * TRAIN.seat;
@@ -120,6 +121,7 @@ export function initTrain(G, api) {
   function puff(n = 1) { for (let k = 0; k < n; k++) { const p = puffs[puffI++ % puffs.length]; V.copy(train.userData.chimneyTop); train.localToWorld(V); p.m.position.copy(V); p.m.position.x += (Math.random() - .5) * .2; p.life = 1; p.m.visible = true; p.vx = -T.dir * T.v * .25 + (Math.random() - .5) * .4; } }
 
   function call(i) {
+    if (follow) { if (G.trainJoin) G.trainJoin(); return; } /* (build 102: the shared train is a friend's right now) */
     const P = api.player; if (P.ride || P.layer !== '' || P.y > 1) { if (!(P.ride && P.ride.type === 'train')) Sound.click(); return; }
     const st = STATIONS[i];
     st.bells.forEach(b => { b.userData.sw = .6; }); Sound.bell(1318, .05); Sound.bell(1046, .04, .18);
@@ -157,10 +159,11 @@ export function initTrain(G, api) {
     const toward = (goal, vmax) => { const sx = seatX(), d = goal - sx, dir = Math.sign(d) || 1, stopV = Math.sqrt(Math.max(0, 2 * ACC * Math.abs(d)));
       let sp = Math.abs(T.vs); sp = Math.min(vmax, stopV + .3, sp + ACC * dt); T.vs = dir * sp; let nx = sx + T.vs * dt;
       if ((goal - nx) * dir <= 0 || Math.abs(d) < .02) { nx = goal; T.vs = 0; seatAt(nx); return true; } seatAt(nx); return false; };
-    if (T.mode === 'arriving') {
+    if (follow) { const pv = seatX(); seatAt(follow.x); T.vs = follow.vs || (follow.x - pv) / Math.max(dt, .001) * .5; T.mode = riding && P.ride && P.ride.passenger ? 'driving' : 'remote'; if (Math.random() < dt * (1 + Math.abs(T.vs) * .8)) puff(); }
+    else if (T.mode === 'arriving') {
       if (toward(STATIONS[T.target].x, 13)) board(T.target);
       if (Math.random() < dt * (2 + Math.abs(T.vs))) puff();
-    } else if (T.mode === 'driving') {
+    } else if (T.mode === 'driving' && !(riding && P.ride && P.ride.passenger)) {
       let d = 0;
       if (stick && stick.active) { if (stick.dx > 30) d = 1; else if (stick.dx < -30) d = -1; }
       if (keys.right) d = 1; if (keys.left) d = -1;
@@ -182,9 +185,20 @@ export function initTrain(G, api) {
     const bob = T.v > .5 ? Math.sin(t * 22) * .012 : 0; train.position.y = bob;
     train.userData.wheels.forEach(w => { w.rotation.z -= T.vs * T.dir * dt / .2; });
     for (const p of puffs) if (p.life > 0) { p.life -= dt * 1.05; p.m.position.y += dt * (1.6 + (1 - p.life) * 1.4); p.m.position.x += p.vx * dt; p.m.scale.setScalar(1 + (1 - p.life) * 2.4); p.m.material.opacity = Math.max(0, p.life) * .8; if (p.life <= 0) p.m.visible = false; }
-    if (riding) { train.updateMatrixWorld(true); train.userData.seat.getWorldPosition(V); P.x = V.x; P.y = V.y - .05; P.z = V.z; P.facing = T.vs > .3 ? 1 : T.vs < -.3 ? -1 : P.facing; P.vx = T.vs; P.grounded = true; }
+    if (riding && P.ride) { train.updateMatrixWorld(true); /* (build 103: the ride can end this very frame, e.g. on arriving) */ train.userData.seats[P.ride && P.ride.passenger ? P.ride.seat : 0].getWorldPosition(V); P.x = V.x; P.y = V.y - .05; P.z = V.z; P.facing = T.vs > .3 ? 1 : T.vs < -.3 ? -1 : P.facing; P.vx = T.vs; P.grounded = true; }
   }
+  // (build 102) RIDING THE TRAIN TOGETHER (Play Together): a friend's train is the shared one. While a friend drives, this
+  //  train follows the friend's seat (it is the same train on every screen); you can hop on as a passenger (your own seat)
+  //  when it stands at your station, and you get off together when the driver gets off.
+  let follow = null; // { x, vs } this frame, from multiplayer
+  function followFriend(x, vs) { const P = api.player, riding = P.ride && P.ride.type === 'train';
+    if (x == null) { if (follow) { follow = null; if (riding && P.ride.passenger) hopOff(); else if (!riding) { T.mode = 'parked'; T.vs = 0; T.at = nearestStation(seatX()); } } return; }
+    if (riding && !P.ride.passenger) return; follow = { x, vs: vs || 0 }; }
+  function seatWorld(k, out) { train.updateMatrixWorld(true); return train.userData.seats[Math.max(0, Math.min(3, k))].getWorldPosition(out); }
+  function boardPassenger(k) { const P = api.player; if (P.ride || P.layer !== '' || P.y > 1.5 || !follow) return false;
+    P.ride = { type: 'train', passenger: true, seat: Math.max(1, Math.min(3, k)) }; P.vx = P.vy = 0; Sound.chime(); burst(seatX(), 1.2, TRAIN.z, ['#fff', '#ffd23f', '#ff8fc8'], 12, 2);
+    toast('🚂 All aboard with your friend!'); discover('traintogether', '🚂 You rode the train together!'); return true; }
   // (build 30) ride to a station automatically (from the picture strip)
   function goTo(i) { const P = api.player; if (!(P.ride && P.ride.type === 'train') || i < 0 || i >= STATIONS.length) return; if (Math.abs(seatX() - STATIONS[i].x) < .5) { api.arrived && api.arrived(i); return; } T.dest = i; T.vtrip = Math.min(36, Math.max(20, Math.abs(STATIONS[i].x - seatX()) / 14)); whistle(); } // (build 34: long trips go express, up to 36 m/s, so the far end is half a minute away, not a minute)
-  return { update, call, hopOff, whistle, goTo, seatX, state: T, train, STATIONS };
+  return { update, call, hopOff, whistle, goTo, seatX, state: T, train, STATIONS, followFriend, boardPassenger, seatWorld, get following() { return !!follow; } };
 }

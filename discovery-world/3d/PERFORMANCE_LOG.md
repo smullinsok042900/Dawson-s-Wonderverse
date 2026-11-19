@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 103 (riding the Earth train together)
+Desktop, software rendering; `tests/perf/ba.cjs`, builds 102 and 103, four rounds each in both orders. Script ms per frame (average): park 14.4 → 15.6 (each build ranges 12.8–17.4), creatures 10.3 → 10.3, castle 14.2 → 14.6; shader programs 115 → 115; draw calls and triangles the same; no new long tasks. The new code runs only inside a Play Together room.
+
 ## Build 102 (four more friends)
 Desktop, software rendering; builds 101 and 102 alternately, twice each: Moon +30 204 → 207 ms, +50 176 → 176, +79 170 → 168; draw calls the same. New friends' pictures (first time only): the first about 11 s on this software renderer (preparing the friends' materials), then about 1 s each, one per frame. Background sculpting was measured at 5–11 s per picture and dropped.
 
