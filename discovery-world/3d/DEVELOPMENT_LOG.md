@@ -10,6 +10,7 @@ are in `PERFORMANCE_LOG.md`.
   - Bug found and fixed: on the fast rapids one big step (a slow frame) could jump right over the fork's narrow window, so the steering was never checked. Both forks now trigger on the first step at or past their arch.
   - The splash targets moved onto the rapids before the fork, with the last one on the right, so aiming at them never sends the log into the cave by accident.
   - Test fix: the flume test pressed JUMP only between 3.0 and 3.2 s of the ride (a window that can be skipped at 1–2 fps); it now presses once at the first frame after 3 s.
+- **Full smoke test: 236/236.**
 - Desktop (software rendering) speed: Neptune and Venus the same as build 92 (see `PERFORMANCE_LOG.md`). Not tried on an iPhone.
 
 ## Checkpoint: build 92 — bungee balloons, double swing, trampoline switch, splash game, rainbow wall
