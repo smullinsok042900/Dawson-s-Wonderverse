@@ -7,6 +7,7 @@ are in `PERFORMANCE_LOG.md`.
 ## Checkpoint: build 95 — the giant bungee tower
 - **Neptune bungee: THE GIANT TOWER.** 10 m more on top (34 m) with its own red jumping board. On the top board, push ▲ to climb up to it; JUMP for a long fall (lowest point about 8 m), bounces, then she is lowered down (`control-rides` all passed).
 - Bug found and fixed before shipping: the text used to insert the giant-jump code also matched in the sky dive, so a copy landed there and froze the sky dive at the top (`giant is not defined`). Found by the ride test; the copy is removed.
+- **Full smoke test: 236/236.**
 - Desktop (software rendering) speed: Neptune the same as build 94 (the tower pieces are part of the tower mesh). Not tried on an iPhone.
 
 ## Checkpoint: build 94 — the winding ice trail on Uranus
