@@ -102,7 +102,11 @@ A tour of every district found these still looking like placeholders. Do them in
 - **Play Together, a world you share (build 56): paste the database rules once** (`firebase-rules.json`, step 3 of
   `MULTIPLAYER.md`), check that anonymous sign-in is on, then test on two real devices: build together, paint together,
   see a friend's pets, wave, leave and rejoin (the room keeps its world). The first push runs the new GitHub build.
-- Multiplayer after build 56: the colouring pictures, shared karts/train rides, seeing a friend's creation in other
+- **Two real phones in one room (builds 100–103):** the shared rocket, the Moon coaster together, the outfit, and the Earth
+  train together (one drives, the other taps the train at the station, ride, get off together). Desktop tests pass; never
+  tried on phones.
+- Multiplayer still to share: the log flume and other multi-seat rides; hugs, high-fives, dancing; co-op activities;
+  the colouring pictures, karts, seeing a friend's creation in other
   places (nursery, art gallery), and a "friend is here" picture on the map.
 - **Rooms refused ("Permission denied") on the phone (build 58):** open `…/discovery-world/3d/?mpcheck` and send the
   lines it shows — they name the database address, whether sign-in worked, and which read or write was refused.

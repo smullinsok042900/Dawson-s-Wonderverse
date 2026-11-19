@@ -99,6 +99,9 @@ Everyone in the room uses **the same rocket** on each launch pad:
   never stuck. Climbing out (✖ or JUMP) before the countdown gives your seat back.
 - **The Moon coaster:** friends standing on the station platform when the train sets off hop on in the next seats, and
   each one sees the others in their seats on the same train.
+- **The Earth train (build 103):** when a friend drives the train, it is the same train on every screen. Tap it at the
+  station to hop on in a seat behind them (up to three friends); you ride together and get off together. Nothing new is
+  sent, so it needs no new rules.
 
 **Needs the new rules (once):** shared rides use a new part of the room, `live`. Until the rules below are published
 again, the shared rocket simply does not appear (each phone flies its own rocket, as before) and everything else in a
@@ -157,7 +160,7 @@ on the Spark plan.
 
 ## Notes for the next build
 
-- The colouring pictures, the karts, the train and the rest of the world are still each device's own; the two shared
+- The colouring pictures, the karts and the rest of the world are still each device's own; the two shared
   places are the Block Builder wall and the paint wall.
 - Paint is shared live while you are in the room. A picture painted before you joined stays on your own device (it is
   part of your saved world) and is not uploaded.
