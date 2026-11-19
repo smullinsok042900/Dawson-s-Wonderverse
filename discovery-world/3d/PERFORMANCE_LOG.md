@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 100 (Moon coaster fixes and the station near the rocket; shared rides)
+Desktop, software rendering; `pplanet.cjs`, builds 99 and 100 alternately, twice each. ms per frame / draw calls: Moon +30 249 / 67–83 → 210 / 67; +50 179 / 74 → 182 / 73; +79 (the new station) 176 / 64 → 186 / 69 (runs 168 → 174 and 183 → 198: noise); +150 193 / 86 → 200 / 86. (+20 is the first spot after landing and varies too much: 655 → 606.) Shared rides cost nothing when not in a room; in a room, a few small records per ride.
+
 ## Build 99 (rotating mirror walls in the Mercury maze)
 Desktop, software rendering; `pplanet.cjs`, builds 98 and 99 alternately, four times each. Mercury +180 (maze): 245, 243, 270, 296 → 231, 318, 235, 215 ms (average 264 → 250); draw calls 77–78 → 78–79. (+150 is the first spot after arriving and varies too much to compare.)
 

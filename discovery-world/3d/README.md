@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 100: the Moon coaster fixed, its station by the rocket, and riding together
+- **Moon coaster:** the camera never looks from under the cart any more; real tunnel and cave openings (no more diving into solid rock); the station is now close to the rocket.
+- **Play Together:** climb into the same rocket together (your own seat, your face in a window, one countdown, land together), and hop on the Moon coaster with friends. Needs the new database rules once (see `MULTIPLAYER.md`).
+- **Pluto:** the puffy squish maze: tap each puffy wall to squish it flat, walk on to the prize balloon.
+
 ## 3D build 99: rotating mirror walls in the Mercury maze
 - Two big mirror walls turn round and round on the maze's ground route: wait for the gap, then walk through.
 
