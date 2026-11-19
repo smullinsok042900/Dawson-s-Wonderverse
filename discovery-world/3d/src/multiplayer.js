@@ -431,7 +431,7 @@ export function initMultiplayer(G, api) {
   //   • while you ride, friends on the same train are drawn exactly in their seats on your train (no lag behind);
   //   • while you watch, your train follows them along the track, so you see them riding in it;
   //   • standing on the station platform when a friend's train sets off: you hop on, in the next free seat.
-  let trainOut = false, joinedAt = -1e9;
+  let trainOut = false, joinedAt = -1e9, wasMine = false;
   const nearI = (C, x, y, z, i0) => { const p = C.pos, N = C.N; let best = -1, bd = 1e9; const a = i0 == null ? 0 : Math.max(0, i0 - 40), b = i0 == null ? N : Math.min(N, i0 + 90), st = i0 == null ? 4 : 1;
     for (let i = a; i < b; i += st) { const dx = p[i * 3] - x, dy = p[i * 3 + 1] + .3 - y, dz = p[i * 3 + 2] - z, d = dx * dx + dy * dy + dz * dz; if (d < bd) { bd = d; best = i; } }
     if (i0 == null && best >= 0) return nearI(C, x, y, z, Math.max(0, best - 30)); return [best, Math.sqrt(bd)]; };
@@ -443,9 +443,12 @@ export function initMultiplayer(G, api) {
       const st = o.interp.at(now); if (!st || !st.r || st.l !== 'space') { o.ci = null; continue; }
       const [i, d] = nearI(C, st.x, st.y, st.z, o.ci); if (i < 0 || d > 3) { o.ci = null; continue; } o.ci = i; riders.push(o); }
     const mine = P.ride && P.ride.type === 'coaster';
+    if (wasMine && !mine) joinedAt = now; wasMine = mine; /* (after your own ride: no hopping straight back on) */
     if (!riders.length) { if (trainOut && !mine) { C.placeTrain(C.homeI); trainOut = false; } return; }
     const front = mine ? P.ride.i : Math.max(...riders.map(o => o.ci)), occupied = new Set(mine ? [P.ride.seat || 0] : []);
-    for (const o of riders) { const k = Math.round((front - o.ci) / C.CAR_GAP); if (k >= 0 && k <= 3 && Math.abs(front - Math.min(2, k) * C.CAR_GAP - o.ci) < C.CAR_GAP * .9) { o.snap = seatAt(C, front, occupied.has(k) && k === 2 ? 3 : k, o.snapA || (o.snapA = [0, 0, 0])); occupied.add(k); } }
+    // seats in order along the train (front-most rider first), skipping your own: every device agrees, however laggy the network
+    const near = riders.filter(o => Math.abs(front - o.ci) < 4 * C.CAR_GAP + 40).sort((a, b) => b.ci - a.ci);
+    for (const o of near) { const k = [0, 1, 2, 3].find(q => !occupied.has(q)); if (k == null) break; occupied.add(k); o.snap = seatAt(C, front, k, o.snapA || (o.snapA = [0, 0, 0])); }
     if (!mine) { C.placeTrain(front); trainOut = true;
       // hop on: standing on the platform while a friend's train is just setting off from the station
       if (!P.ride && front < C.homeI + 70 && now - joinedAt > 20000 && Math.abs(P.x - (C.stationX - 4)) < 9 && P.y < 1.6 && Math.abs((P.z || 0) + 1) < 3 && G.startCoaster) {
