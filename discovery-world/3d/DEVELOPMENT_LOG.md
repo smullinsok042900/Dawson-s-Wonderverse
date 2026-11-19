@@ -7,6 +7,7 @@ are in `PERFORMANCE_LOG.md`.
 ## Checkpoint: build 96 — the 📷 camera button on the sky dive
 - **Neptune sky dive: THE 📷 PICTURE BUTTON.** It appears only during the sky dive (the joystick steers and JUMP opens the parachute, so the view needs its own button). Tap it for a HIGH VIEW looking down at her and the landing target; tap again (🔍) for the close view. It hides itself when the dive ends, however it ends (`control-rides` all passed).
 - Found by the test and fixed: the first version only changed the view while falling (the waiting part of the ride returns early); the view is now set at the start of every ride step.
+- **Full smoke test: 236/236.** Desktop speed: Neptune the same or slightly faster than build 95.
 - Desktop (software rendering) only; not tried on an iPhone.
 
 ## Checkpoint: build 95 — the giant bungee tower

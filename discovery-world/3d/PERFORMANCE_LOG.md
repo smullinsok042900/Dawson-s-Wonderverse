@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 96 (the 📷 camera button on the sky dive)
+Desktop, software rendering; `pplanet.cjs`, builds 95 and 96 alternately, twice each. ms per frame / draw calls: Neptune +150 193 / 71 → 192 / 70; +158 194 / 67 → 186 / 67; +186 187 / 64 → 176 / 64. (The button is part of the page, not the 3D scene.)
+
 ## Build 95 (the giant bungee tower)
 Desktop, software rendering; `pplanet.cjs`, builds 94 and 95 alternately, twice each. ms per frame / draw calls: Neptune +150 187 / 69 → 188 / 70; +158 186 / 67 → 187 / 67; +186 (bungee) 177 / 64 → 176 / 64.
 
