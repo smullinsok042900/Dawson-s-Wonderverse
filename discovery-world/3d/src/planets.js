@@ -428,15 +428,19 @@ function neptuneWindSwings(k, X) {
   { const cb = makeBatch(), lo = new THREE.SphereGeometry(1, 8, 6); for (let i = 0; i < 6; i++) cb.put(lo, sx + 9 + i * 1.3, .25, -1.4 + (i % 2) * .5, '#ffffff', [1.2, .45, 1.1]); k.add(cb.mesh(glowMat())); } // (build 82: the soft cloud cushion you fly onto)
   // white wind streaks blowing across
   const streakM = toy('#ffffff', { r: .2, em: '#ffffff', ei: .4 }), streaks = [...Array(10)].map((_, i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.6, .05, .05), streakM); m.position.set(X + Math.random() * 60, 1 + (i * 1.7) % 6, -2 - (i % 4)); k.add(m); return m; });
-  let gust = 0; k.U.push((dt, t) => { gust = .5 + .5 * Math.sin(t * .6); for (const m of streaks) { m.position.x += dt * (8 + gust * 10); if (m.position.x > X + 70) m.position.x = X + 4; } sock.children[0].rotation.y = Math.sin(t * 2) * .2 * gust; });
+  // (build 90) THE WIND BUTTON: a big fan; tap it and a strong gust blows for 5 s: the empty swings fly high, and yours gets a push
+  let blow = 0; const fan = new THREE.Group(); fan.position.set(sx - 8, 0, -3); k.add(fan); { const fb = makeBatch(); fb.put(cyl, 0, 1.1, 0, '#5a6a8a', [.12, 2.2, .12]); fb.put(cyl, 0, 2.4, 0, '#9fd8ff', [1, .25, 1], [Math.PI / 2, 0, 0]); fan.add(fb.mesh(shinyMat()));
+    const bl = makeBatch(); for (let i = 0; i < 4; i++) bl.put(new THREE.BoxGeometry(1, 1, 1), 0, 0, 0, '#ffffff', [1.6, .3, .05], [0, 0, i * Math.PI / 4]); const blades = bl.mesh(shinyMat()); blades.position.set(0, 2.4, .2); fan.add(blades); fan.userData.blades = blades; }
+  k.tapIt(fan, () => { if (P.layer !== 'space') return; blow = 5; k.Sound.whoosh(); k.fact('💨 WHOOSH! A big gust of Neptune wind! Look at the swings fly!', 'neptunewindbutton'); }, sx - 8, 'neptunewindbutton');
+  let gust = 0; k.U.push((dt, t) => { blow = Math.max(0, blow - dt); fan.userData.blades.rotation.z += dt * (2 + blow * 6); gust = .5 + .5 * Math.sin(t * .6) + (blow > 0 ? 1.5 : 0); k.G.windBlow = blow; for (const m of streaks) { m.position.x += dt * (8 + gust * 10); if (m.position.x > X + 70) m.position.x = X + 4; } sock.children[0].rotation.y = Math.sin(t * 2) * .2 * gust; });
   [-2.6, 0, 2.6].forEach((dx, i) => { const piv = new THREE.Group(); piv.position.set(sx + dx, H, -3); k.add(piv); const pb = makeBatch();
     for (const z of [-.3, .3]) pb.put(cyl, 0, -L / 2, z, '#d8e0ea', [.025, L, .025]); pb.put(new THREE.BoxGeometry(1, 1, 1), 0, -L, 0, ['#ff6fae', '#7fe0a0', '#ffd23f'][i], [.85, .1, .66]); piv.add(pb.mesh(shinyMat()));
-    let idle = 0; k.U.push((dt, t) => { if (!(P.ride && P.ride.swing === piv)) { idle += dt; piv.rotation.z = Math.sin(t * 1.6 + i) * .12 * gust; } });
+    let idle = 0; k.U.push((dt, t) => { if (!(P.ride && P.ride.swing === piv)) { idle += dt; piv.rotation.z = Math.sin(t * 1.6 + i) * (blow > 0 ? .7 : .12 * gust); } });
     const go = () => { if (!near(sx + dx)) return; k.fact('🌬️ Neptune has the fastest winds of all the planets! The wind pushes your swing!', 'neptunewind');
       // (build 82) YOU pump the swing: press JUMP and it goes higher (the wind helps a little). When it is really high,
       //  press JUMP at the top of a forward swing to LET GO and fly onto the soft cloud cushion.
       let amp = .25, th = 0, flew = false, idleT = 0;
-      jupiterRide(k, 'wswing', (R, dt) => { th += dt * 1.9; idleT += dt; amp = Math.max(.2, Math.min(1.3, amp + gust * .012 * dt * 60 * .1 - (idleT > 4 ? dt * .03 : 0)));
+      jupiterRide(k, 'wswing', (R, dt) => { th += dt * 1.9; idleT += dt; if (blow > 0) { amp = Math.min(1.3, amp + dt * .2); idleT = 0; R.blown = true; } amp = Math.max(.2, Math.min(1.3, amp + gust * .012 * dt * 60 * .1 - (idleT > 4 ? dt * .03 : 0)));
         const a = amp * Math.sin(th); piv.rotation.z = a; R.swing = piv; R.amp = amp;
         P.x = piv.position.x + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) - .35; P.z = -3; P.facing = Math.cos(th) >= 0 ? 1 : -1; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
         if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5);
