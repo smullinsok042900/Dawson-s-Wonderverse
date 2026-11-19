@@ -639,17 +639,18 @@ function saturnRingRace(k, X) {
   ringG.add(ob.mesh(shinyMat())); ringG.add(og.mesh(glowMat()));
   for (let i = 0; i < 4; i++) { const sa = OA + .9 + i * .45, m = new THREE.Mesh(new THREE.OctahedronGeometry(.45), smat); m.position.set(Math.cos(-sa) * (RR + OR), 1.1, Math.sin(-sa) * (RR + OR)); ringG.add(m); stars.push({ a: sa, l: OR, m, outer: true }); }
   let lane = 0, boost = 0, hop = 0, hv = 0, outer = 0, onOuter = false;
-  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - pad) > 7) return; k.fact('🏁 The Ring Raceway! YOU drive: ► to go faster, ◄ to slow down, ▲ ▼ to change lanes. Drive over the blue pads to BOOST and catch the stars!', 'saturnrace');
-    let ph = 'up', a = 0, laps = 0, v = 0; const start = kart.position.clone(), top = on(0, .4);
+  const go = (mode = 'race') => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - pad) > 9) return; if (mode === 'free') k.fact('⭐ Free drive! No racing: drive round Saturn\'s rings as long as you like. Press JUMP when you want to stop.', 'saturnfreedrive'); else k.fact('🏁 The Ring Raceway! YOU drive: ► to go faster, ◄ to slow down, ▲ ▼ to change lanes. Drive over the blue pads to BOOST and catch the stars!', 'saturnrace');
+    let ph = 'up', a = 0, laps = 0, v = 0; const free = mode === 'free'; const start = kart.position.clone(), top = on(0, .4);
     jupiterRide(k, 'ringrace', (R, dt) => {
-      if (ph === 'up') { if (R.t < .05) { lane = 0; boost = 0; outer = 0; onOuter = false; for (const s of stars) { s.got = false; s.m.visible = true; } for (const o of rivals) { o.a = .02 * (o.l > 0 ? 1 : -1); o.m.visible = true; } } const q = Math.min(1, R.t / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(start, top, e); kart.position.y += Math.sin(q * Math.PI) * 10; if (q >= 1) { ph = 'race'; k.say('🏁 Three, two, one... GO!', true); k.Sound.chime && k.Sound.chime(); } }
+      if (ph === 'up') { if (R.t < .05) { lane = 0; boost = 0; outer = 0; onOuter = false; for (const s of stars) { s.got = false; s.m.visible = true; } for (const o of rivals) { if (free) continue; o.a = .02 * (o.l > 0 ? 1 : -1); o.m.visible = true; } } const q = Math.min(1, R.t / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(start, top, e); kart.position.y += Math.sin(q * Math.PI) * 10; if (q >= 1) { ph = 'race'; k.say('🏁 Three, two, one... GO!', true); k.Sound.chime && k.Sound.chime(); } }
       else if (ph === 'race') { // (build 71) YOU DRIVE: ► faster, ◄ brake (no input: a gentle cruise), ▲ ▼ change lane; boost pads and stars
         const st = k.api.stick ? k.api.stick() : { x: 0, y: 0 }, want = st.x > .2 ? 32 : st.x < -.2 ? 4 : 13; v += (want + boost - v) * Math.min(1, dt * (st.x < -.2 ? 2.5 : 1.2)); boost = Math.max(0, boost - dt * 6);
         lane = Math.max(-2, Math.min(2, lane + st.y * dt * 3)); const da = v / (RR + lane) * dt; a -= da; R.maxV = Math.max(R.maxV || 0, v); R.lanes = Math.max(R.lanes || 0, Math.abs(lane));
         for (const p of pads) if (Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - p.a) < .03 && Math.abs(lane - p.l) < .9 && R.t - (p.t || -9) > 2) { p.t = R.t; boost = 16; R.boosts = (R.boosts || 0) + 1; k.Sound.whoosh(); k.say('⚡ BOOST!', false); }
         for (const s of stars) if (!s.got && Math.abs((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) - s.a) < .025 && Math.abs(lane + outer - s.l) < .9) { s.got = true; s.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(600 + R.stars * 50, .15, 'sine', .07, 1.5); }
-        for (const o of rivals) { o.a -= o.v / (RR + o.l) * dt; o.v = 14 + Math.sin(R.t * .7 + o.l) * 4 + (o.a > a ? 3 : -2); o.m.position.copy(on(o.a, .4, o.l)); o.m.lookAt(on(o.a - .05, .4, o.l)); o.m.rotateY(-Math.PI / 2); }
-        if (a <= -(laps + 1) * Math.PI * 2) { laps++; R.laps = laps; k.Sound.chime && k.Sound.chime(); k.say(laps < 3 ? `🏁 Lap ${laps}! Keep going!` : `🏆 You finished the race around Saturn's rings${R.stars ? ' with ' + R.stars + ' stars' : ''}! Everybody wins!`, true); if (laps >= 3) { ph = 'down'; R.d = R.t; } }
+        if (!free) for (const o of rivals) { o.a -= o.v / (RR + o.l) * dt; o.v = 14 + Math.sin(R.t * .7 + o.l) * 4 + (o.a > a ? 3 : -2); o.m.position.copy(on(o.a, .4, o.l)); o.m.lookAt(on(o.a - .05, .4, o.l)); o.m.rotateY(-Math.PI / 2); }
+        if (free && R.stop) { ph = 'down'; R.d = R.t; k.say('⭐ What a drive! Back down we go.', true); }
+        if (!free && a <= -(laps + 1) * Math.PI * 2) { laps++; R.laps = laps; k.Sound.chime && k.Sound.chime(); k.say(laps < 3 ? `🏁 Lap ${laps}! Keep going!` : `🏆 You finished the race around Saturn's rings${R.stars ? ' with ' + R.stars + ' stars' : ''}! Everybody wins!`, true); if (laps >= 3) { ph = 'down'; R.d = R.t; } }
         const na = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)); if (!hop) for (const ra of ramps) if (Math.abs(na - ra) < .02 && lane > 1 && v > 10) { hop = .001; hv = 7 + v * .15; R.jumps = (R.jumps || 0) + 1; k.Sound.whoosh(); k.api.burst(kart.position.x, kart.position.y, kart.position.z, ['#ffd23f', '#ffffff'], 12, 2); }
         if (hop) { hv -= 14 * dt; hop += hv * dt; if (hop <= 0) { hop = 0; k.Sound.boing(); } }
         const nb = ((((-a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI));
@@ -660,7 +661,11 @@ function saturnRingRace(k, X) {
       else if (ph === 'down') { for (const o of rivals) o.m.visible = false; const q = Math.min(1, (R.t - R.d) / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(top, start, e); kart.position.y += Math.sin(q * Math.PI) * 8; if (q >= 1) { kart.rotation.set(0, 0, 0); return true; } }
       P.x = kart.position.x; P.y = kart.position.y + .35; P.z = kart.position.z; P.facing = 1; R.maxY = Math.max(R.maxY || 0, P.y); return false;
     }, () => { P.x = pad + 3; P.y = 0; P.z = 0; kart.position.copy(start); k.say('🏆 What a race! Tap the rocket kart to race again!', true); }, { noExit: true }); };
-  k.tapIt(kart, go, pad, 'saturnracego'); k.tapIt(sat, () => k.fact('🪐 Saturn\'s rings are so wide that the Earth could roll along them... many times over!', 'saturnrings'), C.x, 'saturnrings');
+  // (build 88) the FREE DRIVE pad (a big star): no racers, no laps; JUMP stops
+  const fpad = k.sball(pad - 6, .1, -2.8, 2.2, .2, 1.8, '#7fe0a0', { em: '#7fe0a0', ei: .3 }); const fstar = k.sball(pad - 6, 1.4, -2.8, .55, .55, .2, '#ffd23f', { em: '#ffb000', ei: .6 });
+  const goFree = () => { if (P.ride) return; P.x = pad; go('free'); if (P.ride && P.ride.type === 'ringrace') { P.ride.free = true; P.ride.onJump = () => { P.ride.stop = true; }; } };
+  k.tapIt(fpad, goFree, pad - 6, 'saturnfreedrive'); k.tapIt(fstar, goFree); k.U.push((dt, t) => { fstar.rotation.y = t * 1.5; });
+  k.tapIt(kart, () => go('race'), pad, 'saturnracego'); k.tapIt(sat, () => k.fact('🪐 Saturn\'s rings are so wide that the Earth could roll along them... many times over!', 'saturnrings'), C.x, 'saturnrings');
 }
 const saturn = {
   sections: [

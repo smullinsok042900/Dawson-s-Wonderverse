@@ -26,6 +26,11 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
       if ((seen && !P.ride) || performance.now() - t0 > 400000) { Object.assign(D.keys, { right: false, up: false, down: false }); return res({ seen, done: !P.ride, laps: R0 && R0.laps, maxV: R0 && R0.maxV, lanes: R0 && R0.lanes, boosts: R0 && R0.boosts, stars: R0 && R0.stars, jumps: R0 && R0.jumps, outer: R0 && R0.outer, x: P.x }); } requestAnimationFrame(f); }; f(); }));
   check('Ring Raceway: you drive 3 laps, changing lanes, and get back to the pad', race.done && race.laps >= 3 && race.lanes > 1.5 && race.maxV > 25, JSON.stringify(race));
   check('Ring Raceway: boost pads, stars, jump ramps and the outer ring route work', (race.boosts || 0) >= 1 && (race.stars || 0) >= 1 && (race.jumps || 0) >= 1 && (race.outer || 0) >= 1, JSON.stringify({ boosts: race.boosts, stars: race.stars, jumps: race.jumps, outer: race.outer }));
+  await put(X + 236); await sleep(1500);
+  const fd = await ev(() => new Promise(res => { const D = __DDW3, P = D.player; D.G.interact.find(i => i.disc === 'saturnfreedrive').run(); const t0 = performance.now(); let seen = false, R0 = null, stopped = false, rivalsSeen = false;
+    const f = () => { const R = P.ride; if (R && R.type === 'ringrace') { seen = true; R0 = R; D.keys.right = true; D.scene && 0; let rv = false; D.G.scene && 0; if (R.t > 14 && !stopped) { stopped = true; R.onJump(); } }
+      if ((seen && !P.ride) || performance.now() - t0 > 200000) { D.keys.right = false; return res({ seen, free: !!(R0 && R0.free), done: !P.ride, laps: R0 && R0.laps, maxV: R0 && R0.maxV }); } requestAnimationFrame(f); }; f(); }));
+  check('Ring Raceway free drive (the star pad): no racers, no laps, drive as long as you like, JUMP brings you back', fd.seen && fd.free && fd.done && !fd.laps && fd.maxV > 20, JSON.stringify(fd));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();
