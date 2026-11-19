@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 94: a winding ice trail on Uranus
+- Tap the snowflake gate beside the rink and skate a long winding trail under glowing ice arches (▶ faster, ◀ slower, JUMP hops).
+
 ## 3D build 93: wind gusts on the sky dive, and a crystal cave on the log flume
 - **Neptune sky dive:** bands of wind push you sideways on the way down; steer against them.
 - **Venus log flume:** steer ◀ at the second arch to ride through a sparkling crystal cave.

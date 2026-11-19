@@ -4,6 +4,12 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 94 — the winding ice trail on Uranus
+- **Uranus rink: THE WINDING ICE TRAIL.** Tap the snowflake gate at the rink's east end. She skates a long trail that winds far behind the rink and back, under six glowing ice arches that chime as she passes; ▶ faster, ◀ slower, JUMP hops (`parks`: 20 m back, top speed 9 m/s, all six arches).
+- Speed: the first version (a flat ice ribbon over the ground and many snow banks) was 8–12 % slower where the trail is in view on desktop. It was slimmed three times: one mesh, thin arches, no ribbon (Uranus's ground is icy already), a few snow banks. Now within the noise (see `PERFORMANCE_LOG.md`).
+- Test: the Pluto rainbow tower checks print SKIP while that tower is switched off, instead of failing.
+- Desktop (software rendering) only; not tried on an iPhone.
+
 ## Checkpoint: build 93 — sky dive wind gusts, the flume's crystal-cave fork
 - **Neptune sky dive: WIND GUSTS.** Three bands of white wind streaks; diving through one pushes her sideways, and she steers against it (`control-rides` all passed: 3 gusts, then a bullseye).
 - **Venus flume: THE CRYSTAL-CAVE FORK.** Steer ◀ at the second arch, after the rapids, to ride through a sparkling crystal cave behind the mountain (`venus-flume` 6/6).

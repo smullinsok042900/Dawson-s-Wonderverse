@@ -7,6 +7,15 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 94 (the winding ice trail on Uranus)
+Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 93 and 94 alternately, twice each. ms per frame / draw calls (averages):
+
+| Spot | Build 93 | Build 94, first try (ribbon, many banks) | Build 94, shipped |
+|---|---|---|---|
+| Uranus +196 (palace) | 199 / 73 | 191 / 73 | 194 / 73 |
+| Uranus +270 (rink) | 163 / 63 | 167 / 66 | 167 / 64 |
+| Uranus +306 (trail start) | 135 / 61 | 145 / 66 | 139 / 64 |
+
 ## Build 93 (sky dive wind gusts, the flume's crystal-cave fork)
 Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 92 and 93 alternately, twice each. ms per frame / draw calls (averages):
 
