@@ -77,16 +77,15 @@ export function neptuneBungee2(k, X) {
 export function marsZipWall(k) {
   const P = k.P, G0 = GEO(), X = k.s0, wx = X + 56, W = 3, H = 16, zx = X + 77, b = makeBatch();
   b.put(G0.box, wx, H / 2, -2.2, '#c86a48', [2 * W, H, 3.2]); b.put(G0.box, wx, H + .15, -2.2, '#e08a5a', [2 * W + .4, .3, 3.4]);
-  for (let r = 0; r < 13; r++) for (let c = 0; c < 4; c++) { const x = wx - W + .7 + c * 1.5 + (r % 2) * .7; if (x > wx + W - .4) continue; b.put(G0.ball, x, .8 + r * 1.2, -.5, RB[(r + c) % 7], [.24, .19, .15]); }
+  for (let r = 0; r < 13; r++) for (let c = 0; c < 4; c++) { const x = wx - W + .7 + c * 1.5 + (r % 2) * .7; if (x > wx + W - .4) continue; b.put(G0.lo, x, .8 + r * 1.2, -.5, RB[(r + c) % 7], [.24, .19, .15]); } // (low-detail handholds)
   for (const s of [-1, 1]) b.put(G0.cyl, wx + W + .8 + s * .5, (H + 3) / 2, -1, '#d8e0ea', [.1, H + 3, .1]);           // the zip tower post
   b.put(G0.cyl, zx, 2, -1, '#d8e0ea', [.12, 4, .12]); b.put(G0.cyl, zx, .1, -1, '#7fe0a0', [1.6, .2, 1.6]);          // the low end post and a landing mat
   const top = new THREE.Vector3(wx + W + .8, H + 2.6, -1), bot = new THREE.Vector3(zx, 3.6, -1), d = bot.clone().sub(top);
   b.put(G0.cyl, (top.x + bot.x) / 2, (top.y + bot.y) / 2, -1, '#ffffff', [.04, d.length(), .04], [0, 0, Math.atan2(-d.x, d.y)]);
   b.put(G0.cyl, wx - W + .8, H + 1, -1.6, '#5a6a8a', [.05, 1.6, .05]);   // the bell post
-  const cliff = b.mesh(shinyMat()); cliff.castShadow = true; k.add(cliff); k.plat(wx - W, wx + W + 1.4, H + .3, { z: -1.2 });
+  const cliff = b.mesh(shinyMat()); k.add(cliff); k.plat(wx - W, wx + W + 1.4, H + .3, { z: -1.2 });
   const bell = new THREE.Mesh(new THREE.ConeGeometry(.45, .7, 14, 1, true), toy('#ffd23f', { m: .6, r: .3, em: '#ffb000', ei: .2 })); bell.position.set(wx - W + .8, H + 1.6, -1.6); k.add(bell);
   const handle = new THREE.Mesh(new THREE.TorusGeometry(.3, .05, 6, 16), toy('#ff4f6a', { r: .3 })); handle.position.copy(top); handle.position.y -= .4; handle.userData.dynamic = true; k.add(handle);
-  starField(k, [[wx - 1.5, 5, -.1], [wx + 1.5, 10, -.1], [X + 67, 9, -1], [X + 72, 6, -1]], () => { k.Sound.chime(); k.say('⭐ All the rainbow wall stars!', true); k.disc('marszipstars'); });
   let ring = 0; k.U.push((dt, t) => { ring = Math.max(0, ring - dt); bell.rotation.z = Math.sin(t * 14) * ring * .35; });
   const zip = () => { k.say('🪢 Grab the zip line! WHEEE!', true); k.disc('marszip'); handle.position.copy(top); handle.position.y -= .4;
     ride(k, 'zipline', (R, dt) => { R.f = Math.min(1, (R.f || 0) + dt * (.06 + (R.f || 0) * .2)); handle.position.copy(top).addScaledVector(d, R.f); handle.position.y -= .4; P.x = handle.position.x; P.y = handle.position.y - 2.1; P.z = -1; P.facing = 1; R.roll = Math.sin(R.t * 3) * .1;
