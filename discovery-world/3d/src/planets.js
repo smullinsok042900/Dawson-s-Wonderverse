@@ -566,7 +566,7 @@ function venusLogRide(k, X) {
   const flumeStars = []; { const sm = toy('#ffd23f', { em: '#ffb000', ei: .8 }); for (const [u, off] of [[.2, -.4], [.27, .4], [.36, -.4], [.43, .4], [.5, -.35], [.58, .4], [.75, -.4], [.82, .4]]) { const p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize(); const m = new THREE.Mesh(new THREE.OctahedronGeometry(.3), sm); m.position.set(p.x + side.x * off, p.y + 1.1, p.z + side.z * off); k.add(m); flumeStars.push({ u, off, m, got: false }); } }
   // (build 92) THE RAPIDS SPLASH GAME: five round splash targets float beside the rapids (left and right). Steer ◀ ▶
   //  toward one and press JUMP: a jet of water hits it and it spins round and lights up. Hit all five!
-  const splashT = []; { const tm = toy('#ff6a3c', { em: '#ff3a1a', ei: .2, r: .35 }), dg = new THREE.CylinderGeometry(.55, .55, .14, 16); for (const [u, sd] of [[.41, -1], [.44, 1], [.47, -1], [.5, 1], [.53, -1]]) { const p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize();
+  const splashT = []; { const tm = toy('#ff6a3c', { em: '#ff3a1a', ei: .2, r: .35 }), dg = new THREE.CylinderGeometry(.55, .55, .14, 16); for (const [u, sd] of [[.43, 1], [.445, -1], [.46, 1], [.472, -1], [.484, 1]]) /* (all on the rapids before the crystal-cave fork at .493; the last one is on the right, so aiming keeps you on the main channel) */ { const p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize();
     const m = new THREE.Mesh(dg, tm.clone()); m.position.set(p.x + side.x * 1.9 * sd, p.y + .9, p.z + side.z * 1.9 * sd); m.rotation.set(Math.PI / 2, 0, Math.atan2(-tg.z, tg.x)); m.userData.dynamic = true; k.add(m); splashT.push({ u, sd, m, hit: false, spin: 0 }); } }
   k.G.venusSplash = splashT;
   k.U.push(dt => { for (const s of splashT) if (s.spin > 0) { s.spin = Math.max(0, s.spin - dt); s.m.rotation.z += dt * 12; } });
@@ -581,14 +581,24 @@ function venusLogRide(k, X) {
   const pathB = new THREE.CatmullRomCurve3([PF.clone(), V3(st + 29.5, 20.5, -21), V3(st + 31, 15, -22.5), V3(st + 32.5, 11, -23.5), PJ.clone()], false, 'catmullrom', .4), lenB = pathB.getLength();
   { const hp = new THREE.Mesh(halfPipe(pathB, 70, .95, ['#4fb8ff', '#cfefff'], 8), shinyMat()); k.add(hp); const fb = makeBatch(); for (let i = 0; i < 8; i++) { const q = pathB.getPointAt(.25 + i * .08); fb.put(new THREE.BoxGeometry(1, 1, 1), q.x + 1.2, q.y - 1.2, q.z, i % 2 ? '#ffffff' : '#9fd8ff', [.15, 2.4, 1.6]); }
     fb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF.x, PF.y, PF.z, '#62f0ff', 1, [0, Math.atan2(-(PJ.z - PF.z), PJ.x - PF.x) + Math.PI / 2, 0]); k.add(fb.mesh(glowMat())); }
+  // (build 93) THE CRYSTAL-CAVE FORK: at the second glowing arch (before the crystal tunnel) steer ◀ and the log takes a
+  //  branch round behind the mountain through a sparkling crystal cave, then joins the main channel again; straight on is the tunnel
+  const uF2 = nearU(st + 48, 5, -23), uJ2 = nearU(st + 68, 4.2, -27), PF2 = path.getPointAt(uF2), PJ2 = path.getPointAt(uJ2);
+  const pathC = new THREE.CatmullRomCurve3([PF2.clone(), V3(st + 51, 4.6, -30.5), V3(st + 57, 4.2, -35), V3(st + 64, 4.2, -33.5), PJ2.clone()], false, 'catmullrom', .4), lenC = pathC.getLength();
+  { const hp = new THREE.Mesh(halfPipe(pathC, 60, .95, ['#4fb8ff', '#cfefff'], 8), shinyMat()); k.add(hp); const cb = makeBatch(), oct = new THREE.OctahedronGeometry(1);
+    for (let i = 0; i < 18; i++) { const q = pathC.getPointAt(.08 + i * .05), sd = i % 2 ? 1.6 : -1.6; cb.put(oct, q.x + (i % 3 - 1) * .4, q.y + 1.2 + (i % 3) * .5, q.z + sd, ['#b07bff', '#62f0ff', '#ff6fd8', '#7dffb0'][i % 4], [.28, .7, .28]); }
+    cb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF2.x, PF2.y, PF2.z, '#ff6fd8', 1, [0, Math.atan2(-(PJ2.z - PF2.z), PJ2.x - PF2.x) + Math.PI / 2, 0]); k.add(cb.mesh(glowMat())); }
   const place = (u, pth = path) => { const p = pth.getPointAt(u); pth.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
   place(0);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
-    let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; } for (const q of splashT) { q.hit = false; q.m.material.emissiveIntensity = .2; } let hits = 0;
+    let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0, onC = false, uc = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; } for (const q of splashT) { q.hit = false; q.m.material.emissiveIntensity = .2; } let hits = 0;
     k.say('🪵 Steer the log with ◀ ▶ to catch the stars! Press JUMP to SPLASH!', true);
     jupiterRide(k, 'logride', (R, dt) => {
       if (onB) { vb = Math.min(16, vb + dt * 9); ub = Math.min(1, ub + vb / lenB * dt); const pb = place(ub, pathB); P.x = pb.x; P.y = pb.y + .25; P.z = pb.z; R.roll = -.5; if (Math.random() < dt * 12) k.api.burst(pb.x, pb.y, pb.z, ['#ffffff', '#cfefff'], 2, 1.4);
         if (ub >= 1) { onB = false; u = uJ; v = vb; crest = PJ.y + vb * vb / 18; k.api.burst(pb.x, pb.y + .4, pb.z, ['#ffffff', '#4fb8ff'], 20, 3); k.Sound.boing(); } return false; }
+      if (onC) { uc = Math.min(1, uc + Math.max(3.5, v) / lenC * dt); const pc = place(uc, pathC); P.x = pc.x; P.y = pc.y + .25; P.z = pc.z; R.roll = 0; if (Math.random() < dt * 5) k.api.burst(pc.x, pc.y + 1.5, pc.z, ['#b07bff', '#62f0ff', '#ff6fd8', '#ffffff'], 2, 1.2);
+        if (uc >= 1) { onC = false; u = uJ2; R.pu = u; k.Sound.chime(); } return false; }
+      if (!R.forked2 && u >= uF2 - .002 && u <= uF2 + .01) { R.forked2 = true; if (off < -.2) { onC = true; uc = 0; R.cave = true; k.Sound.twinkle && k.Sound.twinkle(); k.say('💎 The crystal cave! Look at all the sparkles!', true); k.disc('venuscrystalcave'); return false; } }
       if (!R.forked && u >= uF - .002 && u <= uF + .01) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
       path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
       if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
@@ -604,7 +614,7 @@ function venusLogRide(k, X) {
       return u >= 1; }, () => { P.x = st + 66; P.y = 0; P.z = 0; place(0); k.say('🪵 What a ride! Tap the log to ride again!', true); }, { noExit: true });
     if (P.ride) P.ride.onJump = () => { k.api.burst(P.x, P.y + .6, P.z, ['#ffffff', '#cfefff', '#4fb8ff'], 18, 3); k.Sound.pop && k.Sound.pop(); P.ride.splashes = (P.ride.splashes || 0) + 1;
       /* (build 92) the splash game: a jet of water hits the nearest target on the side you steer toward */
-      if (onB) return; const q = splashT.find(q => !q.hit && u > q.u - .03 && u < q.u + .012 && off * q.sd >= -.05); if (!q) return; q.hit = true; q.spin = 1.2; q.m.material.emissiveIntensity = 1.3; hits++; P.ride.hits = hits;
+      if (onB) return; const q = splashT.find(q => !q.hit && u > q.u - .02 && u < q.u + .008 && off * q.sd >= -.05); if (!q) return; q.hit = true; q.spin = 1.2; q.m.material.emissiveIntensity = 1.3; hits++; P.ride.hits = hits;
       const a = q.m.position; for (let i = 1; i <= 4; i++) k.api.burst(P.x + (a.x - P.x) * i / 4, P.y + .8 + (a.y - P.y - .8) * i / 4, P.z + (a.z - P.z) * i / 4, ['#ffffff', '#4fb8ff'], 5, 1.2);
       k.Sound.tone(520 + hits * 80, .15, 'triangle', .07, 1.5); if (hits === 1) k.say('💦 SPLASH! You hit a target! Steer toward the next one!', false);
       if (hits === splashT.length) { k.Sound.chime(); k.say('💦 You splashed all five targets!', true); k.disc('venussplashgame'); } }; };
