@@ -17,11 +17,11 @@ const { chromium } = require('playwright'); const path = require('path'); const 
     const l = new THREE.DirectionalLight('#ffffff', 2.4); l.position.set(2, 4, 5); s.add(l); const l2 = new THREE.DirectionalLight('#ffffff', 1.2); l2.position.set(-3, 2, -4); s.add(l2);
     const cam = new THREE.PerspectiveCamera(26, 1, .01, 50), box = new THREE.Box3(), c = new THREE.Vector3(), sz = new THREE.Vector3();
     // the side each thing is best seen from: things for the back from behind, everything else from the front, a little from above
-    const VIEW = { head: [.45, .55, 1], face: [.32, .14, 1], neck: [.35, .45, 1], back: [.45, .3, -1] };
+    const VIEW = { head: [.4, .4, 1], face: [.32, .14, 1], neck: [.35, .45, 1], back: [.45, .3, -1], tiara: [.15, .12, 1], partyhat: [.3, .12, 1], helmet: [.3, .15, 1], scarf: [.3, .3, 1], flowers: [.25, .7, 1], crown: [.3, .3, 1] };
     for (const [id, slot] of G.wearItems) {
       const m = G.wearMesh(id).clone(); m.position.set(0, 0, 0); m.rotation.set(0, 0, 0); m.scale.setScalar(1); s.add(m); m.updateMatrixWorld(true);
       box.setFromObject(m); box.getCenter(c); box.getSize(sz); const rad = Math.max(sz.x, sz.y, sz.z) * .62 + .01;
-      const v = new THREE.Vector3(...VIEW[slot]).normalize(), d = rad / Math.sin(THREE.MathUtils.degToRad(cam.fov / 2));
+      const v = new THREE.Vector3(...(VIEW[id] || VIEW[slot])).normalize(), d = rad / Math.sin(THREE.MathUtils.degToRad(cam.fov / 2));
       cam.position.copy(c).addScaledVector(v, d); cam.lookAt(c); cam.updateMatrixWorld();
       r.render(s, cam); res[id] = r.domElement.toDataURL('image/webp', .88); s.remove(m);
     }

@@ -26,6 +26,9 @@ export function buildMoonCoaster(k) {
   { // (a tiny mesh with that material is there from the start, so the rocket flight already prepares its shader: no pause on landing)
     const wg = new THREE.BufferGeometry(); for (const n of ['position', 'normal', 'color']) wg.setAttribute(n, new THREE.Float32BufferAttribute(new Float32Array(9), 3));
     const w = new THREE.Mesh(wg, glowMat); w.frustumCulled = false; w.receiveShadow = false; root.add(w); }
+  // (build 105) for the riding camera: is this track point (solid: the train) / the point 3.4 m above it (solidCam: where the
+  //  camera rides) inside the mountain's rock or below the ground? The camera never stays outside while the train is inside.
+  C.solid = new Uint8Array(N); C.solidCam = new Uint8Array(N); const camPt = (i, o) => V(i, pos, o).addScaledVector(V(i, up, uA).normalize(), 3.4);
   const jobs = [];                // slices of one-time work, done a few milliseconds per frame
   const tA = new THREE.Vector3(), uA = new THREE.Vector3(), sA = new THREE.Vector3(), pA = new THREE.Vector3(), m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
   const frame = i => { V(i, tan, tA); V(i, up, uA); sA.crossVectors(tA, uA).normalize(); m4.makeBasis(tA, uA, sA); q.setFromRotationMatrix(m4); e.setFromQuaternion(q); return e; };
@@ -82,17 +85,20 @@ export function buildMoonCoaster(k) {
     skel.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(4, pts.length * 2), r, 10, false), null, colr);
     V(openAt, pos, pA); skel.put(new THREE.TorusGeometry(r + .15, .4, 6, 22), pA.x, pA.y, pA.z, '#8a8a98', 1, ringRot(openAt)); };
   const darkOut = new THREE.CircleGeometry(1, 22), darkIn = new THREE.CircleGeometry(1, 22).rotateY(Math.PI);
-  const dark = (i, r, facingIn) => { V(i, pos, pA); skel.put(facingIn ? darkIn : darkOut, pA.x, pA.y, pA.z, '#0b0812', r, ringRot(i)); }; /* (the darkness inside the mouth, seen from outside only) */
+  const darkB = makeBatch(); /* (build 105: their own mesh, hidden while you ride: the riding camera follows the train through the mouth, and the darkness would cover the screen) */
+  const dark = (i, r, facingIn) => { V(i, pos, pA); darkB.put(facingIn ? darkIn : darkOut, pA.x, pA.y, pA.z, lit('#0b0812'), r, ringRot(i)); }; /* (the darkness inside the mouth, seen from outside only) */
   jobs.push(() => { const idx = tubeAround('T', 6.5, '#55556e', 64); if (!idx) return; const ball = new THREE.SphereGeometry(1, 12, 8);
     const rocks = []; for (let j = 64 + 20; j < idx.length - 64 - 20; j += 30) { V(idx[j], pos, pA); skel.put(ball, pA.x, pA.y - 8, pA.z, j % 60 ? '#9a9aa8' : '#b4b4c0', [20, 24, 20]); rocks.push([pA.x, pA.y - 8, pA.z]); }
     { const inR = i => { V(i, pos, pA); return rocks.some(([x, y, z]) => ((pA.x - x) / 20) ** 2 + ((pA.y - y) / 24) ** 2 + ((pA.z - z) / 20) ** 2 < .985); };
       const i0 = idx[0], i1 = idx[idx.length - 1]; let inI = -1, outI = -1; for (let i = i0; i <= i1; i++) if (inR(i)) { if (inI < 0) inI = i; outI = i; }
+      { const inP = p => rocks.some(([x, y, z]) => ((p.x - x) / 20) ** 2 + ((p.y - y) / 24) ** 2 + ((p.z - z) / 20) ** 2 < .985), cp = new THREE.Vector3(); for (let i = i0; i <= i1; i++) { if (inR(i)) C.solid[i] = 1; if (inP(camPt(i, cp))) C.solidCam[i] = 1; } }
       if (inI > 0) { mouth(i0, Math.min(i1, inI + 12), 6.85, '#7a7a88', i0); mouth(Math.max(i0, outI - 12), i1, 6.85, '#7a7a88', i1); dark(inI + 4, 6.4, true); dark(outI - 4, 6.4, false); C.tunnelMouths = [i0, inI, outI, i1]; } }
     const tg = makeBatch(); for (let j = 0; j < idx.length; j += 20) { V(idx[j], pos, pA); tg.put(torusT, pA.x, pA.y, pA.z, j % 40 ? '#ffe36e' : '#62f0ff', 1, ringRot(idx[j])); } idx.grp.add(tg.mesh(glowMat));
   });
   // ---------- THE GLOWING UNDERGROUND CAVE: a purple cave lit by crystals ----------
   jobs.push(() => { const idx = tubeAround('C', 7.5, '#4a2a86'); if (!idx) return; const cg = makeBatch();
     { const i0 = idx[0], i1 = idx[idx.length - 1]; let dn = -1, upI = -1; for (let i = i0; i <= i1; i++) { V(i, pos, pA); if (pA.y < ground(pA.x, pA.z) - .4) { if (dn < 0) dn = i; upI = i; } }
+      { const cp = new THREE.Vector3(); for (let i = i0; i <= i1; i++) { V(i, pos, pA); if (pA.y < ground(pA.x, pA.z) - .4) C.solid[i] = 1; camPt(i, cp); if (cp.y < ground(cp.x, cp.z) - .2) C.solidCam[i] = 1; } }
       if (dn > 0) { mouth(i0, Math.min(i1, dn + 14), 7.85, '#6a5a7a', i0); mouth(Math.max(i0, upI - 14), i1, 7.85, '#6a5a7a', i1); dark(dn + 4, 7.4, true); dark(upI - 4, 7.4, false); C.caveMouths = [i0, dn, upI, i1]; } }
     for (let j = 0; j < idx.length; j += 7) { V(idx[j], pos, pA); const a = j * 2.39, r = 6.6; cg.put(oct, pA.x + Math.cos(a) * r, pA.y + 1 + Math.sin(a) * r * .8, pA.z + Math.sin(a * 1.7) * 2, ['#b07bff', '#62f0ff', '#ff6fd8', '#7dffb0'][j % 4], [.5, 1.3, .5], [a, a * .5, 0]); }
     idx.grp.add(cg.mesh(glowMat)); for (const j of [0, idx.length - 1]) { V(idx[j], pos, pA); glow.put(torusC, pA.x, pA.y, pA.z, '#b07bff', 1, ringRot(idx[j])); } });
@@ -102,7 +108,7 @@ export function buildMoonCoaster(k) {
     for (const dx of [-11.5, 3.5]) { sb.put(cyl, sx + dx, 2.2, -.4, '#ffffff', [.16, 4.4, .16]); sb.put(cyl, sx + dx, 2.2, -4, '#ffffff', [.16, 4.4, .16]); }
     for (const dx of [-12, 4]) glow.put(new THREE.TorusGeometry(3.4, .16, 6, 30, Math.PI), sx + dx, 0, -2.4, '#62f0ff', 1, [0, Math.PI / 2, 0]); }
   // when all slices are done, the skeleton becomes two meshes
-  jobs.push(() => { const g2 = glow.mesh(glowMat); g2.name = 'coasterSkeleton'; g2.receiveShadow = false; root.add(g2); for (const h of hidden) h.grp.visible = true; try { k.api.compile && k.api.compile(root); } catch (e) { } check = 0; C.ready = true; });
+  jobs.push(() => { const g2 = glow.mesh(glowMat); g2.name = 'coasterSkeleton'; g2.receiveShadow = false; root.add(g2); if (darkB.count === undefined || darkB.count) { const dm = darkB.mesh(glowMat); dm.name = 'coasterMouthDark'; dm.receiveShadow = false; root.add(dm); C.mouthDark = dm; } for (const h of hidden) h.grp.visible = true; try { k.api.compile && k.api.compile(root); } catch (e) { } check = 0; C.ready = true; });
   k.U.push(() => { const t0 = performance.now(); while (jobs.length && performance.now() - t0 < 4) jobs.shift()(); });
 
   // ---------- the detailed rails and ties, streamed in 120 m pieces near the camera ----------
