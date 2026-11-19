@@ -392,7 +392,7 @@ function coasterRide(dt, R) {
   R.maxY = Math.max(R.maxY, pos.y); R.maxV = Math.max(R.maxV, v);
   // the chase camera: inside the tunnel and the cave it sits on the track just behind the train; outside it rides behind
   // and above, along the way the train is going (smoothed), and never rolls
-  const inside = f === 'T' || f === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C'));
+  const ahead = C.flag[Math.min(N - 1, j + 30)], inside = f === 'T' || f === 'C' || ahead === 'T' || ahead === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C')); /* (build 100: follow the track down into the tunnel and the cave BEFORE the entrance, so the camera never swoops through the mountain's rock) */
   let want;
   if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); want.y = Math.max(want.y, pos.y + 1.8); } /* (build 100: on a steep climb the point behind is far below the cart; never look up at its underside) */
   else { const back = coasterSample(C, Math.max(0, R.i - 26), C.pos, CV.b); CV.d.subVectors(pos, back).setY(0); if (CV.d.lengthSq() < .01) CV.d.set(P.facing, 0, 0); CV.d.normalize();
