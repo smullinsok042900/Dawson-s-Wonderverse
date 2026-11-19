@@ -4,6 +4,47 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 96 — the 📷 camera button on the sky dive
+- **Neptune sky dive: THE 📷 PICTURE BUTTON.** It appears only during the sky dive (the joystick steers and JUMP opens the parachute, so the view needs its own button). Tap it for a HIGH VIEW looking down at her and the landing target; tap again (🔍) for the close view. It hides itself when the dive ends, however it ends (`control-rides` all passed).
+- Found by the test and fixed: the first version only changed the view while falling (the waiting part of the ride returns early); the view is now set at the start of every ride step.
+- **Full smoke test: 236/236.** Desktop speed: Neptune the same or slightly faster than build 95.
+- Desktop (software rendering) only; not tried on an iPhone.
+
+## Checkpoint: build 95 — the giant bungee tower
+- **Neptune bungee: THE GIANT TOWER.** 10 m more on top (34 m) with its own red jumping board. On the top board, push ▲ to climb up to it; JUMP for a long fall (lowest point about 8 m), bounces, then she is lowered down (`control-rides` all passed).
+- Bug found and fixed before shipping: the text used to insert the giant-jump code also matched in the sky dive, so a copy landed there and froze the sky dive at the top (`giant is not defined`). Found by the ride test; the copy is removed.
+- **Full smoke test: 236/236.**
+- Desktop (software rendering) speed: Neptune the same as build 94 (the tower pieces are part of the tower mesh). Not tried on an iPhone.
+
+## Checkpoint: build 94 — the winding ice trail on Uranus
+- **Uranus rink: THE WINDING ICE TRAIL.** Tap the snowflake gate at the rink's east end. She skates a long trail that winds far behind the rink and back, under six glowing ice arches that chime as she passes; ▶ faster, ◀ slower, JUMP hops (`parks`: 20 m back, top speed 9 m/s, all six arches).
+- Speed: the first version (a flat ice ribbon over the ground and many snow banks) was 8–12 % slower where the trail is in view on desktop. It was slimmed three times: one mesh, thin arches, no ribbon (Uranus's ground is icy already), a few snow banks. Now within the noise (see `PERFORMANCE_LOG.md`).
+- **Full smoke test: 236/236.**
+- Test: the Pluto rainbow tower checks print SKIP while that tower is switched off, instead of failing.
+- Desktop (software rendering) only; not tried on an iPhone.
+
+## Checkpoint: build 93 — sky dive wind gusts, the flume's crystal-cave fork
+- **Neptune sky dive: WIND GUSTS.** Three bands of white wind streaks; diving through one pushes her sideways, and she steers against it (`control-rides` all passed: 3 gusts, then a bullseye).
+- **Venus flume: THE CRYSTAL-CAVE FORK.** Steer ◀ at the second arch, after the rapids, to ride through a sparkling crystal cave behind the mountain (`venus-flume` 6/6).
+  - Bug found and fixed: on the fast rapids one big step (a slow frame) could jump right over the fork's narrow window, so the steering was never checked. Both forks now trigger on the first step at or past their arch.
+  - The splash targets moved onto the rapids before the fork, with the last one on the right, so aiming at them never sends the log into the cave by accident.
+  - Test fix: the flume test pressed JUMP only between 3.0 and 3.2 s of the ride (a window that can be skipped at 1–2 fps); it now presses once at the first frame after 3 s.
+- **Full smoke test: 236/236.**
+- Desktop (software rendering) speed: Neptune and Venus the same as build 92 (see `PERFORMANCE_LOG.md`). Not tried on an iPhone.
+
+## Checkpoint: build 92 — bungee balloons, double swing, trampoline switch, splash game, rainbow wall
+- **Builds 73–91** are recorded row by row in `ATTRACTIONS.md` (each with its own test and full smoke result).
+- **Build 92** (desktop, software rendering; not tried on an iPhone):
+  - Neptune bungee: THE REBOUND GAME. After the first bounce, three balloons appear around the cord's end; steer ◀ ▶ and bounce to pop them (`control-rides`: 3 popped).
+  - Neptune: THE DOUBLE SWING. A wide seat shared with a little Neptune friend; JUMP pumps it higher; swing high together (`control-rides`: 1.15 rad).
+  - Mars trampoline park: THE GENTLE / HIGH PICTURE SWITCH (feather or rocket). On the feather a bounce reaches 4.3 m, even holding ▲; on the rocket 30.7 m (`control-rides`).
+  - Mars, area 3: THE RAINBOW WALL. A second climbing wall (16 m); the bell rings at the top, then the ZIP LINE takes her down to a landing mat (`control-rides`).
+  - Venus flume: THE RAPIDS SPLASH GAME. Five targets beside the rapids; steer toward one and press JUMP to splash it (`venus-flume`: 5 of 5).
+  - Pluto: a second tower (the rainbow tower with a spiral slide) is written and passes its tests, but is switched OFF. It was 7–15 % slower where it is in view, even after three rounds of trimming.
+  - Test fix: the wind button check waits for the next frame instead of a fixed 300 ms (the test browser runs at 1–2 fps).
+  - **Build 92 full smoke test: 236/236** (Biscuit's check passed this time).
+  - Build 91 full smoke test: 233/236. All 3 failures come from one missed test tap on Biscuit; a separate run shows tapping him works.
+
 ## Checkpoint: build 72 — Saturn jump ramps, lighter Jupiter slides, smoke checks for the build 71 rides
 - **Build 71** (merged in PRs #76 and #77):
   - Neptune: the bungee you control, and the Big Sky Dive;

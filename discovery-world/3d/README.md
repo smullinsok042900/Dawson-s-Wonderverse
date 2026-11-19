@@ -12,6 +12,28 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 96: a 📷 camera button on the sky dive
+- During the Neptune sky dive, tap 📷 to look down from high above; tap 🔍 to come back close.
+
+## 3D build 95: the giant bungee tower on Neptune
+- On the bungee's top board, push ▲ to climb 10 m higher (34 m) for the GIANT jump.
+
+## 3D build 94: a winding ice trail on Uranus
+- Tap the snowflake gate beside the rink and skate a long winding trail under glowing ice arches (▶ faster, ◀ slower, JUMP hops).
+
+## 3D build 93: wind gusts on the sky dive, and a crystal cave on the log flume
+- **Neptune sky dive:** bands of wind push you sideways on the way down; steer against them.
+- **Venus log flume:** steer ◀ at the second arch to ride through a sparkling crystal cave.
+
+## 3D build 92: balloons, a double swing, a feather/rocket switch, a splash game and a rainbow wall
+- **Neptune bungee:** after the first bounce, three balloons appear; steer and bounce to pop them.
+- **Neptune double swing:** swing beside a little Neptune friend; JUMP pumps it higher.
+- **Mars trampolines:** tap the picture sign to choose a feather (soft bounces) or a rocket (big bounces).
+- **Mars rainbow wall:** a second climbing wall; ring the bell at the top, then ride the zip line down.
+- **Venus log flume:** splash the five targets beside the rapids (steer toward one, press JUMP).
+- Pluto's second tower is written but switched off until it is lighter (it measured slower).
+- The attraction checklist, with builds 73–91, is in `ATTRACTIONS.md`.
+
 ## 3D build 71: rides you control (Neptune, Mars)
 - **Neptune bungee:** you press JUMP when ready, steer ◀ ▶ to catch stars, and press JUMP at the bottom to bounce higher.
 - **Neptune Big Sky Dive (new):** a balloon takes you up 70 m. Press JUMP to dive, steer with the joystick through hoops and stars, press JUMP for the parachute, and land on the target.

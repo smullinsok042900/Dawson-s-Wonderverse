@@ -7,6 +7,46 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 96 (the 📷 camera button on the sky dive)
+Desktop, software rendering; `pplanet.cjs`, builds 95 and 96 alternately, twice each. ms per frame / draw calls: Neptune +150 193 / 71 → 192 / 70; +158 194 / 67 → 186 / 67; +186 187 / 64 → 176 / 64. (The button is part of the page, not the 3D scene.)
+
+## Build 95 (the giant bungee tower)
+Desktop, software rendering; `pplanet.cjs`, builds 94 and 95 alternately, twice each. ms per frame / draw calls: Neptune +150 187 / 69 → 188 / 70; +158 186 / 67 → 187 / 67; +186 (bungee) 177 / 64 → 176 / 64.
+
+## Build 94 (the winding ice trail on Uranus)
+Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 93 and 94 alternately, twice each. ms per frame / draw calls (averages):
+
+| Spot | Build 93 | Build 94, first try (ribbon, many banks) | Build 94, shipped |
+|---|---|---|---|
+| Uranus +196 (palace) | 199 / 73 | 191 / 73 | 194 / 73 |
+| Uranus +270 (rink) | 163 / 63 | 167 / 66 | 167 / 64 |
+| Uranus +306 (trail start) | 135 / 61 | 145 / 66 | 139 / 64 |
+
+## Build 93 (sky dive wind gusts, the flume's crystal-cave fork)
+Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 92 and 93 alternately, twice each. ms per frame / draw calls (averages):
+
+| Spot | Build 92 | Build 93 |
+|---|---|---|
+| Neptune +150 | 186 / 69 | 186 / 69 |
+| Neptune +158 | 190 / 67 | 186 / 67 |
+| Neptune +186 | 176 / 65 | 175 / 65 |
+| Venus +160 | 202 / 74 | 198 / 76 |
+| Venus +190 | 219 / 91 | 215 / 94 |
+
+## Build 92 (bungee balloons, double swing, trampoline switch, splash game, rainbow wall)
+Desktop, software rendering, 844 × 390; `pplanet.cjs`, builds 91 and 92 run alternately (2 runs each for Neptune and Venus). Each cell: ms per frame / draw calls; the first spot after arriving varies a lot, so it is left out.
+
+| Spot | Build 91 | Build 92 |
+|---|---|---|
+| Neptune +150 (wind swings) | 181 / 65 | 186 / 69 |
+| Neptune +158 (double swing) | 176 / 63 | 181 / 67 |
+| Neptune +186 (bungee) | 172 / 65 | 175 / 65 (balloons are hidden until the ride) |
+| Mars +221 (trampoline switch) | 169 / 74 | 176 / 76 |
+| Mars +276 (rainbow wall) | 152 / 69 | 157 / 70 (low-detail handholds, no stars, no shadow; first try was 163 / 72) |
+| Venus +160 (rapids) | 199 / 69 | 204 / 75 |
+| Venus +190 | 219 / 86 | 216 / 91 |
+| Pluto +199 / +211 (rainbow tower) | 189 / 178 | 203 / 204 → tower **switched off** in build 92 |
+
 ## Build 69 (the giant Moon coaster)
 Desktop, software rendering (SwiftShader), iPhone-sized 844 × 390 view. `cperf4.cjs` (Moon station view 12 s, boarding, 20 s of riding), build 68 and build 69 run alternately, twice each:
 

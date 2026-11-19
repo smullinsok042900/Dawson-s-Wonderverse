@@ -65,6 +65,33 @@ export function plutoInflatablePark(k) {
   k.tapIt(park, () => k.fact('🎈 The giant inflatable park! On Pluto you bounce super high and float down slowly.', 'plutopark'), x(10), 'plutopark');
 }
 
+// =================== PLUTO: THE RAINBOW TOWER (build 92; area 2, x 95–108) ===================
+// A second inflatable tower: bounce pad → the 7 m ledge → bounce pad → the 14 m top deck with a star, then a TWISTY
+// SPIRAL SLIDE that winds round and round behind the tower down to the ground. Walk off the deck (or tap) to slide.
+export function plutoRainbowTower(k) {
+  const P = k.P, G = k.G, S = k.Sound, G0 = GEO(), x = v => k.s0 + v, b = makeBatch();
+  const puff = (px, py, pz, c, sx, sy, sz) => b.put(G0.lo, px, py, pz, c, [sx, sy, sz]);   // (low-detail balls: it is seen from afar)
+  const tx = x(102.5); for (let i = 0; i < 5; i++) puff(tx, 1.5 + i * 2.8, -4.2, RB[i], 3.9 - i * .25, 1.9, 2.3);
+  puff(tx, 15.2, -4.2, '#ffffff', 2.4, 1.3, 1.9); puff(tx, 17, -4.2, '#ff6fae', .8, .8, .8);
+  b.put(G0.box, x(100), 6.9, -1.6, '#9fd8ff', [4.4, .6, 2.6]); b.put(G0.box, x(104.5), 13.7, -1.6, '#ff9a2e', [6.4, .6, 2.8]);   // the ledge (7 m) and the top deck (14 m)
+  for (const s of [-1, 1]) puff(x(104.5) + s * 3, 14.6, -2.9, '#ffd23f', .5, .6, .5);
+  k.plat(x(97.8), x(102.2), 7.2, { z: -1.2 }); k.plat(x(101.4), x(107.6), 14, { z: -1.2 });
+  b.put(G0.cyl, x(96.5), .2, -1.2, '#7fe0a0', [.85, .4, .85]); b.put(G0.cyl, x(100.8), 7.4, -1.2, '#7fe0a0', [.75, .3, .75]);
+  launcher(k, x(95.8), x(97.2), 0, 5.2, 1.6, () => { S.boing(); k.disc('plutotower2bounce', '🌈 Bounce up the rainbow tower!'); });
+  launcher(k, x(100.2), x(101.4), 7.2, 5.2, 1.2, () => S.boing());
+  // the spiral slide: two turns round behind the tower
+  const pts = [[107.6, 14.5, -1.2], [109, 14, -2.6]]; for (let i = 0; i <= 16; i++) { const a = i / 16 * Math.PI * 4; pts.push([104.8 + 3.6 * Math.sin(a + 1.2), 13.2 - i * .72, -6 + 3.4 * Math.cos(a + 1.2)]); }
+  pts.push([107.5, 1.3, -2.2], [109, .8, -1.2]);
+  const path = new THREE.CatmullRomCurve3(pts.map(([a, y, z]) => V3(x(a), y, z)), false, 'catmullrom', .35);
+  { const tube = slideTube(k, path, { segs: 72, r: 1.1, cols: ['#9b6cff', '#5aa8ff', '#7fe0a0', '#ffd23f', '#ff6fae'], bands: 20 }); tube.castShadow = false; /* (light: no shadow; its posts are part of the tower mesh) */
+    for (let u = .1; u < .95; u += .2) { const p = path.getPointAt(u); if (p.y > 1.8) b.put(G0.cyl, p.x, (p.y - 1.1) / 2, p.z, '#ffd23f', [.13, p.y - 1.1, .13]); } }
+  const go = () => { G.startSlide(path, { vmax: 8, acc: 3.5 }); k.say('🌈 Round and round the spiral slide!', true); k.disc('plutospiralslide'); };
+  let cool = 0; k.U.push(dt => { cool = Math.max(0, cool - dt); if (!cool && P.layer === 'space' && !P.ride && P.grounded && Math.abs(P.y - 14) < .2 && P.x > x(107.3) && P.vx > .3) { cool = 2; go(); } });
+  G.interact.push({ x: x(105), y: 14, layer: 'space', disc: 'plutospiralgo', run: () => { if (Math.abs(P.y - 14) < 1) { P.x = x(107.6); go(); } }, hintY: 2.4 });
+  const m = b.mesh(shinyMat()); k.add(m);
+  k.tapIt(m, () => k.fact('🌈 The rainbow tower! Bounce on the green pads to go up, then slide down the spiral!', 'plutotower2'), x(97), 'plutotower2');
+}
+
 // =================== URANUS: THE ICE PALACE ===================
 export function uranusIcePalace(k) {
   const P = k.P, G = k.G, X0 = k.s0, G0 = GEO(), S = k.Sound, x = v => X0 + v, F2 = 6, b = makeBatch(), gb = makeBatch(), ice = '#bfe6ff', pale = '#e8f6ff', deep = '#7fbde8';
@@ -129,6 +156,40 @@ export function uranusRinkFun(k, cx, rx) {
     const st = k.api.stick ? k.api.stick() : { y: 0 }; vz += (-st.y * 3.2 - vz) * Math.min(1, dt * (Math.abs(st.y) > .2 ? 2.5 : .6));
     const half = rzi * Math.sqrt(Math.max(0, 1 - ((P.x - cx) / rx) ** 2)); const z0 = czc - half, z1 = Math.min(1, czc + half);
     gz = Math.max(z0, Math.min(z1, gz + vz * dt)); if (gz <= z0 || gz >= z1) vz *= -.3; k.G.iceZ = gz; P.groundZ = gz; k.G.rinkZ = gz; });
+}
+
+// =================== (build 94) URANUS: THE WINDING ICE TRAIL (area 3, starts at the rink's east end) ===================
+// Tap the glowing snowflake gate and skate a long winding trail far behind the rink, past snow banks and under glowing ice
+// arches (each one chimes), then back. YOU skate: hold ▶ to go faster, ◀ to slow down; JUMP makes a little hop.
+export function uranusIceTrail(k) {
+  const P = k.P, S = k.Sound, G0 = GEO(), x = v => k.s0 + v;
+  const path = new THREE.CatmullRomCurve3([[85, 0, -.6], [90, 0, -5], [95, 0, -11], [90, 0, -17], [78, 0, -20], [64, 0, -16], [50, 0, -19], [36, 0, -15], [24, 0, -18], [16, 0, -13], [22, 0, -9], [40, 0, -10.5], [60, 0, -9.5], [80, 0, -10], [92, 0, -7], [94, 0, -3], [88, 0, -.6]].map(([a, y, z]) => V3(x(a), y + .06, z)), false, 'catmullrom', .5), len = path.getLength();
+  // the ice ribbon (one mesh) and the snow banks along it (one mesh)
+  const N = Math.ceil(len / 1.2), tg = V3(), sd = V3(), pos = [], idx = [], bb = makeBatch(), bank = new THREE.SphereGeometry(1, 6, 4);
+  for (let i = 0; i <= N; i++) { const u = i / N, p = path.getPointAt(u); path.getTangentAt(u, tg); sd.set(-tg.z, 0, tg.x).normalize();
+    for (const s of [-1, 1]) pos.push(p.x + sd.x * 1.3 * s, .05, p.z + sd.z * 1.3 * s); if (i < N) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
+    if (i % 16 === 0) for (const s of [-1, 1]) bb.put(bank, p.x + sd.x * 1.9 * s, .15, p.z + sd.z * 1.9 * s, i % 2 ? '#ffffff' : '#e8f6ff', [.8, .35, .6]); }
+  const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); rg.setIndex(idx); rg.computeVertexNormals();
+  /* (build 94: no ice ribbon; Uranus's ground is icy already, and a big flat ribbon over it cost 10 % on desktop. The snow banks mark the trail) */   /* (the ribbon, the banks, the arches and the gate are ONE mesh with the shared material: one draw call, no shader pause) */
+  // glowing ice arches (one mesh) and the start gate
+  const arches = [.12, .27, .4, .55, .68, .82].map(u => path.getPointAt(u)), ab = bb, thin = new THREE.TorusGeometry(1, .1, 5, 16);
+  arches.forEach((p, i) => { path.getTangentAt([.12, .27, .4, .55, .68, .82][i], tg); ab.put(thin, p.x, 0, p.z, ['#9fd8ff', '#c9a6ff', '#7fe0ff', '#ffffff'][i % 4], [1.8, 2.2, 1.4], [0, Math.atan2(-tg.z, tg.x) + Math.PI / 2, 0]); });
+  ab.put(G0.oct, x(85.5), 2.6, -1.4, '#ffffff', [.5, .5, .2]); for (const s of [-1, 1]) ab.put(G0.cyl, x(85.5) + s * 1.3, 1.1, -1.4, '#9fd8ff', [.1, 2.2, .1]);
+  const gate = bb.mesh(shinyMat()); k.add(gate);
+  let skating = false;
+  const go = () => { if (P.layer !== 'space' || P.ride || skating || Math.abs(P.x - x(86)) > 6) return; skating = true; k.fact('⛸️ The winding ice trail! Hold ▶ to skate faster, ◀ to slow down. JUMP to hop!', 'uranusicetrail');
+    let u = 0, v = 3, hopV = 0, hopY = 0; const passed = new Set();
+    rideTo(k, 'icetrail', (R, dt) => { const st = k.api.stick ? k.api.stick() : { x: 0 }; const want = st.x > .3 ? 9 : st.x < -.3 ? 2 : 4.5; v += (want - v) * Math.min(1, dt * 1.5); R.maxV = Math.max(R.maxV || 0, v);
+      const u0 = u; u = Math.min(1, u + v / len * dt); const p = path.getPointAt(u); path.getTangentAt(u, tg);
+      if (hopV || hopY > 0) { hopV -= 14 * dt; hopY = Math.max(0, hopY + hopV * dt); if (hopY === 0) hopV = 0; }
+      P.x = p.x; P.z = p.z; P.y = hopY; P.facing = tg.x >= 0 ? 1 : -1; R.roll = Math.sin(R.t * 3) * .08 - (tg.z * Math.sign(tg.x || 1)) * .15;
+      [.12, .27, .4, .55, .68, .82].forEach((au, i) => { if (!passed.has(i) && u0 <= au && u >= au) { passed.add(i); S.tone(523 + i * 70, .25, 'triangle', .07, 1.5); k.api.burst(arches[i].x, 1.8, arches[i].z, ['#ffffff', '#9fd8ff', '#c9a6ff'], 12, 1.8); } });
+      R.arches = passed.size; R.u = u; if (Math.random() < dt * v * .5) k.api.burst(P.x, .1, P.z, ['#ffffff', '#cfefff'], 2, .8);
+      return u >= 1; },
+      () => { skating = false; P.z = 0; P.y = 0; P.x = x(88); S.chime(); k.say('⛸️ What a skate! Tap the snowflake gate to skate again!', true); k.disc('uranusicetraildone'); k.G.iceTrailLast = { arches: passed.size }; });
+    P.ride.onJump = () => { if (hopY === 0) { hopV = 4.5; S.boing && S.boing(); } };
+    k.G.iceTrail = { get u() { return u; }, get v() { return v; } }; };
+  k.tapIt(gate, go, x(86), 'uranusicetrail');
 }
 
 // =================== (build 78) PLUTO: THE PUFFY PICTURE-MATCHING GAME (area 2, after the bounce castles) ===================

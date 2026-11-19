@@ -3,6 +3,10 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## The attraction checklist
+`ATTRACTIONS.md` is the permanent list (the family's request, 2026-11-18). Work through it from the first row that is not DONE.
+- Pluto's rainbow tower (`plutoRainbowTower`, build 92) is switched off: make it lighter (it was 7–15 % slower in view), then turn it on.
+
 ## Speed found in the 2026-11-18 measurements (do these first)
 Desktop, software rendering; milliseconds per frame, build 69 (before) → build 72/73:
 

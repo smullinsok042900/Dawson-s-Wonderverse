@@ -15,8 +15,8 @@ import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
-import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField, marsCanyonTramp, marsBounceRace } from './control-rides.js';
-import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs } from './big-parks.js';
+import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField, marsCanyonTramp, marsBounceRace, marsZipWall } from './control-rides.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs, plutoRainbowTower, uranusIceTrail } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -190,6 +190,7 @@ const mars = {
       k.G.interact.push({ x: X + 84, y: 0, layer: 'space', disc: 'marsflags', run: () => flags[nextF].userData.tap && flags[nextF].userData.tap(), hintY: 2.2 });
       k.U.push((dt, t) => { for (const f of flags) { f.userData.wave = Math.max(0, (f.userData.wave || 0) - dt); f.rotation.y = Math.sin(t * 3 + f.position.x) * .15 + f.userData.wave * Math.sin(t * 20); } });
       k.placeAlien(X + 40, -2.4, 5); k.placeAlien(X + 102, -2, 6);
+      marsZipWall(k); // (build 92) the rainbow wall and zip line
       k.rocketSign(X + 4);
     },
   ],
@@ -226,6 +227,7 @@ const pluto = {
       bounceCastle(k, X + 46, 9, ['#9fd8ff', '#5aa8ff', '#fff3a6', '#ffb35c'], 5.8);
       bounceCastle(k, X + 74, 12, ['#ffd23f', '#ff6fae', '#7fe0a0', '#5aa8ff'], 7.4, true);
       plutoMatchGame(k); // (build 78) the puffy picture-matching game
+      // plutoRainbowTower(k); // (build 92: written and tested, but 7-15% slower where it is in view on desktop; off until it is lighter)
       k.rocketSign(X + 4);
     },
     // ----- area 3: the icy plains beyond (sparkling ice spires, and the way back to the rocket) -----
@@ -354,7 +356,7 @@ function uranusRink(k, cx) {
 const uranus = {
   sections: [
     k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
-    k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
+    k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); uranusIceTrail(k); /* (build 94) */ k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
   ],
 };
 
@@ -451,6 +453,31 @@ function neptuneWindSwings(k, X) {
     k.tapIt(piv, go, sx + dx, i === 1 ? 'neptuneswing' : null); });
   k.tapIt(sock, () => k.fact('🌬️ A windsock shows which way the wind blows. On Neptune the wind is super fast!', 'neptunewindsock'), X + 12, 'neptunewindsock');
 }
+// (build 92) THE DOUBLE SWING: one wide seat for two; a little Neptune friend sits beside her and swings with her.
+//  JUMP pumps it higher (each press also makes the friend cheer); swing really high together and you both laugh.
+function neptuneDoubleSwing(k, X) {
+  const P = k.P, sx = X + 48, H = 4.8, L = 4, cyl = new THREE.CylinderGeometry(1, 1, 1, 10), ball = new THREE.SphereGeometry(1, 12, 9), b = makeBatch();
+  for (const s of [-1, 1]) for (const z of [-1, 1]) b.put(cyl, sx + s * 2.4, H / 2, -3 + z, '#ff9a2e', [.12, H + .3, .12], [0, 0, -s * .14]);
+  b.put(cyl, sx, H, -3, '#ffd23f', [.13, 5.2, .13], [0, 0, Math.PI / 2]); k.add(b.mesh(shinyMat()));
+  const piv = new THREE.Group(); piv.position.set(sx, H, -3); k.add(piv); const pb = makeBatch();
+  for (const dx of [-1.05, 1.05]) for (const z of [-.3, .3]) pb.put(cyl, dx, -L / 2, z, '#d8e0ea', [.025, L, .025]);
+  pb.put(new THREE.BoxGeometry(1, 1, 1), 0, -L, 0, '#5aa8ff', [2.4, .12, .7]); pb.put(new THREE.BoxGeometry(1, 1, 1), 0, -L + .35, -.33, '#9b6cff', [2.4, .6, .08]);
+  // the friend: a round blue-green Neptune puff with big eyes and little antennae
+  const fx = .6; pb.put(ball, fx, -L + .55, 0, '#5fd8c8', [.42, .45, .4]); for (const e of [-.14, .14]) { pb.put(ball, fx + e, -L + .68, .33, '#ffffff', [.11, .13, .06]); pb.put(ball, fx + e, -L + .68, .38, '#203048', [.05, .06, .03]); }
+  for (const e of [-.15, .15]) { pb.put(cyl, fx + e, -L + 1.08, 0, '#5fd8c8', [.025, .3, .025]); pb.put(ball, fx + e, -L + 1.25, 0, '#ffd23f', [.07, .07, .07]); }
+  piv.add(pb.mesh(shinyMat()));
+  k.U.push((dt, t) => { if (!(P.ride && P.ride.swing === piv)) piv.rotation.z = Math.sin(t * 1.3) * (.1 + (k.G.windBlow > 0 ? .5 : 0)); });
+  const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - sx) > 7) return; k.fact('🌬️ The double swing! Swing with your Neptune friend. Press JUMP to go higher together!', 'neptunedoubleswing');
+    let amp = .2, th = 0, idleT = 0, laughed = false;
+    jupiterRide(k, 'wswing2', (R, dt) => { th += dt * 1.8; idleT += dt; amp = Math.max(.2, amp - (idleT > 4 ? dt * .04 : 0) + ((k.G.windBlow || 0) > 0 ? dt * .15 : 0)); amp = Math.min(1.15, amp);
+      const a = amp * Math.sin(th); piv.rotation.z = a; R.swing = piv; R.amp = amp; R.maxA = Math.max(R.maxA || 0, Math.abs(a));
+      const ox = -.6; P.x = sx + Math.cos(a) * ox + Math.sin(a) * (L - .05); P.y = H - Math.cos(a) * (L - .05) + Math.sin(a) * ox - .35; P.z = -3; P.facing = Math.cos(th) >= 0 ? 1 : -1;
+      if (!laughed && R.maxA > .95) { laughed = true; k.Sound.chime(); k.say('😄 You are swinging SO high together!', true); k.disc('neptunedoubleswinghigh'); }
+      return idleT > 8; }, () => { piv.rotation.z = 0; P.z = 0; P.y = 0; P.x = sx - 3; });
+    P.ride.onJump = () => { idleT = 0; amp = Math.min(1.15, amp + .15); k.Sound.tone(330 + amp * 280, .08, 'triangle', .05, 1.5); k.api.burst(sx + Math.sin(piv.rotation.z) * L + .6, H - L + 1, -3, ['#5fd8c8', '#ffd23f'], 3, 1); };
+    k.say('🌬️ Press JUMP to swing higher with your friend!', true); };
+  k.tapIt(piv, go, sx, 'neptunedoubleswing');
+}
 function neptuneBungee(k, X) {
   const P = k.P, bx = X + 76, T = 24, Lc = 10, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 12), box = new THREE.BoxGeometry(1, 1, 1);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.put(cyl, bx + sx * 1.3, T / 2, -4 + sz * 1.3, '#9b6cff', [.16, T, .16]);
@@ -492,7 +519,7 @@ function neptuneSkydive(k, X) {
 }
 const neptune = {
   sections: [
-    k => { neptuneWindSwings(k, k.s0); neptuneBungee2(k, k.s0); k.rocketSign(k.s0 + 4); },  // (build 71: the bungee you control)   // area 2: the wind swings and the bungee tower
+    k => { neptuneWindSwings(k, k.s0); neptuneDoubleSwing(k, k.s0); neptuneBungee2(k, k.s0); k.rocketSign(k.s0 + 4); },  // (build 71: the bungee you control)   // area 2: the wind swings and the bungee tower
     k => { neptuneSkydive(k, k.s0); neptuneSkyDive(k, k.s0); k.rocketSign(k.s0 + 100); },  // (build 71: + the Big Sky Dive you steer)                             // area 3: the skydiving chamber
   ],
 };
@@ -537,6 +564,12 @@ function venusLogRide(k, X) {
     for (let i = 0; i < 16; i++) { const x = st + 30 + i * 1.6, z = -22 + (i % 2) * -6.5; cb.put(ball, x, 6 + (i % 3) * .6, z, ['#3cc46e', '#7fe0a0', '#ff6fae', '#ffd23f'][i % 4], [.9, 1.4, .9]); cb.put(new THREE.CylinderGeometry(1, 1, 1, 6), x, 3, z, '#6a8a2a', [.12, 6, .12]); }
     k.add(mb.mesh(shinyMat())); k.add(cb.mesh(glowMat())); }
   const flumeStars = []; { const sm = toy('#ffd23f', { em: '#ffb000', ei: .8 }); for (const [u, off] of [[.2, -.4], [.27, .4], [.36, -.4], [.43, .4], [.5, -.35], [.58, .4], [.75, -.4], [.82, .4]]) { const p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize(); const m = new THREE.Mesh(new THREE.OctahedronGeometry(.3), sm); m.position.set(p.x + side.x * off, p.y + 1.1, p.z + side.z * off); k.add(m); flumeStars.push({ u, off, m, got: false }); } }
+  // (build 92) THE RAPIDS SPLASH GAME: five round splash targets float beside the rapids (left and right). Steer ◀ ▶
+  //  toward one and press JUMP: a jet of water hits it and it spins round and lights up. Hit all five!
+  const splashT = []; { const tm = toy('#ff6a3c', { em: '#ff3a1a', ei: .2, r: .35 }), dg = new THREE.CylinderGeometry(.55, .55, .14, 16); for (const [u, sd] of [[.43, 1], [.445, -1], [.46, 1], [.472, -1], [.484, 1]]) /* (all on the rapids before the crystal-cave fork at .493; the last one is on the right, so aiming keeps you on the main channel) */ { const p = path.getPointAt(u); path.getTangentAt(u, tg); side.set(-tg.z, 0, tg.x).normalize();
+    const m = new THREE.Mesh(dg, tm.clone()); m.position.set(p.x + side.x * 1.9 * sd, p.y + .9, p.z + side.z * 1.9 * sd); m.rotation.set(Math.PI / 2, 0, Math.atan2(-tg.z, tg.x)); m.userData.dynamic = true; k.add(m); splashT.push({ u, sd, m, hit: false, spin: 0 }); } }
+  k.G.venusSplash = splashT;
+  k.U.push(dt => { for (const s of splashT) if (s.spin > 0) { s.spin = Math.max(0, s.spin - dt); s.m.rotation.z += dt * 12; } });
   // the log: hollow with lighter ends and a seat (modelled along +x)
   const log = new THREE.Group(); { const lb = makeBatch(); lb.put(new THREE.CylinderGeometry(.62, .62, 2.6, 18, 1, true), 0, .35, 0, '#8a5a3a', 1, [0, 0, Math.PI / 2]); for (const sx of [-1.3, 1.3]) lb.put(new THREE.CylinderGeometry(.62, .62, .08, 18), sx, .35, 0, '#e8c08a', 1, [0, 0, Math.PI / 2]);
     lb.put(new THREE.BoxGeometry(1, 1, 1), 0, .2, 0, '#6a4024', [2.4, .12, 1.1]); lb.put(new THREE.SphereGeometry(.2, 10, 8), 1.4, .9, 0, '#7fe0a0', [1, .6, 1]); log.add(lb.mesh(shinyMat())); }
@@ -548,15 +581,25 @@ function venusLogRide(k, X) {
   const pathB = new THREE.CatmullRomCurve3([PF.clone(), V3(st + 29.5, 20.5, -21), V3(st + 31, 15, -22.5), V3(st + 32.5, 11, -23.5), PJ.clone()], false, 'catmullrom', .4), lenB = pathB.getLength();
   { const hp = new THREE.Mesh(halfPipe(pathB, 70, .95, ['#4fb8ff', '#cfefff'], 8), shinyMat()); k.add(hp); const fb = makeBatch(); for (let i = 0; i < 8; i++) { const q = pathB.getPointAt(.25 + i * .08); fb.put(new THREE.BoxGeometry(1, 1, 1), q.x + 1.2, q.y - 1.2, q.z, i % 2 ? '#ffffff' : '#9fd8ff', [.15, 2.4, 1.6]); }
     fb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF.x, PF.y, PF.z, '#62f0ff', 1, [0, Math.atan2(-(PJ.z - PF.z), PJ.x - PF.x) + Math.PI / 2, 0]); k.add(fb.mesh(glowMat())); }
+  // (build 93) THE CRYSTAL-CAVE FORK: at the second glowing arch (before the crystal tunnel) steer ◀ and the log takes a
+  //  branch round behind the mountain through a sparkling crystal cave, then joins the main channel again; straight on is the tunnel
+  const uF2 = nearU(st + 48, 5, -23), uJ2 = nearU(st + 68, 4.2, -27), PF2 = path.getPointAt(uF2), PJ2 = path.getPointAt(uJ2);
+  const pathC = new THREE.CatmullRomCurve3([PF2.clone(), V3(st + 51, 4.6, -30.5), V3(st + 57, 4.2, -35), V3(st + 64, 4.2, -33.5), PJ2.clone()], false, 'catmullrom', .4), lenC = pathC.getLength();
+  { const hp = new THREE.Mesh(halfPipe(pathC, 60, .95, ['#4fb8ff', '#cfefff'], 8), shinyMat()); k.add(hp); const cb = makeBatch(), oct = new THREE.OctahedronGeometry(1);
+    for (let i = 0; i < 18; i++) { const q = pathC.getPointAt(.08 + i * .05), sd = i % 2 ? 1.6 : -1.6; cb.put(oct, q.x + (i % 3 - 1) * .4, q.y + 1.2 + (i % 3) * .5, q.z + sd, ['#b07bff', '#62f0ff', '#ff6fd8', '#7dffb0'][i % 4], [.28, .7, .28]); }
+    cb.put(new THREE.TorusGeometry(1.8, .2, 6, 20, Math.PI), PF2.x, PF2.y, PF2.z, '#ff6fd8', 1, [0, Math.atan2(-(PJ2.z - PF2.z), PJ2.x - PF2.x) + Math.PI / 2, 0]); k.add(cb.mesh(glowMat())); }
   const place = (u, pth = path) => { const p = pth.getPointAt(u); pth.getTangentAt(u, tg); log.position.copy(p); log.rotation.set(0, Math.atan2(-tg.z, tg.x), 0); log.rotateZ(Math.asin(Math.max(-1, Math.min(1, tg.y)))); return p; };
   place(0);
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - st) > 8) return; k.say('🪵 All aboard the log! Hold on tight!', true);
-    let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; }
+    let u = 0, v = 3, splashed = false, crest = .6, off = 0, onB = false, ub = 0, vb = 0, onC = false, uc = 0; for (const f of flumeStars) { f.got = false; f.m.visible = true; } for (const q of splashT) { q.hit = false; q.m.material.emissiveIntensity = .2; } let hits = 0;
     k.say('🪵 Steer the log with ◀ ▶ to catch the stars! Press JUMP to SPLASH!', true);
     jupiterRide(k, 'logride', (R, dt) => {
       if (onB) { vb = Math.min(16, vb + dt * 9); ub = Math.min(1, ub + vb / lenB * dt); const pb = place(ub, pathB); P.x = pb.x; P.y = pb.y + .25; P.z = pb.z; R.roll = -.5; if (Math.random() < dt * 12) k.api.burst(pb.x, pb.y, pb.z, ['#ffffff', '#cfefff'], 2, 1.4);
         if (ub >= 1) { onB = false; u = uJ; v = vb; crest = PJ.y + vb * vb / 18; k.api.burst(pb.x, pb.y + .4, pb.z, ['#ffffff', '#4fb8ff'], 20, 3); k.Sound.boing(); } return false; }
-      if (!R.forked && u >= uF - .002 && u <= uF + .01) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
+      if (onC) { uc = Math.min(1, uc + Math.max(3.5, v) / lenC * dt); const pc = place(uc, pathC); P.x = pc.x; P.y = pc.y + .25; P.z = pc.z; R.roll = 0; if (Math.random() < dt * 5) k.api.burst(pc.x, pc.y + 1.5, pc.z, ['#b07bff', '#62f0ff', '#ff6fd8', '#ffffff'], 2, 1.2);
+        if (uc >= 1) { onC = false; u = uJ2; R.pu = u; k.Sound.chime(); } return false; }
+      if (!R.forked2 && u >= uF2 - .002 && u <= uF2 + .05) { /* (the first step at or past the arch, however big the step) */ R.forked2 = true; if (off < -.2) { onC = true; uc = 0; R.cave = true; k.Sound.twinkle && k.Sound.twinkle(); k.say('💎 The crystal cave! Look at all the sparkles!', true); k.disc('venuscrystalcave'); return false; } }
+      if (!R.forked && u >= uF - .002 && u <= uF + .05) { R.forked = true; if (off < -.2) { onB = true; ub = 0; vb = v; R.shortcut = true; k.Sound.whoosh(); k.say('💦 The waterfall shortcut! SPLOOSH!', true); return false; } }
       path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
       if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
       else { crest = Math.max(y0, crest - dt * .35); v = Math.max(2.6, Math.min(17, Math.sqrt(7 + 2 * 9 * Math.max(0, crest - y0)))); if (splashed) v = Math.max(2.2, v - dt * 14); }
@@ -569,7 +612,12 @@ function venusLogRide(k, X) {
       if (!R.whee && u > .6 && v > 10) { R.whee = 1; k.Sound.whoosh && k.Sound.whoosh(); }
       P.x = p.x; P.y = p.y + .25; P.z = p.z; P.facing = tg.x >= 0 ? 1 : -1; R.roll = Math.max(-.6, Math.min(.6, Math.asin(Math.max(-1, Math.min(1, tg.y))) * (tg.x >= 0 ? 1 : -1)));
       return u >= 1; }, () => { P.x = st + 66; P.y = 0; P.z = 0; place(0); k.say('🪵 What a ride! Tap the log to ride again!', true); }, { noExit: true });
-    if (P.ride) P.ride.onJump = () => { k.api.burst(P.x, P.y + .6, P.z, ['#ffffff', '#cfefff', '#4fb8ff'], 18, 3); k.Sound.pop && k.Sound.pop(); P.ride.splashes = (P.ride.splashes || 0) + 1; }; };
+    if (P.ride) P.ride.onJump = () => { k.api.burst(P.x, P.y + .6, P.z, ['#ffffff', '#cfefff', '#4fb8ff'], 18, 3); k.Sound.pop && k.Sound.pop(); P.ride.splashes = (P.ride.splashes || 0) + 1;
+      /* (build 92) the splash game: a jet of water hits the nearest target on the side you steer toward */
+      if (onB) return; const q = splashT.find(q => !q.hit && u > q.u - .03 && u < q.u + .012 && off * q.sd >= -.05); if (!q) return; q.hit = true; q.spin = 1.2; q.m.material.emissiveIntensity = 1.3; hits++; P.ride.hits = hits;
+      const a = q.m.position; for (let i = 1; i <= 4; i++) k.api.burst(P.x + (a.x - P.x) * i / 4, P.y + .8 + (a.y - P.y - .8) * i / 4, P.z + (a.z - P.z) * i / 4, ['#ffffff', '#4fb8ff'], 5, 1.2);
+      k.Sound.tone(520 + hits * 80, .15, 'triangle', .07, 1.5); if (hits === 1) k.say('💦 SPLASH! You hit a target! Steer toward the next one!', false);
+      if (hits === splashT.length) { k.Sound.chime(); k.say('💦 You splashed all five targets!', true); k.disc('venussplashgame'); } }; };
   k.tapIt(log, go, st, 'venuslogride');
   k.tapIt(pool, () => k.fact('🌊 The splash pool! Real Venus is far too hot for water, so this water is pretend!', 'venuspool'), pc.x, 'venuspool');
 }

@@ -26,6 +26,14 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
     const ks = M.cards.map(c => c.kind); M.tap(ks.indexOf(0)); M.tap(ks.indexOf(1)); await wait(1600); const afterWrong = M.cards.filter(c => c.open).length;
     for (const kd of [0, 1, 2]) { const i = ks.indexOf(kd), j = ks.lastIndexOf(kd); M.tap(i); M.tap(j); await wait(400); } res({ afterWrong, rounds: M.rounds }); }));
   check('Pluto: the picture-matching game: wrong cards turn back, and matching all three pairs wins', mg.afterWrong === 0 && mg.rounds === 1 && await has('plutomatch'), JSON.stringify(mg));
+  // (build 92) the rainbow tower: bounce pads up to the 14 m deck, then the spiral slide down
+  const A2 = X + 110; if (!(await ev(() => __DDW3.G.interact.some(i => i.disc === 'plutospiralgo')))) console.log('SKIP Pluto: the rainbow tower is switched off in this build (planets.js), so its two checks are not run'); else {
+  await put(A2 + 96.5, .5); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; });
+  const rt = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0, top = false; const f = () => { maxY = Math.max(maxY, P.y); if (P.grounded && P.y > 13.5) top = true; if (top || performance.now() - t0 > 40000) return res({ maxY, top, y: P.y, x: P.x }); requestAnimationFrame(f); }; f(); }));
+  check('Pluto: the rainbow tower: the green bounce pads take you up', rt.maxY > 7.2 && await has('plutotower2bounce'), JSON.stringify({ ...rt, x: rt.x - A2 }));
+  await put(A2 + 105, 14); await sleep(500); await run('plutospiralgo'); const sp = await watch(60000);
+  check('Pluto: the spiral slide winds from the rainbow tower top down to the ground', sp.seen && sp.maxY > 13 && sp.y < 1.5 && await has('plutospiralslide'), JSON.stringify({ ...sp, x: sp.x - A2 }));
+  }
   // ---- URANUS ----
   X = await fly('uranus'); await put(X + 150); await sleep(3000); const U0 = X + 110;
   check('Uranus: the Ice Palace is built', await ev(() => !!__DDW3.G.icePalace));
@@ -42,6 +50,11 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   check('Uranus: skate through all six hoops on the bigger rink', await has('uranushoops'));
   await put(X + 220 + 50); await sleep(800); await ev(() => { __DDW3.keys.up = true; }); await sleep(2500); const zf = await ev(() => __DDW3.G.rinkZ); await ev(() => { __DDW3.keys.up = false; __DDW3.keys.down = true; }); await sleep(2500); const zn = await ev(() => __DDW3.G.rinkZ); await ev(() => { __DDW3.keys.down = false; });
   check('Uranus: on the rink, ▲ glides you far across the ice and ▼ back again', zf < -4.5 && zn > zf + 3, JSON.stringify({ zf, zn, dbg: await ev(() => __DDW3.G.rinkDbg) }));
+  // (build 94) the winding ice trail: tap the snowflake gate, hold ▶ to skate fast, under all six arches and back
+  await ev(() => { __DDW3.keys.up = __DDW3.keys.down = false; }); await put(X + 220 + 86); await sleep(800); await run('uranusicetrail'); await ev(() => { __DDW3.keys.right = true; });
+  const it = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let seen = false, minZ = 0, maxV = 0; const f = () => { const R = P.ride; if (R && R.type === 'icetrail') { seen = true; minZ = Math.min(minZ, P.z); maxV = Math.max(maxV, R.maxV || 0); if (R.t > 4 && !R.hopped) { R.hopped = 1; R.onJump(); } }
+    if ((seen && !P.ride) || performance.now() - t0 > 180000) return res({ seen, done: !P.ride, minZ, maxV, last: __DDW3.G.iceTrailLast, y: P.y }); requestAnimationFrame(f); }; f(); })); await ev(() => { __DDW3.keys.right = false; });
+  check('Uranus: the winding ice trail: skate it (▶ faster), far behind the rink, under all six ice arches and back', it.seen && it.done && it.minZ < -18 && it.maxV > 8 && it.last && it.last.arches === 6 && it.y < .3, JSON.stringify(it));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();
