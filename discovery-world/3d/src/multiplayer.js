@@ -429,6 +429,27 @@ export function initMultiplayer(G, api) {
     get: key => live.get(key), all: () => live, listen: fn => liveFns.push(fn),
     peer: id => { const o = others.get(id); return o ? { kind: o.kind, colour: o.colour, st: o.interp.at(performance.now()) } : null; }, peers: () => [...others.keys()],
   };
+  // ----- (build 102) RIDING THE TRAIN TOGETHER -----
+  // Nothing new is sent. A friend riding the train is on it (riding flag, train height, the train's track). The DRIVER's
+  // train is the shared one: every other screen moves its train to the driver's seat, so it is the same train everywhere;
+  // passengers sit in their own seats behind the driver and get off together when the driver gets off.
+  let trainWith = null; const trainSnap = new THREE.Vector3();
+  function trainRiders(now) { const out = []; for (const o of others.values()) { o.tsnap = null; if (P.layer !== '') continue; const st = o.interp.at(now); if (!st || !st.r || st.l !== '' || Math.abs(st.z - 3.2) > .8 || st.y > 1.4) continue; out.push({ o, st }); } return out; }
+  function trainTogether(now) {
+    const TR = G.train; if (!TR || !TR.followFriend) return; const rs = trainRiders(now), mine = P.ride && P.ride.type === 'train';
+    if (mine && !P.ride.passenger) { // I drive: friends riding with me sit in the seats behind me, in order
+      const sx = TR.seatX(), near = rs.filter(r => Math.abs(r.st.x - sx) < 9).sort((a, b) => Math.abs(a.st.x - sx) - Math.abs(b.st.x - sx));
+      near.forEach((r, i) => { const w = TR.seatWorld(Math.min(3, i + 1), trainSnap); r.o.snap = [w.x, w.y - .05, w.z]; }); TR.followFriend(null); return; }
+    if (mine && P.ride.passenger) { const d = rs.find(r => r.o.id === trainWith); if (!d) { trainWith = null; TR.followFriend(null); return; } TR.followFriend(d.st.x, d.st.vx);
+      rs.filter(r => r !== d).sort((a, b) => Math.abs(a.st.x - d.st.x) - Math.abs(b.st.x - d.st.x)).forEach((r, i) => { const k = i + 1 >= P.ride.seat ? i + 2 : i + 1; const w = TR.seatWorld(Math.min(3, k), trainSnap); r.o.snap = [w.x, w.y - .05, w.z]; }); return; }
+    // watching: the driver is the rider at the front (the way they are going); my train follows them
+    if (!rs.length) { if (TR.following) TR.followFriend(null); trainWith = null; return; }
+    const vx = rs.reduce((a, r) => a + (r.st.vx || 0), 0), d = rs.reduce((a, b) => (vx >= 0 ? (b.st.x > a.st.x ? b : a) : (b.st.x < a.st.x ? b : a)));
+    TR.followFriend(d.st.x, d.st.vx); trainWith = d.o.id;
+    rs.filter(r => r !== d).sort((a, b) => Math.abs(a.st.x - d.st.x) - Math.abs(b.st.x - d.st.x)).forEach((r, i) => { const w = TR.seatWorld(Math.min(3, i + 1), trainSnap); r.o.snap = [w.x, w.y - .05, w.z]; });
+  }
+  G.trainJoin = () => { const TR = G.train; if (!TR || !trainWith || P.ride) return; const sx = TR.seatX(); if (Math.abs(P.x - sx) > 7 || Math.abs(TR.state.vs) > 1) { say('🚂 Wait for the train to stop at your station!', true); return; }
+    const taken = trainRiders(performance.now()).length; TR.boardPassenger(Math.min(3, taken)); };
   // ----- (build 100) RIDING THE MOON COASTER TOGETHER -----
   // Nothing new is sent: a friend is on the coaster when their "riding" flag is on and they are right on the track. Their
   // place along the track tells which car they are in (the front of the train is the rider furthest along).
@@ -465,7 +486,7 @@ export function initMultiplayer(G, api) {
     sendT -= dt; const s = myState(), key = JSON.stringify(s);
     if (T && online && ((key !== lastSent && sendT <= 0) || sendT < -2)) { T.send(s); lastSent = key; sendT = .125; }
     if (paintBatch.pending() && now - lastPaintAt > 400) paintBatch.flush(now);
-    coasterTogether(now);
+    coasterTogether(now); trainTogether(now);
     for (const o of others.values()) {
       if (now - o.seen > 20000) { removeOther(o.id); continue; } // (a phone that vanished without saying goodbye)
       syncPeerPets(o);
