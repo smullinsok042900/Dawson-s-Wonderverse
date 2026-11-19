@@ -4,6 +4,21 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 105 — a dress-up menu that makes sense, and the Moon coaster's tunnel and cave camera
+- **THE DRESS-UP MENU, redone like a children's dress-up game (the family's request):**
+  - every button shows a REAL PICTURE of the thing it puts on, made from that thing's own 3D model (`tools/make-accessory-pictures.cjs` → `src/accessory-pictures.js`, 84 KB, built into the game; nothing is drawn while she plays). Before, the bow and the bow tie had the same 🎀, and several pictures were emojis that did not match;
+  - six picture shelves: hats and crowns, bows and headbands, glasses and goggles, necklaces and scarves, wings and capes, other things. A shelf shows only its own things, and only the ones that fit this friend; a shelf with nothing that fits is not shown (no greyed buttons);
+  - one tap wears it at once (a sparkle on the friend and a happy sound); the card glows gold with a green ✔; a second tap takes it off; the red ✖ button takes everything off; the big green ✔ closes; saved for each friend;
+  - surprises not found yet show their picture greyed with a 🎁; a tap says where to find it ("Find it on the Moon!");
+  - her friend is shown close up on the free right side of the screen (the camera comes close, and nothing in the world between the camera and her friend is drawn while dressing); swipe there to turn her round; the walking buttons hide while dressing;
+  - three pictures were improved after looking at them: the tiara has a sparkling crest of gems, the flower crown bigger flowers, the party hat slim stripes (it looked like a cake). These are the real models, so they look better worn too.
+- **THE MOON COASTER'S TUNNEL AND CAVE (the family's report, "both tunnels"):** pictures taken all the way into and out of both found four faults, all fixed:
+  - inside, the camera's position shared a scratch vector with the look-ahead point, so it flew to just in front of the train and showed walls and supports (no train);
+  - going in, the camera trailed 11 m behind, outside the rock or above the ground while the train was already inside: now it waits at the opening and follows in;
+  - coming out, the high camera came back while the train was still inside the stone mouth, and on the steep climb out of the cave the camera was lifted out through the wall: now it follows until the train is out, and closer on the climb;
+  - the dark disc that makes each mouth look dark from outside is hidden while you ride (the camera passes through it).
+- Tests (desktop, software rendering): `dressup` redone thing by thing: all 23 pictures present and different; on all twelve friends every thing on every shelf shows its own picture, one tap wears exactly it on the right bone (and marks it), a second tap takes it off, a whole outfit is worn together and fits (hat above the eyes, glasses at the eyes, necklace below, nothing huge); the red button; surprises; reload; the layout on an iPhone, a small Android phone and an iPad (fits, buttons ≥ 48 px, her friend beside the panel and not hidden by anything); ✔ closes. `dress-together`; tunnel and cave pictures (into and out of both). SPEED_RESULT. **Full smoke test: SMOKE_RESULT.** Not tried on an iPhone.
+
 ## Checkpoint: build 104 — the Venus log ride together (Play Together)
 - **The log holds two.** Standing at the log station when a friend sets off, you hop in behind them (or tap the log while it is out); you ride the whole flume together (the waterfall shortcut and the crystal cave too, wherever the friend steers) and get out together at the end. A friend who stays at the station sees the log carry its riders. While a friend has the log, tapping it says to wait and hop in next time (a voice line).
 - **Nothing new is sent or stored:** a friend on the log is known from where they are (on the water channel) and their riding flag. No new database rules. Outside a room the new code does not run; riding alone, the log is exactly as before (one extra check when you tap it).

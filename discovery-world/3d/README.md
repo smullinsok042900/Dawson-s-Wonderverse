@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 105: an easy dress-up menu, and the coaster tunnels fixed
+- **👗 Dress up:** real pictures of every thing, on six picture shelves; one tap puts it on (a gold card with a tick), another takes it off; the red ✖ takes everything off; her friend shows close up beside the menu.
+- **Moon coaster:** the camera follows the train properly into and out of the mountain tunnel and the crystal cave.
+
 ## 3D build 104: the log ride together
 - **Play Together on Venus:** the log holds two. Stand at the log station when a friend sets off and you hop in behind them; ride the whole flume together and get out together.
 

@@ -70,15 +70,19 @@ const KINDS = ['pip', 'zuzu', 'jelly', 'sprout', 'puffle', 'luna', 'bloop', 'zip
   const off = await ev(() => Object.values(__DDW3.G.me().parts.worn || {}).filter(Boolean).length);
   check('the red button takes everything off', off === 0, `worn ${off}`);
   // the layout on three screens
-  for (const [name, w, h] of [['iphone', 844, 390], ['android', 740, 360], ['ipad', 1180, 820]]) {
-    await page.setViewportSize({ width: w, height: h }); await page.locator(`#dressPanel .dKid[aria-label="pip"]`).tap(); await sleep(2500);
+  for (const [name, w, h, x] of [['iphone', 844, 390, null], ['android', 740, 360, 152], ['ipad', 1180, 820, 70]]) {
+    await page.setViewportSize({ width: w, height: h }); if (x != null) await ev(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.z = 0; }, x); await page.locator(`#dressPanel .dKid[aria-label="pip"]`).tap(); await sleep(3000);
     const L = await ev(() => { const r = e => e.getBoundingClientRect(), pn = r(document.getElementById('dressPanel')), dn = r(document.getElementById('dressDone')), D = __DDW3, P = D.player;
       const head = D.toScreen(P.x, P.y + 1.4), feet = D.toScreen(P.x, P.y), cards = [...document.querySelectorAll('#dressPanel .dItem,#dressPanel .dTab,#dressPanel .dKid,#dressPanel .dOff')].map(r);
+      // nothing drawn may stand between the camera and her friend (a ray from the camera to her chest, from the near plane on)
+      const T = D.THREE, cam = D.camera, me = D.G.me().root, tgt = new T.Vector3(P.x, P.y + .8, P.z || 0), dir = tgt.clone().sub(cam.position), dist = dir.length(); let scene = me; while (scene.parent) scene = scene.parent;
+      const mine = new Set(); me.traverse(o => mine.add(o)); const metas = []; scene.traverse(o => { if (o.isMesh && !mine.has(o) && o.material && !o.material.transparent) { let v = true, q = o; while (q) { if (!q.visible) { v = false; break; } q = q.parent; } if (v) metas.push(o); } });
+      const rc = new T.Raycaster(cam.position.clone(), dir.normalize(), cam.near, dist - .7); const hit = rc.intersectObjects(metas, false)[0], blockedBy = hit ? (hit.object.name || hit.object.geometry.type) + '@' + hit.distance.toFixed(1) : '';
       const overlap = (a, b2) => a.left < b2.right && b2.left < a.right && a.top < b2.bottom && b2.top < a.bottom;
       return { inView: pn.left >= 0 && pn.top >= 0 && pn.bottom <= innerHeight + 1 && pn.right <= innerWidth, minBtn: Math.round(Math.min(...cards.map(c => Math.min(c.width, c.height)))), friendX: Math.round(head.x), panelR: Math.round(pn.right), friendH: Math.round(feet.y - head.y),
-        onScreen: head.y > 0 && feet.y < innerHeight && head.x < innerWidth, doneClear: !overlap(dn, pn) && !(dn.left < head.x + 40 && head.x - 40 < dn.right && dn.top < feet.y && head.y < dn.bottom) }; });
+        onScreen: head.y > 0 && feet.y < innerHeight && head.x < innerWidth, blockedBy, doneClear: !overlap(dn, pn) && !(dn.left < head.x + 40 && head.x - 40 < dn.right && dn.top < feet.y && head.y < dn.bottom) }; });
     await page.screenshot({ path: path.join(__dirname, '..', 'screenshots', `dress-menu-${name}.jpg`), quality: 80, type: 'jpeg' });
-    check(`${name} (${w}×${h}): the menu fits the screen with big buttons; her friend is close up beside it, not covered; the ✔ is clear`, L.inView && L.minBtn >= 46 && L.friendX > L.panelR + 10 && L.onScreen && L.friendH > h * .3 && L.doneClear, JSON.stringify(L));
+    check(`${name} (${w}×${h}): the menu fits the screen with big buttons; her friend is close up beside it, not covered (by the menu or by anything in the world); the ✔ is clear`, L.inView && L.minBtn >= 46 && L.friendX > L.panelR + 10 && L.onScreen && L.friendH > h * .3 && !L.blockedBy && L.doneClear, JSON.stringify(L));
   }
   await page.setViewportSize({ width: 844, height: 390 });
   // reload: outfits kept for each friend

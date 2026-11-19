@@ -1119,6 +1119,7 @@ function updateCamera(dt) {
   // (build 105) DRESSING UP: the camera comes close to her friend and puts it in the middle of the free right side of the screen
   camT.dr = (camT.dr ?? 0) + ((G.dressOpen && !P.ride ? 1 : 0) - (camT.dr ?? 0)) * ease(dt, 5); if (camT.dr < .002) camT.dr = 0;
   if (camT.dr) { const d = 4.2, k = camT.dr, cx = P.x - viewHalfW(d) * .55, cz = (P.z || 0); dressCam.set(cx, P.y + 1.05, cz + d); dressLook.set(cx, P.y + .82, cz); camera.position.lerp(dressCam, k); camLook.lerp(dressLook, k); }
+  { const nr = camT.dr > .6 ? 2.9 : .3; /* (the camera looks straight at the depth of her friend, 4.2 m away) */ if (Math.abs(camera.near - nr) > .01) { camera.near = nr; camera.updateProjectionMatrix(); } } /* (build 105: while dressing, nothing between the camera and her friend is drawn, so no tree or swing can hide her friend) */
   camera.lookAt(camLook);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride && G.camOverride.coaster && !(player.ride && player.ride.type === 'coaster')) G.coasterOff(); // (build 69: left the coaster another way, e.g. the map)
