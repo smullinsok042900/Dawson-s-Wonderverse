@@ -75,12 +75,25 @@ export function buildMoonCoaster(k) {
     const m = wb.mesh(glowMat); m.receiveShadow = false;
     const grp = new THREE.Group(); grp.add(m); root.add(grp); m.geometry.computeBoundingSphere(); hidden.push({ grp, c: m.geometry.boundingSphere.center.clone(), r: m.geometry.boundingSphere.radius }); idx.grp = grp; return idx; };
   const hidden = []; // (the tunnel's inside and the cave are only drawn when the camera is near them)
+  // (build 100) TUNNEL MOUTHS: the tunnel and the cave are drawn from the inside only, so from outside the train used to
+  //  dive straight into solid rock or solid ground. Now a stone mouth leads in: an outward-facing tube round the track from
+  //  its open end to just past where the track meets the rock (or the ground), with a ring round the opening.
+  const mouth = (a, b, r, colr, openAt) => { if (a < 0 || b <= a + 4) return; const pts = []; for (let i = a; i <= b; i += 4) pts.push(V(i)); if ((b - a) % 4) pts.push(V(b));
+    skel.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(4, pts.length * 2), r, 10, false), null, colr);
+    V(openAt, pos, pA); skel.put(new THREE.TorusGeometry(r + .15, .4, 6, 22), pA.x, pA.y, pA.z, '#8a8a98', 1, ringRot(openAt)); };
+  const darkOut = new THREE.CircleGeometry(1, 22), darkIn = new THREE.CircleGeometry(1, 22).rotateY(Math.PI);
+  const dark = (i, r, facingIn) => { V(i, pos, pA); skel.put(facingIn ? darkIn : darkOut, pA.x, pA.y, pA.z, '#0b0812', r, ringRot(i)); }; /* (the darkness inside the mouth, seen from outside only) */
   jobs.push(() => { const idx = tubeAround('T', 6.5, '#55556e', 64); if (!idx) return; const ball = new THREE.SphereGeometry(1, 12, 8);
-    for (let j = 64 + 20; j < idx.length - 64 - 20; j += 30) { V(idx[j], pos, pA); skel.put(ball, pA.x, pA.y - 8, pA.z, j % 60 ? '#9a9aa8' : '#b4b4c0', [20, 24, 20]); }
+    const rocks = []; for (let j = 64 + 20; j < idx.length - 64 - 20; j += 30) { V(idx[j], pos, pA); skel.put(ball, pA.x, pA.y - 8, pA.z, j % 60 ? '#9a9aa8' : '#b4b4c0', [20, 24, 20]); rocks.push([pA.x, pA.y - 8, pA.z]); }
+    { const inR = i => { V(i, pos, pA); return rocks.some(([x, y, z]) => ((pA.x - x) / 20) ** 2 + ((pA.y - y) / 24) ** 2 + ((pA.z - z) / 20) ** 2 < .985); };
+      const i0 = idx[0], i1 = idx[idx.length - 1]; let inI = -1, outI = -1; for (let i = i0; i <= i1; i++) if (inR(i)) { if (inI < 0) inI = i; outI = i; }
+      if (inI > 0) { mouth(i0, Math.min(i1, inI + 12), 6.85, '#7a7a88', i0); mouth(Math.max(i0, outI - 12), i1, 6.85, '#7a7a88', i1); dark(inI + 4, 6.4, true); dark(outI - 4, 6.4, false); C.tunnelMouths = [i0, inI, outI, i1]; } }
     const tg = makeBatch(); for (let j = 0; j < idx.length; j += 20) { V(idx[j], pos, pA); tg.put(torusT, pA.x, pA.y, pA.z, j % 40 ? '#ffe36e' : '#62f0ff', 1, ringRot(idx[j])); } idx.grp.add(tg.mesh(glowMat));
   });
   // ---------- THE GLOWING UNDERGROUND CAVE: a purple cave lit by crystals ----------
   jobs.push(() => { const idx = tubeAround('C', 7.5, '#4a2a86'); if (!idx) return; const cg = makeBatch();
+    { const i0 = idx[0], i1 = idx[idx.length - 1]; let dn = -1, upI = -1; for (let i = i0; i <= i1; i++) { V(i, pos, pA); if (pA.y < ground(pA.x, pA.z) - .4) { if (dn < 0) dn = i; upI = i; } }
+      if (dn > 0) { mouth(i0, Math.min(i1, dn + 14), 7.85, '#6a5a7a', i0); mouth(Math.max(i0, upI - 14), i1, 7.85, '#6a5a7a', i1); dark(dn + 4, 7.4, true); dark(upI - 4, 7.4, false); C.caveMouths = [i0, dn, upI, i1]; } }
     for (let j = 0; j < idx.length; j += 7) { V(idx[j], pos, pA); const a = j * 2.39, r = 6.6; cg.put(oct, pA.x + Math.cos(a) * r, pA.y + 1 + Math.sin(a) * r * .8, pA.z + Math.sin(a * 1.7) * 2, ['#b07bff', '#62f0ff', '#ff6fd8', '#7dffb0'][j % 4], [.5, 1.3, .5], [a, a * .5, 0]); }
     idx.grp.add(cg.mesh(glowMat)); for (const j of [0, idx.length - 1]) { V(idx[j], pos, pA); glow.put(torusC, pA.x, pA.y, pA.z, '#b07bff', 1, ringRot(idx[j])); } });
   // ---------- the station: a long platform with a striped roof and big glowing arches ----------
