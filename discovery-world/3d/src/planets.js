@@ -16,7 +16,7 @@ import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse, mercuryMazePlus, mercuryRotatingWalls } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField, marsCanyonTramp, marsBounceRace, marsZipWall } from './control-rides.js';
-import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs, plutoRainbowTower, uranusIceTrail, uranusIceTunnels } from './big-parks.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs, plutoRainbowTower, uranusIceTrail, uranusIceTunnels, plutoSquishMaze } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -227,6 +227,7 @@ const pluto = {
       bounceCastle(k, X + 46, 9, ['#9fd8ff', '#5aa8ff', '#fff3a6', '#ffb35c'], 5.8);
       bounceCastle(k, X + 74, 12, ['#ffd23f', '#ff6fae', '#7fe0a0', '#5aa8ff'], 7.4, true);
       plutoMatchGame(k); // (build 78) the puffy picture-matching game
+      plutoSquishMaze(k); // (build 100) the puffy squish maze (where the rainbow tower would stand)
       // plutoRainbowTower(k); // (build 92: written and tested, but 7-15% slower where it is in view on desktop; off until it is lighter)
       k.rocketSign(X + 4);
     },

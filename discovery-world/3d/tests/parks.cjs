@@ -26,6 +26,13 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
     const ks = M.cards.map(c => c.kind); M.tap(ks.indexOf(0)); M.tap(ks.indexOf(1)); await wait(1600); const afterWrong = M.cards.filter(c => c.open).length;
     for (const kd of [0, 1, 2]) { const i = ks.indexOf(kd), j = ks.lastIndexOf(kd); M.tap(i); M.tap(j); await wait(400); } res({ afterWrong, rounds: M.rounds }); }));
   check('Pluto: the picture-matching game: wrong cards turn back, and matching all three pairs wins', mg.afterWrong === 0 && mg.rounds === 1 && await has('plutomatch'), JSON.stringify(mg));
+  // (build 100) the puffy squish maze: walk right; each wall stops her until she taps it (it squishes flat), then on to the prize balloon
+  { const A2s = X + 110; await put(A2s + 95.5); await sleep(1200); await ev(() => { __DDW3.keys.right = true; });
+    const sm = await ev(A2s => new Promise(res => { const P = __DDW3.player, W = __DDW3.G.squishMaze, t0 = performance.now(); let stops = 0, taps = 0, lastX = P.x, still = 0; const f = () => {
+      if (Math.abs(P.x - lastX) < .005) still++; else still = 0; lastX = P.x; const w = W.find(w => w.flat === 0 && w.wx > P.x && w.wx - P.x < 1.3);
+      if (w && still > 3) { stops++; taps++; still = 0; const it = __DDW3.G.interact.find(i => i.disc === 'plutosquish' + w.i); it && it.run(); }
+      if (__DDW3.world.disc.has('plutosquishwin') || performance.now() - t0 > 90000) { __DDW3.keys.right = false; return res({ x: P.x - A2s, stops, taps, won: __DDW3.world.disc.has('plutosquishwin') }); } requestAnimationFrame(f); }; f(); }), A2s);
+    check('Pluto: the puffy squish maze: each wall stops you until you tap it, it squishes flat, and you reach the prize balloon', sm.won && sm.stops >= 4, JSON.stringify(sm)); }
   // (build 92) the rainbow tower: bounce pads up to the 14 m deck, then the spiral slide down
   const A2 = X + 110; if (!(await ev(() => __DDW3.G.interact.some(i => i.disc === 'plutospiralgo')))) console.log('SKIP Pluto: the rainbow tower is switched off in this build (planets.js), so its two checks are not run'); else {
   await put(A2 + 96.5, .5); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; });

@@ -265,3 +265,27 @@ export function uranusPalaceUpstairs(k) {
     for (const bl of bells) { bl.ring = Math.max(0, bl.ring - dt * 2); bl.m.rotation.z = Math.sin(t * 20) * .2 * bl.ring; } });
   k.add(b.mesh(shinyMat())); if (gb.count()) k.add(gb.mesh(glowMat()));
 }
+
+// =================== (build 100) PLUTO: THE PUFFY SQUISH MAZE (area 2, x 96–108) ===================
+// Four big puffy walls stand in the way (she cannot walk through them). Each one has a picture on it. Tap a wall and it
+// SQUISHES flat with a funny sound, so she can walk over it; after a few seconds it puffs back up. At the end: a prize balloon.
+export function plutoSquishMaze(k) {
+  const P = k.P, G = k.G, S = k.Sound, G0 = GEO(), x = v => k.s0 + v, walls = [];
+  const pics = [['#ffd23f', 'star'], ['#ff4f6a', 'heart'], ['#7fe0a0', 'leaf'], ['#5aa8ff', 'drop']];
+  [97.5, 100.5, 103.5, 106.5].forEach((wx0, i) => { const wx = x(wx0), g = new THREE.Group(); g.position.set(wx, 0, -1.2); g.userData.dynamic = true; k.add(g); const b = makeBatch();
+    b.put(G0.lo, 0, 1.4, 0, ['#ff9fd2', '#9fd8ff', '#fff3a6', '#c9a6ff'][i], [.55, 1.5, 1.6]); for (const s of [-1, 1]) b.put(G0.lo, 0, 1.4, s * 1.5, '#ffffff', [.5, 1.35, .4]);
+    const [c, sh] = pics[i]; if (sh === 'star') b.put(G0.oct, .5, 1.6, 0, c, [.1, .5, .42]); else if (sh === 'heart') { b.put(G0.ball, .5, 1.7, -.18, c, [.08, .24, .24]); b.put(G0.ball, .5, 1.7, .18, c, [.08, .24, .24]); b.put(G0.cone, .5, 1.38, 0, c, [.08, .4, .38], [Math.PI, 0, 0]); }
+    else if (sh === 'leaf') b.put(G0.ball, .5, 1.6, 0, c, [.08, .5, .28], [.6, 0, 0]); else { b.put(G0.ball, .5, 1.5, 0, c, [.08, .3, .3]); b.put(G0.cone, .5, 1.85, 0, c, [.08, .35, .22]); }
+    g.add(b.mesh(shinyMat()));
+    for (const o of G.solids.filter(s => s.key === 'plutosquish' + i)) G.solids.splice(G.solids.indexOf(o), 1);
+    const w = { g, wx, i, flat: 0, solid: { a: wx - .5, b: wx + .5, top: 3, layer: 'space', key: 'plutosquish' + i } }; G.solids.push(w.solid); walls.push(w);
+    k.tapIt(g, () => { if (P.layer !== 'space' || w.flat > 0) return; w.flat = 5; const j = G.solids.indexOf(w.solid); if (j >= 0) G.solids.splice(j, 1); S.boing(); S.tone(180, .25, 'sawtooth', .04, .6); k.api.burst(wx, .6, -1, RB, 10, 1.6); if (i === 0) k.fact('🎈 The puffy squish maze! Tap a wall to SQUISH it, then walk over it!', 'plutosquishmaze'); }, wx, 'plutosquish' + i); });
+  // the prize balloon at the end
+  const prize = new THREE.Mesh(G0.ball, toy('#ff4f6a', { r: .3, em: '#ff2f5a', ei: .25 })); prize.scale.set(.6, .75, .6); prize.position.set(x(108.6), 2.4, -1.2); k.add(prize); let won = false;
+  k.U.push((dt, t) => { for (const w of walls) { if (w.flat > 0) { w.flat = Math.max(0, w.flat - dt); if (w.flat === 0) { if (Math.abs(P.x - w.wx) < .7 && P.y < 2) { w.flat = .5; continue; } /* (never puff up under her) */ G.solids.push(w.solid); S.tone(520, .15, 'sine', .04, 1.4); } }
+      const sq = w.flat > 0 ? Math.max(.12, 1 - Math.min(1, (5 - w.flat) * 6)) : Math.min(1, w.g.scale.y + dt * 3); w.g.scale.y = w.flat > 0 ? sq : sq; }
+    prize.position.y = 2.4 + Math.sin(t * 2) * .15;
+    if (!won && P.layer === 'space' && P.x > x(107.8) && P.y < 3) { won = true; S.chime(); k.api.burst(prize.position.x, prize.position.y, -1.2, RB, 30, 2.6); k.say('🎈 You got through the puffy squish maze! A prize balloon for you!', true); k.disc('plutosquishwin'); }
+    if (won && P.x < x(96)) won = false; });
+  G.squishMaze = walls;
+}
