@@ -145,6 +145,7 @@ export function neptuneSkyDive(k, X) {
   const go = () => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - bx) > 7) return; k.fact('🪂 The Big Sky Dive! The balloon takes you way up high. Press JUMP to dive!', 'neptuneskydiver');
     let ph = 'up', vx = 0, vz = 0, vy = 0, hoopsGot = 0, wait = 0, rest = null; const hit = hoopPts.map(() => false);
     const R = ride(k, 'skydrop', (R, dt) => {
+      if (R.far) k.G.camOverride = { skydive: true, pos: [P.x + 5, P.y + 18, P.z + 26], look: [P.x, Math.max(0, P.y - 16), P.z - 1] }; else if (k.G.camOverride && k.G.camOverride.skydive) k.G.camOverride = null;   /* (build 96: the 📷 high view, in every part of the dive) */
       if (ph === 'up') { bal.position.y = Math.min(TOP, bal.position.y + dt * 12); P.x = bx; P.z = -2.5; P.y = bal.position.y + 1.6; if (bal.position.y >= TOP) { ph = 'ready'; wait = 0; k.say('🪂 So high! Press JUMP to dive!', true); } return false; }
       if (ph === 'ready') { wait += dt; if (wait > 8 || R.go) { ph = 'fall'; vy = 0; k.Sound.whoosh(); k.say('🪂 Wheee! Steer with the joystick through the hoops! Press JUMP to open your parachute!', true); } return false; }
       if (ph === 'rest') { const sr = stick(k); P.x = Math.max(rest.x - rest.r + .5, Math.min(rest.x + rest.r - .5, P.x + sr.x * 3 * dt)); P.z = Math.max(rest.z - rest.r + .5, Math.min(rest.z + rest.r - .5, P.z - sr.y * 2 * dt)); P.y = rest.y + Math.sin(R.t * 3) * .04; R.roll = 0; P.facing = sr.x >= 0 ? 1 : -1; chute.visible = false;
@@ -159,7 +160,6 @@ export function neptuneSkyDive(k, X) {
       for (const isl of islands) if (!(isl === R.left && R.t - R.leftT < 2) && vy < 0 && P.y - vy * dt >= isl.y - .1 && P.y <= isl.y + .1 && Math.hypot(P.x - isl.x, P.z - isl.z) < isl.r) /* (her height before and after this step) */ { ph = 'rest'; rest = isl; P.y = isl.y; vy = 0; vx = vz = 0; R.rests = (R.rests || 0) + 1; k.Sound.boing(); k.api.burst(P.x, P.y, P.z, ['#ffffff'], 12, 1.6); k.say('☁️ A cloud island! Walk about, then press JUMP to dive again!', true); return false; }
       if (ph === 'fall' && (R.open || P.y < 18)) { ph = 'chute'; chute.visible = true; k.Sound.boing(); k.say('🪂 Parachute open! Steer to the red target!', true); }
       if (chute.visible) chute.position.set(P.x, P.y + .6, P.z);
-      if (R.far) k.G.camOverride = { skydive: true, pos: [P.x + 5, P.y + 18, P.z + 26], look: [P.x, Math.max(0, P.y - 16), P.z - 1] }; else if (k.G.camOverride && k.G.camOverride.skydive) k.G.camOverride = null;   /* (build 96: the 📷 high view) */
       if (P.y <= 0) { P.y = 0; return true; } return false; },
       R => { camBtn(k, null); if (k.G.camOverride && k.G.camOverride.skydive) k.G.camOverride = null; chute.visible = false; bal.position.y = 0; P.vy = 0; const bull = Math.hypot(P.x - tx, (P.z || 0) + 1) < 3.3; P.z = 0; k.api.burst(P.x, .6, 0, RB, bull ? 30 : 12, 2.6); k.Sound.chime();
         k.say(bull ? '🎯 BULLSEYE! A perfect landing on the target!' : '🪂 You landed! Tap the balloon to dive again!', true); k.disc(bull ? 'neptunebullseye' : 'neptuneskydived'); G_last.hoops = hoopsGot; G_last.bull = bull; G_last.gusts = R.gusts || 0; });
