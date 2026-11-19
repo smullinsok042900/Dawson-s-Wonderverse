@@ -364,7 +364,7 @@ function coasterButton(show) {
     coasterBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const R = player.ride; if (R && R.type === 'coaster') { R.skip = true; Sound.click(); } }); document.body.appendChild(coasterBtn); }
   coasterBtn.classList.toggle('show', !!show);
 }
-G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: C.homeI || 0, clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
+G.startCoaster = (C, o = {}) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: o.i ?? (C.homeI || 0), seat: o.seat || 0, /* (build 100: riding together: start where a friend's train is, in your own seat) */ clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
 const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3() };
 function coasterSample(C, i, arr, out) { const N = C.N, j0 = Math.max(0, Math.min(N - 1, Math.floor(i))), j1 = Math.min(N - 1, j0 + 1), f = Math.max(0, Math.min(1, i - j0)); return out.set(arr[j0 * 3] + (arr[j1 * 3] - arr[j0 * 3]) * f, arr[j0 * 3 + 1] + (arr[j1 * 3 + 1] - arr[j0 * 3 + 1]) * f, arr[j0 * 3 + 2] + (arr[j1 * 3 + 2] - arr[j0 * 3 + 2]) * f); }
 const COASTER_SAYS = { L: '🎢 Up, up, up! Look how high we go!', K: '🌋 Down into the GIANT crater!', T: '⛰️ Into the mountain tunnel!', C: '💎 Ooooh! A glowing crystal cave!', B: '🚀 BOOST! Zoom!' };
@@ -386,19 +386,21 @@ function coasterRide(dt, R) {
   if (!R.drop && j > 10 && C.flag[j - 10] === 'L' && f !== 'L') { R.drop = 1; Sound.whoosh(); voice.speak('Wheeeeee!'); }
   C.placeTrain(R.i);
   const pos = coasterSample(C, R.i, C.pos, CV.a), tg = coasterSample(C, R.i, C.tan, CV.t).normalize(), up = coasterSample(C, R.i, C.up, CV.u).normalize();
-  P.x = pos.x + up.x * .55; P.y = pos.y + up.y * .55 - .25; P.z = pos.z + up.z * .55; P.facing = tg.x >= 0 ? 1 : -1; P.vx = v * P.facing; R.roll = Math.atan2(-up.x, up.y) * (P.facing > 0 ? 1 : 1);
+  P.x = pos.x + up.x * .55; P.y = pos.y + up.y * .55 - .25; P.z = pos.z + up.z * .55;
+  if (R.seat) { /* (build 100) riding together: your own seat, further back in the train (the 4th rider shares the back car) */ const iS = Math.max(0, R.i - Math.min(2, R.seat) * (C.CAR_GAP || 4.8)), ps = coasterSample(C, iS, C.pos, CV.d), us = coasterSample(C, iS, C.up, CV.w).normalize();
+    P.x = ps.x + us.x * .55; P.y = ps.y + us.y * .55 - .25; P.z = ps.z + us.z * .55; if (R.seat > 2) { const ts = coasterSample(C, iS, C.tan, new THREE.Vector3()).normalize(), sd = ts.cross(us).normalize(); P.x += sd.x * .6; P.z += sd.z * .6; } } P.facing = tg.x >= 0 ? 1 : -1; P.vx = v * P.facing; R.roll = Math.atan2(-up.x, up.y) * (P.facing > 0 ? 1 : 1);
   R.maxY = Math.max(R.maxY, pos.y); R.maxV = Math.max(R.maxV, v);
   // the chase camera: inside the tunnel and the cave it sits on the track just behind the train; outside it rides behind
   // and above, along the way the train is going (smoothed), and never rolls
-  const inside = f === 'T' || f === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C'));
+  const ahead = C.flag[Math.min(N - 1, j + 30)], inside = f === 'T' || f === 'C' || ahead === 'T' || ahead === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C')); /* (build 100: follow the track down into the tunnel and the cave BEFORE the entrance, so the camera never swoops through the mountain's rock) */
   let want;
-  if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); }
+  if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); want.y = Math.max(want.y, pos.y + 1.8); } /* (build 100: on a steep climb the point behind is far below the cart; never look up at its underside) */
   else { const back = coasterSample(C, Math.max(0, R.i - 26), C.pos, CV.b); CV.d.subVectors(pos, back).setY(0); if (CV.d.lengthSq() < .01) CV.d.set(P.facing, 0, 0); CV.d.normalize();
     want = CV.w.copy(pos).addScaledVector(CV.d, -12).add(CV.b.set(0, 5.5, 0)); want.z += 2.5; want.y = Math.max(want.y, pos.y + 3); }
   const lookAt = coasterSample(C, Math.min(N - 1, R.i + 10), C.pos, CV.b);
   if (!R.cam) { R.cam = want.clone(); R.look = lookAt.clone(); }
   const kc = 1 - Math.exp(-dt * (inside ? 9 : 4.5)), kl = 1 - Math.exp(-dt * 7);
-  R.cam.lerp(want, kc); R.look.lerp(lookAt, kl);
+  R.cam.lerp(want, kc); R.look.lerp(lookAt, kl); if (R.cam.y < pos.y + 1.2) R.cam.y = pos.y + 1.2; /* (build 100: the smoothed camera never drops below the cart, even on a fast climb) */
   G.camOverride = { coaster: true, pos: [R.cam.x, R.cam.y, R.cam.z], look: [R.look.x, R.look.y, R.look.z] };
   if (v > 22 && Math.random() < dt * 14) burst(pos.x - tg.x * 2, pos.y + .1, pos.z - tg.z * 2, ['#ffffff', '#62f0ff', '#ff6fd8'], 1, .6);
 }
@@ -557,7 +559,8 @@ function boardRocket(key, quick) {
 function climbOut(r) {
   launching = false;
   const P = player; G.playerHidden = false; hideBlast(); if (rocketPanel) rocketPanel.classList.remove('show');
-  if (r) { showFace(r, false); r.flame.visible = false; r.g.position.y = r.baseY; P.x = r.x + 2.5; P.y = r.layer === 'space' ? 0 : groundUnder(r.x + 2.5, r.baseY + 1); }
+  const R0 = seated(), seatN = R0 ? R0.seat | 0 : 0; if (R0 && mpL()) { const L = mpL(), fk = R0.padF || padKey(R0.key), f = L.get(fk); rkLeaveSeat(R0); if (f && f.host === L.me() && f.st === 'go') setTimeout(() => { const g2 = L.get(fk); if (g2 && g2.n === f.n) L.set(fk, null); }, 15000); }
+  if (r) { showFace(r, false); r.flame.visible = false; r.g.position.y = r.baseY; P.x = r.x + 2.5 + seatN * 1.3; P.y = r.layer === 'space' ? 0 : groundUnder(P.x, r.baseY + 1); if (mpL()) rkFaces(Object.keys(G.rockets).find(k => G.rockets[k] === r)); }
   P.ride = null; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0; P.facing = 1; G.camLift = 0;
 }
 function cancelFlight() {
@@ -578,6 +581,10 @@ function showBlast(id) {
 G.blastOff = blastOff;
 function blastOff() {
   const R = seated(); if (!R || R.phase !== 'in' || !R.dest || launching) return;
+  { const L = mpL(); if (L) { /* (build 100) in a room: one shared rocket */
+    if (R.passenger) { if (!R.ready) { R.ready = true; rkSetSeat(R); hideBlast(); Sound.chime(); voice.speak('Ready! Hold on tight!'); toast('✋'); } return; }
+    if (!R.waitAt) { R.waitAt = rkNow(); R.ready = true; rkSetSeat(R); const others = rkSeats(R.key).filter(q => q.id !== L.me()); if (others.length && !others.every(q => q.rd)) { hideBlast(); voice.speak('Waiting for your friends to be ready!'); toast('✋ ✋'); } }
+    rkTryGo(R); return; } }
   hideBlast(); ++flightSequence; launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth') setTimeout(() => { if (player.ride === R && launching) space.prepare(R.dest); }, 120); /* (build 50: the planet is made during the countdown) */
   Sound.click(); Sound.tone(180, .5, 'square', .03, .9); voice.speak('Three... two... one... blast off!'); toast('🚀 3');
   discover('blastoff', 'Press the big red button to blast off!');
@@ -588,11 +595,13 @@ function rocketRide(dt, R) {
   if (G.rkLog) { G.rkLog.phases.add(R.phase); G.rkLog.top = Math.max(G.rkLog.top, g.position.y - r.baseY); } // (test record: every phase really run, the highest point)
   if (R.phase === 'board') { // walk up to the door and hop in
     const k = Math.min(1, t / RK.board); P.x = R.x0 + (r.x - R.x0) * k; P.z = R.z0 + (gz + 1.05 - R.z0) * k; P.y = R.y0 + (r.baseY + .2 - R.y0) * k + Math.sin(k * Math.PI) * .8; P.facing = r.x >= R.x0 ? 1 : -1;
-    if (k >= 1) { R.phase = 'in'; G.playerHidden = true; showFace(r, true); Sound.chime(); burst(r.x, r.baseY + 3.6, gz + 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 10, 1.6); if (R.wantDest) { const d = R.wantDest; R.wantDest = null; launchTo(d, true); } else showPicker(); }
+    if (k >= 1) { R.phase = 'in'; G.playerHidden = true; showFace(r, true); Sound.chime(); burst(r.x, r.baseY + 3.6, gz + 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 10, 1.6);
+      const L = mpL(); if (L) { rkClaimSeat(R); rkFaces(R.key); const f = L.get(padKey(R.key)); if (f && f.st === 'board' && f.host !== L.me() && f.d) { rkLive(padKey(R.key), f); return; } } /* (build 100: a friend already picked the planet) */
+      if (R.wantDest) { const d = R.wantDest; R.wantDest = null; launchTo(d, true); } else showPicker(); }
     return;
   }
   P.x = r.x; P.y = r.baseY; P.z = gz + 1.05; P.vx = P.vy = 0; P.grounded = true;
-  if (R.phase === 'in') return;
+  if (R.phase === 'in') { if (R.waitAt && mpL()) rkTryGo(R); return; }
   if (R.phase === 'count') { // rumble and smoke on the pad, louder each second
     const n = 3 - Math.floor(t / (RK.count / 3)); if (n < R.n && n > 0) { R.n = n; toast('🚀 ' + n); Sound.tone(180 + (3 - n) * 60, .4, 'square', .03, .9); }
     G.shake = Math.max(G.shake || 0, .25 + t / RK.count * .6);
@@ -623,12 +632,72 @@ async function arrive(R, r) {
   try { if (dest !== 'earth') await space.prepare(dest); }
   catch (error) { if (player.ride === R) climbOut(r); if (error.name !== 'AbortError') console.error(error); return; }
   if (player.ride !== R) return;
+  { const L = mpL(); if (R.go && L && R.tLand) { const wait = R.tLand - L.now(); if (wait > 0) await new Promise(res => setTimeout(res, Math.min(wait, 8000))); if (player.ride !== R) return; } } /* (build 100: everyone lands at the same moment) */
   r.g.position.y = r.baseY; r.flame.visible = false; showFace(r, false); G.camLift = 0; launching = false; G.playerHidden = false;
   player.ride = null; if (dest === 'earth') space.goHome(); else if (!await space.goTo(space.places.findIndex(p => p[0] === dest))) return; saveSoon();
   const r2 = G.rockets[dest]; if (!r2 || !inScene(r2.g)) return; // (lands beside the pad without the ride if the rocket isn't there)
-  const P = player; P.ride = { type: 'rocket', key: dest, phase: 'land', t0: rkNow() }; G.playerHidden = true; showFace(r2, true);
+  const P = player; P.ride = { type: 'rocket', key: dest, phase: 'land', t0: rkNow(), seat: R.seat | 0, go: R.go, padF: R.padF }; G.playerHidden = true; showFace(r2, true); if (mpL() && R.go) { rkSetSeat(P.ride, { rd: 1 }); rkFaces(dest); } /* (build 100: the same seats in the rocket that lands) */
   P.x = r2.x; P.y = r2.baseY; P.z = r2.g.position.z + 1.05; r2.g.position.y = r2.baseY + 26; G.camLift = 26; snapCamera(); camT.y = P.y + 26;
 }
+// ===================== (build 100) THE SHARED ROCKET (Play Together) =====================
+// One rocket on each launch pad, shared by everyone in the room. Climb in: you take the next free seat (click: seatbelt on)
+// and your face shows in your own round window, on every friend's screen. The first one in picks the planet; the others see
+// it and press the big button when they are ready (✋). The pilot's button starts ONE countdown for everybody (on the room's
+// one clock, slightly in the future), and every passenger's game flies the same rocket at the same moment to the same
+// planet, and lands together. Friends who stay on the pad watch it lift off. A seat or a pilot that disconnects simply goes
+// away (the database removes it), so nobody is ever stuck waiting. Not in a room: the rocket works exactly as before.
+const mpL = () => (G.mpLive && G.mpLive.on ? G.mpLive : null), padKey = key => 'f_rk_' + key, RK_WAIT = 12;
+function rkSeats(key) { const L = mpL(); if (!L) return []; const out = []; for (const [k, v] of L.all()) if (k.startsWith('s_') && v && v.v === 'rk_' + key) out.push({ id: k.slice(2), seat: v.seat | 0, rd: !!v.rd }); return out.sort((a, b) => a.seat - b.seat); }
+function rkSetSeat(R, extra = {}) { const L = mpL(); if (!L) return; L.set('s_' + L.me(), { v: 'rk_' + R.key, seat: R.seat | 0, rd: R.ready ? 1 : 0, ...extra }); }
+function rkClaimSeat(R) { const L = mpL(); if (!L) return; const used = new Set(rkSeats(R.key).filter(s => s.id !== L.me()).map(s => s.seat)); let seat = 0; while (used.has(seat) && seat < 3) seat++; R.seat = seat; R.ready = false; rkSetSeat(R);
+  Sound.tone(1320, .05, 'square', .03, 1); setTimeout(() => Sound.tone(990, .05, 'square', .03, 1), 90); /* (click, click: the seatbelt) */ }
+function rkLeaveSeat(R) { const L = mpL(); if (!L || !R) return; L.set('s_' + L.me(), null); const f = L.get(padKey(R.key)); if (f && f.host === L.me() && f.st === 'board') L.set(padKey(R.key), null); }
+// faces in the windows: window 0 is the big round one; seats 1-3 get little round windows below it
+function rkWindows(r) { const g = r.g; if (g.userData.wins) return g.userData.wins; const w0 = r.win.position, out = [];
+  const offs = [[0, 0], [-.42, -.82], [.42, -.82], [0, -1.55]];
+  for (let k = 0; k < 4; k++) { const ring = k ? new THREE.Mesh(new THREE.CircleGeometry(.3, 20), toy('#1f3f7a', { r: .4 })) : null; if (ring) { ring.position.set(w0.x + offs[k][0], w0.y + offs[k][1], w0.z + .36); ring.visible = false; ring.userData.dynamic = true; g.add(ring); }
+    const f = new THREE.Sprite(new THREE.SpriteMaterial({ map: null })); const sc = k ? .5 : .7; f.scale.set(sc, sc, 1); f.position.set(w0.x + offs[k][0], w0.y + offs[k][1], w0.z + .42); f.visible = false; f.userData.dynamic = true; g.add(f); out.push({ f, ring }); }
+  return (g.userData.wins = out); }
+const faceFor = kind => { const src = portraits[kind]; if (!src) return null; if (!faceTex[kind]) { faceTex[kind] = new THREE.TextureLoader().load(src); faceTex[kind].colorSpace = THREE.SRGBColorSpace; } return faceTex[kind]; };
+function rkFaces(key) { const r = G.rockets[key]; const L = mpL(); if (!r || !L) return false; const ws = rkWindows(r), seats = rkSeats(key); if (r.g.userData.face) r.g.userData.face.visible = false;
+  for (let k = 0; k < 4; k++) { const s = seats.find(q => q.seat === k), w = ws[k]; let kind = null; if (s) kind = s.id === L.me() ? player.creature : (L.peer(s.id) || {}).kind;
+    const tex = kind ? faceFor(kind) : null; w.f.visible = !!tex; if (tex) { w.f.material.map = tex; w.f.material.color.set(s.rd ? '#ffffff' : '#e8e8e8'); } if (w.ring) w.ring.visible = !!tex; }
+  return true; }
+function rkFacesAll() { if (!mpL()) return; for (const k in G.rockets) if (inScene(G.rockets[k].g)) rkFaces(k); }
+// the pilot starts the countdown: now if everyone is ready, or after a forgiving wait
+function rkTryGo(R) { const L = mpL(); if (!L || !R) return; const f = L.get(padKey(R.key)); if (!f || f.host !== L.me() || f.st !== 'board') return;
+  const seats = rkSeats(R.key), all = seats.every(s => s.rd || s.id === L.me());
+  if (all || rkNow() - (R.waitAt || rkNow()) > RK_WAIT) L.set(padKey(R.key), { ...f, st: 'go', t0: L.now() + 1500, d: R.dest }); }
+// everyone in the rocket: the shared countdown starts at t0 on the room's clock
+function rkGo(R, f) { const L = mpL(); if (!L || R.go) return; R.go = f.n; R.padF = padKey(R.key); R.dest = f.d; R.tLand = f.t0 + (RK.count + RK.lift) * 1000 + 2500;
+  hideBlast(); ++flightSequence; launching = true; R.phase = 'count'; R.t0 = rkNow() + (f.t0 - L.now()) / 1000; R.n = 4; if (f.d !== 'earth') setTimeout(() => { if (player.ride === R && launching) space.prepare(f.d); }, 120);
+  const wait = Math.max(0, (f.t0 - L.now())); setTimeout(() => { if (player.ride === R) { Sound.click(); Sound.tone(180, .5, 'square', .03, .9); voice.speak('Three... two... one... blast off!'); toast('🚀 3'); } }, wait);
+  rkSetSeat(R, { rd: 1 }); discover('rockettogether', '🚀 You flew in the rocket together!'); }
+// passengers and friends on the pad react to the room's records
+const rkWatch = {}; // pad key -> { n, hidden } for friends watching a rocket leave or arrive
+function rkLive(key, obj) {
+  if (key.startsWith('s_')) { rkFacesAll(); return; }
+  if (!key.startsWith('f_rk_')) return; const pad = key.slice(5), R = seated(), L = mpL(); if (!L) return;
+  if (R && R.key === pad && R.phase === 'in') {
+    if (!obj) { if (R.passenger) { R.passenger = false; R.dest = null; R.ready = false; rkSetSeat(R); hideBlast(); voice.speak('Where shall we fly? Tap a planet!'); showPicker(); } return; }
+    if (obj.st === 'board' && obj.host !== L.me() && obj.d) { R.passenger = true; R.dest = obj.d; if (rocketPanel) rocketPanel.classList.remove('show'); showBlast(obj.d); if (blastBtn) blastBtn.classList.add('ready'); voice.speak(`Your friend picked ${ROCKET_NAMES[obj.d]}! Press the big button when you are ready!`); }
+    if (obj.st === 'go') rkGo(R, obj);
+  }
+}
+if (G.mpLive) G.mpLive.listen(rkLive); else { const iv = setInterval(() => { if (G.mpLive) { G.mpLive.listen(rkLive); clearInterval(iv); } }, 500); }
+// the same rocket seen from the pad: friends who stay watch it lift off; on the far planet they see it come down
+const liftH = tl => 1.5 * tl * tl + 7 / 3 * tl * tl * tl;
+function rkWatchFrame() { const L = mpL(); if (!L) return; const here = player.layer === 'space' ? space.here() : 'earth', mine = seated();
+  for (const [k, f] of L.all()) { if (!k.startsWith('f_rk_') || !f || f.st !== 'go' || !f.t0) continue; const pad = k.slice(5), t = (L.now() - f.t0) / 1000;
+    const inIt = mine && mine.go === f.n; if (inIt || t > 40) continue;
+    // leaving from this pad
+    if (pad === here) { const r = G.rockets[pad]; if (!r || !inScene(r.g)) continue; const w = rkWatch[pad] || (rkWatch[pad] = {}); w.n = f.n;
+      if (t < 0) continue; if (t < RK.count) { r.flame.visible = t > RK.count * .66; if (Math.random() < .2) burst(r.x + (Math.random() - .5) * 2.6, r.baseY + .3, r.g.position.z + .8, ['#ffffff', '#e4e4ee'], 2, 2); }
+      else if (t < RK.count + RK.lift + 4) { const tl = t - RK.count; r.g.position.y = r.baseY + liftH(tl); r.flame.visible = true; r.flame.scale.set(1, 1.2, 1); w.out = true; }
+      else if (w.out && t > RK.count + RK.lift + 14) { r.g.position.y = r.baseY; r.flame.visible = false; w.out = false; for (const q of rkWindows(r)) { q.f.visible = false; if (q.ring) q.ring.visible = false; } } /* (a new rocket is ready on the pad) */ }
+    // arriving at this planet: it comes down onto the pad
+    if (f.d === here && pad !== here) { const r = G.rockets[here]; if (!r || !inScene(r.g)) continue; const tl = (L.now() - (f.t0 + (RK.count + RK.lift) * 1000 + 2500)) / 1000;
+      if (tl >= 0 && tl <= RK.land) { const kk = tl / RK.land, h = 26 * (1 - kk) * (1 - kk); r.g.position.y = r.baseY + h; r.flame.visible = true; } else if (tl > RK.land && tl < RK.land + 1) { r.g.position.y = r.baseY; r.flame.visible = false; } } } }
 function openRocket() {
   if (launching || G.activityOpen) return;
   const P = player, R = seated();
@@ -677,7 +746,7 @@ function launchTo(id, go) {
   if (launching) return; if (rocketPanel) rocketPanel.classList.remove('show');
   const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
   if (go && !seated() && !player.ride) { const k = nearRocket(); if (k) boardRocket(k, true); }
-  const R = seated(); if (R) { if (R.phase !== 'in') { R.wantDest = id; return; } /* (build 68: a planet chosen while still climbing in is remembered, and the rocket goes as soon as she is inside) */ R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
+  const R = seated(); if (R) { if (R.phase !== 'in') { R.wantDest = id; return; } /* (build 68: a planet chosen while still climbing in is remembered, and the rocket goes as soon as she is inside) */ R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); { const L = mpL(); if (L && !R.passenger) L.set(padKey(R.key), { host: L.me(), st: 'board', d: id, n: Math.floor(Math.random() * 1e9) }); } if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
   launching = true; const flight = ++flightSequence; if (id !== 'earth') space.prepare(id); voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
   Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
   for (let k = 0; k < 8; k++) setTimeout(() => burst(player.x, .5, player.z - 1, ['#ffd23f', '#ff9a2e', '#ffffff'], 6, 2.5), k * 150);
@@ -1031,7 +1100,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
-  space.update(dt, t); // (build 45)
+  space.update(dt, t); rkWatchFrame(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
@@ -1588,7 +1657,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '99'; G.build = GAME_BUILD;
+const GAME_BUILD = '100'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

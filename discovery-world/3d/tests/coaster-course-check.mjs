@@ -1,6 +1,6 @@
 // (build 69) Checks the giant Moon coaster's course without a browser: continuous, never runs into itself, stays over the
 // Moon and clear of the ground and the activities, and every loop/corkscrew turns the car over. usage: node tests/coaster-course-check.mjs
-import { buildCourse, BIG_CRATER } from '../src/coaster-course.js';
+import { buildCourse, BIG_CRATER, STATION } from '../src/coaster-course.js';
 const X = 5000, C = buildCourse(X), { N, pos, up, flag, v, STEP } = C;
 const at = i => [pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]];
 let gaps = 0; for (let i = 1; i < N; i++) { const a = at(i - 1), b = at(i), d = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); if (d > STEP * 1.6) gaps++; }
@@ -17,7 +17,7 @@ for (let i = 0; i < N; i++) { const [x, y, z] = at(i), f = flag[i]; maxY = Math.
   const dc = Math.hypot(x - (X + BIG_CRATER.dx), z - BIG_CRATER.z) / BIG_CRATER.r;
   if (f === 'C' || f === 'S' || (f === 'K' && dc < 1.05)) continue;
   const ss = t => t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t), groundMax = 1.5 + 17 * ss((-60 - z) / 90); // (the Moon's ground: flat at the front, hills up to ~17 m far back)
-  const need = z > -12 ? (Math.abs(x - X - 206) < 32 ? 0 : 12) : dc < 1.4 ? 9 : groundMax + (z > -40 ? 1.2 : 3);
+  const need = z > -12 ? (Math.abs(x - X - STATION.dx) < 32 ? 0 : 12) : dc < 1.4 ? 9 : groundMax + (z > -40 ? 1.2 : 3);
   if (y < need) bad.push(`${(i * STEP).toFixed(0)}m x${(x - X).toFixed(0)} y${y.toFixed(1)} z${z.toFixed(0)} needs ${need}`); }
 // the mountain the tunnel runs through (balls round the tunnel, as moon-coaster.js builds them) must not swallow other track
 let T0 = -1, T1 = -1; const balls = []; { const T = []; for (let i = 0; i < N; i++) if (flag[i] === 'T') T.push(i); T0 = T[0]; T1 = T[T.length - 1]; for (let j = 20; j < T.length - 20; j += 30) { const [x, y, z] = at(T[j]); balls.push([x, y - 8, z]); } }

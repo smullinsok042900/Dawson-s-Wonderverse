@@ -4,6 +4,20 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 100 — the Moon coaster fixed, the station near the rocket, and the first SHARED rides (Play Together)
+- **The Moon coaster (the family's report):**
+  - "Some parts view it from under the cart": a ride probe (every frame of the whole 4.7 km ride) found the camera below the cart in 242 of 2,471 frames on build 99 (in the loop-the-loops and inside the mountain tunnel). Fixed: inside the tunnel and cave the camera never looks up from under the cart, and the smoothed camera never drops below it. Build 100: 0 frames (closest 0.9 m above her). The full smoke test now checks it on every run.
+  - "It goes through solid structures": the probe found the train never touches anything, but the tunnel and the cave were drawn from the inside only, so from outside the train dived straight into bare rock (the mountain) and bare ground (the cave). Fixed: stone TUNNEL MOUTHS with a dark opening at the four places the track goes in and comes out (screenshots before and after); the camera now follows the track down into the tunnel and the cave before the entrance.
+  - THE STATION moved from x 206 to x 80 (the rocket is at x 8): the first straight was shortened by the same 126 m so the rest of the track is unchanged, the lift climbs 5.5 m more, and the way home sweeps round behind the activities. The offline course check passes (clear of itself by 5 m, clear of the ground and the activities, out of the mountain).
+- **SHARED RIDES (Play Together), the first step of the multiplayer upgrade:**
+  - A new part of the room, `live`: one small record per vehicle (pilot, boarding or going, the planet, the start time on the room's one clock) and one per player's seat; both disappear by themselves when their player disconnects. Both transports (Firebase and the test relay) carry it; the relay can add network delay for tests.
+  - **The shared rocket:** climb into the same rocket, each in your own seat with your face in your own window; the first one in picks the planet; the others press ✋ ready; ONE countdown for everybody; every passenger flies, lands and climbs out together, side by side; friends on the pad watch it go; a seat that disconnects frees itself. `rocket-together` (two browsers, 120 ms delay each way): lift-off within 0.22 s, landing within 0.04 s, all passed.
+  - **The Moon coaster together:** standing on the platform when a friend's train sets off, you hop on in the next seat; each sees the other in their seat on the same train; while you watch, your train follows your friends. `coaster-together` all passed.
+  - `firebase-rules.json` has the new `live` rules (`MULTIPLAYER.md` explains). Until the family publishes them, shared rides do not appear and everything else in a room works as before. The existing `multiplayer` test: 20/20.
+- **Pluto: THE PUFFY SQUISH MAZE** (`parks` checks it). Bug found and fixed: the prize counted if she had ever been past it; it now counts only when she walks in through the walls.
+- **Full smoke test: 236/236** (with the new check: the camera never under the cart, over the whole ride).
+- Desktop (software rendering) speed: Moon the same (see `PERFORMANCE_LOG.md`). Not tried on an iPhone or with live Firebase.
+
 ## Checkpoint: build 99 — rotating mirror walls in the Mercury maze
 - **Mercury mirror maze: TWO ROTATING MIRROR WALLS** on the ground route. They turn slowly round and round; while a wall faces her it blocks the way (a solid), then it turns side-on and she walks through. No timer: it opens again every few seconds, and a voice says to wait for the gap (`mercury-maze` all passed: blocked for a moment, then through both).
 - Bug found and fixed before shipping: a wall counted as "passed" if she was ever to the right of it (for example after being moved there); it now counts only when she walks through it from the left.
