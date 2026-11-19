@@ -169,3 +169,22 @@ export function marsClimbPark(k, X) {
   k.add(tb.mesh(shinyMat())); k.add(hb.mesh(glowMat()));
   starField(k, [[wx + 9, 9, -1], [wx + 14.5, 16, -1], [wx + 8, 25, -1], [wx + 11, 14, -1]], () => { k.Sound.chime(); k.say('⭐ All the trampoline stars!', true); k.disc('marstrampstars'); });
 }
+
+// =================== (build 86) MARS: THE CANYON TRAMPOLINE ===================
+// In the canyon between the two mesas (area 2): a big trampoline. Bounce, and hold ▲ (or JUMP) as you land to bounce
+// right up and over onto either mesa top. Stars and a hoop above.
+export function marsCanyonTramp(k) {
+  const P = k.P, G0 = GEO(), X = k.s0, a = X + 21, c = X + 29, y = .6, v = 10, g = 24 * 3.71 / 9.81, tb = makeBatch();
+  for (const xx of [a, c]) for (const z of [-.2, -2.8]) tb.put(G0.cyl, xx, y / 2, z, '#5a6a8a', [.12, y, .12]);
+  for (const z of [-.2, -2.8]) tb.put(G0.box, (a + c) / 2, y, z, '#ff9a2e', [c - a + .4, .25, .3]); for (const xx of [a, c]) tb.put(G0.box, xx, y, -1.5, '#ff9a2e', [.3, .25, 2.8]);
+  const top = v * 1.4 * v * 1.4 / (2 * g), hb = makeBatch(); hb.put(G0.torus, (a + c) / 2, y + top * .85, -1.2, '#ffd23f', 1.2, [0, 0, 0]);
+  k.add(tb.mesh(shinyMat())); k.add(hb.mesh(glowMat()));
+  const mat = k.sbox((a + c) / 2, y - .15, -1.5, c - a - .4, .1, 2.3, '#1d1d2b', { r: .5 }); let sq = 0, cool = 0, n = 0, ringHit = 0;
+  k.plat(a + .2, c - .2, y, { z: -1.2 });
+  k.U.push(dt => { sq = Math.max(0, sq - dt * 3); mat.position.y = y - .1 - Math.sin(sq * Math.PI) * .4; cool = Math.max(0, cool - dt); ringHit = Math.max(0, ringHit - dt);
+    if (!cool && P.layer === 'space' && !P.ride && P.grounded && Math.abs(P.y - y) < .3 && P.x > a + .2 && P.x < c - .2) { const big = k.api.keysUp && k.api.keysUp(); cool = .3; P.y = y + .05; P.vy = v * (big ? 1.4 : 1); P.grounded = false; P.jumps = 1; sq = 1; n++; k.Sound.boing();
+      if (n === 1) k.fact('🤸 The canyon trampoline! Hold ▲ as you land and bounce right up onto the mesas!', 'marscanyontramp'); }
+    if (!ringHit && P.layer === 'space' && Math.abs(P.x - (a + c) / 2) < 1.1 && Math.abs(P.y + .6 - (y + top * .85)) < .9) { ringHit = 1.5; k.Sound.tone(720, .2, 'sine', .07, 1.5); k.api.burst((a + c) / 2, y + top * .85, -1.2, RB, 14, 2); k.disc('marscanyonhoop', '🤸 Through the canyon hoop!'); } });
+  k.tapIt(mat, () => k.fact('🤸 Bounce on the canyon trampoline! Hold ▲ to bounce up onto the mesas!', 'marscanyontramp'), (a + c) / 2, 'marscanyontramp');
+  starField(k, [[a + 1.5, 6, -1.2], [c - 1.5, 8, -1.2], [(a + c) / 2, 3.5, -1.2]], () => { k.Sound.chime(); k.say('⭐ All the canyon stars!', true); k.disc('marscanyonstars'); });
+}

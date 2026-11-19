@@ -15,7 +15,7 @@ import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
-import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField } from './control-rides.js';
+import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField, marsCanyonTramp } from './control-rides.js';
 import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
@@ -138,7 +138,7 @@ const mars = {
       // two tall flat-topped rocks (mesas) with big steps, and a deep canyon between them
       for (const [mx, top] of [[X + 16, 6], [X + 34, 7.2]]) { k.sbox(mx, 0, -3.6, 8, top, 4, '#b8573a', { r: .95 }); }
       for (const [a, b, y] of [[X + 9, X + 11, 1.5], [X + 10.2, X + 12, 3], [X + 11.2, X + 13, 4.5], [X + 12, X + 20, 6]]) { k.sbox((a + b) / 2, 0, -1.2, b - a, y, 1.6, '#c8653f', { r: .9 }); k.plat(a, b, y, { step: true, stepMax: 1.6 }); }
-      k.plat(X + 30, X + 38, 7.2, { z: -1.2 }); k.sbox(X + 34, 0, -1.2, 8, 7.2, 1.6, '#c8653f', { r: .9 });
+      k.plat(X + 30, X + 38, 7.2, { z: -1.2 }); k.sbox(X + 34, 0, -1.2, 8, 7.2, 1.6, '#c8653f', { r: .9 }); marsCanyonTramp(k); // (build 86) the canyon trampoline
       const flag = k.sbox(X + 19, 6, -1.4, .08, 1.8, .08, '#ffffff'); const cloth = k.sbox(X + 19.5, 7.2, -1.4, .9, .55, .04, '#2fa8ff'); let viewed = false;
       k.U.push((dt, t) => { cloth.rotation.y = Math.sin(t * 2) * .2; const P = k.P; if (!viewed && P.layer === 'space' && P.y > 5.8 && P.x > X + 12 && P.x < X + 20) { viewed = true; k.Sound.chime(); k.fact('🏜️ What a view! Mars has a giant canyon called Valles Marineris. It is much, much bigger than the Grand Canyon on Earth!', 'marscanyon'); } });
       k.G.interact.push({ x: X + 9, y: 0, layer: 'space', disc: 'marscanyon', run: () => k.say('🧗 Climb the big red steps to the top of the rock!', true), hintY: 2.2 });
@@ -441,7 +441,7 @@ function neptuneWindSwings(k, X) {
         if (Math.random() < .08) k.api.burst(P.x - 1, P.y + .8, P.z, ['#ffffff', '#cfefff'], 2, 1.5);
         if (R.letGo) { flew = true; return true; } return idleT > 8; },
         () => { piv.rotation.z = 0; P.z = 0; if (flew) { P.vy = 7; P.vx = 7; P.drift = 7; P.driftT = 1.2; P.grounded = false; k.Sound.whoosh(); k.say('🌬️ WHEEE! You let go and flew!', true); k.disc('neptuneswingfly'); } else P.y = 0; });
-      P.ride.onJump = () => { const R = P.ride; idleT = 0; if (amp > 1.1 && Math.cos(th) > 0 && Math.abs(Math.sin(th)) > .8 && Math.sin(th) > 0) { R.letGo = true; return; } amp = Math.min(1.3, amp + .14); k.Sound.tone(300 + amp * 300, .08, 'triangle', .05, 1.5); if (amp > 1.1) k.say('🌬️ So high! Press JUMP at the top to let go and fly!', false); };
+      P.ride.onJump = () => { const R = P.ride; idleT = 0; if (amp > 1.1 && (R.maxA || 0) > 1.05 && Math.cos(th) > 0 && Math.abs(Math.sin(th)) > .8 && Math.sin(th) > 0) { R.letGo = true; return; } /* (only once it has really swung that high) */ amp = Math.min(1.3, amp + .14); k.Sound.tone(300 + amp * 300, .08, 'triangle', .05, 1.5); if (amp > 1.1) k.say('🌬️ So high! Press JUMP at the top to let go and fly!', false); };
       k.say('🌬️ Press JUMP to swing higher and higher!', true); };
     k.tapIt(piv, go, sx + dx, i === 1 ? 'neptuneswing' : null); });
   k.tapIt(sock, () => k.fact('🌬️ A windsock shows which way the wind blows. On Neptune the wind is super fast!', 'neptunewindsock'), X + 12, 'neptunewindsock');
@@ -513,7 +513,14 @@ function venusLogRide(k, X) {
     for (const sg of [-1, 1]) wpos.push(p.x + side.x * .78 * sg, p.y - .02, p.z + side.z * .78 * sg); if (i < N) { const a = i * 2; widx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
   const wood = wb.mesh(shinyMat()); wood.castShadow = true; k.add(wood);
   const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wpos, 3)); wg.setIndex(widx); wg.computeVertexNormals();
-  const water = new THREE.Mesh(wg, new THREE.MeshPhysicalMaterial({ color: '#4fb8ff', roughness: .1, clearcoat: 1, transparent: true, opacity: .85, side: THREE.DoubleSide })); k.add(water);
+  // (build 87) FLOWING WATER: a painted water texture with white foam streaks that scrolls downstream (one texture
+  //  offset per frame; the material is the kind the game prepares at start, so no shader pause)
+  { const uv = []; for (let i = 0; i <= N; i++) { const vv = i / N * len / 3; uv.push(0, vv, 1, vv); } wg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); }
+  const wtex = (() => { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128; const g = cv.getContext('2d'); const gr = g.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, '#2f8fd8'); gr.addColorStop(.5, '#5fc4ff'); gr.addColorStop(1, '#2f8fd8'); g.fillStyle = gr; g.fillRect(0, 0, 64, 128);
+    g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 3; for (let i = 0; i < 7; i++) { const x0 = 6 + (i * 23) % 52, y0 = (i * 37) % 128; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 + 6, y0 + 9, x0, y0 + 18); g.stroke(); }
+    const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const water = new THREE.Mesh(wg, new THREE.MeshStandardMaterial({ map: wtex, roughness: 1, fog: false })); k.add(water); { const host = k.g.parent || k.g; (host.userData.ownedTextures ||= []).push(wtex); } /* (freed with the planet) */
+  k.U.push(dt => { wtex.offset.y -= dt * 1.1; });
   // the splash pool with a rocky rim, and the station with a striped roof
   const pc = path.getPointAt(.965); const pool = k.sball(pc.x, -.25, pc.z - 1, 6.5, .35, 4.2, '#3f9fe8', { r: .1, cc: .8 });
   for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; k.sball(pc.x + Math.cos(a) * 6.6, .1, pc.z - 1 + Math.sin(a) * 4.3, .7, .45, .6, '#d8a060', { r: .9 }); }
@@ -548,10 +555,10 @@ function venusLogRide(k, X) {
       path.getTangentAt(u, tg); const lift = tg.y > .12 && u < .9, y0 = path.getPointAt(u).y;
       if (lift) { v = 3.2; crest = y0; if (R.t % .4 < dt) k.Sound.tone(220, .05, 'square', .02, 1); }
       else { crest = Math.max(y0, crest - dt * .35); v = Math.max(2.6, Math.min(17, Math.sqrt(7 + 2 * 9 * Math.max(0, crest - y0)))); if (splashed) v = Math.max(2.2, v - dt * 14); }
-      u = Math.min(1, u + v / len * dt); const p = place(u); R.maxY = Math.max(R.maxY || 0, p.y); R.maxV = Math.max(R.maxV || 0, v);
+      R.pu = u; u = Math.min(1, u + v / len * dt); const p = place(u); R.maxY = Math.max(R.maxY || 0, p.y); R.maxV = Math.max(R.maxV || 0, v);
       const sx = k.api.stick ? k.api.stick().x : 0; off = Math.max(-.45, Math.min(.45, off + sx * dt * 1.6 * (lift ? 0 : 1))); if (lift || u > .95) off *= .9;
       side.set(-tg.z, 0, tg.x).normalize(); log.position.x += side.x * off; log.position.z += side.z * off; p.x += side.x * off; p.z += side.z * off; R.offMax = Math.max(R.offMax || 0, Math.abs(off));
-      for (const f of flumeStars) if (!f.got && Math.abs(u - f.u) < .006 && Math.abs(off - f.off) < .3) { f.got = true; f.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(560 + R.stars * 60, .15, 'sine', .07, 1.5); k.api.burst(f.m.position.x, f.m.position.y, f.m.position.z, ['#ffd23f', '#ffffff'], 10, 1.6); }
+      for (const f of flumeStars) if (!f.got && (R.pu ?? 0) <= f.u + .006 && u >= f.u - .006 && Math.abs(off - f.off) < .3) /* (passed it since the last frame, even on a slow phone) */ { f.got = true; f.m.visible = false; R.stars = (R.stars || 0) + 1; k.Sound.tone(560 + R.stars * 60, .15, 'sine', .07, 1.5); k.api.burst(f.m.position.x, f.m.position.y, f.m.position.z, ['#ffd23f', '#ffffff'], 10, 1.6); }
       if (u > .4 && u < .55 && Math.random() < dt * 4) k.api.burst(p.x + (Math.random() - .5), p.y + .2, p.z, ['#ffffff', '#cfefff'], 3, 1.2);   // foam on the rapids
       if (!splashed && u > .93 && p.y < 1 && v > 6) { splashed = true; R.splashed = true; for (let i = 0; i < 4; i++) k.api.burst(p.x + (Math.random() - .5) * 2, .6 + i * .5, p.z, ['#ffffff', '#cfefff', '#4fb8ff'], 30, 5); k.Sound.whoosh && k.Sound.whoosh(); k.say('💦 SPLAAASH!', true); }
       if (!R.whee && u > .6 && v > 10) { R.whee = 1; k.Sound.whoosh && k.Sound.whoosh(); }

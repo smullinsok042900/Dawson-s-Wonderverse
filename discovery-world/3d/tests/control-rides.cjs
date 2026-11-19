@@ -71,6 +71,9 @@ const { chromium } = require('playwright'); const path = require('node:path'); c
   await put(wx, 30.3); await sleep(800); await keys({ right: true }); await page.waitForFunction(() => __DDW3.player.y < 29.8, null, { timeout: 30000 }).catch(() => {}); await keys({ right: false });
   const wo = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let lands = 0, up = true, pk = 0, peaks = []; const f = () => { if (P.y > 23) { up = true; pk = Math.max(pk, P.y - 20); } if (up && P.y < 21.6) { lands++; up = false; peaks.push(pk); pk = 0; } if (lands >= 3 || performance.now() - t0 > 60000) return res({ lands, peaks }); requestAnimationFrame(f); }; f(); }));
   check('walk off the cliff top onto the high trampoline and keep bouncing', wo.lands >= 3 && wo.peaks[1] > 4 && wo.peaks[2] > 4, JSON.stringify(wo));
+  await put(X + 135, 2); await ev(() => { __DDW3.player.grounded = false; __DDW3.player.vy = -1; __DDW3.keys.up = true; });
+  const ctr = await ev(() => new Promise(res => { const P = __DDW3.player, t0 = performance.now(); let maxY = 0; const f = () => { maxY = Math.max(maxY, P.y); if (performance.now() - t0 > 9000) return res({ maxY }); requestAnimationFrame(f); }; f(); })); await keys({ up: false });
+  check("the canyon trampoline: hold ▲ to bounce high enough for the mesas, through the hoop", ctr.maxY > 9 && await ev(() => __DDW3.world.disc.has("marscanyonhoop")), JSON.stringify(ctr));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();

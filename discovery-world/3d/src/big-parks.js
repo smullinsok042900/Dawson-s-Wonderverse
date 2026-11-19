@@ -121,6 +121,14 @@ export function uranusRinkFun(k, cx, rx) {
   k.U.push(() => { if (P.layer !== 'space' || P.ride) return; for (const h of hoops) { const s = Math.sign(P.x - h.x); if (h.side && s !== h.side && P.y < 1.5) { n++; S.tone(500 + (n % 6) * 70, .2, 'sine', .07, 1.5); k.api.burst(h.x, 1.3, -1, RB, 10, 1.6); if (n === 6) { S.chime(); k.say('⛸️ Through six hoops! You are a skating star!', true); k.disc('uranushoops'); } } h.side = s; }
     const ti = P.y < .5 && Math.abs(P.z + 3.6) < 1.5 ? Math.round((P.x - (cx - 9)) / 6) : -1; if (ti >= 0 && ti < 4 && ti !== lastTile) S.tone(notes[ti], .3, 'triangle', .06, 1); lastTile = ti; });
   starField(k, [[cx - rx + 9, 1.1, -.6], [cx - 3, 1.1, -.6], [cx + 6, 1.1, -.6], [cx + rx - 8, 1.1, -.6]], () => { S.chime(); k.say('⭐ All the rink stars!', true); k.disc('uranusrinkstars'); });
+  // (build 85) STEER ACROSS THE ICE: on the rink, ▲ glides you away across the ice and ▼ back (with a gentle glide), so you
+  //  can skate round the whole oval, not only along it
+  let vz = 0, onIce = false, gz = 0; const czc = -2.6, rzi = 4;
+  k.U.push(dt => { const now = P.layer === 'space' && !P.ride && P.y < 2 && Math.abs(P.x - cx) < rx - 1;
+    if (!now) { if (onIce) { k.G.iceZ = null; P.groundZ = 0; onIce = false; vz = 0; gz = 0; } return; } onIce = true;
+    const st = k.api.stick ? k.api.stick() : { y: 0 }; vz += (-st.y * 3.2 - vz) * Math.min(1, dt * (Math.abs(st.y) > .2 ? 2.5 : .6));
+    const half = rzi * Math.sqrt(Math.max(0, 1 - ((P.x - cx) / rx) ** 2)); const z0 = czc - half, z1 = Math.min(1, czc + half);
+    gz = Math.max(z0, Math.min(z1, gz + vz * dt)); if (gz <= z0 || gz >= z1) vz *= -.3; k.G.iceZ = gz; P.groundZ = gz; k.G.rinkZ = gz; });
 }
 
 // =================== (build 78) PLUTO: THE PUFFY PICTURE-MATCHING GAME (area 2, after the bounce castles) ===================
