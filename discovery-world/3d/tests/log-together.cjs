@@ -20,7 +20,9 @@ let fail = 0; const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS
   for (const p of [A, B]) await p.evaluate(() => { const pn = document.getElementById('mpPanel'); pn && pn.classList.remove('show'); });
   // both fly to Venus and stand at the log station
   for (const p of [A, B]) await p.evaluate(() => __DDW3.G.space.goTo(__DDW3.G.space.places.findIndex(q => q[0] === 'venus')));
-  const there = (await Promise.all([A, B].map(p => until(p, () => __DDW3.player.layer === 'space' && !__DDW3.player.ride && __DDW3.G.venusLog && __DDW3.G.venusLog.alive(), null, 300000)))).every(Boolean);
+  for (const p of [A, B]) await until(p, () => __DDW3.player.layer === 'space' && !__DDW3.player.ride, null, 300000);
+  for (const p of [A, B]) { const X = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1); await p.evaluate(x => { __DDW3.player.x = x; }, X + 120); } // (walk near the log ride: it is built as she comes near)
+  const there = (await Promise.all([A, B].map(p => until(p, () => __DDW3.G.venusLog && __DDW3.G.venusLog.alive(), null, 120000)))).every(Boolean);
   const st = await A.evaluate(() => __DDW3.G.venusLog.st);
   for (const [p, dx] of [[A, 0], [B, 1.5]]) await p.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; P.z = 0; P.vx = P.vy = 0; }, st + dx); await sleep(2500);
   check('both on Venus at the log station', there, JSON.stringify({ st }));
