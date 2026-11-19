@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 99 (rotating mirror walls in the Mercury maze)
+Desktop, software rendering; `pplanet.cjs`, builds 98 and 99 alternately, four times each. Mercury +180 (maze): 245, 243, 270, 296 → 231, 318, 235, 215 ms (average 264 → 250); draw calls 77–78 → 78–79. (+150 is the first spot after arriving and varies too much to compare.)
+
 ## Build 98 (the loop-the-loop on Saturn's outer ring)
 Desktop, software rendering; `pplanet.cjs`, builds 97 and 98 alternately, twice each. ms per frame / draw calls: Saturn +240 168 / 78 → 158 / 78; +280 140 / 73 → 148 / 73 (the two runs: 141 → 143 and 139 → 153; same draw calls, +1k triangles, counted as noise).
 

@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 99: rotating mirror walls in the Mercury maze
+- Two big mirror walls turn round and round on the maze's ground route: wait for the gap, then walk through.
+
 ## 3D build 98: a loop-the-loop on Saturn's rings
 - Take the outer ring route in the Ring Raceway and the kart rides right round a glowing loop-the-loop.
 

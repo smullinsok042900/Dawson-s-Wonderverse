@@ -4,6 +4,12 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 99 — rotating mirror walls in the Mercury maze
+- **Mercury mirror maze: TWO ROTATING MIRROR WALLS** on the ground route. They turn slowly round and round; while a wall faces her it blocks the way (a solid), then it turns side-on and she walks through. No timer: it opens again every few seconds, and a voice says to wait for the gap (`mercury-maze` all passed: blocked for a moment, then through both).
+- Bug found and fixed before shipping: a wall counted as "passed" if she was ever to the right of it (for example after being moved there); it now counts only when she walks through it from the left.
+- **Full smoke test: 236/236.**
+- Desktop (software rendering) speed: Mercury maze spot 264 → 250 ms (4 runs each), +1 draw call (see `PERFORMANCE_LOG.md`). Not tried on an iPhone.
+
 ## Checkpoint: build 98 — a loop-the-loop on Saturn's outer ring
 - **Saturn Ring Raceway: THE LOOP-THE-LOOP.** Near the end of the outer ring route, after its last star, the kart rides right round a glowing loop (with sparkles and a chime), then carries on round the ring (`saturn-rides` all passed: the outer route 3 times, 3 loops).
 - **Full smoke test: 236/236.**

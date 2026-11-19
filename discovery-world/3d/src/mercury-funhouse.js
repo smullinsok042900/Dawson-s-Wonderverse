@@ -277,3 +277,21 @@ export function mercuryMazePlus(k) {
   for (let i = 0; i < 12; i++) { const px = X + 201 + i * 2; gb.put(G0.cone, px, .06, .6, RB[i % 7], [.35, .08, .25], [0, 0, -Math.PI / 2]); gb.put(G0.lo, px, 3.2 + Math.sin(i * .8) * .3, -1.8, RB[(i + 3) % 7], .18); }
   k.add(mesh(b, shinyMat(), true)); k.add(gb.mesh(glowMat()));
 }
+
+// =================== (build 99) MERCURY MIRROR MAZE: TWO ROTATING MIRROR WALLS on the ground route ===================
+// Big mirror walls that turn slowly round and round. While a wall faces you it is closed (you cannot walk through); when
+// it turns side-on there is a gap: walk through! (No timer, no losing: it opens again every few seconds.)
+export function mercuryRotatingWalls(k) {
+  const P = k.P, G = k.G, S = k.Sound, X = k.X, x0 = X + 124, G0 = GEO(), walls = [];
+  for (const [i, dx] of [[0, 33], [1, 48.5]]) { const wx = x0 + dx, piv = new THREE.Group(); piv.position.set(wx, 0, -1.2); piv.userData.dynamic = true; k.add(piv);
+    const b = makeBatch(); b.put(G0.box, 0, 1.9, 0, '#ffd23f', [.2, 3.8, 3.2]); b.put(G0.box, .12, 1.9, 0, '#dff1ff', [.04, 3.4, 2.8]); b.put(G0.box, -.12, 1.9, 0, '#dff1ff', [.04, 3.4, 2.8]);
+    b.put(G0.cyl, 0, 1.9, 0, '#ff9fd2', [.12, 4.2, .12]); b.put(G0.ball, 0, 4.15, 0, ['#ff6fd8', '#62f0ff'][i], .3); piv.add(b.mesh(shinyMat()));
+    for (const o of G.solids.filter(s => s.key === 'mercrot' + i)) G.solids.splice(G.solids.indexOf(o), 1);
+    walls.push({ piv, wx, solid: { a: wx - .35, b: wx + .35, top: 4.2, layer: 'space', key: 'mercrot' + i }, closed: false, passed: false, i }); }
+  let hinted = 0, px = null;
+  k.U.push((dt, t) => { const x0p = px ?? P.x; px = P.x; for (const w of walls) { const th = t * .7 + w.i * 1.3; w.piv.rotation.y = th; const closed = Math.abs(Math.cos(th)) > .7;
+      if (closed !== w.closed) { w.closed = closed; const j = G.solids.indexOf(w.solid); if (closed && j < 0) G.solids.push(w.solid); else if (!closed && j >= 0) G.solids.splice(j, 1); }
+      if (P.layer === 'space' && !w.passed && P.y < 2 && x0p <= w.wx + .6 && P.x > w.wx + .6 && P.x - x0p < 3) { /* (walked through it from the left this frame, not teleported past) */ w.passed = true; S.tone(660 + w.i * 120, .2, 'sine', .06, 1.5); k.api.burst(w.wx, 2, -1, ['#dff1ff', '#ffffff', '#ff6fd8'], 10, 1.6); if (walls.every(q => q.passed)) k.disc('mercuryrotwalls', '🪞 You got past the turning mirror walls!'); }
+      if (closed && P.layer === 'space' && P.y < 2 && Math.abs(P.x - (w.wx - .8)) < .6 && t - hinted > 8) { hinted = t; k.say('🪞 The mirror is turning... wait for the gap, then walk through!', true); } } });
+  G.mazeRot = walls;
+}
