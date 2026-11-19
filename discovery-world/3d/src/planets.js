@@ -16,7 +16,7 @@ import { buildMoonCoaster } from './moon-coaster.js';
 import { jupiterSkyArea2, jupiterSkyArea3, halfPipe, glass as seeThrough, painted } from './jupiter-world.js';
 import { mercuryFunhouse, mercuryMazePlus } from './mercury-funhouse.js';
 import { neptuneBungee2, neptuneSkyDive, marsClimbPark, starField, marsCanyonTramp, marsBounceRace, marsZipWall } from './control-rides.js';
-import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs, plutoRainbowTower, uranusIceTrail } from './big-parks.js';
+import { plutoInflatablePark, uranusIcePalace, uranusRinkFun, plutoMatchGame, uranusPalaceUpstairs, plutoRainbowTower, uranusIceTrail, uranusIceTunnels } from './big-parks.js';
 
 // (build 69) the giant Moon roller coaster lives in moon-coaster.js (its course in coaster-course.js)
 
@@ -355,7 +355,7 @@ function uranusRink(k, cx) {
 }
 const uranus = {
   sections: [
-    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
+    k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); uranusIceTunnels(k); /* (build 97) */ k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
     k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); uranusIceTrail(k); /* (build 94) */ k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
   ],
 };
@@ -694,9 +694,12 @@ function saturnRingRace(k, X) {
   { const arc = new THREE.TorusGeometry(RR + OR, 2.2, 3, 70, OB - OA - .3); ob.put(arc, 0, -.05, 0, '#3a6a9a', [1, 1, .06], [Math.PI / 2, 0, -(OA + .15)]);
     for (let i = 0; i < 9; i++) { const ta = OA + .35 + i * .08; og.put(new THREE.TorusGeometry(3, .2, 4, 16, Math.PI), Math.cos(-ta) * (RR + OR), 0, Math.sin(-ta) * (RR + OR), i % 2 ? '#62f0ff' : '#ff6fd8', 1, [0, ta, 0]); }
     for (const fa of [OA, OB]) og.put(new THREE.TorusGeometry(3.4, .25, 6, 20), Math.cos(-fa) * (RR + 3), 1, Math.sin(-fa) * (RR + 3), '#ffd23f', 1, [0, fa, 0]); }
+  // (build 98) THE LOOP-THE-LOOP on the outer ring (after its last star): the kart rides right round a glowing loop
+  const LA = OA + 2.65, LR = 3.4; og.put(new THREE.TorusGeometry(LR, .22, 6, 36), Math.cos(-LA) * (RR + OR), .4 + LR, Math.sin(-LA) * (RR + OR), '#ffd23f', 1, [0, LA + Math.PI / 2, 0]);
+  for (const s2 of [-1, 1]) og.put(new THREE.TorusGeometry(LR + .5, .12, 4, 36), Math.cos(-LA) * (RR + OR + s2 * .9), .4 + LR, Math.sin(-LA) * (RR + OR + s2 * .9), s2 > 0 ? '#ff6fd8' : '#62f0ff', 1, [0, LA + Math.PI / 2, 0]);
   ringG.add(ob.mesh(shinyMat())); ringG.add(og.mesh(glowMat()));
   for (let i = 0; i < 4; i++) { const sa = OA + .9 + i * .45, m = new THREE.Mesh(new THREE.OctahedronGeometry(.45), smat); m.position.set(Math.cos(-sa) * (RR + OR), 1.1, Math.sin(-sa) * (RR + OR)); ringG.add(m); stars.push({ a: sa, l: OR, m, outer: true }); }
-  let lane = 0, boost = 0, hop = 0, hv = 0, outer = 0, onOuter = false;
+  let lane = 0, boost = 0, hop = 0, hv = 0, outer = 0, onOuter = false, loopT = -1, loopA = 0;
   const go = (mode = 'race') => { if (P.layer !== 'space' || P.ride || Math.abs(P.x - pad) > 9) return; if (mode === 'free') k.fact('⭐ Free drive! No racing: drive round Saturn\'s rings as long as you like. Press JUMP when you want to stop.', 'saturnfreedrive'); else k.fact('🏁 The Ring Raceway! YOU drive: ► to go faster, ◄ to slow down, ▲ ▼ to change lanes. Drive over the blue pads to BOOST and catch the stars!', 'saturnrace');
     let ph = 'up', a = 0, laps = 0, v = 0; const free = mode === 'free'; const start = kart.position.clone(), top = on(0, .4);
     jupiterRide(k, 'ringrace', (R, dt) => {
@@ -715,7 +718,12 @@ function saturnRingRace(k, X) {
         if (!onOuter && Math.abs(nb - OA) < .03 && lane > 1.2) { onOuter = true; R.outer = (R.outer || 0) + 1; k.Sound.chime(); k.say('🌌 The outer ring route! Through the star tunnel!', false); }
         if (onOuter && nb > OB - .02 && nb < OB + .3) onOuter = false;
         outer += ((onOuter ? OR - lane : 0) - outer) * Math.min(1, dt * 1.5);
-        kart.position.copy(on(a, .4 + hop, lane + outer)); const ahead = on(a - .05, .4 + hop, lane + outer); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
+        if (loopT < 0 && onOuter && Math.abs(nb - LA) < .04 && R.t - (R.loopAt || -9) > 3) { loopT = 0; loopA = a; R.loopAt = R.t; R.loops = (R.loops || 0) + 1; k.Sound.whoosh(); k.say('🎢 LOOP-THE-LOOP!', false); }
+        if (loopT >= 0) { loopT += dt / 1.5; const ang = Math.min(1, loopT) * Math.PI * 2, rr = RR + lane + outer; a = loopA - (LR * Math.sin(ang) + Math.min(1, loopT) * 1.2) / rr;
+          kart.position.copy(on(a, .4 + LR * (1 - Math.cos(ang)), lane + outer)); const ahead = on(a - .05, .4 + LR * (1 - Math.cos(ang)), lane + outer); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); kart.rotateZ(ang);
+          if (Math.random() < .5) k.api.burst(kart.position.x, kart.position.y, kart.position.z, ['#ffd23f', '#ff6fd8', '#62f0ff'], 2, 1);
+          if (loopT >= 1) { loopT = -1; k.Sound.chime && k.Sound.chime(); } }
+        else { kart.position.copy(on(a, .4 + hop, lane + outer)); const ahead = on(a - .05, .4 + hop, lane + outer); kart.lookAt(ahead); kart.rotateY(-Math.PI / 2); } if (Math.random() < .3) k.api.burst(kart.position.x, kart.position.y + .3, kart.position.z, ['#ff9a2e', '#ffd23f', '#ffffff'], 1, .8); }
       else if (ph === 'down') { for (const o of rivals) o.m.visible = false; const q = Math.min(1, (R.t - R.d) / 3.5), e = q * q * (3 - 2 * q); kart.position.lerpVectors(top, start, e); kart.position.y += Math.sin(q * Math.PI) * 8; if (q >= 1) { kart.rotation.set(0, 0, 0); return true; } }
       P.x = kart.position.x; P.y = kart.position.y + .35; P.z = kart.position.z; P.facing = 1; R.maxY = Math.max(R.maxY || 0, P.y); return false;
     }, () => { P.x = pad + 3; P.y = 0; P.z = 0; kart.position.copy(start); k.say('🏆 What a race! Tap the rocket kart to race again!', true); }, { noExit: true }); };

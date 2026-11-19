@@ -7,6 +7,12 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 98 (the loop-the-loop on Saturn's outer ring)
+Desktop, software rendering; `pplanet.cjs`, builds 97 and 98 alternately, twice each. ms per frame / draw calls: Saturn +240 168 / 78 → 158 / 78; +280 140 / 73 → 148 / 73 (the two runs: 141 → 143 and 139 → 153; same draw calls, +1k triangles, counted as noise).
+
+## Build 97 (the ice tunnel doors on Uranus)
+Desktop, software rendering; `pplanet.cjs`, builds 96 and 97 alternately, twice each (this machine measured slower overall today, so compare within the row). ms per frame / draw calls: Uranus +196 (palace) 219 / 73 → 216 / 74; +270 184 / 64 → 182 / 64; +306 156 / 64 → 159 / 64.
+
 ## Build 96 (the 📷 camera button on the sky dive)
 Desktop, software rendering; `pplanet.cjs`, builds 95 and 96 alternately, twice each. ms per frame / draw calls: Neptune +150 193 / 71 → 192 / 70; +158 194 / 67 → 186 / 67; +186 187 / 64 → 176 / 64. (The button is part of the page, not the 3D scene.)
 

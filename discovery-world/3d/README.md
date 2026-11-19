@@ -12,6 +12,12 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 98: a loop-the-loop on Saturn's rings
+- Take the outer ring route in the Ring Raceway and the kart rides right round a glowing loop-the-loop.
+
+## 3D build 97: ice tunnel doors in the Uranus palace
+- Tap a round ice door (❄️ downstairs, ⭐ upstairs, 🌙 by the rink) and whoosh through the ice tunnel to the next one.
+
 ## 3D build 96: a 📷 camera button on the sky dive
 - During the Neptune sky dive, tap 📷 to look down from high above; tap 🔍 to come back close.
 
