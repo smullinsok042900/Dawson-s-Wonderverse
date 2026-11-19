@@ -364,7 +364,7 @@ function coasterButton(show) {
     coasterBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const R = player.ride; if (R && R.type === 'coaster') { R.skip = true; Sound.click(); } }); document.body.appendChild(coasterBtn); }
   coasterBtn.classList.toggle('show', !!show);
 }
-G.startCoaster = (C) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: C.homeI || 0, clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
+G.startCoaster = (C, o = {}) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: o.i ?? (C.homeI || 0), seat: o.seat || 0, /* (build 100: riding together: start where a friend's train is, in your own seat) */ clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
 const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3() };
 function coasterSample(C, i, arr, out) { const N = C.N, j0 = Math.max(0, Math.min(N - 1, Math.floor(i))), j1 = Math.min(N - 1, j0 + 1), f = Math.max(0, Math.min(1, i - j0)); return out.set(arr[j0 * 3] + (arr[j1 * 3] - arr[j0 * 3]) * f, arr[j0 * 3 + 1] + (arr[j1 * 3 + 1] - arr[j0 * 3 + 1]) * f, arr[j0 * 3 + 2] + (arr[j1 * 3 + 2] - arr[j0 * 3 + 2]) * f); }
 const COASTER_SAYS = { L: '🎢 Up, up, up! Look how high we go!', K: '🌋 Down into the GIANT crater!', T: '⛰️ Into the mountain tunnel!', C: '💎 Ooooh! A glowing crystal cave!', B: '🚀 BOOST! Zoom!' };
@@ -386,19 +386,21 @@ function coasterRide(dt, R) {
   if (!R.drop && j > 10 && C.flag[j - 10] === 'L' && f !== 'L') { R.drop = 1; Sound.whoosh(); voice.speak('Wheeeeee!'); }
   C.placeTrain(R.i);
   const pos = coasterSample(C, R.i, C.pos, CV.a), tg = coasterSample(C, R.i, C.tan, CV.t).normalize(), up = coasterSample(C, R.i, C.up, CV.u).normalize();
-  P.x = pos.x + up.x * .55; P.y = pos.y + up.y * .55 - .25; P.z = pos.z + up.z * .55; P.facing = tg.x >= 0 ? 1 : -1; P.vx = v * P.facing; R.roll = Math.atan2(-up.x, up.y) * (P.facing > 0 ? 1 : 1);
+  P.x = pos.x + up.x * .55; P.y = pos.y + up.y * .55 - .25; P.z = pos.z + up.z * .55;
+  if (R.seat) { /* (build 100) riding together: your own seat, further back in the train (the 4th rider shares the back car) */ const iS = Math.max(0, R.i - Math.min(2, R.seat) * (C.CAR_GAP || 4.8)), ps = coasterSample(C, iS, C.pos, CV.d), us = coasterSample(C, iS, C.up, CV.w).normalize();
+    P.x = ps.x + us.x * .55; P.y = ps.y + us.y * .55 - .25; P.z = ps.z + us.z * .55; if (R.seat > 2) { const ts = coasterSample(C, iS, C.tan, new THREE.Vector3()).normalize(), sd = ts.cross(us).normalize(); P.x += sd.x * .6; P.z += sd.z * .6; } } P.facing = tg.x >= 0 ? 1 : -1; P.vx = v * P.facing; R.roll = Math.atan2(-up.x, up.y) * (P.facing > 0 ? 1 : 1);
   R.maxY = Math.max(R.maxY, pos.y); R.maxV = Math.max(R.maxV, v);
   // the chase camera: inside the tunnel and the cave it sits on the track just behind the train; outside it rides behind
   // and above, along the way the train is going (smoothed), and never rolls
   const inside = f === 'T' || f === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C'));
   let want;
-  if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); }
+  if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); want.y = Math.max(want.y, pos.y + 1.8); } /* (build 100: on a steep climb the point behind is far below the cart; never look up at its underside) */
   else { const back = coasterSample(C, Math.max(0, R.i - 26), C.pos, CV.b); CV.d.subVectors(pos, back).setY(0); if (CV.d.lengthSq() < .01) CV.d.set(P.facing, 0, 0); CV.d.normalize();
     want = CV.w.copy(pos).addScaledVector(CV.d, -12).add(CV.b.set(0, 5.5, 0)); want.z += 2.5; want.y = Math.max(want.y, pos.y + 3); }
   const lookAt = coasterSample(C, Math.min(N - 1, R.i + 10), C.pos, CV.b);
   if (!R.cam) { R.cam = want.clone(); R.look = lookAt.clone(); }
   const kc = 1 - Math.exp(-dt * (inside ? 9 : 4.5)), kl = 1 - Math.exp(-dt * 7);
-  R.cam.lerp(want, kc); R.look.lerp(lookAt, kl);
+  R.cam.lerp(want, kc); R.look.lerp(lookAt, kl); if (R.cam.y < pos.y + 1.2) R.cam.y = pos.y + 1.2; /* (build 100: the smoothed camera never drops below the cart, even on a fast climb) */
   G.camOverride = { coaster: true, pos: [R.cam.x, R.cam.y, R.cam.z], look: [R.look.x, R.look.y, R.look.z] };
   if (v > 22 && Math.random() < dt * 14) burst(pos.x - tg.x * 2, pos.y + .1, pos.z - tg.z * 2, ['#ffffff', '#62f0ff', '#ff6fd8'], 1, .6);
 }

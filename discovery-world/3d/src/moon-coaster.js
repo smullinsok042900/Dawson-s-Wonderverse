@@ -128,7 +128,7 @@ export function buildMoonCoaster(k) {
     const c = cars[n]; c.position.set(pos[j0 * 3] + (pos[j1 * 3] - pos[j0 * 3]) * f, pos[j0 * 3 + 1] + (pos[j1 * 3 + 1] - pos[j0 * 3 + 1]) * f, pos[j0 * 3 + 2] + (pos[j1 * 3 + 2] - pos[j0 * 3 + 2]) * f);
     frame(j0); c.quaternion.copy(q); } };
   const stationI = 0; placeTrain(stationI + 2 * CAR_GAP);
-  C.placeTrain = placeTrain; C.cars = cars; C.exitX = X + STATION.dx + 3; C.homeI = 2 * CAR_GAP;
+  C.placeTrain = placeTrain; C.cars = cars; C.exitX = X + STATION.dx + 3; C.homeI = 2 * CAR_GAP; C.CAR_GAP = CAR_GAP; C.stationX = X + STATION.dx; /* (build 100: for riding together) */
   const board = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - (X + STATION.dx)) > 12) return; if (!C.ready) { k.say('🎢 The giant coaster is still getting ready... one moment!', true); return; }
     k.say('🎢 Hold on tight! Up, up, up to the top of the giant coaster!', true); G.startCoaster && G.startCoaster(C); };
   for (const c of cars) k.tapIt(c, board);

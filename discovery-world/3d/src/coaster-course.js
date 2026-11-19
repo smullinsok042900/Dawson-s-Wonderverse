@@ -21,14 +21,14 @@ const D2R = Math.PI / 180;
 // the crater the track dives into (also added to the Moon's ground by space.js, so it is a real hole in the ground)
 export const BIG_CRATER = { dx: 78, z: -125, r: 46, depth: .85, rim: .12 };
 
-export const STATION = { dx: 206, z: -2.4, y: .9 };
+export const STATION = { dx: 80, z: -2.4, y: .9 };   // (build 100: moved from 206 to 80, close to the rocket (x 8))
 
 // the course: pieces (lengths in m, angles in degrees, positive turns left) and ['AT', x, y, z, heading] anchors that the
 // track reaches through one long smooth banked sweep (a curve that leaves and arrives level and in the right direction)
 export const COURSE = [
   ['S', 5, 0, 'S'], ['T', 10, -90, 2.5], ['T', 10, 90, 4],        // leave the station, turn in behind the activities
-  ['S', 130, 5.5],                                                 // along the back of the Moon to the lunar spire
-  ['H', 36, -2.5, 214, 'L'],                                     // THE GIGANTIC CLIMB: a spiral lift round the lunar spire
+  ['S', 4, 0],                                                     // (build 100: was 130 m when the station stood at 206) to the lunar spire
+  ['H', 36, -2.5, 219.5, 'L'],   // (build 100: 5.5 m more, so everything after it keeps its height)                                     // THE GIGANTIC CLIMB: a spiral lift round the lunar spire
   ['S', 12, 0],                                                  // the crest: the whole Moon below
   ['S', 150, -195],                                              // THE BREATHTAKING FIRST DROP
   ['L', 17, -1], ['S', 24, 0],                                                 // LOOP-THE-LOOP 1
@@ -63,6 +63,7 @@ export const COURSE = [
   ['AT', 300, 100, -62, 0],                                      // back across, coming down
   ['H', 22, -2.5, -95, '', .55],                                 // THE GRAND FINALE SPIRAL
   ['C', 45, 3.5],                                                // CORKSCREW 3
+  ['AT', 100, 4, -16, 180],                                     // (build 100) sweep back across BEHIND the activities, to just behind the station
   ['GOHOME'],                                                    // the final run back to the station
 ];
 

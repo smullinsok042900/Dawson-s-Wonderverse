@@ -397,6 +397,32 @@ export function initMultiplayer(G, api) {
   }
 
   // ----- what I send: where I am, what I'm doing and my pets (8 times a second while moving, every 2 s when still) -----
+  // ----- (build 100) RIDING THE MOON COASTER TOGETHER -----
+  // Nothing new is sent: a friend is on the coaster when their "riding" flag is on and they are right on the track. Their
+  // place along the track tells which car they are in (the front of the train is the rider furthest along).
+  //   • while you ride, friends on the same train are drawn exactly in their seats on your train (no lag behind);
+  //   • while you watch, your train follows them along the track, so you see them riding in it;
+  //   • standing on the station platform when a friend's train sets off: you hop on, in the next free seat.
+  let trainOut = false, joinedAt = -1e9;
+  const nearI = (C, x, y, z, i0) => { const p = C.pos, N = C.N; let best = -1, bd = 1e9; const a = i0 == null ? 0 : Math.max(0, i0 - 40), b = i0 == null ? N : Math.min(N, i0 + 90), st = i0 == null ? 4 : 1;
+    for (let i = a; i < b; i += st) { const dx = p[i * 3] - x, dy = p[i * 3 + 1] + .3 - y, dz = p[i * 3 + 2] - z, d = dx * dx + dy * dy + dz * dz; if (d < bd) { bd = d; best = i; } }
+    if (i0 == null && best >= 0) return nearI(C, x, y, z, Math.max(0, best - 30)); return [best, Math.sqrt(bd)]; };
+  const seatAt = (C, iFront, k, out) => { const i = Math.max(0, iFront - Math.min(2, k) * C.CAR_GAP), j = Math.min(C.N - 1, Math.floor(i)), p = C.pos, u = C.up;
+    out[0] = p[j * 3] + u[j * 3] * .55; out[1] = p[j * 3 + 1] + u[j * 3 + 1] * .55 - .25; out[2] = p[j * 3 + 2] + u[j * 3 + 2] * .55; if (k > 2) out[2] += .6; return out; };
+  function coasterTogether(now) {
+    const C = G.moonCoaster; const riders = [];
+    for (const o of others.values()) { o.snap = null; if (!C || !C.ready || !C.CAR_GAP || P.layer !== 'space') { o.ci = null; continue; }
+      const st = o.interp.at(now); if (!st || !st.r || st.l !== 'space') { o.ci = null; continue; }
+      const [i, d] = nearI(C, st.x, st.y, st.z, o.ci); if (i < 0 || d > 3) { o.ci = null; continue; } o.ci = i; riders.push(o); }
+    const mine = P.ride && P.ride.type === 'coaster';
+    if (!riders.length) { if (trainOut && !mine) { C.placeTrain(C.homeI); trainOut = false; } return; }
+    const front = mine ? P.ride.i : Math.max(...riders.map(o => o.ci)), occupied = new Set(mine ? [P.ride.seat || 0] : []);
+    for (const o of riders) { const k = Math.round((front - o.ci) / C.CAR_GAP); if (k >= 0 && k <= 3 && Math.abs(front - Math.min(2, k) * C.CAR_GAP - o.ci) < C.CAR_GAP * .9) { o.snap = seatAt(C, front, occupied.has(k) && k === 2 ? 3 : k, o.snapA || (o.snapA = [0, 0, 0])); occupied.add(k); } }
+    if (!mine) { C.placeTrain(front); trainOut = true;
+      // hop on: standing on the platform while a friend's train is just setting off from the station
+      if (!P.ride && front < C.homeI + 70 && now - joinedAt > 20000 && Math.abs(P.x - (C.stationX - 4)) < 9 && P.y < 1.6 && Math.abs((P.z || 0) + 1) < 3 && G.startCoaster) {
+        const seat = [1, 2, 3].find(k => !occupied.has(k)); if (seat != null) { joinedAt = now; trainOut = false; G.startCoaster(C, { i: front + 1, seat }); say('🎢 You hop on the coaster with your friend!', true); Sound.chime && Sound.chime(); } } }
+  }
   function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(',') }; }
   function myPets() { const list = Array.isArray(world.pets) ? world.pets : []; return list.slice(0, LIMITS.pets).map(petKey); }
   function update(dt) {
@@ -404,6 +430,7 @@ export function initMultiplayer(G, api) {
     sendT -= dt; const s = myState(), key = JSON.stringify(s);
     if (T && online && ((key !== lastSent && sendT <= 0) || sendT < -2)) { T.send(s); lastSent = key; sendT = .125; }
     if (paintBatch.pending() && now - lastPaintAt > 400) paintBatch.flush(now);
+    coasterTogether(now);
     for (const o of others.values()) {
       if (now - o.seen > 20000) { removeOther(o.id); continue; } // (a phone that vanished without saying goodbye)
       syncPeerPets(o);
@@ -414,6 +441,7 @@ export function initMultiplayer(G, api) {
       if (o.waveM) o.waveM.visible = show && now - (o.waveAt || 0) < 2200;
       const talking = vc.on && vc.speaking(o.id); if (o.talkM) o.talkM.visible = show && talking && !(o.waveM && o.waveM.visible);
       if (!show) continue;
+      if (o.snap) { st.x = o.snap[0]; st.y = o.snap[1]; st.z = o.snap[2]; } /* (build 100: a friend riding the coaster sits in their seat on YOUR train) */
       R.position.set(st.x, st.y, st.z); o.ring.position.set(st.x, Math.max(0, st.g ? st.y : st.y - 2) + .03, st.z); o.mark.position.set(st.x, st.y + (G.headTop || 2) + .6 + Math.sin(now / 300) * .08, st.z); o.mark.rotation.y = now / 600;
       o.model.update(dt, { vx: st.vx || 0, vy: st.vy || 0, grounded: st.g, seated: st.r, facing: st.f, happy: 0 });
       for (let i = 0; i < o.petModels.length; i++) {
