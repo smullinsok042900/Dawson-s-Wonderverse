@@ -15,12 +15,12 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   const wrapped = await ev(() => [...document.querySelectorAll('#dressPanel button')].some(b => b.textContent === '🎁'));
   const want = { head: ['crown', 'partyhat'], face: ['sunglasses', 'heartglasses'], neck: ['scarf', 'necklace'], back: ['backpack', 'cape'] }; /* (the wings are a Neptune surprise, wrapped until found) */
   const shots = [];
-  for (const kind of ['pip', 'zuzu', 'jelly', 'sprout', 'puffle', 'luna', 'bloop', 'zip']) {
+  for (const kind of ['pip', 'zuzu', 'jelly', 'sprout', 'puffle', 'luna', 'bloop', 'zip', 'glimmer', 'pompom', 'bibble', 'cosmo']) {
     await page.locator(`#dressPanel .dKid[aria-label="${kind}"]`).tap(); await sleep(800);
     const r = { kind, worn: {} };
     for (const slot of ['head', 'face', 'neck', 'back']) {
       const tab = page.locator(`#dressPanel .dTab[aria-label="${slot}"]`); if (await tab.evaluate(el => el.classList.contains('no'))) { r.worn[slot] = 'n/a'; continue; }
-      await tab.tap(); await sleep(250); const id = want[slot][['zuzu', 'luna', 'zip'].includes(kind) ? 1 : 0]; await page.locator(`#dressPanel button[aria-label="${id}"]`).tap(); await sleep(300);
+      await tab.tap(); await sleep(250); const id = want[slot][['zuzu', 'luna', 'zip', 'pompom', 'cosmo'].includes(kind) ? 1 : 0]; await page.locator(`#dressPanel button[aria-label="${id}"]`).tap(); await sleep(300);
       r.worn[slot] = await ev(([slot, id]) => { const P = __DDW3.G.me().parts, m = P.worn && P.worn[slot]; if (!m) return 'none'; let q = m.parent, bone = false; while (q) { if (q.isBone) { bone = true; break; } q = q.parent; } return m.userData.acc === id && bone ? 'ok' : 'bad'; }, [slot, id]);
     }
     // where the hat and glasses really are: the hat above the eyes, the glasses at the eyes (in world space, standing still)
@@ -32,13 +32,13 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
     await ev(() => { __DDW3.G.camOverride = null; });
     check(`${kind}: wears something in every slot it has, each on the right bone; the hat sits above the eyes and the glasses at the eyes`, Object.values(r.worn).every(w => w === 'ok' || w === 'n/a') && (r.fit.headDy > .1) && (r.fit.faceDy == null || Math.abs(r.fit.faceDy) < .12), JSON.stringify(r));
   }
-  // take everything off (on Zip, the last one), and the others keep theirs
+  // take everything off (on Cosmo, the last one), and the others keep theirs
   await page.locator('#dressPanel .dTab[aria-label="take everything off"]').tap(); await sleep(400);
   const off = await ev(() => { const P = __DDW3.G.me().parts; return Object.values(P.worn || {}).filter(Boolean).length; });
   check('🧺 takes everything off', off === 0, `worn ${off}`);
   // reload: outfits kept for each friend
   await page.locator('#dressPanel .dKid[aria-label="pip"]').tap(); await sleep(500); await ev(() => __DDW3.save()); await page.reload(); await page.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await page.locator('#playBtn').tap(); await sleep(2500);
-  const kept = await ev(() => { const P = __DDW3.G.me().parts; return { kind: __DDW3.player.creature, worn: Object.keys(P.worn || {}).filter(k => P.worn[k]).length, zip: JSON.stringify((__DDW3.world.wear || {}).zip || {}) }; });
+  const kept = await ev(() => { const P = __DDW3.G.me().parts; return { kind: __DDW3.player.creature, worn: Object.keys(P.worn || {}).filter(k => P.worn[k]).length, zip: JSON.stringify((__DDW3.world.wear || {}).cosmo || {}) }; });
   check('after a reload, Pip is still dressed (and Zip stays as she left it: nothing on)', kept.kind === 'pip' && kept.worn === 4 && kept.zip === '{}', JSON.stringify(kept));
   check('planet surprises stay wrapped (🎁) until found', wrapped && await ev(() => { const id = __DDW3.G.dress.find('moon'); return id === 'helmet' && !!__DDW3.world.wearFound.helmet; }));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
