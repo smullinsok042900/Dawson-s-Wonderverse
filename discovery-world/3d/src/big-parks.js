@@ -168,15 +168,14 @@ export function uranusIceTrail(k) {
   const N = Math.ceil(len / 1.2), tg = V3(), sd = V3(), pos = [], idx = [], bb = makeBatch();
   for (let i = 0; i <= N; i++) { const u = i / N, p = path.getPointAt(u); path.getTangentAt(u, tg); sd.set(-tg.z, 0, tg.x).normalize();
     for (const s of [-1, 1]) pos.push(p.x + sd.x * 1.3 * s, .05, p.z + sd.z * 1.3 * s); if (i < N) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
-    if (i % 3 === 0) for (const s of [-1, 1]) bb.put(G0.lo, p.x + sd.x * 1.9 * s, .15, p.z + sd.z * 1.9 * s, i % 2 ? '#ffffff' : '#e8f6ff', [.8, .35, .6]); }
+    if (i % 7 === 0) for (const s of [-1, 1]) bb.put(G0.lo, p.x + sd.x * 1.9 * s, .15, p.z + sd.z * 1.9 * s, i % 2 ? '#ffffff' : '#e8f6ff', [.8, .35, .6]); }
   const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); rg.setIndex(idx); rg.computeVertexNormals();
-  { const c = new THREE.Color('#bfe6ff'), col = []; for (let i = 0; i < pos.length / 3; i++) col.push(c.r, c.g, c.b); rg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); }
-  k.add(new THREE.Mesh(rg, shinyMat()));   /* (the shared material the game prepares at start: no shader pause) */ k.add(bb.mesh(shinyMat()));
+  bb.add(rg, null, '#bfe6ff');   /* (the ribbon, the banks, the arches and the gate are ONE mesh with the shared material: one draw call, no shader pause) */
   // glowing ice arches (one mesh) and the start gate
-  const arches = [.12, .27, .4, .55, .68, .82].map(u => path.getPointAt(u)), ab = makeBatch();
-  arches.forEach((p, i) => { path.getTangentAt([.12, .27, .4, .55, .68, .82][i], tg); ab.put(G0.torus, p.x, 0, p.z, ['#9fd8ff', '#c9a6ff', '#7fe0ff', '#ffffff'][i % 4], [1.8, 2.2, 1.4], [0, Math.atan2(-tg.z, tg.x) + Math.PI / 2, 0]); });
+  const arches = [.12, .27, .4, .55, .68, .82].map(u => path.getPointAt(u)), ab = bb, thin = new THREE.TorusGeometry(1, .1, 5, 16);
+  arches.forEach((p, i) => { path.getTangentAt([.12, .27, .4, .55, .68, .82][i], tg); ab.put(thin, p.x, 0, p.z, ['#9fd8ff', '#c9a6ff', '#7fe0ff', '#ffffff'][i % 4], [1.8, 2.2, 1.4], [0, Math.atan2(-tg.z, tg.x) + Math.PI / 2, 0]); });
   ab.put(G0.oct, x(85.5), 2.6, -1.4, '#ffffff', [.5, .5, .2]); for (const s of [-1, 1]) ab.put(G0.cyl, x(85.5) + s * 1.3, 1.1, -1.4, '#9fd8ff', [.1, 2.2, .1]);
-  const gate = ab.mesh(glowMat()); k.add(gate);
+  const gate = bb.mesh(shinyMat()); k.add(gate);
   let skating = false;
   const go = () => { if (P.layer !== 'space' || P.ride || skating || Math.abs(P.x - x(86)) > 6) return; skating = true; k.fact('⛸️ The winding ice trail! Hold ▶ to skate faster, ◀ to slow down. JUMP to hop!', 'uranusicetrail');
     let u = 0, v = 3, hopV = 0, hopY = 0; const passed = new Set();
