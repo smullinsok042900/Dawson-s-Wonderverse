@@ -37,6 +37,7 @@ import { initPerf } from './perf.js';
 import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
+import './new-friends-2.js'; // (build 102) four more
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
