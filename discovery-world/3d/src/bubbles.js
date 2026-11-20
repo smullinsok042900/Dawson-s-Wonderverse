@@ -61,7 +61,7 @@ export function initBubbles(api) {
   // ---- the two big buttons: 🫧 (blow) and 💥 (pop my bubble) ----
   const css = `#bubbleBtn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:200px;z-index:12;width:74px;height:74px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff,#cfefff 40%,#c9a6ff 75%,#ff9fd8);box-shadow:0 5px 0 #8a6ad8,0 8px 18px #0004;font-size:40px;line-height:74px;padding:0;display:none}
 #bubbleBtn.show{display:block}#bubbleBtn.wait{opacity:.45;filter:grayscale(.5)}#bubbleBtn.riding{display:none}
-#bubbleEsc{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:112px;z-index:33;width:104px;height:104px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffe36e 45%,#ff9a2e);box-shadow:0 7px 0 #c26a00,0 12px 26px #0006;font-size:58px;line-height:104px;padding:0;display:none;animation:bEsc 1s ease-in-out infinite}
+#bubbleEsc{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:112px;z-index:33;width:80px;height:80px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffe36e 45%,#ff9a2e);box-shadow:0 7px 0 #c26a00,0 12px 26px #0006;font-size:46px;line-height:80px;padding:0;display:none;animation:bEsc 1s ease-in-out infinite}
 #bubbleEsc.show{display:block}@keyframes bEsc{50%{transform:scale(1.12)}}
 body.inBubble #bubbleBtn{display:none}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
