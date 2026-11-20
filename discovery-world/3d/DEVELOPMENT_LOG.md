@@ -4,6 +4,14 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 106 — magic bubbles in Play Together
+- **🫧 BLOW A BUBBLE** (a big button, only in a room): your friend puffs, and a shimmering rainbow bubble floats to the nearest friend (aim assist: the nearest one in front, else the nearest; forgiving). It grows round them, lifts them about four heights into the air, swaying; they wiggle inside; they can steer it a little with ◀ ▶; a big 💥 (or JUMP) pops it at once, otherwise it pops by itself after about 6 seconds. POP: a burst of little bubbles and sparkles, a fall, a soft bounce, dizzy stars and a cheer. Everyone in the room sees the same thing.
+- **Sync:** one event per bubble (`{ t: 'bubble', by, to }`) and `b: 1` in the trapped player's own state; the trapped player's own phone moves them, so the float, the pop, the fall and the landing travel as the positions that are sent anyway. Remote bubbles are drawn round the friend's model and pop when their flag goes.
+- **Fair and safe:** a 3 s wait between bubbles; 8 s safe after landing; never on rides, in the rocket, indoors or under water; the 🫧 switch in the room panel turns bubbles off for that phone. The Firebase rules have the new event type and field (publish them once more; until then the database refuses bubbles and nothing else changes).
+- **Cheap:** one shared sphere painted with rainbow colours and the shared see-through material (no new shader); at most 8 bubble meshes, reused; nothing runs outside a room.
+- Fixed on the way (found in the pictures): the 💥 button first sat over the floating character (moved to the right); the camera first used the rocket's framing and lost her above it (now the normal camera follows her up).
+- Tests (desktop, software rendering): `bubbles-together` (two browsers, 120 ms network delay): no 🫧 outside a room; both see 🫧 in the room; A's bubble traps B; B floats above 4 m and A sees B up there in the bubble; B's 💥 pops it, A sees the pop, B lands and walks on; B safe straight after; B traps A, whose bubble pops by itself, A lands; no bubbles on the train; the 🫧 switch: all passed. `multiplayer` 20/20, `shared` 7/7. SPEED106. **Full smoke test: SMOKE_RESULT.** Not tried on two real phones yet.
+
 ## Checkpoint: build 105 — a dress-up menu that makes sense, and the Moon coaster's tunnel and cave camera
 - **THE DRESS-UP MENU, redone like a children's dress-up game (the family's request):**
   - every button shows a REAL PICTURE of the thing it puts on, made from that thing's own 3D model (`tools/make-accessory-pictures.cjs` → `src/accessory-pictures.js`, 84 KB, built into the game; nothing is drawn while she plays). Before, the bow and the bow tie had the same 🎀, and several pictures were emojis that did not match;
