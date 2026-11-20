@@ -75,8 +75,8 @@ export const CATS = [
 
 const built = new Map(); let G0 = null;
 function itemMesh(id) { if (built.has(id)) return built.get(id); const it = ITEMS.find(q => q[0] === id); if (!it) return null; G0 = G0 || G();
-  const b = makeBatch(); it[3](b, G0); const m = b.mesh(shinyMat()); m.castShadow = true; m.userData.acc = id; m.userData.opts = it[4] || {};
-  if (it[4] && it[4].bubble) { const gb = makeBatch(); gb.put(new THREE.SphereGeometry(.46, 24, 16), 0, 0, 0, '#dff4ff'); const glass = gb.mesh(glassMat(.22)); /* (the shared see-through material the game prepares at start: no shader pause) */ glass.position.y = -.32; m.add(glass); }
+  const b = makeBatch(); it[3](b, G0); const m = b.mesh(shinyMat()); m.geometry.userData.shared = true; m.castShadow = true; m.userData.acc = id; m.userData.opts = it[4] || {};
+  if (it[4] && it[4].bubble) { const gb = makeBatch(); gb.put(new THREE.SphereGeometry(.46, 24, 16), 0, 0, 0, '#dff4ff'); const glass = gb.mesh(glassMat(.22)); glass.geometry.userData.shared = true; /* (the shared see-through material the game prepares at start: no shader pause) */ glass.position.y = -.32; m.add(glass); }
   built.set(id, m); return m; }
 export const accessoryMesh = itemMesh; // (for the picture maker)
 export const slotOf = id => (ITEMS.find(q => q[0] === id) || [])[1] || null;

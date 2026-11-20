@@ -26,7 +26,7 @@ function fiberTexture() {
       g.fillStyle = gr; g.beginPath(); g.arc(x + ox, y + oy, r, 0, 7); g.fill();
     }
   }
-  fiberTex = new THREE.CanvasTexture(c); fiberTex.wrapS = fiberTex.wrapT = THREE.RepeatWrapping; fiberTex.colorSpace = THREE.NoColorSpace;
+  fiberTex = new THREE.CanvasTexture(c); fiberTex.userData.shared = true; fiberTex.wrapS = fiberTex.wrapT = THREE.RepeatWrapping; fiberTex.colorSpace = THREE.NoColorSpace;
   fiberTex.minFilter = THREE.LinearMipmapLinearFilter; fiberTex.magFilter = THREE.LinearFilter; fiberTex.anisotropy = 4; fiberTex.generateMipmaps = true;
   return fiberTex;
 }

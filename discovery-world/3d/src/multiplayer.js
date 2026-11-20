@@ -27,6 +27,7 @@ import * as THREE from 'three';
 import { FIREBASE_CONFIG, VOICE_CONFIG } from './mp-config.js';
 import { createVoice, voiceSupported, VOICE_ALLOWED_KEY, VOLUMES } from './voicechat.js';
 import { buildPet } from './friends.js';
+import { freeLater } from './dispose.js';
 import { LIMITS, isCode, codeFromPics, picsFromCode, petKey, recipeFromKey, sanitizeObject, sanitizeEvent, makePaintBatch } from './shared.js';
 
 export const MAX_PLAYERS = 4;
@@ -308,7 +309,7 @@ export function initMultiplayer(G, api) {
     if (s.k === myColour && id < (T && T.id || '')) fixColour();
   }
   function buildModel(o, kind) {
-    if (o.model) { scene.remove(o.model.root); }
+    if (o.model) { scene.remove(o.model.root); freeLater(o.model.root); } /* (build 107: free a friend's old model) */
     o.kind = kind; o.model = makeCreature(kind); o.model.root.userData.dynamic = true; o.model.root.traverse(q => { q.userData.dynamic = true; }); scene.add(o.model.root);
     if (!o.ring) { const col = COLOURS[o.colour % 4];
       o.ring = new THREE.Mesh(new THREE.TorusGeometry(.62, .08, 8, 32), toy(col, { em: col, ei: .5 })); o.ring.rotation.x = Math.PI / 2; o.ring.userData = { dynamic: true, c: o.colour }; scene.add(o.ring);
@@ -316,7 +317,7 @@ export function initMultiplayer(G, api) {
       o.waveM = waveSprite(); o.talkM = waveSprite('🗣️'); }
     api.compile && api.compile(o.model.root);
   }
-  function removeOther(id, quiet) { const o = others.get(id); if (!o) return; if (G.bubbles) G.bubbles.drop(o); others.delete(id); vc.drop(id); voiceIds.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM, o.talkM]) if (m) scene.remove(m);
+  function removeOther(id, quiet) { const o = others.get(id); if (!o) return; if (G.bubbles) G.bubbles.drop(o); others.delete(id); vc.drop(id); voiceIds.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM, o.talkM]) if (m) scene.remove(m); if (o.model) freeLater(o.model.root); /* (build 107: free a friend who left) */
     for (const pet of o.petModels || []) scene.remove(pet.root);
     if (o.ring) { o.ring.geometry.dispose(); o.ring.material.dispose(); o.mark.geometry.dispose(); o.mark.material.dispose(); }
     if (!quiet) { say('👋 A friend left the room.', true); if (o.model && o.model.root.visible) api.burst && api.burst(o.model.root.position.x, o.model.root.position.y + 1, o.model.root.position.z, [COLOURS[o.colour % 4], '#ffffff'], 14, 2.5); }

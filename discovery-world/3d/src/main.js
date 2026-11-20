@@ -39,7 +39,9 @@ import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import './new-friends-2.js'; // (build 102) four more
 import { PICS as WEAR_PICS } from './accessory-pictures.js';
-import { initBubbles } from './bubbles.js'; // (build 106) magic bubbles in Play Together
+import { initBubbles } from './bubbles.js';
+import { freeObject, freeLater } from './dispose.js'; // (build 107) free creatures that are put away
+import { creatureMesh as lifeMesh, PET_KINDS as LIFE_PETS } from './planet-life.js'; // (build 107) for the pet pictures and tests // (build 106) magic bubbles in Play Together
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS, accessoryMesh, CATS as WEAR_CATS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
@@ -173,7 +175,7 @@ const shadowMat = new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true,
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; blob.userData.dynamic = true; /* (build 33: it follows you; never part of a scenery slice) */ scene.add(blob);
 function groundUnder(x, y) { if (player.layer === 'sea') return SEA.floor; let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
-  if (creature) scene.remove(creature.root);
+  if (creature) { scene.remove(creature.root); freeLater(creature.root); } /* (build 107: free the old friend: it used to stay on the graphics chip) */
   player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root); wear(creature.parts, kind, (world.wear || {})[kind]); /* (build 101: her outfit for this friend) */
   { const bb = new THREE.Box3().setFromObject(creature.root); G.headTop = bb.max.y - creature.root.position.y; } // (for the princess crown)
   document.querySelectorAll('.creatureChoice').forEach(b => b.classList.toggle('chosen', b.dataset.c === kind));
@@ -1005,7 +1007,7 @@ const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFri
   opened: on => { G.dressOpen = on; if (on) { for (const kk in keys) keys[kk] = false; player.vx = 0; } }, /* (build 105: close-up of her friend beside the panel; no walking off while dressing) */
   cheer: slot => { const m = creature.parts && creature.parts.worn && creature.parts.worn[slot]; if (!m) return; m.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld); burst(p.x, p.y, p.z, ['#fff', '#ffe36e', '#ff9fd8', '#9fd8ff'], 14, 2.2); } });
 G.bubbles = initBubbles({ scene, P: player, keys, creature: () => creature, burst, Sound, say: m => toast(m), speak: t => voice.speak(t), headTop: () => G.headTop || 1.8, camPull: v => { G.camPull = v; } }); /* (build 106: only does anything inside a Play Together room) */
-G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
+G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.lifeMesh = lifeMesh; G.lifePets = LIFE_PETS; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
 { const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
   b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
 let wearHere = null; // planet surprises: landing on some planets finds a new thing to wear
@@ -1194,7 +1196,7 @@ function restore(d) {
   world.nursery = d.nursery; world.adventures = d.adventures; world.comfort = d.comfort;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
-  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig', 'seal', 'goat'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
+  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig', 'seal', 'goat', ...LIFE_PETS].filter(k => e.pals[k]) /* (build 107: and the planet pets) */.map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
   world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
@@ -1248,7 +1250,7 @@ function renderPortraits(kinds = Object.keys(CREATURES).filter(k => !CREATURES[k
       gl.readPixels(0, 0, 128, 128, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
       if (gl.isContextLost() || !pixels.some((v, i) => i % 4 < 3 && v !== pixels[i % 4])) throw new Error('Portrait readback is empty');
       for (let y = 0; y < 128; y++) picture.data.set(pixels.subarray((127 - y) * 512, (128 - y) * 512), y * 512);
-      g2.putImageData(picture, 0, 0); out[k] = c2.toDataURL(); s.remove(c.root);
+      g2.putImageData(picture, 0, 0); out[k] = c2.toDataURL(); s.remove(c.root); freeObject(c.root); /* (build 107) */
     }
   } finally {
     renderer.shadowMap.enabled = shadows;
@@ -1693,7 +1695,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '106'; G.build = GAME_BUILD;
+const GAME_BUILD = '107'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1818,7 +1820,7 @@ function trainArrived(i) {
   $('upperLeft').appendChild(btn);
   const pn = document.createElement('div'); pn.id = 'petsPanel'; pn.innerHTML = '<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid pets"></div></div>'; document.body.appendChild(pn);
   const grid = pn.querySelector('.mpGrid');
-  const draw = () => { grid.innerHTML = expansion.palList().map(q => `<button class="mpT pet ${q.found ? (q.follow ? 'on' : '') : 'unknown'}" data-k="${q.kind}">${q.found ? q.emoji : '❓'}<span class="pf">${q.found ? (q.follow ? '💖' : '🏠') : ''}</span></button>`).join('');
+  const draw = () => { grid.innerHTML = expansion.palList().map(q => `<button class="mpT pet ${q.found ? (q.follow ? 'on' : '') : 'unknown'}" data-k="${q.kind}">${q.pic ? `<img class="petPic${q.found ? '' : ' shadow'}" src="${q.pic}" alt="">` : q.found ? q.emoji : '❓'}<span class="pf">${q.found ? (q.follow ? '💖' : '🏠') : ''}</span></button>`).join('');
     grid.querySelectorAll('.mpT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const r = expansion.togglePal(b.dataset.k); if (r) toast(r); else voice.speak(expansion.palHint(b.dataset.k)); draw(); })); };
   const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   tapEl(btn, () => { if (G.activityOpen) return; draw(); pn.classList.add('show'); Sound.click(); voice.speak('Your pet friends! Tap one to bring it along, or to send it home.'); });
