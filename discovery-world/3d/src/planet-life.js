@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
 
-const GEO = { box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 11, 8), cone: new THREE.ConeGeometry(1, 1, 9), cyl: new THREE.CylinderGeometry(1, 1, 1, 8), tor: new THREE.TorusGeometry(1, .22, 6, 14) }; // (light: about 150 triangles a ball)
+const GEO = { box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 11, 8), cone: new THREE.ConeGeometry(1, 1, 9), cyl: new THREE.CylinderGeometry(1, 1, 1, 8), tor: new THREE.TorusGeometry(1, .22, 5, 12), ballS: new THREE.SphereGeometry(1, 8, 6), dot: new THREE.SphereGeometry(1, 6, 4) }; // (light: about 150 triangles a big ball; build 117: small balls use fewer (80), tiny ones (eyes, spots) far fewer (36))
 const starGeo = (() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .45 : 1; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const g = new THREE.ExtrudeGeometry(sh, { depth: .5, bevelEnabled: true, bevelThickness: .18, bevelSize: .14, bevelSegments: 2 }); g.center(); return g; })();
 // two cute eyes with shines, at height y, spread s, looking toward +z, size r
 const eyes = (b, y, s, z, r = .07, col = '#2b1d3d') => { for (const k of [-1, 1]) { b.put(GEO.ball, k * s, y, z, col, [r, r * 1.15, r * .6]); b.put(GEO.ball, k * s + r * .3, y + r * .35, z + r * .45, '#ffffff', r * .35); } };
@@ -298,7 +298,7 @@ export const PET_KINDS = Object.keys(SPECIES).filter(k => SPECIES[k].pet);
 const SHAPES = {};
 export function creatureMesh(kind) {
   const sp = SPECIES[kind]; if (!sp) return null;
-  if (!SHAPES[kind]) { const b = makeBatch(); sp.build(b); SHAPES[kind] = b.geometry ? b.geometry() : b.mesh(shinyMat()).geometry; SHAPES[kind].userData.shared = true; }
+  if (!SHAPES[kind]) { const b = makeBatch(), put = b.put.bind(b); b.put = (geo, x, y, z, col, sc, ...rest) => { if (geo === GEO.ball) { const m = Array.isArray(sc) ? Math.max(...sc) : sc; geo = m <= .075 ? GEO.dot : m <= .16 ? GEO.ballS : GEO.ball; } return put(geo, x, y, z, col, sc, ...rest); }; /* (build 117: lighter shapes, the same look) */ sp.build(b); SHAPES[kind] = b.geometry ? b.geometry() : b.mesh(shinyMat()).geometry; SHAPES[kind].userData.shared = true; }
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body); const m = new THREE.Mesh(SHAPES[kind], shinyMat()); m.castShadow = false; /* (build 108: no shadow pass: cheaper) */ m.scale.setScalar(sp.size || 1); body.add(m);
   g.userData.body = body; g.userData.kind = kind; g.userData.dynamic = true; return g;
 }
