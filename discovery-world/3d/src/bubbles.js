@@ -34,7 +34,7 @@ export function initBubbles(api) {
   const give = m => { if (!m) return; m.userData.busy = false; m.visible = false; };
   const S = (f, ...a) => Sound && Sound[f] && Sound[f](...a);
   const fly = []; // bubbles on their way: { m, from, to: () => Vector3|null, t, onHit }
-  let lastBlow = -99, safeUntil = -99, me = null, landed = null, now = 0, inRoom = false;
+  let lastBlow = -99, safeUntil = -99, me = null, landed = null, now = 0, inRoom = false, wasRiding = false;
   const off = () => { try { return localStorage.getItem('ddw3-bubbles-off') === '1'; } catch (e) { return false; } };
   const canBeBubbled = () => !off() && !P.ride && (P.layer === '' || P.layer === 'space') && !P.swim && now > safeUntil && !me;
   // ---- blowing (from anyone: me, or a friend's model on my screen) ----
@@ -50,7 +50,7 @@ export function initBubbles(api) {
     me = { t: 0, x0: P.x, y0: P.y, z0: P.z || 0, dx: 0, dz: 0, m: take(), h, by, phase: 'grow', layer: P.layer };
     P.ride = { type: 'bubble', noExit: true, onJump: () => pop(true) }; P.vx = P.vy = 0; /* (JUMP pops it too) */ api.camPull && api.camPull(1);
     S('whoosh'); api.speak && api.speak('Whoa! You are in a bubble! Tap the star to pop it!');
-    escBtn.classList.add('show'); document.body.classList.add('inBubble'); c && c.cheer && c.cheer(); return true;
+    escBtn.classList.add('show'); api.place && api.place(escBtn); document.body.classList.add('inBubble'); c && c.cheer && c.cheer(); return true;
   }
   function pop(early) {
     if (!me) return; const { m } = me, y = P.y + me.h * .55;
@@ -60,7 +60,7 @@ export function initBubbles(api) {
   }
   // ---- the two big buttons: 🫧 (blow) and 💥 (pop my bubble) ----
   const css = `#bubbleBtn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:200px;z-index:12;width:74px;height:74px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff,#cfefff 40%,#c9a6ff 75%,#ff9fd8);box-shadow:0 5px 0 #8a6ad8,0 8px 18px #0004;font-size:40px;line-height:74px;padding:0;display:none}
-#bubbleBtn.show{display:block}#bubbleBtn.wait{opacity:.45;filter:grayscale(.5)}
+#bubbleBtn.show{display:block}#bubbleBtn.wait{opacity:.45;filter:grayscale(.5)}#bubbleBtn.riding{display:none}
 #bubbleEsc{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:112px;z-index:33;width:104px;height:104px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffe36e 45%,#ff9a2e);box-shadow:0 7px 0 #c26a00,0 12px 26px #0006;font-size:58px;line-height:104px;padding:0;display:none;animation:bEsc 1s ease-in-out infinite}
 #bubbleEsc.show{display:block}@keyframes bEsc{50%{transform:scale(1.12)}}
 body.inBubble #bubbleBtn{display:none}`;
@@ -74,7 +74,7 @@ body.inBubble #bubbleBtn{display:none}`;
     get trapped() { return !!me; }, get inAir() { return !!me || !!landed; },
     stateFlag: () => (me ? 1 : 0),
     off, setOff(v) { try { localStorage.setItem('ddw3-bubbles-off', v ? '1' : '0'); } catch (e) { } if (v && me) pop(true); blowBtn.classList.toggle('show', inRoom && !v); },
-    showButton(on) { inRoom = !!on; blowBtn.classList.toggle('show', inRoom && !off()); },
+    showButton(on) { inRoom = !!on; blowBtn.classList.toggle('show', inRoom && !off()); if (inRoom) api.place && api.place(blowBtn); },
     bindBlow(fn) { tap(blowBtn, fn); },
     // I blow: returns the target id picked (aim assist: the nearest friend in front of me, else the nearest one), or ''
     blow(targets) { // targets: [{ id, pos: Vector3 (feet), ok }]
@@ -94,7 +94,7 @@ body.inBubble #bubbleBtn{display:none}`;
     drop(o) { if (o.bubM) { give(o.bubM); o.bubM = null; } },
     pop: () => pop(true),
     update(dt) {
-      now += dt;
+      now += dt; const rd = !!P.ride && !me; if (rd !== wasRiding) { wasRiding = rd; blowBtn.classList.toggle('riding', rd); } /* (no 🫧 while riding: the 🏁 uses that place) */
       for (let i = fly.length - 1; i >= 0; i--) { const f = fly[i]; f.t += dt / FLIGHT; const to = f.to(); if (!to) { give(f.m); fly.splice(i, 1); continue; }
         const k = Math.min(1, f.t), e = k * k * (3 - 2 * k); f.m.position.lerpVectors(f.from, to, e); f.m.position.y += Math.sin(k * Math.PI) * 1.2 + Math.sin(now * 9 + i) * .06; f.m.scale.setScalar(.25 + k * .35 + Math.sin(now * 12) * .02);
         if (Math.random() < dt * 10) api.burst(f.m.position.x, f.m.position.y, f.m.position.z, ['#ffffff', '#cfefff', '#ffd6f4'], 1, .5);
