@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 106 (magic bubbles)
+Desktop, software rendering; `ba.cjs`, builds 105 and 106, four rounds each in both orders. Script ms per frame (average and range): park 11.1 (10.4–12.1) → 11.4 (10.4–12.9); creatures 9.4 (8.3–10.7) → 8.5 (7.5–9.5); castle 10.5 (9.1–11.7) → 12.1 (10.7–12.9); shader programs 115 → 115; the same draw calls. Outside a room the new per-frame code was timed directly (200,000 calls): bubbles 0.016 µs a frame, the room update 0.010 µs, so the castle reading is noise, not the new code. In a room: one bubble is one mesh with the shared see-through material (no new shader); at most 8, reused.
+
 ## Build 105 (the dress-up menu; the coaster tunnel camera)
 Desktop, software rendering. Earth (`ba.cjs`, builds 104 and 105, both orders): script ms per frame park 13.8 → 12.8, creatures 11.0 → 11.5, castle 13.4 → 13.6; 115 shader programs in both. Moon (`pplanet.cjs`, two rounds): +30 274 and 174 → 183 and 163 ms (the 274 is noise), +50 180 and 160 → 159 and 162, +79 178 and 161 → 160 and 161; draw calls the same (67/73/69). The accessory pictures are built into the game (84 KB), so opening 👗 draws nothing new. A first version that drew the coaster's mouth darkness as its own mesh cost one draw call on the Moon; it was put back into the coaster's single mesh.
 
