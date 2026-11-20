@@ -39,6 +39,7 @@ import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import './new-friends-2.js'; // (build 102) four more
 import { PICS as WEAR_PICS } from './accessory-pictures.js';
+import { initBubbles } from './bubbles.js'; // (build 106) magic bubbles in Play Together
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS, accessoryMesh, CATS as WEAR_CATS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
@@ -1003,6 +1004,7 @@ const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFri
   Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; },
   opened: on => { G.dressOpen = on; if (on) { for (const kk in keys) keys[kk] = false; player.vx = 0; } }, /* (build 105: close-up of her friend beside the panel; no walking off while dressing) */
   cheer: slot => { const m = creature.parts && creature.parts.worn && creature.parts.worn[slot]; if (!m) return; m.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld); burst(p.x, p.y, p.z, ['#fff', '#ffe36e', '#ff9fd8', '#9fd8ff'], 14, 2.2); } });
+G.bubbles = initBubbles({ scene, P: player, keys, creature: () => creature, burst, Sound, say: m => toast(m), speak: t => voice.speak(t), headTop: () => G.headTop || 1.8, camPull: v => { G.camPull = v; } }); /* (build 106: only does anything inside a Play Together room) */
 G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
 { const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
   b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
@@ -1414,6 +1416,7 @@ function frame() {
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy }); tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
+  G.bubbles.update(dt); /* (build 106: after the friend's own animation, so the bubble's sway and the tumble show) */
   creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)
@@ -1690,7 +1693,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '105'; G.build = GAME_BUILD;
+const GAME_BUILD = '106'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

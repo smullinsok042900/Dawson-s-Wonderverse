@@ -84,8 +84,8 @@ function firebaseTransport(cfg) {
     offs.push(D.onValue(D.ref(db, '.info/serverTimeOffset'), s => { T.offset = Number(s.val()) || 0; })); /* (build 100: one clock for everyone, for shared rides) */
     return me;
   };
-  const noA = st => { if (!T.noA || !st || st.a == null) return st; const { a, ...rest } = st; return rest; }; /* (build 101: rules older than build 101 refuse the outfit field: then it is simply not sent) */
-  const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); const p = D.set(meRef, { ...noA(last), t: D.serverTimestamp() }).catch(e => { if (last && last.a != null && !T.noA) { T.noA = true; return D.set(meRef, { ...noA(last), t: D.serverTimestamp() }); } throw e; }); if (voiceOn) p.then(() => putVoice(true)).catch(() => { }); return p; };
+  const noA = st => { if (!T.noA || !st || (st.a == null && st.b == null)) return st; const { a, b, ...rest } = st; return rest; }; /* (build 106: and the bubble flag) */ /* (build 101: rules older than build 101 refuse the outfit field: then it is simply not sent) */
+  const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); const p = D.set(meRef, { ...noA(last), t: D.serverTimestamp() }).catch(e => { if (last && (last.a != null || last.b != null) && !T.noA) { T.noA = true; return D.set(meRef, { ...noA(last), t: D.serverTimestamp() }); } throw e; }); if (voiceOn) p.then(() => putVoice(true)).catch(() => { }); return p; };
   // (build 62) talking: who has it on (voice/<uid>), and each player's private inbox for setting up calls (sig/<uid>)
   const putVoice = async on => { const { D, db } = fb, ref = D.ref(db, `${ROOM_PATH}/${room}/voice/${me}`); if (on) { await D.set(ref, true); D.onDisconnect(ref).remove(); } else { D.onDisconnect(ref).cancel(); await D.remove(ref); } };
   T.join = async (code, state) => {
@@ -112,7 +112,7 @@ function firebaseTransport(cfg) {
     offs.push(D.onChildAdded(inbox, s => { const v = s.val(); D.remove(s.ref).catch(quiet); if (!v || typeof v.d !== 'string' || v.d.length > 20000 || typeof v.f !== 'string') return; let msg; try { msg = JSON.parse(v.d); } catch (e) { return; } T.onSignal(v.f, msg); }, quiet));
     return { ok: true };
   };
-  T.send = state => { last = state; if (meRef) fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { if (state.a != null && !T.noA) { T.noA = true; fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { }); } }); };
+  T.send = state => { last = state; if (meRef) fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { if ((state.a != null || state.b != null) && !T.noA) { T.noA = true; fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { }); } }); };
   T.setShared = (key, obj) => {
     if (!fb || !room) return;
     const { D, db } = fb, ref = D.ref(db, `${ROOM_PATH}/${room}/objects/${key}`);
@@ -242,7 +242,7 @@ export function initMultiplayer(G, api) {
     if (view === 'room') { const list = [{ c: myColour, me: true }, ...[...others.values()].map(o => ({ c: o.colour, id: o.id }))];
       body.innerHTML = `<div class="mpCode" aria-label="room code">${pics(room)}</div><div class="mpLetters">${room}</div><div class="mpPlayers">${list.map(p => `<span class="mpDot${p.me ? ' me' : ''}${p.id && vc.isBlocked(p.id) ? ' blocked' : ''}${p.id && voiceIds.has(p.id) ? ' vc' : ''}"${p.id ? ` data-p="${p.id}" role="button" aria-label="friend: tap to stop or start hearing them"` : ''} style="background:${COLOURS[p.c % 4]}"></span>`).join('')}${online ? '' : '<span class="mpOff">📶</span>'}</div>` +
         `<div class="mpShare" aria-hidden="true">🧱🎨🐾👋</div>` + talkRow() +
-        `<div class="mpDoors"><button class="mpWave" data-a="wave" aria-label="Wave to your friends">👋</button><button class="mpLeave" data-a="leave" aria-label="Leave the room">🚪</button></div>`; }
+        `<div class="mpDoors"><button class="mpWave" data-a="wave" aria-label="Wave to your friends">👋</button><button class="mpWave${G.bubbles && G.bubbles.off() ? ' mpBubOff' : ''}" data-a="bubbles" aria-label="Magic bubbles on or off">🫧</button><button class="mpLeave" data-a="leave" aria-label="Leave the room">🚪</button></div>`; }
     body.querySelectorAll('[data-a]').forEach(b => tap(b, () => action(b.dataset.a)));
     body.querySelectorAll('.mpDot[data-p]').forEach(d => tap(d, () => { if (!vc.on) return; const id = d.dataset.p, was = vc.isBlocked(id); vc.block(id, !was); Sound.click(); say(was ? '🔊 You can hear this friend again.' : '🚫 You will not hear this friend, and they will not hear you.', true); render('room'); }));
     if (view === 'room') voiceChanged();
@@ -254,6 +254,7 @@ export function initMultiplayer(G, api) {
     if (a === 'back') { pressed.pop(); render('join'); }
     if (a === 'again') { const c = localStorage.getItem(ROOM_KEY); if (validCode(c)) joinRoom(c); }
     if (a === 'wave') wave();
+    if (a === 'bubbles' && G.bubbles) { const nowOff = !G.bubbles.off(); G.bubbles.setOff(nowOff); Sound.click(); say(nowOff ? '🫧 Magic bubbles are off.' : '🫧 Magic bubbles are on!', true); render('room'); }
     if (a === 'leave') { leaveRoom(); render('home'); }
     if (a === 'talk') talkOn();
     if (a === 'talkoff') { talkOff(); render('room'); }
@@ -300,7 +301,7 @@ export function initMultiplayer(G, api) {
     o.petSig = typeof s.ps === 'string' ? s.ps : (Array.isArray(s.p) ? s.p.join(',') : '');
     const kind = api.CREATURES && api.CREATURES[s.c] ? s.c : 'pip'; /* (build 59: an unknown creature, e.g. from a newer game, shows as Pip) */
     o.outfit = typeof s.a === 'string' && s.a.length < 60 ? s.a : '';
-    o.interp.push(now, { x: +s.x || 0, y: +s.y || 0, z: +s.z || 0, f: s.f || 1, g: !!s.g, r: !!s.r, l: s.l || '', h: !!s.h, c: kind });
+    o.interp.push(now, { x: +s.x || 0, y: +s.y || 0, z: +s.z || 0, f: s.f || 1, g: !!s.g, r: !!s.r, l: s.l || '', h: !!s.h, c: kind, b: s.b === 1 ? 1 : 0 });
     if (o.kind !== kind) buildModel(o, kind);
     if (o.model && o.model.parts && o.wornCode !== o.outfit + '|' + kind) { o.wornCode = o.outfit + '|' + kind; wear(o.model.parts, kind, outfitFrom(o.outfit)); } /* (build 101: dressed as they dressed themselves) */
     if (o.ring && o.ring.userData.c !== o.colour) { o.ring.material.color.set(COLOURS[o.colour % 4]); o.mark.material.color.set(COLOURS[o.colour % 4]); o.mark.material.emissive.set(COLOURS[o.colour % 4]); o.ring.userData.c = o.colour; }
@@ -315,7 +316,7 @@ export function initMultiplayer(G, api) {
       o.waveM = waveSprite(); o.talkM = waveSprite('🗣️'); }
     api.compile && api.compile(o.model.root);
   }
-  function removeOther(id, quiet) { const o = others.get(id); if (!o) return; others.delete(id); vc.drop(id); voiceIds.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM, o.talkM]) if (m) scene.remove(m);
+  function removeOther(id, quiet) { const o = others.get(id); if (!o) return; if (G.bubbles) G.bubbles.drop(o); others.delete(id); vc.drop(id); voiceIds.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM, o.talkM]) if (m) scene.remove(m);
     for (const pet of o.petModels || []) scene.remove(pet.root);
     if (o.ring) { o.ring.geometry.dispose(); o.ring.material.dispose(); o.mark.geometry.dispose(); o.mark.material.dispose(); }
     if (!quiet) { say('👋 A friend left the room.', true); if (o.model && o.model.root.visible) api.burst && api.burst(o.model.root.position.x, o.model.root.position.y + 1, o.model.root.position.z, [COLOURS[o.colour % 4], '#ffffff'], 14, 2.5); }
@@ -362,12 +363,29 @@ export function initMultiplayer(G, api) {
     Sound.chime(); say('👋 A friend waves at you!', true);
     if (o) { o.waveAt = now; if (o.waveM) o.waveM.visible = true; }
   }
+  // ----- (build 106) MAGIC BUBBLES: blown at the nearest friend; the friend's own phone floats them up (see bubbles.js) -----
+  const bubFrom = new THREE.Vector3();
+  const modelAt = o => () => o && o.model && o.model.root.visible ? new THREE.Vector3(o.model.root.position.x, o.model.root.position.y + (G.headTop || 1.8) * .5, o.model.root.position.z) : null;
+  function blowBubble() {
+    const B = G.bubbles; if (!B || !room || !T) return; const now = performance.now(), targets = [];
+    for (const o of others.values()) { const st = o.interp.at(now); if (!st || !o.model) continue; targets.push({ id: o.id, pos: new THREE.Vector3(st.x, st.y, st.z), ok: st.l === (P.layer || '') && !st.r && !st.h && !st.b && o.model.root.visible, live: modelAt(o) }); }
+    const to = B.blow(targets); if (to === null) return; if (T.sendEvent) T.sendEvent({ t: 'bubble', by: T.id, to });
+  }
+  function seenBubble(e) {
+    const B = G.bubbles, o = others.get(e.by); if (!B || !o || !o.model || !o.model.root.visible) return;
+    bubFrom.set(o.model.root.position.x + (o.model.root.position.x < P.x ? .5 : -.5), o.model.root.position.y + (G.headTop || 1.8) * .8, o.model.root.position.z);
+    if (e.to && T && e.to === T.id) B.seen(bubFrom, () => new THREE.Vector3(P.x, P.y + (G.headTop || 1.8) * .5, P.z || 0), true, e.by);
+    else if (e.to && others.get(e.to)) B.seen(bubFrom, modelAt(others.get(e.to)), false, e.by);
+    else { const end = bubFrom.clone().add(new THREE.Vector3(o.model.root.position.x < P.x ? 6 : -6, 1.2, 0)); B.seen(bubFrom, () => end, false, e.by); }
+  }
+  if (G.bubbles) G.bubbles.bindBlow(blowBubble);
   function onEvent(evt) {
     if (!room) return;
     const e = sanitizeEvent(evt || {});
     if (!e) return;
     if (e.by && T && e.by === T.id) return;
     if (e.at && Date.now() - e.at > 20000) return; // (an old one from before you joined)
+    if (e.t === 'bubble') { seenBubble(e); return; }
     showWave(e.by);
   }
 
@@ -434,7 +452,7 @@ export function initMultiplayer(G, api) {
   // train is the shared one: every other screen moves its train to the driver's seat, so it is the same train everywhere;
   // passengers sit in their own seats behind the driver and get off together when the driver gets off.
   let trainWith = null; const trainSnap = new THREE.Vector3();
-  function trainRiders(now) { const out = []; for (const o of others.values()) { o.tsnap = null; if (P.layer !== '') continue; const st = o.interp.at(now); if (!st || !st.r || st.l !== '' || Math.abs(st.z - 3.2) > .8 || st.y > 1.4) continue; out.push({ o, st }); } return out; }
+  function trainRiders(now) { const out = []; for (const o of others.values()) { o.tsnap = null; if (P.layer !== '') continue; const st = o.interp.at(now); if (!st || !st.r || st.b || st.l !== '' || Math.abs(st.z - 3.2) > .8 || st.y > 1.4) continue; out.push({ o, st }); } return out; }
   function trainTogether(now) {
     const TR = G.train; if (!TR || !TR.followFriend) return; const rs = trainRiders(now), mine = P.ride && P.ride.type === 'train';
     if (mine && !P.ride.passenger) { // I drive: friends riding with me sit in the seats behind me, in order
@@ -452,10 +470,11 @@ export function initMultiplayer(G, api) {
   // Nothing new is sent: a friend riding along the water channel is on the log. The log holds two: while you ride, a friend
   // on the log with you sits behind you; while you watch, your log carries the friend; standing at the station as a friend
   // sets off, you hop in behind them (or tap the log), and you get out together at the end.
+  let bubShown = false;
   let logOut = false, logJoinedAt = -1e9, logWas = false, logCand = null;
   function logTogether(now) {
     const L = G.venusLog; logCand = null; if (!L || P.layer !== 'space' || !L.alive()) { logOut = false; return; }
-    const rs = []; for (const o of others.values()) { const st = o.interp.at(now); if (!st || !st.r || st.l !== 'space' || Math.abs(st.x - P.x) > 120 || !L.onFlume(st.x, st.y, st.z)) continue; rs.push({ o, st }); }
+    const rs = []; for (const o of others.values()) { const st = o.interp.at(now); if (!st || !st.r || st.b || st.l !== 'space' || Math.abs(st.x - P.x) > 120 || !L.onFlume(st.x, st.y, st.z)) continue; rs.push({ o, st }); }
     const mine = P.ride && P.ride.type === 'logride'; if (logWas && !mine) logJoinedAt = now; logWas = mine;
     if (mine) { if (P.ride.passenger) return; let n = null, nd = 5; for (const r of rs) { const d = Math.hypot(r.st.x - P.x, r.st.y - P.y, r.st.z - P.z); if (d < nd) { nd = d; n = r; } }
       if (n) n.o.snap = L.seatBehind(n.o.snapL || (n.o.snapL = [0, 0, 0])); logOut = false; return; }
@@ -483,7 +502,7 @@ export function initMultiplayer(G, api) {
   function coasterTogether(now) {
     const C = G.moonCoaster; const riders = [];
     for (const o of others.values()) { o.snap = null; if (!C || !C.ready || !C.CAR_GAP || P.layer !== 'space') { o.ci = null; continue; }
-      const st = o.interp.at(now); if (!st || !st.r || st.l !== 'space') { o.ci = null; continue; }
+      const st = o.interp.at(now); if (!st || !st.r || st.b || st.l !== 'space') { o.ci = null; continue; }
       const [i, d] = nearI(C, st.x, st.y, st.z, o.ci); if (i < 0 || d > 3) { o.ci = null; continue; } o.ci = i; riders.push(o); }
     const mine = P.ride && P.ride.type === 'coaster';
     if (wasMine && !mine) joinedAt = now; wasMine = mine; /* (after your own ride: no hopping straight back on) */
@@ -497,9 +516,10 @@ export function initMultiplayer(G, api) {
       if (!P.ride && front < C.homeI + 70 && now - joinedAt > 20000 && Math.abs(P.x - (C.stationX - 4)) < 9 && P.y < 1.6 && Math.abs((P.z || 0) + 1) < 3 && G.startCoaster) {
         const seat = [1, 2, 3].find(k => !occupied.has(k)); if (seat != null) { joinedAt = now; trainOut = false; G.startCoaster(C, { i: front + 1, seat }); say('🎢 You hop on the coaster with your friend!', true); Sound.chime && Sound.chime(); } } }
   }
-  function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']) }; }
+  function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']), b: G.bubbles && G.bubbles.stateFlag() ? 1 : null }; } /* (null: Firebase's update removes the flag again when the bubble pops) */ /* (build 106: b while inside a magic bubble) */
   function myPets() { const list = Array.isArray(world.pets) ? world.pets : []; return list.slice(0, LIMITS.pets).map(petKey); }
   function update(dt) {
+    if (G.bubbles && bubShown !== !!room) { bubShown = !!room; G.bubbles.showButton(bubShown); } /* (build 106: 🫧 only in a room) */
     if (!room) { if (logOut && G.venusLog) { G.venusLog.reset(); logOut = false; } return; } const now = performance.now();
     sendT -= dt; const s = myState(), key = JSON.stringify(s);
     if (T && online && ((key !== lastSent && sendT <= 0) || sendT < -2)) { T.send(s); lastSent = key; sendT = .125; }
@@ -514,9 +534,9 @@ export function initMultiplayer(G, api) {
       for (const pet of o.petModels) pet.root.visible = show;
       if (o.waveM) o.waveM.visible = show && now - (o.waveAt || 0) < 2200;
       const talking = vc.on && vc.speaking(o.id); if (o.talkM) o.talkM.visible = show && talking && !(o.waveM && o.waveM.visible);
-      if (!show) continue;
+      if (!show) { if (o.bubM && G.bubbles) G.bubbles.drop(o); continue; }
       if (o.snap) { st.x = o.snap[0]; st.y = o.snap[1]; st.z = o.snap[2]; } /* (build 100: a friend riding the coaster sits in their seat on YOUR train) */
-      R.position.set(st.x, st.y, st.z); o.ring.position.set(st.x, Math.max(0, st.g ? st.y : st.y - 2) + .03, st.z); o.mark.position.set(st.x, st.y + (G.headTop || 2) + .6 + Math.sin(now / 300) * .08, st.z); o.mark.rotation.y = now / 600;
+      R.position.set(st.x, st.y, st.z); if (G.bubbles && (o.bubM || st.b)) G.bubbles.friend(o, !!st.b, R.position, G.headTop || 1.8, now / 1000); /* (build 106: a friend inside a magic bubble; it pops when they pop it) */ o.ring.position.set(st.x, Math.max(0, st.g ? st.y : st.y - 2) + .03, st.z); o.mark.position.set(st.x, st.y + (G.headTop || 2) + .6 + Math.sin(now / 300) * .08, st.z); o.mark.rotation.y = now / 600;
       o.model.update(dt, { vx: st.vx || 0, vy: st.vy || 0, grounded: st.g, seated: st.r, facing: st.f, happy: 0 });
       for (let i = 0; i < o.petModels.length; i++) {
         const pet = o.petModels[i], back = 1 + i * .6, side = i ? .45 : -.45;

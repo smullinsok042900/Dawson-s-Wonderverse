@@ -97,7 +97,10 @@ export function sanitizeObject(raw) {
 }
 
 // A wave: the only moment a room shares. Nothing else (and never any text) can arrive through this door.
+// (build 106) ...and a magic bubble blown at a friend: who blew it and at whom (a player id, or '' for nobody).
 export function sanitizeEvent(raw) {
-  if (!raw || typeof raw !== 'object' || raw.t !== 'wave') return null;
-  return { t: 'wave', by: typeof raw.by === 'string' ? raw.by.slice(0, 60) : '', at: Number(raw.at) || 0 };
+  if (!raw || typeof raw !== 'object' || (raw.t !== 'wave' && raw.t !== 'bubble')) return null;
+  const e = { t: raw.t, by: typeof raw.by === 'string' ? raw.by.slice(0, 60) : '', at: Number(raw.at) || 0 };
+  if (raw.t === 'bubble') e.to = typeof raw.to === 'string' ? raw.to.slice(0, 60) : '';
+  return e;
 }

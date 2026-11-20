@@ -50,6 +50,9 @@
               "a": {
                 ".validate": "newData.isString() && newData.val().length < 60"
               },
+              "b": {
+                ".validate": "newData.val() === 1"
+              },
               "$other": {
                 ".validate": false
               }
@@ -90,9 +93,12 @@
             ".read": "auth != null",
             "$key": {
               ".write": "auth != null",
-              ".validate": "newData.hasChildren(['t', 'by', 'at']) && newData.child('t').val() === 'wave' && newData.child('by').val() === auth.uid",
+              ".validate": "newData.hasChildren(['t', 'by', 'at']) && (newData.child('t').val() === 'wave' || newData.child('t').val() === 'bubble') && newData.child('by').val() === auth.uid",
               "t": {
-                ".validate": "newData.val() === 'wave'"
+                ".validate": "newData.val() === 'wave' || newData.val() === 'bubble'"
+              },
+              "to": {
+                ".validate": "newData.isString() && newData.val().length < 60"
               },
               "by": {
                 ".validate": "newData.isString() && newData.val().length < 60"
