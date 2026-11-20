@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 108 (Mars creatures)
+Desktop, software rendering; `pplanet.cjs mars`, builds 107 and 108, both orders: +125 144 → 133 ms (one 211 ms outlier on build 107 left out), +140 138 → 136, +221 132 → 131, +276 119 → 119; one more draw call where a creature is in view, +2 k triangles. A first version with creature shadows measured +125 138 → 143 and +140 135 → 137, so the creatures no longer cast shadows.
+
 ## Build 107 (the memory leak fixed; Moon creatures)
 Desktop, software rendering. **Memory while switching friends** (`renderer.info.memory`, shapes/textures): build 106 1,334/113 at the start → 1,385/157 after opening 👗 and three rounds through all the friends (it kept growing); build 107 1,324/109 → 1,332/114 and then flat. Planet trips (Moon, Mars, Venus and home, twice): shapes back to 1,334 at home each time. Speed (builds 106 and 107, both orders, run alone): Moon +30 130 → 127 ms, +50 126 → 121, +79 126 → 122 (one or two more draw calls where creatures are in view; triangles +3–5 k); Earth (`ba.cjs`) park 11.0 → 11.6 ms of script, creatures 10.6 → 9.3, castle 14.9 → 13.0, 115 shader programs in both, and less memory at the end of the run (shapes 1,378 → 1,365, textures 168 → 164).
 

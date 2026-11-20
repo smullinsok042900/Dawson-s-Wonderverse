@@ -83,7 +83,7 @@ const SHAPES = {};
 export function creatureMesh(kind) {
   const sp = SPECIES[kind]; if (!sp) return null;
   if (!SHAPES[kind]) { const b = makeBatch(); sp.build(b); SHAPES[kind] = b.geometry ? b.geometry() : b.mesh(shinyMat()).geometry; SHAPES[kind].userData.shared = true; }
-  const g = new THREE.Group(), body = new THREE.Group(); g.add(body); const m = new THREE.Mesh(SHAPES[kind], shinyMat()); m.castShadow = true; m.scale.setScalar(sp.size || 1); body.add(m);
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body); const m = new THREE.Mesh(SHAPES[kind], shinyMat()); m.castShadow = false; /* (build 108: no shadow pass: cheaper) */ m.scale.setScalar(sp.size || 1); body.add(m);
   g.userData.body = body; g.userData.kind = kind; g.userData.dynamic = true; return g;
 }
 // how a pet moves while following her (the 🐾 friends call this every frame)
