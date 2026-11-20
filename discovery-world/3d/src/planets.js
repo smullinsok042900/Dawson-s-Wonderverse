@@ -223,6 +223,7 @@ function bounceCastle(k, cx, w, cols, v, big) {
   k.tapIt(m, () => k.fact('🏰 Hop on the bouncy floor and bounce!', 'plutocastle'), cx, big ? 'plutocastle' : null);
 }
 const pluto = {
+  all(k) { populate(k, [['frostfluff', 12, -2.8], ['snowballkid', 24, -2.6], ['heartling', 34, -3.4], ['heartbun', 58, -3], ['charondot', 72, -2.8], ['snowpup', 86, -3], ['icehamster', 100, -2.8], ['icesquirrel', 316, -3], ['babyyak', 326, -3]]); }, // (build 116) Pluto friends and pets (planet-life.js); none on the ice-slide plain (+37 to +51)
   sections: [
     // ----- area 2: THE BOUNCE CASTLE PARK -----
     k => { const X = k.s0;
