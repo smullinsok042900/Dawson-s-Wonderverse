@@ -367,10 +367,14 @@ G.rideWheel = () => {
 // tunnel and the cave it moves along the track itself, so it always stays inside. A big ⏩ button skips back to the
 // station at any time; with the grown-ups' calm mode the whole ride runs slower.
 let coasterBtn = null;
+// (build 110) the extra big buttons (🏁 off the coaster, 🫧 blow a bubble, 💥 pop my bubble) sit just left of the 🐾 button,
+// in the bottom row: up at the top right they covered ⚙️ and 🔊 when the top buttons wrap onto several rows on a phone
+G.besidePaw = el => { const pb = document.getElementById('pawBtn'); if (!pb || !el) return; const r = pb.getBoundingClientRect(); if (!r.width) return; el.style.top = 'auto'; el.style.left = 'auto'; el.style.transform = 'none'; el.style.right = Math.round(innerWidth - r.left + 12) + 'px'; el.style.bottom = Math.round(innerHeight - r.bottom) + 'px'; };
+addEventListener('resize', () => { for (const id of ['coasterSkip', 'bubbleBtn', 'bubbleEsc']) { const el = document.getElementById(id); if (el) G.besidePaw(el); } });
 function coasterButton(show) {
   if (!coasterBtn) { coasterBtn = document.createElement('button'); coasterBtn.id = 'coasterSkip'; coasterBtn.className = 'pill'; coasterBtn.setAttribute('aria-label', 'get off the roller coaster'); coasterBtn.textContent = '🏁';
     coasterBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const R = player.ride; if (R && R.type === 'coaster') { R.skip = true; Sound.click(); } }); document.body.appendChild(coasterBtn); }
-  coasterBtn.classList.toggle('show', !!show);
+  coasterBtn.classList.toggle('show', !!show); if (show) G.besidePaw(coasterBtn);
 }
 G.startCoaster = (C, o = {}) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: o.i ?? (C.homeI || 0), seat: o.seat || 0, /* (build 100: riding together: start where a friend's train is, in your own seat) */ clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
 const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3(), e: new THREE.Vector3() };
@@ -1006,7 +1010,7 @@ const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFri
   Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; },
   opened: on => { G.dressOpen = on; if (on) { for (const kk in keys) keys[kk] = false; player.vx = 0; } }, /* (build 105: close-up of her friend beside the panel; no walking off while dressing) */
   cheer: slot => { const m = creature.parts && creature.parts.worn && creature.parts.worn[slot]; if (!m) return; m.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld); burst(p.x, p.y, p.z, ['#fff', '#ffe36e', '#ff9fd8', '#9fd8ff'], 14, 2.2); } });
-G.bubbles = initBubbles({ scene, P: player, keys, creature: () => creature, burst, Sound, say: m => toast(m), speak: t => voice.speak(t), headTop: () => G.headTop || 1.8, camPull: v => { G.camPull = v; } }); /* (build 106: only does anything inside a Play Together room) */
+G.bubbles = initBubbles({ scene, P: player, keys, creature: () => creature, burst, Sound, say: m => toast(m), speak: t => voice.speak(t), headTop: () => G.headTop || 1.8, camPull: v => { G.camPull = v; }, place: el => G.besidePaw(el) }); /* (build 106: only does anything inside a Play Together room) */
 G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.lifeMesh = lifeMesh; G.lifePets = LIFE_PETS; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
 { const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
   b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
@@ -1695,7 +1699,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '110'; G.build = GAME_BUILD;
+const GAME_BUILD = '111'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

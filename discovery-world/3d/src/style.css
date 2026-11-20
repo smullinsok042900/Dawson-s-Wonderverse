@@ -565,6 +565,8 @@ html.calm #learn .lgone span,html.calm #learn .lconf{visibility:hidden}
 #vcBtn{position:relative}
 #vcBtn .vcLive{position:absolute;top:4px;right:4px;width:11px;height:11px;border-radius:50%;background:#ff3b5c;box-shadow:0 0 0 2px #fff;animation:vcBlink 1.6s infinite}
 #vcBtn.muted{background:#ffe0e8}
+#vcBtn.muted .vcIc,#mpPanel .vcBig.muted{position:relative}#vcBtn.muted .vcIc::after,#mpPanel .vcBig.muted::after{content:"";position:absolute;inset:-2px;background:linear-gradient(45deg,transparent 44%,#ff3b5c 44%,#ff3b5c 56%,transparent 56%);pointer-events:none} /* (build 111: a microphone with a red line = off) */
+#vcBtn .vcIc{display:inline-block}
 #vcBtn.muted .vcLive{display:none}
 #vcBtn.talk{box-shadow:0 0 0 4px #3cc46e,0 0 18px 6px #9dffb5}
 @keyframes vcBlink{50%{opacity:.35}}

@@ -213,7 +213,8 @@ export function populate(k, spots) {
 let panel = null, cur = null;
 function befriend(k, c) {
   if (!panel) {
-    const st = document.createElement('style'); st.textContent = `#befriend{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(140%);transition:transform .22s;z-index:34;display:flex;gap:12px;padding:12px 14px;background:linear-gradient(160deg,#fffdf6,#ffe8f6);border:5px solid #fff;border-radius:30px;box-shadow:0 8px 0 #c26a9a55,0 18px 40px #29104c66}
+    const st = document.createElement('style'); st.textContent = `#befriend{position:fixed;left:50%;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 104px);transform:translateX(-50%) translateY(140%);transition:transform .22s;z-index:34;display:flex;gap:12px;padding:12px 14px;background:linear-gradient(160deg,#fffdf6,#ffe8f6);border:5px solid #fff;border-radius:30px;box-shadow:0 8px 0 #c26a9a55,0 18px 40px #29104c66}
+#befriend:not(.show){visibility:hidden;pointer-events:none;transition:transform .22s,visibility 0s .22s} /* (closed: it lets every tap through) */
 #befriend.show{transform:translateX(-50%) translateY(0)}#befriend button{border:none;width:clamp(64px,17vh,86px);height:clamp(64px,17vh,86px);border-radius:24px;background:#fff;box-shadow:0 5px 0 #f0b6d6;font-size:clamp(36px,10vh,50px);padding:0}
 #befriend button.x{background:#efe4ff;box-shadow:0 5px 0 #c9b6e8;font-size:30px;width:56px}`; document.head.appendChild(st);
     panel = document.createElement('div'); panel.id = 'befriend'; panel.innerHTML = ['✋', '🤗', '🍓', '⚽'].map((e, i) => `<button data-a="${i}" aria-label="${['pat', 'hug', 'treat', 'play'][i]}">${e}</button>`).join('') + '<button class="x" data-a="x" aria-label="not now">✖</button>'; document.body.appendChild(panel);
@@ -221,6 +222,9 @@ function befriend(k, c) {
   }
   const sp = c.sp; k.say(`${sp.emoji || '💖'} ${sp.name}! Pat it, hug it, give it a treat, or play!`, true);
   panel.classList.add('show');
+  // (build 111) it closes by itself: she walks away from the pet, gets on a ride or flies off, or after a while (it never
+  //  stays over the screen, covering other buttons)
+  const P = k.P, t0 = performance.now(), watch = () => { if (!cur) return; if (Math.abs(P.x - c.g.position.x) > 5 || P.ride || P.layer !== 'space' || performance.now() - t0 > 12000) { panel.classList.remove('show'); cur = null; return; } requestAnimationFrame(watch); }; requestAnimationFrame(watch);
   cur = a => {
     panel.classList.remove('show'); cur = null; if (a === 'x') return;
     const g = c.g, x = g.position.x, y = g.position.y, z = g.position.z;

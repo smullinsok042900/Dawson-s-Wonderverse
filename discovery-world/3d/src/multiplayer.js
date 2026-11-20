@@ -212,12 +212,14 @@ export function initMultiplayer(G, api) {
     Sound.chime(); say('🎤 Talking is on! Say hello to your friends!', true); api.discover && api.discover('mptalk');
   }
   function talkOff(quiet) { if (!vc.on) return; vc.stop(); if (T && T.setVoice) T.setVoice(false).catch(() => { }); if (!quiet) say('🎤 Talking is off.', true); }
-  function toggleMute() { if (!vc.on) return; vc.setMuted(!vc.muted); Sound.tone(vc.muted ? 330 : 660, .12, 'sine', .05, 1); say(vc.muted ? '🔇 Shh! Your friends can not hear you.' : '🎤 Your friends can hear you again!'); }
+  function toggleMute() { if (!vc.on) return; vc.setMuted(!vc.muted); Sound.tone(vc.muted ? 330 : 660, .12, 'sine', .05, 1); say(vc.muted ? '🎤 Microphone off: your friends can not hear you. Tap 🎤 again to talk!' : '🎤 Your friends can hear you again!', true); }
   let vcKey = '';
+  let mutedHint = -1e9;
   function voiceChanged() {
     vcBtn.style.display = vc.on ? '' : 'none';
+    if (vc.on && vc.muted && [...voiceIds].some(id => vc.speaking(id)) && performance.now() - mutedHint > 60000) { mutedHint = performance.now(); say('🎤 Your friend is talking to you! Your microphone is off: tap 🎤 to talk back.', true); } /* (build 111) */
     vcBtn.classList.toggle('muted', vc.muted); vcBtn.classList.toggle('talk', vc.meSpeaking());
-    vcBtn.querySelector('.vcIc').textContent = vc.muted ? '🔇' : '🎤';
+    vcBtn.querySelector('.vcIc').textContent = '🎤'; /* (build 111: always a microphone; muted = a red line through it. The 🔇 speaker looked like "sound off") */
     if (!panel.classList.contains('show') || !room) return;
     const key = [vc.on, vc.muted, voiceAllowed(), vc.volume].join();
     if (key !== vcKey) { render('room'); return; }
@@ -227,7 +229,7 @@ export function initMultiplayer(G, api) {
   function talkRow() {
     vcKey = [vc.on, vc.muted, voiceAllowed(), vc.volume].join();
     if (!vc.on) return `<div class="vcRow"><button class="vcBig${voiceAllowed() ? '' : ' locked'}" data-a="talk" aria-label="Turn on talking">🎤${voiceAllowed() ? '<b>▶</b>' : '<b>🔒</b>'}</button></div>`;
-    return `<div class="vcRow"><button class="vcBig on${vc.muted ? ' muted' : ''}" data-a="mute" aria-label="${vc.muted ? 'unmute' : 'mute'}">${vc.muted ? '🔇' : '🎤'}</button>` +
+    return `<div class="vcRow"><button class="vcBig on${vc.muted ? ' muted' : ''}" data-a="mute" aria-label="${vc.muted ? 'unmute' : 'mute'}">🎤</button>` +
       `<span class="vcVol">${VOLUMES.map((v, i) => `<button class="vcV${vc.volume === i ? ' on' : ''}" data-a="vol${i}" aria-label="volume ${i + 1}">${['🔈', '🔉', '🔊'][i]}</button>`).join('')}</span>` +
       `<button class="vcStop" data-a="talkoff" aria-label="Turn talking off">🎤<b>✖</b></button></div>`;
   }
