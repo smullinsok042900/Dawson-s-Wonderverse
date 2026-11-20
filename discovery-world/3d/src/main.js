@@ -40,6 +40,7 @@ import './new-friends.js'; // (build 101) more playable friends (they register t
 import './new-friends-2.js'; // (build 102) four more
 import { PICS as WEAR_PICS } from './accessory-pictures.js';
 import { initBubbles } from './bubbles.js';
+import { freeObject, freeLater } from './dispose.js'; // (build 107) free creatures that are put away
 import { creatureMesh as lifeMesh, PET_KINDS as LIFE_PETS } from './planet-life.js'; // (build 107) for the pet pictures and tests // (build 106) magic bubbles in Play Together
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS, accessoryMesh, CATS as WEAR_CATS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
@@ -174,7 +175,7 @@ const shadowMat = new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true,
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; blob.userData.dynamic = true; /* (build 33: it follows you; never part of a scenery slice) */ scene.add(blob);
 function groundUnder(x, y) { if (player.layer === 'sea') return SEA.floor; let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of G.platforms) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
 function setCreature(kind) {
-  if (creature) scene.remove(creature.root);
+  if (creature) { scene.remove(creature.root); freeLater(creature.root); } /* (build 107: free the old friend: it used to stay on the graphics chip) */
   player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root); wear(creature.parts, kind, (world.wear || {})[kind]); /* (build 101: her outfit for this friend) */
   { const bb = new THREE.Box3().setFromObject(creature.root); G.headTop = bb.max.y - creature.root.position.y; } // (for the princess crown)
   document.querySelectorAll('.creatureChoice').forEach(b => b.classList.toggle('chosen', b.dataset.c === kind));
@@ -1249,7 +1250,7 @@ function renderPortraits(kinds = Object.keys(CREATURES).filter(k => !CREATURES[k
       gl.readPixels(0, 0, 128, 128, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
       if (gl.isContextLost() || !pixels.some((v, i) => i % 4 < 3 && v !== pixels[i % 4])) throw new Error('Portrait readback is empty');
       for (let y = 0; y < 128; y++) picture.data.set(pixels.subarray((127 - y) * 512, (128 - y) * 512), y * 512);
-      g2.putImageData(picture, 0, 0); out[k] = c2.toDataURL(); s.remove(c.root);
+      g2.putImageData(picture, 0, 0); out[k] = c2.toDataURL(); s.remove(c.root); freeObject(c.root); /* (build 107) */
     }
   } finally {
     renderer.shadowMap.enabled = shadows;

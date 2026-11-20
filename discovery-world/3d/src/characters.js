@@ -14,7 +14,7 @@ import { plushNormal } from './nature.js';
 import { addFur } from './fur.js';
 
 const geoCache = new Map();
-const cached = (key, make) => { if (!geoCache.has(key)) geoCache.set(key, make()); return geoCache.get(key); };
+const cached = (key, make) => { if (!geoCache.has(key)) { const g = make(); g.userData.shared = true; geoCache.set(key, g); } return geoCache.get(key); }; /* (build 107: shared: never freed with one creature) */
 const shade = (hex, k) => '#' + new THREE.Color(hex).multiplyScalar(k).getHexString();
 const mixC = (a, b, t) => '#' + new THREE.Color(a).lerp(new THREE.Color(b), t).getHexString();
 
@@ -32,7 +32,7 @@ function irisTexture(color) {
   // fine radial fibres and a few bright flecks
   for (let i = 0; i < 220; i++) { const x = Math.random() * W, y0 = H * (.34 + Math.random() * .1), y1 = H * (.8 + Math.random() * .12); g.strokeStyle = `rgba(${Math.random() < .55 ? '255,255,240' : '20,10,40'},${.08 + Math.random() * .16})`; g.lineWidth = .8 + Math.random() * .8; g.beginPath(); g.moveTo(x, y0); g.quadraticCurveTo(x + (Math.random() - .5) * 6, (y0 + y1) / 2, x + (Math.random() - .5) * 4, y1); g.stroke(); }
   for (let i = 0; i < 26; i++) { g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(Math.random() * W, H * (.5 + Math.random() * .3), .8 + Math.random() * 1.4, 0, 7); g.fill(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; irisTexCache.set(color, t); return t;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4; t.userData.shared = true; irisTexCache.set(color, t); return t;
 }
 const SCLERA = new THREE.MeshPhysicalMaterial({ color: '#fdfbff', roughness: .3, clearcoat: .5, sheen: .3, sheenColor: new THREE.Color('#ffe8f4') });
 const CORNEA = new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0, metalness: 0, clearcoat: 1, clearcoatRoughness: 0, transparent: true, opacity: .12, depthWrite: false });
