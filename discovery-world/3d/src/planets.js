@@ -359,6 +359,7 @@ function uranusRink(k, cx) {
   k.tapIt(rink, () => { k.Sound.twinkle && k.Sound.twinkle(); k.api.burst(P.x, 1.6, P.z, ['#ffffff', '#cfefff', '#ffd23f'], 16, 2); k.fact('⛸️ Wheee! Walk onto the ice and let go to glide!', 'uranusrink'); }, cx, 'uranusrink');
 }
 const uranus = {
+  all(k) { populate(k, [['icepup', 12, -2.8], ['frosty', 27, -2.6], ['polarcub', 42, -3], ['snowman', 57, -3.4], ['sealpup', 72, -2.8], ['skatey', 87, -3], ['snowflake', 102, -3], ['babypenguin', 316, -3], ['icefly', 326, -2.8]]); }, // (build 114) Uranus friends and pets (planet-life.js)
   sections: [
     k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); uranusIceTunnels(k); /* (build 97) */ k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
     k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); uranusIceTrail(k); /* (build 94) */ k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
