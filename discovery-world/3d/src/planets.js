@@ -307,6 +307,7 @@ function jupiterSuperSlide(k, X) {
   return path;
 }
 const jupiter = {
+  all(k) { populate(k, [['balloonpup', 12, -2.8], ['zappy', 27, -2.6], ['cloudcub', 42, -3], ['swirly', 57, -3.2], ['jellyfloat', 72, -2.8], ['bigpuff', 87, -3.6], ['thunderchick', 102, -3], ['windkite', 316, -3], ['windbunny', 326, -2.8]]); }, // (build 112) Jupiter friends and pets (planet-life.js); its busy sky playground has none, to keep it light
   sections: [
     k => { jupiterPlayground(k, k.s0); jupiterSkyArea2(k); k.rocketSign(k.s0 + 1); },   // area 2: the playground + (build 70) the Sky Playground's towers, islands and games
     k => { jupiterSuperSlide(k, k.s0); jupiterSkyArea3(k); k.rocketSign(k.s0 + 104); },  // area 3: the super slide + (build 70) the Floaty Bubble, the Sky Lookout and its slides
