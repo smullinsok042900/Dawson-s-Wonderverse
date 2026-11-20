@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 115 (Neptune creatures)
+Desktop, software rendering; `pplanet.cjs neptune` (spots +60, +95, +150, +186, +320), builds 114 and 115, eight rounds (medians): +95 177 → 182 ms (three creatures in view: +4 draw calls, +6 k triangles), +150 174.5 → 173.5, +186 165.5 → 165, +320 130 → 133.5 (+2 draw calls); +60 is the landing spot (160–560 ms on both), not compared. Memory the same (shapes 1,320–1,338, textures 139–148). The creatures' own cost is about 1–2 ms each where they are in view, as on the other planets.
+
 ## Build 114 (Uranus creatures)
 Desktop, software rendering; `pplanet.cjs uranus` (spots +60, +95, +185, +270, +320), builds 113 and 114, four rounds (medians): +95 144 → 149 ms, +185 190 → 189.5, +270 156.5 → 156.75, +320 123 → 129; two to four more draw calls where creatures are in view, +4 k triangles; +60 is the landing spot (210–560 ms on both), not compared. Memory the same (shapes 1,330–1,338, textures 148).
 
