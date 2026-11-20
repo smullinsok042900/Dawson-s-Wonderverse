@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 112: Jupiter friends and pets
+- **On Jupiter:** Zappy the storm sprite, Swirly who spins and Big Puff the giant cloud, and six pets: Bobble, Wobble, Bolt, Nimbo, Kite and Gusty.
+
 ## 3D build 111: buttons out of the way
 - 🏁, 🫧 and 💥 now sit next to 🐾 at the bottom (they covered ⚙️ and 🔊). The talking button always shows a 🎤 (a red line through it = your microphone is off).
 
