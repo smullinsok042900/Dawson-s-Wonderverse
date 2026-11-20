@@ -374,7 +374,7 @@ const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector
 function coasterSample(C, i, arr, out) { const N = C.N, j0 = Math.max(0, Math.min(N - 1, Math.floor(i))), j1 = Math.min(N - 1, j0 + 1), f = Math.max(0, Math.min(1, i - j0)); return out.set(arr[j0 * 3] + (arr[j1 * 3] - arr[j0 * 3]) * f, arr[j0 * 3 + 1] + (arr[j1 * 3 + 1] - arr[j0 * 3 + 1]) * f, arr[j0 * 3 + 2] + (arr[j1 * 3 + 2] - arr[j0 * 3 + 2]) * f); }
 const COASTER_SAYS = { L: '🎢 Up, up, up! Look how high we go!', K: '🌋 Down into the GIANT crater!', T: '⛰️ Into the mountain tunnel!', C: '💎 Ooooh! A glowing crystal cave!', B: '🚀 BOOST! Zoom!' };
 function endCoaster(R) {
-  const P = player, C = R.C; C.placeTrain(C.homeI); P.ride = null; G.camOverride = null; coasterButton(false); if (C.mouthDark) C.mouthDark.visible = true;
+  const P = player, C = R.C; C.placeTrain(C.homeI); P.ride = null; G.camOverride = null; coasterButton(false);
   P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; creature.root.rotation.z = 0; snapCamera();
   burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast(R.skip ? '🎢 Back at the station! Tap the train to ride again.' : '🎢 WOW! What a ride! Tap the train to go again!'); discover('coaster', '🎢 The GIANT Moon roller coaster!');
 }
@@ -389,7 +389,7 @@ function coasterRide(dt, R) {
   if (f && f !== R.said && f !== 'S' && COASTER_SAYS[f]) { R.said = f; toast(COASTER_SAYS[f]); if (f === 'K' || f === 'B') Sound.whoosh(); }
   if (!f && R.said) R.said = '';
   if (!R.drop && j > 10 && C.flag[j - 10] === 'L' && f !== 'L') { R.drop = 1; Sound.whoosh(); voice.speak('Wheeeeee!'); }
-  C.placeTrain(R.i); if (C.mouthDark) C.mouthDark.visible = false; /* (build 105: riding: the camera goes through the mouths with the train) */
+  C.placeTrain(R.i);
   const pos = coasterSample(C, R.i, C.pos, CV.a), tg = coasterSample(C, R.i, C.tan, CV.t).normalize(), up = coasterSample(C, R.i, C.up, CV.u).normalize();
   P.x = pos.x + up.x * .55; P.y = pos.y + up.y * .55 - .25; P.z = pos.z + up.z * .55;
   if (R.seat) { /* (build 100) riding together: your own seat, further back in the train (the 4th rider shares the back car) */ const iS = Math.max(0, R.i - Math.min(2, R.seat) * (C.CAR_GAP || 4.8)), ps = coasterSample(C, iS, C.pos, CV.d), us = coasterSample(C, iS, C.up, CV.w).normalize();
@@ -399,7 +399,7 @@ function coasterRide(dt, R) {
   // and above, along the way the train is going (smoothed), and never rolls
   const ahead = C.flag[Math.min(N - 1, j + 30)], inTube = Mo => !!Mo && j >= Mo[0] - 30 && j <= Mo[3] + 14, inside = inTube(C.tunnelMouths) || inTube(C.caveMouths) || f === 'T' || f === 'C' || ahead === 'T' || ahead === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C')); /* (build 105: until the train is right out of the stone mouth, not just out of the rock: the high camera used to look at the outside of the mouth with the train inside it) */ /* (build 100: follow the track down into the tunnel and the cave BEFORE the entrance, so the camera never swoops through the mountain's rock) */
   let want;
-  if (inside) { let bk = 22; if (C.solid && C.solid[j]) while (bk > 1.5 && !C.solidCam[Math.max(0, Math.floor(R.i - bk))]) bk -= 1; while (bk > 4 && C.pos[Math.max(0, Math.floor(R.i - bk)) * 3 + 1] < pos.y - 2.4) bk -= 1; /* (build 105: on the steep climb out of the cave, follow closer instead of being lifted out through the wall) */ /* (build 105: going into the rock or under the ground, the camera waits at the opening until it can follow inside: it never looks at the outside of the rock with the train hidden behind it) */
+  if (inside) { let bk = 22; if (C.solid && C.solid[j]) while (bk > .3 && !C.solidCam[Math.max(0, Math.floor(R.i - bk))]) bk -= 1; if (bk < .3) bk = .3; while (bk > 4 && C.pos[Math.max(0, Math.floor(R.i - bk)) * 3 + 1] < pos.y - 2.4) bk -= 1; /* (build 105: on the steep climb out of the cave, follow closer instead of being lifted out through the wall) */ /* (build 105: going into the rock or under the ground, the camera waits just inside the opening (past its darkness) until it can follow: it never looks at the outside of the rock, or at the dark entrance, with the train hidden behind it) */
     want = coasterSample(C, Math.max(0, R.i - bk), C.pos, CV.e); /* (build 105: its OWN vector: it used to share CV.b with the look-ahead point below, so in the tunnel and the cave the camera flew to just in front of the train and looked at the walls) */ coasterSample(C, Math.max(0, R.i - bk), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); want.y = Math.max(want.y, pos.y + 1.4); } /* (build 100: on a steep climb the point behind is far below the cart; never look up at its underside) */
   else { const back = coasterSample(C, Math.max(0, R.i - 26), C.pos, CV.b); CV.d.subVectors(pos, back).setY(0); if (CV.d.lengthSq() < .01) CV.d.set(P.facing, 0, 0); CV.d.normalize();
     want = CV.w.copy(pos).addScaledVector(CV.d, -12).add(CV.b.set(0, 5.5, 0)); want.z += 2.5; want.y = Math.max(want.y, pos.y + 3); }

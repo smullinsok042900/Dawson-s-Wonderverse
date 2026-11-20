@@ -85,8 +85,8 @@ export function buildMoonCoaster(k) {
     skel.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), Math.max(4, pts.length * 2), r, 10, false), null, colr);
     V(openAt, pos, pA); skel.put(new THREE.TorusGeometry(r + .15, .4, 6, 22), pA.x, pA.y, pA.z, '#8a8a98', 1, ringRot(openAt)); };
   const darkOut = new THREE.CircleGeometry(1, 22), darkIn = new THREE.CircleGeometry(1, 22).rotateY(Math.PI);
-  const darkB = makeBatch(); /* (build 105: their own mesh, hidden while you ride: the riding camera follows the train through the mouth, and the darkness would cover the screen) */
-  const dark = (i, r, facingIn) => { V(i, pos, pA); darkB.put(facingIn ? darkIn : darkOut, pA.x, pA.y, pA.z, lit('#0b0812'), r, ringRot(i)); }; /* (the darkness inside the mouth, seen from outside only) */
+  /* (build 105: the riding camera never stops in front of an entrance's darkness: see solidCam below) */
+  const dark = (i, r, facingIn) => { V(i, pos, pA); skel.put(facingIn ? darkIn : darkOut, pA.x, pA.y, pA.z, '#0b0812', r, ringRot(i)); if (facingIn) for (let q = Math.max(0, i - 40); q <= i + 1; q++) C.solidCam[q] = 0; }; /* (the darkness inside the mouth, seen from outside only) */
   jobs.push(() => { const idx = tubeAround('T', 6.5, '#55556e', 64); if (!idx) return; const ball = new THREE.SphereGeometry(1, 12, 8);
     const rocks = []; for (let j = 64 + 20; j < idx.length - 64 - 20; j += 30) { V(idx[j], pos, pA); skel.put(ball, pA.x, pA.y - 8, pA.z, j % 60 ? '#9a9aa8' : '#b4b4c0', [20, 24, 20]); rocks.push([pA.x, pA.y - 8, pA.z]); }
     { const inR = i => { V(i, pos, pA); return rocks.some(([x, y, z]) => ((pA.x - x) / 20) ** 2 + ((pA.y - y) / 24) ** 2 + ((pA.z - z) / 20) ** 2 < .985); };
@@ -108,7 +108,7 @@ export function buildMoonCoaster(k) {
     for (const dx of [-11.5, 3.5]) { sb.put(cyl, sx + dx, 2.2, -.4, '#ffffff', [.16, 4.4, .16]); sb.put(cyl, sx + dx, 2.2, -4, '#ffffff', [.16, 4.4, .16]); }
     for (const dx of [-12, 4]) glow.put(new THREE.TorusGeometry(3.4, .16, 6, 30, Math.PI), sx + dx, 0, -2.4, '#62f0ff', 1, [0, Math.PI / 2, 0]); }
   // when all slices are done, the skeleton becomes two meshes
-  jobs.push(() => { const g2 = glow.mesh(glowMat); g2.name = 'coasterSkeleton'; g2.receiveShadow = false; root.add(g2); if (darkB.count === undefined || darkB.count) { const dm = darkB.mesh(glowMat); dm.name = 'coasterMouthDark'; dm.receiveShadow = false; root.add(dm); C.mouthDark = dm; } for (const h of hidden) h.grp.visible = true; try { k.api.compile && k.api.compile(root); } catch (e) { } check = 0; C.ready = true; });
+  jobs.push(() => { const g2 = glow.mesh(glowMat); g2.name = 'coasterSkeleton'; g2.receiveShadow = false; root.add(g2); for (const h of hidden) h.grp.visible = true; try { k.api.compile && k.api.compile(root); } catch (e) { } check = 0; C.ready = true; });
   k.U.push(() => { const t0 = performance.now(); while (jobs.length && performance.now() - t0 < 4) jobs.shift()(); });
 
   // ---------- the detailed rails and ties, streamed in 120 m pieces near the camera ----------
