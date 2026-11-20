@@ -763,6 +763,7 @@ function saturnRingRace(k, X) {
   k.tapIt(kart, () => go('race'), pad, 'saturnracego'); k.tapIt(sat, () => k.fact('🪐 Saturn\'s rings are so wide that the Earth could roll along them... many times over!', 'saturnrings'), C.x, 'saturnrings');
 }
 const saturn = {
+  all(k) { populate(k, [['halopup', 12, -2.8], ['ringo', 27, -2.8], ['skystar', 42, -3], ['zoomer', 57, -3], ['icechip', 72, -2.8], ['shimmer', 87, -3.4], ['cometkit', 102, -3], ['ringbird', 316, -3], ['gemmouse', 326, -2.8]]); }, // (build 113) Saturn friends and pets (planet-life.js)
   sections: [
     k => { saturnStarBlaster(k, k.s0); k.rocketSign(k.s0 + 4); },   // area 2: the Star Blaster
     k => { saturnRingRace(k, k.s0); k.rocketSign(k.s0 + 104); },    // area 3: the Ring Raceway
