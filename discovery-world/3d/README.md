@@ -12,7 +12,8 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
-## 3D build 107: Moon friends and pets
+## 3D build 107: less lag, Moon friends and pets
+- **Less lag:** switching friends (and dress-up) no longer leaves old friends behind in the phone's graphics memory.
 - **On the Moon:** Rocky the rolling rock, Lumi the lantern sprite and Boing the spring hopper to play with, and six pets to make friends with (✋ 🤗 🍓 ⚽).
 - **🐾 Friends** now come along everywhere, even to the planets in the rocket (up to four at once).
 

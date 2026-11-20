@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 107 (the memory leak fixed; Moon creatures)
+Desktop, software rendering. **Memory while switching friends** (`renderer.info.memory`, shapes/textures): build 106 1,334/113 at the start → 1,385/157 after opening 👗 and three rounds through all the friends (it kept growing); build 107 1,324/109 → 1,332/114 and then flat. Planet trips (Moon, Mars, Venus and home, twice): shapes back to 1,334 at home each time. MOON_SPEED
+
 ## Build 106 (magic bubbles)
 Desktop, software rendering; `ba.cjs`, builds 105 and 106, four rounds each in both orders. Script ms per frame (average and range): park 11.1 (10.4–12.1) → 11.4 (10.4–12.9); creatures 9.4 (8.3–10.7) → 8.5 (7.5–9.5); castle 10.5 (9.1–11.7) → 12.1 (10.7–12.9); shader programs 115 → 115; the same draw calls. Outside a room the new per-frame code was timed directly (200,000 calls): bubbles 0.016 µs a frame, the room update 0.010 µs, so the castle reading is noise, not the new code. In a room: one bubble is one mesh with the shared see-through material (no new shader); at most 8, reused.
 
