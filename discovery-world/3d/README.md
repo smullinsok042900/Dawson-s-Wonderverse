@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 109: Mercury friends and pets
+- **On Mercury:** Mo the mirror creature (he copies you!), Sunny the sun-flower and Pip-Pebble, and six pets: Cinder, Quartz, Glow, Flicker, Sparky and Blink.
+
 ## 3D build 108: Mars friends and pets
 - **On Mars:** Dusty the dust sprite, Bongo the drummer (jump and he drums along) and Chime the crystal kid, and six pets to make friends with: Sandy, Ruby, Pebbles, Ember, Dusk and Wiggles.
 
