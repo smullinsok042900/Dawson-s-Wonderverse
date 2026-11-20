@@ -649,6 +649,7 @@ function venusLogRide(k, X) {
   k.tapIt(pool, () => k.fact('🌊 The splash pool! Real Venus is far too hot for water, so this water is pretend!', 'venuspool'), pc.x, 'venuspool');
 }
 const venus = {
+  all(k) { populate(k, [['mistlamb', 14, -2.8], ['nimbus', 28, -2.6], ['airfish', 44, -2.8], ['coral', 58, -3.4], ['dewdrop', 74, -2.8], ['puffo', 88, -2.8], ['puffbird', 102, -3], ['cloudkit', 250, -3], ['sunsetfly', 290, -3]]); }, // (build 110) Venus friends and pets (planet-life.js)
   sections: [
     k => { venusLogRide(k, k.s0); k.rocketSign(k.s0 + 4); },   // area 2: the giant log ride
     k => { const X = k.s0; for (let i = 0; i < 6; i++) k.sball(X + 14 + i * 15, .4, -7 - (i % 3) * 2, 2 + (i % 2), 1.2, 1.6, '#d8a060', { r: .9 }); k.rocketSign(X + 100); },
