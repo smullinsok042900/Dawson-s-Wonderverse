@@ -261,6 +261,36 @@ export const SPECIES = {
   babyyak: { name: 'Yaki', planet: 'pluto', pet: true, move: 'hop', v: 1.2, r: 2.5, size: .95, hopH: .08, voice: 'Mooo, fluffy!', where: 'by the inflatable park', emoji: '🐂',
     build: b => { b.put(GEO.ball, 0, .38, -.04, '#d8c0a8', [.32, .3, .4]); for (let i = 0; i < 6; i++) b.put(GEO.ball, (i % 3 - 1) * .2, .2, -.2 + Math.floor(i / 3) * .3, '#c8a888', [.14, .2, .14]); b.put(GEO.ball, 0, .56, .34, '#e8d4c0', .2); b.put(GEO.ball, 0, .5, .5, '#f4e0d0', [.12, .09, .08]);
       for (const k of [-1, 1]) { b.put(GEO.cone, k * .16, .78, .34, '#fff4d8', [.04, .14, .04], [0, 0, -k * .6]); b.put(GEO.ball, k * .14, .06, .2, '#a88868', .07); b.put(GEO.ball, k * .14, .06, -.24, '#a88868', .07); } b.put(GEO.ball, 0, .74, .34, '#c8a888', [.14, .07, .1]); eyes(b, .62, .1, .5, .05); } },
+  // ---- EARTH (the Whispering Woods): characters (build 117) ----
+  puffball: { name: 'Puffy', planet: 'earth', move: 'float', v: 1, r: 2.5, size: 1, hover: .9, voice: 'Pfff, wish!',
+    build: b => { b.put(GEO.ball, 0, 0, 0, '#fffbe8', .3); for (let i = 0; i < 14; i++) { const a = i * 2.4, e = Math.acos(1 - 2 * (i + .5) / 14); const x = Math.sin(e) * Math.cos(a), y = Math.cos(e), z = Math.sin(e) * Math.sin(a); b.put(GEO.ball, x * .36, y * .36, z * .36, '#ffffff', .07); }
+      b.put(GEO.cyl, 0, -.6, 0, '#7fc86a', [.025, .6, .025]); b.put(GEO.ball, .1, -.66, 0, '#7fc86a', [.12, .03, .06], [0, 0, .5]); eyes(b, .04, .09, .28, .05); cheeks(b, -.04, .16, .26); smile(b, -.08, .3, .035); } },
+  shroomy: { name: 'Shroomy', planet: 'earth', move: 'bounce', v: 1.2, r: 2.5, size: 1, voice: 'Bounce on me!',
+    build: b => { b.put(GEO.cyl, 0, .3, 0, '#fff4e0', [.2, .3, .2]); b.put(GEO.ball, 0, .66, 0, '#ff5a5a', [.48, .3, .48]); for (let i = 0; i < 6; i++) { const a = i * 1.05; b.put(GEO.ball, Math.cos(a) * .3, .84 - (i % 2) * .06, Math.sin(a) * .3, '#ffffff', .07); } b.put(GEO.ball, 0, .94, 0, '#ffffff', .08);
+      for (const k of [-1, 1]) b.put(GEO.ball, k * .1, .02, .06, '#f0e0c8', [.09, .05, .12]); eyes(b, .36, .08, .2, .045); cheeks(b, .28, .15, .19); smile(b, .24, .21, .035); } },
+  twiggy: { name: 'Twiggy', planet: 'earth', move: 'hop', v: 1.2, r: 2.5, size: 1.05, hopH: .12, voice: 'Grow, grow, grow!',
+    build: b => { b.put(GEO.cyl, 0, .45, 0, '#9a6a3a', [.22, .45, .22]); b.put(GEO.cyl, 0, .92, 0, '#b07a4a', [.24, .03, .24]); for (let i = 0; i < 5; i++) b.put(GEO.cyl, 0, .92, 0, '#8a5a2a', [.19 - i * .035, .031, .19 - i * .035]); b.put(GEO.ball, 0, 1.1, 0, '#5fc86a', [.3, .2, .3]); b.put(GEO.ball, .14, 1.24, .08, '#ff9fd8', .07);
+      for (const k of [-1, 1]) { b.put(GEO.cyl, k * .3, .62, 0, '#8a5a2a', [.03, .22, .03], [0, 0, k * .9]); b.put(GEO.ball, k * .42, .74, 0, '#7fd87a', .07); b.put(GEO.ball, k * .1, .04, .06, '#7a4a2a', [.08, .05, .12]); } eyes(b, .62, .08, .22, .05); smile(b, .48, .23, .045); } },
+  // ---- EARTH: woodland pets and a fantasy foal ----
+  hedgehog: { name: 'Prickles', planet: 'earth', pet: true, move: 'hop', v: 1.4, r: 2.5, size: .8, hopH: .06, voice: 'Snuffle snuffle!', where: 'in the Whispering Woods', emoji: '🦔',
+    build: b => { b.put(GEO.ball, 0, .24, -.04, '#8a6a4a', [.3, .24, .32]); for (let i = 0; i < 14; i++) { const a = i * 2.4, e = .3 + (i % 5) * .25; b.put(GEO.cone, Math.cos(a) * Math.sin(e) * .26, .26 + Math.cos(e) * .22, -.06 + Math.sin(a) * Math.sin(e) * .26 - .04, '#6a4a2a', [.05, .16, .05], [Math.sin(a) * e, 0, -Math.cos(a) * e]); }
+      b.put(GEO.ball, 0, .2, .24, '#f0d8b8', [.17, .14, .16]); b.put(GEO.cone, 0, .18, .42, '#f0d8b8', [.07, .14, .07], [Math.PI / 2, 0, 0]); b.put(GEO.ball, 0, .18, .5, '#2a1a1a', .035); eyes(b, .26, .08, .36, .04); } },
+  fawn: { name: 'Dewey', planet: 'earth', pet: true, move: 'hop', v: 2, r: 3, size: .95, hopH: .2, voice: 'Mew, leap!', where: 'by the creek', emoji: '🦌',
+    build: b => { b.put(GEO.ball, 0, .56, -.04, '#c8885a', [.22, .2, .36]); for (let i = 0; i < 5; i++) b.put(GEO.ball, (i % 2 ? .1 : -.1), .64, -.24 + i * .1, '#fff4e8', .035); b.put(GEO.ball, 0, .9, .26, '#c8885a', .17); b.put(GEO.ball, 0, .84, .42, '#e8c8a8', [.09, .07, .09]); b.put(GEO.ball, 0, .86, .5, '#2a1a1a', .03);
+      for (const k of [-1, 1]) { b.put(GEO.ball, k * .17, 1.04, .2, '#c8885a', [.06, .12, .04], [0, 0, k * .8]); for (const z of [.18, -.24]) b.put(GEO.cyl, k * .12, .22, z, '#a8683a', [.035, .22, .035]); } b.put(GEO.ball, 0, .64, -.4, '#fff4e8', .06); eyes(b, .96, .08, .38, .05); } },
+  ladybug: { name: 'Dotty', planet: 'earth', pet: true, move: 'hop', v: 1.6, r: 2.5, size: .7, hopH: .05, voice: 'Tick tick, hello!', where: 'on the berry bushes', emoji: '🐞',
+    build: b => { b.put(GEO.ball, 0, .2, -.02, '#ff3a3a', [.3, .2, .34]); b.put(GEO.box, 0, .4, -.02, '#2a1a1a', [.02, .02, .6]); for (const [x, z] of [[-.14, .08], [.14, .08], [-.16, -.14], [.16, -.14], [0, -.26]]) b.put(GEO.ball, x, .36, z, '#2a1a1a', .06);
+      b.put(GEO.ball, 0, .18, .32, '#2a1a1a', .14); for (const k of [-1, 1]) b.put(GEO.cyl, k * .06, .36, .4, '#2a1a1a', [.01, .14, .01], [.4, 0, k * .4]); eyes(b, .22, .07, .44, .045); } },
+  raccoonkit: { name: 'Bandit', planet: 'earth', pet: true, move: 'hop', v: 2, r: 2.5, size: .85, hopH: .12, voice: 'Chirr, peekaboo!', where: 'near the foxes\' den', emoji: '🦝',
+    build: b => { b.put(GEO.ball, 0, .32, -.04, '#9a9aa4', [.26, .24, .32]); b.put(GEO.ball, 0, .6, .18, '#a8a8b0', .22); b.put(GEO.ball, 0, .6, .34, '#3a3a44', [.2, .07, .08]); b.put(GEO.ball, 0, .52, .38, '#ffffff', [.09, .07, .08]); b.put(GEO.ball, 0, .54, .46, '#2a2a2a', .03);
+      for (const k of [-1, 1]) { b.put(GEO.cone, k * .14, .82, .14, '#7a7a84', [.07, .12, .05]); b.put(GEO.ball, k * .14, .08, .12, '#5a5a64', .08); } for (let i = 0; i < 4; i++) b.put(GEO.ball, 0, .36 + i * .06, -.38 - i * .1, i % 2 ? '#3a3a44' : '#c8c8d0', .1); eyes(b, .62, .08, .38, .045); } },
+  otterpup: { name: 'Splashy', planet: 'earth', pet: true, move: 'slide', v: 1.2, r: 2.5, size: .85, voice: 'Squeak, splash!', where: 'by the creek', emoji: '🦦',
+    build: b => { b.put(GEO.ball, 0, .2, -.06, '#8a5a3a', [.2, .18, .42]); b.put(GEO.ball, 0, .3, .32, '#9a6a4a', .18); b.put(GEO.ball, 0, .26, .46, '#e8c8a8', [.1, .08, .06]); b.put(GEO.ball, 0, .3, .52, '#2a1a1a', .03); b.put(GEO.ball, 0, .14, .1, '#e8c8a8', [.14, .1, .26]);
+      for (const k of [-1, 1]) { b.put(GEO.ball, k * .14, .44, .28, '#7a4a2a', .04); b.put(GEO.ball, k * .18, .06, .16, '#7a4a2a', [.07, .04, .08]); } b.put(GEO.cone, 0, .14, -.6, '#8a5a3a', [.08, .3, .05], [-Math.PI / 2, 0, 0]); eyes(b, .38, .08, .44, .045); } },
+  unicornfoal: { name: 'Sparkle', planet: 'earth', pet: true, move: 'hop', v: 1.8, r: 3, size: .95, hopH: .18, voice: 'Neigh, sparkle!', where: 'deep in the woods', emoji: '🦄',
+    build: b => { b.put(GEO.ball, 0, .56, -.04, '#ffffff', [.24, .22, .36]); b.put(GEO.ball, 0, .9, .26, '#ffffff', .18); b.put(GEO.ball, 0, .84, .44, '#ffe8f4', [.1, .08, .1]); b.put(GEO.cone, 0, 1.14, .3, '#ffd23f', [.04, .22, .04], [.3, 0, 0]);
+      for (let i = 0; i < 4; i++) b.put(GEO.ball, 0, 1.02 - i * .1, .1 - i * .08, ['#ff9fd8', '#c9a6ff', '#9fd8ff', '#7fe0a0'][i], .08); for (const k of [-1, 1]) { b.put(GEO.cone, k * .1, 1.08, .18, '#ffffff', [.04, .08, .03]); for (const z of [.18, -.24]) b.put(GEO.cyl, k * .12, .22, z, '#fff4fa', [.04, .22, .04]); }
+      for (let i = 0; i < 3; i++) b.put(GEO.ball, 0, .6 - i * .08, -.42 - i * .06, ['#ff9fd8', '#c9a6ff', '#9fd8ff'][i], .08); eyes(b, .96, .08, .38, .05); cheeks(b, .86, .14, .38); } },
 };
 export const PET_KINDS = Object.keys(SPECIES).filter(k => SPECIES[k].pet);
 
@@ -324,6 +354,9 @@ export function populate(k, spots) {
     else if (c.kind === 'snowballkid') { k.say('⛄ Snowball fight! Here comes a soft one!', true); for (let i = 0; i <= 8; i++) setTimeout(() => { const f = i / 8; k.api.burst(c.x + (P.x - c.x) * f, 1 + Math.sin(f * Math.PI) * 2.4 + (P.y - .2) * f, c.z + ((P.z || 0) - c.z) * f, ['#ffffff'], 2, .3); if (i === 8) { k.api.burst(P.x, P.y + 1, P.z || 0, ['#ffffff', '#e0ecff'], 22, 2.4); k.Sound.whoosh && k.Sound.whoosh(); k.say('😄 Splat! Hee hee!', false); } }, i * 70); }
     else if (c.kind === 'heartling') { k.say('💗 I love you! Lovey sends you hearts!', true); c.twirl = 2.5; for (let i = 0; i < 6; i++) setTimeout(() => { k.api.burst(c.x + (Math.random() - .5) * 2, c.g.position.y + .5 + i * .2, c.z, ['#ff6f9a', '#ff9fc8', '#ffffff'], 6, 1); if (i < 4) k.Sound.tone(i % 2 ? 98 : 82, .14, 'sine', .08, .5); }, i * 220); }
     else if (c.kind === 'charondot') { k.say('🌑 Dance with me! Pluto and Charon dance round and round!', true); c.orbit = 6; k.Sound.chime && k.Sound.chime(); }
+    else if (c.kind === 'puffball') { k.say('🌬️ Pfff! Puffy blows wishing seeds for you!', true); c.act = 1.2; for (let i = 0; i < 12; i++) setTimeout(() => k.api.burst(c.x + i * .5 * (P.x > c.x ? -1 : 1), c.g.position.y + .4 + i * .15, c.z + .5, ['#ffffff', '#fffbe8'], 2, .4), i * 120); k.Sound.whoosh && k.Sound.whoosh(); }
+    else if (c.kind === 'shroomy') { k.say('🍄 Boing boing! Jump with Shroomy!', true); c.bounceBig = 2.2; }
+    else if (c.kind === 'twiggy') { k.say('🌸 Grow, grow, grow! Twiggy makes flowers bloom!', true); for (let i = 0; i < 7; i++) setTimeout(() => { k.api.burst(P.x + (i - 3) * .9, .2, (P.z || 0) - .6, [['#ff9fd8', '#ffe36e', '#c9a6ff', '#ffffff', '#ff6f9a', '#9fd8ff', '#7fe0a0'][i], '#7fd87a'], 8, 1.2); k.Sound.tone(523 + i * 60, .12, 'triangle', .04, 1.2); }, i * 140); c.act = 1; }
     else if (c.kind === 'dusty') { k.say('🌪️ Whoosh! Dusty makes a little dust twirl!', true); c.twirl = 2.5; for (let i = 0; i < 6; i++) setTimeout(() => k.api.burst(c.x, .3 + i * .4, c.z, ['#f0b888', '#f8d0a8', '#ffffff'], 6, 1.4), i * 150); }
     else if (c.kind === 'drummer') { k.say('🥁 Boom boom tap! Jump and Bongo plays along!', true); c.band = 8; [0, 1, 2, 3].forEach(i => setTimeout(() => { k.Sound.tone(i % 2 ? 160 : 110, .14, 'triangle', .09, .5); c.act = .4; }, i * 260)); }
     else if (c.kind === 'crystalkid') { k.say('🎶 Ting ting! Chime sings for you!', true); [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => { k.Sound.tone(f, .3, 'sine', .06, 1); k.api.burst(c.x, 1.3 + i * .2, c.z, ['#ff6fd8', '#62f0ff', '#ffe36e', '#7dffb0'][i], 6, 1.2); }, i * 220)); }
@@ -332,7 +365,7 @@ export function populate(k, spots) {
   // only creatures near the camera move; a few at a time
   k.U.push((dt, t) => {
     for (const c of list) {
-      if (c.gone) continue; const far = Math.abs(c.x - P.x) > 45 || P.layer !== 'space'; c.g.visible = !far; if (far) continue;
+      if (c.gone) continue; const far = Math.abs(c.x - P.x) > 45 || P.layer !== (k.layer ?? 'space'); c.g.visible = !far; if (far) continue;
       const sp = c.sp, near = Math.abs(P.x - c.x) < 4 && Math.abs(P.y - (c.g.position.y)) < 3;
       if (near && !c.greeted) { c.greeted = true; c.act = Math.max(c.act, .8); k.say(sp.pet ? `${sp.emoji || '💖'} ${sp.name} waves at you! Tap to make friends!` : `👋 ${sp.name}: ${sp.voice}`, false); }
       if (!near && Math.abs(P.x - c.x) > 10) c.greeted = false;
@@ -374,7 +407,7 @@ function befriend(k, c) {
   panel.classList.add('show');
   // (build 111) it closes by itself: she walks away from the pet, gets on a ride or flies off, or after a while (it never
   //  stays over the screen, covering other buttons)
-  const P = k.P, t0 = performance.now(), watch = () => { if (!cur) return; if (Math.abs(P.x - c.g.position.x) > 5 || P.ride || P.layer !== 'space' || performance.now() - t0 > 12000) { panel.classList.remove('show'); cur = null; return; } requestAnimationFrame(watch); }; requestAnimationFrame(watch);
+  const P = k.P, t0 = performance.now(), watch = () => { if (!cur) return; if (Math.abs(P.x - c.g.position.x) > 5 || P.ride || P.layer !== (k.layer ?? 'space') || performance.now() - t0 > 12000) { panel.classList.remove('show'); cur = null; return; } requestAnimationFrame(watch); }; requestAnimationFrame(watch);
   cur = a => {
     panel.classList.remove('show'); cur = null; if (a === 'x') return;
     const g = c.g, x = g.position.x, y = g.position.y, z = g.position.z;

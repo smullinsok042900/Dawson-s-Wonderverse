@@ -5,7 +5,7 @@
 const { chromium } = require('playwright'); const path = require('path'); const fs = require('fs');
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  const p = await (await b.newContext({ viewport: { width: 900, height: 2400 }, deviceScaleFactor: 1 })).newPage();
+  const p = await (await b.newContext({ viewport: { width: 900, height: 2650 }, deviceScaleFactor: 1 })).newPage();
   await p.goto('file://' + path.resolve(__dirname, '..', 'index.html') + '?test', { timeout: 600000 });
   await p.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 });
   const out = await p.evaluate(() => {
@@ -17,7 +17,7 @@ const { chromium } = require('playwright'); const path = require('path'); const 
     const cam = new THREE.PerspectiveCamera(26, 1, .01, 50), box = new THREE.Box3(), c = new THREE.Vector3(), sz = new THREE.Vector3();
     // the side each thing is best seen from: things for the back from behind, everything else from the front, a little from above
     for (const id of G.lifePets) {
-      const m = G.lifeMesh(id); s.add(m); m.rotation.y = { glowsnail: 1.15, orbiter: .2, sandsnake: 1.2, pebbleturtle: .8, marsmoth: .2, sparkmouse: .9, airfish: .8, sunsetfly: .2, windkite: 0, sealpup: .9, snowflake: 0, icefly: .6, seadragon: .9, gloworb: 0, icesquirrel: .8, babyyak: .6 }[id] ?? .45; /* (the snail from the side, so its shell shows) */ m.updateMatrixWorld(true);
+      const m = G.lifeMesh(id); s.add(m); m.rotation.y = { glowsnail: 1.15, orbiter: .2, sandsnake: 1.2, pebbleturtle: .8, marsmoth: .2, sparkmouse: .9, airfish: .8, sunsetfly: .2, windkite: 0, sealpup: .9, snowflake: 0, icefly: .6, seadragon: .9, gloworb: 0, icesquirrel: .8, babyyak: .6, hedgehog: .7, fawn: .7, otterpup: .9, unicornfoal: .7, ladybug: .5 }[id] ?? .45; /* (the snail from the side, so its shell shows) */ m.updateMatrixWorld(true);
       box.setFromObject(m); box.getCenter(c); box.getSize(sz); const rad = Math.max(sz.x, sz.y, sz.z) * .52 + .02;
       const v = new THREE.Vector3(.25, .3, 1).normalize(), d = rad / Math.sin(THREE.MathUtils.degToRad(cam.fov / 2));
       cam.position.copy(c).addScaledVector(v, d); cam.lookAt(c); cam.updateMatrixWorld();
