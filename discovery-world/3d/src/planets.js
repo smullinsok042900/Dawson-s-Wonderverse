@@ -525,6 +525,7 @@ function neptuneSkydive(k, X) {
   k.tapIt(glass, go, cx, 'neptuneskydivego'); k.tapIt(fan, go);
 }
 const neptune = {
+  all(k) { populate(k, [['gloworb', 12, -2.8], ['whirly', 27, -2.6], ['windpup', 36, -3], ['glowjelly', 54, -3.6], ['bluejelly', 76, -2.8], ['windwhale', 88, -3.8], ['seadragon', 102, -3], ['wavebun', 316, -3], ['stormcat', 326, -2.8]]); }, // (build 115) Neptune friends and pets (planet-life.js); none at the windsock (+44) or the geyser (+64)
   sections: [
     k => { neptuneWindSwings(k, k.s0); neptuneDoubleSwing(k, k.s0); neptuneBungee2(k, k.s0); k.rocketSign(k.s0 + 4); },  // (build 71: the bungee you control)   // area 2: the wind swings and the bungee tower
     k => { neptuneSkydive(k, k.s0); neptuneSkyDive(k, k.s0); k.rocketSign(k.s0 + 100); },  // (build 71: + the Big Sky Dive you steer)                             // area 3: the skydiving chamber
