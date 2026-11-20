@@ -102,7 +102,8 @@ A tour of every district found these still looking like placeholders. Do them in
 - **Play Together, a world you share (build 56): paste the database rules once** (`firebase-rules.json`, step 3 of
   `MULTIPLAYER.md`), check that anonymous sign-in is on, then test on two real devices: build together, paint together,
   see a friend's pets, wave, leave and rejoin (the room keeps its world). The first push runs the new GitHub build.
-- **Two real phones in one room (builds 100–103):** the shared rocket, the Moon coaster together, the outfit, and the Earth
+- **Paste the database rules once more (build 106: magic bubbles):** `firebase-rules.json` into the Firebase console.
+- **Two real phones in one room (builds 100–106):** the shared rocket, the Moon coaster together, the outfit, and the Earth
   train together (one drives, the other taps the train at the station, ride, get off together), and the Venus log ride
   together (build 104). Desktop tests pass; never tried on phones.
 - Multiplayer still to share: other multi-seat rides (Jupiter's rides, the Saturn karts); hugs, high-fives, dancing; co-op activities;

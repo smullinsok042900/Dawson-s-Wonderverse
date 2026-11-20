@@ -109,6 +109,20 @@ Everyone in the room uses **the same rocket** on each launch pad:
 again, the shared rocket simply does not appear (each phone flies its own rocket, as before) and everything else in a
 room works exactly as it did. After publishing, it works at once (no update needed on the phones).
 
+## Magic bubbles (build 106)
+- In a room there is a big 🫧 button. Tap it and your friend blows a rainbow bubble at the nearest friend (it aims for
+  you: no aiming needed; if nobody is near, the bubble just floats off and pops).
+- The friend it reaches is lifted up inside the bubble, swaying, about four of their own heights; they can steer it a
+  little with ◀ ▶, and tap the big 💥 (or JUMP) to pop it at once. Otherwise it pops by itself after a few seconds.
+  Pop: a burst of little bubbles, a fall, a soft bounce and dizzy stars. No damage, nothing lost.
+- Fair play: a short wait between bubbles; after landing you cannot be bubbled again for a while; no bubbles on rides,
+  in the rocket, indoors or under water; and the 🫧 in the room panel switches bubbles off on this phone (crossed out =
+  off: nobody can bubble you, and your own 🫧 button hides).
+- What is sent: one tiny event when a bubble is blown (who, at whom), and `b: 1` in your player state while you are inside
+  a bubble. Your own phone moves you, so everyone sees the same float through the positions already sent.
+- **Needs the rules once more** (the event type `bubble` and the `b` field). Until they are published again, bubbles are
+  simply refused by the database: nothing else in a room changes.
+
 ## The one thing left to do once: paste the rules
 
 1. Go to **console.firebase.google.com** and open the project (`dawsons-world`).

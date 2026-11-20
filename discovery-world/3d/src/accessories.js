@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
 import { attach } from './sculpt.js';
 import { glass as glassMat } from './jupiter-world.js';
+import { PICS } from './accessory-pictures.js'; // (build 105) a real picture of every accessory, made from its own 3D model (tools/make-accessory-pictures.cjs)
 
 // where things sit on each friend (positions on the character at rest, as in characters.js)
 export const FIT = {
@@ -30,10 +31,11 @@ const glassesFrame = (b, g, col, lens, shape = 'round') => { for (const s of [-1
 export const ITEMS = [
   // ---- head ----
   ['crown', 'head', '👑', (b, g) => { b.put(g.cyl, 0, .05, 0, '#ffd23f', [.2, .1, .2]); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; b.put(g.cone, Math.sin(a) * .18, .16, Math.cos(a) * .18, '#ffd23f', [.05, .14, .05]); b.put(g.ball, Math.sin(a) * .19, .06, Math.cos(a) * .19, ['#ff4f6a', '#5aa8ff', '#7fe0a0', '#ff6fd8', '#ffffff'][i], .03); } }],
-  ['tiara', 'head', '💎', (b, g) => { b.put(g.tor, 0, .02, 0, '#e8e8f4', [.2, .2, .7], [Math.PI / 2, 0, 0]); b.put(g.oct, 0, .12, .17, '#ff9fd2', [.06, .09, .03]); for (const s of [-1, 1]) b.put(g.oct, s * .1, .08, .15, '#9fd8ff', [.035, .055, .02]); }],
+  ['tiara', 'head', '💎', (b, g) => { b.put(g.tor, 0, .02, 0, '#e8e8f4', [.2, .2, .7], [Math.PI / 2, 0, 0]); /* (build 105: a sparkling crest of gems across the front, so it reads as a tiara) */
+    for (let k = -3; k <= 3; k++) { const a = k * .3, h = (3 - Math.abs(k)) * .028; b.put(g.cone, Math.sin(a) * .19, .07 + h / 2, Math.cos(a) * .19, '#e8e8f4', [.022, .07 + h, .022]); b.put(g.oct, Math.sin(a) * .195, .11 + h, Math.cos(a) * .195, k === 0 ? '#ff6fd8' : k % 2 ? '#9fd8ff' : '#c9a6ff', k === 0 ? [.05, .075, .03] : [.028, .042, .02]); } }],
   ['bow', 'head', '🎀', (b, g) => { for (const s of [-1, 1]) b.put(g.ball, s * .1, .06, .05, '#ff6fae', [.11, .07, .04], [0, 0, s * .4]); b.put(g.ball, 0, .06, .07, '#ff4f9a', .045); }],
-  ['partyhat', 'head', '🥳', (b, g) => { b.put(g.cone, 0, .16, 0, '#5aa8ff', [.13, .32, .13]); for (let i = 0; i < 3; i++) b.put(g.tor, 0, .05 + i * .09, 0, ['#ffd23f', '#ff6fae', '#7fe0a0'][i], [.13 - i * .035, .13 - i * .035, .35], [Math.PI / 2, 0, 0]); b.put(g.ball, 0, .34, 0, '#ffd23f', .045); }],
-  ['flowers', 'head', '🌸', (b, g) => { b.put(g.tor, 0, .03, 0, '#7fe0a0', [.2, .2, .45], [Math.PI / 2, 0, 0]); for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2, x = Math.sin(a) * .2, z = Math.cos(a) * .2; for (let q = 0; q < 5; q++) { const qa = q / 5 * Math.PI * 2; b.put(g.ball, x + Math.cos(qa) * .03, .06, z + Math.sin(qa) * .03, ['#ff9fd2', '#ffd23f', '#c9a6ff', '#ffffff', '#ff6fae', '#9fd8ff', '#ffb35c'][i], [.025, .018, .025]); } b.put(g.ball, x, .07, z, '#ffe36e', .018); } }],
+  ['partyhat', 'head', '🥳', (b, g) => { b.put(g.cone, 0, .16, 0, '#5aa8ff', [.13, .32, .13]); for (let i = 0; i < 3; i++) { const y = .04 + i * .085, r = .13 * (1 - y / .32) + .006; b.put(g.tor, 0, y, 0, ['#ffd23f', '#ff6fae', '#7fe0a0'][i], [r, r, .16], [Math.PI / 2, 0, 0]); } /* (build 105: stripes hugging the cone, not sticking out like a cake) */ b.put(g.ball, 0, .34, 0, '#ffd23f', .045); }],
+  ['flowers', 'head', '🌸', (b, g) => { b.put(g.tor, 0, .03, 0, '#7fe0a0', [.2, .2, .45], [Math.PI / 2, 0, 0]); for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2, x = Math.sin(a) * .2, z = Math.cos(a) * .2; for (let q = 0; q < 5; q++) { const qa = q / 5 * Math.PI * 2; b.put(g.ball, x + Math.cos(qa) * .042, .065, z + Math.sin(qa) * .042, ['#ff9fd2', '#ffd23f', '#c9a6ff', '#ffffff', '#ff6fae', '#9fd8ff', '#ffb35c'][i], [.036, .022, .036]); } b.put(g.ball, x, .078, z, '#ffe36e', .026); } }], // (build 105: bigger flowers, so they read as flowers)
   ['tophat', 'head', '🎩', (b, g) => { b.put(g.cyl, 0, .02, 0, '#3a2a5a', [.22, .03, .22]); b.put(g.cyl, 0, .14, 0, '#3a2a5a', [.13, .22, .13]); b.put(g.cyl, 0, .07, 0, '#ff6fae', [.135, .04, .135]); b.put(star(.04, .5, .02), .08, .1, .11, '#ffd23f'); }],
   ['starband', 'head', '⭐', (b, g) => { b.put(g.tor, 0, .02, 0, '#9b6cff', [.2, .2, .5], [Math.PI / 2, 0, 0]); for (const s of [-1, 1]) { b.put(g.cyl, s * .1, .14, .05, '#9b6cff', [.012, .2, .012], [0, 0, s * .25]); b.put(star(.06, .5, .03), s * .13, .25, .05, '#ffd23f'); } }],
   ['unicorn', 'head', '🦄', (b, g) => { b.put(g.cone, 0, .16, .12, '#fff3a6', [.05, .28, .05], [-.25, 0, 0]); for (let i = 0; i < 3; i++) b.put(g.tor, 0, .07 + i * .07, .135 - i * .02, '#ff9fd2', [.048 - i * .012, .048 - i * .012, .3], [Math.PI / 2 - .25, 0, 0]); }],
@@ -59,12 +61,24 @@ export const ITEMS = [
 export const SLOTS = [['head', '🎩'], ['face', '👓'], ['neck', '🧣'], ['back', '🦋']];
 // special ones are found on the planets (planet id -> item); found items are kept in world.wearFound
 export const FOUND = { moon: 'helmet', saturn: 'starband', pluto: 'flowers', neptune: 'wings', mars: 'rocketpack' };
+export const FOUND_ON = Object.fromEntries(Object.entries(FOUND).map(([pl, id]) => [id, pl]));
+// (build 105) THE SHELVES she picks from: simple picture groups, each shown by a picture of one of its things. (Where a
+//  thing is worn, its slot, is separate: a hat and a bow both sit on top of the head, so wearing one swaps the other.)
+export const CATS = [
+  ['hats', 'crown', ['crown', 'partyhat', 'tophat', 'unicorn', 'helmet']],
+  ['bows', 'bow', ['bow', 'tiara', 'starband', 'flowers']],
+  ['glasses', 'heartglasses', ['sunglasses', 'heartglasses', 'starglasses', 'roundglasses', 'goggles']],
+  ['necklaces', 'necklace', ['necklace', 'scarf', 'bowtie', 'medal']],
+  ['wings', 'wings', ['wings', 'cape']],
+  ['other', 'backpack', ['backpack', 'rocketpack', 'mask']],
+];
 
 const built = new Map(); let G0 = null;
 function itemMesh(id) { if (built.has(id)) return built.get(id); const it = ITEMS.find(q => q[0] === id); if (!it) return null; G0 = G0 || G();
   const b = makeBatch(); it[3](b, G0); const m = b.mesh(shinyMat()); m.castShadow = true; m.userData.acc = id; m.userData.opts = it[4] || {};
   if (it[4] && it[4].bubble) { const gb = makeBatch(); gb.put(new THREE.SphereGeometry(.46, 24, 16), 0, 0, 0, '#dff4ff'); const glass = gb.mesh(glassMat(.22)); /* (the shared see-through material the game prepares at start: no shader pause) */ glass.position.y = -.32; m.add(glass); }
   built.set(id, m); return m; }
+export const accessoryMesh = itemMesh; // (for the picture maker)
 export const slotOf = id => (ITEMS.find(q => q[0] === id) || [])[1] || null;
 export const fits = (kind, id) => { const sl = slotOf(id); return !!(sl && FIT[kind] && FIT[kind][sl]); };
 
@@ -84,51 +98,88 @@ export function tickWorn(P, t, run = 0) { if (!P || !P.worn) return; const w = P
 export const outfitCode = o => SLOTS.map(([s]) => (o && o[s]) || '').join('.');
 export const outfitFrom = code => { const o = {}; if (typeof code !== 'string' || code.length > 60) return o; code.split('.').forEach((id, i) => { if (id && ITEMS.some(q => q[0] === id && q[1] === SLOTS[i][0])) o[SLOTS[i][0]] = id; }); return o; };
 
-// ---------- the DRESS-UP panel: pictures only (no reading), one tap to wear or take off ----------
-// api: { world, save(), kinds: () => [[kind, pictureURL]], kind: () => current, setKind(k), rewear(), Sound, speak(text), spin(dx) }
+// ---------- (build 105) the DRESS-UP panel, like a children's dress-up game: pictures only, no reading ----------
+// The friends along the top; the shelves (picture tabs) below; the things on the chosen shelf in big picture cards.
+// One tap wears a thing at once (on the 3D friend beside the panel, close up); a second tap takes it off; the card worn
+// glows gold with a tick. The red button takes everything off. Things that do not fit this friend are not shown at all;
+// surprises not yet found show their picture greyed with a 🎁. Everything is saved straight away, for each friend.
+// api: { world, save(), kinds: () => [[kind, pictureURL]], kind: () => current, setKind(k), rewear(), Sound, speak(text),
+//        spin(dx), opened(open), cheer(slot) }
 export function initDressUp(api) {
-  const css = `#dressPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:50%;transform:translateY(-50%) translateX(-110%);transition:transform .25s;z-index:31;width:min(48vw,440px);max-height:88vh;overflow-y:auto;background:linear-gradient(160deg,#fffdf6,#f2e8ff);border:5px solid #fff;border-radius:28px;padding:10px;box-shadow:0 10px 0 #47216c55,0 24px 50px #29104c88;display:grid;gap:8px;touch-action:pan-y}
-#dressPanel.show{transform:translateY(-50%) translateX(0)}
-#dressPanel .dRow{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-#dressPanel button{border:none;border-radius:18px;background:#fff;box-shadow:0 4px 0 #c9b6e8;min-width:62px;min-height:62px;font-size:34px;padding:4px;line-height:1}
-#dressPanel button.on{background:#ffe36e;box-shadow:0 4px 0 #e0a800,0 0 0 4px #ff9fd2 inset}
-#dressPanel button.no{opacity:.28}
-#dressPanel .dKid img{width:54px;height:54px;border-radius:50%;display:block}
-#dressPanel .dKid.on{background:#c9f0ff;box-shadow:0 4px 0 #5aa8ff,0 0 0 4px #5aa8ff inset}
-#dressPanel .dTab{font-size:30px;min-width:56px;min-height:56px;background:#f4ecff}
-#dressPanel .dTab.on{background:#c9a6ff}
-#dressPanel .dDone{background:#7fe0a0;box-shadow:0 4px 0 #3a9a5a;font-size:36px;min-width:88px}
-#dressSpin{position:fixed;right:0;top:0;bottom:0;width:50vw;z-index:30;display:none;touch-action:none}
-#dressSpin.show{display:block}`;
+  const css = `#dressPanel{position:fixed;left:max(8px,env(safe-area-inset-left));top:8px;bottom:8px;transform:translateX(-115%);transition:transform .25s;z-index:31;width:min(55vw,560px);background:linear-gradient(160deg,#fffdf6,#f2e8ff);border:5px solid #fff;border-radius:26px;padding:8px;box-shadow:0 8px 0 #47216c55,0 20px 44px #29104c88;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
+#dressPanel.show{transform:translateX(0)}
+#dressPanel button{border:none;padding:0;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#dressPanel .dKids{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex:none;padding:2px 2px 4px;touch-action:pan-x;scrollbar-width:none}
+#dressPanel .dKid{flex:none;width:clamp(48px,13vh,64px);height:clamp(48px,13vh,64px);border-radius:50%;background:#fff;box-shadow:0 3px 0 #c9b6e8}
+#dressPanel .dKid img{width:100%;height:100%;border-radius:50%;display:block}
+#dressPanel .dKid.on{box-shadow:0 0 0 4px #5aa8ff,0 3px 0 #2f6fd0}
+#dressPanel .dShelves{display:flex;gap:6px;flex:none;align-items:center}
+#dressPanel .dTab{flex:1 1 0;max-width:84px;height:clamp(50px,14vh,70px);border-radius:18px;background:#efe4ff;box-shadow:0 4px 0 #c9b6e8;display:flex;align-items:center;justify-content:center}
+#dressPanel .dTab img{height:88%;max-width:92%;object-fit:contain;pointer-events:none}
+#dressPanel .dTab.on{background:#c9a6ff;box-shadow:0 4px 0 #8a5ad8,0 0 0 3px #fff inset}
+#dressPanel .dOff{flex:none;width:clamp(50px,14vh,70px);height:clamp(50px,14vh,70px);border-radius:50%;background:#ff6f7f;box-shadow:0 4px 0 #c23a4c;position:relative;margin-left:4px}
+#dressPanel .dOff img{position:absolute;inset:14%;width:72%;height:72%;object-fit:contain;filter:grayscale(.2);opacity:.9;pointer-events:none}
+#dressPanel .dOff::after{content:"";position:absolute;inset:10%;background:linear-gradient(45deg,transparent 44%,#fff 44%,#fff 56%,transparent 56%),linear-gradient(-45deg,transparent 44%,#fff 44%,#fff 56%,transparent 56%);pointer-events:none}
+#dressPanel .dItems{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(76px,22vh,104px),1fr));gap:8px;align-content:start;padding:4px 2px;touch-action:pan-y}
+#dressPanel .dItem{aspect-ratio:1;border-radius:22px;background:#fff;box-shadow:0 5px 0 #c9b6e8;position:relative;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+#dressPanel .dItem img{width:86%;height:86%;object-fit:contain;pointer-events:none}
+#dressPanel .dItem.on{background:radial-gradient(circle,#fff6b8,#ffd23f);box-shadow:0 5px 0 #d99a00,0 0 0 5px #ff6fae}
+#dressPanel .dItem.on::after{content:"✔";position:absolute;right:-4px;bottom:-4px;width:30px;height:30px;border-radius:50%;background:#3ac46a;color:#fff;font-size:19px;line-height:30px;text-align:center;box-shadow:0 2px 0 #1f8a45;pointer-events:none}
+#dressPanel .dItem.locked img{filter:grayscale(1) brightness(.75);opacity:.55}
+#dressPanel .dItem.locked::after{content:"🎁";position:absolute;right:2px;bottom:0;font-size:30px;pointer-events:none}
+#dressPanel .pop{animation:dPop .28s ease-out}
+@keyframes dPop{0%{transform:scale(1)}40%{transform:scale(1.18) rotate(-4deg)}100%{transform:scale(1)}}
+#dressDone{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:14px;z-index:32;width:84px;height:84px;border:none;border-radius:50%;background:#3ac46a;box-shadow:0 6px 0 #1f8a45,0 10px 24px #0005;color:#fff;font-size:46px;line-height:84px;display:none;padding:0}
+#dressDone.show{display:block}
+#dressSpin{position:fixed;right:0;top:0;bottom:0;left:min(58vw,580px);z-index:30;display:none;touch-action:none}
+#dressSpin.show{display:block}
+body.dressing #bottom,body.dressing #stick,body.dressing #paintTools,body.dressing #buildTools{visibility:hidden}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   const panel = document.createElement('div'); panel.id = 'dressPanel'; document.body.appendChild(panel);
   const spin = document.createElement('div'); spin.id = 'dressSpin'; document.body.appendChild(spin);
-  let slot = 'head', lastX = null;
+  const doneB = document.createElement('button'); doneB.id = 'dressDone'; doneB.textContent = '✔'; doneB.setAttribute('aria-label', 'done'); document.body.appendChild(doneB);
+  let cat = 'hats', lastX = null, popId = null;
   const W = () => { const w = api.world; w.wear = w.wear || {}; w.wearFound = w.wearFound || {}; return w; };
   const outfit = () => { const w = W(), k = api.kind(); return (w.wear[k] = w.wear[k] || {}); };
-  const found = id => { const locked = Object.values(FOUND).includes(id); return !locked || !!W().wearFound[id]; };
+  const found = id => !FOUND_ON[id] || !!W().wearFound[id];
+  const pic = id => PICS[id] || '';
+  const img = id => `<img src="${pic(id)}" alt="">`;
   const tap = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); fn(); });
+  const S = (f, ...a) => api.Sound && api.Sound[f] && api.Sound[f](...a);
+  const shelf = (k, c) => c[2].filter(id => fits(k, id)); // (only the things that fit this friend)
+  let kidsEl = null, kidsKey = '';
   function render() {
-    const k = api.kind(), o = outfit(); panel.innerHTML = '';
-    const kids = document.createElement('div'); kids.className = 'dRow';
-    for (const [kind, pic] of api.kinds()) { const b = document.createElement('button'); b.className = 'dKid' + (kind === k ? ' on' : ''); b.setAttribute('aria-label', kind); b.innerHTML = pic ? `<img src="${pic}" alt="">` : '❔'; tap(b, () => { api.setKind(kind); api.Sound && api.Sound.chime && api.Sound.chime(); render(); }); kids.appendChild(b); }
-    panel.appendChild(kids);
-    const tabs = document.createElement('div'); tabs.className = 'dRow';
-    for (const [s, icon] of SLOTS) { const b = document.createElement('button'); b.className = 'dTab' + (s === slot ? ' on' : '') + (FIT[k] && FIT[k][s] ? '' : ' no'); b.textContent = icon; b.setAttribute('aria-label', s); tap(b, () => { if (!(FIT[k] && FIT[k][s])) { api.speak && api.speak('That one does not fit this friend. Try another!'); return; } slot = s; api.Sound && api.Sound.click && api.Sound.click(); render(); }); tabs.appendChild(b); }
-    const off = document.createElement('button'); off.className = 'dTab'; off.textContent = '🧺'; off.setAttribute('aria-label', 'take everything off'); tap(off, () => { for (const [s] of SLOTS) delete o[s]; api.rewear(); api.save(); api.Sound && api.Sound.whoosh && api.Sound.whoosh(); render(); }); tabs.appendChild(off);
+    const k = api.kind(), o = outfit(), shelves = CATS.filter(c => shelf(k, c).length);
+    if (!shelves.some(c => c[0] === cat)) cat = shelves[0] ? shelves[0][0] : 'hats';
+    const keep = kidsEl ? kidsEl.scrollLeft : 0; panel.innerHTML = '';
+    // the friends (the strip keeps where it was scrolled)
+    const kids = kidsEl = document.createElement('div'); kids.className = 'dKids';
+    for (const [kind, p] of api.kinds()) { const b = document.createElement('button'); b.className = 'dKid' + (kind === k ? ' on' : ''); b.setAttribute('aria-label', kind); b.innerHTML = p ? `<img src="${p}" alt="">` : ''; tap(b, () => { if (kind === api.kind()) return; api.setKind(kind); S('chime'); render(); }); kids.appendChild(b); }
+    panel.appendChild(kids); kids.scrollLeft = keep;
+    // the shelves, and the red take-everything-off button
+    const tabs = document.createElement('div'); tabs.className = 'dShelves';
+    for (const c of shelves) { const b = document.createElement('button'); b.className = 'dTab' + (c[0] === cat ? ' on' : ''); b.innerHTML = img(c[1]); b.setAttribute('aria-label', c[0]); tap(b, () => { if (cat === c[0]) return; cat = c[0]; S('click'); render(); }); tabs.appendChild(b); }
+    const off = document.createElement('button'); off.className = 'dOff'; off.innerHTML = img('partyhat'); off.setAttribute('aria-label', 'take everything off');
+    tap(off, () => { const had = SLOTS.some(([s]) => o[s]); for (const [s] of SLOTS) delete o[s]; api.rewear(); api.save(); S(had ? 'whoosh' : 'click'); render(); }); tabs.appendChild(off);
     panel.appendChild(tabs);
-    const grid = document.createElement('div'); grid.className = 'dRow';
-    for (const [id, s, icon] of ITEMS) { if (s !== slot) continue; const b = document.createElement('button'), have = found(id), ok = fits(k, id); b.className = (o[s] === id ? 'on' : '') + (ok ? '' : ' no'); b.textContent = have ? icon : '🎁'; b.setAttribute('aria-label', id);
-      tap(b, () => { if (!have) { api.speak && api.speak('A surprise! Find it on a planet!'); api.Sound && api.Sound.twinkle && api.Sound.twinkle(); return; } if (!ok) return; if (o[s] === id) delete o[s]; else o[s] = id; api.rewear(); api.save(); api.Sound && api.Sound.tone && api.Sound.tone(o[s] ? 660 : 440, .12, 'triangle', .05, 1.4); render(); });
+    // the things on this shelf
+    const grid = document.createElement('div'); grid.className = 'dItems';
+    const c = CATS.find(q => q[0] === cat);
+    for (const id of c ? shelf(k, c) : []) { const s = slotOf(id), have = found(id), b = document.createElement('button');
+      b.className = 'dItem' + (have ? '' : ' locked') + (o[s] === id ? ' on' : '') + (popId === id ? ' pop' : ''); b.innerHTML = img(id); b.setAttribute('aria-label', id);
+      tap(b, () => {
+        if (!have) { api.speak && api.speak(`A surprise! Find it on ${FOUND_ON[id] === 'moon' ? 'the Moon' : FOUND_ON[id].replace(/^./, m => m.toUpperCase())}!`); S('twinkle'); popId = id; render(); return; }
+        const on = o[s] !== id; if (on) o[s] = id; else delete o[s]; api.rewear(); api.save(); popId = id;
+        S('tone', on ? 660 : 420, .12, 'triangle', .06, on ? 1.5 : .8); if (on) { S('pop'); api.cheer && api.cheer(s); } render(); });
       grid.appendChild(b); }
-    panel.appendChild(grid);
-    const done = document.createElement('div'); done.className = 'dRow'; const d = document.createElement('button'); d.className = 'dDone'; d.textContent = '✓'; d.setAttribute('aria-label', 'done'); tap(d, close); done.appendChild(d); panel.appendChild(done);
+    panel.appendChild(grid); popId = null;
   }
-  function open() { render(); panel.classList.add('show'); spin.classList.add('show'); api.Sound && api.Sound.click && api.Sound.click(); api.speak && api.speak('Dress up! Tap a picture to wear it.'); }
-  function close() { panel.classList.remove('show'); spin.classList.remove('show'); api.spin && api.spin(null); api.Sound && api.Sound.click && api.Sound.click(); }
+  function open() { render(); panel.classList.add('show'); spin.classList.add('show'); doneB.classList.add('show'); document.body.classList.add('dressing'); api.opened && api.opened(true); S('click'); api.speak && api.speak('Dress up! Tap a picture to put it on.'); }
+  function close() { panel.classList.remove('show'); spin.classList.remove('show'); doneB.classList.remove('show'); document.body.classList.remove('dressing'); api.opened && api.opened(false); api.spin && api.spin(null); S('click'); }
+  tap(doneB, close);
   spin.addEventListener('pointerdown', e => { lastX = e.clientX; spin.setPointerCapture(e.pointerId); });
   spin.addEventListener('pointermove', e => { if (lastX == null) return; const dx = e.clientX - lastX; lastX = e.clientX; api.spin && api.spin(dx); });
   spin.addEventListener('pointerup', () => { lastX = null; });
-  return { open, close, render, get isOpen() { return panel.classList.contains('show'); },
+  return { open, close, render, get isOpen() { return panel.classList.contains('show'); }, get shelf() { return cat; },
     find(planet) { const id = FOUND[planet]; if (!id) return null; const w = W(); if (w.wearFound[id]) return null; w.wearFound[id] = true; api.save(); return id; } };
 }

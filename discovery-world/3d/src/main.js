@@ -38,7 +38,9 @@ import { initExpansion, EXP } from './expansion.js';
 import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import './new-friends-2.js'; // (build 102) four more
-import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS } from './accessories.js'; // (build 101) dress-up
+import { PICS as WEAR_PICS } from './accessory-pictures.js';
+import { initBubbles } from './bubbles.js'; // (build 106) magic bubbles in Play Together
+import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS, accessoryMesh, CATS as WEAR_CATS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
 import { LOD, makeTree } from './nature.js';
@@ -369,7 +371,7 @@ function coasterButton(show) {
   coasterBtn.classList.toggle('show', !!show);
 }
 G.startCoaster = (C, o = {}) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: o.i ?? (C.homeI || 0), seat: o.seat || 0, /* (build 100: riding together: start where a friend's train is, in your own seat) */ clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
-const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3() };
+const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3(), e: new THREE.Vector3() };
 function coasterSample(C, i, arr, out) { const N = C.N, j0 = Math.max(0, Math.min(N - 1, Math.floor(i))), j1 = Math.min(N - 1, j0 + 1), f = Math.max(0, Math.min(1, i - j0)); return out.set(arr[j0 * 3] + (arr[j1 * 3] - arr[j0 * 3]) * f, arr[j0 * 3 + 1] + (arr[j1 * 3 + 1] - arr[j0 * 3 + 1]) * f, arr[j0 * 3 + 2] + (arr[j1 * 3 + 2] - arr[j0 * 3 + 2]) * f); }
 const COASTER_SAYS = { L: '🎢 Up, up, up! Look how high we go!', K: '🌋 Down into the GIANT crater!', T: '⛰️ Into the mountain tunnel!', C: '💎 Ooooh! A glowing crystal cave!', B: '🚀 BOOST! Zoom!' };
 function endCoaster(R) {
@@ -396,9 +398,10 @@ function coasterRide(dt, R) {
   R.maxY = Math.max(R.maxY, pos.y); R.maxV = Math.max(R.maxV, v);
   // the chase camera: inside the tunnel and the cave it sits on the track just behind the train; outside it rides behind
   // and above, along the way the train is going (smoothed), and never rolls
-  const ahead = C.flag[Math.min(N - 1, j + 30)], inside = f === 'T' || f === 'C' || ahead === 'T' || ahead === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C')); /* (build 100: follow the track down into the tunnel and the cave BEFORE the entrance, so the camera never swoops through the mountain's rock) */
+  const ahead = C.flag[Math.min(N - 1, j + 30)], inTube = Mo => !!Mo && j >= Mo[0] - 30 && j <= Mo[3] + 14, inside = inTube(C.tunnelMouths) || inTube(C.caveMouths) || f === 'T' || f === 'C' || ahead === 'T' || ahead === 'C' || (j > 16 && (C.flag[j - 16] === 'T' || C.flag[j - 16] === 'C')); /* (build 105: until the train is right out of the stone mouth, not just out of the rock: the high camera used to look at the outside of the mouth with the train inside it) */ /* (build 100: follow the track down into the tunnel and the cave BEFORE the entrance, so the camera never swoops through the mountain's rock) */
   let want;
-  if (inside) { want = coasterSample(C, Math.max(0, R.i - 22), C.pos, CV.b); coasterSample(C, Math.max(0, R.i - 22), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); want.y = Math.max(want.y, pos.y + 1.8); } /* (build 100: on a steep climb the point behind is far below the cart; never look up at its underside) */
+  if (inside) { let bk = 22; if (C.solid && C.solid[j]) while (bk > .3 && !C.solidCam[Math.max(0, Math.floor(R.i - bk))]) bk -= 1; if (bk < .3) bk = .3; while (bk > 4 && C.pos[Math.max(0, Math.floor(R.i - bk)) * 3 + 1] < pos.y - 2.4) bk -= 1; /* (build 105: on the steep climb out of the cave, follow closer instead of being lifted out through the wall) */ /* (build 105: going into the rock or under the ground, the camera waits just inside the opening (past its darkness) until it can follow: it never looks at the outside of the rock, or at the dark entrance, with the train hidden behind it) */
+    want = coasterSample(C, Math.max(0, R.i - bk), C.pos, CV.e); /* (build 105: its OWN vector: it used to share CV.b with the look-ahead point below, so in the tunnel and the cave the camera flew to just in front of the train and looked at the walls) */ coasterSample(C, Math.max(0, R.i - bk), C.up, CV.w); want.addScaledVector(CV.w.normalize(), 3.4); want.y = Math.max(want.y, pos.y + 1.4); } /* (build 100: on a steep climb the point behind is far below the cart; never look up at its underside) */
   else { const back = coasterSample(C, Math.max(0, R.i - 26), C.pos, CV.b); CV.d.subVectors(pos, back).setY(0); if (CV.d.lengthSq() < .01) CV.d.set(P.facing, 0, 0); CV.d.normalize();
     want = CV.w.copy(pos).addScaledVector(CV.d, -12).add(CV.b.set(0, 5.5, 0)); want.z += 2.5; want.y = Math.max(want.y, pos.y + 3); }
   const lookAt = coasterSample(C, Math.min(N - 1, R.i + 10), C.pos, CV.b);
@@ -998,8 +1001,11 @@ function newFriendPictures() { if (picBusy) return; const miss = Object.keys(CRE
   requestAnimationFrame(next); }
 const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
   setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
-  Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; } });
-G.dress = dress; G.me = () => creature; /* (tests: her character) */
+  Sound, speak: t => voice.speak(t), spin: dx => { G.dressSpin = dx == null ? null : (G.dressSpin ?? creature.root.rotation.y) + dx * .015; },
+  opened: on => { G.dressOpen = on; if (on) { for (const kk in keys) keys[kk] = false; player.vx = 0; } }, /* (build 105: close-up of her friend beside the panel; no walking off while dressing) */
+  cheer: slot => { const m = creature.parts && creature.parts.worn && creature.parts.worn[slot]; if (!m) return; m.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld); burst(p.x, p.y, p.z, ['#fff', '#ffe36e', '#ff9fd8', '#9fd8ff'], 14, 2.2); } });
+G.bubbles = initBubbles({ scene, P: player, keys, creature: () => creature, burst, Sound, say: m => toast(m), speak: t => voice.speak(t), headTop: () => G.headTop || 1.8, camPull: v => { G.camPull = v; } }); /* (build 106: only does anything inside a Play Together room) */
+G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
 { const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
   b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
 let wearHere = null; // planet surprises: landing on some planets finds a new thing to wear
@@ -1086,7 +1092,7 @@ function updatePlayer(dt) {
 }
 
 // ---------------- camera ----------------
-const camT = { x: 5, y: 1.6, look: 0 };
+const camT = { x: 5, y: 1.6, look: 0 }; const camLook = new THREE.Vector3(), dressCam = new THREE.Vector3(), dressLook = new THREE.Vector3();
 function viewHalfW(dist) { return Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * dist * camera.aspect; }
 const CAM_DIST = 12.5; // (build 43: zoomed out from 7.6 at the family's request, so whole activities fit on screen) (build 63: 9 → 12.5, asked again: see more, do every activity)
 const CAM_UP = 2.9, CAM_LOOK = 1.95; // (build 63: a little higher (2.15 → 2.9), aimed higher (1.15 → 1.95): tall activities fit, less of the track)
@@ -1111,7 +1117,12 @@ function updateCamera(dt) {
   const kz = P.ride && (P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale' || P.ride.type === 'coaster' || P.ride.type === 'ringrace') ? P.z : 0; camT.z = (camT.z ?? 0) + (kz - (camT.z ?? 0)) * ease(dt, 3);
   camT.wz = (camT.wz ?? 0) + ((P.ride && P.ride.type === 'whale' ? 1 : 0) - (camT.wz ?? 0)) * ease(dt, 1.2); // (build 43: flying the whale: the camera pulls back and looks down at the world below)
   camT.sp = (camT.sp ?? 0) + ((P.layer === 'space' ? 1 : 0) - (camT.sp ?? 0)) * ease(dt, 2.5); if (P.layer !== 'space' && camT.sp < .02) camT.sp = 0; // (build 49: on the planets the camera stands a little further back and looks a little higher, so you see the mountains and the sky)
-  camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camera.lookAt(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
+  camera.position.set(camT.x, y + CAM_UP + Math.max(0, -camT.z) * .25 + camT.cz * 1.2 + camT.wz * 3 + camT.rk * 1.6 + camT.sp * .5, CAM_DIST + camT.z + camT.cz * 3.2 + camT.wz * 10 + camT.rk * 5 + camT.sp * 3.2); camLook.set(camT.x, y + CAM_LOOK + camT.cz * 2.4 - camT.wz * 3.5 + camT.rk * 2 + camT.sp * 1.0, camT.z - camT.cz * 2 - camT.rk * 2);
+  // (build 105) DRESSING UP: the camera comes close to her friend and puts it in the middle of the free right side of the screen
+  camT.dr = (camT.dr ?? 0) + ((G.dressOpen && !P.ride ? 1 : 0) - (camT.dr ?? 0)) * ease(dt, 5); if (camT.dr < .002) camT.dr = 0;
+  if (camT.dr) { const d = 4.2, k = camT.dr, cx = P.x - viewHalfW(d) * .55, cz = (P.z || 0); dressCam.set(cx, P.y + 1.05, cz + d); dressLook.set(cx, P.y + .82, cz); camera.position.lerp(dressCam, k); camLook.lerp(dressLook, k); }
+  { const nr = camT.dr > .6 ? 2.9 : .3; /* (the camera looks straight at the depth of her friend, 4.2 m away) */ if (Math.abs(camera.near - nr) > .01) { camera.near = nr; camera.updateProjectionMatrix(); } } /* (build 105: while dressing, nothing between the camera and her friend is drawn, so no tree or swing can hide her friend) */
+  camera.lookAt(camLook);
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride && G.camOverride.coaster && !(player.ride && player.ride.type === 'coaster')) G.coasterOff(); // (build 69: left the coaster another way, e.g. the map)
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
@@ -1405,6 +1416,7 @@ function frame() {
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy }); tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
+  G.bubbles.update(dt); /* (build 106: after the friend's own animation, so the bubble's sway and the tumble show) */
   creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
   checkMerged(dt); // (build 63: merged scenery goes back to its pieces the moment the game animates one)
@@ -1681,7 +1693,7 @@ window.__DDW3 = { THREE,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '104'; G.build = GAME_BUILD;
+const GAME_BUILD = '106'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
