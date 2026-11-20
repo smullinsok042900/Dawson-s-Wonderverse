@@ -24,7 +24,7 @@ multiplayer view, its own browser test, a speed A/B, the full smoke test, then m
 | 1 | The Moon | Rocky (rolling moon rock: catch-me), Lumi (lantern sprite: lights the way to a hidden pet), Boing (spring hopper: bounce together) | Moonpup, Hopscotch, Stardrop, Dustbun, Orbit, Glimmer Snail | DONE (build 107) |
 | 2 | Mars | Dusty (dust sprite: a dust twirl), Bongo (rock drummer: drums along when she jumps), Chime (crystal kid: sings notes) | Sandy, Ruby, Pebbles, Ember, Dusk, Wiggles | DONE (build 108) |
 | 3 | Mercury | Mo (mirror creature: copies her), Sunny (sun-flower: spins and shines), Pip-Pebble (stones sparkle) | Cinder, Quartz, Glow, Flicker, Sparky, Blink | DONE (build 109) |
-| 4 | Venus | floating cloud people | mist puffs, sunset flutterbies | TODO |
+| 4 | Venus | Nimbus (cloud person: shower and rainbow), Puffo (mist creature: peekaboo), Coral (sunset singer) | Fluff, Flutter, Wisp, Bubbles, Drip, Puffin | DONE (build 110) |
 | 5 | Jupiter | storm sprites | balloon pets, cloud lambs | TODO |
 | 6 | Saturn | ring dancers | sparkle comets, star fish | TODO |
 | 7 | Uranus | frost sprites | snowflake pets, ice pups | TODO |

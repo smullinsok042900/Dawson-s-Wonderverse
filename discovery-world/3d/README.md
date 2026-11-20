@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 110: Venus friends and pets
+- **On Venus:** Nimbus the cloud (rain and a rainbow), Puffo who plays peekaboo, and Coral the singer, and six pets: Fluff, Flutter, Wisp, Bubbles, Drip and Puffin.
+
 ## 3D build 109: Mercury friends and pets
 - **On Mercury:** Mo the mirror creature (he copies you!), Sunny the sun-flower and Pip-Pebble, and six pets: Cinder, Quartz, Glow, Flicker, Sparky and Blink.
 

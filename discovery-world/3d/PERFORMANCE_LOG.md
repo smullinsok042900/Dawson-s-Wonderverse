@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 110 (Venus creatures)
+Desktop, software rendering; `pplanet.cjs venus` (spots +60, +100, +270 added), builds 109 and 110, both orders: +60 142 → 148 ms, +100 123 → 117, +160 168 → 168, +270 116 → 114; each spot spreads about 30 ms between runs; two to four more draw calls where creatures are in view.
+
 ## Build 109 (Mercury creatures)
 Desktop, software rendering; `pplanet.cjs mercury` (spots +60 and +100 added for the landing), builds 108 and 109, both orders, after spreading the creatures out: +60 137 → 129 ms, +100 114 → 118 (two creatures in view: +3–4 draw calls), +150 167 → 172 (nothing changed there: this is the spread of the measurement), +180 136 → 136. The first placement (creatures 12 m apart) measured +100 118 → 132 with +5 draw calls, so they were spread to about 15 m and two moved to the open ground before the funhouse.
 
