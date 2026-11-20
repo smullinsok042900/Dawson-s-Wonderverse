@@ -4,6 +4,10 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 109 — living creatures and pets on Mercury
+- **MERCURY IS ALIVE** (the third destination of `CREATURES.md`): **Mo**, a shiny mirror creature: tap him and he copies her (she walks one way, he walks the other like a mirror, and he jumps when she jumps); **Sunny**, a sun-flower sprite who spins and shines; **Pip-Pebble**, a pebble person who makes a trail of stepping stones sparkle with rising notes. **Pets:** Cinder (a warm ember puff), Quartz (a crystal kitten), Glow (a glowing pebble), Flicker (a fire beetle), Sparky (a comet mouse), Blink (a lantern owl). Seven near the landing, spread about 15 m apart, and two on the open ground before the funhouse (a first placement, 12 m apart, put three in view at once and was measured slower).
+- Tests (desktop, software rendering): `mercury-life`: all nine there; Mo copies her; Sunny spins; Quartz befriended with ✋ follows her on Mercury and home to Earth: all passed. Speed (Mercury, builds 108 and 109, both orders): +60 137 → 129 ms, +100 114 → 118 (two creatures in view, three or four more draw calls), +150 167 → 172 (no creature there: the measurement's own spread), +180 136 → 136. **Full smoke test: SMOKE_RESULT.** Not tried on an iPhone.
+
 ## Checkpoint: build 108 — living creatures and pets on Mars
 - **MARS IS ALIVE** (the second destination of `CREATURES.md`): **Dusty**, a dust sprite who spins a little dust twirl when tapped; **Bongo**, a rock drummer: tap him and he plays a beat, then drums along each time she jumps near him; **Chime**, a crystal kid who sings four notes with coloured sparkles. **Pets:** Sandy (a big-eared dune hopper), Ruby (a puppy with a red crystal back), Pebbles (a turtle with a gem shell), Ember (a glowing beetle), Dusk (a moth), Wiggles (a sand worm). Built with each area of Mars as she walks, and freed with it.
 - Befriended like the Moon pets (✋ 🤗 🍓 ⚽); they join 🐾 with real pictures and follow her everywhere.
