@@ -8,7 +8,7 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 ## Build 105 (the dress-up menu; the coaster tunnel camera)
-Desktop, software rendering. Earth (`ba.cjs`, builds 104 and 105, both orders): script ms per frame park 13.8 → 12.8, creatures 11.0 → 11.5, castle 13.4 → 13.6; 115 shader programs in both. Moon (`pplanet.cjs`, two rounds): +30 224 → 173 ms, +50 170 → 161, +79 170 → 161; draw calls the same (67/73/69). The accessory pictures are built into the game (84 KB), so opening 👗 draws nothing new. A first version that drew the coaster's mouth darkness as its own mesh cost one draw call on the Moon; it was put back into the coaster's single mesh.
+Desktop, software rendering. Earth (`ba.cjs`, builds 104 and 105, both orders): script ms per frame park 13.8 → 12.8, creatures 11.0 → 11.5, castle 13.4 → 13.6; 115 shader programs in both. Moon (`pplanet.cjs`, two rounds): +30 274 and 174 → 183 and 163 ms (the 274 is noise), +50 180 and 160 → 159 and 162, +79 178 and 161 → 160 and 161; draw calls the same (67/73/69). The accessory pictures are built into the game (84 KB), so opening 👗 draws nothing new. A first version that drew the coaster's mouth darkness as its own mesh cost one draw call on the Moon; it was put back into the coaster's single mesh.
 
 ## Build 104 (the Venus log ride together)
 Desktop, software rendering; `pplanet.cjs venus`, builds 103 and 104, four rounds each in both orders. ms per frame (average) / draw calls: +160 216 → 218 / 76; +190 221 → 226 / 93–94 (each build ranges about 15 ms at these spots: 218–227 and 221–233). +131 is the first spot after landing (291–625) and is not compared. The new code runs only inside a Play Together room.
