@@ -17,15 +17,15 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   for (const k of all) there[k] = !!(await find(k));
   check('Mercury has Mo, Sunny and Pip-Pebble, and six pets to befriend', all.every(k => there[k]), JSON.stringify(there));
   // Mo copies her: tap, then she walks one way and Mo walks the other way (mirrored)
-  await ev(x => { __DDW3.player.x = x; }, X + 27); await sleep(2000); await ev(() => __DDW3.G.interact.find(i => i.disc === 'pal_mirrormo').run()); await sleep(500);
-  const m0 = await find('mirrormo'); await ev(x => { __DDW3.player.x = x; }, X + 24); await sleep(4000); const m1 = await find('mirrormo');
+  await ev(x => { __DDW3.player.x = x; }, X + 25); await sleep(2000); await ev(() => __DDW3.G.interact.find(i => i.disc === 'pal_mirrormo').run()); await sleep(500);
+  const m0 = await find('mirrormo'); await ev(x => { __DDW3.player.x = x; }, X + 22); await sleep(4000); const m1 = await find('mirrormo');
   check('tap Mo: Mo copies her (she goes left, Mo goes right, like a mirror)', m0 && m1 && m1.x - m0.x > 1, JSON.stringify({ m0: m0 && +m0.x.toFixed(1), m1: m1 && +m1.x.toFixed(1) }));
   // Sunny spins and shines
-  await ev(x => { __DDW3.player.x = x; }, X + 53); await sleep(2000); await ev(() => __DDW3.G.interact.find(i => i.disc === 'pal_sunny').run()); await sleep(700);
+  await ev(x => { __DDW3.player.x = x; }, X + 56); await sleep(2000); await ev(() => __DDW3.G.interact.find(i => i.disc === 'pal_sunny').run()); await sleep(700);
   const sun = await ev(() => { let s = __DDW3.G.me().root; while (s.parent) s = s.parent; let g = null; s.traverse(o => { if (o.userData && o.userData.kind === 'sunny' && o.userData.body) g = o; }); return g ? +g.userData.body.rotation.z.toFixed(2) : null; });
   check('tap Sunny: she spins and shines', sun != null && Math.abs(sun) > .5, `rotation ${sun}`);
   // Quartz: ✋ and she is a friend, following on Mercury and home
-  await ev(x => { __DDW3.player.x = x; }, X + 40); await sleep(2500); await ev(() => __DDW3.G.interact.find(i => i.disc === 'pet_quartzkit').run()); await sleep(500);
+  await ev(x => { __DDW3.player.x = x; }, X + 42); await sleep(2500); await ev(() => __DDW3.G.interact.find(i => i.disc === 'pet_quartzkit').run()); await sleep(500);
   await page.locator('#befriend button[aria-label=pat]').tap(); await sleep(1800);
   const fr = await ev(() => ({ pal: __DDW3.G.expansion.isPal('quartzkit'), follows: __DDW3.G.expansion._followers().includes('quartzkit') }));
   await ev(x => { __DDW3.player.x = x; }, X + 120); await sleep(4000);
