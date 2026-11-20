@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 108: Mars friends and pets
+- **On Mars:** Dusty the dust sprite, Bongo the drummer (jump and he drums along) and Chime the crystal kid, and six pets to make friends with: Sandy, Ruby, Pebbles, Ember, Dusk and Wiggles.
+
 ## 3D build 107: less lag, Moon friends and pets
 - **Less lag:** switching friends (and dress-up) no longer leaves old friends behind in the phone's graphics memory.
 - **On the Moon:** Rocky the rolling rock, Lumi the lantern sprite and Boing the spring hopper to play with, and six pets to make friends with (✋ 🤗 🍓 ⚽).

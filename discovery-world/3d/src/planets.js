@@ -134,6 +134,7 @@ const moon = {
 
 // ---------- 🔴 MARS: canyon country; the explorer station ----------
 const mars = {
+  all(k) { populate(k, [['dusty', 40, -2.6], ['dunehop', 70, -2.8], ['rubypup', 95, -3]]); }, // (build 108) Mars friends and pets near the landing (planet-life.js)
   sections: [
     // ----- area 2: CANYON COUNTRY -----
     k => { const X = k.s0;
@@ -161,7 +162,7 @@ const mars = {
       k.G.interact.push({ x: X + 86, y: 0, layer: 'space', disc: 'marssunset', run: () => sun.userData.tap && sun.userData.tap(), hintY: 2.4 });
       const red = new THREE.Color('#b8794a'), blue = new THREE.Color('#5f7fb8'), tmp = new THREE.Color();
       k.U.push(dt => { if (dusk <= 0) return; dusk = Math.max(0, dusk - dt); const a = Math.min(1, Math.min(dusk, 6 - dusk) / 1.2); tmp.copy(red).lerp(blue, a); k.setSkyColor(tmp); sun.position.y = 9 - a * 3; });
-      k.placeAlien(X + 26, -2, 3); k.placeAlien(X + 76, -2.4, 4);
+      k.placeAlien(X + 26, -2, 3); k.placeAlien(X + 76, -2.4, 4); populate(k, [['pebbleturtle', 128, -3.4], ['drummer', 178, -3], ['emberbug', 205, -2.6]]); // (build 108: planet-relative)
       marsClimbPark(k, X); // (build 71: the climbing wall you climb yourself, and the trampoline park; was marsClimbWall)
       k.rocketSign(X + 4);
     },
@@ -191,7 +192,7 @@ const mars = {
       flags.forEach((f, i) => k.tapIt(f, () => { if (i !== nextF) { k.say(`🚩 Find the ${['red', 'yellow', 'green', 'blue'][nextF]} flag first!`, true); return; } nextF = (nextF + 1) % 4; k.Sound.tone(600 + i * 120, .12, 'square', .03, 1.2); f.userData.wave = 1; k.say(nextF === 0 ? '🎉 All four flags! Great exploring!' : `🚩 ${['Red', 'Yellow', 'Green', 'Blue'][i]}!`, true); k.disc('marsflags', '🚩 Tap the flags in a row: red, yellow, green, blue!'); }));
       k.G.interact.push({ x: X + 84, y: 0, layer: 'space', disc: 'marsflags', run: () => flags[nextF].userData.tap && flags[nextF].userData.tap(), hintY: 2.2 });
       k.U.push((dt, t) => { for (const f of flags) { f.userData.wave = Math.max(0, (f.userData.wave || 0) - dt); f.rotation.y = Math.sin(t * 3 + f.position.x) * .15 + f.userData.wave * Math.sin(t * 20); } });
-      k.placeAlien(X + 40, -2.4, 5); k.placeAlien(X + 102, -2, 6);
+      k.placeAlien(X + 40, -2.4, 5); k.placeAlien(X + 102, -2, 6); populate(k, [['marsmoth', 250, -3.2], ['crystalkid', 282, -3], ['sandsnake', 300, -3.4]]); // (build 108)
       marsZipWall(k); // (build 92) the rainbow wall and zip line
       k.rocketSign(X + 4);
     },
