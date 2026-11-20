@@ -29,7 +29,7 @@ multiplayer view, its own browser test, a speed A/B, the full smoke test, then m
 | 6 | Saturn | Ringo (hula dancer: dances when she jumps), Shimmer (shooting star), Zoomer (racer: catch-me) | Halo, Streak, Starla, Chip, Loop, Gem | DONE (build 113) |
 | 7 | Uranus | Frosty (frost sprite: makes it snow), Skatey (ice skater: twirls, catch-me), Brrr (snowman: ACHOO!) | Flurry, Flake, Polar, Slider, Mitten, Tinsel | DONE (build 114) |
 | 8 | Neptune | Whirly (wind whirler: whirls the wind round her), Bloop (glowing jellyfish: flashes colours with notes), Echo (whale calf: a whale song and a spout) | Glowbe, Drifty, Breezy, Swish, Ripple, Misty | DONE (build 115) |
-| 9 | Pluto | snowball folk | frost fluffs, snowball pups | TODO |
+| 9 | Pluto | Snowy (snowball kid: a soft snowball toss), Lovey (heart sprite: hearts and a heartbeat), Dot (little Charon moon: dances round her) | Fuzzy, Snowball, Cuddles, Nibbles, Nutty, Yaki | DONE (build 116) |
 | 10 | Earth | woodland puffballs and fantasy animals (beside the existing pals) | woodland pets | TODO |
 
 ## Rules

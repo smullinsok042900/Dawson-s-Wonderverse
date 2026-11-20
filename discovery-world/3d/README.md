@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 116: Pluto friends and pets
+- **On Pluto:** Snowy the snowball kid, Lovey the heart sprite and Dot the little dancing moon, and six pets: Fuzzy, Snowball, Cuddles, Nibbles, Nutty and Yaki.
+
 ## 3D build 115: Neptune friends and pets
 - **On Neptune:** Whirly the little whirlwind, Bloop the glowing jellyfish and Echo the singing whale calf, and six pets: Glowbe, Drifty, Breezy, Swish, Ripple and Misty.
 
