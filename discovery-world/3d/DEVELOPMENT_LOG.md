@@ -4,6 +4,17 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 107 — living creatures and pets on the Moon; pets come along everywhere
+- **THE MOON IS ALIVE** (the first destination of `CREATURES.md`): three characters and six pets, each its own shape and way of moving, built with the Moon and freed with it.
+  - **Rocky**, a rolling moon rock: tap him and he plays catch-me (rolls away, giggling). **Lumi**, a little lantern sprite: tap her and she lights up the stars and floats off to show you a hidden pet. **Boing**, a spring hopper: tap him and he bounces high ("jump with me!").
+  - **Pets:** Moonpup (a glowing moon puppy), Hopscotch (a crater hopper), Stardrop (a floating star), Dustbun (a fluffy dust bunny), Orbit (a little planet with a ring of moons), Glimmer Snail (a snail with a glowing shell).
+  - Every creature breathes, wanders near its home, turns to look at her, waves and says hello when she comes close, and wiggles and hops when tapped.
+- **MAKING FRIENDS:** tap a pet: four big picture buttons (✋ pat, 🤗 hug, 🍓 treat, ⚽ play, and ✖ not now). One happy moment, a burst of hearts, and the pet is hers for good (saved).
+- **🐾 FRIENDS:** the planet pets join the Earth pals in the 🐾 panel with real pictures made from their shapes (`tools/make-pet-pictures.cjs`); pets still to find are silhouettes. At most four friends follow at once (tap one to send it home, another to bring it).
+- **PETS COME ALONG EVERYWHERE:** her following friends, the Earth pals too, now ride in the rocket and walk beside her on every planet (before, they waited on Earth). After a reload they are still hers, and a befriended pet is not waiting on its planet a second time.
+- Cheap: one draw call per creature, the shared painted material (no new shader), light shapes (about 150 triangles a ball); only creatures within 45 m move.
+- Tests (desktop, software rendering): `moon-life`: all nine creatures there; tap Rocky (he rolls away); Moonpup befriended with 🤗 and following on the Moon and home on Earth; 🐾 shows its picture and silhouettes; reload keeps it (and no second Moonpup); four at most: all passed. SPEED107. **Full smoke test: SMOKE_RESULT.** Not tried on an iPhone.
+
 ## Checkpoint: build 106 — magic bubbles in Play Together
 - **🫧 BLOW A BUBBLE** (a big button, only in a room): your friend puffs, and a shimmering rainbow bubble floats to the nearest friend (aim assist: the nearest one in front, else the nearest; forgiving). It grows round them, lifts them about four heights into the air, swaying; they wiggle inside; they can steer it a little with ◀ ▶; a big 💥 (or JUMP) pops it at once, otherwise it pops by itself after about 6 seconds. POP: a burst of little bubbles and sparkles, a fall, a soft bounce, dizzy stars and a cheer. Everyone in the room sees the same thing.
 - **Sync:** one event per bubble (`{ t: 'bubble', by, to }`) and `b: 1` in the trapped player's own state; the trapped player's own phone moves them, so the float, the pop, the fall and the landing travel as the positions that are sent anyway. Remote bubbles are drawn round the friend's model and pop when their flag goes.
