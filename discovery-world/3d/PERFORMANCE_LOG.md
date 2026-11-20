@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 112 (Jupiter creatures)
+Desktop, software rendering; `pplanet.cjs jupiter` (spots +30, +60, +90, +150, +205, +320), four rounds each of build 111 / build 112 without the creatures / build 112: +60 223 / 223 / 213 ms, +90 215 / 221 / 226 (three creatures in view: +4 draw calls), +150 206 / 211 / 218, +205 194 / 201 / 203, +320 149 / 167 / 173 (+30 is the landing spot, 200–670 ms, not compared). The copy without creatures drifts as much at places with no creature, so the creatures' own cost is about 5 ms where three are in view.
+
 ## Build 111 (buttons moved; friendship panel)
 Desktop, software rendering; `ba.cjs`, builds 110 and 111, both orders: script ms per frame park 12.2 → 11.8, creatures 10.1 → 9.3, castle 12.2 → 14.1 (each spreads several ms between runs; the change is buttons and styles only); 115 shader programs in both. In a Play Together room the page answered as fast as build 110 (1,455–1,480 vs 1,180–1,360 round trips a second).
 
