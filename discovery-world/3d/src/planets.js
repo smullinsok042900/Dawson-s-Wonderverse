@@ -10,6 +10,7 @@
 //   P, G, api, placeAlien, plat, rocketSign, setSkyColor }
 // ===================================================================
 import * as THREE from 'three';
+import { populate } from './planet-life.js';
 import { toy } from './creatures.js';
 import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
@@ -57,6 +58,7 @@ const Cap = s => s[0].toUpperCase() + s.slice(1);
 // ---------- 🌕 THE MOON: crater valley and the explorer station; moon mountains and the hidden cave ----------
 const moon = {
   all(k) { buildMoonCoaster(k); // (build 69) THE GIANT ROLLER COASTER: built with the Moon itself, so you see it from anywhere on it
+    populate(k, [['rocky', 30, -3], ['moonpup', 56, -2.6], ['dustbun', 66, -3.2], ['craterhop', 128, -2.8], ['lumi', 150, -2.4], ['stardrop', 178, -2.6], ['orbiter', 206, -3], ['boing', 250, -2.8], ['glowsnail', 304, -3.4]]); // (build 107) Moon friends and pets to befriend (planet-life.js)
  // footprints in the moon dust wherever you walk (one shared instanced mesh: 40 prints, the oldest fades away)
     const N = 40, prints = new THREE.InstancedMesh(new THREE.CircleGeometry(.16, 12), toy('#8a8a96', { r: 1 }), N); prints.count = 0; prints.frustumCulled = false; k.add(prints);
     const m = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)), s = new THREE.Vector3(1, 1.5, 1), v = new THREE.Vector3(); let last = null, n = 0, side = 1;

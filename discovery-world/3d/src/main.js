@@ -39,7 +39,8 @@ import { makeVoice } from './voice.js';
 import './new-friends.js'; // (build 101) more playable friends (they register themselves)
 import './new-friends-2.js'; // (build 102) four more
 import { PICS as WEAR_PICS } from './accessory-pictures.js';
-import { initBubbles } from './bubbles.js'; // (build 106) magic bubbles in Play Together
+import { initBubbles } from './bubbles.js';
+import { creatureMesh as lifeMesh, PET_KINDS as LIFE_PETS } from './planet-life.js'; // (build 107) for the pet pictures and tests // (build 106) magic bubbles in Play Together
 import { wear, tickWorn, initDressUp, FOUND as WEAR_FOUND, ITEMS as WEAR_ITEMS, accessoryMesh, CATS as WEAR_CATS } from './accessories.js'; // (build 101) dress-up
 import { initMultiplayer } from './multiplayer.js';
 import { windTime, assetsReady, landmarksReady } from './assets.js';
@@ -1005,7 +1006,7 @@ const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFri
   opened: on => { G.dressOpen = on; if (on) { for (const kk in keys) keys[kk] = false; player.vx = 0; } }, /* (build 105: close-up of her friend beside the panel; no walking off while dressing) */
   cheer: slot => { const m = creature.parts && creature.parts.worn && creature.parts.worn[slot]; if (!m) return; m.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(m.matrixWorld); burst(p.x, p.y, p.z, ['#fff', '#ffe36e', '#ff9fd8', '#9fd8ff'], 14, 2.2); } });
 G.bubbles = initBubbles({ scene, P: player, keys, creature: () => creature, burst, Sound, say: m => toast(m), speak: t => voice.speak(t), headTop: () => G.headTop || 1.8, camPull: v => { G.camPull = v; } }); /* (build 106: only does anything inside a Play Together room) */
-G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
+G.dress = dress; G.me = () => creature; G.wearMesh = accessoryMesh; G.lifeMesh = lifeMesh; G.lifePets = LIFE_PETS; G.wearCats = WEAR_CATS; G.wearItems = WEAR_ITEMS; G.wearPics = WEAR_PICS; /* (tests: her character) */
 { const b = document.createElement('button'); b.className = 'pill'; b.id = 'dressBtn'; b.setAttribute('aria-label', 'dress up'); b.textContent = '👗'; $('styleBtn').after(b);
   b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; if (dress.isOpen) dress.close(); else dress.open(); discover('dressup', '👗 Dress up your friend!'); }); }
 let wearHere = null; // planet surprises: landing on some planets finds a new thing to wear
@@ -1194,7 +1195,7 @@ function restore(d) {
   world.nursery = d.nursery; world.adventures = d.adventures; world.comfort = d.comfort;
   if (CREATURES[d.creature]) player.creature = d.creature;
   if (d.learn && typeof d.learn === 'object' && !Array.isArray(d.learn)) { world.learn = {}; for (const [k, v] of Object.entries(d.learn)) if (v && Number.isFinite(v.level) && Number.isFinite(v.stars)) { const o = world.learn[k] = { level: Math.max(1, Math.min(9, v.level | 0)), stars: Math.max(0, v.stars | 0) }; for (const f of ['s1', 's2', 's3', 'd1', 'd2', 'd3']) if (Number.isFinite(v[f])) o[f] = Math.max(0, Math.min(9, v[f] | 0)); } } // (build 25: learning progress; build 27: per-level ramps)
-  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig', 'seal', 'goat'].filter(k => e.pals[k]).map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
+  if (d.exp && typeof d.exp === 'object') { const e = d.exp, num = v => Number.isFinite(v) ? Math.max(0, Math.min(1e6, v | 0)) : 0; world.exp = Object.assign(world.exp || {}, { gems: Array.isArray(e.gems) ? e.gems.filter(g => /^g\d{1,2}$/.test(g)).slice(0, 40) : [], stickers: Array.isArray(e.stickers) ? e.stickers.filter(q => Array.isArray(q) && q.length === 3 && q.every(Number.isFinite)).slice(-80) : [], chests: num(e.chests), balloons: num(e.balloons), shells: Array.isArray(e.shells) ? e.shells.filter(v => /^s\d$/.test(v)).slice(0, 12) : [], pals: e.pals && typeof e.pals === 'object' ? Object.fromEntries(['crab', 'fox', 'penguin', 'robot', 'frog', 'parrot', 'pig', 'seal', 'goat', ...LIFE_PETS].filter(k => e.pals[k]) /* (build 107: and the planet pets) */.map(k => [k, { follow: !!e.pals[k].follow }])) : {} }); } // (build 29; build 30: fill in the SAME object the new areas already hold, never a new one)
   world.learnTier = [1, 2, 3].includes(d.learnTier) ? d.learnTier : 1; // (build 27: learning level, chosen by a grown-up; Super Easy by default)
   const okRec = r => r && typeof r === 'object' && [['col', PET_COLS.length], ['ears', EARS.length], ['tail', TAILS.length], ['pat', PATS.length]].every(([k, n]) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] < n);
   const cleanRec = r => ({ col: r.col, ears: r.ears, tail: r.tail, pat: r.pat });
@@ -1818,7 +1819,7 @@ function trainArrived(i) {
   $('upperLeft').appendChild(btn);
   const pn = document.createElement('div'); pn.id = 'petsPanel'; pn.innerHTML = '<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="mpGrid pets"></div></div>'; document.body.appendChild(pn);
   const grid = pn.querySelector('.mpGrid');
-  const draw = () => { grid.innerHTML = expansion.palList().map(q => `<button class="mpT pet ${q.found ? (q.follow ? 'on' : '') : 'unknown'}" data-k="${q.kind}">${q.found ? q.emoji : '❓'}<span class="pf">${q.found ? (q.follow ? '💖' : '🏠') : ''}</span></button>`).join('');
+  const draw = () => { grid.innerHTML = expansion.palList().map(q => `<button class="mpT pet ${q.found ? (q.follow ? 'on' : '') : 'unknown'}" data-k="${q.kind}">${q.pic ? `<img class="petPic${q.found ? '' : ' shadow'}" src="${q.pic}" alt="">` : q.found ? q.emoji : '❓'}<span class="pf">${q.found ? (q.follow ? '💖' : '🏠') : ''}</span></button>`).join('');
     grid.querySelectorAll('.mpT').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const r = expansion.togglePal(b.dataset.k); if (r) toast(r); else voice.speak(expansion.palHint(b.dataset.k)); draw(); })); };
   const tapEl = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; fn(e); });
   tapEl(btn, () => { if (G.activityOpen) return; draw(); pn.classList.add('show'); Sound.click(); voice.speak('Your pet friends! Tap one to bring it along, or to send it home.'); });

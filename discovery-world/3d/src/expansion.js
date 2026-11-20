@@ -13,6 +13,8 @@ import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
+import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeAnimate } from './planet-life.js'; // (build 107) pets from the planets
+import { PET_PICS } from './pet-pictures.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -156,7 +158,12 @@ export function initExpansion(G, api) {
   X.pals = X.pals || {};
   const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' }, seal: { home: [-584, .36, -2.3], hello: '🦭 Splash the seal is your friend now! Ar ar!' }, goat: { home: [494, 0, -2.4], hello: '🐐 Clover the goat is your friend now! Maa!' } };
   const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜', pig: '🐷', seal: '🦭', goat: '🐐' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi', pig: 'Truffle', seal: 'Splash', goat: 'Clover' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza', pig: 'on the farm', seal: 'at the ocean pier', goat: 'on the Adventure Trail' };
+  // (build 107) PETS FROM THE PLANETS join the same friends: befriended where they live (planet-life.js), then they can
+  // follow her everywhere, like the Earth pals. At most 4 friends follow at once (to keep the game quick).
+  const MAX_FOLLOW = 4;
+  for (const k of LIFE_PETS) { const sp = LIFE[k]; PALS[k] = { home: null, planet: sp.planet, hello: `${sp.emoji} ${sp.name} is your friend now!` }; PAL_EMOJI[k] = sp.emoji; PAL_NAME[k] = sp.name; PAL_WHERE[k] = sp.where; }
   function makePalMesh(kind) {
+    if (LIFE[kind]) return creatureMesh(kind);
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
     if (kind === 'crab') { const sh = new THREE.Mesh(new THREE.SphereGeometry(.38, 18, 12), mat('#ff5a3c', { r: .5 })); sh.scale.set(1.25, .62, 1); sh.position.y = .32; sh.castShadow = true; body.add(sh);
       for (const s2 of [-1, 1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .26, 6), mat('#ff5a3c')); st.position.set(s2 * .14, .62, .18); body.add(st); const e = new THREE.Mesh(new THREE.SphereGeometry(.08, 10, 8), mat('#ffffff')); e.position.set(s2 * .14, .77, .18); body.add(e); const pp = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), mat('#2b1d3d')); pp.position.set(s2 * .14, .78, .25); body.add(pp);
@@ -215,13 +222,13 @@ export function initExpansion(G, api) {
   for (const k of Object.keys(PALS)) if (X.pals[k] && X.pals[k].follow) setFollow(k, true);
   function updateFollowers(dt, t) {
     let slot = 0; for (const k of Object.keys(followers)) { const f = followers[k], m = f.m; slot++;
-      const tx = P.layer === '' && !G.playerHidden ? P.x - (P.facing || 1) * (1.6 + slot * 1.3) : m.position.x, ty = P.layer === '' && !G.playerHidden ? Math.max(0, P.y - .1) : m.position.y; /* (build 48: pets wait on the ground while you fly off in the rocket) */
+      const out = (P.layer === '' || P.layer === 'space') && !G.playerHidden && !(P.ride && P.ride.type === 'rocket'), tx = out ? P.x - (P.facing || 1) * (1.6 + slot * 1.3) : m.position.x, ty = out ? Math.max(P.layer === 'space' ? -50 : 0, P.y - .1) : m.position.y; /* (build 107: they come along to the planets too, riding in the rocket with her) */ /* (build 48: pets wait on the ground while you fly off in the rocket) */
       if (Math.abs(tx - m.position.x) > 25) m.position.x = tx; // (after a jump somewhere else, it arrives with you)
       const dx = tx - m.position.x; m.position.x += dx * Math.min(1, dt * 3); m.position.y += (ty - m.position.y) * Math.min(1, dt * 6); m.position.z += (1.5 + slot * .45 - m.position.z) * Math.min(1, dt * 3);
       const moving = Math.abs(dx) > .3; m.userData.body.position.y = moving ? Math.abs(Math.sin(t * 12 + slot)) * .12 : 0;
       if (k === 'crab') m.rotation.y = 0; else m.rotation.y = dx >= 0 ? 0 : Math.PI; if (k === 'penguin') { m.userData.body.rotation.z = moving ? Math.sin(t * 10) * .12 : 0; } if (k === 'parrot') { m.userData.body.position.y = .7 + Math.sin(t * 5) * .15; if (m.userData.wing1) { m.userData.wing1.rotation.x = Math.sin(t * 18) * .6; m.userData['wing-1'].rotation.x = -Math.sin(t * 18) * .6; } } if (m.userData.curl) m.userData.curl.rotation.y = t * 6; if (k === 'robot' && m.userData.bulb) m.userData.bulb.material.emissiveIntensity = .5 + Math.abs(Math.sin(t * 4)) * .8;
       if (f.play > 0) { f.play -= dt; m.userData.body.position.y = Math.abs(Math.sin(t * 11)) * .3; m.rotation.y = f.face; } // (build 41: playing with a friend)
-      if (m.userData.tail) m.userData.tail.rotation.y = Math.sin(t * 6) * .4; m.visible = P.layer === '' || P.layer === 'in'; }
+      if (m.userData.tail) m.userData.tail.rotation.y = Math.sin(t * 6) * .4; if (LIFE[k]) lifeAnimate(k, m, t, moving); m.visible = (P.layer === '' || P.layer === 'in' || P.layer === 'space') && !(P.ride && P.ride.type === 'rocket'); }
     // (build 41) PALS PLAY TOGETHER: when two or more friends follow you and you stand still for a moment, now and then two
     // friends next to each other turn to face each other and hop about, with a little burst of hearts and a giggle.
     const ks = Object.keys(followers); still = P.layer === '' && Math.abs(P.vx) < .3 && !P.ride ? still + dt : 0;
@@ -769,9 +776,11 @@ export function initExpansion(G, api) {
     if (G.sea && camX < 0) { if (camX > -190) seaW.update(t); G.sea.position.y = .02 + Math.sin(t * .8) * .04; G.foam.position.z = -8.2 + Math.sin(t * .8) * .35; }
   }
   // (build 31) the pets panel
-  const palList = () => Object.keys(PALS).map(k => ({ kind: k, emoji: PAL_EMOJI[k], found: !!X.pals[k], follow: !!(X.pals[k] && X.pals[k].follow) }));
-  const togglePal = k => { if (!X.pals[k]) return null; const on = !X.pals[k].follow; setFollow(k, on); return on ? `${PAL_EMOJI[k]} ${PAL_NAME[k]} is coming with you!` : `${PAL_EMOJI[k]} ${PAL_NAME[k]} will wait ${PAL_WHERE[k]}!`; };
-  const palHint = k => `Somebody is waiting to be your friend ${PAL_WHERE[k]}! Tap them three times.`;
+  const palList = () => Object.keys(PALS).map(k => ({ kind: k, emoji: PAL_EMOJI[k], pic: PET_PICS[k] || null, planet: PALS[k].planet || 'earth', found: !!X.pals[k], follow: !!(X.pals[k] && X.pals[k].follow) }));
+  const befriend = k => { const on = Object.keys(followers).length < MAX_FOLLOW; X.pals[k] = { follow: on }; if (on) setFollow(k, true); api.saveSoon(); return on; };
+  const isPal = k => !!X.pals[k];
+  const togglePal = k => { if (!X.pals[k]) return null; const on = !X.pals[k].follow; if (on && Object.keys(followers).length >= MAX_FOLLOW) return `🐾 ${MAX_FOLLOW} friends are with you already! Send one home first.`; setFollow(k, on); return on ? `${PAL_EMOJI[k]} ${PAL_NAME[k]} is coming with you!` : `${PAL_EMOJI[k]} ${PAL_NAME[k]} will wait ${PAL_WHERE[k]}!`; };
+  const palHint = k => PALS[k].planet ? `Somebody is waiting to be your friend ${PAL_WHERE[k]}! Fly there in the rocket and tap them.` : `Somebody is waiting to be your friend ${PAL_WHERE[k]}! Tap them three times.`;
   // (build 30) after the save is loaded: hide the gems already found and bring back the friends who follow you
   function restored() {
     for (let i = gemObjs.length - 1; i >= 0; i--) if (X.gems.includes(gemObjs[i].id)) { scene.remove(gemObjs[i].s); gemObjs.splice(i, 1); }
@@ -779,5 +788,5 @@ export function initExpansion(G, api) {
     for (const k of Object.keys(PALS)) if (X.pals[k] && !X.pals[k].follow) X.pals[k] = { follow: false };
   }
   const stats = () => S.map(s => `${s.d.id}:${s.state}`).join(' ');
-  return { pictureSign, palList, togglePal, palHint, _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
+  return { pictureSign, palList, togglePal, palHint, befriend, isPal, _followers: () => Object.keys(followers), _X: () => X, update, buildNow, restored, stats, districts: DISTRICTS, gemsFound: () => X.gems.length, gemsTotal: GEMS.length, _S: S };
 }
