@@ -26,7 +26,7 @@ multiplayer view, its own browser test, a speed A/B, the full smoke test, then m
 | 3 | Mercury | Mo (mirror creature: copies her), Sunny (sun-flower: spins and shines), Pip-Pebble (stones sparkle) | Cinder, Quartz, Glow, Flicker, Sparky, Blink | DONE (build 109) |
 | 4 | Venus | Nimbus (cloud person: shower and rainbow), Puffo (mist creature: peekaboo), Coral (sunset singer) | Fluff, Flutter, Wisp, Bubbles, Drip, Puffin | DONE (build 110) |
 | 5 | Jupiter | Zappy (storm sprite: lightning flash), Swirly (spins), Big Puff (giant cloud: a puffy hug) | Bobble, Wobble, Bolt, Nimbo, Kite, Gusty | DONE (build 112) |
-| 6 | Saturn | ring dancers | sparkle comets, star fish | TODO |
+| 6 | Saturn | Ringo (hula dancer: dances when she jumps), Shimmer (shooting star), Zoomer (racer: catch-me) | Halo, Streak, Starla, Chip, Loop, Gem | DONE (build 113) |
 | 7 | Uranus | frost sprites | snowflake pets, ice pups | TODO |
 | 8 | Neptune | wind whirlers | glowing blue floaters | TODO |
 | 9 | Pluto | snowball folk | frost fluffs, snowball pups | TODO |

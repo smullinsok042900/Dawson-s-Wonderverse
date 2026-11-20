@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 113 (Saturn creatures)
+Desktop, software rendering; `pplanet.cjs saturn` (spots +60, +95, +320 added), builds 112 and 113, four rounds: +95 169 → 171 ms, +150 163 → 162, +240 143 → 139, +320 131 → 135; two to four more draw calls where creatures are in view.
+
 ## Build 112 (Jupiter creatures)
 Desktop, software rendering; `pplanet.cjs jupiter` (spots +30, +60, +90, +150, +205, +320), four rounds each of build 111 / build 112 without the creatures / build 112: +60 223 / 223 / 213 ms, +90 215 / 221 / 226 (three creatures in view: +4 draw calls), +150 206 / 211 / 218, +205 194 / 201 / 203, +320 149 / 167 / 173 (+30 is the landing spot, 200–670 ms, not compared). The copy without creatures drifts as much at places with no creature, so the creatures' own cost is about 5 ms where three are in view.
 
