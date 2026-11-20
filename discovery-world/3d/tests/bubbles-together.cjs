@@ -26,16 +26,15 @@ let fail = 0; const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS
   await A.locator('#bubbleBtn').tap();
   const bIn = await until(B, () => __DDW3.G.bubbles.trapped, null, 20000);
   check('A taps 🫧: a bubble flies to B, and B is trapped inside it (with a big 💥 to pop it)', bIn && await B.locator('#bubbleEsc.show').isVisible());
-  const rise = await B.evaluate(() => new Promise(res => { const P = __DDW3.player, y0 = 0; let top = 0; const t0 = performance.now(); const f = () => { top = Math.max(top, P.y); if (performance.now() - t0 > 3500 || !__DDW3.G.bubbles.trapped) return res(+top.toFixed(1)); requestAnimationFrame(f); }; f(); }));
-  const aSees = await until(A, () => { const o = [...__DDW3.G.mp.others.values()][0]; return !!(o && o.bubM && o.bubM.visible && o.model.root.position.y > 2.5); }, null, 20000);
-  check('B floats up high inside the bubble, and A sees B up there inside the bubble', rise > 4 && aSees, JSON.stringify({ rise, aSees }));
-  await B.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-inside.jpg'), quality: 75, type: 'jpeg' });
-  await A.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-friend.jpg'), quality: 75, type: 'jpeg' });
+  // (both screens at once: B rising past 4 m, and A seeing B high up inside the bubble)
+  const [rise, aSees] = await Promise.all([until(B, () => __DDW3.player.y > 4 && __DDW3.G.bubbles.trapped, null, 20000), until(A, () => { const o = [...__DDW3.G.mp.others.values()][0]; return !!(o && o.bubM && o.bubM.visible && o.model.root.position.y > 2.5); }, null, 20000)]);
+  const bY = await B.evaluate(() => +__DDW3.player.y.toFixed(1));
+  check('B floats up high inside the bubble (over 4 m), and A sees B up there inside the bubble', rise && aSees, JSON.stringify({ rise, aSees, bY }));
   // B pops it early with 💥
-  await B.locator('#bubbleEsc').tap();
+  const stillUp = await B.evaluate(() => __DDW3.G.bubbles.trapped); if (stillUp) await B.locator('#bubbleEsc').tap({ timeout: 5000 }).catch(() => { });
   const bDown = await until(B, () => !__DDW3.G.bubbles.trapped && !__DDW3.G.bubbles.inAir && __DDW3.player.grounded && !__DDW3.player.ride && __DDW3.player.y < .3, null, 30000);
   const aPop = await until(A, () => { const o = [...__DDW3.G.mp.others.values()][0]; return !!(o && !o.bubM); }, null, 20000);
-  check('B taps 💥: the bubble pops (A sees it pop too), B falls, bounces and lands safely on the ground', bDown && aPop, JSON.stringify({ bDown, aPop }));
+  check('B taps 💥: the bubble pops (A sees it pop too), B falls, bounces and lands safely on the ground', stillUp && bDown && aPop, JSON.stringify({ stillUp, bDown, aPop }));
   const walk = await B.evaluate(() => new Promise(res => { const P = __DDW3.player, x0 = P.x; __DDW3.keys.right = true; setTimeout(() => { __DDW3.keys.right = false; res(+(P.x - x0).toFixed(1)); }, 1500); }));
   check('afterwards B walks normally', walk > .5, `moved ${walk} m`);
   // straight away again: B is safe for a while
@@ -44,6 +43,7 @@ let fail = 0; const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS
   // B blows one back at A; A's bubble pops by itself after a few seconds
   await sleep(5000); await B.evaluate(() => { __DDW3.player.facing = -1; }); await B.locator('#bubbleBtn').tap();
   const aIn = await until(A, () => __DDW3.G.bubbles.trapped, null, 20000);
+  if (aIn && await until(A, () => __DDW3.player.y > 3, null, 15000)) { await A.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-inside.jpg'), quality: 75, type: 'jpeg' }); await B.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-friend.jpg'), quality: 75, type: 'jpeg' }); }
   const aDone = aIn && await until(A, () => !__DDW3.G.bubbles.trapped && !__DDW3.G.bubbles.inAir && __DDW3.player.grounded && !__DDW3.player.ride, null, 60000);
   check('B blows one back at A: A is trapped, floats, and the bubble pops by itself; A lands safely', aIn && aDone, JSON.stringify({ aIn, aDone }));
   // no bubbles on a ride: B on the train

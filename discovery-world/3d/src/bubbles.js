@@ -30,7 +30,7 @@ export function initBubbles(api) {
   // api: { scene, P, keys, creature: () => creature, burst, Sound, say, speak, ground(x) -> y, camPull(v) }
   const { scene, P, Sound } = api;
   const pool = [];
-  const take = () => { let m = pool.find(q => !q.userData.busy); if (!m) { if (pool.length >= 8) return null; MAT = MAT || glass(.3); m = new THREE.Mesh(bubbleGeo(), MAT); m.renderOrder = 5; m.userData.dynamic = true; m.castShadow = false; m.receiveShadow = false; scene.add(m); pool.push(m); } m.userData.busy = true; m.visible = true; return m; };
+  const take = () => { let m = pool.find(q => !q.userData.busy); if (!m) { if (pool.length >= 8) return null; MAT = MAT || glass(.38); m = new THREE.Mesh(bubbleGeo(), MAT); m.renderOrder = 5; m.userData.dynamic = true; m.castShadow = false; m.receiveShadow = false; scene.add(m); pool.push(m); } m.userData.busy = true; m.visible = true; return m; };
   const give = m => { if (!m) return; m.userData.busy = false; m.visible = false; };
   const S = (f, ...a) => Sound && Sound[f] && Sound[f](...a);
   const fly = []; // bubbles on their way: { m, from, to: () => Vector3|null, t, onHit }
@@ -50,19 +50,20 @@ export function initBubbles(api) {
     me = { t: 0, x0: P.x, y0: P.y, z0: P.z || 0, dx: 0, dz: 0, m: take(), h, by, phase: 'grow', layer: P.layer };
     P.ride = { type: 'bubble', noExit: true, onJump: () => pop(true) }; P.vx = P.vy = 0; /* (JUMP pops it too) */ api.camPull && api.camPull(1);
     S('whoosh'); api.speak && api.speak('Whoa! You are in a bubble! Tap the star to pop it!');
-    escBtn.classList.add('show'); c && c.cheer && c.cheer(); return true;
+    escBtn.classList.add('show'); document.body.classList.add('inBubble'); c && c.cheer && c.cheer(); return true;
   }
   function pop(early) {
     if (!me) return; const { m } = me, y = P.y + me.h * .55;
     popAt(P.x, y, P.z || 0, 1.3); for (let i = 0; i < 6; i++) api.burst(P.x + Math.sin(i) * 1.2, y + Math.cos(i * 1.7) * .9, (P.z || 0) + Math.cos(i) * .8, ['#ffffff', '#cfefff'], 3, 1.2);
     give(m); me = null; if (P.ride && P.ride.type === 'bubble') P.ride = null; P.vy = 2.6; P.vx = 0; P.grounded = false; landed = { t: 0, bounced: false };
-    escBtn.classList.remove('show'); api.speak && api.speak(early ? 'Pop!' : 'Pop! Wheee!'); S('whoosh');
+    escBtn.classList.remove('show'); document.body.classList.remove('inBubble'); api.speak && api.speak(early ? 'Pop!' : 'Pop! Wheee!'); S('whoosh');
   }
   // ---- the two big buttons: 🫧 (blow) and 💥 (pop my bubble) ----
   const css = `#bubbleBtn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:200px;z-index:12;width:74px;height:74px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff,#cfefff 40%,#c9a6ff 75%,#ff9fd8);box-shadow:0 5px 0 #8a6ad8,0 8px 18px #0004;font-size:40px;line-height:74px;padding:0;display:none}
 #bubbleBtn.show{display:block}#bubbleBtn.wait{opacity:.45;filter:grayscale(.5)}
-#bubbleEsc{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:33;width:112px;height:112px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffe36e 45%,#ff9a2e);box-shadow:0 7px 0 #c26a00,0 12px 26px #0006;font-size:62px;line-height:112px;padding:0;display:none;animation:bEsc 1s ease-in-out infinite}
-#bubbleEsc.show{display:block}@keyframes bEsc{50%{transform:translateX(-50%) scale(1.1)}}`;
+#bubbleEsc{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:112px;z-index:33;width:104px;height:104px;border:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffe36e 45%,#ff9a2e);box-shadow:0 7px 0 #c26a00,0 12px 26px #0006;font-size:58px;line-height:104px;padding:0;display:none;animation:bEsc 1s ease-in-out infinite}
+#bubbleEsc.show{display:block}@keyframes bEsc{50%{transform:scale(1.12)}}
+body.inBubble #bubbleBtn{display:none}`;
   const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   const blowBtn = document.createElement('button'); blowBtn.id = 'bubbleBtn'; blowBtn.textContent = '🫧'; blowBtn.setAttribute('aria-label', 'blow a bubble'); document.body.appendChild(blowBtn);
   const escBtn = document.createElement('button'); escBtn.id = 'bubbleEsc'; escBtn.textContent = '💥'; escBtn.setAttribute('aria-label', 'pop my bubble'); document.body.appendChild(escBtn);
@@ -99,7 +100,7 @@ export function initBubbles(api) {
         if (Math.random() < dt * 10) api.burst(f.m.position.x, f.m.position.y, f.m.position.z, ['#ffffff', '#cfefff', '#ffd6f4'], 1, .5);
         if (f.t >= 1) { give(f.m); fly.splice(i, 1); f.onHit && f.onHit(); } }
       if (me) { me.t += dt; const t = me.t, m = me.m;
-        if (!P.ride || P.ride.type !== 'bubble') { give(m); me = null; escBtn.classList.remove('show'); api.camPull && api.camPull(0); return; } // (something else took over, e.g. 🏠 or the map: just let go)
+        if (!P.ride || P.ride.type !== 'bubble') { give(m); me = null; escBtn.classList.remove('show'); document.body.classList.remove('inBubble'); api.camPull && api.camPull(0); return; } // (something else took over, e.g. 🏠 or the map: just let go)
         const k = api.keys || {}, sx = (k.right ? 1 : 0) - (k.left ? 1 : 0), sz = (k.down ? 1 : 0) - (k.up ? 1 : 0);
         me.dx = Math.max(-3, Math.min(3, me.dx + sx * dt * 1.6)); me.dz = Math.max(-1.2, Math.min(1.2, me.dz + sz * dt * 1.2)); if (sx) P.facing = sx;
         const up = t < GROW ? 0 : Math.min(1, (t - GROW) / 2.4), ease = up * up * (3 - 2 * up);
