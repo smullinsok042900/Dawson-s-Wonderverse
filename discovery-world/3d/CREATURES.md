@@ -27,7 +27,7 @@ multiplayer view, its own browser test, a speed A/B, the full smoke test, then m
 | 4 | Venus | Nimbus (cloud person: shower and rainbow), Puffo (mist creature: peekaboo), Coral (sunset singer) | Fluff, Flutter, Wisp, Bubbles, Drip, Puffin | DONE (build 110) |
 | 5 | Jupiter | Zappy (storm sprite: lightning flash), Swirly (spins), Big Puff (giant cloud: a puffy hug) | Bobble, Wobble, Bolt, Nimbo, Kite, Gusty | DONE (build 112) |
 | 6 | Saturn | Ringo (hula dancer: dances when she jumps), Shimmer (shooting star), Zoomer (racer: catch-me) | Halo, Streak, Starla, Chip, Loop, Gem | DONE (build 113) |
-| 7 | Uranus | frost sprites | snowflake pets, ice pups | TODO |
+| 7 | Uranus | Frosty (frost sprite: makes it snow), Skatey (ice skater: twirls, catch-me), Brrr (snowman: ACHOO!) | Flurry, Flake, Polar, Slider, Mitten, Tinsel | DONE (build 114) |
 | 8 | Neptune | wind whirlers | glowing blue floaters | TODO |
 | 9 | Pluto | snowball folk | frost fluffs, snowball pups | TODO |
 | 10 | Earth | woodland puffballs and fantasy animals (beside the existing pals) | woodland pets | TODO |

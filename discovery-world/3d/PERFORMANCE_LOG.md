@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 114 (Uranus creatures)
+Desktop, software rendering; `pplanet.cjs uranus` (spots +60, +95, +185, +270, +320), builds 113 and 114, four rounds (medians): +95 144 → 149 ms, +185 190 → 189.5, +270 156.5 → 156.75, +320 123 → 129; two to four more draw calls where creatures are in view, +4 k triangles; +60 is the landing spot (210–560 ms on both), not compared. Memory the same (shapes 1,330–1,338, textures 148).
+
 ## Build 113 (Saturn creatures)
 Desktop, software rendering; `pplanet.cjs saturn` (spots +60, +95, +320 added), builds 112 and 113, four rounds: +95 169 → 171 ms, +150 163 → 162, +240 143 → 139, +320 131 → 135; two to four more draw calls where creatures are in view.
 
