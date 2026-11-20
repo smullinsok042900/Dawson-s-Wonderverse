@@ -417,6 +417,7 @@ function mercuryMirrorMaze(k, X) {
   k.tapIt(hall, () => k.fact('🪞 The funhouse mirror maze! Look in the mirrors, and tap the mirror doors to open them.', 'mercuryfunhouse'), x0, 'mercuryfunhouse');
 }
 const mercury = {
+  all(k) { populate(k, [['cinderpuff', 18, -2.8], ['mirrormo', 30, -2.4], ['quartzkit', 42, -3], ['sunny', 55, -3.6], ['glowpebble', 66, -2.8], ['pebblefolk', 80, -3], ['flicker', 92, -2.6], ['sparkmouse', 102, -3], ['lanternowl', 112, -2.8]]); }, // (build 109) Mercury friends and pets (planet-life.js)
   sections: [
     k => { mercuryMirrorMaze(k, k.s0); mercuryMazePlus(k); mercuryRotatingWalls(k); /* (build 99) */ k.rocketSign(k.s0 + 4); },     // area 2: the funhouse mirror maze + (build 74) the gallery, light-beam puzzle, hidden door
     k => { mercuryFunhouse(k); k.rocketSign(k.s0 + 108); }, // area 3: (build 71) the giant carnival funhouse (it replaces the rocks)
