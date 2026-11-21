@@ -260,6 +260,37 @@ export function initExpansion(G, api) {
       const tube = new THREE.Mesh(new THREE.CylinderGeometry(.16, .24, 1.2, 20), mat('#ffd23f', { r: .4 })); tube.rotation.z = 1.1; tube.position.y = 1.1; tube.castShadow = true; tele.add(tube);
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .9, 8), mat('#7a5230')); leg.position.y = .45; tele.add(leg);
       c.tap(tele, () => { if (P.y < 3) { c.say('🔭 Climb the rocks to look through the telescope!'); return; } c.disc('lookout'); c.say('🔭 What a view! I can see so far away!'); c.burst(485.6, 5, -1, ['#ffd23f', '#fff', '#9fe6ff'], 24, 3); Sound.chime(); }, 485.6); },
+    // (build 118) THE ZIP LINE: from a wooden tower beside the lookout rocks, a long cable down over the treasure chests to a
+    //  soft landing mat. Hold ▶ to zoom, ◀ to slow down; ▲ lifts your legs for the high stars, ▼ stretches down for the low
+    //  ones; JUMP lets go (you float down gently). Five stars to catch on the way.
+    () => { const T0 = new THREE.Vector3(489, 8.2, -1), T1 = new THREE.Vector3(528.5, 2.9, -1), D = T1.clone().sub(T0), b = makeBatch(), bx = new THREE.BoxGeometry(1, 1, 1), cy = new THREE.CylinderGeometry(1, 1, 1, 8);
+      for (const [x, z] of [[487.2, -.2], [490.2, -.2], [487.2, -2], [490.2, -2]]) b.put(cy, x, 3.6, z, '#8a5a2a', [.13, 7.2, .13]);          // the tower's four legs
+      b.put(bx, 488.7, 4.7, -1.1, '#bf8650', [3.4, .2, 2.2]); // the platform (one rock-step above the lookout)
+      b.put(bx, 488.7, 5.75, -2.15, '#a8703f', [3.4, .1, .1]); b.put(bx, 488.7, 7.4, -2.15, '#e8902a', [3.8, .2, .4]); b.put(cy, 489, 8.4, -1, '#d8e0ea', [.09, .5, .09]);
+            b.put(cy, T1.x + .3, 1.6, -1, '#d8e0ea', [.12, 3.2, .12]); b.put(cy, 529.5, .12, 0, '#7fe0a0', [1.9, .24, 1.9]); b.put(cy, 529.5, .26, 0, '#b8f5c8', [1.6, .06, 1.6]); // low post and the soft landing mat
+      b.put(cy, (T0.x + T1.x) / 2, (T0.y + T1.y) / 2, -1, '#ffffff', [.035, D.length(), .035], [0, 0, Math.atan2(-D.x, D.y)]);              // the cable
+      c.add(b.mesh(shinyMat())); c.plat(486.5, 490.9, 4.8, { z: -1.1 });                                                                   // the platform
+      const handle = new THREE.Mesh(new THREE.TorusGeometry(.3, .06, 6, 16), mat('#ff4f6a', { r: .3 })); handle.userData.dynamic = true; c.add(handle);
+      const home = () => { handle.position.copy(T0); handle.position.y -= .45; }; home();
+      const starMat = mat('#ffd23f', { em: '#ffb000', ei: .8, r: .3 }), starG = new THREE.OctahedronGeometry(.32, 0);
+      const stars = [[.18, 1], [.34, -1], [.5, 1], [.66, -1], [.82, 1]].map(([f, hi]) => { const m = new THREE.Mesh(starG, starMat); m.scale.y = 1.3; const p = T0.clone().addScaledVector(D, f); m.position.set(p.x, p.y - 1.4 + hi * .9, -1); c.add(m); return { m, f, hi, got: false }; });
+      let R = null, floatDown = false, ready = 0;
+      const start = () => { if (P.layer !== '' || P.ride || Math.abs(P.x - 489) > 2.2 || P.y < 4.5) { if (!P.ride) c.say('🪜 Climb up the tower beside the lookout rocks, then grab the zip line!'); return; }
+        c.disc('zipline', '🪢 The zip line! Climb the tower and grab the handle!'); c.say('🪢 Hold on! ▶ to zoom, ◀ to slow down, ▲ ▼ to catch the stars, JUMP to let go!'); Sound.whoosh && Sound.whoosh();
+        R = { type: 'zipline', t: 0, noExit: true, stick: true, f: 0, v: .035, lift: 0, n: 0 }; R.onJump = () => { if (R && R.f > .08) R.letGo = true; }; P.ride = R; P.vx = P.vy = 0; for (const q of stars) { q.got = false; q.m.visible = true; } };
+      c.tap(handle, start, 489, { y: 4.8, icon: '🪢', label: 'Zip line', action: 'Zip!', disc: 'zipline' });
+      return (dt, t) => { for (const q of stars) if (!q.got) q.m.rotation.y = t * 2;
+        if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); }
+        if (!R) return; if (P.ride !== R) { R = null; home(); return; }
+        const st = api.stick ? api.stick() : { x: 0, y: 0 }; dt = Math.min(dt, .1); R.t += dt;
+        R.v += ((st.x > .3 ? .075 : st.x < -.3 ? .018 : .04) - R.v) * Math.min(1, dt * 2); R.f = Math.min(1, R.f + R.v * dt);                 // (▶ zoom, ◀ slow; it never stops)
+        R.lift += ((st.y > .3 ? .9 : st.y < -.3 ? -.9 : 0) - R.lift) * Math.min(1, dt * 6);
+        handle.position.copy(T0).addScaledVector(D, R.f); handle.position.y -= .45; P.x = handle.position.x; P.y = handle.position.y - 2.1 + R.lift * .6; P.z = -1; P.facing = 1; P.vx = R.v * D.x;
+        if (Math.random() < dt * (4 + R.v * 80)) c.burst(handle.position.x, handle.position.y + .3, -1, ['#ffffff', '#ffd23f'], 1, .8);
+        for (const q of stars) if (!q.got && Math.abs(q.f - R.f) < .03 && Math.abs((P.y + 1.1) - q.m.position.y) < .75) { q.got = true; q.m.visible = false; R.n++; Sound.tone(520 + R.n * 70, .15, 'sine', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1, ['#ffd23f', '#ffffff'], 10, 1.6); }
+        if (R.f >= 1 || R.letGo) { const r = R; R = null; P.ride = null; P.z = 0; home();
+          if (r.letGo) { P.vy = 0; P.grounded = false; floatDown = true; c.say('🪂 You let go! Float down gently...'); }
+          else { P.y = .3; P.x = 530; P.vy = 0; P.grounded = true; c.burst(529.5, 1, 0, RB, 18, 2.4); Sound.boing(); c.say(r.n === 5 ? '🌟 WOW! All five stars on the zip line!' : `🪢 What a zip! You caught ${NUM[r.n] || r.n} star${r.n === 1 ? '' : 's'}! Climb up again!`); if (r.n === 5) c.disc('zipstars', '🌟 Catch all five stars on the zip line!'); } } }; },
     // three treasure chests: tap to open, a surprise pops out
     () => { const toys = ['🧸', '🎈', '🍭', '👑', '🦄', '🌟', '🎁', '🐣', '🪀', '🍓'];
       return [500, 512, 524].map(x => { const g = new THREE.Group(); g.position.set(x, 0, -2.2); c.add(g);
