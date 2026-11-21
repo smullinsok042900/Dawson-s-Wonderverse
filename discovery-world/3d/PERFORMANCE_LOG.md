@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 118 (the Adventure Trail zip line)
+Desktop, software rendering; `pearth.cjs trail` (spots 470, 489, 505, 520, 538), builds 117 and 118, two runs pooled, 24 samples per spot (median / mean): 470 539.5 / 529 → 531 / 526 ms, 489 537 / 529 → 533 / 525, 505 516.5 / 522 → 526.5 / 516, 520 525.5 / 522 → 541.5 / 527, 538 (the crystal cave, with the landing mat in view) 533.5 / 544 → 553.5 / 560 (+5 in one run, +37 in the other: each spot spreads ±50 ms between runs); +1 to +4 draw calls where the tower or the stars are in view. Shader programs after walking the trail: 147 in both (a first version with the stars as one instanced mesh made one new shader).
+
 ## Build 117 (Earth creatures; lighter creature shapes; shared paint kept)
 Desktop, software rendering; new `pearth.cjs`-style run (teleport into the Whispering Woods / Balloon Hills, then the same spot measurement as `pplanet.cjs`). Earth frames are much heavier than the planets here (550–700 ms) and each spot spreads ±50 ms between runs, so many rounds were pooled. Builds 116 and 117, 22 samples per spot (medians): woods −160 668.5 → 669.5 ms, −185 615 → 588, −211 573.5 → 581.5, −240 621 → 627, −255 634 → 649 (+1 to +2.5 draw calls); hills (6 samples) −740 234.5 → 236, −748 237 → 237.5, −756 239.5 → 236.5. The first placement (creatures 12 m apart, three in view at −185) measured 594 → 713 in one run, so they were spread to 15 m and the shapes made lighter (40–70 % fewer triangles a creature). A copy without the woods creatures and a copy without the shared-paint fix moved as much as build 117 (−185: 544.5 and 553.5 vs 634.5 for build 116 in one run, the opposite direction in another): the measurement's spread.
 

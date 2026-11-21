@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 118: the Adventure Trail zip line
+- **Climb the lookout rocks, hop onto the tower and zip down the long cable** over the treasure chests: ▶ zoom, ◀ slow down, ▲ ▼ catch the high and low stars, JUMP to let go and float down.
+
 ## 3D build 117: Earth friends and pets
 - **In the Whispering Woods:** Puffy the dandelion puffball, Shroomy the bouncing mushroom and Twiggy the walking tree stump, and five woodland pets: Prickles, Dewey, Dotty, Bandit and Splashy. **On Balloon Hills:** Sparkle the unicorn foal.
 - Every place in the solar system now has its own creatures and pets to befriend.
