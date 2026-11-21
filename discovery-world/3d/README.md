@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 119: Toy Town's paper plane
+- **Climb the giant toy blocks and glide over Toy Town on a big paper plane:** ▲ up, ▼ dive, catch the six stars, JUMP to hop off.
+
 ## 3D build 118: the Adventure Trail zip line
 - **Climb the lookout rocks, hop onto the tower and zip down the long cable** over the treasure chests: ▶ zoom, ◀ slow down, ▲ ▼ catch the high and low stars, JUMP to let go and float down.
 

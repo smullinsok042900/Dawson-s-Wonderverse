@@ -7,6 +7,9 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 119 (Toy Town's paper-plane glider)
+Desktop, software rendering; `pearth.cjs toytown` (spots 560, 585, 610, 635, 656), builds 118 and 119, 12 samples per spot (median / mean): 560 269 / 272 → 265 / 266 ms, 585 271.5 / 266 → 262 / 265, 610 254.5 / 257 → 258.5 / 259, 635 260.5 / 263 → 267 / 269, 656 (the toy-block stairs and the plane) 265 / 266 → 273.5 / 272 (+2 draw calls there). Toy Town frames spread about ±10 ms between runs. Shader programs after walking Toy Town: 147 in both.
+
 ## Build 118 (the Adventure Trail zip line)
 Desktop, software rendering; `pearth.cjs trail` (spots 470, 489, 505, 520, 538), builds 117 and 118, two runs pooled, 24 samples per spot (median / mean): 470 539.5 / 529 → 531 / 526 ms, 489 537 / 529 → 533 / 525, 505 516.5 / 522 → 526.5 / 516, 520 525.5 / 522 → 541.5 / 527, 538 (the crystal cave, with the landing mat in view) 533.5 / 544 → 553.5 / 560 (+5 in one run, +37 in the other: each spot spreads ±50 ms between runs); +1 to +4 draw calls where the tower or the stars are in view. Shader programs after walking the trail: 147 in both (a first version with the stars as one instanced mesh made one new shader).
 
