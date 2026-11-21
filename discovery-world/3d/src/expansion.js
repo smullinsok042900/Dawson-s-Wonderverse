@@ -272,8 +272,8 @@ export function initExpansion(G, api) {
       c.add(b.mesh(shinyMat())); c.plat(486.5, 490.9, 4.8, { z: -1.1 });                                                                   // the platform
       const handle = new THREE.Mesh(new THREE.TorusGeometry(.3, .06, 6, 16), mat('#ff4f6a', { r: .3 })); handle.userData.dynamic = true; c.add(handle);
       const home = () => { handle.position.copy(T0); handle.position.y -= .45; }; home();
-      const starMat = mat('#ffd23f', { em: '#ffb000', ei: .8, r: .3 }), starG = new THREE.OctahedronGeometry(.32, 0);
-      const stars = [[.18, 1], [.34, -1], [.5, 1], [.66, -1], [.82, 1]].map(([f, hi]) => { const m = new THREE.Mesh(starG, starMat); m.scale.y = 1.3; const p = T0.clone().addScaledVector(D, f); m.position.set(p.x, p.y - 1.4 + hi * .9, -1); c.add(m); return { m, f, hi, got: false }; });
+      const starG = new THREE.OctahedronGeometry(.32, 0);
+      const stars = [[.18, 1], [.34, -1], [.5, 1], [.66, -1], [.82, 1]].map(([f, hi]) => { const sb = makeBatch(); sb.put(starG, 0, 0, 0, '#ffd23f', [1, 1.3, 1]); const m = sb.mesh(shinyMat()); /* (build 118: the shared paint: no new shader) */ m.userData.dynamic = true; const p = T0.clone().addScaledVector(D, f); m.position.set(p.x, p.y - 1.4 + hi * .9, -1); c.add(m); return { m, f, hi, got: false }; });
       let R = null, floatDown = false, ready = 0;
       const start = () => { if (P.layer !== '' || P.ride || Math.abs(P.x - 489) > 2.2 || P.y < 4.5) { if (!P.ride) c.say('🪜 Climb up the tower beside the lookout rocks, then grab the zip line!'); return; }
         c.disc('zipline', '🪢 The zip line! Climb the tower and grab the handle!'); c.say('🪢 Hold on! ▶ to zoom, ◀ to slow down, ▲ ▼ to catch the stars, JUMP to let go!'); Sound.whoosh && Sound.whoosh();
