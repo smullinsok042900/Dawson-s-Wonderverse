@@ -355,6 +355,36 @@ export function initExpansion(G, api) {
           else { ph += dt * 2.6; pivot.rotation.z = Math.sin(ph) * .34; P.y = endY(side, pivot.rotation.z); P.vy = 0; P.grounded = true; P.jumps = 0; if (Math.abs(Math.cos(ph)) > .99 && Math.sin(pivot.rotation.z) * side < 0) Sound.tone(300, .05, 'triangle', .03, 1); } }
         else { const want = near ? -sd * .34 : 0; pivot.rotation.z += (want - pivot.rotation.z) * Math.min(1, dt * 4); } // (the near end dips down to the ground so you can step on)
         const tx = 638 - (on ? side : 1) * 2.6 * Math.cos(pivot.rotation.z); teddy.position.set(tx, .8 + .7 + Math.sin(pivot.rotation.z) * 2.6 * -(on ? side : 1), -.2); }; },
+    // (build 119) THE PAPER-PLANE GLIDER: climb the giant toy blocks at the end of Toy Town, hop on the big paper plane and
+    //  glide back over the town. ▲ pulls up (slower), ▼ dives (faster), nothing held = a gentle glide down; catch the stars at
+    //  different heights; land anywhere soft (the musical floor plays you in), or JUMP to hop off and float down.
+    () => { const b = makeBatch(), bx = new THREE.BoxGeometry(1, 1, 1), STEPS = [[664.6, 667.8, 1.2], [661.4, 664.6, 2.4], [658.2, 661.4, 3.6], [655, 658.2, 4.8]]; /* (3.2 m wide, like the lookout rocks: easy hops) */
+      STEPS.forEach(([a, z2, y], i) => { b.put(bx, (a + z2) / 2, y / 2, -1.3, RB[(i * 2 + 1) % 8], [z2 - a, y, 2]); b.put(bx, (a + z2) / 2, y - .02, -.28, '#ffffff', [z2 - a - .2, .06, .06]); });  // the toy-block stairs
+      c.add(b.mesh(shinyMat())); for (const [a, z2, y] of STEPS) c.plat(a, z2, y, { z: -1.2 });
+      const PL = (() => { const pb = makeBatch(), cn = new THREE.ConeGeometry(1, 1, 4); pb.put(bx, -.1, 0, 0, '#ffffff', [2.6, .14, .3]); pb.put(cn, 1.55, 0, 0, '#ffffff', [.22, .7, .16], [0, 0, -Math.PI / 2]); /* (a paper plane: a long body, a pointed nose, V wings, a pink tail) */
+        for (const k of [-1, 1]) { pb.put(bx, -.15, .18, k * .75, '#f4faff', [2.3, .04, 1.3], [k * .32, 0, 0]); pb.put(bx, -.15, .21, k * 1.05, '#5aa8ff', [2, .045, .16], [k * .32, 0, 0]); }
+        pb.put(bx, -1.2, .32, 0, '#ff9fc8', [.5, .5, .05]); return pb.mesh(shinyMat()); })();
+      const plane = new THREE.Group(); plane.add(PL); PL.rotation.y = Math.PI; plane.userData.dynamic = true; c.add(plane); const home = () => { plane.position.set(656.4, 4.95, -1.1); plane.rotation.set(0, 0, 0); }; home();
+      const starG = new THREE.OctahedronGeometry(.32, 0), stars = [[638, 7.6], [626, 4.4], [612, 8.2], [598, 5], [586, 3], [574, 6.4]].map(([x, y]) => { const sb = makeBatch(); sb.put(starG, 0, 0, 0, '#ffd23f', [1, 1.3, 1]); const m = sb.mesh(shinyMat()); m.userData.dynamic = true; m.position.set(x, y, -1.1); c.add(m); return { m, got: false }; });
+      let R = null, floatDown = false;
+      const start = () => { if (P.layer !== '' || P.ride || Math.abs(P.x - 656.6) > 2.2 || P.y < 4.5) { if (!P.ride) c.say('🧱 Climb up the giant toy blocks, then hop on the paper plane!'); return; }
+        c.disc('glider', '✈️ The paper plane! Climb the toy blocks and fly over Toy Town!'); c.say('✈️ Wheee! ▲ to fly up, ▼ to dive, catch the stars, JUMP to hop off!'); Sound.whoosh && Sound.whoosh();
+        R = { type: 'glider', t: 0, noExit: true, stick: true, x: 656.4, y: 6.2, v: 3.5, n: 0 }; R.onJump = () => { if (R && R.t > .6) R.hop = true; }; P.ride = R; P.vx = P.vy = 0; for (const q of stars) { q.got = false; q.m.visible = true; } };
+      c.tap(plane, start, 656.6, { y: 4.8, icon: '✈️', label: 'Paper plane', action: 'Fly!', disc: 'glider' });
+      return (dt, t) => { for (const q of stars) if (!q.got) q.m.rotation.y = t * 2;
+        if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); }
+        if (!R) return; if (P.ride !== R) { R = null; home(); return; }
+        const st = api.stick ? api.stick() : { x: 0, y: 0 }; dt = Math.min(dt, .1); R.t += dt; const up = st.y > .3, dn = st.y < -.3;
+        R.v += ((up ? 3.6 : dn ? 9 : 6) - R.v) * Math.min(1, dt * 1.5); const vy = up ? 1.6 : dn ? -3.4 : -.9;               // (▲ climbs and slows, ▼ dives and speeds up)
+        R.x -= R.v * dt; R.y = Math.min(11, R.y + vy * dt); const pitch = up ? -.25 : dn ? .3 : .06;
+        plane.position.set(R.x, R.y, -1.1); plane.rotation.z += (pitch - plane.rotation.z) * Math.min(1, dt * 4); plane.rotation.x = Math.sin(R.t * 2) * .06;
+        P.x = R.x; P.y = R.y + .1; P.z = -1.1; P.facing = -1; P.vx = -R.v;
+        if (Math.random() < dt * 8) c.burst(R.x + 1.3, R.y, -1.1, ['#ffffff', '#cfefff'], 1, .6);
+        for (const q of stars) if (!q.got && Math.abs(q.m.position.x - R.x) < 1 && Math.abs(q.m.position.y - (R.y + .7)) < 1.1) { q.got = true; q.m.visible = false; R.n++; Sound.tone(520 + R.n * 70, .15, 'sine', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1.1, ['#ffd23f', '#ffffff'], 10, 1.6); }
+        const landed = R.y <= .35 || R.x < 557;
+        if (landed || R.hop) { const r = R; R = null; P.ride = null; P.z = 0; home();
+          if (r.hop) { P.vy = 0; P.grounded = false; floatDown = true; c.say('🪂 You hopped off! Float down gently...'); }
+          else { P.y = Math.max(0, r.y); P.vy = 0; P.grounded = P.y < .4; if (!P.grounded) floatDown = true; c.burst(P.x, .8, 0, RB, 16, 2.2); Sound.boing(); c.say(r.n === 6 ? '🌟 WOW! All six stars on the paper plane!' : `✈️ What a flight! You caught ${NUM[r.n] || r.n} star${r.n === 1 ? '' : 's'}! Fly again from the toy blocks!`); if (r.n === 6) c.disc('gliderstars', '🌟 Catch all six stars on the paper plane!'); } } }; },
     // catch the balloons floating up from the basket
     () => { c.cyl(651.5, 0, -2.4, .9, .7, .8, '#c87a2a', { r: .8 }); /* (build 64: in the gap between the houses; at 656 the balloons rose up a house wall) */ const list = []; const spawn = b => { b.position.set(650 + Math.random() * 3, .8, -2.4 + Math.random() * .8); b.rotation.z = 0; b.userData.v = .8 + Math.random() * .6; };
       for (let i = 0; i < 6; i++) { const b = physicalToy('🎈', 1); spawn(b); b.position.y = Math.random() * 8; c.add(b); list.push(b); c.tap(b, () => { if (b.userData.pop) return; b.userData.pop = 1; Sound.pop ? Sound.pop() : Sound.click(); X.balloons++; c.burst(b.position.x, b.position.y, b.position.z, RB, 10, 2.5); c.disc('balloons', '🎈 Pop! Catch the balloons as they float up!'); if (X.balloons % 10 === 0) c.say(`🎈 ${X.balloons} balloons caught!`); setTimeout(() => { b.userData.pop = 0; spawn(b); }, 400); b.position.y = -20; api.saveSoon(); }); }
