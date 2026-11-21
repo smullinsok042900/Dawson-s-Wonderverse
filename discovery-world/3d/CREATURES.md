@@ -30,7 +30,7 @@ multiplayer view, its own browser test, a speed A/B, the full smoke test, then m
 | 7 | Uranus | Frosty (frost sprite: makes it snow), Skatey (ice skater: twirls, catch-me), Brrr (snowman: ACHOO!) | Flurry, Flake, Polar, Slider, Mitten, Tinsel | DONE (build 114) |
 | 8 | Neptune | Whirly (wind whirler: whirls the wind round her), Bloop (glowing jellyfish: flashes colours with notes), Echo (whale calf: a whale song and a spout) | Glowbe, Drifty, Breezy, Swish, Ripple, Misty | DONE (build 115) |
 | 9 | Pluto | Snowy (snowball kid: a soft snowball toss), Lovey (heart sprite: hearts and a heartbeat), Dot (little Charon moon: dances round her) | Fuzzy, Snowball, Cuddles, Nibbles, Nutty, Yaki | DONE (build 116) |
-| 10 | Earth | woodland puffballs and fantasy animals (beside the existing pals) | woodland pets | TODO |
+| 10 | Earth | Puffy (dandelion puffball: wishing seeds), Shroomy (bouncing mushroom: bounce together), Twiggy (walking tree stump: flowers bloom) — in the Whispering Woods | Prickles, Dewey, Dotty, Bandit, Splashy (woods), Sparkle the unicorn foal (Balloon Hills) | DONE (build 117) |
 
 ## Rules
 - Original creatures only; each species its own shape and movement (not a recolour).
