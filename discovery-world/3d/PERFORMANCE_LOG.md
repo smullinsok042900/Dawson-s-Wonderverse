@@ -7,6 +7,21 @@ real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPh
 
 
 
+## Build 117 (Earth creatures; lighter creature shapes; shared paint kept)
+Desktop, software rendering; new `pearth.cjs`-style run (teleport into the Whispering Woods / Balloon Hills, then the same spot measurement as `pplanet.cjs`). Earth frames are much heavier than the planets here (550–700 ms) and each spot spreads ±50 ms between runs, so many rounds were pooled. Builds 116 and 117, 22 samples per spot (medians): woods −160 668.5 → 669.5 ms, −185 615 → 588, −211 573.5 → 581.5, −240 621 → 627, −255 634 → 649 (+1 to +2.5 draw calls); hills (6 samples) −740 234.5 → 236, −748 237 → 237.5, −756 239.5 → 236.5. The first placement (creatures 12 m apart, three in view at −185) measured 594 → 713 in one run, so they were spread to 15 m and the shapes made lighter (40–70 % fewer triangles a creature). A copy without the woods creatures and a copy without the shared-paint fix moved as much as build 117 (−185: 544.5 and 553.5 vs 634.5 for build 116 in one run, the opposite direction in another): the measurement's spread.
+
+## Build 116 (Pluto creatures)
+Desktop, software rendering; `pplanet.cjs pluto` (spots +30, +60, +95, +199, +320), builds 115 and 116, eight rounds (medians): +60 163.5 → 166.5 ms (+2 draw calls), +95 155.5 → 158.5 (+4 draw calls), +199 181 → 183 (no creature there: the measurement's drift), +320 183 → 189.5 (+2 draw calls); +30 is the landing spot (185–590 ms on both), not compared. Memory the same (shapes 1,323–1,334, textures 148).
+
+## Build 115 (Neptune creatures)
+Desktop, software rendering; `pplanet.cjs neptune` (spots +60, +95, +150, +186, +320), builds 114 and 115, eight rounds (medians): +95 177 → 182 ms (three creatures in view: +4 draw calls, +6 k triangles), +150 174.5 → 173.5, +186 165.5 → 165, +320 130 → 133.5 (+2 draw calls); +60 is the landing spot (160–560 ms on both), not compared. Memory the same (shapes 1,320–1,338, textures 139–148). The creatures' own cost is about 1–2 ms each where they are in view, as on the other planets.
+
+## Build 114 (Uranus creatures)
+Desktop, software rendering; `pplanet.cjs uranus` (spots +60, +95, +185, +270, +320), builds 113 and 114, four rounds (medians): +95 144 → 149 ms, +185 190 → 189.5, +270 156.5 → 156.75, +320 123 → 129; two to four more draw calls where creatures are in view, +4 k triangles; +60 is the landing spot (210–560 ms on both), not compared. Memory the same (shapes 1,330–1,338, textures 148).
+
+## Build 113 (Saturn creatures)
+Desktop, software rendering; `pplanet.cjs saturn` (spots +60, +95, +320 added), builds 112 and 113, four rounds: +95 169 → 171 ms, +150 163 → 162, +240 143 → 139, +320 131 → 135; two to four more draw calls where creatures are in view.
+
 ## Build 112 (Jupiter creatures)
 Desktop, software rendering; `pplanet.cjs jupiter` (spots +30, +60, +90, +150, +205, +320), four rounds each of build 111 / build 112 without the creatures / build 112: +60 223 / 223 / 213 ms, +90 215 / 221 / 226 (three creatures in view: +4 draw calls), +150 206 / 211 / 218, +205 194 / 201 / 203, +320 149 / 167 / 173 (+30 is the landing spot, 200–670 ms, not compared). The copy without creatures drifts as much at places with no creature, so the creatures' own cost is about 5 ms where three are in view.
 

@@ -3,6 +3,10 @@
 Prioritized unfinished work, highest first. Take the top item that can be done without the user. When a task is done,
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
+## Creatures and pets (CREATURES.md): every destination DONE (builds 107–117)
+Still open there: S2 (creatures sleeping and playing with each other) and S6 (Play Together: show each player's followers on the
+others' screens). Earth's woods frames spread ±50 ms between runs on desktop: pool many rounds before judging a change there.
+
 ## The attraction checklist
 `ATTRACTIONS.md` is the permanent list (the family's request, 2026-11-18). Work through it from the first row that is not DONE.
 - Pluto's rainbow tower (`plutoRainbowTower`, build 92) is switched off: make it lighter (it was 7–15 % slower in view), then turn it on.

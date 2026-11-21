@@ -12,6 +12,22 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 117: Earth friends and pets
+- **In the Whispering Woods:** Puffy the dandelion puffball, Shroomy the bouncing mushroom and Twiggy the walking tree stump, and five woodland pets: Prickles, Dewey, Dotty, Bandit and Splashy. **On Balloon Hills:** Sparkle the unicorn foal.
+- Every place in the solar system now has its own creatures and pets to befriend.
+
+## 3D build 116: Pluto friends and pets
+- **On Pluto:** Snowy the snowball kid, Lovey the heart sprite and Dot the little dancing moon, and six pets: Fuzzy, Snowball, Cuddles, Nibbles, Nutty and Yaki.
+
+## 3D build 115: Neptune friends and pets
+- **On Neptune:** Whirly the little whirlwind, Bloop the glowing jellyfish and Echo the singing whale calf, and six pets: Glowbe, Drifty, Breezy, Swish, Ripple and Misty.
+
+## 3D build 114: Uranus friends and pets
+- **On Uranus:** Frosty the snow sprite, Skatey the ice skater and Brrr the sneezy snowman, and six pets: Flurry, Flake, Polar, Slider, Mitten and Tinsel.
+
+## 3D build 113: Saturn friends and pets
+- **On Saturn:** Ringo the hula dancer, Shimmer the shooting-star maker and Zoomer the racer, and six pets: Halo, Streak, Starla, Chip, Loop and Gem.
+
 ## 3D build 112: Jupiter friends and pets
 - **On Jupiter:** Zappy the storm sprite, Swirly who spins and Big Puff the giant cloud, and six pets: Bobble, Wobble, Bolt, Nimbo, Kite and Gusty.
 

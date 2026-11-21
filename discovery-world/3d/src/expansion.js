@@ -13,7 +13,7 @@ import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
-import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeAnimate } from './planet-life.js'; // (build 107) pets from the planets
+import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeAnimate, populate } from './planet-life.js'; // (build 107) pets from the planets
 import { PET_PICS } from './pet-pictures.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -83,8 +83,8 @@ export function initExpansion(G, api) {
     object.removeFromParent();
     object.traverse(o => {
       if (o.isSprite) return;
-      if (o.geometry && !W.isShared(o.geometry) && !toyGeometries.has(o.geometry)) o.geometry.dispose();
-      for (const m of [].concat(o.material || [])) if (m && !W.isSharedMat(m) && !toyMaterials.has(m)) { if (m.map) m.map.dispose(); m.dispose(); }
+      if (o.geometry && !W.isShared(o.geometry) && !toyGeometries.has(o.geometry) && !o.geometry.userData?.shared) o.geometry.dispose();
+      for (const m of [].concat(o.material || [])) if (m && !W.isSharedMat(m) && !toyMaterials.has(m) && m !== shinyMat()) { /* (build 117: never the shared paint, used by many things: freeing it rebuilt its shader on the way back) */ if (m.map) m.map.dispose(); m.dispose(); }
     });
   }
 
@@ -161,7 +161,7 @@ export function initExpansion(G, api) {
   // (build 107) PETS FROM THE PLANETS join the same friends: befriended where they live (planet-life.js), then they can
   // follow her everywhere, like the Earth pals. At most 4 friends follow at once (to keep the game quick).
   const MAX_FOLLOW = 4;
-  for (const k of LIFE_PETS) { const sp = LIFE[k]; PALS[k] = { home: null, planet: sp.planet, hello: `${sp.emoji} ${sp.name} is your friend now!` }; PAL_EMOJI[k] = sp.emoji; PAL_NAME[k] = sp.name; PAL_WHERE[k] = sp.where; }
+  for (const k of LIFE_PETS) { const sp = LIFE[k]; PALS[k] = { home: null, planet: sp.planet === 'earth' ? null : sp.planet, hello: `${sp.emoji} ${sp.name} is your friend now!` }; PAL_EMOJI[k] = sp.emoji; PAL_NAME[k] = sp.name; PAL_WHERE[k] = sp.where; }
   function makePalMesh(kind) {
     if (LIFE[kind]) return creatureMesh(kind);
     const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
@@ -486,6 +486,11 @@ export function initExpansion(G, api) {
   ];
 
   // =================== 🌲 WHISPERING WOODS (x -272 to -150) ===================
+  // (build 117) creatures of planet-life.js living in a district (the district's kit stands in for a planet's)
+  const lifeHere = (c, spots) => { const fns = [], who = id2 => LIFE[id2.replace(/^(pet|pal)_/, '')];
+    populate({ P, G, X: 0, layer: '', add: c.add, U: fns, Sound, say: c.say, disc: id => disc(id), api: { burst: api.burst },
+      tapIt: (o, fn, x, id2) => c.tap(o, fn, x, id2 ? { disc: id2, icon: who(id2)?.emoji || '🌲', label: who(id2)?.name } : {}) }, spots);
+    return (dt, t) => { for (const f of fns) f(dt, t); }; };
   builders.woods = c => [
     () => tunnelMouth(c, -232, -4.4, 'toytown'), // (build 32) a secret tunnel to Toy Town
     // the campfire: tap the fire for flames; tap the marshmallow to toast it golden
@@ -530,6 +535,9 @@ export function initExpansion(G, api) {
       const den = c.sph(-263, 0, -4.4, 2, '#8a6a4a', { m: { r: .95 } }); den.scale.set(1.3, .7, 1); const hole = c.sph(-263, .4, -2.7, .7, '#3a2a1a', { m: { r: 1 } }); hole.scale.set(1, .8, .3);
       const pal = palAtHome(c, 'fox'); c.tap(den, () => { c.say(X.pals.fox ? '🦊 This is Rusty\'s den!' : '🦊 Somebody lives here... tap the little fox to say hello!'); Sound.click(); });
       return (dt, t) => { pal && pal(dt, t); }; },
+    // (build 117) THE WOODS ARE ALIVE: woodland friends and pets to befriend (planet-life.js), built and freed with the woods;
+    //  15 m apart, so at most two are on screen at once (three in view measured slower)
+    () => lifeHere(c, [['shroomy', -160, -5.6], ['hedgehog', -175, -5.6], ['puffball', -190, -5.6], ['ladybug', -205, -5.4], ['otterpup', -220, -5.6], ['raccoonkit', -235, -5.6], ['twiggy', -250, -5.6], ['fawn', -268, -6.8]]),
   ];
 
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
@@ -765,6 +773,7 @@ export function initExpansion(G, api) {
       const blow = q => { if (q.gone) return; q.gone = 4; Sound.whoosh(); for (let k = 0; k < 4; k++) setTimeout(() => c.burst(q.x + k * .4, q.h + .3 + k * .15, q.z, ['#ffffff', '#f4f4ff'], 6, 1.6), k * 120); c.say('💨 Whoosh! The seeds fly away on the wind!'); c.disc('dandelion', '💨 Tap the fluffy dandelions and the seeds blow away!'); api.event?.({ type: 'activity', id: 'dandelion' }); };
       puffs.forEach(q => c.tap(q.ball, () => blow(q))); c.tap(c.add(new THREE.Group()), () => blow(puffs.find(q => !q.gone) || puffs[0]), X, { icon: '💨', label: 'Dandelions', action: 'Blow the seeds', disc: 'dandelion' }); // (PAW: the next fluffy one)
       return dt => { for (const q of puffs) { if (q.gone > 0) { q.gone = Math.max(0, q.gone - dt); const k = q.gone > 3 ? 0 : Math.min(1, (3 - q.gone) / 3); q.ball.scale.setScalar(Math.max(.05, k)); } } }; },
+    () => lifeHere(c, [['unicornfoal', -748, -5.6]]), // (build 117) Sparkle the unicorn foal lives on Balloon Hills
   ];
 
   // ---------- per frame ----------

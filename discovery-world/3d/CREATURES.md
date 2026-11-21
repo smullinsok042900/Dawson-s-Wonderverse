@@ -26,11 +26,11 @@ multiplayer view, its own browser test, a speed A/B, the full smoke test, then m
 | 3 | Mercury | Mo (mirror creature: copies her), Sunny (sun-flower: spins and shines), Pip-Pebble (stones sparkle) | Cinder, Quartz, Glow, Flicker, Sparky, Blink | DONE (build 109) |
 | 4 | Venus | Nimbus (cloud person: shower and rainbow), Puffo (mist creature: peekaboo), Coral (sunset singer) | Fluff, Flutter, Wisp, Bubbles, Drip, Puffin | DONE (build 110) |
 | 5 | Jupiter | Zappy (storm sprite: lightning flash), Swirly (spins), Big Puff (giant cloud: a puffy hug) | Bobble, Wobble, Bolt, Nimbo, Kite, Gusty | DONE (build 112) |
-| 6 | Saturn | ring dancers | sparkle comets, star fish | TODO |
-| 7 | Uranus | frost sprites | snowflake pets, ice pups | TODO |
-| 8 | Neptune | wind whirlers | glowing blue floaters | TODO |
-| 9 | Pluto | snowball folk | frost fluffs, snowball pups | TODO |
-| 10 | Earth | woodland puffballs and fantasy animals (beside the existing pals) | woodland pets | TODO |
+| 6 | Saturn | Ringo (hula dancer: dances when she jumps), Shimmer (shooting star), Zoomer (racer: catch-me) | Halo, Streak, Starla, Chip, Loop, Gem | DONE (build 113) |
+| 7 | Uranus | Frosty (frost sprite: makes it snow), Skatey (ice skater: twirls, catch-me), Brrr (snowman: ACHOO!) | Flurry, Flake, Polar, Slider, Mitten, Tinsel | DONE (build 114) |
+| 8 | Neptune | Whirly (wind whirler: whirls the wind round her), Bloop (glowing jellyfish: flashes colours with notes), Echo (whale calf: a whale song and a spout) | Glowbe, Drifty, Breezy, Swish, Ripple, Misty | DONE (build 115) |
+| 9 | Pluto | Snowy (snowball kid: a soft snowball toss), Lovey (heart sprite: hearts and a heartbeat), Dot (little Charon moon: dances round her) | Fuzzy, Snowball, Cuddles, Nibbles, Nutty, Yaki | DONE (build 116) |
+| 10 | Earth | Puffy (dandelion puffball: wishing seeds), Shroomy (bouncing mushroom: bounce together), Twiggy (walking tree stump: flowers bloom) — in the Whispering Woods | Prickles, Dewey, Dotty, Bandit, Splashy (woods), Sparkle the unicorn foal (Balloon Hills) | DONE (build 117) |
 
 ## Rules
 - Original creatures only; each species its own shape and movement (not a recolour).

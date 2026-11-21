@@ -223,6 +223,7 @@ function bounceCastle(k, cx, w, cols, v, big) {
   k.tapIt(m, () => k.fact('🏰 Hop on the bouncy floor and bounce!', 'plutocastle'), cx, big ? 'plutocastle' : null);
 }
 const pluto = {
+  all(k) { populate(k, [['frostfluff', 12, -2.8], ['snowballkid', 24, -2.6], ['heartling', 34, -3.4], ['heartbun', 58, -3], ['charondot', 72, -2.8], ['snowpup', 86, -3], ['icehamster', 100, -2.8], ['icesquirrel', 316, -3], ['babyyak', 326, -3]]); }, // (build 116) Pluto friends and pets (planet-life.js); none on the ice-slide plain (+37 to +51)
   sections: [
     // ----- area 2: THE BOUNCE CASTLE PARK -----
     k => { const X = k.s0;
@@ -359,6 +360,7 @@ function uranusRink(k, cx) {
   k.tapIt(rink, () => { k.Sound.twinkle && k.Sound.twinkle(); k.api.burst(P.x, 1.6, P.z, ['#ffffff', '#cfefff', '#ffd23f'], 16, 2); k.fact('⛸️ Wheee! Walk onto the ice and let go to glide!', 'uranusrink'); }, cx, 'uranusrink');
 }
 const uranus = {
+  all(k) { populate(k, [['icepup', 12, -2.8], ['frosty', 27, -2.6], ['polarcub', 42, -3], ['snowman', 57, -3.4], ['sealpup', 72, -2.8], ['skatey', 87, -3], ['snowflake', 102, -3], ['babypenguin', 316, -3], ['icefly', 326, -2.8]]); }, // (build 114) Uranus friends and pets (planet-life.js)
   sections: [
     k => { uranusIceCastle(k, k.s0 + 40); uranusIcePalace(k); uranusPalaceUpstairs(k); uranusIceTunnels(k); /* (build 97) */ k.rocketSign(k.s0 + 4); },   // area 2: the ice castle + (build 71) the Ice Palace
     k => { uranusRink(k, k.s0 + 50); uranusRinkFun(k, k.s0 + 50, 32); uranusIceTrail(k); /* (build 94) */ k.rocketSign(k.s0 + 100); },       // area 3: the (bigger) skating rink + hoops, stars, musical ice
@@ -524,6 +526,7 @@ function neptuneSkydive(k, X) {
   k.tapIt(glass, go, cx, 'neptuneskydivego'); k.tapIt(fan, go);
 }
 const neptune = {
+  all(k) { populate(k, [['gloworb', 12, -2.8], ['whirly', 27, -2.6], ['windpup', 36, -3], ['glowjelly', 54, -3.6], ['bluejelly', 76, -2.8], ['windwhale', 88, -3.8], ['seadragon', 102, -3], ['wavebun', 316, -3], ['stormcat', 326, -2.8]]); }, // (build 115) Neptune friends and pets (planet-life.js); none at the windsock (+44) or the geyser (+64)
   sections: [
     k => { neptuneWindSwings(k, k.s0); neptuneDoubleSwing(k, k.s0); neptuneBungee2(k, k.s0); k.rocketSign(k.s0 + 4); },  // (build 71: the bungee you control)   // area 2: the wind swings and the bungee tower
     k => { neptuneSkydive(k, k.s0); neptuneSkyDive(k, k.s0); k.rocketSign(k.s0 + 100); },  // (build 71: + the Big Sky Dive you steer)                             // area 3: the skydiving chamber
@@ -763,6 +766,7 @@ function saturnRingRace(k, X) {
   k.tapIt(kart, () => go('race'), pad, 'saturnracego'); k.tapIt(sat, () => k.fact('🪐 Saturn\'s rings are so wide that the Earth could roll along them... many times over!', 'saturnrings'), C.x, 'saturnrings');
 }
 const saturn = {
+  all(k) { populate(k, [['halopup', 12, -2.8], ['ringo', 27, -2.8], ['skystar', 42, -3], ['zoomer', 57, -3], ['icechip', 72, -2.8], ['shimmer', 87, -3.4], ['cometkit', 102, -3], ['ringbird', 316, -3], ['gemmouse', 326, -2.8]]); }, // (build 113) Saturn friends and pets (planet-life.js)
   sections: [
     k => { saturnStarBlaster(k, k.s0); k.rocketSign(k.s0 + 4); },   // area 2: the Star Blaster
     k => { saturnRingRace(k, k.s0); k.rocketSign(k.s0 + 104); },    // area 3: the Ring Raceway
