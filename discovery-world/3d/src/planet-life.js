@@ -13,6 +13,8 @@ import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
 import { CHALK_FRIENDS } from './chalk-friends.js';
 import { MARKER_FRIENDS } from './marker-friends.js';
+import { DOODLE_FRIENDS } from './doodle-friends.js';
+import { KEEPSAKE_FRIENDS } from './keepsake-friends.js';
 
 const GEO = { box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 11, 8), cone: new THREE.ConeGeometry(1, 1, 9), cyl: new THREE.CylinderGeometry(1, 1, 1, 8), tor: new THREE.TorusGeometry(1, .22, 5, 12), ballS: new THREE.SphereGeometry(1, 8, 6), dot: new THREE.SphereGeometry(1, 6, 4) }; // (light: about 150 triangles a big ball; build 117: small balls use fewer (80), tiny ones (eyes, spots) far fewer (36))
 const starGeo = (() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .45 : 1; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const g = new THREE.ExtrudeGeometry(sh, { depth: .5, bevelEnabled: true, bevelThickness: .18, bevelSize: .14, bevelSegments: 2 }); g.center(); return g; })();
@@ -26,6 +28,8 @@ const smile = (b, y, z, w = .06) => b.put(GEO.tor, 0, y, z, '#2b1d3d', [w, w, .3
 export const SPECIES = {
   ...CHALK_FRIENDS, // The family's drawings are world residents, never selectable avatars or collectible pets.
   ...MARKER_FRIENDS,
+  ...DOODLE_FRIENDS,
+  ...KEEPSAKE_FRIENDS,
   // ---- THE MOON: characters ----
   rocky: { name: 'Rocky', planet: 'moon', move: 'roll', v: 1.4, r: 3, size: 1, voice: 'Rumble rumble!',
     build: b => { b.put(GEO.ball, 0, .55, 0, '#b4b4c2', [.58, .52, .55]); for (const [x, y, z, s] of [[-.32, .82, .2, .12], [.3, .4, .38, .1], [.12, .95, -.2, .14], [-.4, .35, -.2, .11]]) b.put(GEO.ball, x, y, z, '#9a9aa8', [s, s * .6, s]); eyes(b, .66, .17, .48, .085); cheeks(b, .5, .3, .46); smile(b, .47, .5, .07); } },
@@ -333,7 +337,21 @@ export function populate(k, spots) {
     if (c.gone) return; c.act = 1.2; k.Sound.giggle && k.Sound.giggle(); k.api.burst(c.g.position.x, c.g.position.y + 1, c.g.position.z, ['#ffffff', '#ffe36e', '#ff9fd8'], 12, 2);
     if (c.sp.pet) { befriend(k, c); return; }
     // the characters' little games
-    if (c.kind === 'chalkpink') { k.say('🖍️ Hello, friend! Let’s twirl and dance together!', true); c.twirl = 2.5; k.Sound.chime && k.Sound.chime(); }
+    if (c.sp.play) {
+      // Family creations reuse the residents' existing motions, sounds and short-lived particles.
+      const play = c.sp.play;
+      k.say(`🖍️ ${play.line}`, true);
+      if (play.action === 'twirl') { c.twirl = 2.5; k.Sound.chime && k.Sound.chime(); }
+      else if (play.action === 'bounce') c.bounceBig = 2.2;
+      else if (play.action === 'sing') [523, 659, 784, 659].forEach((f, i) => k.Sound.tone(f, .22, 'sine', .05, 1, i * .22));
+      else {
+        const hug = play.action === 'hug';
+        k.api.burst(hug ? P.x : c.x, (hug ? P.y : c.g.position.y) + 1, hug ? (P.z || 0) : c.z,
+          play.colors || ['#ff9fc8', '#ffe36e', '#ffffff'], 16, 1.6);
+        k.Sound.chime && k.Sound.chime();
+      }
+    }
+    else if (c.kind === 'chalkpink') { k.say('🖍️ Hello, friend! Let’s twirl and dance together!', true); c.twirl = 2.5; k.Sound.chime && k.Sound.chime(); }
     else if (c.kind === 'chalkgreen') { k.say('🖍️ Let’s play copycat! Walk and jump, and I’ll copy you!', true); c.copy = 12; }
     else if (c.kind === 'drawingblue') { k.say('🖍️ Let’s sing together! La la la!', true); [523, 659, 784, 659].forEach((f, i) => k.Sound.tone(f, .22, 'sine', .05, 1, i * .22)); c.act = 1.8; }
     else if (c.kind === 'drawingwave') { k.say('🖍️ Wave, wave! Let’s wave and twirl together!', true); c.twirl = 2.5; }

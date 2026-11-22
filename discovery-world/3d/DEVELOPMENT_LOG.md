@@ -4,6 +4,14 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+
+## Checkpoint: build 121 — sixteen more family creations, including two pairs of twins
+- All sixteen references become solid painted world residents: nine paper figures, the snow sculpture, yellow balloon, chalk person and the remaining asymmetric drawings. The two pink-paper figures and two brown long-eared figures are **separate twins**, as the family confirmed; both pairs live beside the Adventure Trail bridge.
+- Each resident uses one cached merged mesh, shared paint, no texture and no shadow pass, with an existing dance, bounce, song, hug or sparkle reaction. Homes stream with nine Earth districts. The original seven friends, player choices and pets stay intact. `FAMILY_FRIENDS.md` gives their landmarks and rendered close-ups; original photos remain outside the repository.
+- Desktop software-rendering verification: **90/90 native checks**, learning contracts (41 activities), both world regressions, and all sixteen actual touch/PAW/greeting/movement checks pass. The focused tour also passes unload/revisit, shader reuse, unchanged choices, saved progress and reload. Render review corrected the snow figure's connected blocky hat/arms and raised the Big-Eared Friend's inspection camera above a foreground crab's party hat.
+- The test originally stood closer to the train station than the pink twin, so its approach now comes from the twin side. The save check also now preserves newly collected gems: the tour legitimately collects g8, and verifies the complete pre-reload gem list survives reload while retaining all earlier gems.
+- This is the first source checkpoint of the family's queued batch. Full gameplay and before/after performance verification will cover the combined build 122 before its PR is marked ready. No physical iPhone result is claimed.
+
 ## Checkpoint: build 120 — seven of her own drawings come to life
 - **Two chalk drawings and five marker drawings are now world residents:** Pink Chalk Friend twirls in Art Plaza;
   Green Chalk Friend plays copycat in Toy Town; Blue Drawing Friend sings at Sunny Seaside; Waving Drawing Friend
