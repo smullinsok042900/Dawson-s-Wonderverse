@@ -13,6 +13,7 @@ on:
       - 'discovery-world/3d/package-lock.json'
       - 'discovery-world/3d/sw.js'
       - 'discovery-world/3d/tests/shared.test.mjs'
+      - 'discovery-world/3d/tests/perf/**'
       - '.github/workflows/build-3d.yml'
   workflow_dispatch:
     inputs:
@@ -232,7 +233,7 @@ jobs:
         working-directory: discovery-world/3d
         shell: bash
     env:
-      DDW3_OLD_URL: http://127.0.0.1:8766/backups/3D_build120_index.html
+      DDW3_OLD_URL: http://127.0.0.1:8766/discovery-world/backups/3D_build120_index.html
       DDW3_NEW_URL: http://127.0.0.1:8766/discovery-world/3d/index.html
       DDW3_PERF_REPORT: tests/PERFORMANCE_BUILD122.json
     steps:
