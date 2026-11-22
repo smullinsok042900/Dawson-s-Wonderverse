@@ -14,7 +14,7 @@ global.location = {search:'?noassets'};
 const noop = () => {};
 const context = new Proxy({}, {get: (o,k) => k === 'isPointInPath' ? () => false : ['getImageData','createImageData'].includes(k) ? (...args) => ({data:new Uint8ClampedArray((args.at(-2)||128)*(args.at(-1)||128)*4)}) : noop, set: () => true});
 global.document = {createElement: () => ({width:0,height:0,getContext: () => context})};
-global.Path2D = class {rect(){} arc(){} ellipse(){} closePath(){} moveTo(){} lineTo(){}};
+global.Path2D = class {rect(){} arc(){} ellipse(){} closePath(){} moveTo(){} lineTo(){} bezierCurveTo(){}};
 const {buildMeadow, BUILD, ERASE} = load('meadow.js');
 const THREE = require('three');
 const scene = new THREE.Scene(), world = {build:Array(50).fill(-1),paintColor:'#ff4f9a'};

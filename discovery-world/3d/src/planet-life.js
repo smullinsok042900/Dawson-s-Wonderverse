@@ -11,6 +11,8 @@
 // ===================================================================
 import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
+import { CHALK_FRIENDS } from './chalk-friends.js';
+import { MARKER_FRIENDS } from './marker-friends.js';
 
 const GEO = { box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 11, 8), cone: new THREE.ConeGeometry(1, 1, 9), cyl: new THREE.CylinderGeometry(1, 1, 1, 8), tor: new THREE.TorusGeometry(1, .22, 5, 12), ballS: new THREE.SphereGeometry(1, 8, 6), dot: new THREE.SphereGeometry(1, 6, 4) }; // (light: about 150 triangles a big ball; build 117: small balls use fewer (80), tiny ones (eyes, spots) far fewer (36))
 const starGeo = (() => { const sh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .45 : 1; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const g = new THREE.ExtrudeGeometry(sh, { depth: .5, bevelEnabled: true, bevelThickness: .18, bevelSize: .14, bevelSegments: 2 }); g.center(); return g; })();
@@ -22,6 +24,8 @@ const smile = (b, y, z, w = .06) => b.put(GEO.tor, 0, y, z, '#2b1d3d', [w, w, .3
 // ---------- the species: shape (built facing +z, standing on y = 0), movement, sound, and what tapping does ----------
 //   move: hop | float | roll | slide | bounce;  pet: befriendable;  where: spoken when it is still to be found
 export const SPECIES = {
+  ...CHALK_FRIENDS, // The family's drawings are world residents, never selectable avatars or collectible pets.
+  ...MARKER_FRIENDS,
   // ---- THE MOON: characters ----
   rocky: { name: 'Rocky', planet: 'moon', move: 'roll', v: 1.4, r: 3, size: 1, voice: 'Rumble rumble!',
     build: b => { b.put(GEO.ball, 0, .55, 0, '#b4b4c2', [.58, .52, .55]); for (const [x, y, z, s] of [[-.32, .82, .2, .12], [.3, .4, .38, .1], [.12, .95, -.2, .14], [-.4, .35, -.2, .11]]) b.put(GEO.ball, x, y, z, '#9a9aa8', [s, s * .6, s]); eyes(b, .66, .17, .48, .085); cheeks(b, .5, .3, .46); smile(b, .47, .5, .07); } },
@@ -329,7 +333,14 @@ export function populate(k, spots) {
     if (c.gone) return; c.act = 1.2; k.Sound.giggle && k.Sound.giggle(); k.api.burst(c.g.position.x, c.g.position.y + 1, c.g.position.z, ['#ffffff', '#ffe36e', '#ff9fd8'], 12, 2);
     if (c.sp.pet) { befriend(k, c); return; }
     // the characters' little games
-    if (c.kind === 'rocky') { k.say(`🪨 ${c.sp.voice} Catch me if you can!`, true); c.tx = c.x + (P.x < c.x ? 8 : -8); c.run = 3; }
+    if (c.kind === 'chalkpink') { k.say('🖍️ Hello, friend! Let’s twirl and dance together!', true); c.twirl = 2.5; k.Sound.chime && k.Sound.chime(); }
+    else if (c.kind === 'chalkgreen') { k.say('🖍️ Let’s play copycat! Walk and jump, and I’ll copy you!', true); c.copy = 12; }
+    else if (c.kind === 'drawingblue') { k.say('🖍️ Let’s sing together! La la la!', true); [523, 659, 784, 659].forEach((f, i) => k.Sound.tone(f, .22, 'sine', .05, 1, i * .22)); c.act = 1.8; }
+    else if (c.kind === 'drawingwave') { k.say('🖍️ Wave, wave! Let’s wave and twirl together!', true); c.twirl = 2.5; }
+    else if (c.kind === 'drawinglonglegs') { k.say('🖍️ A big gentle hug for my friend! Hello, hello!', true); k.api.burst(P.x, P.y + 1, P.z || 0, ['#ff9fc8', '#ffffff', '#a7d8ad'], 16, 1.6); c.act = 1.8; }
+    else if (c.kind === 'drawingteal') { k.say('🖍️ Boing, boing! Let’s jump together!', true); c.bounceBig = 2.2; }
+    else if (c.kind === 'drawingscribble') { k.say('🖍️ Pink, green, and gold! Happy colorful sparkles!', true); k.api.burst(c.x, c.g.position.y + 1, c.z + .3, ['#dc66aa', '#b4d958', '#ffe36e', '#ffffff'], 20, 2); k.Sound.chime && k.Sound.chime(); c.act = 1.8; }
+    else if (c.kind === 'rocky') { k.say(`🪨 ${c.sp.voice} Catch me if you can!`, true); c.tx = c.x + (P.x < c.x ? 8 : -8); c.run = 3; }
     else if (c.kind === 'lumi') { k.say('✨ Lumi lights up the stars for you!', true); for (let i = 0; i < 8; i++) k.api.burst(c.x + (i - 4) * 1.4, 3 + Math.sin(i) * 1.5, c.z - 1, ['#fff3a6', '#ffffff', '#9fe6ff'], 6, 1.4); k.Sound.chime && k.Sound.chime();
       const hidden = list.find(q => q.sp.pet && !q.gone && Math.abs(q.x - c.x) < 60); if (hidden) { c.tx = hidden.x - 1.5; c.lead = hidden; setTimeout(() => k.say(`✨ Look! ${hidden.sp.name} is over here!`, true), 1600); } }
     else if (c.kind === 'boing') { k.say('🦘 Boing boing! Jump with me!', true); c.bounceBig = 2.2; }
@@ -380,7 +391,7 @@ export function populate(k, spots) {
       animate(c.kind, g, t, moving);
       if (sp.move === 'bounce') { const hb = c.bounceBig > 0 ? 1.6 : .25; if (c.bounceBig > 0) c.bounceBig -= dt; g.userData.body.position.y = Math.abs(Math.sin(t * (c.bounceBig > 0 ? 4 : 6))) * hb; if (c.bounceBig > 0 && P.vy > 3 && near) { c.bounceBig = 2.2; } }
       if (c.band > 0) { c.band -= dt; if (near && P.vy > 3 && !c.beat) { c.beat = 1; if (c.kind === 'ringo') { c.twirl = 1.2; k.Sound.tone(520 + Math.random() * 200, .12, 'sine', .07, 1); } else k.Sound.tone(130 + Math.random() * 60, .12, 'triangle', .09, .5); c.act = .4; /* (Ringo twirls along; Bongo drums) */ k.api.burst(c.x, 1, c.z + .3, ['#ffd23f', '#ffffff'], 6, 1.2); } if (P.vy <= 0) c.beat = 0; } /* (Bongo drums along to her jumps) */
-      if (c.copy > 0) { c.copy -= dt; if (Math.abs(P.x - c.x0) < 8) { c.tx = c.x0 - (P.x - c.x0) * .6; c.rest = 1; } if (P.vy > 3 && !c.hopd) { c.hopd = 1; c.act = .5; } if (P.vy <= 0) c.hopd = 0; } /* (Mo copies her: mirrored walking, jumping when she jumps) */
+      if (c.copy > 0) { c.copy -= dt; if (Math.abs(P.x - c.x0) < 8) { const r = sp.copyRange ?? Infinity; c.tx = c.x0 + Math.max(-r, Math.min(r, -(P.x - c.x0) * .6)); c.rest = 1; } if (P.vy > 3 && !c.hopd) { c.hopd = 1; c.act = .5; } if (P.vy <= 0) c.hopd = 0; } /* (Mo copies her: mirrored walking, jumping when she jumps) */
       if (c.spin > 0) { c.spin -= dt; g.userData.body.rotation.z = (2 - c.spin) * 8; } else if (c.kind === 'sunny') g.userData.body.rotation.z = Math.sin(t * 1.2) * .08;
       if (c.hideT > 0) { c.hideT -= dt; g.visible = c.hideT <= 0; if (c.hideT <= 0) { k.api.burst(c.x, .5, c.z, ['#f4d8ff', '#ffffff'], 18, 2); k.say('🎉 Here I am!', false); c.act = 1; } } /* (Puffo's hide-and-seek) */
       if (c.orbit > 0) { c.orbit -= dt; const a = t * 2.2; c.tx = P.x + Math.cos(a) * 2.2; c.tz = Math.min(-1.2, (P.z || 0) - 1.8 + Math.sin(a) * .8); c.run = .3; c.rest = 1; if (Math.random() < dt * 3) k.api.burst(c.x, .3, c.z, ['#c9a6ff', '#ffffff'], 2, .6); } /* (Dot dances round her, like Charon round Pluto) */

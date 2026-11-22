@@ -5,7 +5,7 @@
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs');
 const ROOT = path.resolve(__dirname, '..');
-const FILE = 'file://' + path.join(ROOT, 'index.html') + '?test';
+const FILE = (process.env.DDW3_TEST_URL || 'file://' + path.join(ROOT, 'index.html')) + '?test';
 const SHOTS = path.join(ROOT, 'screenshots'); fs.mkdirSync(SHOTS, { recursive: true });
 const results = [];
 const check = (name, ok, detail = '') => { results.push({ name, ok: !!ok, detail }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`); };
@@ -96,6 +96,26 @@ const UG_F = -6;
   { const p = await scr(c.x, c.y + .75, c.z), el = await page.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e && (e.id || e.className); }, [p.x, p.y]); const pk = await page.evaluate(([x, y]) => JSON.stringify(__DDW3.pick(x, y)), [p.x, p.y]);
     await tapWorld(c.x, c.y + .75, c.z); await sleep(200); check('tap your creature to tickle it', (await S()).disc.includes('tickle'), `tap at ${Math.round(p.x)},${Math.round(p.y)} lands on: ${el} ${pk} P=${c.x.toFixed(2)},${c.y.toFixed(2)},${c.z.toFixed(2)}`); }
   if (process.env.QUICK) { console.log(results.filter(r => !r.ok)); await browser.close(); return; }
+  // The daughter's drawings are residents in the world, with the existing touch and PAW controls.
+  for (const [kind, home, words] of [
+    ['chalkgreen', 587, 'copycat'], ['chalkpink', 827, 'twirl'], ['drawingblue', -123, 'sing'],
+    ['drawingwave', -486, 'twirl'], ['drawinglonglegs', -789, 'hug'], ['drawingteal', -288, 'jump'], ['drawingscribble', 754, 'sparkles'],
+  ]) {
+    await teleport(home - 2.2); await page.evaluate(x => __DDW3.G.expansion.buildNow(x), home);
+    await page.waitForFunction(kind => __DDW3.G.interact.some(i => i.disc === 'pal_' + kind), kind, { timeout: 120000 });
+    const resident = await page.evaluate(kind => {
+      let scene = __DDW3.G.me().root; while (scene.parent) scene = scene.parent;
+      const found = []; scene.traverse(o => { if (o.userData.kind === kind && o.userData.body) found.push(o); });
+      const g = found[0]; if (!g) return null;
+      const center = new __DDW3.THREE.Box3().setFromObject(g).getCenter(new __DDW3.THREE.Vector3());
+      return { count: found.length, point: __DDW3.toScreen(...center.toArray()), visible: g.visible };
+    }, kind);
+    check(`${kind}: the drawing is one visible world resident, not a selectable character`, resident && resident.count === 1 && resident.visible && await page.locator(`.creatureChoice[data-c="${kind}"]`).count() === 0);
+    if (resident) { await touch('touchStart', [resident.point]); await sleep(60); await touch('touchEnd', []); await sleep(150); }
+    const tapped = (await page.locator('#toast').textContent()).includes(words);
+    await press('#pawBtn');
+    check(`${kind}: tap and PAW invite her to play with spoken words and movement`, tapped && (await page.locator('#toast').textContent()).includes(words));
+  }
   // ---------- playhouse ----------
   await teleport(10); await tapWorld(12, .6); check('tap the ball pit: splash', (await S()).disc.includes('ballpit'));
   await shot('04_ball_pit.jpg');

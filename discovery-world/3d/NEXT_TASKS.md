@@ -4,6 +4,10 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 ## Creatures and pets (CREATURES.md): every destination DONE (builds 107–117)
+Build 120 adds seven family-drawn world residents, separate from the collectible pets. On the real iPhone, visit Toy Town,
+Art Plaza, Sunny Seaside, Happy Farm, Balloon Hills, Frosty Peaks and Lab Gardens; hear their greetings and try both tapping
+them and the big paw. Ask the family for names when the daughter chooses them. Desktop checks do not establish iPhone speed.
+
 Still open there: S2 (creatures sleeping and playing with each other) and S6 (Play Together: show each player's followers on the
 others' screens). Earth's woods frames spread ±50 ms between runs on desktop: pool many rounds before judging a change there.
 
