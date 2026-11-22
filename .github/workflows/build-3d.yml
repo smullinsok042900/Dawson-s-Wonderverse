@@ -13,7 +13,14 @@ on:
       - 'discovery-world/3d/package-lock.json'
       - 'discovery-world/3d/sw.js'
       - 'discovery-world/3d/tests/shared.test.mjs'
+      - '.github/workflows/build-3d.yml'
   workflow_dispatch:
+    inputs:
+      full_gameplay:
+        description: 'Run the complete desktop gameplay test on an isolated runner'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
@@ -51,3 +58,153 @@ jobs:
           fi
           git commit -m "Build the 3D game from its source"
           git push
+
+  full-gameplay:
+    # Opt in for a verified milestone; ordinary source pushes keep the existing fast build.
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.full_gameplay) || contains(github.event.head_commit.message, '[full-gameplay]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: discovery-world/3d
+        shell: bash
+    env:
+      DDW3_SMOKE_TOOLS: ${{ runner.temp }}/ddw3-smoke-tools
+      NODE_PATH: ${{ runner.temp }}/ddw3-smoke-tools/node_modules
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ddw3-smoke-browsers
+      DDW3_TEST_URL: http://127.0.0.1:8766/discovery-world/3d/index.html
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Test exactly the triggering commit even if the build job subsequently pushes built files.
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: discovery-world/3d/package-lock.json
+      - name: Prepare fresh test artifacts
+        # Keep existing portraits; the full test overwrites the gameplay screenshots it checks.
+        run: rm -f tests/TEST_RESULTS.json tests/FULL_SMOKE_ENVIRONMENT.json tests/full-smoke.log tests/full-smoke-index.sha256
+      - run: npm ci
+      - name: Install isolated browser tools
+        run: |
+          npm install --prefix "$DDW3_SMOKE_TOOLS" --no-package-lock --no-audit --no-fund playwright@1.62.1
+          "$DDW3_SMOKE_TOOLS/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Build the tested game
+        run: node build.mjs
+      - name: Serve the game over local HTTP
+        run: |
+          cat > "$RUNNER_TEMP/ddw3-smoke-http-server.py" <<'PY'
+          import os
+          from functools import partial
+          from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+          class Handler(SimpleHTTPRequestHandler):
+              def do_GET(self):
+                  if self.path.split('?', 1)[0] == '/favicon.ico':
+                      self.send_response(204)
+                      self.end_headers()
+                      return
+                  super().do_GET()
+
+          ThreadingHTTPServer(('127.0.0.1', 8766), partial(Handler, directory=os.environ['GITHUB_WORKSPACE'])).serve_forever()
+          PY
+          python3 -u "$RUNNER_TEMP/ddw3-smoke-http-server.py" > "$RUNNER_TEMP/ddw3-smoke-http.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/ddw3-smoke-http.pid"
+          for attempt in {1..16}; do
+            if curl --head --fail --silent --output /dev/null --connect-timeout 0.1 --max-time 0.25 "$DDW3_TEST_URL"; then
+              exit 0
+            fi
+            sleep 0.25
+          done
+          cat "$RUNNER_TEMP/ddw3-smoke-http.log"
+          exit 1
+      - name: Record the build and desktop environment
+        run: |
+          sha256sum index.html > tests/full-smoke-index.sha256
+          node <<'NODE'
+          const fs = require('node:fs'), os = require('node:os'), crypto = require('node:crypto');
+          const { execFileSync } = require('node:child_process');
+          const { chromium } = require('playwright');
+          const metadata = {
+            environment: 'GitHub-hosted Ubuntu Linux desktop',
+            rendering: 'Chromium SwiftShader software rendering; not a physical iPhone',
+            sourceCommit: process.env.GITHUB_SHA,
+            compiledIndexSha256: crypto.createHash('sha256').update(fs.readFileSync('index.html')).digest('hex'),
+            build: JSON.parse(fs.readFileSync('version.json', 'utf8')).build,
+            testUrl: process.env.DDW3_TEST_URL,
+            run: process.env.GITHUB_RUN_ID,
+            attempt: process.env.GITHUB_RUN_ATTEMPT,
+            recordedAt: new Date().toISOString(),
+            node: process.version,
+            playwright: require('playwright/package.json').version,
+            chromium: execFileSync(chromium.executablePath(), ['--version'], { encoding: 'utf8' }).trim(),
+            kernel: os.release(),
+            cpu: os.cpus()[0]?.model,
+            flags: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+          };
+          fs.writeFileSync('tests/FULL_SMOKE_ENVIRONMENT.json', JSON.stringify(metadata, null, 2) + '\n');
+          NODE
+          cat tests/full-smoke-index.sha256 tests/FULL_SMOKE_ENVIRONMENT.json
+      - name: Run the complete gameplay test alone
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee tests/full-smoke.log
+      - name: Stop the local HTTP server
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/ddw3-smoke-http.pid" ]; then
+            read -r DDW3_HTTP_PID < "$RUNNER_TEMP/ddw3-smoke-http.pid"
+            kill "$DDW3_HTTP_PID" 2>/dev/null || true
+          fi
+      # Preserve the tested files before any report rebase can change the working tree.
+      - name: Upload gameplay evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ddw3-full-gameplay-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            discovery-world/3d/tests/TEST_RESULTS.json
+            discovery-world/3d/screenshots/*.jpg
+            discovery-world/3d/tests/full-smoke.log
+            discovery-world/3d/tests/FULL_SMOKE_ENVIRONMENT.json
+            discovery-world/3d/tests/full-smoke-index.sha256
+      - name: Record successful gameplay validation on the development branch
+        if: ${{ success() && github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch && github.ref_name != 'main' }}
+        continue-on-error: true
+        env:
+          DDW3_REPORT_BRANCH: ${{ github.ref_name }}
+        run: |
+          git fetch --no-tags origin "$DDW3_REPORT_BRANCH"
+          DDW3_CHECKED_TIP=$(git rev-parse FETCH_HEAD)
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "$DDW3_CHECKED_TIP"; then
+            echo "The remote branch no longer descends from the tested commit; keeping the immutable artifact only."
+            exit 0
+          fi
+          if ! git diff --quiet "$GITHUB_SHA" "$DDW3_CHECKED_TIP" -- \
+            ':(top)discovery-world/3d' \
+            ':(top,exclude)discovery-world/3d/screenshots' \
+            ':(top,exclude)discovery-world/3d/tests/TEST_RESULTS.json' \
+            ':(top,exclude)discovery-world/3d/tests/FULL_SMOKE_ENVIRONMENT.json' \
+            ':(top,exclude)discovery-world/3d/tests/full-smoke.log' \
+            ':(top,exclude)discovery-world/3d/tests/full-smoke-index.sha256'; then
+            echo "Game or test inputs changed after the tested commit; keeping the immutable artifact only."
+            exit 0
+          fi
+          git config user.name "Wonderverse maintenance"
+          git config user.email "actions@users.noreply.github.com"
+          git switch -c "$DDW3_REPORT_BRANCH"
+          git add tests/FULL_SMOKE_ENVIRONMENT.json tests/TEST_RESULTS.json 'screenshots/*.jpg'
+          if git diff --cached --quiet; then
+            echo "Gameplay evidence is already up to date."
+            exit 0
+          fi
+          git commit -m "Record full gameplay validation [skip ci]"
+          git rebase --autostash "$DDW3_CHECKED_TIP"
+          git push origin "HEAD:refs/heads/$DDW3_REPORT_BRANCH"
