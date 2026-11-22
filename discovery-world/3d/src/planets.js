@@ -11,6 +11,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { populate } from './planet-life.js';
+import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
 import { toy } from './creatures.js';
 import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { buildMoonCoaster } from './moon-coaster.js';
@@ -776,3 +777,15 @@ const saturn = {
 export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn }; // (build 68: + Saturn's Star Blaster and Ring Raceway) // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;
+
+// Family friends in the expanded areas belong to that area's normal build and cleanup lifecycle.
+// Offsets are relative to the whole planet (k.X), while each wrapper builds only its own 110 m section.
+for (const [planet, extra] of Object.entries(PLANET_EXTRA)) {
+  const homes = CRAFT_FRIEND_HOMES.filter(home => home.planet === planet);
+  if (!homes.length) continue;
+  extra.sections = extra.sections.map((build, index) => k => {
+    const result = build(k);
+    populate(k, homes.filter(home => Math.floor(home.x / SECTION) === index + 1).map(home => [home.kind, home.x, home.z]));
+    return result;
+  });
+}

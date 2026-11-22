@@ -116,6 +116,41 @@ const UG_F = -6;
     await press('#pawBtn');
     check(`${kind}: tap and PAW invite her to play with spoken words and movement`, tapped && (await page.locator('#toast').textContent()).includes(words));
   }
+  // New family keepsakes use the same touch and PAW controls, including the two requested twins.
+  {
+    const { pathToFileURL } = require('node:url');
+    const { FAMILY_FRIEND_HOMES } = await import(pathToFileURL(path.join(ROOT, 'src/family-friend-homes.js')));
+    const { DOODLE_FRIENDS } = await import(pathToFileURL(path.join(ROOT, 'src/doodle-friends.js')));
+    const { KEEPSAKE_FRIENDS } = await import(pathToFileURL(path.join(ROOT, 'src/keepsake-friends.js')));
+    const familySpecies = { ...DOODLE_FRIENDS, ...KEEPSAKE_FRIENDS };
+    for (const { kind, x: home, approach = -1 } of FAMILY_FRIEND_HOMES) {
+      const line = familySpecies[kind].play.line;
+      await teleport(home + approach * 2.2); await page.evaluate(x => __DDW3.G.expansion.buildNow(x), home);
+      await page.waitForFunction(kind => __DDW3.G.interact.some(i => i.disc === 'pal_' + kind), kind, { timeout: 120000 });
+      const resident = await page.evaluate(kind => {
+        let scene = __DDW3.G.me().root; while (scene.parent) scene = scene.parent;
+        const found = []; scene.traverse(o => { if (o.userData.kind === kind && o.userData.body) found.push(o); });
+        const g = found[0]; if (!g) return null;
+        const center = new __DDW3.THREE.Box3().setFromObject(g).getCenter(new __DDW3.THREE.Vector3());
+        return { count: found.length, point: __DDW3.toScreen(...center.toArray()), visible: g.visible };
+      }, kind);
+      check(`${kind}: the family keepsake is one visible resident, not a player choice`, resident && resident.count === 1 && resident.visible && await page.locator(`.creatureChoice[data-c="${kind}"]`).count() === 0);
+      if (resident) { await touch('touchStart', [resident.point]); await sleep(60); await touch('touchEnd', []); await sleep(150); }
+      const tapped = (await page.locator('#toast').textContent()).includes(line);
+      const movement = await page.evaluate(kind => new Promise(resolve => {
+        let scene = __DDW3.G.me().root; while (scene.parent) scene = scene.parent;
+        let g; scene.traverse(o => { if (o.userData.kind === kind && o.userData.body) g = o; });
+        if (!g) return resolve(false);
+        const heights = []; let n = 0;
+        const f = () => { heights.push(g.userData.body.position.y); if (++n >= 6) resolve(Math.max(...heights) - Math.min(...heights) > .02); else requestAnimationFrame(f); };
+        requestAnimationFrame(f);
+      }), kind);
+      await press('#pawBtn');
+      check(`${kind}: real touch and PAW start its spoken activity and happy movement`, tapped && movement && (await page.locator('#toast').textContent()).includes(line) && await page.locator('#befriend.show').count() === 0);
+    }
+  }
+  // The next artwork collection lives on Earth and in the planets' streamed areas.
+  await require('./craft-friends.cjs').runCraftSmoke(page, check);
   // ---------- playhouse ----------
   await teleport(10); await tapWorld(12, .6); check('tap the ball pit: splash', (await S()).disc.includes('ballpit'));
   await shot('04_ball_pit.jpg');
