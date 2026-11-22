@@ -4,6 +4,50 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 120 (seven family-drawn residents)
+
+Desktop Chromium 156, SwiftShader, 844×390 touch viewport, `?hq`. `tests/perf/chalk-friends.cjs` compares the preserved
+build-119 HTML (`../backups/3D_build120_index.html`, copied before editing) with build 120, in old/new/new/old order.
+Each spot has eight arrival frames and twelve steady frames per run, two runs per build. Times below average the two
+run medians; brackets show their range. Absolute times depend on this browser/settings/scenery and are not comparable
+with earlier log entries. Raw observations: `tests/PERFORMANCE_BUILD120.json`.
+
+| Place / x | Build 119 ms [range] | Build 120 ms [range] | Draw-call change | Triangle change |
+|---|---|---|---|---|
+| Toy Town / 587 | 675.0 [674.9–675.0] | 679.2 [666.6–691.7] | +3 | +2,888 |
+| Art Plaza / 827 | 570.8 [566.6–575.0] | 583.4 [583.3–583.4] | +1 | +1,832 |
+| Seaside / −123 | 595.8 [591.6–599.9] | 591.7 [583.3–600.0] | +1 | +1,168 |
+| Farm / −486 | 1045.8 [1041.6–1049.9] | 1166.6 [1149.9–1183.3] | +2 | +19,166 |
+| Balloon Hills / −789 | 583.4 [566.7–600.0] | 583.4 [583.3–583.4] | +1 | +1,184 |
+| Frosty Peaks / −288 | 529.2 [500.0–558.3] | 537.5 [533.3–541.6] | +0.25 | +2,496 |
+| Lab Gardens / 754 | 1345.8 [1325.0–1366.6] | 1183.4 [1183.3–1183.4] | +1 | −48,454.5 |
+| Unchanged park / 190 | 2108.3 [2099.9–2116.6] | 2091.6 [2058.3–2124.9] | 0 | 0 |
+
+**The farm difference was investigated rather than attributed to the new friend.** Seeding global `Math.random()` does
+not keep the scenery identical: Three.js constructors consume random values for UUIDs, so the new model primitives
+shift subsequent scenery randomness. The farm has 19,166 extra visible triangles although its new friend has only
+2,352; the gardens have 48,454 fewer. These comparisons therefore cannot isolate the character's cost.
+
+`tests/perf/drawing-cost.cjs` repeats the farm measurement in one unchanged build-120 scene, switching only the new
+friend's `body.visible` in shown/hidden/hidden/shown order (two warm frames, twelve samples per round). NPC logic,
+scenery, player, camera, materials and cached resources stay intact. Shown: **1124.9 and 1091.6 ms**; hidden:
+**1299.9 and 1108.4 ms**. The visible friend costs exactly **one draw call and 2,352 triangles**. The earlier 11.6%
+farm slowdown was not reproduced in this controlled comparison; the frame readings overlap and vary between rounds.
+Raw matched results and shader audit: `tests/DRAWING_COST_BUILD120.json`.
+
+**Shader preparation:** a separate `createProgram` hook and linked-source hashes record all shader creation, including
+fast links. Build 119 has 113 programs at boot and at the end of its audit; build 120 has 115 at boot and after entering
+all seven new residents' areas. **Every creation happened in the pre-entry boot phase; none happened after that snapshot
+or on area entry.** The probe's `loading` phase includes startup and two frames after pressing Play, before teleporting.
+The matrix also found zero new-build shader-query waits over 30 ms (old build: one at park entry). The second old matrix
+run already had 115 programs, so its initial raw count difference was not evidence of a new NPC shader variant.
+
+For completeness, the unmatched matrix observed seven new-build versus one old-build steady long task (maximum 73
+versus 54 ms), and fourteen versus eighteen entry long tasks (maximum 248 versus 1422 ms). With different procedural
+scenery these are not causal evidence about the new creatures, and this report does not claim zero long tasks or
+physical-device speed. Each creature reuses the existing paint, one merged mesh, shared geometry, no textures and no
+shadow pass; models contain 1,168–2,524 triangles. A real iPhone check remains for the family.
+
 
 
 

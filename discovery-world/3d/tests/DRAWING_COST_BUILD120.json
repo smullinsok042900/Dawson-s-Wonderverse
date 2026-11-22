@@ -1,0 +1,99 @@
+{
+  "environment": "Desktop Chromium156, SwiftShader software rendering,844x390touch viewport; NOT a physical iPhone",
+  "method": "Audit actual createProgram calls and linked shader-source hashes from boot through all7homes. At the farm, toggle only drawingwave.userData.body.visible in shown/hidden/hidden/shown order; keep NPC logic, scenery, camera and player unchanged.12steadyframes per round after2warm frames.",
+  "runs": [
+    {
+      "input": "http://localhost:8766/discovery-world/backups/3D_build120_index.html",
+      "boot_programs": 113,
+      "final_programs": 113,
+      "creation_phases": {
+        "loading": 113
+      },
+      "rows": []
+    },
+    {
+      "input": "http://localhost:8766/discovery-world/3d/index.html",
+      "boot_programs": 115,
+      "final_programs": 115,
+      "creation_phases": {
+        "loading": 115
+      },
+      "rows": [
+        {
+          "kind": "chalkgreen",
+          "x": 587,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": []
+        },
+        {
+          "kind": "chalkpink",
+          "x": 827,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": []
+        },
+        {
+          "kind": "drawingblue",
+          "x": -123,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": []
+        },
+        {
+          "kind": "drawingwave",
+          "x": -486,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": [
+            {
+              "visible": true,
+              "frameMs": 1124.9,
+              "calls": 113,
+              "triangles": 299976.5
+            },
+            {
+              "visible": false,
+              "frameMs": 1299.9,
+              "calls": 112,
+              "triangles": 297624.5
+            },
+            {
+              "visible": false,
+              "frameMs": 1108.4,
+              "calls": 112,
+              "triangles": 297624.5
+            },
+            {
+              "visible": true,
+              "frameMs": 1091.6,
+              "calls": 113,
+              "triangles": 299976.5
+            }
+          ]
+        },
+        {
+          "kind": "drawinglonglegs",
+          "x": -789,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": []
+        },
+        {
+          "kind": "drawingteal",
+          "x": -288,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": []
+        },
+        {
+          "kind": "drawingscribble",
+          "x": 754,
+          "entryPrograms": 115,
+          "newProgramHashes": [],
+          "rounds": []
+        }
+      ]
+    }
+  ]
+}

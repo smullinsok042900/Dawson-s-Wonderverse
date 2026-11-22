@@ -119,7 +119,9 @@ const UG_F = -6;
   // ---------- playhouse ----------
   await teleport(10); await tapWorld(12, .6); check('tap the ball pit: splash', (await S()).disc.includes('ballpit'));
   await shot('04_ball_pit.jpg');
-  await teleport(21.6, 3.8); await holdBtn('#rightBtn', 700); c = await waitFor(s => s.ride === 'slide', 2000); check('walk off the tower onto the twisty slide', c.ride === 'slide');
+  await teleport(21.6, 3.8);
+  const reachedSlide = await holdUntil('#rightBtn', () => __DDW3.player.ride && __DDW3.player.ride.type === 'slide', null, 15000);
+  c = await S(); check('walk off the tower onto the twisty slide', reachedSlide && c.ride === 'slide', `x=${c.x.toFixed(2)} y=${c.y.toFixed(2)} ride=${c.ride}`);
   await shot('05_slide.jpg');
   c = await waitFor(s => !s.ride && s.y === 0, 9000); check('slide ends on the floor and you can move again', !c.ride && c.x > 30 && c.y === 0, `x=${c.x.toFixed(1)}`);
   await teleport(31.5); { const top = page.evaluate(() => new Promise(r => { let n = 0, m = 0; const f = () => { m = Math.max(m, __DDW3.player.y); if (m > 2 || ++n > 200) return r(m); requestAnimationFrame(f); }; f(); })); await holdBtn('#rightBtn', 500); const m = await top; check('walk onto the trampoline: big bounce', m > 2, `highest y=${m.toFixed(2)}`); }
