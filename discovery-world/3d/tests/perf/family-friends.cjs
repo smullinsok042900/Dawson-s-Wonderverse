@@ -27,11 +27,23 @@ const addedPrograms = (programs, baseline) => programs.filter(p => !baseline.som
 const areaPhase = phase => /^(area|matched|revisit):/.test(phase);
 
 (async () => {
-  const [{ FAMILY_FRIEND_HOMES }, { CRAFT_FRIEND_HOMES }] = await Promise.all([
-    import(pathToFileURL(path.resolve(__dirname, '../../src/family-friend-homes.js'))),
-    import(pathToFileURL(path.resolve(__dirname, '../../src/craft-friend-homes.js'))),
-  ]);
-  const homes = [...FAMILY_FRIEND_HOMES, ...CRAFT_FRIEND_HOMES].map(h => ({ ...h, planet: h.planet || 'earth' }));
+  // The home lists are ES modules inside a CommonJS package; bundle them the same way
+  // tests/family-friends.cjs does, so the script loads on every supported Node version.
+  const os = require('node:os');
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'discovery-family-perf-'));
+  let homes;
+  try {
+    const bundle = path.join(temp, 'homes.mjs');
+    await require('esbuild').build({
+      stdin: {
+        contents: `export { FAMILY_FRIEND_HOMES } from './src/family-friend-homes.js';\nexport { CRAFT_FRIEND_HOMES } from './src/craft-friend-homes.js';`,
+        resolveDir: path.resolve(__dirname, '../..'),
+      },
+      bundle: true, platform: 'node', format: 'esm', outfile: bundle, logLevel: 'silent',
+    });
+    const loaded = await import(pathToFileURL(bundle));
+    homes = [...loaded.FAMILY_FRIEND_HOMES, ...loaded.CRAFT_FRIEND_HOMES].map(h => ({ ...h, planet: h.planet || 'earth' }));
+  } finally { fs.rmSync(temp, { recursive: true, force: true }); }
   assert.equal(homes.length, 46, 'all 46 added residents must be measured');
   assert.equal(new Set(homes.map(h => h.kind)).size, homes.length, 'every resident has a distinct kind');
   assert.ok(homes.every(h => PLACE_ORDER.includes(h.planet) && Number.isFinite(h.x)), 'homes have valid planets and coordinates');
