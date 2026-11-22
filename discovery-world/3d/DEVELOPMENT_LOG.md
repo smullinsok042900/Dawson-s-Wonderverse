@@ -4,6 +4,39 @@ Completed changes and how each was tested, newest first. Each checkpoint says wh
 browser vs. a real iPhone). The routine and rules are in `CLAUDE.md`; unfinished work is in `NEXT_TASKS.md`; measurements
 are in `PERFORMANCE_LOG.md`.
 
+## Checkpoint: build 120 — seven of her own drawings come to life
+- **Two chalk drawings and five marker drawings are now world residents:** Pink Chalk Friend twirls in Art Plaza;
+  Green Chalk Friend plays copycat in Toy Town; Blue Drawing Friend sings at Sunny Seaside; Waving Drawing Friend
+  waves and twirls on Happy Farm; Long-Legged Drawing Friend gives a gentle hug on Balloon Hills; Teal Drawing Friend
+  jumps in Frosty Peaks; Scribble Drawing Friend makes colorful sparkles in Lab Gardens. They greet her nearby, turn
+  toward her and respond to screen taps and the big paw. Descriptive names are temporary; the daughter has not named
+  the first two yet. Their unusual eyes, teeth, tails, limbs, fingers, tummy doodle and pink whiskers are real geometry.
+- **Same world-creature system, no new avatar or pet entries:** two focused model modules feed `planet-life.js`'s
+  existing one-mesh/shared-paint batching and speech/reactions; each is owned, streamed and freed by its district.
+  Green's copying stays within 1.2 m of home, clear of Toy Town's tower; Mo retains his original copying range. No
+  save-format changes, new shader features, image downloads, paid services or new per-frame subsystem. Private source
+  photographs stay outside the public repository. Build 119 is preserved in the pre-change build-120 backup.
+- **Drawing and geometry review:** fixed the green creature's detached extra feet, open base tip and buried mouth;
+  preserved its single curved base and placed the smile on the snout. Connected the waving friend's palm/feet.
+  Actual-geometry raycasts check face visibility. All seven close-ups were inspected against the drawings. Two
+  independent reviews found no blocking source/lifecycle/save issues.
+- **Verified on desktop, software rendering:** 67/67 native checks, 41 learning contracts and both saved-world scene
+  regressions passed. The focused real-game browser check passes all seven greetings, actual screen taps and paw
+  actions, distinct movement, no collectible-pet panel, unloading/revisiting without duplicate residents/targets, shader
+  reuse, unchanged player choices and saved progress after reload. Screenshots are included. Required native checks
+  also exposed older missing ladder/knot/parachute toys and a missing Bézier method in the test fixture; fixed without
+  weakening assertions. GitHub's native checks and build also passed.
+- **Performance:** before/after measurements cover all seven homes and an unchanged park view; an additional same-scene
+  farm check did not reproduce the unmatched-scene slowdown. Every shader creation was before the first area visit,
+  with none on entering any of the seven areas. Exact timings, long-task observations and limits are in `PERFORMANCE_LOG.md` and
+  the two build-120 JSON reports. No physical iPhone results are claimed.
+- **Full smoke: 250/250 passed**, run alone in desktop Chromium/SwiftShader, including all fourteen new-resident checks
+  and zero console errors/warnings. Its first run passed the new-resident checks but the old fixed 700 ms slide hold
+  stopped at x=23.1, before the unchanged
+  x>23.2 ride trigger. The test now uses its existing bounded, real-touch `holdUntil` helper and keeps both slide-start
+  and original landing assertions. A focused real-touch retest passes start and landing (x=32.2, y=0); no game code
+  changed for this automation timing correction.
+
 ## Checkpoint: build 119 — Toy Town's paper-plane glider
 - **THE PAPER-PLANE GLIDER** (`ATTRACTIONS.md` row 5, Earth: the second district): at the end of Toy Town, four giant toy blocks make stairs (3.2 m wide each: one easy hop to the next); at the top she taps the big paper plane and glides back over the town. **▲ pulls up (slower), ▼ dives (faster)**, nothing held is a gentle glide down; six stars at different heights ("All six stars!"); she lands softly wherever the glide ends (the musical floor if she stays up long enough), or **JUMP hops off** and she floats down. A different kind of ride from the zip line: she chooses her own height and path.
 - Tests (desktop, software rendering): `toy-glider` (new): she climbs the four blocks one hop at a time; tapping the plane starts the flight; ▲ climbs and slows, ▼ dives and speeds up; she lands in Toy Town; JUMP hops off and she floats down: all passed. (A first version had 2.2 m blocks; at the test's low frame rate a hop flew past the first block, so they were made as wide as the lookout rocks.) Shader programs after walking Toy Town: 147 in builds 118 and 119. Speed: see PERFORMANCE_LOG. **Full smoke test: 236/236.** Not tried on an iPhone.
