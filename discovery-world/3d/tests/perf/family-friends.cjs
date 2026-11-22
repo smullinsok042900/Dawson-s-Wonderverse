@@ -204,14 +204,35 @@ const areaPhase = phase => /^(area|matched|revisit):/.test(phase);
         run.areaShaderCreations = run.shaderCreations.filter(c => areaPhase(c.phase));
         run.transitionShaderCreations = run.shaderCreations.filter(c => c.phase.startsWith('transition:'));
         run.bootCreationCount = await page.evaluate(start => __familyPerf.creations.filter(c => c.start < start).length, bootTime);
-        if (isNew && run.areaShaderCreations.length) report.failures.push('New build linked shaders on area entry, matched sampling or revisit in run ' + runIndex + ': ' + JSON.stringify(run.areaShaderCreations));
-        if (isNew && [...run.spots, ...run.revisits].some(s => (s.entry?.newProgramHashes || s.newProgramHashes).length))
-          report.failures.push('New shader source appeared after a landing baseline in run ' + runIndex);
         if (errors.length) report.failures.push('Game errors in run ' + runIndex + ': ' + errors.join('; '));
         save();
       } catch (error) {
         report.failures.push('Run ' + runIndex + ' stopped: ' + error.message); save(); throw error;
       } finally { await context.close(); }
+    }
+    // Gate shader work on the difference between the builds. The preserved build-120 bundle also
+    // builds planet sections lazily, so a creation the old build makes at the same entry is
+    // pre-existing section work, reported on its own instead of blamed on the new residents.
+    const oldSpots = report.runs.filter(r => r.build === 'old').flatMap(r => r.spots);
+    const oldEntries = (planet, kind) => oldSpots.filter(s => s.planet === planet && s.kind === kind);
+    const oldCreationCounts = (planet, kind) => oldEntries(planet, kind).map(s => (s.entry.shaderCreations || []).length);
+    const oldEntryHashes = (planet, kind) => oldEntries(planet, kind).flatMap(s => s.entry.newProgramHashes || []);
+    report.preExistingShaderCreations = [];
+    for (const run of report.runs.filter(r => r.build === 'new')) {
+      const fresh = [];
+      for (const creation of run.areaShaderCreations) {
+        const [, planet, kind] = creation.phase.split(':');
+        const counts = planet && kind ? oldCreationCounts(planet, kind) : [];
+        if (counts.length && counts.every(n => n > 0)) report.preExistingShaderCreations.push({ runIndex: run.runIndex, phase: creation.phase });
+        else fresh.push(creation);
+      }
+      if (fresh.length) report.failures.push('New build linked shaders on area entry, matched sampling or revisit in run ' + run.runIndex + ': ' + JSON.stringify(fresh));
+      const freshSources = [...run.spots, ...run.revisits]
+        .filter(s => (s.entry?.newProgramHashes || s.newProgramHashes || []).length)
+        .filter(s => !s.kind || !oldEntryHashes(s.planet, s.kind).length)
+        .map(s => s.planet + ':' + s.kind);
+      if (freshSources.length) report.failures.push('New shader source appeared after a landing baseline in run ' + run.runIndex + ': ' + freshSources.join(', '));
+      save();
     }
     // Compare source sets at the same landing across builds. Raw program counts can
     // vary because multiple cache keys share a source; they are retained, not gated.
