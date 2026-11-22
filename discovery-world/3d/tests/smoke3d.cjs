@@ -149,6 +149,8 @@ const UG_F = -6;
       check(`${kind}: real touch and PAW start its spoken activity and happy movement`, tapped && movement && (await page.locator('#toast').textContent()).includes(line) && await page.locator('#befriend.show').count() === 0);
     }
   }
+  // The next artwork collection lives on Earth and in the planets' streamed areas.
+  await require('./craft-friends.cjs').runCraftSmoke(page, check);
   // ---------- playhouse ----------
   await teleport(10); await tapWorld(12, .6); check('tap the ball pit: splash', (await S()).disc.includes('ballpit'));
   await shot('04_ball_pit.jpg');

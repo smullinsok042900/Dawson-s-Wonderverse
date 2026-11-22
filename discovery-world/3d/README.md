@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 122: thirty more creations across the world
+- **Thirty more family creations join the sixteen from build 121:** decorated animals, ponies, friendly ghosts, a pumpkin, all three bees and the colorful shark. Dad Duck keeps his mustache, tie, coffee and ramen.
+- Six live around Earth; three each live on the Moon, Mercury, Mars, Venus, Saturn, Uranus, Neptune and Pluto. Each has a spoken welcome and a dance, song, bounce, hug or sparkle reaction.
+- [Find every family friend and see their close-up](FAMILY_FRIENDS.md), including both pairs of twins and the original seven.
+
 ## 3D build 121: sixteen more family creations
 - **Sixteen more drawings and handmade creations are now 3D friends to meet, talk to and play with.** Both pairs of twins keep their differences and live together by the Adventure Trail bridge.
 - The snow sculpture, yellow balloon and chalk person join the paper drawings around nine Earth places. Tap a friend or the big paw for a dance, song, bounce, hug or colorful sparkles.
