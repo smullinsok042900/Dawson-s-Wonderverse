@@ -10,5 +10,5 @@ Residents greet nearby players with speech and respond to both a direct tap and 
 - [x] Add shared home metadata, streamed district placement and small data-driven tap activities.
 - [x] Verify actual touch, paw, greetings, movement, unload/revisit, unchanged player choices and saved progress; inspect world and close-up images.
 - [ ] Measure build 120 versus 121, isolate new geometry in the same scenery, and audit shader creation on area entry.
-- [ ] Run native, learning, world regression and the full gameplay suite alone; record desktop software-rendering limits.
-- [ ] Update parent-facing location guide and build records; deliver one easy-to-merge PR, including the pending build-120 validation records.
+- [x] Run native, learning, world regression and the full gameplay suite alone; record desktop software-rendering limits. The full suite ran on GitHub Actions (`full-gameplay`, 60m 13s, desktop Chromium/SwiftShader) alongside the combined build-122 benchmark.
+- [x] Update parent-facing location guide and build records; deliver one easy-to-merge PR, including the pending build-120 validation records.

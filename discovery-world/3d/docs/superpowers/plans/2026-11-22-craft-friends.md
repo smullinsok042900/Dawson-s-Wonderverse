@@ -13,6 +13,6 @@ Six residents live in Earth districts. Twenty-four live in the expanded areas of
 - [x] Complete actual touch/PAW, greeting, reaction, cleanup, revisit, shared-resource and save/reload tour for all thirty.
 - [x] Review all world/inspection renders; retain the confirmed cup, cheek and neck-joint fixes.
 - [ ] Measure build 120 against final 122 at all forty-six new homes, including controlled visibility and area-entry shader audits.
-- [ ] Run the final full gameplay suite alone, update validation records and mark the single PR ready.
+- [x] Run the final full gameplay suite alone, update validation records and mark the single PR ready. The suite ran on GitHub Actions (`full-gameplay`, 60m 13s, desktop Chromium/SwiftShader, no physical iPhone) and passed on the commit before the benchmark and documentation commits, which change no game code.
 
 Build 121 is the preceding sixteen-character source checkpoint. `3D_build122_index.html` preserves that checkpoint before these thirty were integrated. Final validation and delivery cover the combined build 122.

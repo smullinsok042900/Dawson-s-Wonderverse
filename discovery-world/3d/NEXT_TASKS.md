@@ -5,7 +5,7 @@ remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, id
 
 
 ## Active family request: the next thirty creations
-Build 121's sixteen additional residents and build 122's next thirty are integrated. All 128 native checks and the actual touch/PAW, cleanup/revisit and save/reload tours pass. Finish the combined performance audit and full gameplay suite before marking PR #103 ready. Keep both confirmed twin pairs distinct; use `FAMILY_FRIENDS.md` for all fifty-three family characters, including the original seven.
+Build 121's sixteen additional residents and build 122's next thirty are integrated. All 128 native checks, the actual touch/PAW, cleanup/revisit and save/reload tours and the full desktop gameplay suite pass. The build-120 versus build-122 performance audit runs as the opt-in `performance-audit` GitHub Actions job (`tests/perf/family-friends.cjs` over all 46 homes, matched shown/hidden rounds and area-entry shader audits) and writes `tests/PERFORMANCE_BUILD122.json`. Keep both confirmed twin pairs distinct; use `FAMILY_FRIENDS.md` for all fifty-three family characters, including the original seven.
 
 ## Creatures and pets (CREATURES.md): every destination DONE (builds 107–117)
 Build 120 adds seven family-drawn world residents, separate from the collectible pets. On the real iPhone, visit Toy Town,
