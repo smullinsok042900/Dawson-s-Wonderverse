@@ -315,6 +315,7 @@ export function initExpansion(G, api) {
 
   // =================== 🧸 TOY TOWN ===================
   builders.toytown = c => [
+    () => lifeHere(c, [['chalkgreen', 587, -4.2]]), // The daughter's green chalk creature: a resident who plays copycat.
     () => palAtHome(c, 'robot'), // (build 32) Bolt the toy robot waits here
     () => tunnelMouth(c, 612.4, -3.4, 'woods') /* (build 62: centred in the gap between the houses at 606 and 619) */, // (build 32) a secret tunnel to the Whispering Woods
     // toy houses behind
@@ -393,6 +394,7 @@ export function initExpansion(G, api) {
 
   // =================== 🔬 LAB GARDENS ===================
   builders.labgarden = c => [
+    () => lifeHere(c, [['drawingscribble', 754, -3.6]]),
     () => { const flowers = [-1, 0, 1].map(dx => c.toy('🌷', .7, 676 + dx * .7, .55, -2)); let grown; flowers.forEach(f => { f.visible = false; });
       return () => { const events = world.adventures?.events || []; const next = (events.includes('learn_count') && events.includes('learn_plant')) || world.adventures?.completed?.includes('science') === true; if (next === grown) return; grown = next; flowers.forEach(f => { f.visible = grown; }); };
     },
@@ -443,6 +445,7 @@ export function initExpansion(G, api) {
 
   // =================== 🖍️ ART PLAZA ===================
   builders.artplaza = c => [
+    () => lifeHere(c, [['chalkpink', 827, -2.7]]), // The daughter's pink chalk creature: tap to twirl and dance.
     () => { const frame = c.toy('🖼️', 1.3, 798, 2, -2); c.tap(frame, () => api.gallery?.(), 798, { icon: '🖼️', label: 'Gallery', action: 'Open gallery', disc: 'gallery' }); },
     // the sticker wall: tap anywhere on it to stick a picture there (they're remembered)
     () => { const STK = ['⭐', '❤️', '🌈', '🦄', '🐱', '🌸', '🚀', '🍦', '🐞', '🌙', '🎈', '🦋'];
@@ -505,6 +508,7 @@ export function initExpansion(G, api) {
 
   // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
   builders.seaside = c => [
+    () => lifeHere(c, [['drawingblue', -123, -3.7]]),
     // the ice cream stand: tap the tubs to stack scoops, tap the cone to eat it
     () => { c.block(-35, 0, -3.4, 3.4, 1.1, 1.2, '#ffffff', { r: .2 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.2, 4).rotateY(Math.PI / 4), mat('#ff7ac8')); roof.position.set(-35, 3.2, -3.4); roof.scale.z = .6; /* (build 48: turned in its shape, then squashed: straight, not crooked) */ c.add(roof); for (const x of [-36.6, -33.4]) c.cyl(x, 0, -3.4, .07, .07, 2.6, '#ffffff');
       const flav = [['strawberry', '#ff8fb8'], ['vanilla', '#fff3d6'], ['mint', '#9ff0c8'], ['chocolate', '#8a5a3a']]; const cone = new THREE.Mesh(new THREE.ConeGeometry(.28, .8, 16), mat('#e8b06a', { r: .7 })); cone.rotation.x = Math.PI; cone.position.set(-35, 1.6, -2.5); c.add(cone); const scoops = [];
@@ -603,6 +607,7 @@ export function initExpansion(G, api) {
 
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
   builders.frosty = c => [
+    () => lifeHere(c, [['drawingteal', -288, -3.6]]),
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
       for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -1.3, Math.abs(b - a), y, 1.6, '#b9dcf5', { r: .3 }); /* (build 62: icy blue steps, not grey boxes against the snow) */ c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.2 }); }
@@ -650,6 +655,7 @@ export function initExpansion(G, api) {
   const COLOURS = [['#ff6fae', 'pink'], ['#4fa8ff', 'blue'], ['#ffd23f', 'yellow'], ['#3cc46e', 'green'], ['#a15cff', 'purple'], ['#ff8a1f', 'orange'], ['#ffffff', 'white']];
   const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
   builders.farm = c => [
+    () => lifeHere(c, [['drawingwave', -486, -4.5]]),
     // the red barn: tap the doors and an animal comes out to say hello (a different one each time)
     () => { c.block(-420, 0, -5.6, 7, 4.2, 4, '#d8443c', { r: .15 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(5, 2.2, 4).rotateY(Math.PI / 4), mat('#8a2a24', { r: .8 })); roof.scale.z = .62; /* (build 48: the barn roof was crooked, like the house's was) */ roof.position.set(-420, 5.3, -5.6); c.add(roof);
       c.block(-420, 4.2, -3.55, 7.2, .25, .2, '#ffffff', { r: .05 }); const doors = [-1, 1].map(s2 => { const d = c.block(-420 + s2 * .8, 0, -3.5, 1.6, 2.8, .16, '#b8322c', { r: .08 }); c.block(-420 + s2 * .8, 1.4, -3.4, 1.4, .14, .06, '#ffffff', { r: .02 }); return d; });
@@ -780,6 +786,7 @@ export function initExpansion(G, api) {
   // (the echo), long tubes play low notes and short tubes high notes (wind chimes), blow and watch (dandelions), and a
   // grassy hill to climb and slide down.
   builders.hills = c => [
+    () => lifeHere(c, [['drawinglonglegs', -789, -3.5]]),
     // rolling green hills behind (a few big shared-material bumps) and a soft lawn colour
     () => { for (const [x, z, r, sy, col] of [[-690, -22, 16, .45, '#8fd88a'], [-722, -26, 20, .55, '#7fcf7a'], [-756, -21, 15, .5, '#9be096'], [-788, -25, 18, .5, '#86d482']]) { const h = c.sph(x, -3, z, r, col, { m: { r: .95, cc: 0 } }); h.scale.y = sy; h.castShadow = false; } },
     // the hot-air balloon: tap the burner, the balloon puffs up into the sky and floats back down

@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 120: her drawings come to life
+- **Seven of her own drawings are now real 3D friends living around the world.** Walk up to hear hello; tap the friend or the big paw to play. They keep the drawings' unusual eyes, smiles, tails, long limbs and colorful hands.
+- **Toy Town:** Green Chalk Friend plays copycat. **Art Plaza:** Pink Chalk Friend twirls. **Sunny Seaside:** Blue Drawing Friend sings. **Happy Farm:** Waving Drawing Friend waves and twirls. **Balloon Hills:** Long-Legged Drawing Friend gives a gentle hug. **Frosty Peaks:** Teal Drawing Friend jumps. **Lab Gardens:** Scribble Drawing Friend makes colorful sparkles.
+- These are friends to meet in their places, with descriptive names for now. Her saved progress, playable characters and pets carry on as before.
+
 ## 3D build 119: Toy Town's paper plane
 - **Climb the giant toy blocks and glide over Toy Town on a big paper plane:** ▲ up, ▼ dive, catch the six stars, JUMP to hop off.
 
