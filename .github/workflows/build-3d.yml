@@ -71,9 +71,6 @@ jobs:
         working-directory: discovery-world/3d
         shell: bash
     env:
-      DDW3_SMOKE_TOOLS: ${{ runner.temp }}/ddw3-smoke-tools
-      NODE_PATH: ${{ runner.temp }}/ddw3-smoke-tools/node_modules
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ddw3-smoke-browsers
       DDW3_TEST_URL: http://127.0.0.1:8766/discovery-world/3d/index.html
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +85,13 @@ jobs:
           cache-dependency-path: discovery-world/3d/package-lock.json
       - name: Prepare fresh test artifacts
         # Keep existing portraits; the full test overwrites the gameplay screenshots it checks.
-        run: rm -f tests/TEST_RESULTS.json tests/FULL_SMOKE_ENVIRONMENT.json tests/full-smoke.log tests/full-smoke-index.sha256
+        run: |
+          {
+            echo "DDW3_SMOKE_TOOLS=$RUNNER_TEMP/ddw3-smoke-tools"
+            echo "NODE_PATH=$RUNNER_TEMP/ddw3-smoke-tools/node_modules"
+            echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ddw3-smoke-browsers"
+          } >> "$GITHUB_ENV"
+          rm -f tests/TEST_RESULTS.json tests/FULL_SMOKE_ENVIRONMENT.json tests/full-smoke.log tests/full-smoke-index.sha256
       - run: npm ci
       - name: Install isolated browser tools
         run: |
