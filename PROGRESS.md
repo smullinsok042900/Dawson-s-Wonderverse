@@ -68,7 +68,8 @@ draft pull request — never a push to `main`.
 | 15 | Ocean Pier: plank seams and edge trim on the deck, eight pilings with rope wraps and caps, three brass mooring cleats, a striped bait shack with a counter and buckets, and four lamp posts | `5761fce` | 21 tests, build 9,957 KB, paired screenshots, audit clean, `pier-detail` measured |
 | 16 | Balloon Hills: three moored balloons with striped envelopes, baskets, ropes and stakes, two bunting lines, wildflower drifts along the path, and two pale terrace shelves behind the hills | `633068f` | 21 tests, build 9,960 KB, paired screenshots, audit clean, `hills-detail` measured |
 | 17 | Adventure Trail: sagging rope handrails and ties on the bridge, two stratified rock cliffs, a waterfall with plunge basin and mist, and a plank lookout deck with a rope rail | `27f6b8d` | 21 tests, build 9,963 KB, paired screenshots, audit clean, `trail-detail` measured |
-| 18 | Playhouse: a curtained stage with an open gap, backdrop, valance, rail and six footlights; a prop chest; a cushioned reading nook with pillows and a book box; two lower lanterns | this commit | 21 tests, build 9,964 KB, screenshots, audit clean, `playhouse-detail` measured |
+| 18 | Playhouse: a curtained stage with an open gap, backdrop, valance, rail and six footlights; a prop chest; a cushioned reading nook with pillows and a book box; two lower lanterns | `462b80b` | 21 tests, build 9,964 KB, screenshots, audit clean, `playhouse-detail` measured |
+| 19 | Studio: an easel wall (two easels, drying rack with pegged and leaning canvases), a pottery wheel with four finished pots, and a paint-splattered workbench with brush jar and palette | this commit | 21 tests, build 9,967 KB, screenshots, audit clean, `studio-detail` measured |
 
 ## Graphics improvements
 
@@ -322,6 +323,17 @@ Art Plaza's activities were already good; the district around them was a flat ch
 - Cost: `playhouse-detail` now **17 meshes / 3,588 triangles**, no collision entries, no new tap targets. The nook was
   first placed at x 6.5/z 5 (behind the camera in the house view) and moved into the visible back wall run.
 
+### Stage 19 — Studio: easels, pottery wheel and workbench
+
+- **Easel wall** (x 74–82, against the studio wall): two A-frame easels with boards and wet paintings, a rail with two
+  pegged canvases and three canvases leaning in a drying row.
+- **Pottery wheel** at x 71.4 with a splash pan, a stool and four finished pots on a drying board.
+- **Workbench** at x 84.6: top, legs, a shelf, a brush jar with four brushes and a palette, with paint splats on the top
+  and on the floor around it.
+- Cost: `studio-detail` **4 meshes / 1,222 triangles**, no collision entries, no new tap targets. The first pass had
+  paintings that covered only a corner of each board (they read as sticky notes) and a bench standing behind an existing
+  cylinder, so both were reworked.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -462,7 +474,7 @@ which is why the named-group probe is the number quoted here.
 ## Speed and performance
 
 - **Collision queries:** `src/spatial.js` interval index replaces linear scans in `updatePlayer`/`groundUnder`; 8 unit tests cover filtering, ordering and overlap fraction.
-- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All fifteen detailed areas together add **78 draw calls and 223,710 triangles**.
+- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All sixteen detailed areas together add **82 draw calls and 224,932 triangles**.
 - **Stage 7 landscape:** 29 hills + 8 mountains = **2 meshes / 2 draw calls / 51,140 triangles**, replacing 29 separate hill meshes (27 fewer draw calls for the backdrop). Single-frame read at the park: 199 draw calls, 382,430 triangles total. Rocks gained their new detail inside existing geometry (0 extra calls, 0 extra textures).
 - **Texture cost:** anisotropy set once per texture on load, no per-frame work.
 - **Scene audit:** runs only on demand (`window.__DDW3.audit()` or `?audit`), never in the frame loop.
@@ -472,7 +484,7 @@ which is why the named-group probe is the number quoted here.
 
 - `node tests/spatial.test.mjs` — 8/8 pass.
 - `node tests/scene-audit.test.mjs` — 13/13 pass.
-- `npm run build` — succeeds, `index.html` 9,964 KB.
+- `npm run build` — succeeds, `index.html` 9,967 KB.
 - Headless load (Chromium headless shell + SwiftShader), stage 9 build — **0 page errors, no "Oops" fallback** at x 695 (Lab Gardens) and 771 (potting bench); the ride sweep also loaded cleanly at the carousel, the Ferris wheel and Dino Valley.
 - Headless load, stage 10 build — **0 page errors, no "Oops" fallback** at x 815, 850 and 868 (Art Plaza).
 - Stage 9 screenshots: 1280×720, dpr 1, `before-labgarden.png` (stage-8 build) and `after-labgarden.png` (this build) at x 695, `after-labbench.png` at x 771, `close-dome.png` and `close-bench.png` from a pinned inspection camera, and four ride/climb close-ups in `rides/`. Camera settle is waited on for every shot.
@@ -499,6 +511,8 @@ which is why the named-group probe is the number quoted here.
 - Audit at x −13 and 32, stage 18 build: **z-fighting 0**, solids 12 and platforms 108 all well formed, 0 page errors.
 - Bridge handrails verified with a dedicated capture at x 450: posts, sagging rope and ties read correctly and the
   waterfall is visible on the cliff; no fix was needed.
+- Model probe (`studio-detail`): **4 meshes / 1,222 triangles**.
+- Audit at x 62 and 80, stage 19 build: **z-fighting 0**, solids 12 and platforms 108 all well formed, 0 page errors.
 - Audit at x −470 and −500, stage 14 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
   platforms 114 all well formed, 0 page errors. A third shot at x −424 confirmed the cupola sits on the barn roof peak.
 - Audit at x −320 and −370, stage 13 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
@@ -520,7 +534,7 @@ which is why the named-group probe is the number quoted here.
 - Remaining rail-corridor checks are bounding-box based, not a visual pass with the train running.
 - The Ferris gondola is a closed cabin: the rider now stands correctly on its bench (seat at −0.94) but is still
   mostly hidden inside it during the ride. Opening the sides is an art decision for a later pass, not a bug.
-- 9 of 26 areas still have no geometry pass; no planet has had one yet.
+- 8 of 26 areas still have no geometry pass; no planet has had one yet.
 
 ## Resuming after an interruption (exact steps)
 
@@ -577,7 +591,9 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
    a lookout deck; 5 meshes / 2,512 triangles, evidence in `docs/screenshots/stage17/`.
 7. **Playhouse — done (stage 18):** curtained stage with footlights, prop chest, reading nook and two lanterns;
    17 meshes / 3,588 triangles, evidence in `docs/screenshots/stage18/`.
-8. **Studio and Wonder Lab** interiors next (easel wall, pottery wheel, science bench), then the planets.
+8. **Studio — done (stage 19):** easel wall with drying canvases, pottery wheel with finished pots, paint-splattered
+   workbench; 4 meshes / 1,222 triangles, evidence in `docs/screenshots/stage19/`.
+9. **Wonder Lab** interior next (glass tube bench, specimen shelves), then the planets.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

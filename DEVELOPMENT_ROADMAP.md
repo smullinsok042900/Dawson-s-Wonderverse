@@ -37,7 +37,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 13 | Balloon Hills | done (stage 16) | three moored balloons, two bunting lines, wildflower drifts, terrace shelves |
 | 14 | Adventure Trail | done (stage 17) | bridge handrails, stratified cliffs, waterfall + mist, lookout deck |
 | 15 | Playhouse | done (stage 18) | curtained stage + footlights, prop chest, reading nook, lanterns |
-| 16 | Studio | **next** | easel wall, pottery wheel, paint-splattered workbench |
+| 16 | Studio | done (stage 19) | easel wall + drying canvases, pottery wheel, splattered workbench |
+| 17 | Wonder Lab | **next** | glass tube bench, specimen shelves, microscope table |
 | 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
 | 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
 | 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |

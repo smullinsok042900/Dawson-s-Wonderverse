@@ -95,6 +95,59 @@ function rugTexture() {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
 
+// ---------------------------------------------------------------------------------------------
+// (stage 19) IMAGINATION STUDIO: an easel wall with canvases drying, a pottery wheel with finished
+// pots, and a paint-splattered workbench. Scenery only: no collision, no new tap targets.
+export function buildStudioDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'studio-detail'; add(group);
+  const B = (list, hex, w, h, d, x, y, z, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const C = (list, hex, ra, rb, h, x, y, z, seg = 10) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+
+  const wood = [], paint = [], pots = [], splat = [];
+  // --- two A-frame easels with a board on each, standing against the studio wall
+  for (const [ex, lean, art] of [[74.2, .12, '#ff9fd2'], [77.2, -.1, '#7fd8ff']]) {
+    for (const s of [-1, 1]) { const leg = new THREE.BoxGeometry(.12, 2.5, .12); leg.rotateX(s * lean); leg.translate(ex + s * .55, 1.25, -3.05); wood.push(tinted(leg, '#c98a52')); leg.dispose(); }
+    B(wood, '#b8723f', 1.3, .14, .2, ex, 1.55, -2.98);
+    B(paint, '#fffaf2', 1.15, .95, .07, ex, 2.15, -3.02, 0);
+    B(paint, art, .98, .72, .02, ex, 2.18, -2.96, 0);                 // the wet painting on the board
+    B(paint, '#ffd84a', .26, .2, .02, ex + .28, 2.0, -2.94, .3);      // a second colour blot
+    B(paint, '#ffffff', .2, .05, .02, ex - .3, 2.42, -2.94, 0);       // a highlight stroke
+  }
+  // --- drying rack against the wall: three canvases leaning, plus a rail with two pegged boards
+  for (let i = 0; i < 3; i++) B(paint, ['#ffd1ec', '#c9f2d0', '#ffe8a8'][i], .9, 1.15, .06, 79.9 + i * .98, .63, -3.35, .03 * (i - 1));
+  B(wood, '#c98a52', 3.6, .1, .12, 81.0, 3.1, -3.32);
+  for (let i = 0; i < 2; i++) { B(wood, '#8a6b55', .04, .5, .04, 79.9 + i * 2.1, 2.85, -3.3); B(paint, ['#ffb3dc', '#9fe6ff'][i], .75, .9, .05, 79.9 + i * 2.1, 2.35, -3.28); }
+
+  // --- pottery wheel with a stool, a splash pan and four finished pots on a drying board
+  C(wood, '#8a6b55', .42, .5, .55, 71.4, .28, -1.75, 12);
+  C(paint, '#b9c4cc', .46, .46, .08, 71.4, .6, -1.75, 20);
+  C(paint, '#d9b48a', .17, .2, .22, 71.4, .74, -1.75, 12);
+  C(wood, '#c98a52', .3, .34, .42, 70.5, .21, -1.1, 10);
+  B(wood, '#b8723f', 1.5, .1, .55, 73.0, .5, -1.55);
+  const potTones = ['#e0a35f', '#cf8a4c', '#f0b877', '#b9763f'];
+  for (let i = 0; i < 4; i++) {
+    const px = 72.5 + (i % 2) * .42, pz = -1.68 + Math.floor(i / 2) * .3;
+    C(pots, potTones[i], .1, .13, .26 + (i % 3) * .06, px, .73 + (i % 3) * .03, pz, 12);
+    C(pots, potTones[i], .16, .12, .1, px, .88 + (i % 3) * .03, pz, 12);
+  }
+
+  // --- paint-splattered workbench: top, legs, brush jar and palette, splats on the top and floor
+  B(wood, '#c98a52', 2.4, .16, .8, 84.6, .92, -2.35);
+  for (const lx of [83.6, 85.6]) for (const lz of [-2.65, -2.05]) B(wood, '#a96f3e', .11, .92, .11, lx, .46, lz);
+  B(wood, '#b8723f', 2.0, .1, .6, 84.6, .45, -2.35);
+  C(paint, '#9fd8ff', .12, .13, .3, 85.6, 1.14, -2.5, 12);
+  for (let i = 0; i < 4; i++) { const g = new THREE.CylinderGeometry(.02, .02, .42, 5); g.rotateZ(.1 * (i - 1.5)); g.translate(85.55 + i * .05, 1.45, -2.52 + i * .02); paint.push(tinted(g, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a'][i])); g.dispose(); }
+  B(paint, '#f6e7d2', .62, .05, .42, 83.7, 1.03, -2.3);
+  for (let i = 0; i < 5; i++) { const g = new THREE.CircleGeometry(.055, 10); g.rotateX(-Math.PI / 2); g.translate(83.45 + (i % 3) * .14, 1.06, -2.42 + Math.floor(i / 3) * .12); splat.push(tinted(g, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a', '#b07cff'][i])); g.dispose(); }
+  for (let i = 0; i < 9; i++) { const g = new THREE.CircleGeometry(.09 + (i % 3) * .05, 12); g.rotateX(-Math.PI / 2); g.translate(83.4 + (i % 4) * .8, .014, -2.2 + Math.floor(i / 4) * .5); splat.push(tinted(g, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a', '#b07cff'][i % 5])); g.dispose(); }
+
+  const mw = new THREE.Mesh(mergeParts(wood), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .86 })); mw.castShadow = true; group.add(mw);
+  const mp = new THREE.Mesh(mergeParts(paint), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .78, side: THREE.DoubleSide })); mp.castShadow = true; group.add(mp);
+  const mo = new THREE.Mesh(mergeParts(pots), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .92, side: THREE.DoubleSide })); group.add(mo);
+  const ms = new THREE.Mesh(mergeParts(splat), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 })); group.add(ms);
+  return { group, added: { easels: 2, canvases: 5, pots: 4, bench: 1, splats: 14 } };
+}
+
 export function buildPlayhouseDetail({ scene, add, rnd }) {
   const group = new THREE.Group(); group.name = 'playhouse-detail'; add(group);
   const r = rnd || Math.random;

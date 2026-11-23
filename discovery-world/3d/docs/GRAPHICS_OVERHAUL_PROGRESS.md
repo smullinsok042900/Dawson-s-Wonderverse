@@ -401,5 +401,16 @@ Evidence: `docs/screenshots/stage18/` (stage at x −13, nook at x 32, plus the 
 `docs/screenshots/stage17/after-trail-bridge-rails.png`. Audit at −13/32: z-fighting 0, solids 12, platforms 108, 0 page
 errors. No FPS claim.
 
-Next: Studio, Wonder Lab,
+## Stage 19 — Studio easels, pottery and workbench
+
+- **Easel wall**: two A-frame easels with boards and wet paintings, a peg rail with two canvases and three leaning in a
+  drying row. The first pass left the painting covering a corner of each board; enlarged to fill it.
+- **Pottery wheel**, splash pan, stool, four finished pots on a drying board.
+- **Workbench** with shelf, brush jar, palette and paint splats on the top and floor; moved off the existing cylinder.
+- **Cost:** `studio-detail` 4 meshes / 1,222 triangles, no collision entries.
+
+Evidence: `docs/screenshots/stage19/` (x 62, x 80 and a bench view at x 84). Audit at 62/80: z-fighting 0, solids 12,
+platforms 108, 0 page errors. No FPS claim.
+
+Next: Wonder Lab,
 then the planets in order Moon → … → Pluto, then character/pet material polish.

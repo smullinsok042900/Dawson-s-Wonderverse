@@ -17,7 +17,7 @@ import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
-import { buildPlayhouseDetail, buildParkDetail, buildParkHills } from './scenery-detail.js'; // (overhaul) area detail
+import { buildPlayhouseDetail, buildParkDetail, buildParkHills, buildStudioDetail } from './scenery-detail.js'; // (overhaul) area detail
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -190,6 +190,7 @@ export function buildWorld(G) {
 
   // (overhaul) extra props for the Playhouse: a woven rug, a ceiling of bunting and paper lanterns.
   if (!/[?&]nodetail/.test(location.search)) G.playhouseDetail = buildPlayhouseDetail({ scene, add }); // (?nodetail = A/B measurement)
+  if (!/[?&]nodetail/.test(location.search)) G.studioDetail = buildStudioDetail({ add }); // (stage 19) easels, pottery wheel, workbench
 
   // =================== IMAGINATION STUDIO ===================
   // GIANT PAINT WALL (you paint on it with your finger)
