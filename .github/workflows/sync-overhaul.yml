@@ -33,6 +33,8 @@ jobs:
           git fetch --depth=1 verified main
           git checkout verified/main -- \
             PROGRESS.md \
+            DEVELOPMENT_ROADMAP.md \
+            RELEASE_CHECKLIST.md \
             discovery-world/3d/src \
             discovery-world/3d/tests \
             discovery-world/3d/tools \
@@ -57,7 +59,7 @@ jobs:
       - name: Commit the verified overhaul [skip sync]
         run: |
           set -euo pipefail
-          git add PROGRESS.md discovery-world/3d
+          git add PROGRESS.md DEVELOPMENT_ROADMAP.md RELEASE_CHECKLIST.md discovery-world/3d
           if git diff --cached --quiet; then echo "nothing to commit"; exit 0; fi
           git commit -m "Sync the 3D graphics overhaul from the verified build [skip sync]"
           git push origin HEAD:feature/full-3d-overhaul
