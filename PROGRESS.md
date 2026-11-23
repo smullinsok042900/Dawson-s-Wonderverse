@@ -3,6 +3,23 @@
 Repository: `smullinsok042900/dawsons-world-test` · branch `main` · game root `discovery-world/3d`.
 Every completed stage is committed and pushed to `main` automatically.
 
+## Pull request (draft, mandatory checkpoint)
+
+The original game repository keeps its own history, so verified work reaches it only through one
+draft pull request — never a push to `main`.
+
+- **PR #104** → https://github.com/smullinsok042900/Dawson-s-Wonderverse/pull/104
+  (`feature/full-3d-overhaul` → `main`, draft, updated in place for every stage)
+- The branch is based on the original `main` (`9449914`). The sync copies only the overhaul paths
+  (`discovery-world/3d/src|tests|tools`, `package.json`, `package-lock.json`, `PROGRESS.md`,
+  `docs/GRAPHICS_OVERHAUL_PROGRESS.md`), so the original backups, workflows and other files stay untouched.
+- **How to sync after a stage:** push this repo's `main`, then run the `Sync the 3D overhaul` workflow on
+  `feature/full-3d-overhaul` (Actions → Sync the 3D overhaul → Run workflow). It copies those paths, runs
+  `tests/scene-audit.test.mjs` and `tests/spatial.test.mjs`, rebuilds `discovery-world/3d/index.html` with
+  `build.mjs`, and commits to the PR branch. The PR then updates itself.
+- **Verified 2026-11-23:** the PR's `index.html` blob is identical to this repo's build (`33903e8`),
+  19 files changed, draft, `main` unchanged.
+
 ## Completed stages
 
 | # | Stage | Commit | Verified |
