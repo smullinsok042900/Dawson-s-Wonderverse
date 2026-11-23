@@ -22,7 +22,8 @@ import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 import { BIG_CRATER } from './coaster-course.js';
 
 export const SPACE = { ox: 5000, gap: 400, w: 110 };
-let venusCloudMat = null; // (stage 23) one translucent cloud material for Venus, shared by every build of the place // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
+let venusCloudMat = null, venusCloudFar = null; // (stage 23/24) Venus's shared cloud material, and a coarser ball for its far sheets
+let marsHazeMat = null, marsHazeGeo = null;       // (stage 24) Mars's shared dust-haze material and ball // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
 // [id, picture colours for the menu, gravity m/s², gas giant?, what the voice says when you arrive]
 export const PLACES = [
   ['moon', ['#e8e8ec', '#9a9aa6'], 1.62, false, "The Moon! There's not much gravity here, so you can jump about six times higher. Look, there's Earth!"],
@@ -267,12 +268,13 @@ export function initSpace(G, api) {
       // (stage 23) THE CLOUD DECK: three translucent sheets of cloud stacked at different heights and drifting at
       // different speeds, each a continuous run of billows rather than separate puffs, so they read as a deck
       venusCloudMat ||= new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: .42, roughness: 1, metalness: 0, depthWrite: false });
+      venusCloudFar ||= new THREE.SphereGeometry(1, 8, 5); // (stage 24) the two far sheets use a coarser ball: 64 tris instead of 120, no different at 100+ m
       for (const [zz, yy, sc, n, tint, sp] of [[-40, 9, 1.2, 17, '#fff2cc', .55], [-100, 16, 2.2, 15, '#ffe0a8', .95], [-170, 26, 3.4, 13, '#ffcb80', 1.5]]) {
-        const band = () => model(b => { for (let k = 0; k < n; k++) { const x = X - 70 + k * (PW + 140) / (n - 1), z2 = zz + (R(k + 3 + zz) - .5) * 10 * sc, c0 = K.col('#fbebc6').lerp(K.col(tint), R(k + 7 + zz) * .6);
-          for (let q = 0; q < 4; q++) { const r = sc * (.8 + R(k * 4 + q + zz) * .7), hgt = r * (.5 + R(k * 7 + q) * .55);
-            b.put(K.geo.sph(1), x + (q - 1.5) * r * 1.1, R(k + q + zz) * r * .45, z2 + R(k + q + 2 + zz) * 3 * sc, (px, py, pz, nx, ny, nz, o2) => { o2.copy(c0).multiplyScalar(.76 + .32 * Math.max(0, ny)); }, [r * 1.7, hgt, r * 1.25]); } } }, venusCloudMat, false);
-        const m = add(band()); m.position.set(0, yy, zz); m.userData.dynamic = true; m.renderOrder = 2;
-        const m2 = add(band()); m2.position.set(-(PW + 140), yy, zz); m2.userData.dynamic = true; m2.renderOrder = 2;
+        const ball = sc > 1.5 ? venusCloudFar : K.geo.sph(1), row = () => model(b => { for (let k = 0; k < n; k++) { const x = X - 70 + k * (PW + 140) / (n - 1), z2 = zz + (R(k + 3 + zz) - .5) * 10 * sc, c0 = K.col('#fbebc6').lerp(K.col(tint), R(k + 7 + zz) * .6);
+          for (let q = 0; q < 3; q++) { const r = sc * (.9 + R(k * 4 + q + zz) * .7), hgt = r * (.5 + R(k * 7 + q) * .55); // (stage 24: 3 wider billows instead of 4: 43,200 -> 22,992 tris)
+            b.put(ball, x + (q - 1) * r * 1.3, R(k + q + zz) * r * .45, z2 + R(k + q + 2 + zz) * 3 * sc, (px, py, pz, nx, ny, nz, o2) => { o2.copy(c0).multiplyScalar(.76 + .32 * Math.max(0, ny)); }, [r * 2.0, hgt, r * 1.25]); } } }, venusCloudMat, false);
+        const m = add(row()); m.position.set(0, yy, zz); m.userData.dynamic = true; m.renderOrder = 2;
+        const m2 = add(row()); m2.position.set(-(PW + 140), yy, zz); m2.userData.dynamic = true; m2.renderOrder = 2;
         U.push(dt => { for (const q of [m, m2]) { q.position.x += dt * sp; if (q.position.x > PW + 140) q.position.x -= (PW + 140) * 2; } });
       }
       // (stage 23) fumaroles beside the walkway: low sulphur cones with a glowing mouth, so the ground by the path has
@@ -300,12 +302,50 @@ export function initSpace(G, api) {
     yield;
     if (id === 'mars') {
       const mons = [MID + 40, -205, 120, 34];
-      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, zFar: -215, height: (x, z) => { const n = K.fbm2(x * .03, z * .03, 4), far = K.sstep(-5, -22, z); let h = (n - .5) * 5 * far + Math.pow(Math.sin(x * .33 + n * 9 + z * .12) * .5 + .5, 2.2) * .8 * far * K.sstep(-60, -30, z);
+      // (stage 24) THE CANYONS: one long canyon with a branch, cut 11 m and 7 m into the far plains, so the ground has
+      // layered walls and a flat shaded floor instead of an even slope
+      const can1 = x => -50 + Math.sin(x * .022) * 9 + Math.sin(x * .0075 + 2) * 7, can2 = x => -96 + Math.sin(x * .021 + 1) * 12;
+      const canyon = (x, z) => { const w1 = 11 + 4 * Math.sin(x * .04), w2 = 9 + 3 * Math.sin(x * .05 + 3), far = K.sstep(-14, -26, z);
+        return far * (9 * K.sstep(1, .5, Math.abs(z - can1(x)) / w1) + 7 * K.sstep(1, .5, Math.abs(z - can2(x)) / w2)); };
+      // three stepped buttes beside the walkway: a landmark you can see the shape of, with four flat rock terraces
+      const BUTTES = [[X + 32, -26, 9, 7], [X + 92, -40, 12, 9], [X + 150, -22, 6.5, 5]];
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, zFar: -215, nx: 220, nz: 84, height: (x, z) => { const n = K.fbm2(x * .03, z * .03, 4), far = K.sstep(-5, -22, z); let h = (n - .5) * 5 * far + Math.pow(Math.sin(x * .33 + n * 9 + z * .12) * .5 + .5, 2.2) * .8 * far * K.sstep(-60, -30, z);
           const m = K.fbm2(x * .021 + 7, z * .021 + 3, 3), mesa = K.sstep(.565, .6, m) * K.sstep(-20, -42, z) * K.sstep(-150, -110, z); h += mesa * (8 + m * 9 + K.noise2(x * .5, z * .5) * .5);
+          for (const [bx, bz, br, bh] of BUTTES) { const d = Math.hypot(x - bx, (z - bz) * 1.35) / br; if (d < 1.25) h += bh * Math.min(1, Math.ceil(K.sstep(1.2, .35, d) * 4.2) / 4.2) * (.72 + .28 * K.noise2(x * .5, z * .5)); } // (four terraces)
+          h -= canyon(x, z);
           const d = Math.hypot(x - mons[0], (z - mons[1]) * 1.6) / mons[2]; if (d < 1) h += mons[3] * Math.pow(1 - d, 1.2) * (1 - .3 * Math.exp(-d * d / .012)); return h; },
-        color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), strata = Math.sin(h * 2.6 + K.noise2(x * .1, z * .1) * 2) * .5 + .5, steep = K.sstep(.86, .6, ny);
-          K.ramp(['#8f3b20', '#c45a2e', '#e08c54', '#f2b684'], .25 + n * .45 + Math.min(.25, Math.max(0, h) * .02), o); if (steep > 0) o.lerp(K.ramp(['#7a2f1c', '#d9764a', '#f0c8a0'], strata, T3), steep * .85); o.multiplyScalar(.74 + .32 * ny); } });
-      yield* rocks(110, { colors: ['#4a2a22', '#8f4a30', '#b8603a'], sharp: 1, s1: .7 }); yield* frontRocks(['#4a2a22', '#8f4a30'], 8, 1);
+        color: (x, z, h, ny, o) => { // (stage 24) a layered ochre palette: banded walls, dark basalt, pale drift dust
+          const n = K.fbm2(x * .5, z * .5, 3), big = K.fbm2(x * .028 + 3, z * .028 + 8, 3), steep = K.sstep(.94, .7, ny);
+          const band = Math.sin(h * 2.4 + K.noise2(x * .05, z * .05) * 1.2) * .5 + .5, layer = K.sstep(.6, .96, Math.sin(h * 1.5 + big * 4) * .5 + .5);
+          const drift = K.sstep(.62, .9, ny) * K.sstep(.42, .62, K.noise2(x * .06, z * .14)), can = canyon(x, z) / 9;
+          K.ramp(['#8f3b20', '#c45a2e', '#e08c54', '#f2b684'], .22 + n * .4 + big * .24 + Math.min(.2, Math.max(0, h) * .018), o);
+          o.lerp(K.col('#5e2a20'), K.sstep(.56, .44, big) * .55);                                            // dark basalt fields
+          o.lerp(K.col('#f8dcb8'), drift * .55);                                                             // pale wind-blown dust
+          o.lerp(K.col('#c96a3c'), layer * .3);                                                              // ochre layers across the dunes
+          if (steep > .02) o.lerp(K.ramp(['#6e2a1a', '#e08a52', '#f6c89c', '#b8542e'], band, T3), steep * .9); // the banded canyon and butte walls
+          o.lerp(K.col('#2e140e'), Math.min(.65, can * .4));                                                 // the deep canyon floor
+          o.multiplyScalar((.74 + .32 * ny) * (.94 + .1 * K.noise2(x * .02, z * .4))); } });                  // (soft wind streaks)
+      yield* rocks(80, { colors: ['#4a2a22', '#8f4a30', '#b8603a'], sharp: 1, s1: .7 }); yield* frontRocks(['#4a2a22', '#8f4a30'], 8, 1);
+      // (stage 24) ROCK FIELDS: clusters of stacked, dust-capped boulders with a grit apron, so the rock field reads as
+      // groups of shapes with contact shadows instead of an even scatter of stones
+      for (let c = 0; c < 10; c++) { const cx = X + 6 + c * 33 + R(c + 600) * 14, cz = -6.6 - R(c + 610) * 22, n = 4 + (R(c + 620) * 4 | 0), sc = .62 + R(c + 630) * .7;
+        for (let k = 0; k < n; k++) { const a = R(c * 7 + k, 0, 6.283), rr = R(c * 7 + k + .5) * sc * 2.2, sx = cx + Math.cos(a) * rr, sz = cz + Math.sin(a) * rr, s = sc * (.5 + R(c * 13 + k + .25) * .8), c0 = K.ramp(['#3a201a', '#7a3a26', '#b8603a'], R(c * 5 + k + .7), new THREE.Color());
+          matte.put(K.rockGeo(c * 5 + k, 1, s < .5), sx, H(sx, sz) + s * (.3 + k * .12), sz, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.72 + .35 * Math.max(0, ny)); o.lerp(T3.set('#f5d6b0'), Math.max(0, ny) * .42); }, [s, s * R(c + k, .7, 1), s], [R(k + c) * .5, R(k + c + 1) * 6.28, R(k + c + 2) * .4]); }
+        for (let k = 0; k < 6; k++) { const a = R(c * 3 + k, 0, 6.283), rr = sc * (.8 + R(c * 3 + k + .5) * 2.4), s = .09 + R(k + c * 9) * .14, sx = cx + Math.cos(a) * rr, sz = cz + Math.sin(a) * rr; // (the grit apron)
+          matte.put(K.rockGeo(c + k + 40, 1, 1), sx, H(sx, sz) + s * .25, sz, '#8a4a30', [s, s * .7, s]); }
+        yield; }
+      // (stage 24) DUST HAZE: three low wide sheets of fine dust stacked at different heights and drifting at different
+      // speeds, so the far ground fades away in layers instead of ending on a hard line
+      marsHazeMat ||= new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: .27, roughness: 1, metalness: 0, depthWrite: false });
+      marsHazeGeo ||= new THREE.SphereGeometry(1, 8, 5);
+      for (const [zz, yy, sc, n, tint, sp] of [[-20, 1.7, 1.4, 8, '#fbe0bc', .5], [-62, 3.8, 2.4, 7, '#f4cfa6', .85], [-120, 6.6, 4.2, 6, '#ecc49a', 1.25]]) {
+        const sheet = () => model(b => { for (let k = 0; k < n; k++) { const x = X - 90 + k * (PW + 180) / (n - 1), z2 = zz + (R(k + 4 + zz) - .5) * 14 * sc, c0 = K.col('#fbe2c2').lerp(K.col(tint), R(k + 9 + zz) * .6);
+          for (let q = 0; q < 2; q++) { const r = sc * (1.1 + R(k * 4 + q + zz) * .8);
+            b.put(marsHazeGeo, x + (q - .5) * r * 1.4, R(k + q + zz) * r * .3, z2 + R(k + q + 2 + zz) * 4 * sc, (px, py, pz, nx, ny, nz, o2) => { o2.copy(c0).multiplyScalar(.8 + .26 * Math.max(0, ny)); }, [r * 2.6, r * .38, r * 1.6]); } } }, marsHazeMat, false);
+        const m = add(sheet()); m.position.set(0, yy, zz); m.userData.dynamic = true; m.renderOrder = 2;
+        const m2 = add(sheet()); m2.position.set(-(PW + 180), yy, zz); m2.userData.dynamic = true; m2.renderOrder = 2;
+        U.push(dt => { for (const q of [m, m2]) { q.position.x += dt * sp; if (q.position.x > PW + 180) q.position.x -= (PW + 180) * 2; } }); }
+      yield;
       tapIt(inSky(new THREE.Mesh(new THREE.SphereGeometry(30, 8, 6), new THREE.MeshBasicMaterial({ visible: false })), mons[0], 22, mons[1] + 40), () => fact('🌋 That\'s Olympus Mons: the biggest volcano in the whole solar system!', 'marsvolcano')); skies[id].pop(); // (an unseen tap target over the real mountain; it stays put)
       G.interact.push({ x: X + 78, y: 0, layer: 'space', disc: 'marsvolcano', run: () => fact('🌋 That\'s Olympus Mons: the biggest volcano in the whole solar system!', 'marsvolcano'), hintY: 2.4 });
       // the two little moons, Phobos and Deimos

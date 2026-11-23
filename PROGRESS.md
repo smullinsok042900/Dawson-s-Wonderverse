@@ -421,6 +421,55 @@ highlands) and `venus-domes.png` (dome country and fumaroles beside the path).
 Audit at x 12, 40, 70 and 120: **z-fighting 0** at all four, solids 12 and platforms 108, none malformed, 0 page
 errors. No FPS claim.
 
+### Venus measured cost, and what was trimmed
+
+Measured on the stage-23 build at the planet approach (x 40, normal walking camera, one explicit
+`renderer.render()` with `renderer.info`, per-mesh breakdown over the `space:venus` group):
+
+| Item | Before | After |
+|---|---|---|
+| Draw calls in the frame | 57 | **57** |
+| Triangles in the frame | 133,830 | **113,622** |
+| Whole Venus place | 35 meshes / 129,200 tris | 35 meshes / **108,992** tris |
+| The six translucent cloud sheets | 43,200 tris | **22,992** tris |
+| Ground mesh (unchanged) | 49,660 tris | 49,660 tris |
+
+The clouds were the only heavy item: 360 low-poly billow spheres at 120 triangles each. Each cluster now
+uses three wider billows instead of four, and the two far sheets (100 m and 170 m out) use an 8x5 ball (64
+triangles) instead of the 10x7 one, which is indistinguishable at that distance. Same six meshes, same six
+draw calls, same deck silhouette. The ground is 1 mesh and 1 draw call and stays at full detail.
+
+### Stage 24 — Mars: layered dust haze and readable rock fields
+
+- **Resolution**: `terrainSteps` runs at `nx 220, nz 84` for Mars (about 2 m between columns near the walkway),
+  so the far ground can hold canyons and stepped buttes instead of one smooth dune wall. Ground mesh **1 mesh /
+  59,440 triangles**; whole place **41 meshes / 101,562 triangles** at the approach; the frame at the approach is
+  **54 draw calls / 101,516 triangles** (the extra streamed sections add meshes later, as before).
+- **Canyons and buttes**: two canyons cut 9 m and 7 m into the plains (the near rim about 40 m out), and three
+  stepped buttes beside the path - four flat terraces each, 6.5-12 m across and 5-9 m tall - so the ground has a
+  landmark with readable rock faces.
+- **Layered ochre palette**: four-stop banded canyon and butte walls, dark basalt fields, pale wind-blown drift dust,
+  ochre layers across the dune slopes, a shaded canyon floor and soft wind streaks, all anchored on the ochre base.
+- **Rock fields**: ten clusters of four to seven stacked, dust-capped boulders (lighter caps on the up faces), each
+  with a six-stone grit apron, alongside 80 scattered rocks and 8 front rocks. The clusters read as groups with
+  contact shadows instead of an even scatter.
+- **Layered dust haze**: three translucent sheets of fine dust at 1.7 m, 3.8 m and 6.6 m (one shared material,
+  opacity 0.27) drifting at 0.5, 0.85 and 1.25 m/s and wrapping around the place, so the far ground fades away in
+  layers instead of ending on a hard silhouette.
+- **Rover and dust devil kept working**: their code is unchanged; a live check tapped both and let 2.6 s of the
+  running loop pass, and 18 objects moved (the rover group drove 2.46 m and turned, the dust-devil segments swayed
+  0.14-0.39 m and turned), with 0 page errors.
+- First capture rejected after inspection: the canyon sat too far back to read, the wall strata and haze were too
+  subtle, and the boulder clusters looked like the old even scatter. Moved the near canyon to a rim about 40 m out,
+  strengthened the steep-wall palette and the haze opacity, and enlarged the clusters with pale dust caps.
+
+Evidence in `docs/screenshots/stage24/`, normal walking camera: `mars-approach.png` (haze layers and the canyon
+behind the rocket), `mars-rover-dustdevil.png` (rover at the frame edge, the dust devil, boulder clusters and a haze
+band across the ground) and `mars-canyon.png` (stepped butte, terraced mesas and the second haze layer).
+
+Audit at x 12, 40, 70 and 120: **z-fighting 0** at all four, solids 12, platforms 108/126/126/126, 0 malformed,
+0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |

@@ -481,4 +481,27 @@ or platforms, 0 page errors. No FPS claim.
 Evidence: `docs/screenshots/stage23/`. Audit at 12/40/70/120: z-fighting 0, 0 malformed solids or platforms, 0 page
 errors. No FPS claim.
 
-Next: Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.
+## Stage 24 — Mars: layered dust haze and readable rock fields
+
+- **Venus measured, then trimmed**: at the approach the frame was 57 draw calls / 133,830 triangles, with the six
+  translucent cloud sheets alone at 43,200 triangles. Three wider billows per cluster instead of four, plus an 8x5
+  ball for the two far sheets, brings the clouds to 22,992 and the frame to 113,622 (same six meshes, same six draw
+  calls, same silhouette).
+- **Resolution**: a 220x84 grid (about 2 m columns near the walkway) so the far ground carries canyons and stepped
+  buttes; ground mesh 1 mesh / 59,440 triangles, whole place 41 meshes / 101,562 triangles at the approach.
+- **Landforms**: two canyons cut 9 m and 7 m into the plains with the near rim about 40 m out, and three stepped
+  buttes (four flat terraces, 6.5-12 m across, 5-9 m tall) beside the path.
+- **Layered ochre palette**: banded walls, dark basalt fields, pale drift dust, ochre layers on the dune slopes, a
+  shaded canyon floor and soft wind streaks.
+- **Rock fields**: ten clusters of four to seven stacked, dust-capped boulders with a grit apron, plus the existing
+  scattered stones and front rocks.
+- **Dust haze**: three translucent sheets at 1.7/3.8/6.6 m (opacity 0.27) drifting at different speeds and wrapping,
+  so the far ground fades in layers.
+- **Rover and dust devil unchanged and re-verified**: tapping both and letting the loop run moved 18 objects (rover
+  2.46 m and turned, dust-devil segments swayed and turned), 0 page errors.
+- Rejected after inspection: the first canyon was too far back to read, strata/haze too subtle, clusters too scattered.
+
+Evidence: `docs/screenshots/stage24/` (approach, rover/dust devil, canyon). Audit at 12/40/70/120: z-fighting 0,
+0 malformed, 0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
+
+Next: Jupiter → Saturn → Uranus → Neptune → Pluto, then character/pet material polish.

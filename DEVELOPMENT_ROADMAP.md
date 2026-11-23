@@ -4,7 +4,7 @@ Development repository: `smullinsok042900/dawsons-world-test` (branch `main`)
 Original game repository: `smullinsok042900/Dawson-s-Wonderverse` (never written directly)
 Draft pull request: **#104** → https://github.com/smullinsok042900/Dawson-s-Wonderverse/pull/104
 
-Last verified commit: stage 11 on `dawsons-world-test/main` (PR #104 synced after every stage)
+Last verified commit: stage 24 on `dawsons-world-test/main` (PR #104 synced after every stage)
 Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 
 ## How work is delivered
@@ -51,7 +51,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 18 | the Moon | done (stage 21) | crater rims + ejecta rays, layered regolith colours, 54 pebbles |
 | 19 | Mercury | done (stage 22) | deeper crater bowls, capped ejecta rays, layered regolith, volatile hollows |
 | 20 | Venus | done (stage 23) | layered cloud deck, pancake domes, tessera highlands, lava channels, fumaroles |
-| 21 | Mars → Pluto | **next** | cloud bands, ring geometry, horizon atmosphere, then the character material pass |
+| 21 | Mars | done (stage 24) | two canyons, stepped terraced buttes, layered ochre palette, boulder clusters, dust haze |
+| 22 | Jupiter → Pluto | **next** | Great Red Spot detail, cloud band depth, moon surfaces, ring geometry, atmosphere |
 
 Order: Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto (plus Earth orbit/sky stairs).
 Per planet: crater rims + ejecta, layered regolith vertex colours, ring geometry, cloud bands, horizon
