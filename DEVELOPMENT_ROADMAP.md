@@ -4,7 +4,7 @@ Development repository: `smullinsok042900/dawsons-world-test` (branch `main`)
 Original game repository: `smullinsok042900/Dawson-s-Wonderverse` (never written directly)
 Draft pull request: **#104** → https://github.com/smullinsok042900/Dawson-s-Wonderverse/pull/104
 
-Last verified commit: `22ffb14` (stage 10 synced into the PR; branch head `8466076`)
+Last verified commit: stage 11 on `dawsons-world-test/main` (PR #104 synced after every stage)
 Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 
 ## How work is delivered
@@ -29,8 +29,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 5 | Toy Town | done (stages 5/8) | toy-box spill, balls, tops, rebuilt Ferris wheel + carousel |
 | 6 | Lab Gardens | done (stage 9) | glazed greenhouses, beds, fences, potting lab, copper pipe |
 | 7 | Art Plaza | done (stage 10) | painted paving, planters, easels, drying rack, paint pots, bunting |
-| 8 | Sunny Seaside | **next** | surf/wet sand, umbrellas + towels, pier railing + lamps, gulls, beach balls |
-| 9 | Whispering Woods | todo | layered canopy, trunks with bark, undergrowth, campfire surround |
+| 8 | Sunny Seaside | done (stage 11) | five striped parasols with towels + beach balls, dune grass, driftwood |
+| 9 | Whispering Woods | **next** | layered canopy, trunks with bark, undergrowth, campfire surround |
 | 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
 | 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
 | 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |

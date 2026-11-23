@@ -874,6 +874,96 @@ export function buildArtPlazaDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 11) Sunny Seaside: the beach was flat sand with its activities in a
+// row. This adds the things a beach has — five striped parasols with towels
+// and beach balls, a band of dune grass along the back of the sand that stops
+// clear of the lighthouse and the pier, and a piece of driftwood.
+// Static wood, fabric, balls and grass are merged or instanced: four draw
+// calls for the whole shoreline, no collision entries.
+// ===================================================================
+export function buildSeasideDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'seaside-detail'; add(group);
+  const painted = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 });
+  const fabricM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .93, side: THREE.DoubleSide });
+  const ballM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .32, clearcoat: .6 });
+  const woodParts = [], fabricParts = [], ballParts = [], grassSpots = [];
+  const UMB = ['#ff8fc8', '#ffd23f', '#7fd8ff', '#a98bff', '#8fd47a'];
+  const TOWEL = ['#ff9a7a', '#9fe6ff', '#ffe28a', '#ffb3dc', '#b6f0c0'];
+  const box = (list, hex, w, h, d, x, y, z, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 10, rot) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); if (rot) { g.rotateX(rot[0] || 0); g.rotateZ(rot[2] || 0); } g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const beam = (list, hex, a, b, r = .05) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), len = A.distanceTo(B);
+    const g = new THREE.CylinderGeometry(r, r, len, 7);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+
+  // ---- a striped parasol, its towel and a ball: the beach furniture, spread along the sand
+  const PARASOLS = [[-26, -4.2], [-43, -4.6], [-79, -4.4], [-106, -4.8], [-143, -4.5]];
+  PARASOLS.forEach(([x, z], i) => {
+    cyl(woodParts, '#f6f1e6', .045, .06, 2.35, x, 1.17, z, 8);
+    cyl(woodParts, '#c98a52', .12, .12, .06, x, .03, z, 8);
+    // canopy: a real cone of twelve panels, alternating its own colour and cream
+    const canopy = new THREE.ConeGeometry(1.45, .64, 12, 1, true);
+    const pos = canopy.attributes.position, cols = new Float32Array(pos.count * 3), cA = new THREE.Color(UMB[i % UMB.length]), cB = new THREE.Color('#fffaf0');
+    for (let k = 0; k < pos.count; k++) {
+      const a = Math.atan2(pos.getZ(k), pos.getX(k));
+      const panel = Math.floor(((a + Math.PI) / (Math.PI * 2)) * 12);
+      const c = panel % 2 ? cA : cB;
+      cols[k * 3] = c.r; cols[k * 3 + 1] = c.g; cols[k * 3 + 2] = c.b;
+    }
+    canopy.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    canopy.translate(x, 2.28, z); fabricParts.push(canopy);
+    const rim = new THREE.TorusGeometry(1.44, .045, 4, 24); rim.rotateX(Math.PI / 2); rim.translate(x, 1.97, z); fabricParts.push(tinted(rim, '#fffaf0')); rim.dispose();
+    cyl(woodParts, '#ffd23f', .06, .08, .16, x, 2.66, z, 8);
+    // towel laid out beside the pole
+    box(fabricParts, TOWEL[i % TOWEL.length], 1.45, .04, 1.9, x + .95, .035, z + .75, .16);
+    box(fabricParts, '#fffaf0', .16, .045, 1.92, x + .95, .04, z + .75, .16);
+    // beach ball: six painted gores
+    const ball = new THREE.SphereGeometry(.3, 18, 12);
+    const bp = ball.attributes.position, bc = new Float32Array(bp.count * 3);
+    for (let k = 0; k < bp.count; k++) {
+      const a = Math.atan2(bp.getZ(k), bp.getX(k));
+      const gore = Math.floor(((a + Math.PI) / (Math.PI * 2)) * 6);
+      const c = new THREE.Color(['#ff6f6f', '#fffaf0', '#ffd23f', '#7fd8ff', '#fffaf0', '#a98bff'][gore % 6]);
+      bc[k * 3] = c.r; bc[k * 3 + 1] = c.g; bc[k * 3 + 2] = c.b;
+    }
+    ball.setAttribute('color', new THREE.BufferAttribute(bc, 3));
+    ball.translate(x - 1.02, .3, z + 1.2); ballParts.push(ball);
+  });
+
+  // ---- dune grass along the back of the sand, skipping the lighthouse and the pier
+  for (let x = -147; x <= -23; x += 1.55) {
+    if (Math.abs(x + 95) < 2.8 || Math.abs(x + 115) < 3.6) continue;
+    grassSpots.push({ x: x + ((x * 7) % 5) * .08, z: -7.25 + ((x * 3) % 7) * .07, rot: (x * 1.7) % 6.283, col: x % 3 ? '#7fb86a' : '#9ad07e' });
+  }
+
+  // ---- driftwood: a weathered trunk and a broken branch, clear of the crab walk
+  beam(woodParts, '#b8a68f', [-58.6, .12, -5.4], [-55.2, .22, -5.9], .17);
+  beam(woodParts, '#a89478', [-56.6, .2, -5.6], [-55.9, .1, -4.7], .07);
+  beam(woodParts, '#c4b49c', [-57.8, .2, -5.4], [-57.3, .55, -5.1], .05);
+
+  const wood = new THREE.Mesh(mergeMixed(woodParts), painted); wood.castShadow = wood.receiveShadow = true; group.add(wood);
+  const cloth = new THREE.Mesh(mergeMixed(fabricParts), fabricM); cloth.castShadow = cloth.receiveShadow = true; group.add(cloth);
+  const balls = new THREE.Mesh(mergeMixed(ballParts), ballM); balls.castShadow = true; group.add(balls);
+
+  // ---- grass tufts: three blades per spot, one instanced mesh
+  const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), v = new THREE.Vector3(), s = new THREE.Vector3();
+  const blade = broadLeafGeometry({ len: .52, wid: .05, rise: .42, droop: .16, cup: .02, rib: .004, seg: 5, across: 2 });
+  const grass = new THREE.InstancedMesh(blade, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, side: THREE.DoubleSide }), grassSpots.length * 3);
+  let gi = 0;
+  for (const sp of grassSpots) for (let k = 0; k < 3; k++) {
+    q.setFromEuler(eu.set(-.2, sp.rot + k * 2.09, (k - 1) * .18));
+    v.set(sp.x, .01, sp.z); s.setScalar(.85 + (k % 2) * .25);
+    mtx.compose(v, q, s); grass.setMatrixAt(gi, mtx); grass.setColorAt(gi, C.set(sp.col)); gi++;
+  }
+  grass.castShadow = true; group.add(grass);
+
+  return { group, added: { parasols: PARASOLS.length, towels: PARASOLS.length, balls: PARASOLS.length, grass: gi } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

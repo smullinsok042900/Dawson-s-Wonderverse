@@ -17,7 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
-import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail } from './scenery-detail.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -527,6 +527,8 @@ export function initExpansion(G, api) {
   // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
   builders.seaside = c => [
     ...familyParts(c, 'seaside'),
+    // (stage 11) parasols, towels, beach balls, dune grass and driftwood along the sand
+    () => { G.seasideDetail = buildSeasideDetail({ add: c.add }); },
     () => lifeHere(c, [['drawingblue', -123, -3.7]]),
     // the ice cream stand: tap the tubs to stack scoops, tap the cone to eat it
     () => { c.block(-35, 0, -3.4, 3.4, 1.1, 1.2, '#ffffff', { r: .2 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.2, 4).rotateY(Math.PI / 4), mat('#ff7ac8')); roof.position.set(-35, 3.2, -3.4); roof.scale.z = .6; /* (build 48: turned in its shape, then squashed: straight, not crooked) */ c.add(roof); for (const x of [-36.6, -33.4]) c.cyl(x, 0, -3.4, .07, .07, 2.6, '#ffffff');

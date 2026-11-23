@@ -60,7 +60,8 @@ draft pull request — never a push to `main`.
 | 7 | Sculpted hill/mountain geometry, fractured layered rocks, top-bar overflow fix, rail-corridor sweep | `9fc41c7` | 21 tests, build, 2 paired screenshots, toolbar measured |
 | 8 | Real geometry on the foreground models: Dottie, broad-leaf plants, Ferris wheel, carousel ponies, castle facade | `5c899a8` | 21 tests, build, 8 paired screenshots (castle, Toy Town, Dino Valley, Park), audit clean, per-model geometry measured |
 | 9 | Lab Gardens: glazed greenhouses on drum walls with doors and ribs, raised beds with soil depth, edging fences, potting bench with lathed glassware and copper plumbing; ride/climb placement sweep; capture harness committed | `be0db6b` | 21 tests, build, paired screenshots (Lab Gardens), 5 close-ups, 4 ride close-ups, audit clean, `labgarden-detail` measured |
-| 10 | Art Plaza gallery yard: paint-splattered paving, four kerbed planters, two easels and a drying rack with painted canvases, paint pots and brushes, bunting on poles across the plaza | this commit | 21 tests, build 9,942 KB, paired screenshots, audit clean, `artplaza-detail` measured |
+| 10 | Art Plaza gallery yard: paint-splattered paving, four kerbed planters, two easels and a drying rack with painted canvases, paint pots and brushes, bunting on poles across the plaza | `e6107b5` | 21 tests, build 9,942 KB, paired screenshots, audit clean, `artplaza-detail` measured |
+| 11 | Sunny Seaside shoreline: five striped parasols with towels and beach balls, dune grass along the back of the sand, driftwood; clear of the lighthouse, pier and crab walk | this commit | 21 tests, build 9,945 KB, paired screenshots, audit clean, `seaside-detail` measured |
 
 ## Graphics improvements
 
@@ -211,6 +212,19 @@ Art Plaza's activities were already good; the district around them was a flat ch
 - Everything static is merged into one painted mesh and one fabric mesh, the flowers are two instanced meshes and each
   painting is a small textured plane: **10 meshes / 4,262 triangles** for the whole yard, and no collision entries.
 
+### Stage 11 — Sunny Seaside: a shoreline, not a sand strip
+
+- **Five striped parasols** (x −26, −43, −79, −106, −143, at z −4.2 … −4.8): a pale timber pole with a base
+  plate, a twelve-panel cone canopy where every other panel takes the parasol's own colour, a cream rim ring and a
+  brass finial. Each one is placed in a gap between the district's activities.
+- **A towel and a beach ball** beside every parasol: the towel has a cream end stripe, the ball is a six-gore
+  painted sphere. Both sit on the sand, clear of the walking lane.
+- **Dune grass** along the back of the beach (z ≈ −7.25, x −147…−23, every 1.55 m): three arched blades per tuft in
+  one instanced mesh, skipping the lighthouse steps and the pier approach.
+- **Driftwood** at x ≈ −57: a weathered trunk, a broken branch and a raised splinter, clear of the crab walk.
+- Everything static is merged into three meshes (timber, fabric, balls) plus one instanced grass mesh: **4 meshes /
+  8,064 triangles**, no collision entries and no tap targets changed.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -237,6 +251,16 @@ Probe: traverse the named group on the running game and sum `index.count/3` (× 
 `InstancedMesh`), run against both the committed stage-7 build and this build in the same headless session.
 Scene-level totals (e.g. 198 calls / 393 k tris at the castle) are **not** used as an A/B: slice streaming and
 LOD depend on the live player state, so they move between runs by more than the models changed.
+
+### Stage 11 measured cost (streamed district group)
+
+| Group | Meshes | Triangles |
+|---|---|---|
+| `seaside-detail` timber (poles, base plates, driftwood) | 1 | — |
+| `seaside-detail` fabric (canopies, rims, towels) | 1 | — |
+| `seaside-detail` beach balls (5 merged painted spheres) | 1 | — |
+| `seaside-detail` dune grass (instanced, 3 blades per tuft) | 1 | — |
+| **Total** | **4** | **8,064** |
 
 ### Stage 10 measured cost (streamed district group)
 
@@ -275,7 +299,7 @@ which is why the named-group probe is the number quoted here.
 ## Speed and performance
 
 - **Collision queries:** `src/spatial.js` interval index replaces linear scans in `updatePlayer`/`groundUnder`; 8 unit tests cover filtering, ordering and overlap fraction.
-- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All seven detailed areas together add **39 draw calls and 80,702 triangles**.
+- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All eight detailed areas together add **43 draw calls and 88,766 triangles**.
 - **Stage 7 landscape:** 29 hills + 8 mountains = **2 meshes / 2 draw calls / 51,140 triangles**, replacing 29 separate hill meshes (27 fewer draw calls for the backdrop). Single-frame read at the park: 199 draw calls, 382,430 triangles total. Rocks gained their new detail inside existing geometry (0 extra calls, 0 extra textures).
 - **Texture cost:** anisotropy set once per texture on load, no per-frame work.
 - **Scene audit:** runs only on demand (`window.__DDW3.audit()` or `?audit`), never in the frame loop.
@@ -285,7 +309,7 @@ which is why the named-group probe is the number quoted here.
 
 - `node tests/spatial.test.mjs` — 8/8 pass.
 - `node tests/scene-audit.test.mjs` — 13/13 pass.
-- `npm run build` — succeeds, `index.html` 9,942 KB.
+- `npm run build` — succeeds, `index.html` 9,945 KB.
 - Headless load (Chromium headless shell + SwiftShader), stage 9 build — **0 page errors, no "Oops" fallback** at x 695 (Lab Gardens) and 771 (potting bench); the ride sweep also loaded cleanly at the carousel, the Ferris wheel and Dino Valley.
 - Headless load, stage 10 build — **0 page errors, no "Oops" fallback** at x 815, 850 and 868 (Art Plaza).
 - Stage 9 screenshots: 1280×720, dpr 1, `before-labgarden.png` (stage-8 build) and `after-labgarden.png` (this build) at x 695, `after-labbench.png` at x 771, `close-dome.png` and `close-bench.png` from a pinned inspection camera, and four ride/climb close-ups in `rides/`. Camera settle is waited on for every shot.
@@ -294,6 +318,9 @@ which is why the named-group probe is the number quoted here.
 - Audit at x 815, 850 and 868, stage 10 build: **duplicates 6, z-fighting 0**; the six are the little character face spheres at local (0.06, 0.5, 0.1) — pre-existing, not scenery. Solids 12 (0 malformed / 0 duplicate / 0 heavy overlaps); platforms 108 (0 malformed); `buried` 3.
 - Model probe (`labgarden-detail`): **5 meshes / 28,320 triangles** (paint 9,284, glassware 772, copper 740, leaves 14,544 across 606 instances, blooms 2,020 across 101).
 - Model probe (`artplaza-detail`): **10 meshes / 4,262 triangles** (merged wood/stone, fabric flags, paving decal, five canvases, instanced leaves and blooms).
+- Model probe (`seaside-detail`): **4 meshes / 8,064 triangles**.
+- Audit at x −43, −100 and −143, stage 11 build: **duplicates 6** (the character face spheres), **z-fighting 0**;
+  solids 12 (0 malformed); platforms 108 at x −43 and 111 at x −100/−143 (0 malformed); `buried` 3–7 (known terrain class).
 
 ## Remaining issues and unverified work
 
@@ -306,7 +333,7 @@ which is why the named-group probe is the number quoted here.
 - Remaining rail-corridor checks are bounding-box based, not a visual pass with the train running.
 - The Ferris gondola is a closed cabin: the rider now stands correctly on its bench (seat at −0.94) but is still
   mostly hidden inside it during the ride. Opening the sides is an art decision for a later pass, not a bug.
-- 17 of 26 areas still have no geometry pass; no planet has had one yet.
+- 16 of 26 areas still have no geometry pass; no planet has had one yet.
 
 ## Resuming after an interruption (exact steps)
 
@@ -347,13 +374,11 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
 
 ## In progress / next (stage 11 onward)
 
-0. **Art Plaza — done (stage 10):** paint-splattered paving, four kerbed planters, two easels, a drying rack,
-   paint pots and brushes, and bunting on poles; 10 meshes / 4,262 triangles, audit clean, evidence in
-   `docs/screenshots/stage10/`. (The 6 "duplicates" the audit reports there are the character's face spheres.)
-1. **Sunny Seaside** (next): layered surf and wet sand at the waterline, beach umbrellas and towels, a pier
-   railing with posts and lamps, gulls and beach balls. Capture before/after at x −120 and −90, run the audit,
-   then sync the PR.
-2. Then **Whispering Woods**, **Frosty Peaks**, **Happy Farm**, **Ocean Pier**, **Balloon Hills**.
+0. **Art Plaza — done (stage 10)** and **Sunny Seaside — done (stage 11):** parasols, towels, beach balls, dune
+   grass and driftwood; 4 meshes / 8,064 triangles, audit clean, evidence in `docs/screenshots/stage11/`.
+1. **Whispering Woods** (next): layered canopy with real trunks and branches, bark material, undergrowth and a
+   campfire clearing. Capture before/after at x −200 and −250, run the audit, then sync the PR.
+2. Then **Frosty Peaks**, **Happy Farm**, **Ocean Pier**, **Balloon Hills**, then the planets.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

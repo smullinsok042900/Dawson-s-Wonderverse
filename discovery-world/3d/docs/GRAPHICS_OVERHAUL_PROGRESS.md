@@ -291,5 +291,20 @@ Evidence: `docs/screenshots/stage10/` — `before-artplaza.png` and `before-artp
 pots). Audit at x 815/850/868: 0 z-fighting, solids 12 and platforms 108 all well formed, the 6 reported duplicates are
 the character's face spheres. Headless load: 0 page errors, no "Oops". No FPS claim: software WebGL only.
 
-Next: Sunny Seaside, Whispering Woods, Frosty Peaks, Happy Farm, Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
+## Stage 11 — Sunny Seaside shoreline
+
+- **Parasols:** five pale-timber poles (x −26, −43, −79, −106, −143) with twelve-panel alternating cone canopies,
+  cream rim rings, brass finials and base plates, each in a gap between the district's activities.
+- **Beach furniture:** a striped towel and a six-gore painted beach ball beside every parasol.
+- **Dune grass:** 1.55 m spacing along z ≈ −7.25 from x −147 to −23, three arched instanced blades per tuft, clear of
+  the lighthouse steps and the pier approach.
+- **Driftwood:** weathered trunk, broken branch and splinter at x ≈ −57.
+- **Cost:** 4 meshes / 8,064 triangles / +4 draw calls, one streamed group (`seaside-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage11/` — `before-seaside.png`, `before-seaside-pier.png` (stage-10 build) and
+`after-seaside.png` (x −43), `after-seaside-pier.png` (x −100). Audit at x −43/−100/−143: 0 z-fighting, solids 12 and
+platforms 108–111 all well formed; the 6 duplicates are the character's face spheres. Headless load: 0 page errors.
+No FPS claim: software WebGL only.
+
+Next: Whispering Woods, Frosty Peaks, Happy Farm, Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
 then the planets in order Moon → … → Pluto, then character/pet material polish.
