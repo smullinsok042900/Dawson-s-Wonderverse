@@ -32,7 +32,8 @@ draft pull request — never a push to `main`.
 | 6 | World-wide lighting/atmosphere, dino skin & vegetation, playhouse furniture, rail-clearing fixes | `35f321c` | 21 tests, build, screenshots, 0 page errors |
 | 7 | Sculpted hill/mountain geometry, fractured layered rocks, top-bar overflow fix, rail-corridor sweep | `9fc41c7` | 21 tests, build, 2 paired screenshots, toolbar measured |
 | 8 | Real geometry on the foreground models: Dottie, broad-leaf plants, Ferris wheel, carousel ponies, castle facade | `5c899a8` | 21 tests, build, 8 paired screenshots (castle, Toy Town, Dino Valley, Park), audit clean, per-model geometry measured |
-| 9 | Lab Gardens: glazed greenhouses on drum walls with doors and ribs, raised beds with soil depth, edging fences, potting bench with lathed glassware and copper plumbing; ride/climb placement sweep; capture harness committed | this commit | 21 tests, build, paired screenshots (Lab Gardens), 5 close-ups, 4 ride close-ups, audit clean, `labgarden-detail` measured |
+| 9 | Lab Gardens: glazed greenhouses on drum walls with doors and ribs, raised beds with soil depth, edging fences, potting bench with lathed glassware and copper plumbing; ride/climb placement sweep; capture harness committed | `be0db6b` | 21 tests, build, paired screenshots (Lab Gardens), 5 close-ups, 4 ride close-ups, audit clean, `labgarden-detail` measured |
+| 10 | Art Plaza gallery yard: paint-splattered paving, four kerbed planters, two easels and a drying rack with painted canvases, paint pots and brushes, bunting on poles across the plaza | this commit | 21 tests, build 9,942 KB, paired screenshots, audit clean, `artplaza-detail` measured |
 
 ## Graphics improvements
 
@@ -163,6 +164,26 @@ Close-ups in `discovery-world/3d/docs/screenshots/stage9/rides/`, 1100×800, sof
   roof. The gondola is still a closed cabin, so on the ride she is mostly hidden inside it; opening the sides is
   left as a later art choice, not a regression from stage 8.
 
+### Stage 10 — Art Plaza: a gallery yard
+
+Art Plaza's activities were already good; the district around them was a flat chequered floor with the props in a row.
+
+- **Paint-splattered paving.** A procedurally drawn splat sheet (96 ellipses in six paint colours with flung droplets)
+  lies on the paving in the open lane, semi-transparent and polygon-offset, so the plaza reads as a place where paint
+  happens rather than a showroom.
+- **Four kerbed stone planters** sit in the gaps between the activities (x 813.4, 823.6, 868, 883.6): a tapered stone
+  drum, a proud rim, recessed soil and a small flowering planting, placed clear of every tap target and of the lane.
+- **Two easels** (x 827, 884.4) with splayed legs, a back leg, a ledge and a painting resting on it, each canvas a
+  different procedurally painted abstract with a white gallery border.
+- **A drying rack** (x 866.2) with two posts, a rail, three pegged canvases and clothespins, angled just behind the
+  props so its paintings read above the floor line.
+- **Paint pots and a brush jar** at the edge of the lane (x 830.6–833.1): four colour-topped pots with brushes leaning
+  out of them and a glass jar of four more.
+- **Bunting** on two poles (x 811.6 and 893.4, 3.55 m) with a sagging rope and 26 fabric flags in the six paint
+  colours, high enough to clear the statue (2.7 m) and every tap target.
+- Everything static is merged into one painted mesh and one fabric mesh, the flowers are two instanced meshes and each
+  painting is a small textured plane: **10 meshes / 4,262 triangles** for the whole yard, and no collision entries.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -190,6 +211,17 @@ Probe: traverse the named group on the running game and sum `index.count/3` (× 
 Scene-level totals (e.g. 198 calls / 393 k tris at the castle) are **not** used as an A/B: slice streaming and
 LOD depend on the live player state, so they move between runs by more than the models changed.
 
+### Stage 10 measured cost (streamed district group)
+
+| Group | Meshes | Triangles |
+|---|---|---|
+| `artplaza-detail` painted wood/stone (planters, easels, rack, poles, paint pots) | 1 | — |
+| `artplaza-detail` fabric (26 bunting flags) | 1 | — |
+| paving decal | 1 | — |
+| paintings (5 textured planes) | 5 | — |
+| flowers: leaves (instanced, 72) and blooms (instanced, 24) | 2 | — |
+| **Total** | **10** | **4,262** |
+
 ### Stage 9 measured cost (streamed district group)
 
 | Group | Meshes | Triangles |
@@ -216,7 +248,7 @@ which is why the named-group probe is the number quoted here.
 ## Speed and performance
 
 - **Collision queries:** `src/spatial.js` interval index replaces linear scans in `updatePlayer`/`groundUnder`; 8 unit tests cover filtering, ordering and overlap fraction.
-- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All six detailed areas together add **29 draw calls and 76,440 triangles**.
+- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All seven detailed areas together add **39 draw calls and 80,702 triangles**.
 - **Stage 7 landscape:** 29 hills + 8 mountains = **2 meshes / 2 draw calls / 51,140 triangles**, replacing 29 separate hill meshes (27 fewer draw calls for the backdrop). Single-frame read at the park: 199 draw calls, 382,430 triangles total. Rocks gained their new detail inside existing geometry (0 extra calls, 0 extra textures).
 - **Texture cost:** anisotropy set once per texture on load, no per-frame work.
 - **Scene audit:** runs only on demand (`window.__DDW3.audit()` or `?audit`), never in the frame loop.
@@ -226,11 +258,15 @@ which is why the named-group probe is the number quoted here.
 
 - `node tests/spatial.test.mjs` — 8/8 pass.
 - `node tests/scene-audit.test.mjs` — 13/13 pass.
-- `npm run build` — succeeds, `index.html` 9,937 KB.
+- `npm run build` — succeeds, `index.html` 9,942 KB.
 - Headless load (Chromium headless shell + SwiftShader), stage 9 build — **0 page errors, no "Oops" fallback** at x 695 (Lab Gardens) and 771 (potting bench); the ride sweep also loaded cleanly at the carousel, the Ferris wheel and Dino Valley.
+- Headless load, stage 10 build — **0 page errors, no "Oops" fallback** at x 815, 850 and 868 (Art Plaza).
 - Stage 9 screenshots: 1280×720, dpr 1, `before-labgarden.png` (stage-8 build) and `after-labgarden.png` (this build) at x 695, `after-labbench.png` at x 771, `close-dome.png` and `close-bench.png` from a pinned inspection camera, and four ride/climb close-ups in `rides/`. Camera settle is waited on for every shot.
+- Stage 10 screenshots in `docs/screenshots/stage10/`: `before-artplaza.png`, `before-artplaza-wide.png` (stage-9 build, x 850 / 815), `after-artplaza.png` (x 850), `after-artplaza-wide.png` (x 815, planters and easel) and `after-artplaza-rack.png` (x 868, drying rack and paint pots).
 - Audit (`window.__DDW3.audit()`) at x 724, stage 9 build: **duplicates 0, z-fighting 0**; solids 12 (0 malformed / 0 duplicate / 0 heavy overlaps); platforms 115 (0 malformed). `buried` reports 3–5 bounding-box candidates (the same intentional hills/terrain class as stages 7–8); the report exposes only geometry type names, so individual attribution is not possible from the JSON.
+- Audit at x 815, 850 and 868, stage 10 build: **duplicates 6, z-fighting 0**; the six are the little character face spheres at local (0.06, 0.5, 0.1) — pre-existing, not scenery. Solids 12 (0 malformed / 0 duplicate / 0 heavy overlaps); platforms 108 (0 malformed); `buried` 3.
 - Model probe (`labgarden-detail`): **5 meshes / 28,320 triangles** (paint 9,284, glassware 772, copper 740, leaves 14,544 across 606 instances, blooms 2,020 across 101).
+- Model probe (`artplaza-detail`): **10 meshes / 4,262 triangles** (merged wood/stone, fabric flags, paving decal, five canvases, instanced leaves and blooms).
 
 ## Remaining issues and unverified work
 
@@ -243,7 +279,7 @@ which is why the named-group probe is the number quoted here.
 - Remaining rail-corridor checks are bounding-box based, not a visual pass with the train running.
 - The Ferris gondola is a closed cabin: the rider now stands correctly on its bench (seat at −0.94) but is still
   mostly hidden inside it during the ride. Opening the sides is an art decision for a later pass, not a bug.
-- 18 of 26 areas still have no geometry pass; no planet has had one yet.
+- 17 of 26 areas still have no geometry pass; no planet has had one yet.
 
 ## Resuming after an interruption (exact steps)
 

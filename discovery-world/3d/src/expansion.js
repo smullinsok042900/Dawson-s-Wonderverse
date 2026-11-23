@@ -17,7 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
-import { buildToyTownDetail, buildLabGardenDetail } from './scenery-detail.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -461,6 +461,8 @@ export function initExpansion(G, api) {
   // =================== 🖍️ ART PLAZA ===================
   builders.artplaza = c => [
     ...familyParts(c, 'artplaza'),
+    // (stage 10) the gallery yard: painted paving, planters, easels, a drying rack and bunting
+    () => { G.artPlazaDetail = buildArtPlazaDetail({ add: c.add }); },
     () => lifeHere(c, [['chalkpink', 827, -2.7]]), // The daughter's pink chalk creature: tap to twirl and dance.
     () => { const frame = c.toy('🖼️', 1.3, 798, 2, -2); c.tap(frame, () => api.gallery?.(), 798, { icon: '🖼️', label: 'Gallery', action: 'Open gallery', disc: 'gallery' }); },
     // the sticker wall: tap anywhere on it to stick a picture there (they're remembered)

@@ -726,6 +726,154 @@ export function buildLabGardenDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 10) Art Plaza: the district was a flat chequered floor with its
+// props standing in a row. This turns it into a gallery yard — paint-
+// splattered paving underfoot, stone planters with flowers in the gaps
+// between the activities, easels showing wet paintings, a rack of drying
+// canvases, a jar of brushes and paint pots, and bunting strung between
+// two poles above the props. Static pieces merge into two meshes (painted
+// wood/stone, fabric), the flowers are two instanced meshes, and each
+// painting is one small textured plane, so the whole yard costs about
+// eight draw calls.
+// ===================================================================
+export function buildArtPlazaDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'artplaza-detail'; add(group);
+  const painted = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .66 });
+  const fabricM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .94, side: THREE.DoubleSide });
+  const parts = [], fabric = [], leafSpots = [], bloomSpots = [];
+  const ART = ['#ff8fc8', '#ffd23f', '#7fd8ff', '#a98bff', '#8fd47a', '#ff8f6f'];
+  const box = (list, hex, w, h, d, x, y, z, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 12, rot) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); if (rot) { g.rotateX(rot[0] || 0); g.rotateZ(rot[2] || 0); } g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const beam = (list, hex, a, b, r = .045) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), len = A.distanceTo(B);
+    const g = new THREE.CylinderGeometry(r, r, len, 8);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+
+  // ---- paint-splattered paving: one soft decal in the open lane in front of the props
+  const splat = (() => {
+    const W = 1024, H = 192, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const g = c.getContext('2d'); g.clearRect(0, 0, W, H);
+    for (let i = 0; i < 96; i++) {
+      const x = 20 + ((i * 197) % (W - 40)), y = 22 + ((i * 61) % (H - 44));
+      const rx = 6 + (i * 37 % 26), ry = rx * (.5 + (i % 5) * .09);
+      g.fillStyle = ART[i % ART.length]; g.globalAlpha = .78 + (i % 3) * .07;
+      g.beginPath(); g.ellipse(x, y, rx, ry, i * 1.7, 0, Math.PI * 2); g.fill();
+      for (let k = 0; k < 3; k++) { g.beginPath(); g.arc(x + Math.cos(i + k * 2.1) * rx * (1.3 + k * .3), y + Math.sin(i + k * 2.1) * ry * (1.5 + k * .3), 2 + (i + k) % 4, 0, 7); g.fill(); }
+    }
+    g.globalAlpha = 1; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  })();
+  { const m = new THREE.MeshStandardMaterial({ map: splat, transparent: true, roughness: .9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    m.userData.own = true; const p = new THREE.Mesh(new THREE.PlaneGeometry(46, 2.0), m); p.rotation.x = -Math.PI / 2; p.position.set(848, .016, -.55); p.renderOrder = 1; p.receiveShadow = false; group.add(p); }
+
+  // ---- a stone planter with real soil and a little planting
+  const planter = (cx, cz, r = .62, h = .5) => {
+    cyl(parts, '#e6dccd', r, r * 1.07, h, cx, h / 2, cz, 10);
+    cyl(parts, '#f6f1e6', r * 1.02, r * 1.02, .08, cx, h + .01, cz, 10);
+    cyl(parts, '#5b4230', r * .82, r * .82, .05, cx, h - .02, cz, 10);
+    for (let i = 0; i < 6; i++) {
+      const a = i * 1.05, rr = r * .46 * (i % 3 === 0 ? .35 : 1);
+      leafSpots.push({ x: cx + Math.cos(a) * rr, y: h + .02, z: cz + Math.sin(a) * rr, s: .8, rot: a, tilt: (i % 3) * .1, col: i % 2 ? '#6dbb63' : '#8fd47a' });
+      bloomSpots.push({ x: cx + Math.cos(a) * rr * .85, y: h + .24 + (i % 2) * .08, z: cz + Math.sin(a) * rr * .85, col: ART[i % ART.length] });
+    }
+  };
+  planter(813.4, -3.0);
+  planter(823.6, -3.7, .54, .46);
+  planter(868.0, -2.5, .6, .52);
+  planter(883.6, -3.35, .56, .48);
+
+  // ---- paintings: a childlike abstract, painted procedurally, one texture each
+  const paintingTexture = seed => {
+    const S = 192, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+    g.fillStyle = '#fffaf2'; g.fillRect(0, 0, S, S);
+    g.fillStyle = ART[seed % ART.length] + '33'; g.fillRect(0, S * .64, S, S * .36);
+    for (let i = 0; i < 7; i++) {
+      const a = (i * 2.3 + seed) % 6.283, r = 26 + ((i * 31 + seed * 17) % 44);
+      g.fillStyle = ART[(i + seed) % ART.length]; g.globalAlpha = .9;
+      g.beginPath(); g.arc(S / 2 + Math.cos(a) * r, S / 2 + Math.sin(a) * r * .8, 12 + (i * 7 + seed) % 15, 0, 7); g.fill();
+    }
+    g.globalAlpha = 1; g.strokeStyle = '#ffffff'; g.lineWidth = 10; g.strokeRect(5, 5, S - 10, S - 10);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  };
+  const artMats = [0, 1, 2, 3].map(i => { const m = new THREE.MeshStandardMaterial({ map: paintingTexture(i), roughness: .78 }); m.userData.own = true; return m; });
+  const painting = (cx, cy, cz, w, h, ry, mat, tilt = -.16) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.position.set(cx, cy, cz); m.rotation.set(tilt, ry, 0); m.castShadow = m.receiveShadow = true; group.add(m);
+    return m;
+  };
+
+  // ---- an easel: two splayed front legs, a back leg, a ledge and a painting resting on it
+  const easel = (cx, cz, ry, mat) => {
+    const cs = Math.cos(ry), sn = Math.sin(ry), at = (x, z) => [cx + x * cs - z * sn, cz + x * sn + z * cs];
+    for (const s of [-1, 1]) { const [ax, az] = at(s * .52, .34), [bx, bz] = at(s * .12, -.06); beam(parts, '#b9814a', [ax, .0, az], [bx, 1.58, bz], .045); }
+    { const [ax, az] = at(0, .62), [bx, bz] = at(0, -.06); beam(parts, '#a9743f', [ax, .0, az], [bx, 1.5, bz], .042); }
+    { const [ax, az] = at(-.56, .28), [bx, bz] = at(.56, .28); beam(parts, '#c98a52', [ax, .72, az], [bx, .72, bz], .05); }
+    painting(cx, 1.2, cz, .94, 1.0, ry, mat, -.2);
+  };
+  easel(827.0, -4.45, .1, artMats[0]);
+  easel(884.4, -4.55, -.12, artMats[1]);
+
+  // ---- a drying rack: two posts, a rail, three small canvases pegged along it
+  {
+    const RX = 866.2, RZ = -4.45;
+    for (const s of [-1, 1]) { box(parts, '#b9814a', .09, 1.6, .09, RX + s * 1.05, .8, RZ); box(parts, '#a9743f', .34, .07, .3, RX + s * 1.05, .035, RZ); }
+    box(parts, '#c98a52', 2.28, .08, .08, RX, 1.56, RZ);
+    for (let i = 0; i < 3; i++) {
+      const px = RX - .68 + i * .68;
+      box(parts, '#f6f1e6', .05, .13, .05, px, 1.47, RZ + .01);
+      painting(px, 1.16, RZ + .03, .52, .46, 0, artMats[(i + 2) % 4], -.02);
+    }
+  }
+
+  // ---- paint pots and a brush jar at the edge of the open lane
+  {
+    const PZ = -1.05;
+    ['#ff8fc8', '#ffd23f', '#7fd8ff', '#a98bff'].forEach((hex, i) => {
+      const px = 830.6 + i * .3; cyl(parts, '#ffffff', .11, .1, .2, px, .1, PZ, 10); cyl(parts, hex, .095, .095, .04, px, .2, PZ, 10);
+      cyl(parts, '#c98a52', .018, .02, .34, px + .02, .27, PZ - .12, 6, [.2, 0, .1]);
+    });
+    cyl(parts, '#bfe9f2', .17, .15, .3, 833.1, .15, PZ, 12);
+    for (let i = 0; i < 4; i++) beam(parts, ['#ff8fc8', '#ffd23f', '#7fd8ff', '#a98bff'][i], [832.98 + i * .07, .24, PZ], [833.06 + i * .1, .62, PZ - .06], .022);
+  }
+
+  // ---- bunting: two poles and a sagging line of flags above the props, clear of every tap target
+  {
+    const X0 = 811.6, X1 = 893.4, PZ = -4.15, TOP = 3.55;
+    for (const x of [X0, X1]) { cyl(parts, '#f6f1e6', .06, .08, TOP, x, TOP / 2, PZ, 8); cyl(parts, '#ffd23f', .1, .1, .1, x, TOP + .02, PZ, 10); }
+    const N = 26, flags = 14;
+    let prev = [X0, TOP - .08, PZ];
+    for (let i = 1; i <= flags; i++) { const u = i / flags, x = X0 + (X1 - X0) * u, y = TOP - .08 - Math.sin(u * Math.PI) * .42;
+      beam(parts, '#7a6a58', prev, [x, y, PZ], .012); prev = [x, y, PZ]; }
+    for (let i = 0; i < N; i++) {
+      const u = (i + .5) / N, x = X0 + (X1 - X0) * u, y = TOP - .08 - Math.sin(u * Math.PI) * .42;
+      const g = new THREE.BufferGeometry(); const w = .42;
+      g.setAttribute('position', new THREE.Float32BufferAttribute([x - w, y, PZ, x + w, y, PZ, x, y - .62, PZ], 3));
+      g.setIndex([0, 1, 2]); g.computeVertexNormals(); fabric.push(tinted(g, ART[i % ART.length])); g.dispose();
+    }
+  }
+
+  const wood = new THREE.Mesh(mergeMixed(parts), painted); wood.castShadow = wood.receiveShadow = true; group.add(wood);
+  const flags = new THREE.Mesh(mergeMixed(fabric), fabricM); flags.castShadow = true; group.add(flags);
+
+  // ---- the flowers: two instanced meshes for every planter
+  const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), v = new THREE.Vector3(), s = new THREE.Vector3();
+  const leafGeo = broadLeafGeometry({ len: .26, wid: .15, rise: .11, droop: .04, cup: .04, rib: .014, seg: 4, across: 3 });
+  const leaves = new THREE.InstancedMesh(leafGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .68, side: THREE.DoubleSide }), leafSpots.length * 3);
+  let li = 0;
+  for (const sp of leafSpots) for (let k = 0; k < 3; k++) {
+    q.setFromEuler(eu.set(-.34 + sp.tilt, sp.rot + k * 2.09, 0)); v.set(sp.x, sp.y, sp.z); s.setScalar(sp.s);
+    mtx.compose(v, q, s); leaves.setMatrixAt(li, mtx); leaves.setColorAt(li, C.set(sp.col)); li++;
+  }
+  leaves.castShadow = true; leaves.receiveShadow = true; group.add(leaves);
+  const blooms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.085, 0), new THREE.MeshStandardMaterial({ roughness: .42, clearcoat: .5 }), bloomSpots.length);
+  bloomSpots.forEach((b, i) => { q.setFromEuler(eu.set(0, i * 1.7, 0)); v.set(b.x, b.y, b.z); s.setScalar(.85 + (i % 3) * .15); mtx.compose(v, q, s); blooms.setMatrixAt(i, mtx); blooms.setColorAt(i, C.set(b.col)); });
+  blooms.castShadow = true; group.add(blooms);
+
+  return { group, added: { planters: 4, easels: 2, paintings: 5, flags: 26, leaves: li, blooms: bloomSpots.length } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

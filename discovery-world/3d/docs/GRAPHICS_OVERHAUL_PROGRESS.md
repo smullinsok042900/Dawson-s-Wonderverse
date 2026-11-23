@@ -272,5 +272,24 @@ seat front/side). Audit clean (0 duplicates, 0 z-fighting, 0 malformed / 0 heavy
 found one real placement bug: the Ferris wheel seat sat 0.59 m above the stage-8 gondola bench and now sits on it.
 No FPS claim: software WebGL only.
 
-Next: Art Plaza, Sunny Seaside, Whispering Woods, Frosty Peaks, Happy Farm, Ocean Pier, Balloon Hills, then the
-planets in order Moon → … → Pluto, then character/pet material polish.
+## Stage 10 — Art Plaza gallery yard
+
+- **Paving:** a procedural paint-splat sheet (96 ellipses, six colours, flung droplets) laid on the paving in the open
+  lane, transparent with a polygon offset, so it never z-fights the floor.
+- **Planters:** four tapered kerbed stone planters with a proud rim, recessed soil and a flowering planting, in the gaps
+  between the activities (x 813.4, 823.6, 868, 883.6) — clear of every tap target and the walking lane.
+- **Easels:** two A-frame easels (splayed front legs, back leg, ledge) at x 827 and 884.4, each with a different
+  procedurally painted canvas and a white gallery border.
+- **Drying rack:** two posts, a rail, three pegged canvases with clothespins at x 866.2.
+- **Paint pots and brush jar:** four colour-topped pots with leaning brushes and a glass jar holding four more.
+- **Bunting:** two 3.55 m poles (x 811.6, 893.4), a sagging rope and 26 fabric flags in the paint colours, above the
+  statue and every tap target.
+- **Cost:** 10 meshes / 4,262 triangles / +10 draw calls, one streamed group (`artplaza-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage10/` — `before-artplaza.png` and `before-artplaza-wide.png` (stage-9 build at x 850 and
+815), `after-artplaza.png`, `after-artplaza-wide.png` (planters, easel), `after-artplaza-rack.png` (drying rack, paint
+pots). Audit at x 815/850/868: 0 z-fighting, solids 12 and platforms 108 all well formed, the 6 reported duplicates are
+the character's face spheres. Headless load: 0 page errors, no "Oops". No FPS claim: software WebGL only.
+
+Next: Sunny Seaside, Whispering Woods, Frosty Peaks, Happy Farm, Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
+then the planets in order Moon → … → Pluto, then character/pet material polish.
