@@ -1212,6 +1212,75 @@ export function buildFarmDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 15) Ocean Pier: the deck was one smooth block with four plain posts.
+// This gives it real planking with seams and edge trim, pilings with rope wraps,
+// brass mooring cleats, a striped bait shack on the shore and lamp posts. It
+// keeps clear of the fishing rod, tide pool, buoys, seal rock, crates, dolphin
+// hoop and treasure dig.
+// ===================================================================
+export function buildPierDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'pier-detail'; add(group);
+  const woodParts = [], ropeParts = [], metalParts = [], clothParts = [];
+  const box = (list, hex, w, h, d, x, y, z, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 10, rot) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); if (rot) { g.rotateX(rot[0] || 0); g.rotateZ(rot[2] || 0); } g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+
+  // ---- deck: plank seams, edge trim and a kick rail (deck top is y .625, x −561.4…−558.6)
+  const DX = -560, DZ0 = -5.2, DZ1 = -16.8, DXW = 1.34;
+  for (let z = DZ0; z >= DZ1; z -= .42) box(woodParts, '#8a6240', 2.68, .012, .035, DX, .633, z);
+  for (const s of [-1, 1]) {
+    box(woodParts, '#9a7350', .12, .1, DZ0 - DZ1 + .1, DX + s * (DXW + .04), .68, (DZ0 + DZ1) / 2);
+    for (let z = DZ0; z >= DZ1; z -= 1.16) box(woodParts, '#7d5836', .07, .26, .07, DX + s * (DXW + .04), .5, z);
+  }
+
+  // ---- pilings with rope wraps, two per side
+  for (const z of [-6.4, -9.6, -12.8, -16.2]) for (const s of [-1, 1]) {
+    const x = DX + s * (DXW + .1);
+    cyl(woodParts, '#6d4b30', .13, .16, 1.9, x, .45, z, 8);
+    cyl(woodParts, '#5d3f28', .17, .17, .08, x, 1.36, z, 8);           // cap
+    for (const y of [1.02, .84]) { const r = new THREE.TorusGeometry(.155, .035, 5, 12); r.rotateX(Math.PI / 2); r.translate(x, y, z); ropeParts.push(tinted(r, '#d9c39a')); r.dispose(); }
+  }
+
+  // ---- brass mooring cleats along the outer edge
+  for (const z of [-7.6, -11.2, -15.0]) {
+    box(metalParts, '#c8a44a', .1, .08, .34, DX - DXW - .02, .68, z);
+    for (const s of [-1, 1]) cyl(metalParts, '#b8953f', .045, .045, .1, DX - DXW - .02, .74, z + s * .15, 8);
+  }
+
+  // ---- bait shack on the shore, clear of the fishing rod and tide pool
+  const SX = -545.5, SZ = -4.5;
+  box(woodParts, '#b98a5c', 2.3, 1.9, 1.7, SX, .95, SZ);
+  box(woodParts, '#a3754a', 2.42, .12, 1.82, SX, 1.96, SZ);
+  for (const s of [-1, 1]) box(woodParts, '#8f6440', .12, 1.9, 1.72, SX + s * 1.14, .95, SZ);
+  // counter and awning sit proud of the front face (z ≈ −3.65), not buried in the body
+  box(woodParts, '#c99a6a', 2.1, .12, .52, SX, 1.05, SZ + 1.05);
+  box(woodParts, '#a87b4c', 2.1, .06, .5, SX, .62, SZ + 1.05);
+  for (let i = 0; i < 6; i++) box(clothParts, i % 2 ? '#fff6ea' : '#ff7a5c', .38, .05, .95, SX - 1.14 + .38 * i + .19, 1.94, SZ + 1.6);
+  box(clothParts, '#fff6ea', 2.3, .05, .07, SX, 1.86, SZ + 2.05);
+  for (const s of [-1, 1]) cyl(woodParts, '#8f6440', .035, .045, 1.86, SX + s * 1.05, .93, SZ + 2.0, 6);
+  // a couple of bait buckets and a crate by the door
+  cyl(woodParts, '#7fb8d8', .22, .19, .42, SX + 1.5, .21, SZ + .2, 10);
+  cyl(woodParts, '#6aa8cc', .2, .17, .36, SX + 1.9, .18, SZ - .15, 10);
+  box(woodParts, '#c9a26a', .5, .5, .5, SX - 1.5, .25, SZ + .35, .3);
+
+  // ---- lamp posts: one on the shore, three down the deck edge
+  const LAMPS = [[-549.6, -3.9, 0], [DX - DXW - .12, -8.2, 0], [DX - DXW - .12, -13.2, 0], [DX - DXW - .12, -16.4, 0]];
+  LAMPS.forEach(([x, z]) => {
+    cyl(woodParts, '#4a3d33', .055, .075, 2.5, x, 1.25, z, 8);
+    box(metalParts, '#3b332c', .26, .1, .26, x, 2.54, z);
+    cyl(metalParts, '#ffe7a8', .13, .16, .26, x, 2.72, z, 8);
+    box(metalParts, '#3b332c', .3, .06, .3, x, 2.88, z);
+    const cap = new THREE.ConeGeometry(.24, .16, 8); cap.translate(x, 2.99, z); metalParts.push(tinted(cap, '#3b332c')); cap.dispose();
+  });
+
+  const timber = new THREE.Mesh(mergeMixed(woodParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9 })); timber.castShadow = timber.receiveShadow = true; group.add(timber);
+  const ropes = new THREE.Mesh(mergeMixed(ropeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .98 })); ropes.castShadow = true; group.add(ropes);
+  const metal = new THREE.Mesh(mergeMixed(metalParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .4, metalness: .65 })); metal.castShadow = true; group.add(metal);
+  const cloth = new THREE.Mesh(mergeMixed(clothParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, side: THREE.DoubleSide })); cloth.castShadow = true; group.add(cloth);
+
+  return { group, added: { plankSeams: Math.round((DZ0 - DZ1) / .42) + 1, pilings: 8, cleats: 3, lamps: LAMPS.length, baitShack: 1 } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

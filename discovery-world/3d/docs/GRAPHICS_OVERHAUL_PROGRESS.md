@@ -349,5 +349,18 @@ Evidence: `docs/screenshots/stage14/` — before (stage-13 build) and after at x
 x −424 confirming the cupola placement. Audit at −470/−500: z-fighting 0, solids 12, platforms 114, 0 page errors.
 No FPS claim.
 
-Next: Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
+## Stage 15 — Ocean Pier deck and bait shack
+
+- **Deck**: seam line every 0.42 m, edge trim with braces, so the deck reads as planks. Collision unchanged.
+- **Eight pilings** with caps and two rope wraps each, plus three brass mooring cleats.
+- **Bait shack** at x −545.5: timber body, counter and shelf proud of the front, striped awning on posts, buckets and a
+  bait crate. Clear of the fishing rod, tide pool and crates.
+- **Four lamp posts**, three down the outer deck edge.
+- **Cost:** 4 meshes / 3,996 triangles / +4 draw calls, one streamed group (`pier-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage15/` — before (stage-14 build) and after at x −600 and −650 as requested, plus
+x −552 (deck) and x −541 (shack). The first render buried the counter and awning inside the shack body; corrected
+before commit. Audit at −600/−650: z-fighting 0, solids 12, platforms 114, 0 page errors. No FPS claim.
+
+Next: Balloon Hills, Adventure Trail, Playhouse,
 then the planets in order Moon → … → Pluto, then character/pet material polish.
