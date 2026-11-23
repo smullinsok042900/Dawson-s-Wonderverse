@@ -17,6 +17,7 @@ import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
+import { buildPlayhouseDetail, buildParkDetail, buildParkHills } from './scenery-detail.js'; // (overhaul) area detail
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -24,6 +25,15 @@ const boxGeoCache = {};
 function rbox(w, h, d, r = .12) { const k = [w, h, d, r].join(); return boxGeoCache[k] || (boxGeoCache[k] = new RoundedBoxGeometry(w, h, d, 3, Math.min(r, w / 2, h / 2, d / 2))); }
 const matCache = {};
 const M = (c, o) => { const k = c + JSON.stringify(o || {}); return matCache[k] || (matCache[k] = toy(c, o)); };
+// (stage 8) bake a colour into a geometry so differently-coloured pieces share one mesh/draw call
+const tintGeo = (geo, hex) => { const g = geo.clone(); const c = new THREE.Color(hex); const n = g.attributes.position.count, col = new Float32Array(n * 3); for (let i = 0; i < n; i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; } g.setAttribute('color', new THREE.BufferAttribute(col, 3)); return g; };
+// rounded boxes are non-indexed while spheres/tubes are indexed: normalise before merging (null otherwise)
+const mergeMixed = parts => {
+  const tmp = parts.map(g => (g.index ? g.toNonIndexed() : g));
+  const out = mergeGeometries(tmp, false);
+  tmp.forEach((g, i) => { if (g !== parts[i]) g.dispose(); });
+  return out;
+};
 
 export function buildWorld(G) {
   const { scene } = G;
@@ -178,6 +188,9 @@ export function buildWorld(G) {
   // CLIMBING BLOCKS pyramid with a secret star on top
   [[38, 1.2], [39.6, 2.4], [41.2, 3.6], [42.8, 2.4], [44.4, 1.2]].forEach(([x, h], i) => { block(x, 0, -.4, 1.5, h, 2, RAINBOW[i * 2 % 8], { r: .2 }); plat(x - .75, x + .75, h); solid(x - .75, x + .75, h); });
 
+  // (overhaul) extra props for the Playhouse: a woven rug, a ceiling of bunting and paper lanterns.
+  if (!/[?&]nodetail/.test(location.search)) G.playhouseDetail = buildPlayhouseDetail({ scene, add }); // (?nodetail = A/B measurement)
+
   // =================== IMAGINATION STUDIO ===================
   // GIANT PAINT WALL (you paint on it with your finger)
   const pc = document.createElement('canvas'); pc.width = 1400; pc.height = 560; const pg = pc.getContext('2d');
@@ -232,11 +245,14 @@ export function buildWorld(G) {
 
   // =================== ADVENTURE PARK ===================
   // soft hills and trees in the back
-  for (let i = 0; i < 29; i++) { const h = sph(140 + i * 10, -3, (i >= 12 ? -23 : -14) - (i % 3) * 3, 7 + (i % 3) * 2, ['#93cf9c', '#82c28e', '#a6dbb0'][i % 3], { cast: false, m: { r: .8, cc: .1 } }); h.scale.y = .6; }
+  // (stage 7) 29 sculpted, normal-mapped landforms merged into one mesh, plus a distant mountain range
+  if (!/[?&]nodetail/.test(location.search)) G.parkHills = buildParkHills({ add });
   const BARK = barkTextures(), barkMat = new THREE.MeshStandardMaterial({ map: BARK.map, normalMap: BARK.normal, roughness: .85 });
   const leafMats = ['#5f9f50', '#6fae5a', '#548f4b', '#80b862'].map(c => new THREE.MeshPhysicalMaterial({ color: c, map: leafDetail().map, roughness: .8, sheen: .5, sheenColor: new THREE.Color('#e4f7c0'), normalMap: leafDetail().normal, normalScale: new THREE.Vector2(.7, .7) }));
   const tree = (x, z, s = 1) => makeTree(scene, x, z, s); // build 15: real branching trees
   [[139, -10.5], [152, -5], [170, -4.2], [178, -5.5], [201, -10.5], [223, -5.2], [238, -5.6], [249, -5], [256, -4.4], [262.5, -9], [274, -13.4], [283, -14], [292, -13.2], [300, -10.5], [270, -1.6], [312, -4.6], [319, -5.4], [345, -5], [351, -4.2], [308, -13], [338, -12]].forEach(([x, z], i) => tree(x, z, 1 + (i % 2) * .3)); // (build 64: the trees at 138 and 200 stood inside rainbow arches: moved back)
+  // (overhaul) extra props for the Park: wildflower drifts, sculpted boulders and lamp posts.
+  if (!/[?&]nodetail/.test(location.search)) G.parkDetail = buildParkDetail({ scene, add, terrainH }); // (?nodetail = A/B measurement)
   // GRASS (build 15): real blades in clumps, swaying in the wind (in chunks so off-screen grass isn't drawn)
   G.grassTime = { value: 0 };
   const offWalk = (x, z) => Math.abs(z) < 1.75 || (z > 2.2 && z < 4.3); // (build 64: never on the path or the train track)
@@ -264,6 +280,10 @@ export function buildWorld(G) {
   const top = new THREE.Mesh(new THREE.ConeGeometry(5, 1.8, 32), M('#a15cff')); top.position.y = 5.5; top.castShadow = true; spin.add(top); carLeg.push(top);
   for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; carLeg.push(sph(Math.cos(a) * 4.8, 4.62, Math.sin(a) * 4.8, .15, ['#ffe36e', '#ff9fd8'][i % 2], { parent: spin, m: { em: '#ffe36e', ei: 1 }, cast: false })); }
   const mounts = [];
+  // (stage 8) the ponies get real riding gear: a woven blanket draped over the barrel, a padded saddle
+  // with a raised cantle and pommel, hanging stirrups on leathers and brass collars on the pole. Each
+  // pony's kit is merged into ONE mesh (one extra draw per pony, no new materials per pony).
+  const ponyTrimMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .32, metalness: .05, clearcoat: .9, clearcoatRoughness: .15 });
   for (let i = 0; i < 6; i++) {
     const a = i / 6 * Math.PI * 2, m = new THREE.Group(); m.position.set(Math.cos(a) * 3.2, 0, Math.sin(a) * 3.2); m.rotation.y = -a; spin.add(m);
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 4.6, 8), M('#ffffff')); pole.position.y = 2.3; m.add(pole);
@@ -274,6 +294,18 @@ export function buildWorld(G) {
       extraPaints: (s2, hx2, hyy) => [{ type: 'limb', a: s2([hx2 - .35, hyy - .15, 0]), b: s2([hx2 - .02, hyy + .15, 0]), ra: .13 * .62, rb: .1 * .62, color: c, soft: .02 }, { type: 'sphere', c: s2([-.95, .75, 0]), r: .25 * .62, color: c, soft: .02 }] }),
       { fur: false, rough: .22, clearcoat: 1, lid: '#fffafc', iris: '#8a4ae0', mouth: false, lightEyes: true }); // (build 60: light eyes: 48 fewer draws in the park, the same look at this size)
     const saddle = new THREE.Mesh(new THREE.CylinderGeometry(.24, .26, .1, 20), M(c, { r: .4 })); saddle.scale.z = .75; saddle.position.set(-.05, 1.25, 0); ride.add(saddle);
+    { const tp = [];
+      const blanket = new RoundedBoxGeometry(.88, .05, .68, 1, .03); blanket.translate(0, 1.17, 0); tp.push(tintGeo(blanket, '#fffafc'));
+      const pad = new RoundedBoxGeometry(.64, .1, .5, 1, .05); pad.translate(-.03, 1.27, 0); tp.push(tintGeo(pad, c));
+      const cantle = new RoundedBoxGeometry(.14, .2, .44, 1, .05); cantle.rotateZ(.2); cantle.translate(-.3, 1.36, 0); tp.push(tintGeo(cantle, '#ffd84a'));
+      const pommel = new RoundedBoxGeometry(.12, .17, .36, 1, .04); pommel.rotateZ(-.28); pommel.translate(.27, 1.34, 0); tp.push(tintGeo(pommel, '#ffd84a'));
+      for (const sz of [-1, 1]) {
+        const leather = new THREE.CylinderGeometry(.022, .022, .26, 6); leather.translate(-.05, 1.1, sz * .42); tp.push(tintGeo(leather, '#9a6b46'));
+        const stirrup = new THREE.TorusGeometry(.085, .022, 8, 16); stirrup.rotateY(Math.PI / 2); stirrup.translate(-.05, .96, sz * .44); tp.push(tintGeo(stirrup, '#ffd23f'));
+      }
+      for (const cy of [1.45, 3.75]) { const collar = new THREE.TorusGeometry(.088, .028, 8, 14); collar.rotateX(Math.PI / 2); collar.translate(0, cy, 0); tp.push(tintGeo(collar, '#ffc531')); }
+      const kit = new THREE.Mesh(mergeMixed(tp), ponyTrimMat);
+      kit.castShadow = kit.receiveShadow = true; ride.add(kit); tp.forEach(g => g.dispose()); }
     const seat = new THREE.Object3D(); seat.position.set(-.05, 1.36, 0); ride.add(seat);
     mounts.push({ m, ride, seat });
   }
@@ -289,19 +321,70 @@ export function buildWorld(G) {
     for (const { m } of mounts) { const pole = m.children[0]; pole.scale.y = 5.55 / 4.6; pole.position.y = 5.55 / 2; pole.material = gold; } });
   tap(car, () => G.rideCarousel(), { paw: [144, 0], disc: 'carousel', hintY: 6.2 });
   // FERRIS WHEEL
+  // (stage 8) the wheel is a real structure now: an A-frame with cross bracing and foot plates, TWO
+  // parallel rims tied together every 36° (so the wheel has depth instead of being flat), 20 tapered
+  // spokes, and a bolted hub with flanges. Steel, accent and brass parts are merged into three meshes;
+  // each gondola is one mesh: a bevelled cab, deep tinted windows, a padded bench, a scalloped roof
+  // and a hanger arm. That is 13 draws for the whole ride where the old flat version needed 40.
   const fw = new THREE.Group(); fw.position.set(160, 7.5, -3.2); add(fw);
-  for (const z of [-.6, .6]) { const leg = (s) => { const l = new THREE.Mesh(new THREE.CylinderGeometry(.18, .25, 8.6, 12), M('#ffffff')); l.position.set(s * 2.2, -3.9, z); l.rotation.z = s * .28; l.castShadow = true; fw.add(l); }; leg(-1); leg(1); }
+  const frameParts = [], cageSteel = [], rimPink = [], brass = [];
+  const legR = y => 2.2 - Math.tan(.28) * (y + 3.9);          // half the spread of the legs at height y
+  const bar3 = (ax, ay, az, bx2, by2, bz2, r) => {
+    const a = new THREE.Vector3(ax, ay, az), b = new THREE.Vector3(bx2, by2, bz2), len = a.distanceTo(b);
+    const g = new THREE.CylinderGeometry(r, r, len, 8);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()));
+    g.translate((ax + bx2) / 2, (ay + by2) / 2, (az + bz2) / 2); return g;
+  };
+  for (const z of [-.62, .62]) {
+    for (const s of [-1, 1]) { const l = new THREE.CylinderGeometry(.17, .25, 8.6, 14); l.rotateZ(s * .28); l.translate(s * 2.2, -3.9, z); frameParts.push(tintGeo(l, '#f7fbff')); l.dispose(); }
+    for (const y of [-1.4, -4.4]) frameParts.push(tintGeo(bar3(-legR(y), y, z, legR(y), y, z, .075), '#eef7ff'));
+    frameParts.push(tintGeo(bar3(-legR(-7.2), -7.2, z, legR(-1.6), -1.6, z, .055), '#e6f2fb'));
+    frameParts.push(tintGeo(bar3(legR(-7.2), -7.2, z, -legR(-1.6), -1.6, z, .055), '#e6f2fb'));
+    for (const s of [-1, 1]) { const foot = new THREE.CylinderGeometry(.46, .56, .26, 12); foot.translate(s * legR(-8.0), -7.95, z); frameParts.push(tintGeo(foot, '#dfeef8')); foot.dispose(); }
+  }
+  { const ax = new THREE.CylinderGeometry(.11, .11, 1.9, 10); ax.rotateX(Math.PI / 2); frameParts.push(tintGeo(ax, '#eef7ff')); ax.dispose(); }
   const wheel = new THREE.Group(); fw.add(wheel);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(6.4, .16, 12, 80), M('#ff65b5')); wheel.add(rim);
-  const rim2 = new THREE.Mesh(new THREE.TorusGeometry(5.9, .08, 8, 80), M('#ffd84a')); wheel.add(rim2);
-  for (let i = 0; i < 10; i++) { const s = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 6.4, 6), M('#ffffff')); s.rotation.z = i / 10 * Math.PI * 2; s.position.set(Math.sin(-i / 10 * Math.PI * 2) * 3.2, Math.cos(i / 10 * Math.PI * 2) * 3.2, 0); wheel.add(s); }
-  sph(0, 0, 0, .6, '#ffd84a', { parent: wheel });
+  for (const z of [-.52, .52]) {
+    const rim = new THREE.TorusGeometry(6.4, .13, 8, 64); rim.translate(0, 0, z); rimPink.push(tintGeo(rim, '#ff65b5')); rim.dispose();
+    const rim2 = new THREE.TorusGeometry(6.02, .06, 6, 64); rim2.translate(0, 0, z); brass.push(tintGeo(rim2, '#ffd84a')); rim2.dispose();
+    for (let i = 0; i < 20; i++) {
+      const a = i / 20 * Math.PI * 2, sp = new THREE.CylinderGeometry(.035, .055, 5.8, 6);
+      sp.rotateZ(a); sp.translate(-Math.sin(a) * 3.5, Math.cos(a) * 3.5, z);
+      cageSteel.push(tintGeo(sp, '#ffffff')); sp.dispose();
+    }
+  }
+  for (let i = 0; i < 10; i++) { // rim ties: the wheel is a cage, not a disc
+    const a = i / 10 * Math.PI * 2, tie = new THREE.CylinderGeometry(.05, .05, 1.04, 8);
+    tie.rotateX(Math.PI / 2); tie.translate(Math.sin(a) * 6.4, -Math.cos(a) * 6.4, 0);
+    cageSteel.push(tintGeo(tie, '#ffffff')); tie.dispose();
+  }
+  { const hub = new THREE.CylinderGeometry(.42, .42, 1.24, 20); hub.rotateX(Math.PI / 2); brass.push(tintGeo(hub, '#ffd84a')); hub.dispose();
+    for (const z of [-.62, .62]) { const fl = new THREE.CylinderGeometry(.66, .66, .16, 20); fl.rotateX(Math.PI / 2); fl.translate(0, 0, z); brass.push(tintGeo(fl, '#ffc531')); fl.dispose(); }
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, bolt = new THREE.CylinderGeometry(.07, .07, 1.44, 8); bolt.rotateX(Math.PI / 2); bolt.translate(Math.cos(a) * .5, Math.sin(a) * .5, 0); brass.push(tintGeo(bolt, '#ffb02e')); bolt.dispose(); } }
+  const steelM = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: '#ffffff', roughness: .3, metalness: .38, clearcoat: .55, clearcoatRoughness: .25 });
+  const pinkM = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: '#ffffff', roughness: .3, metalness: .1, clearcoat: .8 });
+  const goldM2 = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: '#ffffff', roughness: .26, metalness: .6, clearcoat: .5 });
+  for (const [parts, mat, parent] of [[frameParts, steelM, fw], [cageSteel, steelM, wheel], [rimPink, pinkM, wheel], [brass, goldM2, wheel]]) {
+    const m = new THREE.Mesh(mergeGeometries(parts, false), mat); m.castShadow = m.receiveShadow = true; parent.add(m); parts.forEach(g => g.dispose());
+  }
   const gondolas = [];
+  const cabM = new THREE.MeshPhysicalMaterial({ vertexColors: true, color: '#ffffff', roughness: .28, metalness: .04, clearcoat: .85, clearcoatRoughness: .18 });
   for (let i = 0; i < 10; i++) {
     const g = new THREE.Group(); fw.add(g);
-    const cab = new THREE.Mesh(rbox(1.3, .9, 1.1, .25), M(RAINBOW[i % 8])); cab.position.y = -.75; cab.castShadow = true; g.add(cab);
-    const hood = new THREE.Mesh(new THREE.SphereGeometry(.7, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), M('#ffffff')); hood.position.y = .05; g.add(hood);
-    const seat = new THREE.Object3D(); seat.position.set(0, -.35, .2); g.add(seat);
+    const parts = [], col = RAINBOW[i % 8];
+    const cab = new RoundedBoxGeometry(1.32, .92, 1.14, 2, .22); cab.translate(0, -.78, 0); parts.push(tintGeo(cab, col));
+    const under = new RoundedBoxGeometry(1.06, .16, .92, 1, .07); under.translate(0, -1.27, 0); parts.push(tintGeo(under, '#fff6fb'));
+    for (const z of [.585, -.585]) { const win = new RoundedBoxGeometry(1.02, .4, .05, 1, .08); win.translate(0, -.7, z); parts.push(tintGeo(win, '#31507a')); }
+    const bench = new RoundedBoxGeometry(.92, .12, .42, 1, .04); bench.translate(0, -1.0, .26); parts.push(tintGeo(bench, '#fff6df'));
+    const bar = new THREE.CylinderGeometry(.035, .035, 1.0, 8); bar.rotateZ(Math.PI / 2); bar.translate(0, -1.34, .5); parts.push(tintGeo(bar, '#ffd84a'));
+    const roof = new THREE.SphereGeometry(.78, 22, 11, 0, Math.PI * 2, 0, Math.PI / 2); roof.scale(1, .72, .88); roof.translate(0, .0, 0); parts.push(tintGeo(roof, '#ffffff'));
+    const skirt = new THREE.TorusGeometry(.78, .045, 8, 30); skirt.rotateX(Math.PI / 2); skirt.scale(1, 1, .88); skirt.translate(0, .015, 0); parts.push(tintGeo(skirt, '#ffd84a'));
+    for (const sx of [-.42, .42]) { const hang = new THREE.CylinderGeometry(.035, .035, .34, 7); hang.translate(sx, -.16, 0); parts.push(tintGeo(hang, '#ffffff')); }
+    const pivot = new RoundedBoxGeometry(.52, .09, .18, 1, .05); parts.push(tintGeo(pivot, '#ffd84a'));
+    const shell = new THREE.Mesh(mergeMixed(parts), cabM);
+    shell.castShadow = shell.receiveShadow = true; g.add(shell); parts.forEach(x => x.dispose());
+    // (stage 9) the rider stands on the padded bench, not in mid-air above it: the seat sits on the bench top
+    const seat = new THREE.Object3D(); seat.position.set(0, -.94, .26); g.add(seat);
     gondolas.push({ g, seat, i });
   }
   G.wheel = { group: fw, wheel, gondolas, angle: 0, r: 6.4 };

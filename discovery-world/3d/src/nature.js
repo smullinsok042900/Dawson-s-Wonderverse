@@ -348,8 +348,25 @@ let stoneMat = null;
 export function makeRock(scene, x, z, s = 1) {
   if (!stoneMat) { const [c, g] = canvas(256); g.fillStyle = '#a99fb0'; g.fillRect(0, 0, 256, 256); for (let i = 0; i < 2500; i++) { g.fillStyle = pick(['#8f8698', '#c0b8c6', '#9a90a3', '#b3abbb', '#7f7789']); g.globalAlpha = .4; g.beginPath(); g.arc(rnd() * 256, rnd() * 256, 1 + rnd() * 4, 0, 7); g.fill(); } g.globalAlpha = 1; stoneMat = new THREE.MeshStandardMaterial({ map: tex(c), normalMap: tex(normalFromCanvas(c, 3), false), roughness: .95 }); }
   const geo = new THREE.IcosahedronGeometry(1, 3), p = geo.attributes.position, v = new THREE.Vector3(), k = rnd() * 10;
-  for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); const n = 1 + Math.sin(v.x * 2.3 + k) * Math.sin(v.y * 2.9 + k) * Math.sin(v.z * 2.1) * .22 + Math.sin(v.x * 7 + v.z * 5) * .04; v.multiplyScalar(n); v.y = Math.max(v.y, -.25); p.setXYZ(i, v.x, v.y, v.z); }
+  // (stage 7) fractured, layered rock: big broken planes + a finer scree grain, then baked vertex colours with
+  // mossy tops, pale strata bands and darker wet feet -- the same one draw call, no new material or texture
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    const ledges = Math.abs(Math.sin(v.y * 3.2 + k) * Math.sin(v.x * 2.1 + k * .7)) - .35;
+    const n = 1 + ledges * .26 + Math.cos(v.x * 4.6 + k) * Math.cos(v.z * 4.1) * .12 + Math.sin(v.x * 9 + v.z * 7 + v.y * 5) * .035;
+    v.multiplyScalar(n); v.y = Math.max(v.y, -.25); p.setXYZ(i, v.x, v.y, v.z);
+  }
   geo.computeVertexNormals();
+  const cols = new Float32Array(p.count * 3), C = new THREE.Color(), moss = new THREE.Color('#7fae62'), pale = new THREE.Color('#cfc8b8'), dark = new THREE.Color('#6f6878');
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i), x = p.getX(i), z = p.getZ(i), band = Math.sin(y * 7.5 + Math.sin(x * 2.2) * 1.6);
+    C.set('#a99fb0').lerp(pale, Math.max(0, band) * .45).lerp(dark, Math.max(0, -band) * .35);
+    C.lerp(moss, Math.min(.85, Math.max(0, (y - .1) * .8)) * (0.55 + 0.45 * Math.abs(Math.sin(x * 3 + z * 4))));
+    C.multiplyScalar(.94 + Math.sin(x * 6 + z * 5) * .05);
+    cols[i * 3] = C.r; cols[i * 3 + 1] = C.g; cols[i * 3 + 2] = C.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  if (stoneMat) stoneMat.vertexColors = true;
   const m = new THREE.Mesh(geo, stoneMat); m.scale.set(s * (1 + rnd() * .4), s * (.55 + rnd() * .3), s); m.rotation.y = rnd() * 6; m.position.set(x, s * .12 + terrainH(x, z), z); m.castShadow = true; m.receiveShadow = true; scene.add(m); return m;
 }
 
