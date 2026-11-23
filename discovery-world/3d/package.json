@@ -9,6 +9,7 @@
     "capture": "node tools/capture.cjs"
   },
   "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
     "esbuild": "^0.25.0",
     "meshoptimizer": "^1.2.0",
     "playwright": "^1.49.1",

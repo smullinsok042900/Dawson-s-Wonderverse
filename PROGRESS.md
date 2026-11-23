@@ -18,7 +18,34 @@ draft pull request — never a push to `main`.
   `tests/scene-audit.test.mjs` and `tests/spatial.test.mjs`, rebuilds `discovery-world/3d/index.html` with
   `build.mjs`, and commits to the PR branch. The PR then updates itself.
 - **Verified 2026-11-23:** the PR's `index.html` blob is identical to this repo's build (`33903e8`),
-  19 files changed, draft, `main` unchanged.
+  19 files changed, draft, `main` unchanged. After stage 10 the branch head is `8466076`, `index.html`
+  10,181,127 bytes (same as the local build) and `PROGRESS.md` blob `110d639`.
+
+## Tooling available in the cloud workspace (assessed 2026-11-23, no assets changed)
+
+- **glTF-Transform CLI 4.5.1** — installed as a devDependency (`@gltf-transform/cli`) and verified against the
+  game's own models: `npx gltf-transform inspect src/assets/castle.glb` reads meshopt-compressed GLBs, and
+  `etc1s` re-encodes them.
+- **KTX-Software `ktx` v4.4.2** — installed user-space at `~/ktx/bin` (no root needed). With it on `PATH`,
+  `npx gltf-transform etc1s src/assets/tree_0.glb out.glb` produced a valid `KHR_texture_basisu` file: both
+  512×512 textures became ETC1S `image/ktx2` (52.3 KB and 45.0 KB, down from 174.8 KB each). Re-apply
+  `meshopt` afterwards: `etc1s` first decodes the existing meshopt buffers (the CLI warns about that).
+- **Blender 4.2.3 LTS** — not preinstalled and no root (`sudo` blocked, apt lists unusable). The official
+  portable tarball runs headless in this workspace: `~/blender-4.2.3-linux-x64/blender --version` prints the
+  version when started with
+  `LD_LIBRARY_PATH="$HOME/blibs/usr/lib/x86_64-linux-gnu:$HOME/.browser-libs/usr/lib/x86_64-linux-gnu:$HOME/.browser-libs/usr/lib:$HOME/blender-4.2.3-linux-x64"`.
+  The two missing libraries Blender needs were extracted user-space from `libsm6` and `libice6` debs into
+  `~/blibs`; the rest come from the Chromium library bundle. The repo's existing
+  `tools/blender/build_landmarks.py` can therefore be run on a CPU-only machine.
+- **KTX2 runtime in the game: not wired yet.** three r187 ships `KTX2Loader` and the Basis transcoder
+  (`node_modules/three/examples/jsm/libs/basis/`), but `src/assets.js` only sets the meshopt decoder, and no
+  shipped asset uses KTX2. An isolated headless harness that loaded the compressed tree failed with a
+  transcoder URL/worker error, so runtime KTX2 loading is **unverified** and no game asset was changed.
+- **Device support (documented, not measured here):** KTX2/Basis needs WebGL2, which iOS Safari 15+ and
+  current Android Chrome provide; the transcoder must be served over https (GitHub Pages is fine, `file://` is
+  not), so any KTX2 adoption needs a URL base plus a fallback path for offline/local play.
+- **Other tools worth considering:** `three-mesh-bvh` (fast raycasts/collision), Draco (alternative to meshopt),
+  `sharp` for texture resizing before encoding, and Blender's glTF exporter for rebuilt landmarks. None installed.
 
 ## Completed stages
 
