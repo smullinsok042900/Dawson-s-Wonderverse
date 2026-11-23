@@ -1357,6 +1357,83 @@ export function buildHillsDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 17) Adventure Trail: the rope bridge had planks but no rails, the
+// cliffs were bare, and the lookout rock had a telescope on nothing. This adds
+// sagging handrails and rope ties on the bridge, stratified cliffs behind the
+// path, a small waterfall with a plunge basin and mist, and a plank lookout deck
+// with a rail. Clear of the stream crossing (x 444–456), stepping stones,
+// lookout rocks (x 474–486.5) and the zip-line tower (x 487–490).
+// ===================================================================
+export function buildTrailDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'trail-detail'; add(group);
+  const woodParts = [], ropeParts = [], stoneParts = [], waterParts = [], mistParts = [];
+  const box = (list, hex, w, h, d, x, y, z, ry = 0, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 9) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const beam = (list, hex, a, b, r) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+    const g = new THREE.CylinderGeometry(r, r, A.distanceTo(B), 6);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+  const rock = (list, hex, r, x, y, z, sx, sy, ry) => { const g = new THREE.DodecahedronGeometry(r, 0); g.scale(sx, sy, 1); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+
+  // ---- bridge handrails: posts at both ends, sagging rope, vertical ties (deck spans x 445–455, z −1.5…1.5)
+  for (const x of [444.4, 455.6]) for (const z of [-1.5, 1.5]) {
+    cyl(woodParts, '#8a5a2a', .09, .11, 1.15, x, .58, z, 8);
+    cyl(woodParts, '#a8703f', .13, .13, .08, x, 1.16, z, 8);
+  }
+  for (const z of [-1.5, 1.5]) {
+    for (let i = 0; i < 6; i++) {
+      const t0 = i / 6, t1 = (i + 1) / 6, sag = t => 1.08 - Math.sin(t * Math.PI) * .18;
+      beam(ropeParts, '#d9c39a', [444.4 + 11.2 * t0, sag(t0), z], [444.4 + 11.2 * t1, sag(t1), z], .028);
+      beam(ropeParts, '#cbb488', [444.4 + 11.2 * t1, sag(t1), z], [444.4 + 11.2 * t1, .12, z], .018);
+    }
+  }
+
+  // ---- cliff strata behind the path: two faces of stacked slabs with darker bands
+  [[460, -11.6, 1], [508, -11.2, -1]].forEach(([cx, cz, dir]) => {
+    // lumpy rock shoulders with a darker stratum line, not stacked boxes
+    for (let k = 0; k < 3; k++) {
+      const w = 3.0 - k * .55, y = 1.0 + k * 1.05;
+      rock(stoneParts, k % 2 ? '#a89a8a' : '#96897a', w, cx + dir * (k * .45), y, cz + (k % 2 ? .15 : -.1), 1.9, .95, k * .5);
+      rock(stoneParts, '#7f7466', w * .92, cx + dir * (k * .45), y - .55, cz + .05, 1.85, .18, k * .4);
+    }
+    rock(stoneParts, '#b3a595', .7, cx - dir * 2.6, .38, cz + 1.5, 1.2, .7, .4);
+    rock(stoneParts, '#8a7f70', .55, cx + dir * 3.1, .3, cz + 1.6, 1.1, .65, 1.1);
+  });
+
+  // ---- waterfall: water sheet down the left cliff, plunge basin and mist puffs
+  const WX = 459.4, WZ = -9.05;   // (proud of the cliff face; at z −10.15 the rock swallowed the water sheet)
+  box(waterParts, '#bfe6ff', 1.0, 3.1, .12, WX, 1.7, WZ, 0, 0);
+  box(waterParts, '#d8f1ff', .72, 2.7, .1, WX - .06, 1.55, WZ + .08, 0, 0);
+  cyl(waterParts, '#a9dcf5', 1.15, 1.25, .1, WX, .05, WZ + 1.5, 16);
+  cyl(stoneParts, '#8f8474', 1.35, 1.45, .18, WX, .02, WZ + 1.5, 14);
+  for (let i = 0; i < 9; i++) {
+    const a = (i * 2.1) % 6.283, r = .35 + (i % 3) * .28;
+    const g = new THREE.IcosahedronGeometry(.28 + (i % 3) * .08, 1); g.translate(WX + Math.cos(a) * r, .35 + (i % 4) * .22, WZ + 1.5 + Math.sin(a) * r * .7);
+    mistParts.push(g);
+  }
+
+  // ---- lookout deck on the top rock, behind the telescope (telescope is at 485.6, 3.6, −1.1)
+  const DX = 484.6, DZ = -2.35, DY = 3.72;
+  for (let i = 0; i < 6; i++) box(woodParts, i % 2 ? '#b98a5c' : '#a87b4c', .42, .07, 1.5, DX - 1.1 + i * .44, DY, DZ);
+  for (const s of [-1, 1]) { box(woodParts, '#8a5a2a', 2.6, .1, .12, DX, DY - .06, DZ + s * .75); }
+  for (const [x, z] of [[DX - 1.2, DZ - .72], [DX + 1.2, DZ - .72], [DX - 1.2, DZ + .72], [DX + 1.2, DZ + .72]]) cyl(woodParts, '#8a5a2a', .055, .07, 1.0, x, DY + .5, z, 6);
+  beam(ropeParts, '#d9c39a', [DX - 1.2, DY + 1.0, DZ - .72], [DX + 1.2, DY + 1.0, DZ - .72], .03);
+  beam(ropeParts, '#d9c39a', [DX + 1.2, DY + 1.0, DZ - .72], [DX + 1.2, DY + 1.0, DZ + .72], .03);
+
+  const wood = new THREE.Mesh(mergeMixed(woodParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9 })); wood.castShadow = wood.receiveShadow = true; group.add(wood);
+  const ropes = new THREE.Mesh(mergeMixed(ropeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .98 })); group.add(ropes);
+  const stone = new THREE.Mesh(mergeMixed(stoneParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .96, flatShading: true })); stone.castShadow = stone.receiveShadow = true; group.add(stone);
+  const water = new THREE.Mesh(mergeMixed(waterParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .18, transparent: true, opacity: .82 })); group.add(water);
+  const mistM = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .9, transparent: true, opacity: .42, depthWrite: false });
+  const mist = new THREE.Mesh(mergeMixed(mistParts), mistM); group.add(mist);
+
+  return { group, added: { rails: 2, cliffs: 2, waterfall: 1, lookoutDeck: 1 } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

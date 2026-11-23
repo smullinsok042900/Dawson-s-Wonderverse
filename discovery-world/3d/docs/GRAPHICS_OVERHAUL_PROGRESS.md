@@ -376,5 +376,18 @@ Evidence: `docs/screenshots/stage16/` — before (stage-15 build) and after at x
 black flower heads (instanced colours on geometry without a colour attribute); fixed before commit. Audit at −720/−760:
 z-fighting 0, solids 12, platforms 115, 0 page errors. No FPS claim.
 
-Next: Adventure Trail, Playhouse,
+## Stage 17 — Adventure Trail rails, cliffs and waterfall
+
+- **Bridge handrails**: end posts with caps, sagging rope in six segments per side and vertical ties every 1.8 m.
+- **Two stratified cliffs** (x 460, x 508): lumpy rock shoulders with dark stratum lines and fallen boulders. The first
+  pass used stacked boxes (grey steps) and was rebuilt as rock.
+- **Waterfall** at x 459.4: two-layer water sheet, stone-ringed plunge basin and nine mist puffs; moved proud of the
+  cliff face after the first capture showed the rock swallowing it.
+- **Lookout deck** at x 484.6 behind the telescope: six planks, two bearers, four posts and a rope rail.
+- **Cost:** 5 meshes / 2,512 triangles / +5 draw calls, one streamed group (`trail-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage17/` — before (stage-16 build) and after at x 470 and 520. Audit at 470/520: z-fighting 0,
+solids 12, platforms 119, 0 page errors. No FPS claim.
+
+Next: Playhouse,
 then the planets in order Moon → … → Pluto, then character/pet material polish.

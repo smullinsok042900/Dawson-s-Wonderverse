@@ -17,7 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
-import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail, buildHillsDetail } from './scenery-detail.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail, buildHillsDetail, buildTrailDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -256,6 +256,8 @@ export function initExpansion(G, api) {
   // =================== 🌉 ADVENTURE TRAIL ===================
   builders.trail = c => [
     ...familyParts(c, 'trail'),
+    // (stage 17) bridge handrails, cliff strata, a waterfall with mist and a lookout deck
+    () => { G.trailDetail = buildTrailDetail({ add: c.add }); },
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
     () => { const stream = makeSea(10.2, 13.6, 10, 14), w = stream.mesh; w.position.set(450, .035, -5.35); /* (build 62: ends at z 1.6, clear of the track) (build 64: as wide as the bridge, so no water shows on the path beside it) */ c.add(w); /* (build 60: the stream stops before the train track, z up to 2.3) */ /* (build 54: the stream ripples) */
       for (const x of [446.5, 449.5, 452.5]) c.block(x, 0, -6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 }); /* (build 64: stepping stones further upstream, not under the railing) */

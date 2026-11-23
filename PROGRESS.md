@@ -66,7 +66,8 @@ draft pull request — never a push to `main`.
 | 13 | Frosty Peaks: four snow-capped rock shoulders behind the district, snow-loaded pines, an ice arch, and wind drifts along both sides of the path that step around the pond, igloo, hill and snowman | `922e463` | 21 tests, build 9,952 KB, paired screenshots, audit clean, `frosty-detail` measured |
 | 14 | Happy Farm: fenced paddock along the back of the path with gates at the barn and windmill, four crop rows of cabbages and carrots, six round hay bales, and a louvred cupola with a weathervane on the barn roof | `dee1653` | 21 tests, build 9,955 KB, paired screenshots, audit clean, `farm-detail` measured |
 | 15 | Ocean Pier: plank seams and edge trim on the deck, eight pilings with rope wraps and caps, three brass mooring cleats, a striped bait shack with a counter and buckets, and four lamp posts | `5761fce` | 21 tests, build 9,957 KB, paired screenshots, audit clean, `pier-detail` measured |
-| 16 | Balloon Hills: three moored balloons with striped envelopes, baskets, ropes and stakes, two bunting lines, wildflower drifts along the path, and two pale terrace shelves behind the hills | this commit | 21 tests, build 9,960 KB, paired screenshots, audit clean, `hills-detail` measured |
+| 16 | Balloon Hills: three moored balloons with striped envelopes, baskets, ropes and stakes, two bunting lines, wildflower drifts along the path, and two pale terrace shelves behind the hills | `633068f` | 21 tests, build 9,960 KB, paired screenshots, audit clean, `hills-detail` measured |
+| 17 | Adventure Trail: sagging rope handrails and ties on the bridge, two stratified rock cliffs, a waterfall with plunge basin and mist, and a plank lookout deck with a rope rail | this commit | 21 tests, build 9,963 KB, paired screenshots, audit clean, `trail-detail` measured |
 
 ## Graphics improvements
 
@@ -298,6 +299,17 @@ Art Plaza's activities were already good; the district around them was a flat ch
 - Cost: **6 meshes / 10,616 triangles**, no collision entries, no new tap targets. The first render had black flower
   heads (instanced colours on geometry without a colour attribute) and was fixed before commit.
 
+### Stage 17 — Adventure Trail: rails, cliffs, waterfall and a lookout deck
+
+- **Bridge handrails**: posts with caps at both ends of the deck, a sagging rope in six segments per side, and vertical
+  rope ties every 1.8 m. The deck planks and the stream crossing are untouched.
+- **Two stratified cliffs** behind the path (x 460 and x 508): lumpy rock shoulders with dark stratum lines and two
+  fallen boulders at each foot — the first pass used stacked boxes, which read as grey steps and was rebuilt.
+- **Waterfall** at x 459.4: a two-layer water sheet with a plunge basin ringed in stone and nine mist puffs. It was
+  moved proud of the cliff face (z −9.05) after the first capture showed the rock swallowing the sheet.
+- **Lookout deck** at x 484.6 on the top rock, behind the telescope: six planks, two bearers, four posts and a rope rail.
+- Cost: **5 meshes / 2,512 triangles**, no collision entries, no new tap targets.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -324,6 +336,17 @@ Probe: traverse the named group on the running game and sum `index.count/3` (× 
 `InstancedMesh`), run against both the committed stage-7 build and this build in the same headless session.
 Scene-level totals (e.g. 198 calls / 393 k tris at the castle) are **not** used as an A/B: slice streaming and
 LOD depend on the live player state, so they move between runs by more than the models changed.
+
+### Stage 17 measured cost (streamed district group)
+
+| Group | Meshes | Triangles |
+|---|---|---|
+| `trail-detail` timber (posts, deck planks) | 1 | — |
+| `trail-detail` rope (rails, ties) | 1 | — |
+| `trail-detail` rock (cliffs, boulders) | 1 | — |
+| `trail-detail` water (sheet, basin) | 1 | — |
+| `trail-detail` mist puffs | 1 | — |
+| **Total** | **5** | **2,512** |
 
 ### Stage 16 measured cost (streamed district group)
 
@@ -427,7 +450,7 @@ which is why the named-group probe is the number quoted here.
 ## Speed and performance
 
 - **Collision queries:** `src/spatial.js` interval index replaces linear scans in `updatePlayer`/`groundUnder`; 8 unit tests cover filtering, ordering and overlap fraction.
-- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All thirteen detailed areas together add **68 draw calls and 217,610 triangles**.
+- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All fourteen detailed areas together add **73 draw calls and 220,122 triangles**.
 - **Stage 7 landscape:** 29 hills + 8 mountains = **2 meshes / 2 draw calls / 51,140 triangles**, replacing 29 separate hill meshes (27 fewer draw calls for the backdrop). Single-frame read at the park: 199 draw calls, 382,430 triangles total. Rocks gained their new detail inside existing geometry (0 extra calls, 0 extra textures).
 - **Texture cost:** anisotropy set once per texture on load, no per-frame work.
 - **Scene audit:** runs only on demand (`window.__DDW3.audit()` or `?audit`), never in the frame loop.
@@ -437,7 +460,7 @@ which is why the named-group probe is the number quoted here.
 
 - `node tests/spatial.test.mjs` — 8/8 pass.
 - `node tests/scene-audit.test.mjs` — 13/13 pass.
-- `npm run build` — succeeds, `index.html` 9,960 KB.
+- `npm run build` — succeeds, `index.html` 9,963 KB.
 - Headless load (Chromium headless shell + SwiftShader), stage 9 build — **0 page errors, no "Oops" fallback** at x 695 (Lab Gardens) and 771 (potting bench); the ride sweep also loaded cleanly at the carousel, the Ferris wheel and Dino Valley.
 - Headless load, stage 10 build — **0 page errors, no "Oops" fallback** at x 815, 850 and 868 (Art Plaza).
 - Stage 9 screenshots: 1280×720, dpr 1, `before-labgarden.png` (stage-8 build) and `after-labgarden.png` (this build) at x 695, `after-labbench.png` at x 771, `close-dome.png` and `close-bench.png` from a pinned inspection camera, and four ride/climb close-ups in `rides/`. Camera settle is waited on for every shot.
@@ -457,6 +480,9 @@ which is why the named-group probe is the number quoted here.
 - Model probe (`hills-detail`): **6 meshes / 10,616 triangles**.
 - Audit at x −720 and −760, stage 16 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
   platforms 114 all well formed, 0 page errors.
+- Model probe (`trail-detail`): **5 meshes / 2,512 triangles**.
+- Audit at x 470 and 520, stage 17 build: **z-fighting 0**, duplicates 6, solids 12 and platforms 119 all well formed,
+  0 page errors.
 - Audit at x −470 and −500, stage 14 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
   platforms 114 all well formed, 0 page errors. A third shot at x −424 confirmed the cupola sits on the barn roof peak.
 - Audit at x −320 and −370, stage 13 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
@@ -478,7 +504,7 @@ which is why the named-group probe is the number quoted here.
 - Remaining rail-corridor checks are bounding-box based, not a visual pass with the train running.
 - The Ferris gondola is a closed cabin: the rider now stands correctly on its bench (seat at −0.94) but is still
   mostly hidden inside it during the ride. Opening the sides is an art decision for a later pass, not a bug.
-- 11 of 26 areas still have no geometry pass; no planet has had one yet.
+- 10 of 26 areas still have no geometry pass; no planet has had one yet.
 
 ## Resuming after an interruption (exact steps)
 
@@ -531,9 +557,11 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
    shack and four lamps; 4 meshes / 3,996 triangles, evidence in `docs/screenshots/stage15/`.
 5. **Balloon Hills — done (stage 16):** three moored balloons, two bunting lines, wildflower drifts and terrace
    shelves; 6 meshes / 10,616 triangles, evidence in `docs/screenshots/stage16/`.
-6. **Adventure Trail** (next): rope bridge planks and handrails, cliff strata, waterfall mist and a lookout deck;
-   capture before/after at x 470 and 520, run the audit, then sync the PR.
-7. Then **Playhouse**, then the planets.
+6. **Adventure Trail — done (stage 17):** bridge handrails, two stratified cliffs, waterfall with basin and mist, and
+   a lookout deck; 5 meshes / 2,512 triangles, evidence in `docs/screenshots/stage17/`.
+7. **Playhouse** (next): stage curtains and footlights, a prop chest, hanging lanterns and a cushioned reading nook;
+   capture before/after at x 70 and 90, run the audit, then sync the PR.
+8. Then the planets.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.
