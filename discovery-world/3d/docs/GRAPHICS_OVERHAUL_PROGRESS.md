@@ -444,19 +444,22 @@ Evidence: `docs/screenshots/stage21/` (approach at x 12, rays at x 20, station a
 
 ## Stage 22 — Mercury: crater rims, ejecta rays and layered regolith
 
-- **Resolution**: Mercury's ground now uses a 224x88 grid (about 0.5 m columns near the path) because the default
-  128x54 grid averaged every 5-10 m crater rim into a dune. Ground mesh: 1 mesh / 51,464 triangles, no new collision.
-- **Rims and bowls**: rims lowered to 0.08-0.10 r, bowls 3-5 m deep; 37 new craters plus the 40 existing ones reshaped.
-  Two showpiece craters beside the walkway (r 10.5 and 8) carry a dark bowl, a bright fresh rim ring and long ray lanes.
-- **Rays**: painted ejecta rays, long (4.6 r) only for the showpieces and short (2.1 r) for the rest, with dark lanes
-  between them; bright volatile hollows on some floors; four dark warm-grey strata, smooth plains and 46 pebbles.
-- **Camera evidence**: `tools/capture.cjs --cam` pins an inspection camera relative to the place start, which is how the
-  oblique and overhead crater shots were framed. From the walking camera the bowl is hidden by its own near rim.
-- Iterations rejected after looking at captures: broad bright ejecta blankets (washed to cream), tall rims (hid their
-  bowls), a near-uniform dark palette with weak rings (no contrast), and long rays on every crater (covered the map).
+- **Resolution**: Mercury's ground uses a 224x88 grid (about 0.5 m columns near the path) because the default 128x54 grid
+  averaged every crater rim into a dune. Ground mesh: 1 mesh / 51,464 triangles, no new collision.
+- **Showpieces you can see during play**: two wide shallow basins (r 13 and r 9, 2.6 m and 2 m deep, 0.5 m rims).
+  Deep, steep craters are invisible from the 2.5 m walking camera because their near rim hides the bowl.
+- **Crater overlook**: walking within 22 m of the first basin eases the camera up and back to an oblique view of the
+  bowl and back again afterwards, with a one-time "Look at that giant crater!" line. Smoothed `G.camOverride`, so it is
+  part of normal play.
+- **Soft rim ring**: floor and rim colours blend over ~half a crater radius, removing the stepped edge, and long rays
+  (4.6 r) come only from the showpieces while the other ray craters stop at 2.1 r.
+- **Regolith**: four dark warm-grey strata, smooth plains, thin dark wall layers, volatile hollows, 46 pebbles; the Sun's
+  strength eased from 3.9 to 2.9 so rims and rays are not clipped.
+- Iterations rejected after inspecting captures: broad bright blankets (cream wash), tall rims (hid their bowls), a deep
+  basin (same), a near-uniform dark palette (no contrast), long rays on every crater (covered the map), and two
+  overlook framings (too close, then too steep).
 
-Evidence: `docs/screenshots/stage22/` (crater and rays oblique, crater overhead, plains and rim at eye level). Audit at
-2/12/28/46: z-fighting 0/0/0/1 (the one is the pre-existing ground-plane seam at y 0.029), 0 malformed solids or
-platforms, 0 page errors. No FPS claim.
+Evidence: `docs/screenshots/stage22/` from the normal walking camera. Audit at 8/14/22/34: z-fighting 0, 0 malformed
+solids or platforms, 0 page errors. No FPS claim.
 
 Next: Venus, then Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.
