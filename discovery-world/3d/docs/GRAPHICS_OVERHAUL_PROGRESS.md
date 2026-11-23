@@ -306,5 +306,20 @@ Evidence: `docs/screenshots/stage11/` — `before-seaside.png`, `before-seaside-
 platforms 108–111 all well formed; the 6 duplicates are the character's face spheres. Headless load: 0 page errors.
 No FPS claim: software WebGL only.
 
-Next: Whispering Woods, Frosty Peaks, Happy Farm, Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
+## Stage 12 — Whispering Woods forest and clearing
+
+- **Nine trees** (x −157 … −266) with tapered two-tone trunks, three limbs each and four stacked crown clumps so the
+  canopy meets overhead; placed clear of the hollow log, birdhouse, hidden owl and tunnel mouth.
+- **Fern understory** in three rows beside the path, four instanced blades per tuft.
+- **Campfire clearing** at x −165: swept earth disc under the stone ring, two half-log benches and a four-log woodpile,
+  all scenery with no new tap targets.
+- **Cost:** 4 meshes / 22,256 triangles / +4 draw calls, one streamed group (`woods-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage12/` — `before-woods.png`, `before-woods-west.png` (stage-11 build) and
+`after-woods.png` (x −200), `after-woods-west.png` (x −250). Audit: 0 page errors, 6 duplicates (character face
+spheres), 1 z-fighting seam at x −200 that the stage-11 baseline also shows, buried 10 vs 8 baseline, solids 12 and
+platforms 111 well formed. Capture now goes through CDP `Page.captureScreenshot` because `page.screenshot` times out
+under software WebGL. No FPS claim.
+
+Next: Frosty Peaks, Happy Farm, Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
 then the planets in order Moon → … → Pluto, then character/pet material polish.

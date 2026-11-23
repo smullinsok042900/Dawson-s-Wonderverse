@@ -964,6 +964,85 @@ export function buildSeasideDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 12) Whispering Woods: the woods were a single row of trees behind a
+// flat path. This adds real trees with tapered trunks, limbs and stacked crown
+// layers, a fern understory along both sides of the path, and a cleared
+// campfire circle with bench logs and a woodpile. The trees and campfire props
+// keep clear of the hollow log, birdhouse, hidden owl and tunnel mouth.
+// ===================================================================
+export function buildWoodsDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'woods-detail'; add(group);
+  const barkM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .96 });
+  const leafM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .86 });
+  const fernM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9, side: THREE.DoubleSide });
+  const woodParts = [], leafParts = [], fernSpots = [];
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 9) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const beam = (list, hex, a, b, r) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+    const g = new THREE.CylinderGeometry(r * .7, r, A.distanceTo(B), 7);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+  const clump = (list, hex, r, x, y, z, squash = .72) => {
+    const g = new THREE.IcosahedronGeometry(r, 1); g.scale(1, squash, 1); g.translate(x, y, z);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+
+  // ---- nine real trees between the path and the back row: tapered trunk in two barks, three limbs,
+  // three crown layers so neighbouring crowns overlap into a canopy
+  const TREES = [[-157, -9.4], [-171.5, -8.6], [-196, -9.8], [-207, -8.2], [-217, -10.4], [-227, -8.8], [-244, -9.2], [-256, -10.6], [-266, -8.4]];
+  TREES.forEach(([x, z], i) => {
+    const s = .92 + (i % 3) * .14, h = 2.7 * s, lean = (i % 2 ? .1 : -.08);
+    cyl(woodParts, '#5f452f', .17 * s, .26 * s, h * .55, x, h * .275, z);
+    cyl(woodParts, '#76543a', .12 * s, .17 * s, h * .34, x + lean, h * .69, z);
+    beam(woodParts, '#5f452f', [x, h * .52, z], [x + .95 * s, h * 1.02, z + .3 * s], .07 * s);
+    beam(woodParts, '#6b4c34', [x, h * .6, z], [x - .85 * s, h * 1.08, z - .45 * s], .055 * s);
+    beam(woodParts, '#6b4c34', [x + lean, h * .78, z], [x + .3 * s, h * 1.32, z - .95 * s], .045 * s);
+    const c1 = i % 2 ? '#3f7f46' : '#4a8f4c', c2 = i % 2 ? '#57a35a' : '#63b062';
+    clump(leafParts, c1, .95 * s, x, h * 1.0, z);
+    clump(leafParts, c2, .78 * s, x + .42 * s, h * 1.28, z + .18 * s, .8);
+    clump(leafParts, c1, .68 * s, x - .38 * s, h * 1.24, z - .26 * s, .78);
+    clump(leafParts, c2, .52 * s, x + .1 * s, h * 1.5, z + .05 * s, .85);
+  });
+
+  // ---- understory ferns on both sides of the path, clear of the interactive props
+  const KEEP = [[-165, 2.9], [-180, 2.4], [-187, 2.1], [-201, 2.6], [-232, 3.2], [-157, 2.2]];
+  for (let x = -269; x <= -153; x += 1.7) for (const z of [-5.1, -5.9, -6.7]) {
+    if (KEEP.some(([kx, kr]) => Math.hypot(x - kx, z + 2.6) < kr + .8)) continue;
+    if (((x * 31 + z * 17) | 0) % 5 === 0) continue;
+    fernSpots.push({ x: x + ((Math.abs(x * 13) | 0) % 7) * .07, z, rot: (x * 2.3) % 6.283, sc: .78 + ((Math.abs(x) | 0) % 4) * .12 });
+  }
+
+  // ---- the campfire clearing: a swept earth disc, two bench logs and a woodpile
+  const earth = new THREE.CircleGeometry(2.35, 28); earth.rotateX(-Math.PI / 2); earth.translate(-165, .015, -2.6);
+  const ground = new THREE.Mesh(earth, new THREE.MeshStandardMaterial({ color: '#9c7c55', roughness: .98 }));
+  ground.receiveShadow = true; group.add(ground);
+  [[-167.9, -4.35, .25], [-161.9, -4.45, -.2]].forEach(([x, z, ry]) => {
+    const b = new THREE.CylinderGeometry(.24, .26, 1.5, 12); b.rotateZ(Math.PI / 2); b.rotateY(ry); b.translate(x, .25, z);
+    woodParts.push(tinted(b, '#7d5a3c')); b.dispose();
+    const top = new THREE.CylinderGeometry(.245, .245, .04, 12); top.rotateZ(Math.PI / 2); top.rotateY(ry); top.translate(x, .49, z);
+    woodParts.push(tinted(top, '#b3906a')); top.dispose();
+  });
+  for (let k = 0; k < 4; k++) beam(woodParts, k % 2 ? '#6b4c34' : '#7d5a3c', [-168.9, .16 + k * .11, -2.2 - k * .04], [-167.9, .16 + k * .11, -2.9 + k * .05], .1);
+
+  const timber = new THREE.Mesh(mergeMixed(woodParts), barkM); timber.castShadow = timber.receiveShadow = true; group.add(timber);
+  const crowns = new THREE.Mesh(mergeMixed(leafParts), leafM); crowns.castShadow = crowns.receiveShadow = true; group.add(crowns);
+  const fernGeo = broadLeafGeometry({ len: .44, wid: .19, rise: .3, droop: .2, cup: .05, rib: .012, seg: 5, across: 3 });
+  const ferns = new THREE.InstancedMesh(fernGeo, fernM, fernSpots.length * 4);
+  const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  let fi = 0;
+  for (const fp of fernSpots) for (let k = 0; k < 4; k++) {
+    q.setFromEuler(eu.set(-.35, fp.rot + k * 1.34, (k % 2 ? 1 : -1) * .22));
+    v.set(fp.x + Math.cos(k * 1.57) * .1, .02, fp.z + Math.sin(k * 1.57) * .1); sc.set(fp.sc, fp.sc * (1 + k * .12), fp.sc);
+    mtx.compose(v, q, sc); ferns.setMatrixAt(fi, mtx); ferns.setColorAt(fi, C.set(k % 2 ? '#4e8f4a' : '#63ad57')); fi++;
+  }
+  ferns.castShadow = true; group.add(ferns);
+
+  return { group, added: { trees: TREES.length, crowns: TREES.length * 4, fernTufts: fernSpots.length, benches: 2 } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

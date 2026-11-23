@@ -30,7 +30,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 6 | Lab Gardens | done (stage 9) | glazed greenhouses, beds, fences, potting lab, copper pipe |
 | 7 | Art Plaza | done (stage 10) | painted paving, planters, easels, drying rack, paint pots, bunting |
 | 8 | Sunny Seaside | done (stage 11) | five striped parasols with towels + beach balls, dune grass, driftwood |
-| 9 | Whispering Woods | **next** | layered canopy, trunks with bark, undergrowth, campfire surround |
+| 9 | Whispering Woods | done (stage 12) | nine trees with limbs + four-layer crowns, fern understory, campfire clearing |
+| 10 | Frosty Peaks | **next** | snow ridges and drifts, snow-loaded pines, ice arch, sledding slope |
 | 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
 | 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
 | 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |

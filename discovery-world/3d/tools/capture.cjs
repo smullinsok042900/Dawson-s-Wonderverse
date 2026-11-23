@@ -54,6 +54,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   });
   const ctx = await browser.newContext({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(page); // (stage 12) page.screenshot times out when software WebGL saturates the compositor; CDP captures the last frame instead
   const errors = [];
   page.on('pageerror', e => errors.push(String(e.message)));
 
@@ -107,7 +108,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
       return { calls: r.calls, tris: r.triangles, geos: D.renderer.info.memory.geometries, progs: D.renderer.info.programs.length };
     });
     try {
-      await page.screenshot({ path: path.join(OUT, name + '.png'), timeout: 120000 });
+      { const shot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+        fs.writeFileSync(path.join(OUT, name + '.png'), Buffer.from(shot.data, 'base64')); }
       out.shots.push({ name, x, info, models: await runProbes() });
     } catch (e) {
       out.errors.push('shot ' + name + ': ' + e.message.split('\n')[0]);
