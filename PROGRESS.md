@@ -334,6 +334,21 @@ Art Plaza's activities were already good; the district around them was a flat ch
   paintings that covered only a corner of each board (they read as sticky notes) and a bench standing behind an existing
   cylinder, so both were reworked.
 
+### Stage 20 — Wonder Lab: glassware, specimens and microscope
+
+- **Glass-tube bench** (x 101.6–105.6, against the lab wall): a burner tripod with a real cone of flame heating a small
+  flask of green liquid, two large round-bottom flasks in pink and blue liquid joined by a glass bridge tube with
+  bubbles rising in both, and a rack of five test tubes in coloured liquid.
+- **Specimen shelves** at x 110.7: a three-tier wooden unit of glass jars, each with a lid and a coloured specimen
+  inside.
+- **Microscope table** at x 121: a heavy bench with a complete optical microscope (base, pillar, arm, tilted body tube
+  and eyepiece, three objectives, a stage with a glass slide, mirror and paired focus knobs), a slide box and a
+  three-legged stool drawn up to it.
+- **Glass-front cabinet** at x 128 with two more tiers of jars and a pinned butterfly in a little frame.
+- Cost: `lab-detail` **6 meshes / 10,332 triangles**, no collision entries, no new tap targets. The first pass had flasks
+  too small to read from the path and an empty right half of the bench, so the glassware was enlarged and the tripod,
+  bridge tube and test-tube rack added.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -513,6 +528,8 @@ which is why the named-group probe is the number quoted here.
   waterfall is visible on the cliff; no fix was needed.
 - Model probe (`studio-detail`): **4 meshes / 1,222 triangles**.
 - Audit at x 62 and 80, stage 19 build: **z-fighting 0**, solids 12 and platforms 108 all well formed, 0 page errors.
+- Model probe (`lab-detail`): **6 meshes / 10,332 triangles**.
+- Audit at x 100 and 118, stage 20 build: **z-fighting 0**, solids 12 and platforms 104 all well formed, 0 page errors.
 - Audit at x −470 and −500, stage 14 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
   platforms 114 all well formed, 0 page errors. A third shot at x −424 confirmed the cupola sits on the barn roof peak.
 - Audit at x −320 and −370, stage 13 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
@@ -593,7 +610,9 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
    17 meshes / 3,588 triangles, evidence in `docs/screenshots/stage18/`.
 8. **Studio — done (stage 19):** easel wall with drying canvases, pottery wheel with finished pots, paint-splattered
    workbench; 4 meshes / 1,222 triangles, evidence in `docs/screenshots/stage19/`.
-9. **Wonder Lab** interior next (glass tube bench, specimen shelves), then the planets.
+9. **Wonder Lab — done (stage 20):** glass-tube bench with burner tripod, bubbling flasks and test tubes, three-tier
+   specimen shelves, microscope table with stool, glass cabinet; 6 meshes / 10,332 triangles, evidence in
+   `docs/screenshots/stage20/`. The planets are next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

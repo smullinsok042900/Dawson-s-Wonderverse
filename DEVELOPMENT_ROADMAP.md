@@ -38,7 +38,7 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 14 | Adventure Trail | done (stage 17) | bridge handrails, stratified cliffs, waterfall + mist, lookout deck |
 | 15 | Playhouse | done (stage 18) | curtained stage + footlights, prop chest, reading nook, lanterns |
 | 16 | Studio | done (stage 19) | easel wall + drying canvases, pottery wheel, splattered workbench |
-| 17 | Wonder Lab | **next** | glass tube bench, specimen shelves, microscope table |
+| 17 | Wonder Lab | done (stage 20) | glass-tube bench + bubbling flasks, specimen shelves, microscope table |
 | 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
 | 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
 | 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |

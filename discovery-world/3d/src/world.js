@@ -17,7 +17,7 @@ import { plush, quadSpec } from './critterkit.js';
 import { USE_ASSETS, cobbleSet, landmarksReady } from './assets.js';
 import { macroVariation } from './refine.js';
 import { snowTextures, sandTextures, lawnTextures, cobbleTextures, leafNormal, leafDetail, barkTextures, plasterNormal, scatterNature, grassField, makeTree, makeRock, terrainH, fabricMat } from './nature.js';
-import { buildPlayhouseDetail, buildParkDetail, buildParkHills, buildStudioDetail } from './scenery-detail.js'; // (overhaul) area detail
+import { buildLabDetail, buildPlayhouseDetail, buildParkDetail, buildParkHills, buildStudioDetail } from './scenery-detail.js'; // (overhaul) area detail
 const STATION_XS = STATIONS.map(s => s.x);
 
 export const RAINBOW = ['#ff4f9a', '#ff9a2e', '#ffc21c', '#36c96b', '#2fa8ff', '#5b6cff', '#a15cff', '#ff7ad9'];
@@ -220,6 +220,8 @@ export function buildWorld(G) {
   cyl(85.2, 0, -1.8, .5, .55, 1.3, '#c9a6ff'); plat(84.7, 85.7, 1.3, { z: -1.7 }); // (behind the path: jump up the jars)
 
   // =================== WONDER LAB ===================
+  // (overhaul) extra props for the Lab: a glass-tube bench, specimen shelves and a microscope table
+  if (!/[?&]nodetail/.test(location.search)) G.labDetail = buildLabDetail({ add }); // (stage 20)
   // BUBBLE MACHINE
   const bm = new THREE.Group(); bm.position.set(99, 0, -2.4); add(bm);
   block(0, 0, 0, 3, 2.6, 2.2, '#8a5ad8', { parent: bm, r: .35 });

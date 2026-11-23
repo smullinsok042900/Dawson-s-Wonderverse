@@ -148,6 +148,123 @@ export function buildStudioDetail({ add }) {
   return { group, added: { easels: 2, canvases: 5, pots: 4, bench: 1, splats: 14 } };
 }
 
+// ---------------------------------------------------------------------------------------------
+// (stage 20) WONDER LAB: a glass-tube bench of bubbling flasks, shelves of specimen jars and a
+// microscope table. Scenery only: no collision, no new tap targets, nothing in the walking lane.
+export function buildLabDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'lab-detail'; add(group);
+  const Bx = (list, hex, w, h, d, x, y, z, rz = 0, rx = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rx) g.rotateX(rx); if (rz) g.rotateZ(rz); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const Cy = (list, hex, ra, rb, h, x, y, z, seg = 12, rx = 0, rz = 0) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); if (rx) g.rotateX(rx); if (rz) g.rotateZ(rz); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const wood = [], glass = [], liquid = [], metal = [], bubbles = [], glow = [];
+
+  // --- glass-tube bench: a heavy bench with a burner tripod, two round-bottom flasks joined by a
+  //     glass bridge and a rack of test tubes, all in coloured liquid with bubbles rising
+  const BX = 103.6, BZ = -4.55;
+  Bx(wood, '#c98a52', 4.6, .16, .92, BX, .96, BZ);
+  for (const lx of [101.6, 105.6]) for (const lz of [-4.9, -4.2]) Bx(wood, '#a96f3e', .13, .9, .13, lx, .45, lz);
+  Bx(wood, '#b8723f', 4.3, .08, .68, BX, .45, BZ);
+  // a burner tripod heating a small flask, with a real cone of flame
+  Cy(metal, '#4a4f60', .19, .21, .06, 101.95, 1.07, BZ, 12);
+  for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; Cy(metal, '#565c70', .022, .026, .34, 101.95 + Math.cos(a) * .13, 1.26, BZ + Math.sin(a) * .13, 6); }
+  Bx(metal, '#8089a0', .34, .03, .34, 101.95, 1.44, BZ);
+  { const flame = new THREE.ConeGeometry(.075, .28, 10); flame.translate(101.95, 1.2, BZ); glow.push(tinted(flame, '#ffc85a')); flame.dispose(); }
+  { const boil = new THREE.SphereGeometry(.16, 14, 10); boil.scale(1, .95, 1); boil.translate(101.95, 1.6, BZ); glass.push(tinted(boil, '#eafaff')); boil.dispose();
+    Cy(glass, '#eafaff', .05, .065, .18, 101.95, 1.78, BZ, 10);
+    const boilLiq = new THREE.SphereGeometry(.125, 12, 8); boilLiq.scale(1, .7, 1); boilLiq.translate(101.95, 1.56, BZ); liquid.push(tinted(boilLiq, '#7fd8a0')); boilLiq.dispose(); }
+  // the two big flasks and the glass bridge joining their necks
+  const flasks = [[102.9, '#ff5f8f'], [104.15, '#4fa8ff']];
+  flasks.forEach(([fx, tone]) => {
+    const shell = new THREE.SphereGeometry(.34, 22, 16); shell.translate(fx, 1.38, BZ); glass.push(tinted(shell, '#eafaff')); shell.dispose();
+    Cy(glass, '#eafaff', .09, .11, .34, fx, 1.78, BZ, 14);                                       // neck
+    const liq = new THREE.SphereGeometry(.28, 16, 12); liq.scale(1, .62, 1); liq.translate(fx, 1.25, BZ); liquid.push(tinted(liq, tone)); liq.dispose();
+    for (let b = 0; b < 5; b++) { const s = new THREE.SphereGeometry(.032 + (b % 2) * .014, 8, 6); s.translate(fx + ((b % 2) - .5) * .15, 1.16 + b * .17, BZ + (b % 2 ? .09 : -.09)); bubbles.push(tinted(s, '#ffffff')); s.dispose(); }
+  });
+  {
+    const curve = new THREE.CatmullRomCurve3([[102.9, 1.94, BZ], [103.25, 2.38, BZ], [103.6, 2.5, BZ], [103.9, 2.38, BZ], [104.15, 1.94, BZ]].map(p => new THREE.Vector3(...p)));
+    glass.push(tinted(new THREE.TubeGeometry(curve, 28, .06, 8, false), '#eafaff'));             // the glass bridge
+  }
+  // a rack of five test tubes at the near end of the bench
+  Bx(wood, '#8a6b55', .64, .08, .36, 105.3, 1.08, BZ - .02);
+  for (let i = 0; i < 5; i++) {
+    const tx = 105.03 + i * .12;
+    Cy(glass, '#eafaff', .045, .042, .46, tx, 1.33, BZ - .02, 10);
+    Cy(liquid, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a', '#b07cff'][i], .034, .034, .3, tx, 1.23, BZ - .02, 8);
+  }
+
+  // --- specimen shelves: three tiers of labelled jars against the back wall
+  const SH = 110.7, SZ = -4.8;
+  for (const sx of [SH - 1.9, SH + 1.9]) Bx(wood, '#8a6b55', .14, 3.0, .5, sx, 1.5, SZ);
+  const shelfTops = [.44, 1.42, 2.4];
+  for (const sy of [.4, 1.38, 2.36]) Bx(wood, '#c98a52', 4.0, .08, .56, SH, sy, SZ);
+  Bx(wood, '#b8723f', 4.1, .1, .6, SH, 2.95, SZ);
+  const jarTones = ['#7fd8a0', '#ff9fd2', '#ffd23f', '#9fe6ff', '#b58cff'];
+  let jars = 0;
+  shelfTops.forEach((top, row) => {
+    for (let i = 0; i < 4; i++) {
+      const jx = SH - 1.5 + i * 1.0, jh = .46 + ((i + row) % 3) * .12;
+      Cy(glass, '#eafaff', .16, .15, jh, jx, top + jh / 2 - .02, SZ, 14);
+      Cy(wood, '#8a6b55', .175, .175, .07, jx, top + jh - .035, SZ, 14);                        // lid
+      const blob = new THREE.SphereGeometry(.1, 10, 8); blob.translate(jx, top + .17, SZ); liquid.push(tinted(blob, jarTones[(i + row) % 5])); blob.dispose();
+      jars++;
+    }
+  });
+
+  // --- microscope table: a solid bench, an optical microscope on a slide-ready stage, a slide box
+  //     and a three-legged stool drawn up to it
+  const MX = 121.0, MZ = -4.4;
+  Bx(wood, '#c98a52', 3.2, .14, .96, MX, .97, MZ);
+  for (const lx of [MX - 1.4, MX + 1.4]) for (const lz of [MZ - .35, MZ + .35]) Bx(wood, '#a96f3e', .12, .9, .12, lx, .45, lz);
+  Bx(wood, '#b8723f', 2.9, .08, .7, MX, .45, MZ);
+  Cy(wood, '#9a6b46', .25, .23, .1, MX + 1.0, .64, MZ + 1.02, 16);                                // stool seat
+  for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; Cy(wood, '#8a6b55', .035, .06, .6, MX + 1.0 + Math.cos(a) * .17, .31, MZ + 1.02 + Math.sin(a) * .17, 8); }
+  const SC = 120.0;
+  Cy(metal, '#4a4f60', .34, .38, .08, SC, 1.07, MZ, 20);                                          // base
+  Bx(metal, '#565c70', .16, .52, .16, SC, 1.33, MZ - .1);                                         // pillar
+  Bx(metal, '#565c70', .13, .9, .14, SC, 1.8, MZ - .12);                                          // arm
+  Cy(metal, '#6d7488', .1, .1, .62, SC, 1.98, MZ - .02, 14, .16);                                 // body tube
+  Cy(metal, '#3a3f4d', .135, .115, .17, SC, 2.32, MZ + .04, 14, .16);                             // eyepiece
+  Cy(metal, '#3a3f4d', .11, .11, .09, SC, 1.62, MZ - .05, 12, .16);                               // nosepiece
+  for (const ox of [-.12, 0, .12]) Cy(metal, '#8089a0', .045, .04, .2, SC + ox, 1.5, MZ - .05, 8, .16);
+  Bx(metal, '#6d7488', .52, .06, .44, SC, 1.32, MZ + .12);                                        // stage
+  Bx(glass, '#eafaff', .2, .02, .3, SC + .04, 1.36, MZ + .12);                                     // a slide on the stage
+  Cy(metal, '#cfd6e2', .15, .15, .03, SC, 1.13, MZ + .08, 18, -.7);                                // mirror
+  Cy(metal, '#3a3f4d', .085, .085, .05, SC + .14, 1.62, MZ - .1, 12, 0, Math.PI / 2);              // focus knobs
+  Cy(metal, '#3a3f4d', .085, .085, .05, SC - .14, 1.62, MZ - .1, 12, 0, Math.PI / 2);
+  Bx(wood, '#b8723f', .46, .16, .32, 122.1, 1.12, MZ - .06);                                      // slide box
+  for (let i = 0; i < 3; i++) Bx(glass, '#eafaff', .28, .012, .06, 122.1, 1.22, MZ - .15 + i * .08);
+
+  // --- glass-front cabinet further along: two more tiers of jars and a pinned specimen frame
+  const CX = 128.0, CZ = -4.9;
+  for (const cx of [CX - 1.5, CX + 1.5]) Bx(wood, '#8a6b55', .12, 2.6, .46, cx, 1.3, CZ);
+  for (const sy of [.3, 1.3, 2.3]) Bx(wood, '#c98a52', 3.1, .07, .5, CX, sy, CZ);
+  Bx(wood, '#b8723f', 3.2, .09, .54, CX, 2.62, CZ);
+  for (const [row, top] of [[0, .335], [1, 1.335]]) for (let i = 0; i < 3; i++) {
+    const jx = CX - .95 + i * .95, jh = .5 + ((i + row) % 2) * .14;
+    Cy(glass, '#eafaff', .18, .17, jh, jx, top + jh / 2 - .02, CZ, 14);
+    Cy(wood, '#8a6b55', .19, .19, .07, jx, top + jh - .035, CZ, 14);
+    const blob2 = new THREE.SphereGeometry(.12, 10, 8); blob2.translate(jx, top + .2, CZ); liquid.push(tinted(blob2, jarTones[(i + 2) % 5])); blob2.dispose();
+    jars++;
+  }
+  Bx(wood, '#fff3d6', .78, .05, .56, CX, 2.68, CZ);                                              // specimen frame
+  Cy(metal, '#3a3f4d', .035, .035, .3, CX, 2.73, CZ, 8, Math.PI / 2);                            // pinned body
+  for (const s of [-1, 1]) { const wing = new THREE.SphereGeometry(.19, 12, 8); wing.scale(1.1, .07, .66); wing.translate(CX + s * .18, 2.73, CZ); liquid.push(tinted(wing, '#ffb54a')); wing.dispose(); }
+
+  const woodMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .86, metalness: 0 });
+  const bench = new THREE.Mesh(mergeParts(wood), woodMat); bench.castShadow = bench.receiveShadow = true; group.add(bench);
+  const glassMat = new THREE.MeshPhysicalMaterial({ vertexColors: true, transparent: true, opacity: .32, roughness: .06, clearcoat: 1, metalness: 0, depthWrite: false, side: THREE.DoubleSide });
+  group.add(new THREE.Mesh(mergeParts(glass), glassMat));
+  const fluidMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .3, metalness: .05, emissive: '#1a2a34', emissiveIntensity: .35 });
+  group.add(new THREE.Mesh(mergeParts(liquid), fluidMat));
+  const metalMesh = new THREE.Mesh(mergeParts(metal), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .38, metalness: .6 }));
+  metalMesh.castShadow = true; group.add(metalMesh);
+  const bubbleMesh = new THREE.Mesh(mergeParts(bubbles), new THREE.MeshStandardMaterial({ vertexColors: true, emissive: '#ffffff', emissiveIntensity: .6, roughness: .25, transparent: true, opacity: .85 }));
+  group.add(bubbleMesh);
+  const glowMesh = new THREE.Mesh(mergeParts(glow), new THREE.MeshStandardMaterial({ vertexColors: true, emissive: '#ffb54a', emissiveIntensity: 1.1, roughness: .4 }));
+  group.add(glowMesh);
+
+  return { group, added: { benches: 1, flasks: flasks.length, jars, microscope: 1, shelves: 2 } };
+}
+
 export function buildPlayhouseDetail({ scene, add, rnd }) {
   const group = new THREE.Group(); group.name = 'playhouse-detail'; add(group);
   const r = rnd || Math.random;

@@ -412,5 +412,18 @@ errors. No FPS claim.
 Evidence: `docs/screenshots/stage19/` (x 62, x 80 and a bench view at x 84). Audit at 62/80: z-fighting 0, solids 12,
 platforms 108, 0 page errors. No FPS claim.
 
-Next: Wonder Lab,
-then the planets in order Moon → … → Pluto, then character/pet material polish.
+## Stage 20 — Wonder Lab glassware, specimens and microscope
+
+- **Glass-tube bench** (x 101.6–105.6): burner tripod with a flame cone under a small flask, two large round-bottom
+  flasks in pink and blue liquid linked by a glass bridge tube, bubbles rising in both, and a rack of five test tubes.
+- **Specimen shelves** at x 110.7 (three tiers of lidded jars with coloured specimens) and a **glass-front cabinet** at
+  x 128 with two more tiers and a pinned butterfly in a frame.
+- **Microscope table** at x 121: base, pillar, arm, tilted body tube, eyepiece, three objectives, stage with a slide,
+  mirror and focus knobs, plus a slide box and a stool.
+- **Cost:** `lab-detail` 6 meshes / 10,332 triangles, no collision entries. The first pass had flasks too small to read
+  from the path, so the glassware was enlarged and the tripod, bridge and test-tube rack added.
+
+Evidence: `docs/screenshots/stage20/` (x 100 and x 118). Audit at 100/118: z-fighting 0, solids 12, platforms 104, 0 page
+errors. No FPS claim.
+
+Next: the planets in order Moon → … → Pluto, then character/pet material polish.
