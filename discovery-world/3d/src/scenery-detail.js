@@ -1138,6 +1138,80 @@ export function buildFrostyDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 14) Happy Farm: the fields behind the barn and windmill were empty
+// grass. This adds a fenced paddock along the back of the path (with gaps at the
+// barn and the windmill), crop rows of cabbages and carrots, round hay bales in
+// the far field, and a cupola with a weathervane on the barn roof. The
+// interactive vegetable patch, haystack, animals and apple tree are untouched.
+// ===================================================================
+export function buildFarmDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'farm-detail'; add(group);
+  const woodParts = [], cropParts = [], strawParts = [], whiteParts = [], metalParts = [];
+  const box = (list, hex, w, h, d, x, y, z, ry = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (ry) g.rotateY(ry); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 10, rot) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); if (rot) { g.rotateX(rot[0] || 0); g.rotateZ(rot[2] || 0); } g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const beam = (list, hex, a, b, r) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+    const g = new THREE.CylinderGeometry(r, r, A.distanceTo(B), 7);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+  const ball = (list, hex, r, x, y, z, sx = 1, sy = 1) => { const g = new THREE.IcosahedronGeometry(r, 1); g.scale(sx, sy, 1); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+
+  // ---- fenced paddock along the back of the path, with gates at the barn and the windmill
+  const ZF = -6.9;
+  for (let x = -530; x <= -408; x += 2.6) {
+    if (x > -426 && x < -414) continue;   // barn yard gate
+    if (x > -507 && x < -499) continue;   // windmill gate
+    box(woodParts, '#c9a26a', .12, 1.0, .12, x, .5, ZF);
+    if (x > -528) { box(woodParts, '#dcb87e', 2.62, .08, .06, x - 1.3, .78, ZF); box(woodParts, '#dcb87e', 2.62, .08, .06, x - 1.3, .44, ZF); }
+  }
+
+  // ---- crop rows from x −529 to −410, behind the fence: cabbages and carrots
+  for (let row = 0; row < 4; row++) {
+    const z = -8.1 - row * .82;
+    for (let x = -529; x <= -410; x += 1.15) {
+      if (x > -426 && x < -414 && row < 2) continue;          // behind the barn
+      if (((x * 13 + row * 7) | 0) % 5 === 0) continue;       // a few gaps, so rows are not mechanical
+      if (row % 2 === 0) {
+        ball(cropParts, '#79b45e', .3, x, .22, z, 1.15, .85);
+        ball(cropParts, '#8ec972', .22, x + .1, .34, z - .05, 1, .75);
+        ball(cropParts, '#6aa451', .16, x - .16, .2, z + .08, .9, .7);
+      } else {
+        cyl(cropParts, '#e8811f', .055, .085, .26, x, .13, z, 7);         // carrot shoulder
+        for (let k = 0; k < 5; k++) { const a = k / 5 * 6.283 + row; beam(cropParts, k % 2 ? '#4f9048' : '#62a857', [x, .2, z], [x + Math.cos(a) * .17, .52 + (k % 3) * .05, z + Math.sin(a) * .17], .022); }
+      }
+    }
+  }
+
+  // ---- round hay bales in the far field
+  [[-521, -10.2, .2], [-515.5, -10.8, -.15], [-461, -10.4, .1], [-455, -11.0, -.2], [-442, -10.6, .05], [-434.5, -11.2, -.1]].forEach(([x, z, ry]) => {
+    const b = new THREE.CylinderGeometry(1.05, 1.05, 1.5, 14); b.rotateZ(Math.PI / 2); b.rotateY(ry); b.translate(x, 1.05, z);
+    strawParts.push(tinted(b, '#e0b866')); b.dispose();
+    for (const s of [-1, 1]) { const cap = new THREE.CylinderGeometry(1.02, 1.02, .06, 14); cap.rotateZ(Math.PI / 2); cap.rotateY(ry); cap.translate(x + s * .75, 1.05, z); strawParts.push(tinted(cap, '#f0d495')); cap.dispose(); }
+  });
+
+  // ---- barn cupola with louvred vents and a weathervane (the barn roof peaks at y ≈ 6.4)
+  const BX = -420, BZ = -5.6;
+  box(whiteParts, '#f7f2e6', 1.5, .95, 1.5, BX, 6.75, BZ);
+  box(whiteParts, '#efe6d4', 1.62, .1, 1.62, BX, 6.26, BZ);
+  for (const s of [-1, 1]) box(woodParts, '#5d4633', .62, .6, .06, BX + s * .77, 6.8, BZ, 0);
+  const cap = new THREE.ConeGeometry(1.16, .62, 8); cap.translate(BX, 7.5, BZ); whiteParts.push(tinted(cap, '#d8443c')); cap.dispose();
+  cyl(metalParts, '#8d99a6', .035, .045, .55, BX, 8.02, BZ, 7);
+  beam(metalParts, '#8d99a6', [BX - .34, 8.12, BZ], [BX + .34, 8.12, BZ], .022);
+  beam(metalParts, '#8d99a6', [BX + .3, 8.12, BZ], [BX + .42, 8.24, BZ], .02);
+  beam(metalParts, '#8d99a6', [BX + .3, 8.12, BZ], [BX + .42, 8.0, BZ], .02);
+
+  const timber = new THREE.Mesh(mergeMixed(woodParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88 })); timber.castShadow = timber.receiveShadow = true; group.add(timber);
+  const crops = new THREE.Mesh(mergeMixed(cropParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .82 })); crops.castShadow = crops.receiveShadow = true; group.add(crops);
+  const straw = new THREE.Mesh(mergeMixed(strawParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95 })); straw.castShadow = straw.receiveShadow = true; group.add(straw);
+  const paint = new THREE.Mesh(mergeMixed(whiteParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 })); paint.castShadow = true; group.add(paint);
+  const metal = new THREE.Mesh(mergeMixed(metalParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .45, metalness: .7 })); group.add(metal);
+
+  return { group, added: { fencePosts: 45, cropRows: 4, bales: 6, cupola: 1 } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

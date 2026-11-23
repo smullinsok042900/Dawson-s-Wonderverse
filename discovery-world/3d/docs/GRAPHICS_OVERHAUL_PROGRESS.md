@@ -337,5 +337,17 @@ Evidence: `docs/screenshots/stage13/` — before (stage-12 build) and after at x
 corrected before commit (dark drifts from a missing vertex-colour attribute; an oversized bare ridge). Audit at both
 positions: z-fighting 0, solids 12, platforms 115, 0 page errors. No FPS claim.
 
-Next: Happy Farm, Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
+## Stage 14 — Happy Farm paddock and cupola
+
+- **Fenced paddock** (z −6.9, x −530…−408) with two rails and gates at the barn yard and windmill.
+- **Four crop rows**: alternating cabbages and carrots behind the fence, with deliberate gaps and the barn strip skipped.
+- **Six round hay bales** with pale cut ends in the far field.
+- **Barn cupola** with dark louvred vents, red cap, steel spindle and weathervane arrow on the roof peak.
+- **Cost:** 5 meshes / 66,116 triangles / +5 draw calls, one streamed group (`farm-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage14/` — before (stage-13 build) and after at x −470 and −500, plus a barn shot at
+x −424 confirming the cupola placement. Audit at −470/−500: z-fighting 0, solids 12, platforms 114, 0 page errors.
+No FPS claim.
+
+Next: Ocean Pier, Balloon Hills, Adventure Trail, Playhouse,
 then the planets in order Moon → … → Pluto, then character/pet material polish.

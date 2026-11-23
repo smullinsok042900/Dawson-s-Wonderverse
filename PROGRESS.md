@@ -63,7 +63,8 @@ draft pull request — never a push to `main`.
 | 10 | Art Plaza gallery yard: paint-splattered paving, four kerbed planters, two easels and a drying rack with painted canvases, paint pots and brushes, bunting on poles across the plaza | `e6107b5` | 21 tests, build 9,942 KB, paired screenshots, audit clean, `artplaza-detail` measured |
 | 11 | Sunny Seaside shoreline: five striped parasols with towels and beach balls, dune grass along the back of the sand, driftwood; clear of the lighthouse, pier and crab walk | `8959495` | 21 tests, build 9,945 KB, paired screenshots, audit clean, `seaside-detail` measured |
 | 12 | Whispering Woods forest: nine trees with tapered two-tone trunks, limbs and four overlapping leaf-textured crowns with a leaf-card fringe, a fern understory along the path, and a swept campfire clearing with bench logs and a woodpile | `112bedb` | 21 tests, build 9,949 KB, paired screenshots, audit clean, `woods-detail` measured |
-| 13 | Frosty Peaks: four snow-capped rock shoulders behind the district, snow-loaded pines, an ice arch, and wind drifts along both sides of the path that step around the pond, igloo, hill and snowman | this commit | 21 tests, build 9,952 KB, paired screenshots, audit clean, `frosty-detail` measured |
+| 13 | Frosty Peaks: four snow-capped rock shoulders behind the district, snow-loaded pines, an ice arch, and wind drifts along both sides of the path that step around the pond, igloo, hill and snowman | `922e463` | 21 tests, build 9,952 KB, paired screenshots, audit clean, `frosty-detail` measured |
+| 14 | Happy Farm: fenced paddock along the back of the path with gates at the barn and windmill, four crop rows of cabbages and carrots, six round hay bales, and a louvred cupola with a weathervane on the barn roof | this commit | 21 tests, build 9,955 KB, paired screenshots, audit clean, `farm-detail` measured |
 
 ## Graphics improvements
 
@@ -255,6 +256,18 @@ Art Plaza's activities were already good; the district around them was a flat ch
 - Cost: **5 meshes / 16,428 triangles**, no collision entries. First render was corrected before commit: the drifts
   were dark (instanced geometry had no vertex-colour attribute) and the ridge read as one oversized bare boulder.
 
+### Stage 14 — Happy Farm: paddock, crops, bales and a cupola
+
+- **Fenced paddock** at z −6.9 from x −530 to −408: posts every 2.6 m with two rails between them, left open at the
+  barn yard (x −426…−414) and the windmill (x −507…−499) so it reads as a working field, not a wall.
+- **Four crop rows** behind the fence: two rows of cabbages (three overlapping leafy heads each) alternating with two
+  rows of carrots (orange shoulder plus five green fronds). Rows have deliberate gaps so they are not mechanical, and
+  the strip behind the barn is skipped.
+- **Six round hay bales** in the far field (x −521…−434), each a lying cylinder with pale cut ends.
+- **Barn cupola**: cream louvred drum with a base plate, dark vent panels, a red cap, a steel spindle and a
+  weathervane arrow — sitting on the roof peak, clear of the interactive barn doors.
+- Cost: **5 meshes / 66,116 triangles**, no collision entries, no new tap targets.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -281,6 +294,17 @@ Probe: traverse the named group on the running game and sum `index.count/3` (× 
 `InstancedMesh`), run against both the committed stage-7 build and this build in the same headless session.
 Scene-level totals (e.g. 198 calls / 393 k tris at the castle) are **not** used as an A/B: slice streaming and
 LOD depend on the live player state, so they move between runs by more than the models changed.
+
+### Stage 14 measured cost (streamed district group)
+
+| Group | Meshes | Triangles |
+|---|---|---|
+| `farm-detail` timber (fence, vents) | 1 | — |
+| `farm-detail` crops (cabbages, carrots, fronds) | 1 | — |
+| `farm-detail` straw bales | 1 | — |
+| `farm-detail` painted cupola | 1 | — |
+| `farm-detail` weathervane steel | 1 | — |
+| **Total** | **5** | **66,116** |
 
 ### Stage 13 measured cost (streamed district group)
 
@@ -351,7 +375,7 @@ which is why the named-group probe is the number quoted here.
 ## Speed and performance
 
 - **Collision queries:** `src/spatial.js` interval index replaces linear scans in `updatePlayer`/`groundUnder`; 8 unit tests cover filtering, ordering and overlap fraction.
-- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All ten detailed areas together add **53 draw calls and 136,882 triangles**.
+- **Draw calls:** every new decoration batch is merged or instanced — one draw call per batch. All eleven detailed areas together add **58 draw calls and 202,998 triangles**.
 - **Stage 7 landscape:** 29 hills + 8 mountains = **2 meshes / 2 draw calls / 51,140 triangles**, replacing 29 separate hill meshes (27 fewer draw calls for the backdrop). Single-frame read at the park: 199 draw calls, 382,430 triangles total. Rocks gained their new detail inside existing geometry (0 extra calls, 0 extra textures).
 - **Texture cost:** anisotropy set once per texture on load, no per-frame work.
 - **Scene audit:** runs only on demand (`window.__DDW3.audit()` or `?audit`), never in the frame loop.
@@ -361,7 +385,7 @@ which is why the named-group probe is the number quoted here.
 
 - `node tests/spatial.test.mjs` — 8/8 pass.
 - `node tests/scene-audit.test.mjs` — 13/13 pass.
-- `npm run build` — succeeds, `index.html` 9,952 KB.
+- `npm run build` — succeeds, `index.html` 9,955 KB.
 - Headless load (Chromium headless shell + SwiftShader), stage 9 build — **0 page errors, no "Oops" fallback** at x 695 (Lab Gardens) and 771 (potting bench); the ride sweep also loaded cleanly at the carousel, the Ferris wheel and Dino Valley.
 - Headless load, stage 10 build — **0 page errors, no "Oops" fallback** at x 815, 850 and 868 (Art Plaza).
 - Stage 9 screenshots: 1280×720, dpr 1, `before-labgarden.png` (stage-8 build) and `after-labgarden.png` (this build) at x 695, `after-labbench.png` at x 771, `close-dome.png` and `close-bench.png` from a pinned inspection camera, and four ride/climb close-ups in `rides/`. Camera settle is waited on for every shot.
@@ -373,6 +397,9 @@ which is why the named-group probe is the number quoted here.
 - Model probe (`seaside-detail`): **4 meshes / 8,064 triangles**.
 - Model probe (`woods-detail`): **5 meshes / 31,688 triangles** (after the crown fix).
 - Model probe (`frosty-detail`): **5 meshes / 16,428 triangles**.
+- Model probe (`farm-detail`): **5 meshes / 66,116 triangles**.
+- Audit at x −470 and −500, stage 14 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
+  platforms 114 all well formed, 0 page errors. A third shot at x −424 confirmed the cupola sits on the barn roof peak.
 - Audit at x −320 and −370, stage 13 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
   platforms 115 all well formed, 0 page errors.
 - Audit at x −200 and −250, stage 12 build: duplicates 6 (character face spheres, unchanged), **z-fighting 1 at x −200**
@@ -392,7 +419,7 @@ which is why the named-group probe is the number quoted here.
 - Remaining rail-corridor checks are bounding-box based, not a visual pass with the train running.
 - The Ferris gondola is a closed cabin: the rider now stands correctly on its bench (seat at −0.94) but is still
   mostly hidden inside it during the ride. Opening the sides is an art decision for a later pass, not a bug.
-- 14 of 26 areas still have no geometry pass; no planet has had one yet.
+- 13 of 26 areas still have no geometry pass; no planet has had one yet.
 
 ## Resuming after an interruption (exact steps)
 
@@ -439,9 +466,11 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
    clearing; 4 meshes / 22,256 triangles, evidence in `docs/screenshots/stage12/`.
 2. **Frosty Peaks — done (stage 13):** snow-capped ridgeline, snow-loaded pines, ice arch, wind drifts;
    5 meshes / 16,428 triangles, evidence in `docs/screenshots/stage13/`.
-3. **Happy Farm** (next): fenced crop rows with real vegetables, a barn with doors and cupola, a hay field with
-   bales and a windmill; capture before/after at x −470 and −500, run the audit, then sync the PR.
-4. Then **Ocean Pier**, **Balloon Hills**, then the planets.
+3. **Happy Farm — done (stage 14):** fenced paddock, four crop rows, six round bales, barn cupola and weathervane;
+   5 meshes / 66,116 triangles, evidence in `docs/screenshots/stage14/`.
+4. **Ocean Pier** (next): plank deck detail, pilings, mooring cleats and rope, a bait shack and lamp posts;
+   capture before/after at x −600 and −650, run the audit, then sync the PR.
+5. Then **Balloon Hills**, then the planets.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

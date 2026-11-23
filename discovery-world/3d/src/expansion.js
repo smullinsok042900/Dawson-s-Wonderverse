@@ -17,7 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
-import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail } from './scenery-detail.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -682,6 +682,8 @@ export function initExpansion(G, api) {
   const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
   builders.farm = c => [
     ...familyParts(c, 'farm'),
+    // (stage 14) fenced paddock, crop rows, round bales and a barn cupola
+    () => { G.farmDetail = buildFarmDetail({ add: c.add }); },
     () => lifeHere(c, [['drawingwave', -486, -4.5]]),
     // the red barn: tap the doors and an animal comes out to say hello (a different one each time)
     () => { c.block(-420, 0, -5.6, 7, 4.2, 4, '#d8443c', { r: .15 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(5, 2.2, 4).rotateY(Math.PI / 4), mat('#8a2a24', { r: .8 })); roof.scale.z = .62; /* (build 48: the barn roof was crooked, like the house's was) */ roof.position.set(-420, 5.3, -5.6); c.add(roof);

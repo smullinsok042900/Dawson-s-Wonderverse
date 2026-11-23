@@ -32,7 +32,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 8 | Sunny Seaside | done (stage 11) | five striped parasols with towels + beach balls, dune grass, driftwood |
 | 9 | Whispering Woods | done (stage 12) | nine trees with limbs + four-layer crowns, fern understory, campfire clearing |
 | 10 | Frosty Peaks | done (stage 13) | snow-capped ridgeline, seven snow-loaded pines, ice arch, wind drifts |
-| 11 | Happy Farm | **next** | fenced crop rows, barn doors + cupola, hay bales |
+| 11 | Happy Farm | done (stage 14) | fenced paddock, cabbage/carrot rows, round bales, barn cupola + weathervane |
+| 12 | Ocean Pier | **next** | plank deck detail, pilings + rope, cleats, bait shack, lamp posts |
 | 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
 | 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
 | 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |
