@@ -504,4 +504,36 @@ errors. No FPS claim.
 Evidence: `docs/screenshots/stage24/` (approach, rover/dust devil, canyon). Audit at 12/40/70/120: z-fighting 0,
 0 malformed, 0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
 
-Next: Jupiter → Saturn → Uranus → Neptune → Pluto, then character/pet material polish.
+### Venus re-checked after the trim
+
+Re-captured the trimmed deck at the planet approach and at two walking-camera spots (`docs/screenshots/venus-recheck/`):
+57 draw calls / 113,622 triangles at the approach, 60 / 109,098 while walking the deck and 57 / 122,010 further along.
+The three sheets still read as a continuous bank of cream cloud in both views, so no detail was restored on the near
+sheet. Evidence only, no FPS claim.
+
+## Stage 25 — Jupiter: banded depth, a layered Great Red Spot, readable moons
+
+- **Banded deck with real depth**: Jupiter alone uses a 168x62 grid (20,832-triangle ground mesh, up from 12,000) and
+  its own six-colour belt/zone palette warped so no band is straight. The deck's height now follows the bands: soft
+  ridges along the zones, troughs along the belts, plus lumpy cloud tops and a banked far deck. The bands therefore
+  recede in layers instead of lying flat.
+- **Cloud banks in rows**: fifteen random five-puff heaps became four band-aligned rows of wide, half-buried domes
+  (18 banks), each row flatter and larger than the one in front, so the belts show through to the horizon. Whole place
+  45 meshes / 96,216 triangles at the approach (was 36 / 86,048); the frame is 58 draw calls / 98,754 triangles.
+- **Great Red Spot**: four layered parts instead of one decal - a raised pale foam collar, a brick-red ring with two
+  bright spiral arms, a pale inner ring and a deep dark eye, all domed and turning at different speeds, plus two raised
+  spiral arcs that stand out of the bowl and five small counter-spinning eddies. The storm reads as a deep whirl in the
+  deck from the walking camera (68 draw calls at that spot).
+- **Readable moons**: all four are painted at a 256 map (was 128), moved closer and larger (Io 5.6, Europa 4.8,
+  Ganymede 7.0, Callisto 6.0 m radius, 125 m out) and given a little of their own light (emissive map at 0.5), so the
+  far side away from the sun still shows Io's sulphur blotches, Europa's cracks, Ganymede's bright patches and
+  Callisto's pale craters. A tap check ran the Great Red Spot, moon-count and lightning interactions: no errors, four
+  moons present.
+- **Wisps**: Jupiter's two drifting wisp layers sit lower and rounder, so they read as streaks on the deck.
+- Rejected after inspection: a flat decal storm (read as a smear), pancake-shaped cloud banks that floated, and moons
+  at 128 px hidden behind the storm towers.
+
+Evidence: `docs/screenshots/stage25/` (approach, bands, red spot, moons look-up). Audit at 12/44/72/120: z-fighting 0,
+solids 12, platforms 108/113/113/113, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. No FPS claim.
+
+Next: Saturn → Uranus → Neptune → Pluto, then character/pet material polish.

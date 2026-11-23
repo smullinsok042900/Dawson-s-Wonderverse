@@ -376,37 +376,93 @@ export function initSpace(G, api) {
       const BD = CLOUDS[id], amp = { jupiter: 1, saturn: .6, uranus: .34, neptune: .75 }[id];
       const bandAt = (x, z, o) => { const v = z * .085 + (K.fbm2(x * .028, z * .028, 3) - .5) * 5.5 + Math.sin(x * .045 + z * .02) * .7, t = ((v % BD.length) + BD.length) % BD.length, k = Math.floor(t); return o.copy(K.col(BD[k])).lerp(K.col(BD[(k + 1) % BD.length]), K.sstep(.25, .75, t - k)); };
       const spot = id === 'neptune' ? [MID + 14, -62, 26, 9] : null;
-      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : -4.8, blend: 6, nx: 120, nz: 50, height: (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
-        color: (x, z, h, ny, o) => { bandAt(x, z, o); const streak = id === 'neptune' ? K.sstep(.66, .8, K.noise2(x * .035 + 2, z * .55)) : K.sstep(.7, .86, K.noise2(x * .05, z * .4)) * .4; o.lerp(K.col('#ffffff'), streak * .6);
+      // (stage 25) JUPITER'S BANDS carry height as well as colour: pale zones and rust belts, each with wind combs,
+      // whorls and small oval storms, and the deck rises into soft ridges along a zone and sinks into a belt, so the
+      // clouds recede in real layers instead of lying flat
+      const JZ = ['#fff3de', '#c3733e', '#f8e0ba', '#9e4c26', '#fdeed6', '#cf8a4a'];
+      const jupV = (x, z) => z * .1 + (K.fbm2(x * .019 + 1, z * .03, 3) - .5) * 7 + Math.sin(x * .042 + z * .015) * 1.2; // (a warped, wavy band coordinate)
+      const jupH = (x, z) => { const w = (K.fbm2(x * .018 + 3, z * .03, 3) - .5) * 2, ridge = Math.pow(Math.sin(z * .12 + w * 2.6) * .5 + .5, 1.7), fine = Math.sin(z * .31 + w * 4 + x * .01) * .5 + .5, depth = .35 + .85 * K.sstep(-18, -60, z);
+        return K.sstep(-11, -20, z) * depth * (ridge * 5.2 + fine * 1.1 + 1.2)                                        // the ridges themselves
+          + K.sstep(-30, -80, z) * (K.fbm2(x * .08, z * .12, 3) - .5) * 3                                              // lumpy cloud tops behind them
+          + K.sstep(-52, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * 34; }                             // the far deck, banked up
+      const jupCol = (x, z, h, ny, o) => {
+        const v = jupV(x, z), t = ((v % 6) + 6) % 6, k = Math.floor(t);
+        o.copy(K.col(JZ[k])).lerp(K.col(JZ[(k + 1) % 6]), K.sstep(.3, .7, t - k));                                    // crisp belt and zone edges
+        const comb = K.sstep(.6, .82, K.noise2(x * .05, z * .34)), curl = K.sstep(.55, .8, K.noise2(x * .028 + 7, z * .06 + 2));
+        o.lerp(K.col('#ffffff'), comb * .38); o.lerp(K.col('#8c3f1c'), curl * .2);                                     // white combs of cloud and darker curls
+        const ov = K.fbm2(x * .016 + 9, z * .05 + 4, 2);                                                                // small oval storms lying in the belts
+        o.lerp(K.col('#7a2e12'), K.sstep(.66, .9, ov) * .5); o.lerp(K.col('#f8e8c8'), K.sstep(.9, .97, ov) * .45);
+        o.multiplyScalar(.74 + .2 * ny + .12 * K.sstep(-1, 4, h)); }                                                    // (the ridges catch the light)
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : -4.8, blend: 6, nx: id === 'jupiter' ? 168 : 120, nz: id === 'jupiter' ? 62 : 50, height: id === 'jupiter' ? jupH : (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
+        color: (x, z, h, ny, o) => { if (id === 'jupiter') return jupCol(x, z, h, ny, o);
+          bandAt(x, z, o); const streak = id === 'neptune' ? K.sstep(.66, .8, K.noise2(x * .035 + 2, z * .55)) : K.sstep(.7, .86, K.noise2(x * .05, z * .4)) * .4; o.lerp(K.col('#ffffff'), streak * .6);
           if (spot) { const d = Math.hypot((x - spot[0]) / spot[2], (z - spot[1]) / spot[3]); o.lerp(K.col('#101c5c'), K.sstep(1, .7, d) * .85); o.lerp(K.col('#ffffff'), K.sstep(.12, 0, Math.abs(d - 1.12)) * .7); }
           o.multiplyScalar(.78 + .16 * ny + .12 * K.sstep(-.5, 3 * amp, h)); } });
       // puffs of cloud heaped on the deck, and tall storm towers far away
       const puff = (batch, x, y, z, r, k, tint = 0) => { const c0 = bandAt(x, z, new THREE.Color()).lerp(K.col('#ffffff'), .25 + tint); batch.put(K.geo.sph(r > 5 ? 2 : 1), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.74 + .3 * Math.max(0, ny)); }, [r * (1.1 + R(k) * .5), r * (.62 + R(k + 1) * .25), r]); };
-      const heaps = { jupiter: 15, saturn: 12, uranus: 7, neptune: 10 }[id];
-      for (let k = 0; k < heaps; k++) { const x = R(k + 20, X - 30, X + 140), z = -7 - Math.pow(R(k + 21), 1.5) * 55 - (id === 'jupiter' || id === 'saturn' ? 7 : 0), s = (.8 + R(k + 22) * 1.3) * (1 + (-z) * .03), y = H(x, z); for (let q = 0; q < 5; q++) puff(soft, x + (q - 2) * s * .8 + R(k * 7 + q) * s * .4, y + s * (.25 + (q === 2 ? .45 : R(k + q) * .25)), z + (R(k + q + 5) - .5) * s, s * (q === 2 ? 1 : .7), k * 5 + q); }
+      if (id === 'jupiter') { // (stage 25) the cloud banks sit in band-aligned rows, wide and low with gaps between them,
+        // so the zones and belts below show through and recede; every row behind is flatter and larger than the one in front
+        let sd = 40;
+        for (let row = 0; row < 4; row++) { const z0 = -16 - row * 12.5, n = 6 - row, sc0 = 1.05 + row * .42;
+          for (let k = 0; k < n; k++) { const x = X - 24 + (k + .5) * (PW + 48) / n + R(sd++) * 8, z = z0 + (R(sd++) - .5) * 4.5, s = sc0 * (1 + R(sd++) * .55), c0 = bandAt(x, z, new THREE.Color()).lerp(K.col('#ffffff'), .3);
+            for (let q = 0; q < 3; q++) { const bx = x + (q - 1) * s * 1.35, bz = z + (R(sd++) - .5) * s * .8, r = s * (.5 + R(sd++) * .3), by = H(bx, bz) + r * .22;             // (each dome sits on the deck, half buried, so no cloud floats)
+              soft.put(K.geo.sph(1), bx, by, bz, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.76 + .3 * Math.max(0, ny)); }, [r * 2.1, r * 1.1, r * 1.35]); } } }
+      } else { const heaps = { saturn: 12, uranus: 7, neptune: 10 }[id];
+        for (let k = 0; k < heaps; k++) { const x = R(k + 20, X - 30, X + 140), z = -7 - Math.pow(R(k + 21), 1.5) * 55 - (id === 'jupiter' || id === 'saturn' ? 7 : 0), s = (.8 + R(k + 22) * 1.3) * (1 + (-z) * .03), y = H(x, z); for (let q = 0; q < 5; q++) puff(soft, x + (q - 2) * s * .8 + R(k * 7 + q) * s * .4, y + s * (.25 + (q === 2 ? .45 : R(k + q) * .25)), z + (R(k + q + 5) - .5) * s, s * (q === 2 ? 1 : .7), k * 5 + q); } }
       yield;
     if (id === 'jupiter' || id === 'neptune') for (let k = 0; k < 5; k++) { const x = X - 60 + k * 56 + R(k + 30) * 20, z = -95 - R(k + 31) * 60, s = 7 + R(k + 32) * 5, y = H(x, z); for (let q = 0; q < 6; q++) { const up = q / 5; puff(soft, x + (R(k * 9 + q) - .5) * s * (1.8 - up), y + up * s * 2.6, z + (R(k * 9 + q + 3) - .5) * s, s * (1 - up * .35), k * 11 + q, up * .3); } for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s * 1.3, y + s * 2.9, z, s * .9, k * 13 + q, .35); } // (a flat anvil top, like a real storm cloud)
       for (let k = 0; k < 6; k++) { const x = R(k + 400, X, X + 110), z = 4.8 + R(k + 401) * 1.6, s = .55 + R(k + 402) * .5; for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s, -.1 + (q === 1 ? .25 : 0), z, s * (q === 1 ? 1 : .75), k * 3 + q, .1); }
       // wisps that really drift along in the wind: two layers, one mesh each
       const speed = { jupiter: 1.3, saturn: .8, uranus: .45, neptune: 5.5 }[id];
-      for (const [zz, yy, n, sc, sp] of [[-13, .5, 9, 1, 1], [-34, 1.6, 9, 2.4, .6]]) { const span = 190, w = model(b => { for (let k = 0; k < n; k++) { const x = k / n * span + R(k + zz) * 8, z2 = (R(k + 1 + zz) - .5) * 9 * sc, c0 = new THREE.Color(BD[(k + 3) % BD.length]).lerp(K.col('#ffffff'), id === 'neptune' ? .85 : .5); for (let q = 0; q < 3; q++) b.put(K.geo.sph(1), x + (q - 1) * 1.5 * sc, R(k + q) * .3 * sc, z2, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.78 + .28 * Math.max(0, ny)); }, [(id === 'neptune' ? 3.4 : 1.9) * sc * (q === 1 ? 1 : .7), .42 * sc * (q === 1 ? 1 : .7), .9 * sc]); } }, K.softMat(), false);
+      // (stage 25: Jupiter's wisps sit lower and rounder, so they read as streaks lying on the deck, not floating plates)
+      for (const [zz, yy, n, sc, sp] of id === 'jupiter' ? [[-13, .4, 9, 1, 1], [-34, 1.15, 9, 2.4, .6]] : [[-13, .5, 9, 1, 1], [-34, 1.6, 9, 2.4, .6]]) { const span = 190, w = model(b => { for (let k = 0; k < n; k++) { const x = k / n * span + R(k + zz) * 8, z2 = (R(k + 1 + zz) - .5) * 9 * sc, c0 = new THREE.Color(BD[(k + 3) % BD.length]).lerp(K.col('#ffffff'), id === 'neptune' ? .85 : .5); for (let q = 0; q < 3; q++) b.put(K.geo.sph(1), x + (q - 1) * 1.5 * sc, R(k + q) * .3 * sc, z2, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.78 + .28 * Math.max(0, ny)); }, [(id === 'neptune' ? 3.4 : 1.9) * sc * (q === 1 ? 1 : .7), (id === 'jupiter' ? .6 : .42) * sc * (q === 1 ? 1 : .7), .9 * sc]); } }, K.softMat(), false);
         w.position.set(X - 40, yy, zz); w.userData.dynamic = true; add(w); const w2 = w.clone(); w2.position.x = X - 40 - span; add(w2); U.push(dt => { for (const m of [w, w2]) { m.position.x += dt * speed * sp; if (m.position.x > X - 40 + span) m.position.x -= span * 2; } }); }
     }
     yield;
     if (id === 'jupiter') {
-      // the Great Red Spot: a slowly turning whirl of red cloud, with spiral arms
-      const sp = new THREE.Group(); sp.position.set(X + 52, 0, -6.5); add(sp); const sg = new THREE.CircleGeometry(1, 56, 0, Math.PI * 2); const rg = new THREE.RingGeometry(.001, 1, 56, 10); rg.rotateX(-Math.PI / 2); { const p = rg.attributes.position; for (let q = 0; q < p.count; q++) { const r = Math.hypot(p.getX(q), p.getZ(q)); p.setY(q, .32 * (1 - r * r) + .05 * Math.sin(Math.atan2(p.getZ(q), p.getX(q)) * 2 + r * 7) * (1 - r)); } rg.computeVertexNormals(); } sg.dispose();
-      const spot = model(b => b.add(rg, null, (px, py, pz, nx, ny, nz, o) => { const r = Math.hypot(px, pz), a = Math.atan2(pz, px), s = Math.sin(a * 2 + r * 8) * .5 + .5; K.ramp(['#a8321e', '#d8573a', '#f2a078', '#f6c8a0'], s * .6 + r * .4, o); o.lerp(K.col('#7a1f14'), K.sstep(.25, 0, r) * .6); }), K.softMat(), false); spot.scale.set(5.2, 1, 3.2); sp.add(spot); let spin = 0;
+      // (stage 25) the Great Red Spot, as a layered whirl: a pale foam collar, a broad brick-red ring with spiral arms, a
+      // bright inner ring and a dark eye, each raised into a shallow dome and turning at its own speed, so it reads as a
+      // deep storm sunk into the cloud deck rather than a flat red patch
+      const sp = new THREE.Group(); sp.position.set(X + 52, .04, -6.5); add(sp);
+      const vortex = (r0, r1, seg, hf, cf) => { const g = new THREE.RingGeometry(r0, r1, 72, seg); g.rotateX(-Math.PI / 2);
+        const p = g.attributes.position; for (let q = 0; q < p.count; q++) { const px = p.getX(q), pz = p.getZ(q), r = Math.hypot(px, pz), a = Math.atan2(pz, px);
+          p.setY(q, hf(r) + .04 * Math.sin(a * 3 + r * 9)); } g.computeVertexNormals();                                          // (a shaped, faintly rippled surface)
+        return model(b => b.add(g, null, (px, py, pz, nx, ny, nz, o) => cf(Math.hypot(px, pz), Math.atan2(pz, px), py, o)), K.softMat(), false); };
+      const collar = vortex(1.34, 2.0, 4, r => .62 - (r - 1.34) * .5, (r, a, y, o) => { const n = K.noise2(Math.cos(a) * 5 + 3, Math.sin(a) * 5), f = Math.sin(a * 7 + r * 14) * .5 + .5;
+        o.copy(K.col('#ffe9c6')).lerp(K.col('#ffffff'), K.sstep(.4, .9, n + f * .3) * .7); o.lerp(K.col('#d98f58'), K.sstep(.35, .1, n) * .45); }); // (a raised foam rampart)
+      const arms = vortex(.5, 1.42, 8, r => .08 + (r - .5) * .5, (r, a, y, o) => { const s = Math.sin(a * 2 + r * 8 - .9) * .5 + .5, f2 = Math.sin(a * 6 - r * 13) * .5 + .5;
+        K.ramp(['#701a0c', '#b5341a', '#e66232', '#ffa46c'], .14 + s * .48 + f2 * .16 + r * .08, o);                    // (two bright spiral arms wound through the red ring)
+        o.lerp(K.col('#ffe4c4'), K.sstep(.9, 1, s) * .6); });                                                          // (pale cloud drawn out along the arms)
+      const eye = vortex(.02, .54, 6, r => .05 + .02 * Math.sin(r * 12), (r, a, y, o) => { o.copy(K.col('#4a120c')).lerp(K.col('#7e2416'), Math.sin(a * 3 + r * 9) * .5 + .5);
+        o.lerp(K.col('#f2d0a8'), K.sstep(.3, 0, Math.abs(r - .32)) * .5); });                                          // (a pale ring around the deep dark eye)
+      sp.add(collar, arms, eye);
+      // two raised spiral arms standing a little out of the bowl, so the swirl reads in silhouette as well as in colour
+      const swirls = []; for (const [rr, th, arc, y0, col] of [[1.08, .13, Math.PI * 1.55, .3, '#ffe0bc'], [.8, .11, Math.PI * 1.35, .22, '#ff9c66']]) {
+        const tg = new THREE.TorusGeometry(rr, th, 6, 26, arc); tg.rotateX(-Math.PI / 2);
+        const sw = model(b => b.add(tg, null, col), K.softMat(), false); sw.position.y = y0; sp.add(sw); swirls.push(sw); }
+      sp.scale.set(3.0, 1, 2.0); let spin = 0;
+      // five small eddies trailing around the storm, spinning the other way
+      const eddies = []; for (const [ea, er, es] of [[2.5, 2.05, .36], [2.9, 2.25, .28], [3.35, 1.95, .32], [3.75, 2.15, .24], [4.1, 1.85, .28]]) {
+        const ed = vortex(.08, 1, 3, r => .05 * (1 - r), (r, a, y, o) => { o.copy(K.col('#c25630')).lerp(K.col('#f0a074'), Math.sin(a * 2 + r * 5) * .5 + .5);
+          o.lerp(K.col('#f8e2c0'), K.sstep(.5, .9, Math.sin(a * 3) * .5 + .5) * .4); });
+        ed.position.set(X + 52 + Math.cos(ea) * er * 3.0, .04, -6.5 + Math.sin(ea) * er * 2.0); ed.scale.setScalar(es); add(ed); eddies.push(ed); }
       tapIt(sp, () => { spin = 4; Sound.noise && Sound.noise(1.2, 200, 700, .05); fact('🌀 The Great Red Spot: a giant storm bigger than our whole Earth!', 'redspot'); }, X + 52, 'redspot');
-      U.push((dt, t) => { spot.rotation.y -= dt * (.35 + spin * 3); spin = Math.max(0, spin - dt); if (spin > 0 && Math.random() < dt * 12) api.burst(X + 52 + (Math.random() - .5) * 6, .5, -6.5, ['#f2a078', '#fff0dc', '#d8573a'], 1, 1.5); });
+      U.push((dt, t) => { spin = Math.max(0, spin - dt); const kk = 1 + Math.min(1, spin) * .07;
+        arms.rotation.y -= dt * (.18 + spin * 2.6); eye.rotation.y += dt * (.3 + spin * 3.4); collar.rotation.y -= dt * (.11 + spin * 1.8);
+        swirls[0].rotation.y -= dt * (.26 + spin * 2.2); swirls[1].rotation.y += dt * (.34 + spin * 2.8); swirls.forEach((sw, q) => { sw.position.y = (q ? .22 : .3) + Math.sin(t * 1.4 + q) * .04; });
+        sp.scale.set(3.0 * kk, 1, 2.0 * kk); eddies.forEach((ed, q) => { ed.rotation.y += dt * (q % 2 ? -.5 : .5) * (.7 + spin); });
+        if (spin > 0 && Math.random() < dt * 12) api.burst(X + 52 + (Math.random() - .5) * 6, .5, -6.5, ['#f2a078', '#fff0dc', '#d8573a'], 1, 1.5); });
       // the thunder cloud: dark and heavy, it bobs, and a jagged bolt flashes down from it
       const cg = new THREE.Group(); cg.position.set(X + 66, 6, -4); add(cg); cg.add(model(b => { for (const [x, y, z, r] of [[0, 0, 0, 1.25], [-1.2, -.15, .1, .95], [1.25, -.1, 0, 1.0], [-.5, .55, -.2, .9], [.6, .6, .1, .85], [0, -.35, .3, 1.0], [-1.9, -.3, 0, .6], [1.95, -.3, 0, .6]]) b.put(K.geo.sph(2), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(K.col('#6a5a7c')).multiplyScalar(.62 + .5 * Math.max(0, ny)); }, [r, r * .82, r * .9]); }, K.softMat(), false));
       const bolt = (() => { const s = new THREE.Shape(), pts = [[.1, 0], [.55, 0], [.12, -1.9], [.5, -1.9], [-.05, -3.9], [.28, -3.9], [-.35, -5.9], [-.1, -3.5], [-.42, -3.5], [-.02, -1.5], [-.4, -1.5]]; s.moveTo(...pts[0]); pts.slice(1).forEach(p => s.lineTo(...p)); const e = new THREE.ExtrudeGeometry(s, { depth: .1, bevelEnabled: false }); const m = new THREE.Mesh(e, toy('#fff6a0', { em: '#fff3a0', ei: 1.8 })); m.material.fog = false; return m; })(); bolt.position.set(0, -.4, .2); bolt.visible = false; cg.add(bolt); const bgl = K.glow('#fff3a0', 9, .0); bgl.position.set(0, -3, .1); cg.add(bgl); let zap = 0;
       tapIt(cg, () => { zap = .55; boost = calm() ? .15 : .8; Sound.noise && Sound.noise(.4, 2000, 200, .06); fact('⚡ Zap! Jupiter has huge lightning storms!', 'jupiterzap'); }, X + 66, 'jupiterzap');
       U.push((dt, t) => { cg.position.y = 6 + Math.sin(t * .9) * .18; if (zap > 0) { zap -= dt; bolt.visible = zap > 0 && (calm() || Math.sin(zap * 60) > -.3); bolt.scale.x = zap > .3 ? 1 : -1; bgl.material.opacity = Math.max(0, zap) * 1.2; if (zap <= 0) { bolt.visible = false; bgl.material.opacity = 0; api.burst(X + 66, .2, -3.8, ['#fff6a0', '#ffffff'], 6, 2); } } });
-      // the four big moons, each with its own real look: yellow Io, cracked icy Europa, patchy Ganymede, dark Callisto
-      const moons = []; for (const [kind, r, x, y] of [['io', 2.6, MID - 48, 30], ['europa', 2.2, MID - 18, 36], ['ganymede', 3.4, MID + 14, 31], ['callisto', 3.0, MID + 46, 37]]) moons.push(inSky((yield* K.skyBodySteps(kind, r, { size: 128 })), x, y, -160)); let counted = 0;
-      moons.forEach((m, k) => { let b2 = 0; tapIt(m, () => { counted = counted % 4 + 1; b2 = 1; Sound.tone(500 + counted * 100, .15, 'sine', .05, 1.2); say(`🌕 ${['', 'One', 'Two', 'Three', 'Four'][counted]}!${counted === 4 ? ' Jupiter\'s four big moons!' : ''}`, true); disc('jupitermoons'); }, k === 0 ? X + 34 : null, k === 0 ? 'jupitermoons' : null); U.push(dt => { b2 = Math.max(0, b2 - dt * 2); m.scale.setScalar(1 + Math.sin(b2 * 9) * b2 * .3); m.rotation.y += dt * .06; }); });
+      // (stage 25) the four big moons, painted at twice the detail (a 256 map) and larger in the sky, so each one's own
+      // surface reads: Io's sulphur blotches and dark volcanoes, Europa's rust-red cracks, Ganymede's bright patches,
+      // Callisto's pale craters. Each hangs a little lower and turns slowly, showing its whole face as it goes
+      const moons = []; for (const [kind, r, x, y] of [['io', 5.6, MID - 66, 40], ['europa', 4.8, MID - 24, 47], ['ganymede', 7.0, MID + 24, 42], ['callisto', 6.0, MID + 68, 49]]) moons.push(inSky((yield* K.skyBodySteps(kind, r, { size: 256 })), x, y, -125)); let counted = 0;
+      moons.forEach((m, k) => { let b2 = 0; m.rotation.z = k % 2 ? .2 : -.16; m.material.emissiveMap = m.material.map; m.material.emissive.set('#ffffff'); m.material.emissiveIntensity = .5; // (a little of its own light, so the far side away from the sun still shows its surface)
+        tapIt(m, () => { counted = counted % 4 + 1; b2 = 1; Sound.tone(500 + counted * 100, .15, 'sine', .05, 1.2); say(`🌕 ${['', 'One', 'Two', 'Three', 'Four'][counted]}!${counted === 4 ? ' Jupiter\'s four big moons!' : ''}`, true); disc('jupitermoons'); }, k === 0 ? X + 34 : null, k === 0 ? 'jupitermoons' : null); U.push(dt => { b2 = Math.max(0, b2 - dt * 2); m.scale.setScalar(1 + Math.sin(b2 * 9) * b2 * .3); m.rotation.y += dt * .09; }); });
     }
     yield;
     if (id === 'saturn') {

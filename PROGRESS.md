@@ -470,6 +470,44 @@ band across the ground) and `mars-canyon.png` (stepped butte, terraced mesas and
 Audit at x 12, 40, 70 and 120: **z-fighting 0** at all four, solids 12, platforms 108/126/126/126, 0 malformed,
 0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
 
+### Venus re-checked after the cloud trim
+
+Re-captured Venus after the trim at the planet approach and at two walking-camera spots
+(`docs/screenshots/venus-recheck/`): **57 draw calls / 113,622 triangles** at the approach, **60 / 109,098** walking the
+plains and **57 / 122,010** further along. The three sheets still read as one continuous bank of cream cloud in all
+three views, so nothing was restored on the near sheet. Evidence only, no FPS claim.
+
+### Stage 25 — Jupiter: banded depth, a layered Great Red Spot, readable moons
+
+- **Banded deck with real depth**: Jupiter alone runs `nx 168, nz 62` (ground mesh **1 mesh / 20,832 triangles**, up
+  from 12,000) with its own six-colour belt/zone palette, warped so no band is straight. The deck's height follows the
+  bands - soft ridges on the zones, troughs on the belts, lumpy cloud tops behind and a banked far deck - so the belts
+  recede in layers.
+- **Cloud banks in rows**: fifteen random five-puff heaps became four band-aligned rows of wide, half-buried domes (18
+  banks), each row flatter and larger than the one in front, so the belts show through to the horizon. Whole place
+  **45 meshes / 96,216 triangles** at the approach (was 36 / 86,048), frame **58 draw calls / 98,754 triangles**.
+- **Great Red Spot**: four layered parts instead of one decal - a raised pale foam collar, a brick-red ring with two
+  bright spiral arms, a pale inner ring and a deep dark eye, domed and turning at different speeds - plus two raised
+  spiral arcs standing out of the bowl and five small counter-spinning eddies. Frame at the storm **68 draw calls /
+  99,228 triangles**.
+- **Readable moons**: all four are painted at a 256 map (was 128), closer and larger (Io 5.6, Europa 4.8, Ganymede 7.0,
+  Callisto 6.0 m radius, 125 m out) and carry a little of their own light (emissive map, 0.5), so the side turned away
+  from the sun still shows Io's sulphur blotches, Europa's cracks, Ganymede's bright patches and Callisto's pale
+  craters. A tap check ran the Great Red Spot, moon-count and lightning interactions with 0 page errors and four moons
+  present.
+- **Wisps**: Jupiter's two drifting wisp layers sit lower and rounder, so they read as streaks on the deck instead of
+  floating plates.
+- Rejected after inspection: a flat-decal storm (read as a smear on the ground) and pancake-shaped cloud banks that
+  floated above the deck.
+
+Evidence in `docs/screenshots/stage25/`, normal walking camera plus one look-up camera: `jupiter-approach.png`
+(belts and zones running past the rocket), `jupiter-bands.png` (banded ridges receding, cloud banks in rows),
+`jupiter-redspot.png` (the layered storm beside the path) and `jupiter-moons.png` (three moon discs with their own
+surfaces).
+
+Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platforms 108/113/113/113, 0 malformed,
+0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -753,7 +791,14 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
     hollows, 37 new craters and 46 pebbles; 51,464-triangle ground mesh, evidence in `docs/screenshots/stage22/`.
 12. **Venus — done (stage 23):** 240x90 terrain grid, three drifting translucent cloud sheets, pancake domes, cinder
     cones, tessera highlands, branching lava channels and glowing fumaroles, with the volcanic-plain palette; 49,660
-    triangle ground mesh, evidence in `docs/screenshots/stage23/`. Mars is next.
+    triangle ground mesh, evidence in `docs/screenshots/stage23/`.
+13. **Mars — done (stage 24):** 220x84 terrain grid, two canyons with a rim about 40 m out, three stepped terraced
+    buttes, layered ochre palette, ten dust-capped boulder clusters with grit aprons, three drifting haze sheets;
+    59,440-triangle ground mesh, rover and dust devil re-verified, evidence in `docs/screenshots/stage24/`.
+14. **Jupiter — done (stage 25):** 168x62 banded deck whose height follows the belts and zones, four rows of
+    band-aligned cloud banks, a four-layer domed Great Red Spot with raised spiral arcs and five eddies, four moons
+    painted at 256 with their own light; 20,832-triangle ground mesh, evidence in `docs/screenshots/stage25/`. Saturn
+    is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.
