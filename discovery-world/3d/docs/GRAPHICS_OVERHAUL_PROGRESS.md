@@ -442,4 +442,21 @@ errors. No FPS claim.
 Evidence: `docs/screenshots/stage21/` (approach at x 12, rays at x 20, station at x 44, valley at x 78, all captured with
 `--place moon`). Audit at 12/20/44/78: z-fighting 0, solids 12, platforms 108/110, 0 page errors. No FPS claim.
 
-Next: Mercury, then Venus → Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.
+## Stage 22 — Mercury: crater rims, ejecta rays and layered regolith
+
+- **Crater rims**: 37 new craters (34 small pits, three young ray craters beside the walkway) and the 40 existing bowls
+  deepened (depth .38 → .5; pits .32 → .42) with raised bright crests. The icy crater at x 78 is unchanged.
+- **Ejecta rays**: pale radial rays painted into the regolith, with the white overlay capped so overlapping rays cannot
+  flatten the surface; bright volatile hollows on some crater floors.
+- **Layered regolith**: four warm grey strata banded by height, dark smooth plains, shaded bowl floors and thin dark
+  layers in the walls; 46 extra pebbles for surface detail.
+- **Cost:** Mercury ground mesh 1 mesh / 25,864 triangles, no new collision entries.
+- **Iteration:** summed ejecta blankets plus the tan palette saturated the ground to cream (a scene raycast measured
+  ground vertices at 0.85), so the overlay was capped, the base darkened and the bowl floors shaded; the showpiece ray
+  craters were moved nearer the walkway to be inside the view. The same clamp was tried on the Moon and reverted as a
+  regression against its approved stage-21 look.
+
+Evidence: `docs/screenshots/stage22/` (approach at x 14, rays at x 6, crater at x 34, plains at x 78, captured with
+`--place mercury`). Audit at 6/14/34/78: z-fighting 0, solids 12/17, platforms 108/109, 0 page errors. No FPS claim.
+
+Next: Venus, then Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.

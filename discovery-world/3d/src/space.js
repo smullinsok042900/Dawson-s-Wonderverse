@@ -151,14 +151,31 @@ export function initSpace(G, api) {
     }
     yield;
     if (id === 'mercury') {
-      const cr = []; for (let k = 0; k < 40; k++) { const z = -8.5 - Math.pow(R(k + 50), 1.3) * 100, r = 1.3 + R(k + 60) * 2.2 + (-z) * .05; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .38, rim: .15, ray: R(k + 80) > .7 }); }
-      cr.push({ x: X + 78, z: -12.5, r: 4.6, depth: .42, rim: .17 });
+      // (stage 22) the same treatment as the Moon, in Mercury's warm greys: young craters that throw ejecta rays,
+      // raised bright rim crests, layered regolith strata, and bright volatile hollows on some crater floors
+      const cr = []; for (let k = 0; k < 40; k++) { const z = -8.5 - Math.pow(R(k + 50), 1.3) * 100, r = 1.3 + R(k + 60) * 2.2 + (-z) * .05; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .5, rim: .18, ray: R(k + 80) > .7, rayK: .7 + R(k + 90) * .5 }); }
+      const iceCrater = { x: X + 78, z: -12.5, r: 4.6, depth: .55, rim: .2 }; cr.push(iceCrater);
+      for (let k = 0; k < 34; k++) { const z = -6.2 - Math.pow(R(k + 140), 1.25) * 70, r = .4 + R(k + 150) * 1.25; cr.push({ x: R(k + 160, X - 60, X + 190), z, r, depth: .42, rim: .15 }); }
+      cr.push({ x: X + 30, z: -9.5, r: 5.4, depth: .5, rim: .22, peak: true, ray: true, rayK: 1.3 }, { x: X + 60, z: -12, r: 4.4, depth: .5, rim: .21, peak: true, ray: true, rayK: 1.15 }, { x: X + 96, z: -10.5, r: 3.8, depth: .5, rim: .2, ray: true, rayK: 1.1 });
       H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .07, z * .07, 4) - .5) * 3.6 + K.sstep(.47, .53, K.fbm2(x * .011 + 4, z * .034 + 5, 3)) * 2.6 * K.sstep(-14, -34, z) * K.sstep(-90, -60, z) + K.sstep(-70, -160, z) * K.ridge2(x * .016, z * .016, 4) * 9; for (const c of cr) h += K.craterH(c, x, z); return h; },
-        color: (x, z, h, ny, o) => { let s = 0, ray = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; if (c.ray) { const dx = x - c.x, dz = z - c.z, d = Math.hypot(dx, dz) / c.r; if (d > 1 && d < 5) ray += K.sstep(.62, .8, K.noise2(Math.atan2(dz, dx) * 5 + c.x, 1.5)) * (1 - (d - 1) / 4); } }
-          const n = K.fbm2(x * .8, z * .8, 3); K.ramp(['#3b3632', '#72675b', '#a89b8a'], .3 + n * .5 + ray * .4, o); o.multiplyScalar((.72 + .34 * ny) * Math.max(.45, Math.min(1.35, 1 + s * .3))); } });
+        color: (x, z, h, ny, o) => { let s = 0, ray = 0, crest = 0, blanket = 0, hollow = 0, floor = 0;
+          for (const c of cr) { K.craterH(c, x, z); s += c.s; const dx = x - c.x, dz = z - c.z, d = Math.sqrt(dx * dx + dz * dz) / c.r;
+            if (d < 1) floor = Math.max(floor, (1 - d * d) * .9);                                              // the shaded bowl floor
+            if (d < 2.4) blanket = Math.max(blanket, (1 - d / 2.4) * .3);                                 // bright ejecta blanket (nearest rim wins)
+            if (d > .62 && d < 1.62) { const q = 1 - Math.abs(d - 1.02) / .6; if (q > 0) crest = Math.max(crest, q * q); } // the uplifted rim crest
+            if (d < .95) hollow = Math.max(hollow, K.sstep(.56, .8, K.noise2(x * .45 + c.x, z * .45 + c.z)) * (1 - d) * 1.4); // bright volatile hollows
+            if (c.ray && d > .85 && d < 5) { const a = Math.atan2(dz, dx); ray = Math.min(1.15, ray + K.sstep(.4, .66, K.noise2(a * 5.5 + c.x * .3, c.z * .11)) * Math.pow(1 - (d - .85) / 4.15, 1.3) * c.rayK); } } // ejecta rays
+          const plains = K.sstep(.5, .4, K.fbm2(x * .02 + 3, z * .02 + 7, 3)), n = K.fbm2(x * .85, z * .85, 3), fine = K.fbm2(x * 2.7, z * 2.7, 2);
+          const band = Math.sin(h * 3.3 + K.noise2(x * .14, z * .14) * 2.2 + n) * .5 + .5;                    // regolith strata
+          K.ramp(['#26221e', '#3a342d', '#544a40', '#423b33'], .2 + n * .44 + fine * .16 + Math.max(0, h) * .02, o);
+          o.lerp(K.col('#1a1612'), plains * (.5 + band * .2));                                                 // dark smooth plains
+          o.lerp(K.col('#f4f7ff'), Math.min(.46, crest * .22 + blanket * .06 + ray * .36 + hollow * .2));       // bright crests, rays and hollows
+          o.lerp(K.col('#1e1915'), K.sstep(.3, 0, band) * .15);                                               // thin dark layers in the walls
+          o.multiplyScalar((.72 + .34 * ny) * Math.max(.4, Math.min(1.4, 1 + s * .38)) * (1 - floor * .3)); } });
       yield* rocks(80, { colors: ['#4f4439', '#a08a72'], sharp: 1, s1: .75 }); yield* frontRocks(['#3f362e', '#75644f'], 7, 1);
+      yield* rocks(46, { colors: ['#6a5c4e', '#b0a08c'], s0: .1, s1: .3, z0: -3, z1: -22, seed: 1300, sink: .35 }); // (stage 22) fine pebbles
       // ice hiding in a crater that the Sun never reaches (there really is ice on Mercury!)
-      { const c = cr[cr.length - 1], y = H(c.x, c.z); props.put(K.geo.cyl(24), c.x, y + .12, c.z, '#dff3ff', [c.r * .55, .1, c.r * .5]); for (let k = 0; k < 9; k++) { const a = k * .7, r = c.r * (.15 + R(k + 5) * .3); props.put(K.rockGeo(k, 1), c.x + Math.cos(a) * r, y + .3, c.z + Math.sin(a) * r, k % 2 ? '#e8f8ff' : '#bfe6ff', [.3, .5 + R(k) * .8, .3], [R(k) * .4, k, R(k + 2) * .4]); } }
+      { const c = iceCrater, y = H(c.x, c.z); props.put(K.geo.cyl(24), c.x, y + .12, c.z, '#dff3ff', [c.r * .55, .1, c.r * .5]); for (let k = 0; k < 9; k++) { const a = k * .7, r = c.r * (.15 + R(k + 5) * .3); props.put(K.rockGeo(k, 1), c.x + Math.cos(a) * r, y + .3, c.z + Math.sin(a) * r, k % 2 ? '#e8f8ff' : '#bfe6ff', [.3, .5 + R(k) * .8, .3], [R(k) * .4, k, R(k + 2) * .4]); } }
       // the huge Sun, with a glowing crown
       const sx = MID + 30, sy = 17, sz = -210; const sun = inSky((yield* K.skyBodySteps('sunface', 26, { emissive: true })), sx, sy, sz), g1 = inSky(K.glow('#ffd070', 120, .8), sx, sy, sz - 4), g2 = inSky(K.glow('#ff9a3c', 260, .4), sx, sy, sz - 6); let hot = 0;
       tapIt(sun, () => { hot = 2; Sound.noise && Sound.noise(.8, 1200, 300, .04); fact('☀️ Sizzle! The Sun looks HUGE from Mercury: it\'s the closest planet to the Sun!', 'mercurysun'); }, X + 58, 'mercurysun');
