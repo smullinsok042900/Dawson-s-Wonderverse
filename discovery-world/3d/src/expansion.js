@@ -17,7 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
-import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail } from './scenery-detail.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -631,6 +631,8 @@ export function initExpansion(G, api) {
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
   builders.frosty = c => [
     ...familyParts(c, 'frosty'),
+    // (stage 13) snow-capped ridgeline, drifts, snow-loaded pines and an ice arch
+    () => { G.frostyDetail = buildFrostyDetail({ add: c.add }); },
     () => lifeHere(c, [['drawingteal', -288, -3.6]]),
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);

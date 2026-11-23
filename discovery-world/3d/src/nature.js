@@ -260,7 +260,7 @@ export function grassField(scene, { x0, x1, ok, time, chunk = 24, perChunk = (ty
 // and layered clusters of leaf shapes)
 // ===================================================================
 let leafTexCache = null;
-function leafTexture() {
+export function leafTexture() {
   if (leafTexCache) return leafTexCache;
   const N = 256, [c, g] = canvas(N);
   g.clearRect(0, 0, N, N);

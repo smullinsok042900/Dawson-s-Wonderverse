@@ -14,7 +14,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { leafNormal } from './nature.js';
+import { leafNormal, leafDetail, leafTexture } from './nature.js';
 
 const C = new THREE.Color();
 
@@ -984,8 +984,17 @@ export function buildWoodsDetail({ add }) {
     g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
     list.push(tinted(g, hex)); g.dispose();
   };
-  const clump = (list, hex, r, x, y, z, squash = .72) => {
-    const g = new THREE.IcosahedronGeometry(r, 1); g.scale(1, squash, 1); g.translate(x, y, z);
+  // (stage 12 fix) crowns are lumpy, leaf-textured blobs like the engine's own trees, not smooth
+  // tinted spheres: same leaf-detail map and normal map, plus a fringe of leaf cards below
+  const LD = leafDetail();
+  const crownMat = new THREE.MeshPhysicalMaterial({ map: LD.map, normalMap: LD.normal, normalScale: new THREE.Vector2(.7, .7), vertexColors: true, roughness: .8, sheen: .6, sheenRoughness: .6, sheenColor: new THREE.Color('#e4f7c0') });
+  const lumpy = r => {
+    const g = new THREE.IcosahedronGeometry(r, 3), p = g.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); const n = 1 + Math.sin(v.x * 4.1) * Math.sin(v.y * 3.7 + 1) * Math.sin(v.z * 4.3) * .13 + Math.sin(v.x * 9 + v.z * 7) * .03; v.multiplyScalar(n); p.setXYZ(i, v.x, v.y, v.z); }
+    g.computeVertexNormals(); return g;
+  };
+  const clump = (list, hex, r, x, y, z, squash = .78) => {
+    const g = lumpy(r); g.scale(1, squash, 1); g.translate(x, y, z);
     list.push(tinted(g, hex)); g.dispose();
   };
 
@@ -999,11 +1008,13 @@ export function buildWoodsDetail({ add }) {
     beam(woodParts, '#5f452f', [x, h * .52, z], [x + .95 * s, h * 1.02, z + .3 * s], .07 * s);
     beam(woodParts, '#6b4c34', [x, h * .6, z], [x - .85 * s, h * 1.08, z - .45 * s], .055 * s);
     beam(woodParts, '#6b4c34', [x + lean, h * .78, z], [x + .3 * s, h * 1.32, z - .95 * s], .045 * s);
-    const c1 = i % 2 ? '#3f7f46' : '#4a8f4c', c2 = i % 2 ? '#57a35a' : '#63b062';
-    clump(leafParts, c1, .95 * s, x, h * 1.0, z);
-    clump(leafParts, c2, .78 * s, x + .42 * s, h * 1.28, z + .18 * s, .8);
-    clump(leafParts, c1, .68 * s, x - .38 * s, h * 1.24, z - .26 * s, .78);
-    clump(leafParts, c2, .52 * s, x + .1 * s, h * 1.5, z + .05 * s, .85);
+    const c1 = i % 2 ? '#7cb968' : '#8ac474', c2 = i % 2 ? '#9ad483' : '#a8de91';
+    // (stage 12 fix) the four crowns overlap heavily so no clump reads as floating: offsets stay
+    // inside the lower crown's radius and the top sits directly on the stack
+    clump(leafParts, c1, .98 * s, x, h * 1.0, z);
+    clump(leafParts, c2, .8 * s, x + .34 * s, h * 1.2, z + .16 * s, .82);
+    clump(leafParts, c1, .74 * s, x - .32 * s, h * 1.18, z - .22 * s, .8);
+    clump(leafParts, c2, .6 * s, x + .04 * s, h * 1.34, z + .02 * s, .86);
   });
 
   // ---- understory ferns on both sides of the path, clear of the interactive props
@@ -1027,7 +1038,18 @@ export function buildWoodsDetail({ add }) {
   for (let k = 0; k < 4; k++) beam(woodParts, k % 2 ? '#6b4c34' : '#7d5a3c', [-168.9, .16 + k * .11, -2.2 - k * .04], [-167.9, .16 + k * .11, -2.9 + k * .05], .1);
 
   const timber = new THREE.Mesh(mergeMixed(woodParts), barkM); timber.castShadow = timber.receiveShadow = true; group.add(timber);
-  const crowns = new THREE.Mesh(mergeMixed(leafParts), leafM); crowns.castShadow = crowns.receiveShadow = true; group.add(crowns);
+  const crowns = new THREE.Mesh(mergeMixed(leafParts), crownMat); crowns.castShadow = crowns.receiveShadow = true; group.add(crowns);
+  // leaf-card fringe around each crown: the fuzz that makes the engine's trees read as leaves
+  const cards = new THREE.InstancedMesh(new THREE.PlaneGeometry(.42, .42), new THREE.MeshStandardMaterial({ map: leafTexture(), alphaTest: .5, side: THREE.DoubleSide, roughness: .78 }), TREES.length * 44);
+  { const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), pv = new THREE.Vector3(), sv = new THREE.Vector3(); let ci = 0;
+    TREES.forEach(([x, z], i) => { const s = .92 + (i % 3) * .14, h = 2.7 * s, cy = h * 1.12, cr = 1.05 * s;
+      for (let k = 0; k < 44; k++) {
+        const a = (k * 2.399) % 6.283, yy = ((k * 0.618) % 1) * 2 - 1;
+        pv.set(x + Math.cos(a) * cr * Math.sqrt(1 - yy * yy) * .95, cy + yy * cr * .75, z + Math.sin(a) * cr * Math.sqrt(1 - yy * yy) * .95);
+        e.set((k % 3) * .7, a, (k % 2 ? 1 : -1) * .5); q.setFromEuler(e); sv.setScalar(.8 + (k % 4) * .12);
+        m4.compose(pv, q, sv); cards.setMatrixAt(ci, m4); cards.setColorAt(ci, C.set(k % 2 ? '#8ac474' : '#a8de91')); ci++;
+      } }); }
+  cards.castShadow = true; cards.receiveShadow = true; group.add(cards);
   const fernGeo = broadLeafGeometry({ len: .44, wid: .19, rise: .3, droop: .2, cup: .05, rib: .012, seg: 5, across: 3 });
   const ferns = new THREE.InstancedMesh(fernGeo, fernM, fernSpots.length * 4);
   const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
@@ -1040,6 +1062,79 @@ export function buildWoodsDetail({ add }) {
   ferns.castShadow = true; group.add(ferns);
 
   return { group, added: { trees: TREES.length, crowns: TREES.length * 4, fernTufts: fernSpots.length, benches: 2 } };
+}
+
+// ===================================================================
+// (stage 13) Frosty Peaks: flat snow around the hill and the igloo. This adds a
+// ridgeline of snow-capped rock behind the district, wind drifts along both
+// sides of the path, snow-loaded pines between the ridge and the path, and a
+// blue ice arch. Everything stays clear of the sledding steps, snowman, target,
+// pond, igloo, star pole and penguins.
+// ===================================================================
+export function buildFrostyDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'frosty-detail'; add(group);
+  const snowM = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .78, sheen: .5, sheenRoughness: .7, sheenColor: new THREE.Color('#eaf4ff') });
+  const rockM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95, flatShading: true });
+  const iceM = new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: .16, metalness: 0, clearcoat: .9, clearcoatRoughness: .18, transmission: .12, thickness: .6 });
+  const rockParts = [], snowParts = [], pineParts = [], iceParts = [], driftSpots = [];
+  const ball = (list, hex, r, x, y, z, sx = 1, sy = 1) => { const g = new THREE.IcosahedronGeometry(r, 2); g.scale(sx, sy, 1); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cone = (list, hex, r, h, x, y, z, seg = 9) => { const g = new THREE.ConeGeometry(r, h, seg); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+
+  // ---- ridgeline: four lumpy rock shoulders with snow caps, behind everything
+  const RIDGE = [[-286, 2.6, 1.0], [-318, 3.5, 1.2], [-352, 2.9, 1.05], [-390, 3.7, 1.2]];
+  RIDGE.forEach(([x, h, w], i) => {
+    const z = -15.4, zz = ((i * 7) % 3) * .45 - .45;
+    ball(rockParts, i % 2 ? '#8b9bb0' : '#7d8ea4', h * .6, x, h * .3, z + zz, w * 1.45, .95);
+    ball(rockParts, '#93a4b8', h * .38, x + h * .7, h * .2, z + zz + .5, w * .95, .85);
+    // a snow cap that actually sits on and over the shoulder, not a sliver
+    ball(snowParts, '#f7fbff', h * .58, x - h * .08, h * .6, z + zz + .05, w * 1.3, .5);
+    ball(snowParts, '#ffffff', h * .34, x + h * .66, h * .38, z + zz + .5, w * .82, .46);
+    cone(snowParts, '#f7fbff', h * .3, h * .4, x + h * .1, h * .88, z + zz, 8);
+  });
+
+  // ---- snow-loaded pines between the ridge and the path
+  const PINES = [[-283, -8.2, 1], [-293, -9.6, .85], [-307, -8.6, 1.1], [-336, -9.2, .95], [-349, -8.4, 1.05], [-375, -9.8, .9], [-396, -8.8, 1.0]];
+  PINES.forEach(([x, z, s]) => {
+    const trunk = new THREE.CylinderGeometry(.1 * s, .16 * s, 1.5 * s, 7); trunk.translate(x, .75 * s, z); pineParts.push(tinted(trunk, '#6d5138')); trunk.dispose();
+    [[1.35, 1.5, 1.0], [1.05, 1.15, 1.75], [.72, .9, 2.4]].forEach(([r, h, y], k) => {
+      cone(pineParts, k % 2 ? '#2f6b52' : '#357659', r * s, h * s, x, y * s, z, 9);
+      cone(snowParts, '#f7fbff', r * .82 * s, h * .46 * s, x, (y + h * .3) * s, z, 9);
+    });
+  });
+
+  // ---- ice arch over the path side, clear of the pond, igloo and penguins
+  const AX = -372, AZ = -5.0, AW = 1.5, AH = 2.0;
+  for (const side of [-1, 1]) {
+    const pier = new THREE.CylinderGeometry(.24, .3, AH, 8); pier.translate(AX + side * AW, AH / 2, AZ); iceParts.push(tinted(pier, '#bfe6ff')); pier.dispose();
+  }
+  const apex = new THREE.TorusGeometry(AW, .24, 6, 18, Math.PI); apex.translate(AX, AH, AZ); iceParts.push(tinted(apex, '#cdeaff')); apex.dispose();
+  const drip = new THREE.ConeGeometry(.09, .5, 6); drip.rotateX(Math.PI); drip.translate(AX + AW, AH + .1, AZ); iceParts.push(tinted(drip, '#e8f7ff')); drip.dispose();
+
+  // ---- wind drifts along both sides of the path
+  for (let x = -400; x <= -276; x += 2.3) for (const z of [-3.15, -5.75]) {
+    if (x > -369 && x < -353) continue;                        // frozen pond
+    if (x > -384 && x < -376 && z < -3.6) continue;            // igloo
+    if (x > -334 && x < -315 && z < -3.6) continue;            // sledding hill and steps
+    if (x > -304 && x < -294) continue;                        // snowman and snowpile
+    if (Math.abs(x + 312) < 2.2) continue;                     // snowball target
+    driftSpots.push({ x: x + ((Math.abs(x * 7) | 0) % 5) * .09, z, r: .42 + ((Math.abs(x) | 0) % 3) * .1 });
+  }
+
+  const rock = new THREE.Mesh(mergeMixed(rockParts), rockM); rock.castShadow = rock.receiveShadow = true; group.add(rock);
+  const snow = new THREE.Mesh(mergeMixed(snowParts), snowM); snow.castShadow = snow.receiveShadow = true; group.add(snow);
+  const pines = new THREE.Mesh(mergeMixed(pineParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .86 })); pines.castShadow = pines.receiveShadow = true; group.add(pines);
+  const ice = new THREE.Mesh(mergeMixed(iceParts), iceM); ice.castShadow = true; group.add(ice);
+  const driftGeo = new THREE.IcosahedronGeometry(1, 2); driftGeo.scale(1, .38, .72);
+  // (a plain white material: the instanced drift geometry has no vertex-colour attribute to tint)
+  const drifts = new THREE.InstancedMesh(driftGeo, new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: .8, sheen: .5, sheenRoughness: .7, sheenColor: new THREE.Color('#eaf4ff') }), driftSpots.length);
+  const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), v = new THREE.Vector3(), sv = new THREE.Vector3();
+  driftSpots.forEach((d, i) => {
+    q.setFromEuler(eu.set(0, (d.x * 1.7) % 6.283, 0)); v.set(d.x, .02, d.z); sv.set(d.r * 1.6, d.r * .55, d.r);
+    mtx.compose(v, q, sv); drifts.setMatrixAt(i, mtx);
+  });
+  drifts.receiveShadow = true; group.add(drifts);
+
+  return { group, added: { ridges: RIDGE.length, pines: PINES.length, drifts: driftSpots.length, arch: 1 } };
 }
 
 // ===================================================================
