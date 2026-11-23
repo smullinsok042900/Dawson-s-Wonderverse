@@ -446,20 +446,23 @@ Evidence: `docs/screenshots/stage21/` (approach at x 12, rays at x 20, station a
 
 - **Resolution**: Mercury's ground uses a 224x88 grid (about 0.5 m columns near the path) because the default 128x54 grid
   averaged every crater rim into a dune. Ground mesh: 1 mesh / 51,464 triangles, no new collision.
-- **Showpieces you can see during play**: two wide shallow basins (r 13 and r 9, 2.6 m and 2 m deep, 0.5 m rims).
-  Deep, steep craters are invisible from the 2.5 m walking camera because their near rim hides the bowl.
-- **Crater overlook**: walking within 22 m of the first basin eases the camera up and back to an oblique view of the
-  bowl and back again afterwards, with a one-time "Look at that giant crater!" line. Smoothed `G.camOverride`, so it is
-  part of normal play.
-- **Soft rim ring**: floor and rim colours blend over ~half a crater radius, removing the stepped edge, and long rays
-  (4.6 r) come only from the showpieces while the other ray craters stop at 2.1 r.
+- **Showpieces you can see during play**: two wide shallow basins (r 13 and r 9, 2.6 m and 2 m deep, 0.5 m rims); deep
+  craters are invisible from the 2.5 m walking camera because their near rim hides the bowl.
+- **One-time crater overlook**: on the first approach within 24 m (and with no other camera override running) the camera
+  eases into a 6 s oblique view of the bowl and back, once per session (`G.mercuryCraterSeen`); later passes keep the
+  ordinary walking camera.
+- **Rays that read while walking**: wider angular lobes, a 0.9 white blend, dark lanes between rays, 5 r reach from the
+  showpieces and 2.1 r from the rest; the rim ring narrowed to 0.88-1.5 r so the surrounding plain stays dark.
+- **Soft rim ring**: floor and rim blend over 0.2-0.3 r gradients, removing the stepped edge.
 - **Regolith**: four dark warm-grey strata, smooth plains, thin dark wall layers, volatile hollows, 46 pebbles; the Sun's
   strength eased from 3.9 to 2.9 so rims and rays are not clipped.
-- Iterations rejected after inspecting captures: broad bright blankets (cream wash), tall rims (hid their bowls), a deep
-  basin (same), a near-uniform dark palette (no contrast), long rays on every crater (covered the map), and two
-  overlook framings (too close, then too steep).
+- Iterations rejected after inspecting captures: broad bright blankets (cream wash), tall rims (hid their bowls), deep
+  basins (same), a near-uniform dark palette (no contrast), long rays on every crater (covered the map), a permanent
+  camera hijack (replaced by the one-time reveal), an over-wide rim ring that washed the plain out, and two overlook
+  framings (too close, then too steep).
 
-Evidence: `docs/screenshots/stage22/` from the normal walking camera. Audit at 8/14/22/34: z-fighting 0, 0 malformed
-solids or platforms, 0 page errors. No FPS claim.
+Evidence: `docs/screenshots/stage22/` from the normal walking camera (including the same spot revisited after the
+reveal). Audit at 8/14/22/38: z-fighting 0/0/0/1 (the one is the pre-existing y 0.029 plane pair), 0 malformed solids
+or platforms, 0 page errors. No FPS claim.
 
 Next: Venus, then Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.

@@ -165,21 +165,21 @@ export function initSpace(G, api) {
         color: (x, z, h, ny, o) => { let s = 0, ray = 0, crest = 0, blanket = 0, hollow = 0, floor = 0, bowl = 0, ring = 0, gap = 0;
           for (const c of cr) { K.craterH(c, x, z); s += c.s; const dx = x - c.x, dz = z - c.z, d = Math.sqrt(dx * dx + dz * dz) / c.r;
             if (d < 1) floor = Math.max(floor, (1 - d * d) * .9);                                              // the shaded bowl floor
-            if (c.big) { bowl = Math.max(bowl, K.sstep(1.15, .35, d)); ring = Math.max(ring, K.sstep(.45, 1.15, d) * K.sstep(2.1, 1.35, d)); } // the two showpieces read from the path: soft dark bowl, wide soft bright rim
+            if (c.big) { bowl = Math.max(bowl, K.sstep(1.15, .35, d)); ring = Math.max(ring, K.sstep(.88, 1.1, d) * K.sstep(1.5, 1.22, d)); } // the two showpieces read from the path: soft dark bowl, wide soft bright rim
             if (d < 2.4) blanket = Math.max(blanket, (1 - d / 2.4) * .3);                                 // bright ejecta blanket (nearest rim wins)
             if (d > .62 && d < 1.62) { const q = 1 - Math.abs(d - 1.02) / .6; if (q > 0) crest = Math.max(crest, q * q); } // the uplifted rim crest
             if (d < .95) hollow = Math.max(hollow, K.sstep(.56, .8, K.noise2(x * .45 + c.x, z * .45 + c.z)) * (1 - d) * 1.4); // bright volatile hollows
-            const rayTo = c.big ? 4.6 : 2.1;                                                                   // only the two young showpieces throw long rays
-            if (c.ray && d > 1 && d < rayTo) { const a = Math.atan2(dz, dx), m = K.noise2(a * 4.2 + c.x * .3, c.z * .11), fall = Math.pow(1 - (d - 1) / (rayTo - 1), 1.1);
-              ray = Math.min(1.2, ray + K.sstep(.55, .75, m) * fall * c.rayK * (c.big ? 1 : .55));
-              if (c.big) gap = Math.max(gap, K.sstep(.42, .2, m) * fall); } } // ejecta rays, with dark lanes between
+            const rayTo = c.big ? 5 : 2.1;                                                                     // only the two young showpieces throw long rays
+            if (c.ray && d > 1 && d < rayTo) { const a = Math.atan2(dz, dx), m = K.noise2(a * 3.2 + c.x * .3, c.z * .11), fall = Math.pow(1 - (d - 1) / (rayTo - 1), 1);
+              ray = Math.min(1.2, ray + K.sstep(.48, .68, m) * fall * c.rayK * (c.big ? 1 : .55));
+              if (c.big) gap = Math.max(gap, K.sstep(.44, .22, m) * fall); } } // ejecta rays, with dark lanes between
           const plains = K.sstep(.5, .4, K.fbm2(x * .02 + 3, z * .02 + 7, 3)), n = K.fbm2(x * .85, z * .85, 3), fine = K.fbm2(x * 2.7, z * 2.7, 2);
           const band = Math.sin(h * 3.3 + K.noise2(x * .14, z * .14) * 2.2 + n) * .5 + .5;                    // regolith strata
           K.ramp(['#1b1815', '#262320', '#332e29', '#2a2723'], .2 + n * .44 + fine * .16 + Math.max(0, h) * .02, o);
           o.lerp(K.col('#1e1a17'), plains * (.5 + band * .2));                                                 // dark smooth plains
-          o.lerp(K.col('#2b2622'), Math.min(.75, gap * .6));                                                  // the dark lanes between the rays
+          o.lerp(K.col('#241f1c'), Math.min(.8, gap * .7));                                                  // the dark lanes between the rays
           o.lerp(K.col('#3a342d'), Math.min(.8, bowl * .78));                                                  // the showpieces' bowls: dark, shaded floor
-          o.lerp(K.col('#ffffff'), Math.min(.95, crest * .18 + blanket * .05 + ray * .9 + hollow * .14 + ring * .68)); // bright crests, rays, hollows and fresh rims
+          o.lerp(K.col('#ffffff'), Math.min(.95, crest * .18 + blanket * .05 + ray * .9 + hollow * .14 + ray * .9 + ring * .55)); // bright crests, rays, hollows and fresh rims
           o.lerp(K.col('#181513'), K.sstep(.3, 0, band) * .16);                                               // thin dark layers in the walls
           o.multiplyScalar((.7 + .34 * ny) * Math.max(.42, Math.min(1.5, 1 + s * .55)) * (1 - floor * .3)); } });
       yield* rocks(80, { colors: ['#4f4439', '#a08a72'], sharp: 1, s1: .75 }); yield* frontRocks(['#3f362e', '#75644f'], 7, 1);
@@ -198,16 +198,21 @@ export function initSpace(G, api) {
         fact(night ? '🌙 Night on Mercury: it gets VERY cold!' : '☀️ Day on Mercury: it gets VERY hot!', 'mercurynight'); }, X + 44, 'mercurynight');
       U.push(dt => { push = Math.max(0, push - dt * 4); dome.position.y = .5 - Math.sin(push * Math.PI) * .12; });
 
-      // (stage 22c) THE CRATER OVERLOOK: walking up to the big crater lifts the camera so you can see down into the bowl
-      { const cx = X + 34, cz = -10.5, PL = G.player; let w = 0;
+      // (stage 22c) THE CRATER OVERLOOK: a one-time reveal the first time you walk up to the big crater
+      { const cx = X + 34, cz = -10.5, PL = G.player; let show = -1;
         U.push(dt => {
           if (!PL) return;
-          const d = Math.hypot(PL.x - cx, (PL.z || 0) - cz), want = !PL.ride && d < 22 ? 1 : 0;
-          w += (want - w) * Math.min(1, dt * 2.2); if (w < .002) w = 0;
-          if (!w) { if (G.camOverride && G.camOverride.overlook) G.camOverride = null; return; }
-          if (w > .35 && !G.mercuryCraterSeen) { G.mercuryCraterSeen = 1; fact('🕳️ Look at that giant crater! Mercury is covered in craters.', 'mercurycrater'); }
-          const e = w * w * (3 - 2 * w), px = PL.x, py = PL.y + 3.2, pz = 9.5,      // where the walking camera sits
-            tp = [cx - 18, 9, 10], tl = [cx - 2, PL.y - 2, cz];
+          if (show < 0) {
+            if (!G.mercuryCraterSeen && !PL.ride && (!G.camOverride || G.camOverride.overlook) &&
+              Math.hypot(PL.x - cx, (PL.z || 0) - cz) < 24) {
+              show = 0; G.mercuryCraterSeen = 1;
+              fact('🕳️ Look at that giant crater! Mercury is covered in craters.', 'mercurycrater');
+            } else { if (G.camOverride && G.camOverride.overlook) G.camOverride = null; return; }
+          }
+          show += dt;
+          if (show >= 6) { G.camOverride = null; show = -2; return; }
+          const a = Math.min(1, show / 1.1), b = Math.min(1, Math.max(0, (6 - show) / 1.1)), w = Math.min(a, b), e = w * w * (3 - 2 * w);
+          const px = PL.x, py = PL.y + 3.2, pz = 9.5, tp = [cx - 18, 9, 10], tl = [cx - 2, PL.y - 2, cz];
           G.camOverride = { overlook: 1, pos: [px + (tp[0] - px) * e, py + (tp[1] - py) * e, pz + (tp[2] - pz) * e],
             look: [px + (tl[0] - px) * e, (PL.y + 1) + (tl[1] - PL.y - 1) * e, (PL.z || 0) + (tl[2] - (PL.z || 0)) * e] };
         }); }

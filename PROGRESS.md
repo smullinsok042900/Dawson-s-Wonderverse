@@ -370,27 +370,30 @@ Art Plaza's activities were already good; the district around them was a flat ch
   away and the surface rendered as smooth dunes. Cost: ground mesh **1 mesh / 51,464 triangles** (25,864 before);
   no new collision entries or tap targets.
 - **Two wide, shallow showpiece basins** beside the walkway (r 13 at x+34 and r 9 at x+76, 2.6 m and 2 m deep, rims
-  only 0.5 m). A steep-sided, deep crater cannot be seen from the game's 2.5 m walking camera: its own near rim hides
-  the bowl, which is why the earlier deep/tall-rim versions read as banks.
-- **The crater overlook**: within 22 m of the first basin (and not on a ride) the camera eases up and back from the
-  walking position to an elevated oblique view of the bowl, and eases back when the player walks on; a one-time line
-  ("Look at that giant crater!") explains it. It uses a smoothed `G.camOverride` inside the Mercury place, so it works
-  during ordinary gameplay, not only in a scripted shot.
-- **Softened rim ring**: the dark floor and the bright fresh rim are now blended over gradients about half a crater
-  radius wide instead of narrow bands, which removes the stepped, sawtooth edge the earlier build showed.
-- **Rays**: long painted ejecta rays (4.6 r) only from the two showpieces, shorter (2.1 r) from the other ray craters,
-  with dark lanes between them; when every crater threw long rays the whole surface washed out to cream.
+  only 0.5 m). A deep, steep crater is invisible from the game's 2.5 m walking camera: its own near rim hides the bowl,
+  which is why earlier deep/tall-rim versions read as banks.
+- **One-time crater overlook**: the first time the player comes within 24 m of the first basin (and no other camera
+  override is active) the camera eases into a 6 s oblique shot of the bowl and back again, with a spoken line. It is
+  gated on `G.mercuryCraterSeen`, so later passes use the ordinary walking camera - the evidence set includes the same
+  spot revisited after the reveal to show that.
+- **Ejecta rays that read from the walking camera**: wider angular mask (about 3.2 lobes per turn instead of the old 4.2
+  with a tighter threshold), a 0.9 white blend, dark lanes between them, and a reach of 5 r from the two showpieces (2.1 r
+  from the other ray craters). The bright fresh rim ring was narrowed to 0.88-1.5 r so the plain around it stays dark
+  enough for the pale streaks to stand out.
+- **Soft rim ring**: floor and rim colours blend over wide gradients (about 0.2-0.3 r of ramp) rather than hard bands,
+  so the stepped edge the earlier build showed is gone.
 - **Regolith**: four dark warm-grey strata banded by height, dark smooth plains, thin dark wall layers, bright volatile
   hollows and 46 extra pebbles. Mercury's sun was eased from 3.9 to 2.9 so bright rims and rays are not clipped.
 - `tools/capture.cjs` gained `--cam '{"pos":[dx,y,z],"look":[dx,y,z]}'` (a pinned inspection camera relative to the
-  place start), kept for model and terrain inspection; the stage-22 evidence itself is captured with the normal
-  walking camera.
+  place start), kept for model and terrain inspection; the stage-22 evidence itself uses the normal walking camera.
 
-Evidence in `docs/screenshots/stage22/`: `mercury-crater.png`, `mercury-rays.png` and `mercury-plains.png`, all taken
-with the normal camera, so the overlook is what a player actually sees on the way past.
+Evidence in `docs/screenshots/stage22/`, all from the normal camera: `mercury-crater.png` (the one-time overlook on
+first approach), `mercury-rays.png` (walking past the second basin, with the dark bowl and pale rays), `mercury-rays-again.png`
+(the same spot after the reveal, back on the walking camera) and `mercury-plains.png`.
 
-Audit at x 8, 14, 22 and 34: **z-fighting 0**, solids 12 and platforms 108, none malformed, 0 page errors.
-No FPS claim.
+Audit at x 8, 14, 22 and 38: **z-fighting 0, 0, 0, 1**; the x-38 sample is the pre-existing pair of ground planes 2.9 cm
+apart at y 0.029 (the same class as the stage-12 x -200 sample). Solids 12 and platforms 108, none malformed, 0 page
+errors. No FPS claim.
 
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
@@ -577,8 +580,9 @@ which is why the named-group probe is the number quoted here.
 - Moon audit at x 12, 20, 44 and 78 (`node tools/audit.cjs --place moon 12 20 44 78`), stage 21 build: **z-fighting 0**,
   solids 12 and platforms 108/110 all well formed, 0 page errors.
 - Model probe (`ground`, Mercury): **1 mesh / 51,464 triangles** (224x88 terrain grid).
-- Mercury audit at x 8, 14, 22 and 34 (`node tools/audit.cjs --place mercury 8 14 22 34`), stage 22 build: z-fighting 0,
-  solids 12 and platforms 108 all well formed, 0 page errors.
+- Mercury audit at x 8, 14, 22 and 38 (`node tools/audit.cjs --place mercury 8 14 22 38`), stage 22 build: z-fighting
+  0/0/0/1 (the x-38 one is the pre-existing ground-plane seam pair at y 0.029), solids 12 and platforms 108 all well
+  formed, 0 page errors.
 - Ground geometry sample around the showpiece crater: 197 vertices with the bowl floor at -4.75 m and the outer rim at
   +1.9 m, `vertexColors: true`, 0 page errors; a scene raycast through the pinned overhead camera hits the bowl at
   y -3.6 m at the centre and y 0 on the surrounding plain.
@@ -669,8 +673,8 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
    `docs/screenshots/stage20/`.
 10. **The Moon — done (stage 21):** crater rims with bright ejecta rays, layered regolith colours and a detailed
     surface (37 new craters, 54 pebbles); 25,904-triangle ground mesh, evidence in `docs/screenshots/stage21/`.
-11. **Mercury — done (stage 22):** 224x88 terrain grid, two shallow showpiece basins with an overhead-looking camera
-    reveal on approach, soft bright rims and dark floors, ejecta rays with dark lanes, layered regolith, volatile
+11. **Mercury — done (stage 22):** 224x88 terrain grid, two shallow showpiece basins, a one-time camera overlook on
+    first approach, softened bright rims, dark floors, wider ejecta rays with dark lanes, layered regolith, volatile
     hollows, 37 new craters and 46 pebbles; 51,464-triangle ground mesh, evidence in `docs/screenshots/stage22/`.
     Venus is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
