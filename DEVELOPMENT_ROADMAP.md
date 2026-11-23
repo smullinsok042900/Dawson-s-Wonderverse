@@ -48,6 +48,10 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 
 ## Phase 2 — planets and moons
 
+| 18 | the Moon | done (stage 21) | crater rims + ejecta rays, layered regolith colours, 54 pebbles |
+| 19 | Mercury | **next** | crater rims + ejecta, layered regolith vertex colours |
+| 20 | Venus → Pluto | todo | cloud bands, ring geometry, horizon atmosphere, then the character material pass |
+
 Order: Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto (plus Earth orbit/sky stairs).
 Per planet: crater rims + ejecta, layered regolith vertex colours, ring geometry, cloud bands, horizon
 atmosphere, attraction structures. Reuse the loft / vertex-colour / merge helpers from stages 7–8.

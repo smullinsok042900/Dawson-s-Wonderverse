@@ -104,13 +104,29 @@ export function initSpace(G, api) {
     // ================= the ground and scenery of each place =================
     yield;
     if (id === 'moon') {
-      const cr = []; for (let k = 0; k < 30; k++) { const z = -9 - Math.pow(R(k + 50), 1.4) * 105, r = 1.6 + R(k + 60) * 2.4 + (-z) * .06; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .34, rim: .13, peak: r > 6 }); }
-      cr.push({ x: X + BIG_CRATER.dx, z: BIG_CRATER.z, r: BIG_CRATER.r, depth: BIG_CRATER.depth, rim: BIG_CRATER.rim }, /* (build 69: the giant coaster's crater) */ { x: X + 61, z: -15, r: 6.5, depth: .3, rim: .15, peak: true }, { x: X + 24, z: -11, r: 3.4, depth: .3, rim: .14 }, { x: X + 88, z: -10.5, r: 3, depth: .32, rim: .14 });
+      // (stage 21) a detailed regolith: young craters that throw bright ejecta rays out across the maria,
+      // raised rim crests, layered grey strata banded by height, and a scatter of small pits between the big ones
+      const cr = []; for (let k = 0; k < 30; k++) { const z = -9 - Math.pow(R(k + 50), 1.4) * 105, r = 1.6 + R(k + 60) * 2.4 + (-z) * .06; cr.push({ x: R(k + 70, X - 70, X + 180), z, r, depth: .34, rim: .13, peak: r > 6, ray: R(k + 80) > .58, rayK: .55 + R(k + 90) * .5 }); }
+      cr.push({ x: X + BIG_CRATER.dx, z: BIG_CRATER.z, r: BIG_CRATER.r, depth: BIG_CRATER.depth, rim: BIG_CRATER.rim }, /* (build 69: the giant coaster's crater) */ { x: X + 61, z: -15, r: 6.5, depth: .3, rim: .15, peak: true, ray: true, rayK: .9 }, { x: X + 24, z: -11, r: 3.4, depth: .3, rim: .14 }, { x: X + 88, z: -10.5, r: 3, depth: .32, rim: .14 });
+      // (stage 21) three young ray craters right beside the walkway, so the ejecta rays are seen on the way past
+      cr.push({ x: X + 26, z: -13, r: 5.2, depth: .3, rim: .18, peak: true, ray: true, rayK: 1.3 }, { x: X + 52, z: -18, r: 4.2, depth: .3, rim: .17, peak: true, ray: true, rayK: 1.15 }, { x: X + 96, z: -14, r: 3.6, depth: .32, rim: .16, ray: true, rayK: 1.1 });
+      for (let k = 0; k < 34; k++) { const z = -6.2 - Math.pow(R(k + 140), 1.25) * 70, r = .4 + R(k + 150) * 1.25; cr.push({ x: R(k + 160, X - 60, X + 190), z, r, depth: .3, rim: .12 }); }
       H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 1.3 + K.sstep(-60, -150, z) * (K.fbm2(x * .017 + 3, z * .017, 3) * 22 - 5); for (const c of cr) h += K.craterH(c, x, z); return h; },
-        color: (x, z, h, ny, o) => { let s = 0; for (const c of cr) { K.craterH(c, x, z); s += c.s; }
-          const mare = K.sstep(.5, .4, K.fbm2(x * .021 + 9, z * .021 + 2, 3)), n = K.fbm2(x * .9, z * .9, 3), pit = K.sstep(.74, .8, K.noise2(x * .8 + 5, z * .8)) * K.sstep(-5.5, -3, z);
-          K.ramp(['#8d8d99', '#c3c3cc', '#e6e6ec'], .35 + n * .5 + s * .3, o).lerp(K.col('#6d6e7c'), mare * .55); o.multiplyScalar((.8 + .25 * ny) * Math.max(.45, Math.min(1.35, 1 + s * .3)) * (1 - pit * .13)); } });
+        color: (x, z, h, ny, o) => { let s = 0, ray = 0, crest = 0, blanket = 0;
+          for (const c of cr) { K.craterH(c, x, z); s += c.s; const dx = x - c.x, dz = z - c.z, d = Math.sqrt(dx * dx + dz * dz) / c.r;
+            if (d < 2.4) blanket += (1 - d / 2.4) * .3;                                                       // bright ejecta blanket
+            if (d > .62 && d < 1.62) { const q = 1 - Math.abs(d - 1.02) / .6; if (q > 0) crest = Math.max(crest, q * q); } // the uplifted rim crest
+            if (c.ray && d > .85 && d < 5) { const a = Math.atan2(dz, dx); ray += K.sstep(.4, .66, K.noise2(a * 5.5 + c.x * .3, c.z * .11)) * Math.pow(1 - (d - .85) / 4.15, 1.3) * c.rayK; } } // radial ejecta rays
+          const mare = K.sstep(.5, .4, K.fbm2(x * .021 + 9, z * .021 + 2, 3)), n = K.fbm2(x * .9, z * .9, 3), fine = K.fbm2(x * 2.6, z * 2.6, 2), pit = K.sstep(.74, .8, K.noise2(x * .8 + 5, z * .8)) * K.sstep(-5.5, -3, z);
+          const band = Math.sin(h * 3.1 + K.noise2(x * .13, z * .13) * 2.4 + n * 1.2) * .5 + .5;              // regolith strata, stacked by height
+          K.ramp(['#3d3d47', '#5f5f6b', '#8e8e9b', '#6d6d7a'], .22 + n * .44 + fine * .16 + Math.max(0, h) * .025, o);
+          o.lerp(K.col('#232330'), mare * (.5 + band * .18));                                                  // dark basalt maria
+          o.lerp(K.col('#ffffff'), Math.min(.85, crest * .34 + blanket * .14 + ray * .85));                      // fresh crest and rays
+          o.lerp(K.col('#1d1d26'), K.sstep(.3, 0, band) * .14);                                               // thin dark layers in the walls
+          o.multiplyScalar((.8 + .25 * ny) * Math.max(.45, Math.min(1.3, 1 + s * .22)) * (1 - pit * .13)); } });
       yield* rocks(70, { colors: ['#8f8f9b', '#c9c9d2'], s1: .6 }); yield* frontRocks(['#70707c', '#a9a9b4']);
+      yield* rocks(54, { colors: ['#a8a8b4', '#e2e2ea', '#8a8a96'], s0: .1, s1: .3, z0: -3, z1: -22, seed: 1200, sink: .35 }); // (stage 21) fine pebbles between the boulders
+
       // the Moon lander: gold foil body on four legs, with a dish, a ladder and a little engine bell
       const lx = X + 33, lz = -8.2, ly = H(lx, lz); props.put(K.lathe([[0, 1.75], [1.05, 1.75], [1.25, 1.5], [1.25, .95], [1.0, .7], [0, .7]], 8), lx, ly, lz, '#e0a83a');
       props.put(K.lathe([[0, 2.95], [.5, 2.9], [.85, 2.55], [.9, 2.0], [.75, 1.75], [0, 1.75]], 10), lx, ly, lz, '#d9dce6'); props.put(K.lathe([[.2, .72], [.3, .5], [.5, .22], [.44, .22], [.2, .6]], 12), lx, ly, lz, '#5a5f6e');

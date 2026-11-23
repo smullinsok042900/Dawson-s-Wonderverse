@@ -16,6 +16,8 @@
 //
 // Environment:
 //   HTML=/abs/path/index.html   capture another build (e.g. the previous commit, built into /tmp/before)
+//   --place moon                fly to a space place first (moon, mars, …); shot x values are then offsets
+//                               from where that place starts, so the planet-approach views can be captured
 //   WARMUP=11000                ms to wait after the loading screen before the first shot
 //   WIDTH=1280 HEIGHT=720       viewport
 //   SETTLE=1200                 ms to wait after the camera stops before the screenshot
@@ -43,6 +45,7 @@ const WARMUP = +process.env.WARMUP || 11000;
 const SETTLE = process.env.SETTLE === undefined ? 1200 : +process.env.SETTLE;
 const WIDTH = +process.env.WIDTH || 1280, HEIGHT = +process.env.HEIGHT || 720;
 const PROBES = JSON.parse(flag('probes') || process.env.PROBES || '{}');
+const PLACE = flag('place') || process.env.PLACE || '';
 const LOG = process.env.LOG === '-' ? null : (process.env.LOG || path.join(OUT, 'capture.json'));
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -65,6 +68,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     () => document.getElementById('loading') && document.getElementById('loading').classList.contains('done'),
     null, { timeout: 180000 });
   await sleep(WARMUP);
+  if (PLACE) { // (stage 21) fly to a planet and wait until the rocket is gone and the place has been built
+    await page.evaluate(id => window.__DDW3.G.launchTo(id), PLACE);
+    await page.waitForFunction(id => { const P = window.__DDW3.player; return P.layer === 'space' && !P.ride && window.__DDW3.G.spaceHere() === id; }, PLACE, { timeout: 240000 });
+    await sleep(3000);
+  }
+  const goShot = x => page.evaluate(({ x, place }) => {
+    const D = window.__DDW3, P = D.player;
+    if (!place) return D.teleport(x);
+    const B = D.G.spaceBounds; P.x = Math.min(B[1] - 4, B[0] + x); P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.jumps = 0;
+  }, { x, place: PLACE });
 
   const runProbes = () => page.evaluate(probes => {
     const D = window.__DDW3;
@@ -89,7 +102,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   out.oops = await page.evaluate(() => !(document.getElementById('oops') || { hidden: true }).hidden);
 
   for (const [name, x] of SHOTS) {
-    await page.evaluate(x => window.__DDW3.teleport(x), x);
+    await goShot(x);
     await page.evaluate(() => { delete window.__ddwCam; });
     await sleep(2600);
     await page.waitForFunction(() => {

@@ -349,6 +349,20 @@ Art Plaza's activities were already good; the district around them was a flat ch
   too small to read from the path and an empty right half of the bench, so the glassware was enlarged and the tripod,
   bridge tube and test-tube rack added.
 
+### Stage 21 — the Moon: crater rims, ejecta rays and layered regolith
+
+- **Crater rims**: 37 more craters (34 small pits plus three young ray craters beside the walkway), each with a raised,
+  brightened crest; the giant coaster crater and the existing valley craters keep their shape and collision.
+- **Ejecta rays**: ten young craters throw pale radial rays out across the maria, fading with distance. They are painted
+  into the terrain colour with an angular-noise mask, so they add no geometry.
+- **Layered regolith**: four grey strata banded by height and noise, dark basalt maria blended over them, thin dark
+  layers in the crater walls and pale fresh material on the crests and rays.
+- **Detailed surface**: 54 extra pebbles between the boulders, finer two-scale mottling and small pits.
+- Cost: Moon ground mesh **1 mesh / 25,904 triangles** (21,584 before the 54 pebbles), no new collision entries or tap
+  targets. Two passes were rejected by looking at the captures: a pale palette washed the rays out under the Moon's
+  3.5-strength sunlight, and a ground-hugging ribbon mesh for the rays draped over crater walls as floating white
+  shards; the final version paints the rays into the regolith instead.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -530,6 +544,11 @@ which is why the named-group probe is the number quoted here.
 - Audit at x 62 and 80, stage 19 build: **z-fighting 0**, solids 12 and platforms 108 all well formed, 0 page errors.
 - Model probe (`lab-detail`): **6 meshes / 10,332 triangles**.
 - Audit at x 100 and 118, stage 20 build: **z-fighting 0**, solids 12 and platforms 104 all well formed, 0 page errors.
+- Model probe (`ground`, Moon): **1 mesh / 25,904 triangles**.
+- Moon audit at x 12, 20, 44 and 78 (`node tools/audit.cjs --place moon 12 20 44 78`), stage 21 build: **z-fighting 0**,
+  solids 12 and platforms 108/110 all well formed, 0 page errors.
+- The capture and audit harnesses now take `--place <id>` (stage 21), which flies to a space place and treats the shot
+  coordinates as offsets from where that place starts.
 - Audit at x −470 and −500, stage 14 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
   platforms 114 all well formed, 0 page errors. A third shot at x −424 confirmed the cupola sits on the barn roof peak.
 - Audit at x −320 and −370, stage 13 build: **z-fighting 0**, duplicates 6 (character face spheres), solids 12 and
@@ -612,7 +631,10 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
    workbench; 4 meshes / 1,222 triangles, evidence in `docs/screenshots/stage19/`.
 9. **Wonder Lab — done (stage 20):** glass-tube bench with burner tripod, bubbling flasks and test tubes, three-tier
    specimen shelves, microscope table with stool, glass cabinet; 6 meshes / 10,332 triangles, evidence in
-   `docs/screenshots/stage20/`. The planets are next.
+   `docs/screenshots/stage20/`.
+10. **The Moon — done (stage 21):** crater rims with bright ejecta rays, layered regolith colours and a detailed
+    surface (37 new craters, 54 pebbles); 25,904-triangle ground mesh, evidence in `docs/screenshots/stage21/`.
+    Mercury is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

@@ -426,4 +426,20 @@ platforms 108, 0 page errors. No FPS claim.
 Evidence: `docs/screenshots/stage20/` (x 100 and x 118). Audit at 100/118: z-fighting 0, solids 12, platforms 104, 0 page
 errors. No FPS claim.
 
-Next: the planets in order Moon → … → Pluto, then character/pet material polish.
+## Stage 21 — the Moon: crater rims, ejecta rays and layered regolith
+
+- **Crater rims**: 37 new craters (34 small pits, three young ray craters beside the walkway) with raised, brightened
+  crests, on top of the existing valley and coaster craters (whose shape is unchanged).
+- **Ejecta rays**: ten young craters cast pale radial rays across the maria, painted into the terrain colour with an
+  angular-noise mask, so they cost no extra geometry.
+- **Layered regolith**: four grey strata banded by height, dark basalt maria, thin dark layers in the walls and pale
+  fresh material on crests and rays; 54 extra pebbles and finer mottling for surface detail.
+- **Cost:** Moon ground mesh 1 mesh / 25,904 triangles (21,584 before the pebbles), no new collision entries.
+- **Iteration:** a pale palette washed the rays out under the 3.5-strength sun, and a ground-hugging ribbon mesh for the
+  rays draped over crater walls as floating white shards. Both were rejected from the captures; the final version paints
+  the rays into the regolith.
+
+Evidence: `docs/screenshots/stage21/` (approach at x 12, rays at x 20, station at x 44, valley at x 78, all captured with
+`--place moon`). Audit at 12/20/44/78: z-fighting 0, solids 12, platforms 108/110, 0 page errors. No FPS claim.
+
+Next: Mercury, then Venus → Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.
