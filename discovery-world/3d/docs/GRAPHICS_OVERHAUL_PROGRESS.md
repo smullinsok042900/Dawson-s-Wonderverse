@@ -465,4 +465,20 @@ Evidence: `docs/screenshots/stage22/` from the normal walking camera (including 
 reveal). Audit at 8/14/22/38: z-fighting 0/0/0/1 (the one is the pre-existing y 0.029 plane pair), 0 malformed solids
 or platforms, 0 page errors. No FPS claim.
 
-Next: Venus, then Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.
+## Stage 23 — Venus: layered cloud deck and volcanic plains
+
+- **Resolution**: a 240x90 grid (about 1.8 m columns) so the plains carry landforms; ground mesh 1 mesh / 49,660
+  triangles, whole place 35 meshes / 129,200 triangles at the approach.
+- **Landforms**: eight pancake domes, ten cinder cones, four tessera highlands, stacked flow aprons around the
+  volcanoes and lava channels cut 3.2 m into the ground.
+- **Surface detail that survives the vertex grid**: flow lobes with pale fronts, pale tessera blocks with dark
+  fractures, bright dome tops over dark skirts, glowing channel seams, sulphur streaks and eleven fumaroles along
+  the path - all at 4-20 m scales.
+- **Cloud deck**: three translucent billowed sheets at 9/16/26 m drifting at different speeds and wrapping, with the
+  far volcano breaking through them; one shared material for all three.
+- Rejected after inspection: opaque puffs (flying saucers) and high-frequency colour noise (averaged back to a plain).
+
+Evidence: `docs/screenshots/stage23/`. Audit at 12/40/70/120: z-fighting 0, 0 malformed solids or platforms, 0 page
+errors. No FPS claim.
+
+Next: Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.

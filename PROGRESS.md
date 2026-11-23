@@ -395,6 +395,32 @@ Audit at x 8, 14, 22 and 38: **z-fighting 0, 0, 0, 1**; the x-38 sample is the p
 apart at y 0.029 (the same class as the stage-12 x -200 sample). Solids 12 and platforms 108, none malformed, 0 page
 errors. No FPS claim.
 
+### Stage 23 — Venus: layered cloud deck and volcanic plains
+
+- **Terrain resolution raised for Venus**: `terrainSteps` runs at `nx 240, nz 90` for this place (about 1.8 m between
+  columns) instead of the shared grid, so the plains can carry landforms instead of averaging into smooth dunes.
+  Cost: ground mesh **1 mesh / 49,660 triangles**; whole place **35 meshes / 129,200 triangles** at the approach.
+- **Real Venus landforms on the shared unit shapes**: eight flat-topped pancake domes (5-9 m across, 3.4-5.4 m tall)
+  beside the walkway, ten cinder cones, four blocky **tessera highlands** (26-40 m across, 9-17 m tall) on the horizon,
+  stacked lava-flow aprons around the three volcanoes, and **branching lava channels** cut 3.2 m into the ground.
+- **Readable surface detail**: every colour feature is at least ~4 m across so the vertex grid can carry it - dark
+  basalt flow lobes with pale flow fronts, pale tessera blocks with dark fractures between them, bright sunlit dome
+  tops against dark skirts, shaded channels with glowing orange seams, sulphur streaks and thin dark strata. Eleven
+  sulphur fumaroles with glowing mouths stand along the path.
+- **Layered cloud deck**: three translucent sheets of cloud at 9 m, 16 m and 26 m (opacity 0.42, one shared material
+  created once), each a continuous run of overlapping billows rather than separate puffs, drifting at 0.55, 0.95 and
+  1.5 m/s and wrapping around the place, so the approach reads as stacked cloud layers with the far volcano pushing
+  through them.
+- Iterations rejected after inspecting captures: solid opaque puffs that read as flying saucers, and high-frequency
+  colour noise that the 1.8 m grid averaged back into a plain slope (replaced with 4-20 m features).
+
+Evidence in `docs/screenshots/stage23/`, from the planet approach and the walkway: `venus-approach.png` (the three
+cloud sheets over the plains), `venus-plains.png` (the near volcano with the glowing lava river and terraced
+highlands) and `venus-domes.png` (dome country and fumaroles beside the path).
+
+Audit at x 12, 40, 70 and 120: **z-fighting 0** at all four, solids 12 and platforms 108, none malformed, 0 page
+errors. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -676,7 +702,9 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
 11. **Mercury — done (stage 22):** 224x88 terrain grid, two shallow showpiece basins, a one-time camera overlook on
     first approach, softened bright rims, dark floors, wider ejecta rays with dark lanes, layered regolith, volatile
     hollows, 37 new craters and 46 pebbles; 51,464-triangle ground mesh, evidence in `docs/screenshots/stage22/`.
-    Venus is next.
+12. **Venus — done (stage 23):** 240x90 terrain grid, three drifting translucent cloud sheets, pancake domes, cinder
+    cones, tessera highlands, branching lava channels and glowing fumaroles, with the volcanic-plain palette; 49,660
+    triangle ground mesh, evidence in `docs/screenshots/stage23/`. Mars is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

@@ -21,7 +21,8 @@ import { runInSlices } from './stream-work.js';
 import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 import { BIG_CRATER } from './coaster-course.js';
 
-export const SPACE = { ox: 5000, gap: 400, w: 110 }; // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
+export const SPACE = { ox: 5000, gap: 400, w: 110 };
+let venusCloudMat = null; // (stage 23) one translucent cloud material for Venus, shared by every build of the place // (build 50: places are up to 330 m long now (planets.js): 400 m apart)
 // [id, picture colours for the menu, gravity m/s², gas giant?, what the voice says when you arrive]
 export const PLACES = [
   ['moon', ['#e8e8ec', '#9a9aa6'], 1.62, false, "The Moon! There's not much gravity here, so you can jump about six times higher. Look, there's Earth!"],
@@ -222,15 +223,65 @@ export function initSpace(G, api) {
     if (id === 'venus') {
       const river = z => MID + 22 + Math.sin(z * .16) * 9 + Math.sin(z * .05 + 1) * 14; // a lava river winding down from the far volcano
       const VOL = [[MID + 10, -150, 80, 36], [X - 20, -95, 34, 16], [X + 128, -80, 30, 15]];
-      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: -4.4, height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 4 + K.ridge2(x * .11, z * .11, 3) * 1.1; for (const [vx, vz, r, hh] of VOL) { const d = Math.hypot(x - vx, z - vz) / r; if (d < 1) h += hh * Math.pow(1 - d, 1.5) - hh * .5 * Math.exp(-d * d / .004); }
+      // (stage 23) the volcanic plains get real Venus landforms on the shared unit shapes: flat-topped pancake domes,
+      // small cinder cones, blocky tessera highlands and branching lava channels cut into the ground
+      const DOMES = [], CONES = [], TESS = [];
+      for (let k = 0; k < 8; k++) DOMES.push([X + 4 + k * 21 + R(k + 300) * 8, -12 - R(k + 310) * 16, 5 + R(k + 320) * 4, 3.4 + R(k + 330) * 2]);
+      for (let k = 0; k < 10; k++) CONES.push([X - 26 + k * 19 + R(k + 340) * 10, -22 - R(k + 350) * 40, 1.8 + R(k + 360) * 1.8, 1.8 + R(k + 370) * 2.2]);
+      for (let k = 0; k < 4; k++) TESS.push([X - 30 + k * 78 + R(k + 380) * 26, -78 - R(k + 390) * 55, 26 + R(k + 400) * 14, 9 + R(k + 410) * 8]);
+      const chan = (x, z) => K.sstep(.58, .9, K.ridge2(x * .022 + 4, z * .011, 3)) * K.sstep(-8, -20, z);   // branching lava channels
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: -4.4, nx: 240, nz: 90,
+        height: (x, z) => { let h = (K.fbm2(x * .05, z * .05, 4) - .5) * 4 + K.ridge2(x * .11, z * .11, 3) * 1.1;
+          h += (K.fbm2(x * .016 + 2, z * .016 + 5, 3) - .5) * 9 * K.sstep(-14, -34, z);                       // broad volcanic swells
+          for (const [vx, vz, r, hh] of VOL) { const d = Math.hypot(x - vx, z - vz) / r; if (d < 1) h += hh * Math.pow(1 - d, 1.5) - hh * .5 * Math.exp(-d * d / .004);
+            if (d > .3 && d < 1.9) h += hh * .07 * Math.pow(1 - (d - .3) / 1.6, 2) * (1 + .45 * Math.sin(d * 10 + x * .06)); } // stacked flow aprons
+          for (const [dx2, dz2, dr, dh] of DOMES) { const d = Math.hypot(x - dx2, z - dz2) / dr; if (d < 1) h += dh * K.sstep(1.02, .82, d) * (1 + .05 * Math.sin(Math.atan2(z - dz2, x - dx2) * 6)); } // pancake domes: flat tops, steep sides
+          for (const [cx2, cz2, cr, ch] of CONES) { const d = Math.hypot(x - cx2, z - cz2) / cr; if (d < 1) h += ch * Math.pow(1 - d, 1.7); }
+          for (const [tx2, tz2, tr, th] of TESS) { const d = Math.hypot(x - tx2, z - tz2) / tr; if (d < 1.4) h += th * K.sstep(1.2, .45, d) * (.55 + .55 * K.ridge2(x * .06, z * .06, 3)); } // tessera highlands
+          h -= chan(x, z) * 3.2;                                                                              // lava channels cut into the plains
           const rd = Math.abs(x - river(z)); h -= Math.exp(-rd * rd / 5) * 1.1 * K.sstep(-9, -16, z); return h; },
-        color: (x, z, h, ny, o) => { const n = K.fbm2(x * .7, z * .7, 3), crack = K.sstep(.86, .97, K.ridge2(x * .4, z * .4, 2)), rd = Math.abs(x - river(z)), hot = Math.exp(-rd * rd / 14) * K.sstep(-8, -15, z);
-          K.ramp(['#33231c', '#6b4830', '#a8763f', '#d9a64e'], .22 + n * .5 + (1 - ny) * .2, o); o.multiplyScalar((.72 + .32 * ny) * (1 - crack * .35)); o.lerp(K.col('#ff7a1c'), hot * .5 + crack * .12); } });
+        color: (x, z, h, ny, o) => { // every colour feature here is at least ~4 m across, so the 1.8 m vertex grid can carry it
+          const n = K.fbm2(x * .16, z * .16, 3), fine = K.fbm2(x * .42, z * .42, 2), crack = K.sstep(.78, .95, K.ridge2(x * .18, z * .18, 2)), near = K.sstep(-16, -6, z) * K.sstep(.72, .9, K.ridge2(x * .3 + 2, z * .22, 2)), rd = Math.abs(x - river(z)), hot = Math.exp(-rd * rd / 14) * K.sstep(-8, -15, z), ch = chan(x, z);
+          const lv = K.fbm2(x * .028 + 3, z * .028 + 9, 3), lobe = K.sstep(.52, .6, lv), lobeEdge = K.sstep(.5, .555, lv) * K.sstep(.62, .565, lv);  // big lava-flow lobes with bright flow fronts
+          let tw = 0, dw = 0; for (const [tx2, tz2, tr] of TESS) tw = Math.max(tw, K.sstep(1, .6, Math.hypot(x - tx2, z - tz2) / tr));   // tessera blocks
+          for (const [dx2, dz2, dr] of DOMES) dw = Math.max(dw, K.sstep(1.25, .95, Math.hypot(x - dx2, z - dz2) / dr));                    // the domes' steep skirts
+          const band = Math.sin(h * 2.4 + K.noise2(x * .06, z * .06) * 2) * .5 + .5;
+          K.ramp(['#33231c', '#6b4830', '#a8763f', '#d9a64e'], .22 + n * .46 + fine * .12 + (1 - ny) * .18, o);
+          o.lerp(K.col('#241a14'), lobe * .5);                                                                 // dark basalt between the flows
+          o.lerp(K.col('#8c5f36'), lobeEdge * .45);                                                            // pale flow fronts
+          o.lerp(K.col('#efdcb4'), tw * (.44 + crack * .16));                                                   // pale tessera blocks
+          o.lerp(K.col('#3a281e'), tw * crack * .65);                                                          // the fractures between them
+          o.lerp(K.col('#c9924e'), dw * K.sstep(.9, .45, ny) * .45);                                            // the steep dome skirts
+          o.lerp(K.col('#e8cf9c'), dw * K.sstep(.8, .96, ny) * .4);                                             // their flat, pale tops
+          o.lerp(K.col('#1c110c'), Math.min(.8, ch * .85));                                                     // shaded lava channels
+          o.lerp(K.col('#ff7a1c'), Math.min(.9, hot * .55 + ch * K.sstep(.78, .92, K.ridge2(x * .022 + 4, z * .011, 3)) * .5 + crack * .08 + dw * .12));
+          o.lerp(K.col('#f2d98c'), K.sstep(.62, .8, K.noise2(x * .03, z * .2)) * .3);                           // sulphur streaks
+          o.lerp(K.col('#1a100b'), near * .4); o.lerp(K.col('#ff8a2a'), near * .22);                             // the walkway's own cracked, glowing crust
+          o.lerp(K.col('#1a120e'), K.sstep(.3, 0, band) * .12);                                                // thin dark layers
+          o.multiplyScalar((.72 + .32 * ny) * (1 - crack * .3) * (1 - ch * .12)); } });
       yield* rocks(60, { colors: ['#2a1c18', '#6b4830'], sharp: 1, s1: .8 }); yield* frontRocks(['#2a1c18', '#5a3c28'], 7, 1);
       // glowing lava: the river, and the pools on top of the two near volcanoes (one mesh, softly pulsing)
       const lavaM = toy('#ff7a1a', { em: '#ff4a00', ei: 1.5, r: .6 });
       { const pos = [], idx = []; let n = 0; for (let z = -15; z >= -118; z -= 2.5) { const x = river(z), w = .9 + (-z) * .02, y = H(x, z) + .28; pos.push(x - w, y, z, x + w, y, z); if (n) { const a = n * 2 - 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } n++; }
         const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); lg.setIndex(idx); lg.computeVertexNormals(); const lava = mesh(lg, lavaM); lava.userData.lava = 1; U.push((dt, t) => { lavaM.emissiveIntensity = 1.35 + Math.sin(t * 1.6) * .3; }); }
+      // (stage 23) THE CLOUD DECK: three translucent sheets of cloud stacked at different heights and drifting at
+      // different speeds, each a continuous run of billows rather than separate puffs, so they read as a deck
+      venusCloudMat ||= new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: .42, roughness: 1, metalness: 0, depthWrite: false });
+      for (const [zz, yy, sc, n, tint, sp] of [[-40, 9, 1.2, 17, '#fff2cc', .55], [-100, 16, 2.2, 15, '#ffe0a8', .95], [-170, 26, 3.4, 13, '#ffcb80', 1.5]]) {
+        const band = () => model(b => { for (let k = 0; k < n; k++) { const x = X - 70 + k * (PW + 140) / (n - 1), z2 = zz + (R(k + 3 + zz) - .5) * 10 * sc, c0 = K.col('#fbebc6').lerp(K.col(tint), R(k + 7 + zz) * .6);
+          for (let q = 0; q < 4; q++) { const r = sc * (.8 + R(k * 4 + q + zz) * .7), hgt = r * (.5 + R(k * 7 + q) * .55);
+            b.put(K.geo.sph(1), x + (q - 1.5) * r * 1.1, R(k + q + zz) * r * .45, z2 + R(k + q + 2 + zz) * 3 * sc, (px, py, pz, nx, ny, nz, o2) => { o2.copy(c0).multiplyScalar(.76 + .32 * Math.max(0, ny)); }, [r * 1.7, hgt, r * 1.25]); } } }, venusCloudMat, false);
+        const m = add(band()); m.position.set(0, yy, zz); m.userData.dynamic = true; m.renderOrder = 2;
+        const m2 = add(band()); m2.position.set(-(PW + 140), yy, zz); m2.userData.dynamic = true; m2.renderOrder = 2;
+        U.push(dt => { for (const q of [m, m2]) { q.position.x += dt * sp; if (q.position.x > PW + 140) q.position.x -= (PW + 140) * 2; } });
+      }
+      // (stage 23) fumaroles beside the walkway: low sulphur cones with a glowing mouth, so the ground by the path has
+      // its own volcanic detail instead of a bare slope
+      for (let k = 0; k < 11; k++) { const vx = X + 6 + k * 29 + R(k + 500) * 12, vz = -6.5 - R(k + 510) * 7, vy = H(vx, vz), sc = .5 + R(k + 520) * .55;
+        props.put(K.lathe([[0, .1], [.5, .08], [.72, 0]], 12), vx, vy + .02, vz, '#c8a86a', [sc, sc * 1.1, sc]);
+        props.put(K.geo.cyl(10), vx, vy + .13 * sc, vz, '#ff8a2a', [sc * .26, .04, sc * .26]);
+        const gl = K.glow('#ff9a3c', 1.6 * sc, .5); gl.position.set(vx, vy + .16, vz); add(gl);
+        U.push((dt, t) => { gl.scale.setScalar(1.6 * sc * (1 + Math.sin(t * 2.1 + k) * .12)); if (Math.random() < dt * .5) api.burst(vx, vy + .3, vz, ['#e8d2a0', '#ffb060'], 1, .5); }); }
       for (const [x, k] of [[X + 40, 0], [X + 66, 1]]) { const vz = -9.5, vg = new THREE.Group(); vg.position.set(x, H(x, vz) - .3, vz); add(vg);
         vg.add(model(b => { const cone = K.lathe([[0, 5.3], [.55, 5.25], [.95, 5.75], [1.25, 5.6], [1.8, 4.5], [2.6, 3.0], [3.7, 1.5], [5.2, .45], [6.6, 0]], 28), p = cone.attributes.position; for (let q = 0; q < p.count; q++) { const px = p.getX(q), py = p.getY(q), pz = p.getZ(q), n = 1 + (K.fbm3(px * .6 + k * 9, py * .6, pz * .6, 3) - .5) * .32 * K.sstep(5.7, 3, py); p.setXYZ(q, px * n, py, pz * n); } cone.computeVertexNormals();
           b.add(cone, null, (px, py, pz, nx, ny, nz, o) => { const a = Math.atan2(pz, px), flow = K.sstep(.8, .93, K.noise2(a * 2.2 + k * 5, 1)) * K.sstep(.6, 5.6, py); K.ramp(['#3a251c', '#5c3b28', '#7d5132'], K.fbm3(px * .8, py * .8, pz * .8, 3) + py * .04, o).multiplyScalar(.75 + .3 * ny); o.lerp(K.col('#ff6a1c'), flow * .85 + K.sstep(5, 5.7, py) * .5); }); }, K.paintMat(), false));
