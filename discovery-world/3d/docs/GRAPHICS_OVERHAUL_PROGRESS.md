@@ -353,13 +353,14 @@ No FPS claim.
 
 - **Deck**: seam line every 0.42 m, edge trim with braces, so the deck reads as planks. Collision unchanged.
 - **Eight pilings** with caps and two rope wraps each, plus three brass mooring cleats.
-- **Bait shack** at x −545.5: timber body, counter and shelf proud of the front, striped awning on posts, buckets and a
-  bait crate. Clear of the fishing rod, tide pool and crates.
+- **Bait shack** at x −545.5, set back to z −5.7 after a follow-up fix (its counter/awning reached into the walking
+  lane at z −4.5): timber body, counter and shelf proud of the front, striped awning on posts, buckets and a bait crate.
 - **Four lamp posts**, three down the outer deck edge.
 - **Cost:** 4 meshes / 3,996 triangles / +4 draw calls, one streamed group (`pier-detail`), no collision entries.
 
 Evidence: `docs/screenshots/stage15/` — before (stage-14 build) and after at x −600 and −650 as requested, plus
-x −552 (deck) and x −541 (shack). The first render buried the counter and awning inside the shack body; corrected
+x −556 (deck planking, pilings, cleats, lamps) and x −541 (set-back shack), since the x −600/−650 views face along the
+beach rather than the pier. The first render buried the counter and awning inside the shack body; corrected
 before commit. Audit at −600/−650: z-fighting 0, solids 12, platforms 114, 0 page errors. No FPS claim.
 
 Next: Balloon Hills, Adventure Trail, Playhouse,

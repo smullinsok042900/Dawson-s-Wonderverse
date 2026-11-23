@@ -275,12 +275,15 @@ Art Plaza's activities were already good; the district around them was a flat ch
   so the deck reads as planks instead of one block. Nothing added below the walking surface, so collision is unchanged.
 - **Eight pilings** along the deck edges with caps and two rope wraps each, plus **three brass mooring cleats** on the
   outer edge.
-- **Bait shack** on the shore at x −545.5: timber body with corner posts, a counter and shelf proud of the front face,
-  a red-and-cream striped awning on two posts, two buckets and a bait crate beside it. Placed clear of the fishing
-  rod (x −552), tide pool (x −566) and crates (x −594).
+- **Bait shack** at x −545.5, **set back to z −5.7** (a follow-up fix: at z −4.5 its counter, awning and posts reached
+  into the walking lane). Timber body with corner posts, a counter and shelf proud of the front face, a red-and-cream
+  striped awning on two posts, two buckets and a bait crate. Clear of the fishing rod (x −552), tide pool (x −566)
+  and crates (x −594).
 - **Four lamp posts**: one on the shore, three down the outer deck edge, each with a warm glass box and a dark cap.
 - Cost: **4 meshes / 3,996 triangles**, no collision entries, no new tap targets. First render was corrected before
-  commit: the counter and awning had been placed inside the shack body and were invisible.
+  commit: the counter and awning had been placed inside the shack body and were invisible. Re-captured afterwards
+  from x −556 (deck planking, pilings, cleats, lamps) and x −541 (set-back shack), because the requested x −600/−650
+  views look down the beach rather than at the pier itself.
 
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 

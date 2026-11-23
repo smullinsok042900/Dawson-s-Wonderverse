@@ -1247,7 +1247,7 @@ export function buildPierDetail({ add }) {
   }
 
   // ---- bait shack on the shore, clear of the fishing rod and tide pool
-  const SX = -545.5, SZ = -4.5;
+  const SX = -545.5, SZ = -5.7;   // (stage 15 fix) set back off the walking lane: the counter and awning used to reach into it
   box(woodParts, '#b98a5c', 2.3, 1.9, 1.7, SX, .95, SZ);
   box(woodParts, '#a3754a', 2.42, .12, 1.82, SX, 1.96, SZ);
   for (const s of [-1, 1]) box(woodParts, '#8f6440', .12, 1.9, 1.72, SX + s * 1.14, .95, SZ);
