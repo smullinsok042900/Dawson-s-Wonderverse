@@ -17,7 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
-import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail } from './scenery-detail.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail, buildHillsDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -819,6 +819,8 @@ export function initExpansion(G, api) {
   // grassy hill to climb and slide down.
   builders.hills = c => [
     ...familyParts(c, 'hills'),
+    // (stage 16) moored balloons, bunting, wildflower drifts and terrace shelves
+    () => { G.hillsDetail = buildHillsDetail({ add: c.add }); },
     () => lifeHere(c, [['drawinglonglegs', -789, -3.5]]),
     // rolling green hills behind (a few big shared-material bumps) and a soft lawn colour
     () => { for (const [x, z, r, sy, col] of [[-690, -22, 16, .45, '#8fd88a'], [-722, -26, 20, .55, '#7fcf7a'], [-756, -21, 15, .5, '#9be096'], [-788, -25, 18, .5, '#86d482']]) { const h = c.sph(x, -3, z, r, col, { m: { r: .95, cc: 0 } }); h.scale.y = sy; h.castShadow = false; } },

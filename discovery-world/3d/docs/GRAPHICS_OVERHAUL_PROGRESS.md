@@ -363,5 +363,18 @@ x −556 (deck planking, pilings, cleats, lamps) and x −541 (set-back shack), 
 beach rather than the pier. The first render buried the counter and awning inside the shack body; corrected
 before commit. Audit at −600/−650: z-fighting 0, solids 12, platforms 114, 0 page errors. No FPS claim.
 
-Next: Balloon Hills, Adventure Trail, Playhouse,
+## Stage 16 — Balloon Hills balloons, bunting and flowers
+
+- **Three moored balloons** (x −747, −769, −792): banded envelopes, wicker baskets, four ropes and a ground stake each.
+- **Two bunting lines** on sagging rope between timber poles, 11 flags each, clear of the goats and echo rock.
+- **Wildflower drifts** in three rows along the path: merged stems with an instanced bloom each, six colours, skipping the
+  flyable balloon, kites, slide hill, goats, echo rock and long-legs drawing.
+- **Two terrace shelves** behind the hills, laid over the existing green bumps.
+- **Cost:** 6 meshes / 10,616 triangles / +6 draw calls, one streamed group (`hills-detail`), no collision entries.
+
+Evidence: `docs/screenshots/stage16/` — before (stage-15 build) and after at x −720 and −760. The first render had
+black flower heads (instanced colours on geometry without a colour attribute); fixed before commit. Audit at −720/−760:
+z-fighting 0, solids 12, platforms 115, 0 page errors. No FPS claim.
+
+Next: Adventure Trail, Playhouse,
 then the planets in order Moon → … → Pluto, then character/pet material polish.

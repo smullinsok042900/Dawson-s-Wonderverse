@@ -1281,6 +1281,82 @@ export function buildPierDetail({ add }) {
 }
 
 // ===================================================================
+// (stage 16) Balloon Hills: three tethered balloons with baskets and stakes,
+// two bunting lines between poles, wildflower drifts along the path, and two
+// pale terrace shelves behind the hills. Clear of the flyable balloon (x −684),
+// kites (x −696), the grassy slide hill (x −705…−723), goats (x −736…−743),
+// echo rock (x −752), wind chimes and the long-legs drawing (x −789).
+// ===================================================================
+export function buildHillsDetail({ add }) {
+  const group = new THREE.Group(); group.name = 'hills-detail'; add(group);
+  const woodParts = [], clothParts = [], ropeParts = [], stemParts = [], terraceParts = [], flowerSpots = [];
+  const cyl = (list, hex, ra, rb, h, x, y, z, seg = 10) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const beam = (list, hex, a, b, r) => {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+    const g = new THREE.CylinderGeometry(r, r, A.distanceTo(B), 6);
+    g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()));
+    g.translate((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2);
+    list.push(tinted(g, hex)); g.dispose();
+  };
+  const blob = (list, hex, r, x, y, z, sx = 1, sy = 1) => { const g = new THREE.IcosahedronGeometry(r, 2); g.scale(sx, sy, 1); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const RB = ['#ff5a8a', '#ffd23f', '#2fa8ff', '#8fd88a', '#a98bff', '#ff8a3c'];
+
+  // ---- terrace shelves behind the hills: two pale, flat-topped steps
+  [[-730, 8.5, .34, '#a8e3a0'], [-762, 9.5, .3, '#b6e8ad']].forEach(([x, r, sy, col]) => {
+    blob(terraceParts, col, r, x, r * sy * .35, -14.5, 1.5, sy);
+    blob(terraceParts, '#bdeeb4', r * .62, x + 1.2, r * sy * .55, -14.2, 1.4, sy * .8);
+  });
+
+  // ---- three moored balloons, each with a basket, three ropes and a stake
+  const MOORED = [[-747, -9.2, '#ff5a8a', '#ffd23f'], [-769, -9.8, '#2fa8ff', '#8fd88a'], [-792, -8.6, '#ffd23f', '#ff8a3c']];
+  MOORED.forEach(([x, z, cA, cB]) => {
+    const env = new THREE.SphereGeometry(1.15, 20, 14); env.scale(1, 1.16, 1); env.translate(x, 4.4, z);
+    const pos = env.attributes.position, cols = new Float32Array(pos.count * 3), A = new THREE.Color(cA), B = new THREE.Color(cB);
+    for (let i = 0; i < pos.count; i++) { const yy = (pos.getY(i) - 4.4) / 1.35, c = ((Math.round((yy + 1) * 3)) % 2) ? A : B; cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b; }
+    env.setAttribute('color', new THREE.BufferAttribute(cols, 3)); clothParts.push(env);
+    const basket = new THREE.CylinderGeometry(.38, .32, .46, 8); basket.translate(x, 1.5, z); woodParts.push(tinted(basket, '#b5793c')); basket.dispose();
+    cyl(woodParts, '#8a5a2a', .4, .4, .05, x, 1.72, z, 8);
+    for (let k = 0; k < 3; k++) { const a = k / 3 * 6.283 + .4; beam(ropeParts, '#e8dcc4', [x + Math.cos(a) * .34, 1.7, z + Math.sin(a) * .34], [x + Math.cos(a) * .2, 3.55, z + Math.sin(a) * .2], .012); }
+    beam(ropeParts, '#e8dcc4', [x, 1.46, z], [x + 1.5, .05, z + 1.1], .016);
+    cyl(woodParts, '#7a5236', .045, .06, .55, x + 1.5, .27, z + 1.1, 6);
+  });
+
+  // ---- bunting lines between pairs of poles, clear of the goats and the echo rock
+  [[-726.5, -4.9, -732.2, -4.9], [-757.5, -5.2, -763.8, -5.2]].forEach(([x0, z0, x1, z1]) => {
+    for (const [x, z] of [[x0, z0], [x1, z1]]) { cyl(woodParts, '#e6d6bd', .07, .09, 2.5, x, 1.25, z, 8); cyl(woodParts, '#cfb896', .13, .15, .1, x, 2.48, z, 8); }
+    const N = 12;
+    for (let i = 1; i < N; i++) {
+      const t = i / N, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, y = 2.42 - Math.sin(t * Math.PI) * .34;
+      const f = new THREE.ConeGeometry(.12, .26, 4); f.rotateX(Math.PI); f.rotateY(.5); f.translate(x, y - .13, z);
+      clothParts.push(tinted(f, RB[i % RB.length])); f.dispose();
+    }
+    beam(ropeParts, '#efe6d4', [x0, 2.44, z0], [x1, 2.44, z1], .012);
+  });
+
+  // ---- wildflower drifts along the path, stepping around the interactive pieces
+  for (let x = -797; x <= -671; x += .9) for (const z of [-4.4, -5.1, -5.8]) {
+    if (Math.abs(x + 684) < 3.4 || Math.abs(x + 696) < 3 || (x > -723 && x < -704) || (x > -744 && x < -735) || Math.abs(x + 752) < 3.2 || Math.abs(x + 789) < 2.2) continue;
+    if (((x * 17 + z * 11) | 0) % 3 === 0) continue;
+    flowerSpots.push({ x: x + ((Math.abs(x * 7) | 0) % 5) * .1, z, h: .18 + ((Math.abs(x) | 0) % 4) * .04, col: RB[(Math.abs(x) | 0) % RB.length] });
+  }
+  flowerSpots.forEach(f => beam(stemParts, '#5f9a52', [f.x, 0, f.z], [f.x + .03, f.h, f.z], .012));
+
+  const wood = new THREE.Mesh(mergeMixed(woodParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88 })); wood.castShadow = wood.receiveShadow = true; group.add(wood);
+  const cloth = new THREE.Mesh(mergeMixed(clothParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .82, side: THREE.DoubleSide })); cloth.castShadow = true; group.add(cloth);
+  const ropes = new THREE.Mesh(mergeMixed(ropeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .98 })); group.add(ropes);
+  const stems = new THREE.Mesh(mergeMixed(stemParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .9 })); group.add(stems);
+  const terraces = new THREE.Mesh(mergeMixed(terraceParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95 })); terraces.receiveShadow = true; group.add(terraces);
+  const bloom = new THREE.IcosahedronGeometry(.075, 0);
+  // (no vertexColors here: the bloom geometry has no colour attribute, so instance colours must stand alone)
+  const flowers = new THREE.InstancedMesh(bloom, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .6 }), flowerSpots.length);
+  const mtx = new THREE.Matrix4(), q = new THREE.Quaternion(), v = new THREE.Vector3(), s = new THREE.Vector3(1, .7, 1);
+  flowerSpots.forEach((f, i) => { v.set(f.x + .03, f.h + .02, f.z); mtx.compose(v, q, s); flowers.setMatrixAt(i, mtx); flowers.setColorAt(i, C.set(f.col)); });
+  group.add(flowers);
+
+  return { group, added: { mooredBalloons: MOORED.length, buntingLines: 2, flowers: flowerSpots.length, terraces: 2 } };
+}
+
+// ===================================================================
 // (stage 7) The Adventure Park backdrop: the old skyline was 29 smooth
 // pastel spheres squashed flat — soft blobs with a painted-on colour and
 // no surface at all. These are now sculpted landforms: every hill is a

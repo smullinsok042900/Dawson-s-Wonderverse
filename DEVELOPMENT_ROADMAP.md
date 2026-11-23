@@ -34,7 +34,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 10 | Frosty Peaks | done (stage 13) | snow-capped ridgeline, seven snow-loaded pines, ice arch, wind drifts |
 | 11 | Happy Farm | done (stage 14) | fenced paddock, cabbage/carrot rows, round bales, barn cupola + weathervane |
 | 12 | Ocean Pier | done (stage 15) | deck planking + trim, rope-wrapped pilings, cleats, bait shack, lamp posts |
-| 13 | Balloon Hills | **next** | hill terraces, moored balloons, bunting, wildflower drifts |
+| 13 | Balloon Hills | done (stage 16) | three moored balloons, two bunting lines, wildflower drifts, terrace shelves |
+| 14 | Adventure Trail | **next** | rope-bridge planks, cliff strata, waterfall mist, lookout deck |
 | 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
 | 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
 | 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |
