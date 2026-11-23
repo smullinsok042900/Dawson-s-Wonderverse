@@ -389,5 +389,17 @@ z-fighting 0, solids 12, platforms 115, 0 page errors. No FPS claim.
 Evidence: `docs/screenshots/stage17/` — before (stage-16 build) and after at x 470 and 520. Audit at 470/520: z-fighting 0,
 solids 12, platforms 119, 0 page errors. No FPS claim.
 
-Next: Playhouse,
+## Stage 18 — Playhouse stage and reading nook
+
+- **Stage** at x −13.6: platform, rail, valance, two pleated curtain panels with an open gap and backdrop, six footlights.
+  Rebuilt after the first pass closed the gap and hid the toy shelf.
+- **Prop chest**, **reading nook** (base, cushion, three pillows, book box) and two lower lanterns.
+- **Cost:** `playhouse-detail` 17 meshes / 3,588 triangles, no collision entries.
+- Bridge handrails were separately verified at x 450 and needed no change.
+
+Evidence: `docs/screenshots/stage18/` (stage at x −13, nook at x 32, plus the earlier wide shots) and
+`docs/screenshots/stage17/after-trail-bridge-rails.png`. Audit at −13/32: z-fighting 0, solids 12, platforms 108, 0 page
+errors. No FPS claim.
+
+Next: Studio, Wonder Lab,
 then the planets in order Moon → … → Pluto, then character/pet material polish.

@@ -98,6 +98,8 @@ function rugTexture() {
 export function buildPlayhouseDetail({ scene, add, rnd }) {
   const group = new THREE.Group(); group.name = 'playhouse-detail'; add(group);
   const r = rnd || Math.random;
+  const box2 = (list, hex, w, h, d, x, y, z, rz = 0) => { const g = new THREE.BoxGeometry(w, h, d); if (rz) g.rotateZ(rz); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
+  const cyl2 = (list, hex, ra, rb, h, x, y, z, seg = 8) => { const g = new THREE.CylinderGeometry(ra, rb, h, seg); g.translate(x, y, z); list.push(tinted(g, hex)); g.dispose(); };
 
   // --- the rug, flat on the floor in front of the ball pit (no collision, no shadow cast)
   const rug = new THREE.Mesh(new THREE.CircleGeometry(3.3, 56), new THREE.MeshStandardMaterial({ map: rugTexture(), roughness: .96, metalness: 0 }));
@@ -144,7 +146,47 @@ export function buildPlayhouseDetail({ scene, add, rnd }) {
   const soft = new THREE.Mesh(mergeParts(softParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }));
   soft.castShadow = true; soft.receiveShadow = true; group.add(soft);
 
-  return { group, added: { flags: 72, lanterns: glyphs.length, cords: cords.length, mats: 3, books: 14 } };
+  // --- (stage 18) a little stage in the back corner: rail, pleated curtains, valance and footlights
+  const stageParts = [], lightParts = [], glowParts = [];
+  const SX = -13.6, SZ = -3.55;
+  for (let i = 0; i < 5; i++) box2(stageParts, '#8a2a4a', .34, 2.2, .18, SX - 3.0 + i * .38, 1.1, SZ + .06);   // left curtain
+  for (let i = 0; i < 5; i++) box2(stageParts, '#8a2a4a', .34, 2.2, .18, SX + 1.5 + i * .38, 1.1, SZ + .06);   // right curtain
+  box2(stageParts, '#bfe6ff', 3.0, 2.1, .1, SX - .4, 1.05, SZ - .18);                                          // backdrop in the gap
+  box2(stageParts, '#b0395f', 6.6, .34, .3, SX + 1.5, 2.3, SZ + .06);                                          // valance
+  box2(stageParts, '#d8c39a', 6.9, .1, .12, SX + 1.5, 2.52, SZ + .02);                                         // rail
+  box2(stageParts, '#7a5a3c', 6.6, .14, 2.2, SX + 1.5, .07, SZ - .55);                                         // low platform
+  for (let i = 0; i < 6; i++) {
+    const x = SX - 1.1 + i * .62;
+    cyl2(lightParts, '#5b4a3d', .07, .09, .18, x, .16, SZ + 1.15, 7);
+    const b = new THREE.SphereGeometry(.1, 10, 8); b.translate(x, .3, SZ + 1.15); glowParts.push(tinted(b, '#ffd98a')); b.dispose();
+  }
+
+  // --- (stage 18) prop chest and a cushioned reading nook with a low book box
+  const nookParts = [];
+  box2(nookParts, '#8a5a2a', 1.5, .8, .9, 29.5, .4, -2.6);
+  box2(nookParts, '#c9a24a', 1.56, .1, .96, 29.5, .84, -2.6);
+  box2(nookParts, '#ffd23f', .18, .22, .1, 29.5, .52, -2.14);
+  box2(nookParts, '#7fd8a0', 2.6, .28, 1.7, 33.5, .2, -2.5);                    // nook base
+  box2(nookParts, '#9fe6ff', 2.3, .22, 1.4, 33.5, .44, -2.5);                    // cushion
+  for (const [px, pz, col] of [[32.6, -2.1, '#ffb3dc'], [34.3, -2.2, '#ffe28a'], [33.5, -3.1, '#c9a6ff']]) box2(nookParts, col, .7, .34, .5, px, .62, pz, .2);
+  box2(nookParts, '#c98a52', 1.4, .7, .5, 36.0, .35, -2.4);
+  for (let i = 0; i < 4; i++) box2(nookParts, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a'][i], .2, .26, .28, 35.55 + i * .26, .84, -2.4);
+
+  // --- (stage 18) two lower lanterns over the new corners
+  [[SX - .4, 3.1, SZ + .3], [33.5, 3.1, -2.2]].forEach(([lx, ly, lz], i) => {
+    const g2 = new THREE.SphereGeometry(.34, 16, 10); g2.scale(1, .82, 1);
+    const m2 = new THREE.Mesh(g2, new THREE.MeshStandardMaterial({ color: i ? '#fff4d6' : '#ffd9ec', emissive: i ? '#ffb02e' : '#ff5fa8', emissiveIntensity: .5, roughness: .6 }));
+    m2.position.set(lx, ly, lz); group.add(m2);
+    const c2 = new THREE.Mesh(new THREE.CylinderGeometry(.01, .01, 3.3, 5), new THREE.MeshStandardMaterial({ color: '#8a6b55', roughness: .9 }));
+    c2.position.set(lx, ly + 1.72, lz); group.add(c2);
+  });
+
+  const stageMesh = new THREE.Mesh(mergeParts(stageParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .82, side: THREE.DoubleSide })); stageMesh.castShadow = true; group.add(stageMesh);
+  const lights = new THREE.Mesh(mergeParts(lightParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .5 })); group.add(lights);
+  const glow = new THREE.Mesh(mergeParts(glowParts), new THREE.MeshStandardMaterial({ vertexColors: true, emissive: '#ffc85a', emissiveIntensity: .9, roughness: .35 })); group.add(glow);
+  const nook = new THREE.Mesh(mergeParts(nookParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88 })); nook.castShadow = nook.receiveShadow = true; group.add(nook);
+
+  return { group, added: { flags: 72, lanterns: glyphs.length + 2, cords: cords.length, mats: 3, books: 18, curtains: 18, footlights: 6, nook: 1, chest: 1 } };
 }
 
 export function buildParkDetail({ scene, add, terrainH, rnd }) {
