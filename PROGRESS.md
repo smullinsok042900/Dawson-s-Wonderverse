@@ -318,13 +318,15 @@ ln -s "$PWD/discovery-world/3d/node_modules" /tmp/before/discovery-world/3d/node
 HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/capture.cjs docs/screenshots/stage9 '[["before-castle",404]]'
 ```
 
-## In progress / next (stage 10 onward)
+## In progress / next (stage 11 onward)
 
-1. **Art Plaza** (next): give the painted plaza real geometry — a tiled mosaic floor with grout depth, easels
-   with stretched canvases, a real mosaic wall, brush/paint-pot clutter and gallery frames — rather than more
-   flat colour planes. Verify with the committed harness pair and the audit.
-2. Then **Sunny Seaside** (shoreline terrain, rocks, pier planks), **Whispering Woods**,
-   **Frosty Peaks**, **Happy Farm**, **Ocean Pier**, **Balloon Hills**.
+0. **Art Plaza — done (stage 10):** paint-splattered paving, four kerbed planters, two easels, a drying rack,
+   paint pots and brushes, and bunting on poles; 10 meshes / 4,262 triangles, audit clean, evidence in
+   `docs/screenshots/stage10/`. (The 6 "duplicates" the audit reports there are the character's face spheres.)
+1. **Sunny Seaside** (next): layered surf and wet sand at the waterline, beach umbrellas and towels, a pier
+   railing with posts and lamps, gulls and beach balls. Capture before/after at x −120 and −90, run the audit,
+   then sync the PR.
+2. Then **Whispering Woods**, **Frosty Peaks**, **Happy Farm**, **Ocean Pier**, **Balloon Hills**.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.
@@ -332,4 +334,6 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
 6. Then run a real-device pass (iPhone Safari / Android Chrome) before any frame-rate claim.
 
 Each stage: implement, build, run both test files, capture a paired screenshot set with the harness above,
-run the audit, update this file, commit and `cloud_git push` to `main` of `dawsons-world-test` only.
+run the audit, update this file, commit and `cloud_git push` to `main` of `dawsons-world-test` only — never to
+the original repository's `main`. Then run the `Sync the 3D overhaul` workflow on `feature/full-3d-overhaul`
+(Actions → Sync the 3D overhaul → Run workflow) and confirm PR #104's head commit and files moved.
