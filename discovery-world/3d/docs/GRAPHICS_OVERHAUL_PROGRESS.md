@@ -444,19 +444,19 @@ Evidence: `docs/screenshots/stage21/` (approach at x 12, rays at x 20, station a
 
 ## Stage 22 — Mercury: crater rims, ejecta rays and layered regolith
 
-- **Crater rims**: 37 new craters (34 small pits, three young ray craters beside the walkway) and the 40 existing bowls
-  deepened (depth .38 → .5; pits .32 → .42) with raised bright crests. The icy crater at x 78 is unchanged.
-- **Ejecta rays**: pale radial rays painted into the regolith, with the white overlay capped so overlapping rays cannot
-  flatten the surface; bright volatile hollows on some crater floors.
-- **Layered regolith**: four warm grey strata banded by height, dark smooth plains, shaded bowl floors and thin dark
-  layers in the walls; 46 extra pebbles for surface detail.
-- **Cost:** Mercury ground mesh 1 mesh / 25,864 triangles, no new collision entries.
-- **Iteration:** summed ejecta blankets plus the tan palette saturated the ground to cream (a scene raycast measured
-  ground vertices at 0.85), so the overlay was capped, the base darkened and the bowl floors shaded; the showpiece ray
-  craters were moved nearer the walkway to be inside the view. The same clamp was tried on the Moon and reverted as a
-  regression against its approved stage-21 look.
+- **Resolution**: Mercury's ground now uses a 224x88 grid (about 0.5 m columns near the path) because the default
+  128x54 grid averaged every 5-10 m crater rim into a dune. Ground mesh: 1 mesh / 51,464 triangles, no new collision.
+- **Rims and bowls**: rims lowered to 0.08-0.10 r, bowls 3-5 m deep; 37 new craters plus the 40 existing ones reshaped.
+  Two showpiece craters beside the walkway (r 10.5 and 8) carry a dark bowl, a bright fresh rim ring and long ray lanes.
+- **Rays**: painted ejecta rays, long (4.6 r) only for the showpieces and short (2.1 r) for the rest, with dark lanes
+  between them; bright volatile hollows on some floors; four dark warm-grey strata, smooth plains and 46 pebbles.
+- **Camera evidence**: `tools/capture.cjs --cam` pins an inspection camera relative to the place start, which is how the
+  oblique and overhead crater shots were framed. From the walking camera the bowl is hidden by its own near rim.
+- Iterations rejected after looking at captures: broad bright ejecta blankets (washed to cream), tall rims (hid their
+  bowls), a near-uniform dark palette with weak rings (no contrast), and long rays on every crater (covered the map).
 
-Evidence: `docs/screenshots/stage22/` (approach at x 14, rays at x 6, crater at x 34, plains at x 78, captured with
-`--place mercury`). Audit at 6/14/34/78: z-fighting 0, solids 12/17, platforms 108/109, 0 page errors. No FPS claim.
+Evidence: `docs/screenshots/stage22/` (crater and rays oblique, crater overhead, plains and rim at eye level). Audit at
+2/12/28/46: z-fighting 0/0/0/1 (the one is the pre-existing ground-plane seam at y 0.029), 0 malformed solids or
+platforms, 0 page errors. No FPS claim.
 
 Next: Venus, then Mars → Jupiter → Saturn → Uranus → Pluto, then character/pet material polish.
