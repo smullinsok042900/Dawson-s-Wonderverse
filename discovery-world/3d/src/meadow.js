@@ -147,7 +147,8 @@ export function buildMeadow(G, api) {
   const sign = (x, emoji) => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff8ea'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#ffb35c'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(emoji, 64, 70);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const s = new THREE.Mesh(new THREE.CircleGeometry(.55, 32), new THREE.MeshBasicMaterial({ map: t, transparent: true })); s.position.set(x, 6.1, -2.4); add(s);
     const post = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .7, 6), toy('#ffffff')); post.position.set(x, 5.4, -2.45); add(post); };
-  sign(B.x0 + W / 2, '🧱'); sign((COLOR_X[0] + COLOR_X[1]) / 2, '🖍️');
+  // (build 120) no picture signs high above the block wall and the colouring board: the family's picture showed the 🖍️ one
+  //  peeking out behind the top buttons like a broken button (and the family asked for no activity signs, build 42)
 
   function update(dt) {
     for (const m of blockMeshes.values()) if (m.scale.x < 1) m.scale.setScalar(Math.min(1, m.scale.x + dt * 5));

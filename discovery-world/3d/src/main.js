@@ -1487,7 +1487,7 @@ const learning = initLearning({ G, Sound, voice, setSound: on => { setSound(on);
 G.learning = learning;
 { const signTex = e => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff6fb'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#c9a6ff'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
   const wood = toy('#c98a5a', { r: .7, cc: .1 }), glow = toy('#fff3a6', { em: '#ffd76a', ei: .9, r: .4 });
-  const PREF = { num: 118, abc: 182.2 /* (build 62: was 158, under the Ferris wheel's leg; now in the clear gap between the tree and the Fluffkin House) */, art: 214, think: 236, sci: 306, music: 344, me: 384 };
+  const PREF = { num: 118, abc: 182.2 /* (build 62: was 158, under the Ferris wheel's leg; now in the clear gap between the tree and the Fluffkin House) */, art: 214, think: 236, sci: 306, music: 344, me: 393.6 /* (build 120: was 384, where Dottie the dinosaur lowers her head: its toy stuck out of her neck) */ };
   const taken = () => [...G.interact.filter(i => (i.layer || '') === '' && (i.y || 0) < 2).map(i => i.x), ...DOORS.map(d => d.x)];
   for (const [cat, [icon]] of Object.entries(learning.corners)) {
     let x = PREF[cat]; const busy = taken(); for (let k = 0; k < 40 && busy.some(b => Math.abs(b - x) < 3.2); k++) x += (k % 2 ? -1 : 1) * (k + 1) * .8;
@@ -1729,7 +1729,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '122'; G.build = GAME_BUILD;
+const GAME_BUILD = '123'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
