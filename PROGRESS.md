@@ -534,6 +534,31 @@ banding and divisions), `saturn-bands.png` (a broad belt and cream zones across 
 Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platforms 113, 0 malformed, 0 duplicate or
 heavy-overlap solids, 0 page errors. No FPS claim.
 
+### Stage 27 — Uranus: narrow rings with real gaps, a banded deck with depth
+
+- **Rings with real gaps**: the single 128-segment disc painted with five alpha bands became eight separate
+  200-segment annuli - rings 6, 5 and 4, then alpha, beta, gamma, delta and the wide, bright epsilon ring - so every gap
+  between them is real open sky instead of a painted lane. The shared strip grew from 128 px to 1024 px of ringlet
+  grain mapped across each ring's own width, with soft edges and its own opacity per ring; the wide epsilon ring is the
+  new tap target and explains that Uranus has 13 narrow rings. The rings stay upright in the sky (Uranus is tipped right
+  over on its side) and the tilt was opened slightly so the gaps read.
+- **Banded deck with depth**: Uranus now shares the banded-deck code at `nx 150, nz 58` (ground mesh **1 mesh / 17,400
+  triangles**, up from 12,000) with its own ice-blue palette, wind combs, curls and small oval storms. Its belts are the
+  shallowest of the three (height strength .62 against Saturn's .8 and Jupiter's 1), so the deck reads as banded and
+  ridged without losing the calm look of the real ice giant.
+- **Cloud banks and wisps**: the seven random five-puff heaps became three band-aligned rows of half-buried domes, so
+  the belts recede instead of being buried, and the wisp layers lie low on the deck as thin streaks.
+- **Kept working**: the rolling planet and the diamond cloud were re-tapped after the change. The ball travelled 13.95 m
+  and turned 18.6 rad - exactly the distance divided by its 0.75 m radius, so it still rolls without sliding - and the
+  gems spawned and fell, with 0 page errors.
+
+Evidence in `docs/screenshots/stage27/`, normal walking camera: `uranus-approach.png` (the ring arch cut into separate
+rings above the deck), `uranus-deck.png` (a teal belt against pale zones with the ridged horizon behind) and
+`uranus-rings.png` (the full upright ring system).
+
+Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platforms 108/114/114/114, 0 malformed,
+0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -827,7 +852,11 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
 15. **Saturn — done (stage 26):** four separate 220-segment ring annuli with real Cassini and Encke gaps over a
     1024-px banding strip, a 150x58 banded deck whose height follows the belts and zones, three rows of band-aligned
     cloud banks, and a five-tier stepped hexagonal storm with dark skirts and foam caps; 17,400-triangle ground mesh,
-    evidence in `docs/screenshots/stage26/`. Uranus is next.
+    evidence in `docs/screenshots/stage26/`.
+16. **Uranus — done (stage 27):** eight separate 200-segment ring annuli (rings 6, 5, 4, alpha, beta, gamma, delta and
+    the wide epsilon ring) with real gaps over 1024-px ringlet grain, a 150x58 banded deck with the shallowest belts of
+    the three gas giants, three band-aligned rows of cloud banks and low wisp streaks; 17,400-triangle ground mesh, the
+    rolling planet and diamond rain re-verified, evidence in `docs/screenshots/stage27/`. Neptune is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

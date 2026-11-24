@@ -557,4 +557,24 @@ solids 12, platforms 108/113/113/113, 0 malformed, duplicate or heavy-overlap en
 Evidence: `docs/screenshots/stage26/` (approach, bands, hexagon). Audit at 12/44/72/120: z-fighting 0, solids 12,
 platforms 113, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. No FPS claim.
 
-Next: Uranus → Neptune → Pluto, then character/pet material polish.
+## Stage 27 — Uranus: narrow rings with real gaps, a banded deck with depth
+
+- **Rings with real gaps**: the single 128-segment disc painted with five alpha bands became eight separate
+  200-segment annuli - rings 6, 5 and 4, then alpha, beta, gamma, delta and the wide, bright epsilon ring - so every
+  gap between them is real open sky instead of a painted lane. The shared strip grew from 128 px to 1024 px of ringlet
+  grain, mapped across each ring's own width, with soft edges and its own opacity per ring; the wide epsilon ring is the
+  new tap target and explains that Uranus has 13 narrow rings. The rings stay upright in the sky, because Uranus is
+  tipped right over on its side, and the tilt was opened slightly so the gaps read.
+- **Banded deck with depth**: Uranus now shares the banded-deck code at 150x58 (ground mesh 17,400 triangles, up from
+  12,000) with its own ice-blue palette, wind combs, curls and small oval storms. Its belts are the shallowest of the
+  three (height strength .62 against Saturn's .8 and Jupiter's 1), so the deck reads as banded and ridged without
+  losing the calm look of the real ice giant.
+- **Cloud banks and wisps**: the seven random five-puff heaps became three band-aligned rows of half-buried domes, so
+  the belts recede instead of being buried, and the wisp layers lie low on the deck as thin streaks.
+- **Kept working**: the rolling planet and the diamond cloud were re-tapped after the change - the ball travelled
+  13.95 m and turned 18.6 rad (exactly its 0.75 m radius), and the gems spawned and fell, with 0 page errors.
+
+Evidence: `docs/screenshots/stage27/` (approach, deck, rings). Audit at 12/44/72/120: z-fighting 0, solids 12,
+platforms 108/114/114/114, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. No FPS claim.
+
+Next: Neptune → Pluto, then character/pet material polish.
