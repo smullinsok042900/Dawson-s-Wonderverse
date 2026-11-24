@@ -455,7 +455,7 @@ export function buildCastleDetail({ scene, add, cx = 407, rnd }) {
     }
   }
   group.add(new THREE.Mesh(mergeParts(gravelParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .95 })));
-  const hedges = new THREE.Mesh(mergeParts(hedgeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85, sheen: .3 }));
+  const hedges = new THREE.Mesh(mergeParts(hedgeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }));
   hedges.castShadow = true; hedges.receiveShadow = true; group.add(hedges);
 
   // --- rose bushes (green mound) and blooms (per-instance colour) filling both beds
@@ -640,7 +640,7 @@ export function buildCastleInteriorDetail({ add, ox = 2000 }) {
   }
   const posts = new THREE.Mesh(mergeParts(postParts), new THREE.MeshStandardMaterial({ vertexColors: true, metalness: .65, roughness: .3 }));
   posts.castShadow = true; group.add(posts);
-  const ropes = new THREE.Mesh(mergeParts(ropeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85, sheen: .6 }));
+  const ropes = new THREE.Mesh(mergeParts(ropeParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }));
   group.add(ropes);
 
   // --- potted palms beside the back wall (one merged mesh: terracotta pot + fronds + trunk)
@@ -743,7 +743,7 @@ export function buildToyTownDetail({ add }) {
   // --- giant toy balls along the near edge of the path (one instanced mesh, per-instance colour)
   const ballSpots = [];
   for (const x of [562, 574, 589, 604, 626, 641, 655]) ballSpots.push([x, .42 + rr() * .28, 5.75 + rr() * .55]); // (stage 6: the balls sat across the rails at z 3.2)
-  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshStandardMaterial({ roughness: .28, metalness: 0, clearcoat: 1 }), ballSpots.length);
+  const balls = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshStandardMaterial({ roughness: .28, metalness: 0 }), ballSpots.length);
   ballSpots.forEach(([x, r, z], i) => { pos.set(x, r, z); scl.set(r, r, r); mtx.compose(pos, q, scl); balls.setMatrixAt(i, mtx); balls.setColorAt(i, C.set(toyCols[i % toyCols.length])); });
   balls.castShadow = true; balls.receiveShadow = true; group.add(balls);
 
@@ -930,7 +930,7 @@ export function buildLabGardenDetail({ add }) {
     leaves.setMatrixAt(li, mtx); leaves.setColorAt(li, C.set(sp.col)); li++;
   }
   leaves.castShadow = true; leaves.receiveShadow = true; group.add(leaves);
-  const blooms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.075, 0), new THREE.MeshStandardMaterial({ roughness: .42, clearcoat: .5 }), bloomSpots.length);
+  const blooms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.075, 0), new THREE.MeshStandardMaterial({ roughness: .42 }), bloomSpots.length);
   bloomSpots.forEach((b, i) => { q.setFromEuler(eu.set(0, i * 1.7, 0)); v.set(b.x, b.y, b.z); s.setScalar(.8 + (i % 3) * .14); mtx.compose(v, q, s); blooms.setMatrixAt(i, mtx); blooms.setColorAt(i, C.set(b.col)); });
   blooms.castShadow = true; group.add(blooms);
 
@@ -1078,7 +1078,7 @@ export function buildArtPlazaDetail({ add }) {
     mtx.compose(v, q, s); leaves.setMatrixAt(li, mtx); leaves.setColorAt(li, C.set(sp.col)); li++;
   }
   leaves.castShadow = true; leaves.receiveShadow = true; group.add(leaves);
-  const blooms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.085, 0), new THREE.MeshStandardMaterial({ roughness: .42, clearcoat: .5 }), bloomSpots.length);
+  const blooms = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.085, 0), new THREE.MeshStandardMaterial({ roughness: .42 }), bloomSpots.length);
   bloomSpots.forEach((b, i) => { q.setFromEuler(eu.set(0, i * 1.7, 0)); v.set(b.x, b.y, b.z); s.setScalar(.85 + (i % 3) * .15); mtx.compose(v, q, s); blooms.setMatrixAt(i, mtx); blooms.setColorAt(i, C.set(b.col)); });
   blooms.castShadow = true; group.add(blooms);
 
@@ -1097,7 +1097,7 @@ export function buildSeasideDetail({ add }) {
   const group = new THREE.Group(); group.name = 'seaside-detail'; add(group);
   const painted = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .7 });
   const fabricM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .93, side: THREE.DoubleSide });
-  const ballM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .32, clearcoat: .6 });
+  const ballM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .32 });
   const woodParts = [], fabricParts = [], ballParts = [], grassSpots = [];
   const UMB = ['#ff8fc8', '#ffd23f', '#7fd8ff', '#a98bff', '#8fd47a'];
   const TOWEL = ['#ff9a7a', '#9fe6ff', '#ffe28a', '#ffb3dc', '#b6f0c0'];
