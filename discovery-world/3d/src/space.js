@@ -35,6 +35,9 @@ export const PLACES = [
   ['uranus', ['#b8f0f0', '#5ac8d8'], 8.69, true, "Uranus, the ice giant that spins on its side! It's really made of gas and ice, but in our game you can walk on its blue-green clouds."],
   ['neptune', ['#7fa8ff', '#2f4fd0'], 11.15, true, "Neptune, the windy blue planet, far, far away! It's really made of gas and ice, but in our game you can walk on its deep blue clouds."],
   ['pluto', ['#f0dcc8', '#a8806a'], 0.62, false, "Pluto, far out in the cold! It's tiny and icy, with a big heart shape. Jump! You go about sixteen times higher and float down slowly."],
+  // (build 126) THE SUN: really a giant ball of super hot glowing gas with no ground at all. Here, clearly made-up, magic
+  // golden platforms float safely above it, with a light, floaty pull (not a real value: there is nowhere to stand).
+  ['sun', ['#fff3b0', '#ff9a1a'], 4.9, false, "The Sun! It's our star, a gigantic ball of super hot glowing gas, with no ground at all. In our game, magic golden platforms float safely high above it. Jump! You float down gently here."],
 ];
 export const EARTH_G = 9.81;
 
@@ -65,6 +68,9 @@ const LOOK = {
   neptune: { sky: { top: '#010414', mid: '#102c84', hor: '#5e8ef2', stars: .7, sunDir: [.3, .3, -.9], sunCol: '#dfe8ff', glow: [20, .2, .6], band: '#d6e4ff', bandK: .45, wind: .16 },
     sun: ['#dfe8ff', 2.0], hemi: ['#b0caff', '#2444b8', 1.25], fog: ['#4670dc', 40, 225], env: .25, rim: ['#a8c8ff', .9],
     dust: { color: '#ffffff', size: .09, opacity: .7, add: true, box: [50, 7, 24], vel: [7, .1, 0], sway: .5, n: 90 } },
+  sun: { sky: { top: '#ff7a1a', mid: '#ffae4a', hor: '#fff1b8', low: '#ffd070', stars: 0, sunDir: [0, -.35, -1], sunCol: '#fff6d0', glow: [2.4, .5, 0], band: '#fff6c8', bandK: .22, wind: .03 },
+    sun: ['#fff2d4', 2.2], hemi: ['#ffe2a0', '#ff7a1a', 1.35], fog: ['#ffb45e', 70, 290], env: .22, rim: ['#ffd080', 1.0],
+    dust: { color: '#ffe08a', size: .12, opacity: .8, add: true, box: [46, 10, 24], vel: [.2, 1.3, 0], sway: .5, n: 60 } },
   pluto: { sky: { top: '#000004', mid: '#050816', hor: '#1c2c52', low: '#0c1226', stars: 1, sunDir: [-.42, .1, -.9], sunCol: '#ffffff', glow: [400, 0, 2.6] },
     sun: ['#eef2ff', 2.3], hemi: ['#8a9cd0', '#6a4a44', .85], fog: ['#141c34', 120, 900], env: .12, rim: ['#8fb0ff', .9], sunOff: [-14, 9, 9],
     dust: { color: '#eaf2ff', size: .09, opacity: .7, box: [46, 10, 24], vel: [.25, -.3, 0], sway: .3, n: 56 } },
@@ -677,6 +683,36 @@ export function initSpace(G, api) {
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
       inSky(K.glow('#ffffff', 9, 1), MID - 86, 17, -180); inSky(K.glow('#bcd0ff', 34, .35), MID - 86, 17, -182);
     }
+    if (id === 'sun') {
+      // (build 126) golden platforms floating over the glowing surface: the walkway and a broad golden terrace, then the edge,
+      // and far below the bright, slowly boiling surface of the Sun (an animated picture, not real heat!) with giant flares
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: -4.6, nx: 200, nz: 70,
+        height: (x, z) => { const terrace = K.sstep(-11, -16, z), isle = Math.max(0, 1 - Math.hypot((K.fbm2(x * .02, z * .02, 2) - .5) * 6, 0)) * K.sstep(-30, -45, z);
+          return -14 * terrace + isle * 9 * K.sstep(.45, .7, K.fbm2(x * .03 + 4, z * .03, 3)) + (K.fbm2(x * .12, z * .12, 3) - .5) * .4; },
+        color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), tile = (Math.floor(x * .5) + Math.floor(z * .5)) & 1;
+          if (h > -3) { K.ramp(['#e8a030', '#ffcf5a', '#fff0a8'], .35 + n * .4 + tile * .1, o); o.multiplyScalar(.82 + .26 * ny); }
+          else { K.ramp(['#ff5a10', '#ff9a2a', '#ffe070'], K.fbm2(x * .08, z * .08, 4), o); } } });
+      // the boiling surface far below: one big sheet with a small animated shader (soft, slow and not too bright)
+      const surf = new THREE.Mesh(new THREE.PlaneGeometry(900, 420, 1, 1), new THREE.ShaderMaterial({ fog: false, uniforms: { uTime: { value: 0 } },
+        vertexShader: 'varying vec2 vU; void main(){ vU = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+        fragmentShader: `precision mediump float; uniform float uTime; varying vec2 vU;
+          float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5); }
+          float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1., 0.)), f.x), mix(h(i + vec2(0., 1.)), h(i + vec2(1., 1.)), f.x), f.y); }
+          void main(){ vec2 p = vU * .06; float a = n(p + vec2(uTime * .05, 0.)) * .6 + n(p * 2.3 - vec2(0., uTime * .07)) * .3 + n(p * 5.1 + uTime * .03) * .1;
+            float cells = smoothstep(.35, .75, a); vec3 c = mix(vec3(1., .42, .05), vec3(1., .86, .42), cells); c = mix(c, vec3(1., .97, .78), smoothstep(.8, .95, a) * .6);
+            gl_FragColor = vec4(c * .95, 1.);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }` }));
+      surf.rotation.x = -Math.PI / 2; surf.position.set(MID, -16, -170); add(surf); U.push((dt, t) => { surf.material.uniforms.uTime.value = t; });
+      // giant solar prominences: glowing loops of gas rising from the surface, gently pulsing (far away, so they stay put)
+      for (let k = 0; k < 5; k++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(14 + k * 4, 2.2 - k * .2, 10, 48, Math.PI), new THREE.MeshBasicMaterial({ color: k % 2 ? '#ffb040' : '#ff7a20', transparent: true, opacity: .75, fog: false, depthWrite: false }));
+        inSky(arc, MID - 140 + k * 70, -10, -150 - (k % 3) * 25); arc.rotation.y = (k % 2 ? .3 : -.3); U.push((dt, t) => { const s2 = 1 + Math.sin(t * .5 + k) * .06; arc.scale.set(s2, s2 * (1 + Math.sin(t * .35 + k * 2) * .1), s2); arc.material.opacity = .62 + Math.sin(t * .8 + k) * .12; }); }
+      for (let k = 0; k < 6; k++) inSky(K.glow(k % 2 ? '#ffe08a' : '#ffb040', 60 + k * 10, .35), MID - 150 + k * 60, -6, -160);
+      tapIt(surf, () => fact('☀️ The Sun is a giant ball of glowing gas, so hot that nothing can stand on it. Our magic platforms keep us safe!', 'sunsurface'));
+      G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'sunfacts', run: () => fact('☀️ The Sun is a star! It gives Earth light and warmth. A million Earths could fit inside it!', 'sunfacts'), hintY: 1 });
+      yield* rocks(26, { colors: ['#ffcf5a', '#ffe9a0'], s0: .2, s1: .5, z0: -3, z1: -10, batch: props, seed: 900 });
+    }
     // a shooting star now and then, where there is no air to hide the stars
     yield;
     if (id === 'moon' || id === 'mercury' || id === 'pluto') { const st = inSky(K.glow('#ffffff', 1, 0), MID, 20, -170); st.scale.set(14, .5, 1); let next = 3, life = 0, vx = 0, sx = 0;
@@ -705,6 +741,7 @@ export function initSpace(G, api) {
       saturn: { name: 'Ringlets', body: '#c9a6ff', eye: 2, ant: 0, shape: 'ringed', move: 'spin', note: 760, hi: 'Wheee! We spin like Saturn\'s rings!', iris: '#5a2fb0' },
       uranus: { name: 'Rollers', body: '#4fd8d0', eye: 2, ant: 0, shape: 'cube', move: 'roll', note: 580, hi: 'Roll roll! On Uranus everything rolls on its side!', iris: '#0a6a70' },
       neptune: { name: 'Windies', body: '#5a82f0', eye: 2, ant: 0, shape: 'wisp', move: 'swoosh', note: 450, hi: 'Whoosh! The wind is so fast on Neptune!', iris: '#12308a' },
+      sun: { name: 'Sunnies', body: '#ffcf3a', eye: 2, ant: 2, shape: 'spiky', move: 'float', note: 820, hi: 'Hello! We are Sunnies! We wear sunglasses because the Sun is SO bright!', shades: 1, iris: '#a0521a' },
       pluto: { name: 'Heartlings', body: '#ff9fd2', eye: 2, ant: 2, shape: 'heart', move: 'hop', note: 1000, hi: 'Hello, friend! We love our big icy heart!', iris: '#b02a7a' },
     }[id];
     const placeAlien = (x0, z0, k, interactId = null) => { const a = alien(AL, k); a.position.set(x0, 0, z0); add(a); let boing = 0, blink = 2 + k, px = x0, air = 0; const b = a.userData.body, lids = a.userData.lids, ants = a.userData.ants;
@@ -842,9 +879,12 @@ export function initSpace(G, api) {
     return task;
   }
   function cancel() { ++navigation; unbuildOthers(here); }
+  /** (build 126) leave the planet without going home (into open space) */
+  function hideAll() { ++navigation; if (here && groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; unbuildOthers(null); show(); }
   function goHome() { ++navigation; if (here && groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; api.home(); unbuildOthers(null); show(); }
   let lit = null;
   function show() {
+    if (P.layer === 'deep') { for (const k in groups) groups[k].visible = false; sky.mesh.visible = false; dust.set(null); lit = undefined; return; } // (build 126) open space owns the sky and light
     const on = P.layer === 'space';
     for (const k in groups) groups[k].visible = on && k === here;
     sky.mesh.visible = on;
@@ -867,5 +907,5 @@ export function initSpace(G, api) {
     if (areaSteps.length) areaSteps.shift()();
     else if (PLANET_EXTRA[here] && secs[here]) for (let s = 1; s <= PLANET_EXTRA[here].sections.length; s++) if (!secs[here][s] && P.x > X + s * SECTION - 70) { secs[here][s] = true; buildArea(here, s); break; }
   }
-  return { goTo, goHome, cancel, update, prepare, places: PLACES, here: () => here, look: LOOK, groups, warmup: [sky.mesh, dust.points] };
+  return { goTo, goHome, hideAll, cancel, update, prepare, places: PLACES, here: () => here, look: LOOK, groups, warmup: [sky.mesh, dust.points] };
 }

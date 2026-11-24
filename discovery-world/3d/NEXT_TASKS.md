@@ -4,6 +4,18 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
+## THE SOLAR SYSTEM EXPANSION (family request, 2026-11-24) — phases 2–4 started in build 126
+Done in build 126: open space with free flight, picture map and autopilot, landing anywhere, spacewalks (bubble helmet, jetpack,
+tether, one-tap return), Star Station (dock, stars, star jellies), hoop trail, comet, asteroid belt crystals; the Sun as a
+destination with five attractions. Next, in order:
+1. **Multiplayer in open space:** friends in the same room see each other's rockets and spacewalkers (positions over the
+   existing relay, a few times a second), board the same rocket (the shared-rocket seats already exist), float together.
+2. **Pets in open space:** the chosen pet floats along on spacewalks (bubble too), and waits in the rocket otherwise.
+3. **More Sun:** a third district (secret passages under the platforms, observation stations, sun creatures to befriend),
+   a Sun coaster at the Moon coaster's scale.
+4. **More space:** a second station with rooms inside, asteroid caves to float into, satellites to find, a nebula.
+5. Speed: measure the Sun and open space on the real iPhone (Performance Test while there).
+
 ## Family request (build 124): walk-through, overlapping and floating things — continue
 Build 124 rebuilt the drawing friends as round toys, made the Ferris wheel a walk-in ride, moved every Earth climbing set out
 of her path and removed the learning-game screens (nothing opens `learn.js` now; delete it and its tests in a later build).

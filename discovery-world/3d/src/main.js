@@ -49,7 +49,9 @@ import { LOD, makeTree } from './nature.js';
 import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
-import { makeIntervalIndex } from './spatial.js'; // (overhaul) indexed collision lookups
+import { makeIntervalIndex } from './spatial.js';
+import { initDeep } from './deepspace.js'; // (build 126) open space: fly the rocket, spacewalks
+import { runInSlices as deepSlices } from './stream-work.js'; // (overhaul) indexed collision lookups
 import { auditScene } from './scene-audit.js'; // (overhaul) automated geometry/placement validation
 
 const $ = id => document.getElementById(id);
@@ -285,6 +287,19 @@ function spaceLight(L) {
   sky.visible = !L; renderer.shadowMap.needsUpdate = true;
 }
 G.space = space;
+const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest) });
+G.deep = deep;
+// (build 126) landing on a planet flown up to in open space: the normal landing (the rocket comes down onto that planet's pad)
+// (The rocket she took off in may not exist any more: the place it stands on is freed while she is far away in space, so
+// this does not go through arrive(), which expects it.)
+async function deepLand(dest) {
+  const P = player; G.camOverride = null; P.ride = null; launching = false;
+  try { if (dest === 'earth') space.goHome(); else { await space.prepare(dest); if (!await space.goTo(space.places.findIndex(p => p[0] === dest))) return; } }
+  catch (error) { if (error.name !== 'AbortError') console.error(error); P.layer = ''; space.goHome(); return; }
+  saveSoon(); const r2 = G.rockets[dest]; G.playerHidden = false; if (!r2 || !inScene(r2.g)) return; // (lands beside the pad if its rocket isn't there)
+  P.ride = { type: 'rocket', key: dest, phase: 'land', t0: rkNow(), seat: 0 }; G.playerHidden = true; showFace(r2, true);
+  P.x = r2.x; P.y = r2.baseY; P.z = r2.g.position.z + 1.05; r2.g.position.y = r2.baseY + 26; G.camLift = 26; snapCamera(); camT.y = P.y + 26;
+}
 const expansion = initExpansion(G, { stick: () => readStick(), registerRocket: (...a) => registerRocket(...a), scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), rocket: () => openRocket(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
 G.expansion = expansion;
 
@@ -432,6 +447,7 @@ G.coasterOff = () => { G.camOverride = null; coasterButton(false); };
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
 G.startSlide = (path, o) => startSlide(path, o); // (build 66: the planets' slides)
 function updateRide(dt) {
+  if (player.ride && player.ride.type === 'deep') { deep.ride(dt); return; } // (build 126) open space
   const P = player, R = P.ride;
   if (R.type === 'slide') {
     // inside the tube: speed up as you go, sit on the bottom of the tube, face the way you slide
@@ -557,7 +573,7 @@ G.useLift = () => {
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
 // (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
 // countdown, and off you fly. Earth (first) takes you home to the launch pad.
-const ROCKET_NAMES = { earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
+const ROCKET_NAMES = { deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
 let rocketPanel = null, launching = false, blastBtn = null, flightSequence = 0;
 // (build 48) A REAL ROCKET RIDE. PAW (or a tap) at the rocket: she walks up and climbs in, and her face shows in the round
 // window. The planet pictures come up; after she picks one, a BIG RED BUTTON appears. Pressing it starts the countdown
@@ -611,7 +627,7 @@ function hideBlast() { if (blastBtn) blastBtn.classList.remove('show'); }
 function showBlast(id) {
   if (!blastBtn) { blastBtn = document.createElement('button'); blastBtn.id = 'blastBtn'; blastBtn.setAttribute('aria-label', 'Blast off'); blastBtn.innerHTML = '<i></i><b></b>'; document.body.appendChild(blastBtn);
     blastBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); Sound.unlocked = true; blastOff(); }); }
-  const pl = id === 'earth' ? ['#5fa8ff', '#2f6fd0'] : space.places.find(p => p[0] === id)[1];
+  const pl = id === 'earth' ? ['#5fa8ff', '#2f6fd0'] : id === 'deep' ? ['#5a3ad0', '#120a40'] /* (build 126) open space */ : space.places.find(p => p[0] === id)[1];
   blastBtn.querySelector('b').style.background = `radial-gradient(circle at 35% 30%, ${pl[0]}, ${pl[1]})`; blastBtn.className = 'show ' + id;
 }
 G.blastOff = blastOff;
@@ -621,7 +637,7 @@ function blastOff() {
     if (R.passenger) { if (!R.ready) { R.ready = true; rkSetSeat(R); hideBlast(); Sound.chime(); voice.speak('Ready! Hold on tight!'); toast('✋'); } return; }
     if (!R.waitAt) { R.waitAt = rkNow(); R.ready = true; rkSetSeat(R); const others = rkSeats(R.key).filter(q => q.id !== L.me()); if (others.length && !others.every(q => q.rd)) { hideBlast(); voice.speak('Waiting for your friends to be ready!'); toast('✋ ✋'); } }
     rkTryGo(R); return; } }
-  hideBlast(); ++flightSequence; launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth') setTimeout(() => { if (player.ride === R && launching) space.prepare(R.dest); }, 120); /* (build 50: the planet is made during the countdown) */
+  hideBlast(); ++flightSequence; launching = true; R.phase = 'count'; R.t0 = rkNow(); R.n = 3; if (R.dest !== 'earth' && R.dest !== 'deep') setTimeout(() => { if (player.ride === R && launching) space.prepare(R.dest); }, 120); /* (build 50: the planet is made during the countdown) */
   Sound.click(); Sound.tone(180, .5, 'square', .03, .9); voice.speak('Three... two... one... blast off!'); toast('🚀 3');
   discover('blastoff', 'Press the big red button to blast off!');
 }
@@ -665,6 +681,9 @@ function rocketRide(dt, R) {
 async function arrive(R, r) {
   R.phase = 'prepare';
   const dest = R.dest;
+  if (dest === 'deep') { // (build 126) up into open space: she flies the rocket herself from here
+    r.g.position.y = r.baseY; r.flame.visible = false; showFace(r, false); G.camLift = 0; launching = false; player.ride = null;
+    if (player.layer === 'space') space.hideAll(); await deep.enter(R.key); return; }
   try { if (dest !== 'earth') await space.prepare(dest); }
   catch (error) { if (player.ride === R) climbOut(r); if (error.name !== 'AbortError') console.error(error); return; }
   if (player.ride !== R) return;
@@ -746,11 +765,15 @@ function openRocket() {
 // its red spot, ringed Saturn and Uranus, streaky Neptune. Each has its name under it (the voice says it too).
 function planetArt(id) {
   const c = document.createElement('canvas'); c.width = c.height = 192; const g = c.getContext('2d'), R = 62, cx = 96, cy = 96;
+  if (id === 'deep') { // (build 126) open space: a starry night circle with a little rocket
+    const gr0 = g.createRadialGradient(cx, cy, 10, cx, cy, R + 20); gr0.addColorStop(0, '#3a2a8a'); gr0.addColorStop(1, '#05031a'); g.fillStyle = gr0; g.beginPath(); g.arc(cx, cy, R + 18, 0, 7); g.fill();
+    let s0 = 7; const rnd = () => (s0 = (s0 * 16807) % 2147483647) / 2147483647; g.fillStyle = '#ffffff'; for (let i = 0; i < 40; i++) { const a = rnd() * 7, r = rnd() * (R + 12); g.globalAlpha = .4 + rnd() * .6; g.beginPath(); g.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, .8 + rnd() * 2.2, 0, 7); g.fill(); } g.globalAlpha = 1;
+    g.font = '78px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🚀', cx, cy + 4); return c.toDataURL(); }
   const rnd = (k => () => (k = (k * 16807) % 2147483647) / 2147483647)(id.length * 977 + id.charCodeAt(0) * 31);
   const ring = (front, col, tilt, w, k = 1.55) => { g.save(); g.translate(cx, cy); g.rotate(tilt); g.beginPath(); g.ellipse(0, 0, R * k, R * .42 * k / 1.55, 0, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2); g.strokeStyle = col; g.lineWidth = w; g.stroke(); g.restore(); };
   if (id === 'saturn') ring(false, '#d9c08a', -.32, 13); if (id === 'uranus') ring(false, '#bff3f6', 1.25, 5, 1.28);
   g.save(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.clip();
-  const base = { earth: ['#4aa8ff', '#1d5fc0'], moon: ['#e8e8ee', '#9a9aa8'], mercury: ['#c9b9a8', '#7d6e62'], venus: ['#ffe39a', '#d9a24a'], mars: ['#ff8a5c', '#b2432a'], jupiter: ['#f3d9b0', '#c58e5a'], saturn: ['#f6e3b0', '#caa465'], uranus: ['#a8f0f2', '#5cc4cc'], neptune: ['#6d8dff', '#2a3fb8'], pluto: ['#e9d3bf', '#a88a74'] }[id] || ['#ddd', '#888'];
+  const base = { sun: ['#fff3b0', '#ff9a1a'], earth: ['#4aa8ff', '#1d5fc0'], moon: ['#e8e8ee', '#9a9aa8'], mercury: ['#c9b9a8', '#7d6e62'], venus: ['#ffe39a', '#d9a24a'], mars: ['#ff8a5c', '#b2432a'], jupiter: ['#f3d9b0', '#c58e5a'], saturn: ['#f6e3b0', '#caa465'], uranus: ['#a8f0f2', '#5cc4cc'], neptune: ['#6d8dff', '#2a3fb8'], pluto: ['#e9d3bf', '#a88a74'] }[id] || ['#ddd', '#888'];
   const gr = g.createRadialGradient(cx - 22, cy - 24, 8, cx, cy, R); gr.addColorStop(0, base[0]); gr.addColorStop(1, base[1]); g.fillStyle = gr; g.fillRect(0, 0, 192, 192);
   const blob = (x, y, rx, ry, col, a = 0) => { g.fillStyle = col; g.beginPath(); g.ellipse(x, y, rx, ry, a, 0, 7); g.fill(); };
   if (id === 'earth') { blob(70, 78, 26, 18, '#4fbf5a', .5); blob(84, 112, 14, 24, '#4fbf5a', .3); blob(124, 70, 22, 14, '#5ccf62', -.4); blob(132, 118, 16, 12, '#4fbf5a'); blob(96, 38, 26, 8, '#ffffff'); blob(96, 156, 22, 7, '#ffffff'); g.globalAlpha = .7; blob(108, 92, 30, 6, '#ffffff', .3); blob(64, 130, 20, 5, '#ffffff', -.2); g.globalAlpha = 1; }
@@ -768,7 +791,7 @@ function planetArt(id) {
 }
 function showPicker() {
   if (!rocketPanel) { rocketPanel = document.createElement('div'); rocketPanel.id = 'rocketPanel';
-    const tiles = [['earth', ['#5fa8ff', '#2f6fd0']], ...space.places.map(p => [p[0], p[1]])];
+    const tiles = [['deep', ['#22184a', '#05031a']], ['earth', ['#5fa8ff', '#2f6fd0']], ...space.places.map(p => [p[0], p[1]])]; /* (build 126) 🌌 open space first */
     rocketPanel.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="rkGrid">${tiles.map(([id]) => `<button class="rkT ${id}" data-id="${id}" aria-label="${ROCKET_NAMES[id]}"><img src="${planetArt(id)}" alt=""><span class="rkName">${ROCKET_NAMES[id].replace(/^the /, 'The ')}</span></button>`).join('')}</div></div>`; // (build 64: painted planets with their names)
     document.body.appendChild(rocketPanel);
     rocketPanel.querySelector('.mpX').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); rocketPanel.classList.remove('show'); Sound.click(); const R = seated(); if (R && R.phase === 'in') climbOut(G.rockets[R.key]); });
@@ -783,13 +806,14 @@ function launchTo(id, go) {
   const atHome = player.layer !== 'space'; if ((id === 'earth' && atHome) || id === space.here()) { voice.speak(`We're already on ${ROCKET_NAMES[id]}!`); return; }
   if (go && !seated() && !player.ride) { const k = nearRocket(); if (k) boardRocket(k, true); }
   const R = seated(); if (R) { if (R.phase !== 'in') { R.wantDest = id; return; } /* (build 68: a planet chosen while still climbing in is remembered, and the rocket goes as soon as she is inside) */ R.dest = id; showBlast(id); if (rocketPanel) rocketPanel.classList.remove('show'); { const L = mpL(); if (L && !R.passenger) L.set(padKey(R.key), { host: L.me(), st: 'board', d: id, n: Math.floor(Math.random() * 1e9) }); } if (go) blastOff(); else { voice.speak(`To ${ROCKET_NAMES[id]}! Press the big red button!`); Sound.twinkle(); } return; }
-  launching = true; const flight = ++flightSequence; if (id !== 'earth') space.prepare(id); voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
+  launching = true; const flight = ++flightSequence; if (id !== 'earth' && id !== 'deep') space.prepare(id); voice.speak(`To ${ROCKET_NAMES[id]}! Three, two, one, blast off!`); toast('🚀 3... 2... 1... Blast off!');
   Sound.tone(220, .6, 'sawtooth', .04, 1.8); setTimeout(() => Sound.whoosh(), 400); G.shake = 1.2;
   for (let k = 0; k < 8; k++) setTimeout(() => burst(player.x, .5, player.z - 1, ['#ffd23f', '#ff9a2e', '#ffffff'], 6, 2.5), k * 150);
   setTimeout(async () => {
     if (flight !== flightSequence) return;
     try {
-      if (id === 'earth') space.goHome(); else await space.goTo(space.places.findIndex(p => p[0] === id));
+      if (id === 'deep') { const from = player.layer === 'space' ? space.here() : 'earth'; if (player.layer === 'space') space.hideAll(); await deep.enter(from); } // (build 126) open space
+      else if (id === 'earth') space.goHome(); else await space.goTo(space.places.findIndex(p => p[0] === id));
       if (flight === flightSequence) saveSoon();
     } catch (error) { if (error.name !== 'AbortError') console.error(error); }
     finally { if (flight === flightSequence) launching = false; }
@@ -1166,7 +1190,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
-  space.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
+  space.update(dt, t); deep.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
@@ -1446,7 +1470,7 @@ function frame() {
   creature.root.position.set(ix, iy, iz); creature.root.visible = !G.playerHidden;
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
-  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide', facing: P.facing, happy: P.happy }); tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
+  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide' && !(P.ride.type === 'deep' && G.deepFace != null), facing: P.facing, happy: P.happy }); if (G.deepFace != null) creature.root.rotation.y = G.deepFace; /* (build 126: floating in space, she faces the way she drifts) */ tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
   G.bubbles.update(dt); /* (build 106: after the friend's own animation, so the bubble's sway and the tumble show) */
   creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
@@ -1730,7 +1754,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '125'; G.build = GAME_BUILD;
+const GAME_BUILD = '126'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
