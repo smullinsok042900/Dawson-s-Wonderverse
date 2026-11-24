@@ -1,0 +1,99 @@
+# DEVELOPMENT ROADMAP — Dawson's World 3D overhaul
+
+Development repository: `smullinsok042900/dawsons-world-test` (branch `main`)
+Original game repository: `smullinsok042900/Dawson-s-Wonderverse` (never written directly)
+Draft pull request: **#104** → https://github.com/smullinsok042900/Dawson-s-Wonderverse/pull/104
+
+Last verified commit: stage 29 on `dawsons-world-test/main` (PR #104 synced after every stage)
+Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
+
+## How work is delivered
+
+1. Implement one stage in `discovery-world/3d/src`.
+2. `npm run build`; `node tests/scene-audit.test.mjs`; `node tests/spatial.test.mjs`.
+3. Capture paired before/after shots with the committed harness (`tools/capture.cjs`).
+4. Run `window.__DDW3.audit()` at the new stage's positions; record duplicates/z-fighting/solids/platforms.
+5. Update `PROGRESS.md`, `docs/GRAPHICS_OVERHAUL_PROGRESS.md`, this roadmap and `NEXT_TASKS.md`.
+6. Commit and push to `dawsons-world-test/main`.
+7. Run the `Sync the 3D overhaul` workflow on `feature/full-3d-overhaul`; the PR branch is filled from
+   the verified build, tests + `build.mjs` run on the runner, and the same PR updates.
+
+## Phase 1 — Earth districts (in progress)
+
+| # | District | Status | Notes |
+|---|---|---|---|
+| 1 | Playhouse | done (stage 2/6) | rug, bunting, lanterns, play mats, toy shelf |
+| 2 | Park | done (stages 2/7) | wildflowers, boulders, lamps, sculpted hills + mountain range |
+| 3 | Castle front + throne room | done (stages 3/4/8) | parterres, urns, lanterns, ropes, banners, facade depth |
+| 4 | Dino Valley | done (stages 3/6/8) | broad-leaf jungle, fallen log, footprints, lofted Dottie, palms |
+| 5 | Toy Town | done (stages 5/8) | toy-box spill, balls, tops, rebuilt Ferris wheel + carousel |
+| 6 | Lab Gardens | done (stage 9) | glazed greenhouses, beds, fences, potting lab, copper pipe |
+| 7 | Art Plaza | done (stage 10) | painted paving, planters, easels, drying rack, paint pots, bunting |
+| 8 | Sunny Seaside | done (stage 11) | five striped parasols with towels + beach balls, dune grass, driftwood |
+| 9 | Whispering Woods | done (stage 12) | nine trees with limbs + four-layer crowns, fern understory, campfire clearing |
+| 10 | Frosty Peaks | done (stage 13) | snow-capped ridgeline, seven snow-loaded pines, ice arch, wind drifts |
+| 11 | Happy Farm | done (stage 14) | fenced paddock, cabbage/carrot rows, round bales, barn cupola + weathervane |
+| 12 | Ocean Pier | done (stage 15) | deck planking + trim, rope-wrapped pilings, cleats, bait shack, lamp posts |
+| 13 | Balloon Hills | done (stage 16) | three moored balloons, two bunting lines, wildflower drifts, terrace shelves |
+| 14 | Adventure Trail | done (stage 17) | bridge handrails, stratified cliffs, waterfall + mist, lookout deck |
+| 15 | Playhouse | done (stage 18) | curtained stage + footlights, prop chest, reading nook, lanterns |
+| 16 | Studio | done (stage 19) | easel wall + drying canvases, pottery wheel, splattered workbench |
+| 17 | Wonder Lab | done (stage 20) | glass-tube bench + bubbling flasks, specimen shelves, microscope table |
+| 10 | Frosty Peaks | todo | snow/ice materials, drifts, ice columns, wind-shaped rock |
+| 11 | Happy Farm | todo | crop rows with real plants, fences, barn timber, hay |
+| 12 | Ocean Pier | todo | plank depth, pilings, crates, buoys, gulls |
+| 13 | Balloon Hills | todo | terraced hills, balloon clusters, launch platform |
+| 14 | Adventure Trail | todo | zip-line towers/trolley detail, chests, trail markers |
+| 15 | Home / Studio / Wonder Lab | todo | interiors: furniture geometry, wall trim, instruments |
+
+## Phase 2 — planets and moons
+
+| 18 | the Moon | done (stage 21) | crater rims + ejecta rays, layered regolith colours, 54 pebbles |
+| 19 | Mercury | done (stage 22) | deeper crater bowls, capped ejecta rays, layered regolith, volatile hollows |
+| 20 | Venus | done (stage 23) | layered cloud deck, pancake domes, tessera highlands, lava channels, fumaroles |
+| 21 | Mars | done (stage 24) | two canyons, stepped terraced buttes, layered ochre palette, boulder clusters, dust haze |
+| 22 | Jupiter | done (stage 25) | banded deck with real depth, band-aligned cloud banks, layered Great Red Spot, four readable moons |
+| 23 | Saturn | done (stage 26) | four banded ring annuli with real gaps, banded deck with depth, stepped hexagonal storm |
+| 24 | Uranus | done (stage 27) | eight narrow ring annuli with real gaps, banded deck with depth, roll and diamond rain re-verified |
+| 25 | Neptune | done (stage 28) | banded deck with depth, band-aligned banks, Great Dark Spot kept readable, wind rides re-verified |
+| 26 | Pluto | done (stage 29) | 208x82 layered terrain, heart-shaped ice-plain basin with a tholin rim (bezier outline, checked from a pinned top-down camera), ice peaks, rides re-verified |
+| 27 | characters and pets | done (stage 30) | own soft toy-paint material (`lifeMat`); the baked vertex-colour gradient was reverted because it changed the family drawings' exact paint, so paint-preserving aoMap shading moves to stage 31 |
+| 28 | Phase 3 finish | **next** | bevels on the hard-edged family characters, eye highlights sized for phone distance, LOD for far followers, paint-preserving baked shading |
+
+Order: Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto (plus Earth orbit/sky stairs).
+Per planet: crater rims + ejecta, layered regolith vertex colours, ring geometry, cloud bands, horizon
+atmosphere, attraction structures. Reuse the loft / vertex-colour / merge helpers from stages 7–8.
+
+## Phase 3 — characters, creatures, pets
+
+Material and shape pass only (no rig changes): fur-shell tuning, eye highlights, bevels on hard edges,
+shared materials, LOD for far followers. Preserve every animation, pet behaviour and save field.
+
+Shared materials landed in stage 30 (`lifeMat`). The top-lit gradient baked into each shared shape was reverted on
+release validation: the drawings' exact paint colours are part of their design and are asserted by tests. Bevels,
+eye-highlight sizing, follow-LOD and paint-preserving (aoMap) shading remain for stage 31.
+
+## Phase 4 — collision, placement and regression checks
+
+- Keep the scene audit (`src/scene-audit.js`) as the placement gate for every stage.
+- Sweep rides/vehicles after model changes (seat heights, gondola cabins, carousel saddles) as in stage 9.
+- Add a regression check for each confirmed defect class so it cannot silently return.
+- Bounding-box audits still produce known false positives (terrain masses, merged batches); document them.
+
+## Phase 5 — performance on phones
+
+- Collision interval index done (stage 1). Keep new scenery merged or instanced (1 draw per batch).
+- Measure per-group geometry cost with the harness; never quote whole-scene totals (streaming).
+- Remaining work: draw-call budget per district, texture sizes/compression, LOD for distant scenery,
+  shader warm-up, and a real-device pass on iPhone Safari and Android Chrome. No FPS claim without hardware.
+
+## Phase 6 — tooling (assessed 2026-11-23)
+
+- glTF-Transform CLI 4.5.1 installed as a devDependency; reads and rewrites the game's meshopt GLBs.
+- KTX-Software `ktx` v4.4.2 installed under `~/ktx/bin`; `gltf-transform etc1s` produces KHR_texture_basisu.
+- Blender 4.2.3 LTS runs headless from `~/blender-4.2.3-linux-x64` with user-space X libs (see PROGRESS.md).
+- Not yet wired into the game: KTX2 runtime loading, texture compression of shipped assets, Blender rebuilds.
+
+## Phase 7 — release
+
+See `RELEASE_CHECKLIST.md`. The PR stays a draft and is never merged without explicit approval.

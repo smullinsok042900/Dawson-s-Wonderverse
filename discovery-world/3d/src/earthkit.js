@@ -57,18 +57,44 @@ let WALL_M = null; const WALL = () => WALL_M || (WALL_M = Object.assign(shinyMat
  * A sea that moves. w × d metres, the shore along its near edge. Returns { mesh, update(t) }.
  * Waves are worked out for about a thousand points each frame (a fraction of a millisecond), only while you are near.
  */
-let SEA_M = null;
+let SEA_M = null, RIPPLE_SRC = null;
+// (overhaul) a seamless fine-ripple normal map, generated once: the vertex waves are large and slow, this adds the
+// small moving ripples that catch the sun and make the surface read as real water up close. Shared canvas, cloned
+// per sea so each can scroll at its own speed.
+function rippleSource() {
+  if (RIPPLE_SRC) return RIPPLE_SRC;
+  const N = 128, h = new Float32Array(N * N), TAU = Math.PI * 2;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N * TAU, v = y / N * TAU;
+    h[y * N + x] = Math.sin(u * 3 + Math.sin(v * 2) * .7) * .5 + Math.sin(v * 4 + Math.cos(u * 3) * .5) * .32 + Math.sin((u + v) * 6) * .14 + Math.sin((u * 2 - v) * 9) * .06;
+  }
+  const c = document.createElement('canvas'); c.width = c.height = N; const g2 = c.getContext('2d'), img = g2.createImageData(N, N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const dx = h[((y + N) % N) * N + ((x + 1 + N) % N)] - h[((y + N) % N) * N + ((x - 1 + N) % N)], dy = h[((y + 1 + N) % N) * N + ((x + N) % N)] - h[((y - 1 + N) % N) * N + ((x + N) % N)], l = Math.hypot(dx * 2.6, dy * 2.6, 1), k = (y * N + x) * 4;
+    img.data[k] = (-dx * 2.6 / l * .5 + .5) * 255; img.data[k + 1] = (dy * 2.6 / l * .5 + .5) * 255; img.data[k + 2] = (1 / l * .5 + .5) * 255; img.data[k + 3] = 255;
+  }
+  g2.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
+  RIPPLE_SRC = t; return t;
+}
+
 export function makeSea(w, d, nx = 56, nz = 16) {
-  const g = new THREE.PlaneGeometry(w, d, nx, nz); g.rotateX(-Math.PI / 2); g.deleteAttribute('uv');
+  const g = new THREE.PlaneGeometry(w, d, nx, nz); g.rotateX(-Math.PI / 2); // (overhaul) keep UVs: the ripple normal map needs them
   const p = g.attributes.position, n = g.attributes.normal, cols = new Float32Array(p.count * 3), amp = new Float32Array(p.count), c = new THREE.Color();
   for (let i = 0; i < p.count; i++) { const k = 1 - (p.getZ(i) + d / 2) / d; // 0 at the shore … 1 far out
     c.set('#8fe6f2').lerp(col('#3fa9e8'), sstep(0, .22, k)).lerp(col('#1f6fd6'), sstep(.25, 1, k)); c.lerp(col('#ffffff'), sstep(.035, 0, k) * .7); c.multiplyScalar(.92 + noise2(p.getX(i) * .15, p.getZ(i) * .3) * .16);
     cols[i * 3] = c.r; cols[i * 3 + 1] = c.g; cols[i * 3 + 2] = c.b; amp[i] = .03 + sstep(0, .5, k) * .13; }
   g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
   SEA_M = SEA_M || Object.assign(shinyMat().clone(), { roughness: .1, metalness: .2 });
-  const mesh = new THREE.Mesh(g, SEA_M); mesh.receiveShadow = true; mesh.userData.dynamic = true;
+  // (overhaul) per-sea material: fine scrolling ripples, stronger sky reflection, sharper highlight
+  const mat = SEA_M.clone(); const ripple = rippleSource().clone(); ripple.needsUpdate = true;
+  ripple.wrapS = ripple.wrapT = THREE.RepeatWrapping; ripple.repeat.set(Math.max(2, w / 7), Math.max(2, d / 7));
+  mat.normalMap = ripple; mat.normalScale = new THREE.Vector2(.55, .55);
+  mat.envMapIntensity = 1.35; mat.roughness = .07; mat.metalness = .28;
+  const mesh = new THREE.Mesh(g, mat); mesh.receiveShadow = true; mesh.userData.dynamic = true;
   const pa = p.array, na = n.array;
   return { mesh, update(t) {
+    ripple.offset.set(t * .05, t * .037); // the fine ripples drift across the big waves
     for (let i = 0, k = 0; i < p.count; i++, k += 3) { const x = pa[k], z = pa[k + 2], a = amp[i], p1 = x * .34 + t * 1.1, p2 = x * .12 - z * .4 + t * .7, p3 = z * .8 + t * 1.6;
       pa[k + 1] = a * (Math.sin(p1) * .5 + Math.sin(p2) * .5 + Math.sin(p3) * .3);
       const dx = a * (Math.cos(p1) * .17 + Math.cos(p2) * .06), dz = a * (Math.cos(p2) * -.2 + Math.cos(p3) * .24), l = 1 / Math.sqrt(dx * dx * 9 + 1 + dz * dz * 9); // (slopes exaggerated 3x, so the glints show from far)

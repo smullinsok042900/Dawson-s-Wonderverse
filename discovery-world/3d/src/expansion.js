@@ -17,6 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
+import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail, buildHillsDetail, buildTrailDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
 export const DISTRICTS = [
@@ -255,6 +256,8 @@ export function initExpansion(G, api) {
   // =================== 🌉 ADVENTURE TRAIL ===================
   builders.trail = c => [
     ...familyParts(c, 'trail'),
+    // (stage 17) bridge handrails, cliff strata, a waterfall with mist and a lookout deck
+    () => { G.trailDetail = buildTrailDetail({ add: c.add }); },
     // a stream across the path, with a wooden bridge (walk across, or splash through the water)
     () => { const stream = makeSea(10.2, 13.6, 10, 14), w = stream.mesh; w.position.set(450, .035, -5.35); /* (build 62: ends at z 1.6, clear of the track) (build 64: as wide as the bridge, so no water shows on the path beside it) */ c.add(w); /* (build 60: the stream stops before the train track, z up to 2.3) */ /* (build 54: the stream ripples) */
       for (const x of [446.5, 449.5, 452.5]) c.block(x, 0, -6, 1.1, .3, 1.1, '#9a9a9a', { r: .4 }); /* (build 64: stepping stones further upstream, not under the railing) */
@@ -397,6 +400,8 @@ export function initExpansion(G, api) {
     () => { c.cyl(651.5, 0, -2.4, .9, .7, .8, '#c87a2a', { r: .8 }); /* (build 64: in the gap between the houses; at 656 the balloons rose up a house wall) */ const list = []; const spawn = b => { b.position.set(650 + Math.random() * 3, .8, -2.4 + Math.random() * .8); b.rotation.z = 0; b.userData.v = .8 + Math.random() * .6; };
       for (let i = 0; i < 6; i++) { const b = physicalToy('🎈', 1); spawn(b); b.position.y = Math.random() * 8; c.add(b); list.push(b); c.tap(b, () => { if (b.userData.pop) return; b.userData.pop = 1; Sound.pop ? Sound.pop() : Sound.click(); X.balloons++; c.burst(b.position.x, b.position.y, b.position.z, RB, 10, 2.5); c.disc('balloons', '🎈 Pop! Catch the balloons as they float up!'); if (X.balloons % 10 === 0) c.say(`🎈 ${X.balloons} balloons caught!`); setTimeout(() => { b.userData.pop = 0; spawn(b); }, 400); b.position.y = -20; api.saveSoon(); }); }
       return dt => { for (const b of list) { if (b.userData.pop) continue; b.position.y += b.userData.v * dt; b.position.x += Math.sin(b.position.y * 1.3) * dt * .3; if (b.position.y > 10) spawn(b); } }; },
+    // (stage 5) toy-box spill, giant balls and spinning tops along the path
+    () => { G.toyTownDetail = buildToyTownDetail({ add: c.add }); },
   ];
 
   // =================== 🔬 LAB GARDENS ===================
@@ -407,8 +412,12 @@ export function initExpansion(G, api) {
       return () => { const events = world.adventures?.events || []; const next = (events.includes('learn_count') && events.includes('learn_plant')) || world.adventures?.completed?.includes('science') === true; if (next === grown) return; grown = next; flowers.forEach(f => { f.visible = grown; }); };
     },
     () => palAtHome(c, 'frog'), // (build 32) Hoppy the frog waits by the pond
-    // greenhouse domes behind
-    () => { for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat('#d9f6ff', { r: .1, cc: .6 })); d.position.set(x, 0, -11); d.scale.y = .8; c.add(d); } },
+    // greenhouse domes behind: raised onto the drum walls and ribs the detail builder adds (stage 9), and now
+    // really glazed, so the raised beds and tall planting inside are visible through the panes
+    () => { const pane = new THREE.MeshPhysicalMaterial({ color: '#eafcff', roughness: .05, metalness: 0, transparent: true, opacity: .26, clearcoat: 1, clearcoatRoughness: .08, side: THREE.DoubleSide, depthWrite: false });
+      for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), pane); d.position.set(x, .92, -11); d.scale.y = .8; d.renderOrder = 3; c.add(d); } },
+    // (stage 9) planter beds, greenhouse walls/ribs/doors, edging fences and the potting bench
+    () => { G.labGardenDetail = buildLabGardenDetail({ add: c.add }); },
     // a colour-changing pond: tap the water, it changes colour, a fish jumps
     () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const m = mat('#3b82f6', { r: .15, cc: .6 }).clone();
       const pond = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, .08, 40), m); pond.position.set(684, .03, -4.9); /* (build 64: back from the path) */ c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(3, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(684, .1, -4.9); c.add(rim);
@@ -454,6 +463,8 @@ export function initExpansion(G, api) {
   // =================== 🖍️ ART PLAZA ===================
   builders.artplaza = c => [
     ...familyParts(c, 'artplaza'),
+    // (stage 10) the gallery yard: painted paving, planters, easels, a drying rack and bunting
+    () => { G.artPlazaDetail = buildArtPlazaDetail({ add: c.add }); },
     () => lifeHere(c, [['chalkpink', 827, -2.7]]), // The daughter's pink chalk creature: tap to twirl and dance.
     () => { const frame = c.toy('🖼️', 1.3, 798, 2, -2); c.tap(frame, () => api.gallery?.(), 798, { icon: '🖼️', label: 'Gallery', action: 'Open gallery', disc: 'gallery' }); },
     // the sticker wall: tap anywhere on it to stick a picture there (they're remembered)
@@ -518,6 +529,8 @@ export function initExpansion(G, api) {
   // =================== 🏖️ SUNNY SEASIDE (x -150 to -20) ===================
   builders.seaside = c => [
     ...familyParts(c, 'seaside'),
+    // (stage 11) parasols, towels, beach balls, dune grass and driftwood along the sand
+    () => { G.seasideDetail = buildSeasideDetail({ add: c.add }); },
     () => lifeHere(c, [['drawingblue', -123, -3.7]]),
     // the ice cream stand: tap the tubs to stack scoops, tap the cone to eat it
     () => { c.block(-35, 0, -3.4, 3.4, 1.1, 1.2, '#ffffff', { r: .2 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.2, 4).rotateY(Math.PI / 4), mat('#ff7ac8')); roof.position.set(-35, 3.2, -3.4); roof.scale.z = .6; /* (build 48: turned in its shape, then squashed: straight, not crooked) */ c.add(roof); for (const x of [-36.6, -33.4]) c.cyl(x, 0, -3.4, .07, .07, 2.6, '#ffffff');
@@ -568,6 +581,8 @@ export function initExpansion(G, api) {
     return (dt, t) => { for (const f of fns) f(dt, t); }; };
   builders.woods = c => [
     () => tunnelMouth(c, -232, -4.4, 'toytown'), // (build 32) a secret tunnel to Toy Town
+    // (stage 12) real trees, a fern understory and a cleared campfire circle
+    () => { G.woodsDetail = buildWoodsDetail({ add: c.add }); },
     // the campfire: tap the fire for flames; tap the marshmallow to toast it golden
     () => { for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2; const st = c.sph(-165 + Math.cos(a) * .9, .15, -2.6 + Math.sin(a) * .9, .25, '#9a9a9a', { m: { r: .9 } }); st.scale.y = .6; } const logs = [0, 1.2].map(r => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 1.4, 8), mat('#7a4a2a')); lg.rotation.set(Math.PI / 2, r, 0); lg.position.set(-165, .15, -2.6); c.add(lg); return lg; });
       const fire = c.toy('🔥', 1.4, -165, .9, -2.6); fire.visible = false; let lit = 0, toast2 = 0;
@@ -618,6 +633,8 @@ export function initExpansion(G, api) {
   // =================== ❄️ FROSTY PEAKS (x -404 to -272) ===================
   builders.frosty = c => [
     ...familyParts(c, 'frosty'),
+    // (stage 13) snow-capped ridgeline, drifts, snow-loaded pines and an ice arch
+    () => { G.frostyDetail = buildFrostyDetail({ add: c.add }); },
     () => lifeHere(c, [['drawingteal', -288, -3.6]]),
     // the sledding hill: climb the snowy steps, tap the sled at the top and whoosh down the other side
     () => { const hill = c.sph(-328, -2.2, -5.5, 8, '#f3f8ff', { m: { r: .9, cc: 0 } }); hill.scale.set(1, .9, .55);
@@ -667,6 +684,8 @@ export function initExpansion(G, api) {
   const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
   builders.farm = c => [
     ...familyParts(c, 'farm'),
+    // (stage 14) fenced paddock, crop rows, round bales and a barn cupola
+    () => { G.farmDetail = buildFarmDetail({ add: c.add }); },
     () => lifeHere(c, [['drawingwave', -486, -4.5]]),
     // the red barn: tap the doors and an animal comes out to say hello (a different one each time)
     () => { c.block(-420, 0, -5.6, 7, 4.2, 4, '#d8443c', { r: .15 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(5, 2.2, 4).rotateY(Math.PI / 4), mat('#8a2a24', { r: .8 })); roof.scale.z = .62; /* (build 48: the barn roof was crooked, like the house's was) */ roof.position.set(-420, 5.3, -5.6); c.add(roof);
@@ -737,6 +756,8 @@ export function initExpansion(G, api) {
   const FISH = [['🐟', 'a blue fish'], ['🐠', 'a yellow fish'], ['🐡', 'a puffer fish'], ['🐟', 'another blue fish'], ['🐠', 'a stripy fish']];
   builders.pier = c => [
     ...familyParts(c, 'pier'),
+    // (stage 15) deck planking, pilings with rope, cleats, bait shack and lamps
+    () => { G.pierDetail = buildPierDetail({ add: c.add }); },
     // the sea behind the pier (one shared-material plane), a foam line and the wooden pier going out over the water
     () => { const pierSea = makeSea(134, 40, 56, 14), sea = pierSea.mesh; sea.position.set(-602, .02, -26); c.add(sea); /* (build 61: soft grassy headlands hide the sea's straight ends) */ for (const hx of [-671, -533]) { const hd = c.sph(hx, -1.2, -28, 1, '#7fcf7a', { m: { r: .95, cc: 0 } }); hd.scale.set(9, 2.6, 22); hd.castShadow = false; }
       const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
@@ -800,6 +821,8 @@ export function initExpansion(G, api) {
   // grassy hill to climb and slide down.
   builders.hills = c => [
     ...familyParts(c, 'hills'),
+    // (stage 16) moored balloons, bunting, wildflower drifts and terrace shelves
+    () => { G.hillsDetail = buildHillsDetail({ add: c.add }); },
     () => lifeHere(c, [['drawinglonglegs', -789, -3.5]]),
     // rolling green hills behind (a few big shared-material bumps) and a soft lawn colour
     () => { for (const [x, z, r, sy, col] of [[-690, -22, 16, .45, '#8fd88a'], [-722, -26, 20, .55, '#7fcf7a'], [-756, -21, 15, .5, '#9be096'], [-788, -25, 18, .5, '#86d482']]) { const h = c.sph(x, -3, z, r, col, { m: { r: .95, cc: 0 } }); h.scale.y = sy; h.castShadow = false; } },

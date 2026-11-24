@@ -10,7 +10,7 @@
 // and freed with it; only creatures near the camera move (a few per frame); nothing is sent between phones.
 // ===================================================================
 import * as THREE from 'three';
-import { makeBatch, shinyMat } from './spacekit.js';
+import { makeBatch, shinyMat, lifeMat } from './spacekit.js';
 import { CHALK_FRIENDS } from './chalk-friends.js';
 import { MARKER_FRIENDS } from './marker-friends.js';
 import { DOODLE_FRIENDS } from './doodle-friends.js';
@@ -306,10 +306,13 @@ export const PET_KINDS = Object.keys(SPECIES).filter(k => SPECIES[k].pet);
 
 // one shared painted shape per species (made the first time it is needed, then reused)
 const SHAPES = {};
+// (stage 30) the residents' paint stays exactly as authored - the chalk, marker, doodle, keepsake and craft families are
+// drawings, so their colours are part of the design and are asserted by tests. The soft look therefore comes from their
+// own material only (lifeMat), never from editing vertex colours.
 export function creatureMesh(kind) {
   const sp = SPECIES[kind]; if (!sp) return null;
   if (!SHAPES[kind]) { const b = makeBatch(), put = b.put.bind(b); b.put = (geo, x, y, z, col, sc, ...rest) => { if (geo === GEO.ball) { const m = Array.isArray(sc) ? Math.max(...sc) : sc; geo = m <= .075 ? GEO.dot : m <= .16 ? GEO.ballS : GEO.ball; } return put(geo, x, y, z, col, sc, ...rest); }; /* (build 117: lighter shapes, the same look) */ sp.build(b); SHAPES[kind] = b.geometry ? b.geometry() : b.mesh(shinyMat()).geometry; SHAPES[kind].userData.shared = true; }
-  const g = new THREE.Group(), body = new THREE.Group(); g.add(body); const m = new THREE.Mesh(SHAPES[kind], shinyMat()); m.castShadow = false; /* (build 108: no shadow pass: cheaper) */ m.scale.setScalar(sp.size || 1); body.add(m);
+  const g = new THREE.Group(), body = new THREE.Group(); g.add(body); const m = new THREE.Mesh(SHAPES[kind], lifeMat()); m.castShadow = false; /* (build 108: no shadow pass: cheaper) */ m.scale.setScalar(sp.size || 1); body.add(m);
   g.userData.body = body; g.userData.kind = kind; g.userData.dynamic = true; return g;
 }
 // how a pet moves while following her (the 🐾 friends call this every frame)
