@@ -536,4 +536,25 @@ sheet. Evidence only, no FPS claim.
 Evidence: `docs/screenshots/stage25/` (approach, bands, red spot, moons look-up). Audit at 12/44/72/120: z-fighting 0,
 solids 12, platforms 108/113/113/113, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. No FPS claim.
 
-Next: Saturn → Uranus → Neptune → Pluto, then character/pet material polish.
+## Stage 26 — Saturn: banded rings, a banded deck with depth, a readable hexagon
+
+- **Rings with real gaps and banding**: one 128-segment annulus with a 256-px alpha strip became four separate
+  220-segment annuli — the faint C ring, the bright B ring, the A ring and the thin F ring — so the Cassini division
+  between B and A is open sky rather than painted transparency. The shared strip is 1024 px with fine one-pixel
+  ringlets, a narrow division inside B, the Encke gap in A and a soft F ring; each band keeps its own opacity.
+- **Banded deck with depth, like Jupiter's**: Saturn now shares Jupiter's banded-deck code at 150x58 (ground mesh
+  17,400 triangles, up from 12,000) with its own gold palette, wind combs, curls and oval storms. The deck's height
+  follows the belts and zones (weaker and lower than Jupiter's), and twelve random cloud heaps became three
+  band-aligned rows of half-buried domes, so the belts recede instead of being covered.
+- **Hexagon storm**: the four flat 16 cm hexagon plates became a five-tier stepped hexagonal vortex with real walls,
+  2.2 m tall and alternating cream and amber tiers, each with a dark skirt at its foot and foam caps on the corners,
+  plus a dark hexagonal eye on top. It now reads as a storm from the walking camera (the tiers counter-rotate, faster
+  when tapped).
+- **Wisps**: Saturn's drifting wisp layers sit low on the deck as thin streaks, so nothing floats like a plate.
+- Rejected after inspection: one pass with cream tiers (the steps vanished into the cream deck) and a first hexagon
+  at four flat 16 cm plates that looked like a gold platter.
+
+Evidence: `docs/screenshots/stage26/` (approach, bands, hexagon). Audit at 12/44/72/120: z-fighting 0, solids 12,
+platforms 113, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. No FPS claim.
+
+Next: Uranus → Neptune → Pluto, then character/pet material polish.

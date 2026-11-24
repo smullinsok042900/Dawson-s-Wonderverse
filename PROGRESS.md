@@ -508,6 +508,32 @@ surfaces).
 Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platforms 108/113/113/113, 0 malformed,
 0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
 
+### Stage 26 — Saturn: banded rings, a banded deck with depth, a readable hexagon
+
+- **Rings with real gaps and banding**: the single 128-segment annulus with a 256-px alpha strip became four separate
+  220-segment annuli - the faint C ring (190-226), the bright B ring (231-272), the A ring (279-301) and the thin F
+  ring (306-310) - so the Cassini division between B and A is open sky, not painted transparency. The shared strip is
+  1024 px with one-pixel ringlets, a narrow division inside B, the Encke gap inside A and a soft F ring; each band
+  keeps its own opacity, and the tap target and the "millions of pieces of ice" fact moved to the B ring.
+- **Banded deck with depth**: Saturn now uses Jupiter's banded-deck code at `nx 150, nz 58` (ground mesh **1 mesh /
+  17,400 triangles**, up from 12,000) with its own gold palette, wind combs, curls and oval storms. The deck's height
+  follows the belts and zones - weaker and lower than Jupiter's - and the twelve random five-puff heaps became three
+  band-aligned rows of half-buried domes, so the belts recede instead of being covered by blobs.
+- **Hexagon storm**: the four flat 16 cm hexagon plates became a five-tier stepped hexagonal vortex with real walls,
+  2.2 m tall, alternating cream and amber tiers, a dark skirt at each tier's foot and foam caps on the corners, with a
+  dark hexagonal eye on top. The tiers counter-rotate (faster when tapped) and the storm now reads from the walking
+  camera instead of looking like a gold platter.
+- **Wisps**: Saturn's drifting wisp layers sit low on the deck as thin streaks, so nothing floats like a plate.
+- Rejected after inspection: the first tier palette was all cream (the steps vanished into the cream deck) and the
+  first hexagon was still four flat plates.
+
+Evidence in `docs/screenshots/stage26/`, normal walking camera: `saturn-approach.png` (the ring arch with its
+banding and divisions), `saturn-bands.png` (a broad belt and cream zones across the deck) and `saturn-hexagon.png`
+(the stepped hexagonal storm beside the path).
+
+Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platforms 113, 0 malformed, 0 duplicate or
+heavy-overlap solids, 0 page errors. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -797,8 +823,11 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
     59,440-triangle ground mesh, rover and dust devil re-verified, evidence in `docs/screenshots/stage24/`.
 14. **Jupiter — done (stage 25):** 168x62 banded deck whose height follows the belts and zones, four rows of
     band-aligned cloud banks, a four-layer domed Great Red Spot with raised spiral arcs and five eddies, four moons
-    painted at 256 with their own light; 20,832-triangle ground mesh, evidence in `docs/screenshots/stage25/`. Saturn
-    is next.
+    painted at 256 with their own light;     20,832-triangle ground mesh, evidence in `docs/screenshots/stage25/`.
+15. **Saturn — done (stage 26):** four separate 220-segment ring annuli with real Cassini and Encke gaps over a
+    1024-px banding strip, a 150x58 banded deck whose height follows the belts and zones, three rows of band-aligned
+    cloud banks, and a five-tier stepped hexagonal storm with dark skirts and foam caps; 17,400-triangle ground mesh,
+    evidence in `docs/screenshots/stage26/`. Uranus is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.
