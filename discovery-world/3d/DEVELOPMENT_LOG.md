@@ -16,7 +16,7 @@ are in `PERFORMANCE_LOG.md`.
 - **Dottie the dinosaur:** the "me" learning corner (a floating toy) stood where she lowers her head and stuck out of her neck; moved to x 393.6.
 - **Meadow:** the two picture signs high above the block wall and the colouring board are gone (one showed behind the top buttons like a broken button).
 - The Ferris wheel fix written first (rod, canopy, open basket) was dropped: the overhaul (builds 120–122, PR #104) had already rebuilt the wheel and its gondolas, and its version is kept.
-- Tests (desktop, software rendering): `trail-zip` (its speed check now compares the ride's own speed; the old one measured wall-clock time at 1–2 frames a second): all passed. Speed: see PERFORMANCE_LOG. **Full smoke test: SMOKE_RESULT.** Not tried on an iPhone.
+- Tests (desktop, software rendering): `trail-zip` (its speed check now compares the ride's own speed; the old one measured wall-clock time at 1–2 frames a second): all passed. Speed: see PERFORMANCE_LOG. **Full smoke test: 342/342** (the first two runs: 341/342 — console warnings from the overhaul's scenery code giving plain materials sheen and clearcoat, removed; then the desktop ReadPixels driver note in a longer form the test's filter missed, filter widened for that ending only). Not tried on an iPhone.
 - Still to look at (asked the family): which learning game showed plain white cards on the iPhone (every game shows its pictures on desktop); the little door high on the barn; the 3D learning pictures follow the world's adaptive sharpness (blocky letters on a busy phone).
 
 ## Checkpoint: build 122 — thirty further family creations, forty-six additions together
