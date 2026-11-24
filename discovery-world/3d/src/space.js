@@ -614,10 +614,36 @@ export function initSpace(G, api) {
     yield;
     if (id === 'pluto') {
       const hc = X + 44, face = (x, z) => Math.min(10, Math.max(0, (-41 - z) * .72)) * Math.exp(-Math.pow((x - hc) / 21, 4)); // the broad smooth mountain face that carries the heart
-      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
-          return (K.fbm2(x * .06, z * .06, 4) - .5) * 3 + jag * (1 - fm) + face(x, z) + K.sstep(-70, -150, z) * 10 * fm; },
-        color: (x, z, h, ny, o) => { const n = K.fbm2(x * .5, z * .5, 3), dark = K.sstep(.52, .42, K.fbm2(x * .02 + 6, z * .02 + 1, 3)), ice = K.sstep(4, 11, h + n * 4) * K.sstep(.5, .85, ny + n * .2);
-          K.ramp(['#a87660', '#cfa890', '#f0dcc8'], .2 + n * .6, o).lerp(K.col('#7a3a30'), dark * .55); o.lerp(K.ramp(['#bcd4f2', '#f4f8ff'], n, T3), ice);
+      // (stage 29) THE HEART PLAIN: the heart-shaped basin of nitrogen ice (Pluto's Sputnik Planitia) is cut about 4.5 m
+      // into the crust and ringed by a raised tholin rim, with ice mountains standing beyond it, so the plain has edges and
+      // depth the walking camera can see instead of being a flat painted patch. The depth is gated off within 8 m of the
+      // walkway, and the terrain grid carries it at nx 208 / nz 82, about 2 m columns where you walk.
+      const PX = X + 46, PZ = -34, PRX = 34, PRZ = 26;
+      const heartF = (x, z) => { const u = (x - PX) / PRX, w = -(z - PZ) / PRZ, q = u * u + w * w - 1; return q * q * q - u * u * w * w * w; };
+      const plain = (x, z) => { const f = heartF(x, z), near = K.sstep(-8, -16, z);
+        return near * (-6.2 * K.sstep(.12, -.14, f) + 3.2 * K.sstep(.34, .02, Math.abs(f))); };                 // (a bowl with a banked rim)
+      const MTS = [[PX - 52, -86, 32, 11], [PX + 4, -98, 38, 14], [PX + 58, -84, 29, 10]];                      // (the ice mountains beyond the plain)
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, nx: 208, nz: 82, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
+          let h = (K.fbm2(x * .06, z * .06, 4) - .5) * 3 + jag * (1 - fm) + face(x, z) + K.sstep(-70, -150, z) * 10 * fm;
+          h += plain(x, z) * (1 - fm);
+          for (const [mx, mz, mr, mh] of MTS) { const d = Math.hypot((x - mx) / mr, (z - mz) / (mr * .85)); if (d < 1.4) h += mh * Math.pow(Math.max(0, 1 - d), 1.35) * (.52 + .62 * Math.pow(K.ridge2(x * .062, z * .062, 3), 1.4)); } // (angular ice peaks, not smooth drifts)
+          return h; },
+        color: (x, z, h, ny, o) => { // (stage 29) a layered surface: tholin-stained crust, frost strata stacked by height on
+          const n = K.fbm2(x * .5, z * .5, 3), dark = K.sstep(.52, .42, K.fbm2(x * .02 + 6, z * .02 + 1, 3)), big = K.fbm2(x * .028 + 4, z * .028 + 9, 3);
+          const strata = Math.sin(h * 2.2 + (K.noise2(x * .07, z * .07) - .5) * 2.4) * .5 + .5;                 // every frost layer the scarps expose
+          const icy = K.sstep(6.5, 15, h + n * 3) * K.sstep(.4, .78, ny + n * .2);                                // bright ice on the high ground
+          const crev = K.sstep(.56, .84, K.ridge2(x * .1 + 2, z * .1, 2));                                        // crevasse shadows in the ice
+          const f = heartF(x, z), near = K.sstep(-8, -16, z), inPlain = K.sstep(.12, -.14, f) * near;
+          const cell = K.sstep(.56, .82, K.ridge2(x * .085, z * .085, 2)), thaw = K.sstep(.5, .88, K.noise2(x * .06 + 3, z * .06));
+          K.ramp(['#8f6a58', '#c39a80', '#e8cfb8'], .18 + n * .55 + big * .22, o);                                // tholin-stained crust
+          o.lerp(K.col('#6a4438'), dark * .5);
+          o.lerp(K.col('#7a4a3c'), strata * K.sstep(.93, .66, ny) * .5);                                          // stacked strata on the scarps
+          o.lerp(K.col('#dfe9f6'), inPlain * (.72 + thaw * .18));                                                 // the nitrogen-ice plain floor
+          o.lerp(K.col('#f7fbff'), inPlain * cell * .5);                                                          // bright polygon centres
+          o.lerp(K.col('#93827c'), inPlain * (1 - cell) * .34);                                                   // dark tholin lanes between them
+          o.lerp(K.col('#a8896f'), K.sstep(.34, .02, Math.abs(f)) * near * .55);                                   // the raised tholin rim around the plain
+          o.lerp(K.ramp(['#bcd4f2', '#f4f8ff'], n, T3), icy * .9);
+          o.lerp(K.col('#6a5040'), icy * crev * .42);                                                             // dark crevasses and rock showing through
           const lane = K.sstep(1, 0, Math.hypot((x - (X + 44.5)) / 7.6, (z + .6) / 3.9)); if (lane > 0) { const cell = K.sstep(.42, .5, Math.abs(K.noise2(x * .7, z * .7) - .5) * 2 + .3); o.lerp(K.ramp(['#cfe2f6', '#ffffff'], cell, T3), Math.min(1, lane * 3)); }
           o.multiplyScalar(.74 + .32 * ny); } });
       yield* rocks(60, { colors: ['#7a4a3c', '#c9b0a0', '#e6eefa'], sharp: 1, s1: .7 }); yield* frontRocks(['#5a3a30', '#a88a7a'], 7, 1);

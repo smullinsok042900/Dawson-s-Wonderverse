@@ -609,4 +609,27 @@ Evidence: `docs/screenshots/stage28/` (approach, deck, and the storm on the walk
 z-fighting 0, solids 12, platforms 108, 0 malformed, duplicate or heavy-overlap entries, 0 page errors (one run flagged
 a pair of streamed scenery planes 1.8 cm apart at x 44; it did not reproduce in two reruns). No FPS claim.
 
-Next: Pluto, then character/pet material polish.
+## Stage 29 — Pluto: a layered surface with depth, and the heart plain kept playable
+
+- **A real terrain grid**: the ground went from the default 128x54 sheet to 208x82 (about 2 m columns where you walk), so
+  scarps, plain edges and ice peaks are carried by geometry instead of averaged away: ground mesh **40,772 triangles**,
+  while the walkway and the ice-slide lane still measure exactly flat (largest deviation 0.000 m over 57 lane vertices).
+- **The heart plain, with depth**: Pluto's nitrogen-ice plain is now a heart-shaped basin **6.2 m deep with a 3.2 m raised
+  tholin rim**, cut from the crust with an implicit heart outline and gated by `sstep(-8, -16, z)` so nothing within 8 m
+  of the walkway changes height. Relief now runs from -5.85 m on the plain floor to +36.5 m at the ice mountains, where
+  the old sheet had one ridge band and a flat painted patch.
+- **Layered surface**: tholin-stained crust with stacked frost strata on the scarps, a dark tholin stain, the bright ice
+  floor with polygonal convection cells and darker lanes between them, a tholin rim around the plain, and bright ice with
+  crevasse shadows on the high ground - all at 5-40 m scales, so the new grid can resolve every one.
+- **The ice mountains**: three angular peaks (14/17/12 m over 30-38 m radii) built from a sharpened ridge function, so
+  they read as crags rather than smooth drifts.
+- **Kept working**: the bounce castles still launch the player (a 0.48 m pad threw them to vy **4.07**), a squish wall
+  still squishes (**4 walls to 3**), the matching game is built (`G.plutoMatch`), and the heart's ice lane still slides
+  (**0.35 m** coast against 0.22 m off the lane), with 0 page errors.
+
+Evidence: `docs/screenshots/stage29/` (approach, heart plain, heart). Audit at 12/60/120/200: z-fighting 0 at 60/120/200,
+solids 12/16/16/16, platforms 108/111/111/120, 0 malformed, duplicate or heavy-overlap entries, 0 page errors (one run
+flagged a pair of streamed scenery planes 3 cm apart at x 12; it did not reproduce in two reruns). Frames 56 calls /
+87,378 tris at the approach, 58 / 86,160 on the plain, 61 / 89,000 at the heart. No FPS claim.
+
+Next: the character/pet material pass.

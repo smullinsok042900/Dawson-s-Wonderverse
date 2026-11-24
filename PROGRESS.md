@@ -595,6 +595,37 @@ Audit at x 12, 44, 72 and 99: **z-fighting 0**, solids 12, platforms 108, 0 malf
 solids, 0 page errors. One run earlier flagged a pair of streamed scenery planes 1.8 cm apart at x 44; it did not
 reproduce in two reruns, so it is a streaming artefact rather than a deck regression. No FPS claim.
 
+### Stage 29 — Pluto: a layered surface with depth, and the heart plain kept playable
+
+- **A real terrain grid**: the ground went from the default 128x54 sheet to `nx 208, nz 82` (about 2 m columns where you
+  walk), so the scarps, the plain edges and the ice peaks are carried by geometry instead of being averaged away. Ground
+  mesh **1 mesh / 40,772 triangles**; the walkway strip and the ice-slide lane still measure exactly flat (largest
+  deviation 0.000 m across 57 lane vertices).
+- **The heart plain, with depth**: Pluto's nitrogen-ice plain (Sputnik Planitia) is now a **heart-shaped basin 6.2 m deep
+  with a 3.2 m raised tholin rim**, cut out of the crust with an implicit heart outline. The basin is gated by
+  `sstep(-8, -16, z)`, so nothing within 8 m of the walkway changes height. Terrain relief now spans -5.85 m (plain floor)
+  to +36.5 m (the ice mountains beyond), where the old sheet had one jagged ridge band and a flat painted patch.
+- **Layered surface**: a tholin-stained crust with stacked frost strata exposed on the scarps, a dark tholin stain, the
+  bright ice plain floor with polygonal convection cells and darker lanes between them, a tholin rim around the plain,
+  and bright ice with crevasse shadows on the high ground. All colour features sit at 5-40 m scales, so the new grid can
+  resolve them.
+- **The ice mountains**: three angular peaks (14/17/12 m of relief over 30-38 m radii) stand beyond the plain, built from
+  a sharpened ridge function rather than smooth domes, with strata and crevasses in their flanks.
+- **Kept working**: the bounce castles still launch the player (standing on a 0.48 m pad at 0.54 m, the pad threw them to
+  vy **4.07** and y 1.11), a squish-maze wall still squishes (**4 walls to 3** on tap), the picture-matching game is built
+  (`G.plutoMatch` present), and the heart's slippery ice lane still slides (coasting **0.35 m** against 0.22 m off the lane
+  from the same speed). The heart glacier, Charon and every tap still work, with 0 page errors.
+
+Evidence in `docs/screenshots/stage29/`: `pluto-approach.png` (the landing pad under the layered peaks),
+`pluto-heart-plain.png` (the ice basin with its bright floor and banked rim beside the player) and `pluto-heart.png`
+(the heart glacier on the slope, the ice blocks across the plain and the mountain walls behind).
+
+Audit at x 12, 60, 120 and 200: **z-fighting 0** at 60/120/200, solids 12/16/16/16, platforms 108/111/111/120,
+0 malformed, 0 duplicate or heavy-overlap solids, 0 page errors. One run flagged a pair of streamed scenery planes
+3 cm apart (77.7% overlap) at x 12; it did not reproduce in two reruns, so it is a streaming artefact rather than a
+terrain regression. Frames: 56 calls / 87,378 triangles at the approach, 58 / 86,160 on the plain and 61 / 89,000 at
+the heart; whole place 30 meshes / 73,354 triangles at the approach. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
