@@ -1,15 +1,18 @@
 // JSON-only adventure progress. No renderer, DOM, clocks or randomness.
 const step = (event, icon, say, x, extra = {}) => ({ event, icon, say, x, ...extra });
+// (build 124) The learning-game screens are gone at the family's request, so no quest step opens one. Quests that used them
+// now use places in the world; `was` keeps the old steps, so a quest already finished the old way stays finished (and
+// keeps its reward), and the old learn_* events stay valid in saved games.
 export const ADVENTURES = {
  rescue: { icon: '🐣', name: 'A little friend', reward: 'nest', steps: [step('walk','👣','Hold an arrow to walk. Follow the little footprints!',5),step('fluff_found','🐣','Find a baby Fluffkin. Walk close to say hello!',40),step('fluff_home','🏠','Take your little friend to the Fluffkin House!',190)] },
- companion: { icon:'💖',name:'A home for a friend',reward:'cushion',steps:[step('visit_woods','🌲','Visit the woods with a friend, or explore on your own!',-158),step('learn_count','🌱','Count seeds to grow something for home!',118,{learn:'count'}),step('furnish','🛏️','Choose a cosy cushion for the home nook!',190,{panel:'furnish'})] },
- rainbow: {icon:'🌈',name:'Rainbow helper',reward:'rainbow',steps:[step('learn_colors','🎨','Match the colours to make a rainbow!',214,{learn:'colors'})]},
- garden: {icon:'🌻',name:'Little gardener',reward:'garden',steps:[step('learn_count','🔢','Count seeds for the garden!',118,{learn:'count'}),step('learn_plant','🌱','Help a plant grow!',306,{learn:'plant'})]},
- train: {icon:'🚂',name:'Pattern express',reward:'train',steps:[step('learn_pattern','🔴','Finish the colour pattern to start the toy train!',214,{panel:'pattern'})]},
+ companion: { icon:'💖',name:'A home for a friend',reward:'cushion',steps:[step('visit_woods','🌲','Visit the woods with a friend, or explore on your own!',-158),step('furnish','🛏️','Choose a cosy cushion for the home nook!',190,{panel:'furnish'})],was:['visit_woods','learn_count','furnish'] },
+ rainbow: {icon:'🌈',name:'Rainbow helper',reward:'rainbow',steps:[step('visit_artplaza','🌈','Find the rainbow at Art Plaza!',880)],was:['learn_colors']},
+ garden: {icon:'🌻',name:'Little gardener',reward:'garden',steps:[step('visit_labgarden','🌻','Visit the flowers in the Lab Gardens!',700),step('seed_planted','🌱','Plant a seed in the farm vegetable patch!',-478)],was:['learn_count','learn_plant']},
+ train: {icon:'🚂',name:'Toy train trip',reward:'train',steps:[step('visit_toytown','🚂','Ride the train to Toy Town!',556)],was:['learn_pattern']},
  farm: {icon:'🚜',name:'Farm picnic',reward:'basket',steps:[step('seed_planted','🌱','Plant a seed in the farm vegetable patch!',-478),step('carrot_harvest','🥕','Help the carrot grow, then pull it up!',-478),step('feed_friend','🍪','Take a snack to the hungry friend in Art Plaza!',879)]},
  woods: {icon:'🦉',name:'Who is calling?',reward:'owl',steps:[step('woods_listen','👂','Listen to the call, or follow the glowing owl picture!',-187),step('woods_found','🦉','Follow the owl pictures and find the hidden friend!',-201)]},
  snow: {icon:'⛄',name:'Snow friend',reward:'snow',steps:[step('snow_rolled','⚪','Roll a snowball beside the snow pile!',-302),step('snow_built','⛄','Tap the snow pile to build a snow friend!',-300)]},
- science: {icon:'🔬',name:'Wonder gardener',reward:'flower',steps:[step('learn_float','🛁','Try things in water. What will float?',306,{learn:'float'}),step('learn_magnet','🧲','Discover what a magnet can pick up!',306,{learn:'magnet'}),step('learn_plant','🌱','Grow a flower for the garden!',306,{learn:'plant'})]},
+ science: {icon:'🔬',name:'Wonder gardener',reward:'flower',steps:[step('visit_lab','🔬','Visit the science lab!',100),step('visit_labgarden','🌷','Find the flowers in the Lab Gardens!',700)],was:['learn_float','learn_magnet','learn_plant']},
  art: {icon:'🎨',name:'My own gallery',reward:'frame',steps:[step('art_saved','🖼️','Paint or build, then put your creation in the gallery!',62,{panel:'gallery'}),step('gallery_visit','🏠','Visit your gallery at home or Art Plaza!',190,{panel:'gallery'})]},
  pier: {icon:'🌊',name:'Pier explorer',reward:'pirate',steps:[step('tide_found','🐙','Look in the tide pool for a little sea creature!',-566),step('fish_caught','🎣','Tap the fishing rod to catch a fish!',-552),step('beach_clue','🐚','Look for a shell clue on Sunny Seaside!',-106),step('treasure_dug','❌','Find the cross at the pier and dig for treasure!',-620)]},
 };
@@ -18,7 +21,7 @@ export const CREATURE_BOOK = [
 ].map(([id,icon,name,fact])=>({id,icon,name,fact}));
 export const REWARDS = {nest:['🪺','Fluffkin nest'],cushion:['🛏️','Cosy cushion'],rainbow:['🌈','Rainbow decoration'],garden:['🌻','Seed garden'],train:['🚂','Toy train'],basket:['🧺','Picnic basket'],owl:['🦉','Woodland owl'],snow:['⛄','Snow friend'],flower:['🌷','Wonder flower'],frame:['🖼️','Artist frame'],pirate:['🚩','Pirate flag']};
 const allowed = new Set(Object.values(ADVENTURES).flatMap(q=>q.steps.map(s=>s.event)));
-for(const e of ['visit_pier','visit_farm','visit_frosty','visit_seaside','visit_trail','visit_toytown','visit_labgarden','visit_artplaza','visit_home','visit_park','visit_studio','visit_lab','visit_castle','visit_playhouse','learn_float','learn_magnet','learn_plant'])allowed.add(e);
+for(const e of ['learn_count','learn_colors','learn_pattern','visit_pier','visit_farm','visit_frosty','visit_seaside','visit_trail','visit_toytown','visit_labgarden','visit_artplaza','visit_home','visit_park','visit_studio','visit_lab','visit_castle','visit_playhouse','learn_float','learn_magnet','learn_plant'])allowed.add(e);
 for(const c of CREATURE_BOOK)allowed.add('sea_'+c.id);
 const record = v => v && typeof v==='object'&&!Array.isArray(v)?v:{};
 const cleanEvents = a => Array.isArray(a)?[...new Set(a.filter(x=>allowed.has(x)))]:[];
@@ -34,7 +37,7 @@ export function createAdventureState(raw, legacy={}) {
  if(r.replay&&Object.prototype.hasOwnProperty.call(ADVENTURES,r.replay.id)&&s.completed.includes(r.replay.id))s.replay={id:r.replay.id,events:cleanEvents(r.replay.events)};
  return s;
 }
-function settle(s){const rewards=[];for(const [id,q]of Object.entries(ADVENTURES))if(q.steps.every(st=>s.events.includes(st.event))&&!s.completed.includes(id)){s.completed.push(id);if(!s.rewards.includes(q.reward)){s.rewards.push(q.reward);rewards.push(q.reward);}}return rewards;}
+function settle(s){const rewards=[];for(const [id,q]of Object.entries(ADVENTURES))if((q.steps.every(st=>s.events.includes(st.event))||(q.was&&q.was.every(e=>s.events.includes(e))))&&!s.completed.includes(id)){s.completed.push(id);if(!s.rewards.includes(q.reward)){s.rewards.push(q.reward);rewards.push(q.reward);}}return rewards;}
 export function emitAdventure(s,event){
  const id=event.type==='learn'?'learn_'+event.id:event.type==='sea'?'sea_'+event.id:event.id;
  if(!allowed.has(id))return{changed:false,rewards:[]};

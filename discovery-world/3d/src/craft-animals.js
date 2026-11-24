@@ -2,6 +2,7 @@
 // The unusual sticker eyes, hand-drawn additions and scribbles are painted geometry, never photographs.
 // Each builder feeds one existing resident batch and reuses the world's shiny material.
 import * as THREE from 'three';
+import { eye as shinyEye, limb, boot } from './plush.js';
 
 const BALL = new THREE.SphereGeometry(1, 12, 8);
 const SMALL = new THREE.SphereGeometry(1, 8, 6);
@@ -274,7 +275,7 @@ function orangeFox(b) {
 
 function scribble(b, green) {
   const CY = .99, SX = .59, SY = .65, SZ = .39, ink = '#51434a', crayon = green ? '#598157' : '#dd9a5e', blue = '#433a8c';
-  ball(b, CREAM, 0, CY, 0, SX, SY, SZ, true);
+  ball(b, green ? '#d6ecc4' : '#ffdcb4', 0, CY, 0, SX, SY, SZ, true);
   const surface = (x, y, extra = .025) => SZ * Math.sqrt(Math.max(.02, 1 - (x / SX) ** 2 - ((y - CY) / SY) ** 2)) + extra;
   const rim = Array.from({ length: 28 }, (_, i) => { const a = i / 28 * Math.PI * 2; return [Math.cos(a) * .575, CY + Math.sin(a) * .63, .10]; });
   stroke(b, green ? blue : crayon, rim, .021, 28, true);
@@ -290,25 +291,25 @@ function scribble(b, green) {
     });
     stroke(b, green && i % 2 ? blue : crayon, points, green ? .025 : .022, 8);
   }
-  // Large dark loop eyes remain legible in front of the layered crayon marks.
-  for (const s of [-1, 1]) {
-    const x = s * .22, y = 1.15;
-    const ring = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * Math.PI * 2, xx = x + Math.cos(a) * .095, yy = y + Math.sin(a) * .19; return [xx, yy, surface(xx, yy, .065)]; });
-    stroke(b, ink, ring, .020, 14, true);
-    rod(b, ink, [x - .025, 1.24, surface(x - .025, 1.24, .070)], [x + .018, 1.08, surface(x + .018, 1.08, .070)], .022);
+  // (build 124) Big shiny 3D eyes inside the drawing's tall loop outlines.
+  for (const sx of [-1, 1]) {
+    const x = sx * .22, y = 1.15;
+    const ring = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * Math.PI * 2, xx = x + Math.cos(a) * .115, yy = y + Math.sin(a) * .2; return [xx, yy, surface(xx, yy, .03)]; });
+    stroke(b, ink, ring, .022, 14, true, 6);
+    shinyEye(b, x, y, surface(x, y, -.02), .1, { tall: 1.7, iris: ink });
   }
   const ySmile = green ? .65 : .72;
   const points = [[-.20, ySmile + .11], [-.12, ySmile + .01], [0, ySmile], [.15, ySmile + .03], [.23, ySmile + .14]].map(([x, y]) => [x, y, surface(x, y, .065)]);
   stroke(b, ink, points, .022, 10);
   if (green) {
-    for (const s of [-1, 1]) stroke(b, crayon, [[s * .37, 1.44, 0], [s * .48, 1.82, .01], [s * .67, 1.75, .02], [s * .59, 1.45, .03]], .026, 9);
-    rod(b, crayon, [-.11, .39, 0], [-.18, .03, .02], .027);
-    rod(b, blue, [.12, .39, 0], [.20, .03, .02], .027);
+    for (const s of [-1, 1]) limb(b, crayon, [[s * .37, 1.44, 0], [s * .48, 1.82, .01], [s * .67, 1.75, .02], [s * .59, 1.45, .03]], .05, .045, 12, .07);
+    limb(b, crayon, [[-.13, .45, 0], [-.18, .12, .04]], .075, .07, 4); boot(b, crayon, -.18, 0, .06, .12);
+    limb(b, blue, [[.13, .45, 0], [.20, .12, .04]], .075, .07, 4); boot(b, blue, .20, 0, .06, .12);
   } else {
-    stroke(b, crayon, [[-.24, 1.51, -.02], [-.35, 1.83, -.01], [-.45, 2.08, 0]], .024, 6);
-    stroke(b, crayon, [[.20, 1.54, -.02], [.43, 1.82, -.01], [.67, 2.06, 0]], .024, 6);
-    rod(b, crayon, [-.18, .43, 0], [-.29, .03, .02], .027);
-    rod(b, crayon, [.18, .43, 0], [.34, .03, .02], .027);
+    limb(b, crayon, [[-.24, 1.51, -.02], [-.35, 1.83, -.01], [-.45, 2.08, 0]], .045, .04, 8, .075);
+    limb(b, crayon, [[.20, 1.54, -.02], [.43, 1.82, -.01], [.67, 2.06, 0]], .045, .04, 8, .075);
+    limb(b, crayon, [[-.18, .45, 0], [-.27, .12, .04]], .075, .07, 4); boot(b, crayon, -.28, 0, .06, .12);
+    limb(b, crayon, [[.18, .45, 0], [.32, .12, .04]], .075, .07, 4); boot(b, crayon, .33, 0, .06, .12);
   }
 }
 

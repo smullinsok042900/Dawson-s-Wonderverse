@@ -359,9 +359,16 @@ G.rideCarousel = () => {
 };
 G.rideWheel = () => {
   const P = player; if (P.ride || P.layer !== '' || Math.abs(P.x - 160) > 8) { Sound.click(); return; }
-  let best = 0, by = 1e9; G.wheel.gondolas.forEach((g, i) => { g.seat.getWorldPosition(V); if (V.y < by) { by = V.y; best = i; } });
-  P.ride = { type: 'wheel', i: best, turned: 0 }; P.vx = P.vy = 0; Sound.chime(); discover('wheel', 'Up, up, up on the Ferris wheel!');
+  // (build 124) the wheel brings the nearest car down to the ground and stops; she walks into it, goes all the way round
+  // once, and steps out at the bottom again
+  const W = G.wheel, TAU = Math.PI * 2; let best = 0, rem = 9;
+  W.gondolas.forEach((g, i) => { const r = (TAU - ((W.angle + i / 10 * TAU) % TAU + TAU) % TAU) % TAU; if (r < rem) { rem = r; best = i; } });
+  const R = P.ride = { type: 'wheel', i: best, phase: 'wait', rem, turned: 0, t: 0 }; P.vx = P.vy = 0;
+  // JUMP: before boarding, changes her mind; in a car near the ground, steps out; higher up, the wheel hurries her car down
+  R.onJump = () => { if (R.phase === 'wait') { P.ride = null; P.grounded = true; } else if (R.phase === 'ride') { if (P.y < 2.5) { R.phase = 'off'; R.t = 0; } else R.hurry = true; } }; Sound.chime(); discover('wheel', 'Up, up, up on the Ferris wheel!');
 };
+// where a car's floor spot is right now (from the wheel's angle, so it is exact in the same frame)
+G.wheelSeat = (i, out) => { const W = G.wheel, a = W.angle + i / 10 * Math.PI * 2, f = W.group.position; return out.set(f.x + Math.sin(a) * W.r, f.y - Math.cos(a) * W.r - 1.86, f.z + W.carZ + .1); };
 // (build 65) THE MOON ROLLER COASTER: a car on a track (planets.js builds both). A clicking chain lift pulls you up to the
 // top; from there your speed comes from the height you drop (faster down the big drop, slower over the hills), through a
 // loop-the-loop and bunny hops, back to the station. You tilt with the car, upside down at the top of the loop.
@@ -470,9 +477,21 @@ function updateRide(dt) {
     const d = R.to - P.y, st = Math.sign(d) * Math.min(Math.abs(d), 3.2 * dt); P.y += st; P.vx = 0;
     if (Math.abs(R.to - P.y) < .001) { P.y = R.to; P.ride = null; P.vy = 0; P.grounded = true; P.jumps = 0; burst(P.x, P.y + .2, P.z, ['#fff', '#9ff7e0'], 10, 2); }
   } else if (R.type === 'wheel') {
-    const g = G.wheel.gondolas[R.i]; g.seat.getWorldPosition(V); P.x = V.x; P.y = V.y; P.z = V.z; P.vx = 0;
-    R.turned += G.wheel.speedNow * dt;
-    if (R.turned > Math.PI * 2 + .2 && P.y < 2) { P.z = 0; endRide(0, 4); }
+    const W = G.wheel, TAU = Math.PI * 2; R.t += dt; P.vx = 0; P.vy = 0;
+    if (R.phase === 'wait') { // the wheel turns the car down to the ground; she walks over beside it
+      const st = Math.min(R.rem, .9 * dt); W.angle += st; R.rem -= st;
+      const gx = 160 - 1.7; P.x += Math.sign(gx - P.x) * Math.min(Math.abs(gx - P.x), 3 * dt); P.y = 0; P.z += (0 - P.z) * Math.min(1, dt * 6); P.facing = 1;
+      if (R.rem <= 1e-6) { R.phase = 'board'; R.t = 0; R.from = [P.x, P.y, P.z]; Sound.click(); }
+    } else if (R.phase === 'board' || R.phase === 'off') { // a little hop in, or out
+      const k = Math.min(1, R.t / .9), e = k * k * (3 - 2 * k), seat = G.wheelSeat(R.i, V);
+      const [ax, ay, az] = R.phase === 'board' ? R.from : [seat.x, seat.y, seat.z], [bx, by, bz] = R.phase === 'board' ? [seat.x, seat.y, seat.z] : [160 + 1.9, 0, 0];
+      P.x = ax + (bx - ax) * e; P.y = ay + (by - ay) * e + Math.sin(k * Math.PI) * .45; P.z = az + (bz - az) * e; P.facing = R.phase === 'board' ? 1 : 1;
+      if (k >= 1) { if (R.phase === 'board') { R.phase = 'ride'; R.t = 0; Sound.chime(); } else { P.y = 0; P.z = 0; P.ride = null; P.grounded = true; P.jumps = 0; burst(P.x, .4, P.z, ['#fff', '#ffd84a', '#ff9fd0'], 10, 2); return; } }
+    } else { // once round, all the way to the top and back to the ground
+      const st = Math.min(TAU - R.turned, (R.hurry ? 2.4 : .55) * dt); W.angle += st; R.turned += st;
+      G.wheelSeat(R.i, V); P.x = V.x; P.y = V.y; P.z = V.z;
+      if (R.turned >= TAU - 1e-6) { R.phase = 'off'; R.t = 0; Sound.boing(); }
+    }
   }
 }
 
@@ -1151,14 +1170,11 @@ function updateWorldAnim(dt, t) {
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
-  if (G.learnSigns) for (const g of G.learnSigns) { const d = Math.abs(g.position.x - camT.x); if (d > 30) continue; const u = g.userData;
-    u.toy.rotation.y += dt * .9; u.toy.position.y = 1.35 + Math.sin(t * 2 + g.position.x) * .1; u.star.position.set(Math.cos(t * 1.5) * .6, 1.6 + Math.sin(t * 3) * .15, Math.sin(t * 1.5) * .6); u.ring.scale.setScalar(1 + Math.sin(t * 3) * .05);
-    if (d < 8 && Math.random() < dt * 2.5) burst(g.position.x + (Math.random() - .5) * 1.2, .25, g.position.z + (Math.random() - .5) * .8, ['#fff3a6', '#ffd1ec', '#ffffff'], 2, 1); }
   const C = G.carousel, riding = player.ride && player.ride.type === 'carousel';
   C.speed += ((riding ? 1.1 : .25) - C.speed) * Math.min(1, dt * .8); C.spin.rotation.y += C.speed * dt;
   C.mounts.forEach((m, i) => { m.ride.position.y = Math.sin(t * 2.2 + i * 1.3) * .35 + .2; });
-  const W = G.wheel, wr = player.ride && player.ride.type === 'wheel'; W.speedNow = wr ? .55 : .12; W.angle += W.speedNow * dt; W.wheel.rotation.z = W.angle;
-  W.gondolas.forEach((g, i) => { const a = W.angle + i / 10 * Math.PI * 2; g.g.position.set(Math.sin(a) * W.r, -Math.cos(a) * W.r, .9); });
+  const W = G.wheel, wr = player.ride && player.ride.type === 'wheel'; W.speedNow = wr ? 0 : .12; W.angle += W.speedNow * dt; W.wheel.rotation.z = W.angle; /* (build 124) while she rides, the ride itself turns the wheel (it stops for her to get in and out) */
+  W.gondolas.forEach((g, i) => { const a = W.angle + i / 10 * Math.PI * 2; g.g.position.set(Math.sin(a) * W.r, -Math.cos(a) * W.r, W.carZ); });
   if (world.trampT > 0) { world.trampT -= dt; G.tramp.scale.y = 1 - Math.sin(world.trampT * 20) * world.trampT * .8; }
   G.xylo.forEach(k => { k.lit = Math.max(0, k.lit - dt * 2); k.key.material.emissiveIntensity = k.lit * .8; k.key.position.y = k.key.userData.y0 - k.lit * .06; });
   G.orbs.forEach(o => { o.zap = Math.max(0, o.zap - dt); o.o.material.emissiveIntensity = .8 + Math.sin(t * 3) * .2 + o.zap * 2; o.o.scale.setScalar(1 + o.zap * .15); });
@@ -1485,23 +1501,8 @@ let lodTick = 0, poolTick = 0, poolDt = 0, shadowTick = 0;
 // 3D world pauses while they're open.
 const learning = initLearning({ G, Sound, voice, setSound: on => { setSound(on); save(); }, world, save: () => save(), discover: id => { if (id.startsWith('learn_')) adventures?.event({type:'learn',id:id.slice(6)}); if (!world.disc.has(id)) { world.disc.add(id); saveSoon(); } }, pause: on => { G.releaseInputs?.(); G.activityOpen = on; if (!on) { timer.update(); acc = 0; } }, TEST, event: e => adventures?.event(e) });
 G.learning = learning;
-{ const signTex = e => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#fff6fb'; g.beginPath(); g.arc(64, 64, 60, 0, 7); g.fill(); g.lineWidth = 8; g.strokeStyle = '#c9a6ff'; g.stroke(); g.font = '72px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(e, 64, 70); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
-  const wood = toy('#c98a5a', { r: .7, cc: .1 }), glow = toy('#fff3a6', { em: '#ffd76a', ei: .9, r: .4 });
-  const PREF = { num: 118, abc: 182.2 /* (build 62: was 158, under the Ferris wheel's leg; now in the clear gap between the tree and the Fluffkin House) */, art: 214, think: 236, sci: 306, music: 344, me: 393.6 /* (build 120: was 384, where Dottie the dinosaur lowers her head: its toy stuck out of her neck) */ };
-  const taken = () => [...G.interact.filter(i => (i.layer || '') === '' && (i.y || 0) < 2).map(i => i.x), ...DOORS.map(d => d.x)];
-  for (const [cat, [icon]] of Object.entries(learning.corners)) {
-    let x = PREF[cat]; const busy = taken(); for (let k = 0; k < 40 && busy.some(b => Math.abs(b - x) < 3.2); k++) x += (k % 2 ? -1 : 1) * (k + 1) * .8;
-    const g = new THREE.Group(), z = -1.95; g.position.set(x, 0, z); scene.add(g);
-    // (build 43) A PLAY SPOT instead of a signpost (signs overlapped other things, and a pre-reader can't tell a sign is a
-    // game): a glowing, sparkling circle on the ground with the corner's toy floating and turning above it.
-    const pad = new THREE.Mesh(new THREE.CylinderGeometry(.78, .82, .08, 40), toy('#fff6fb', { r: .5 })); pad.position.y = .04; g.add(pad);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(.8, .07, 10, 40), glow); ring.rotation.x = Math.PI / 2; ring.position.y = .1; g.add(ring);
-    const toyM = makeToyModel(icon); toyM.scale.setScalar(1.3); toyM.position.y = 1.35; g.add(toyM); g.userData.toy = toyM; g.userData.ring = ring;
-    const star = new THREE.Mesh(starGeometry(.12, .06, .04, .02, 5), glow); star.position.set(.55, 1.9, 0); g.add(star); g.userData.star = star;
-    g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.tap = () => learning.showCorner(cat); } }); G.taps.push(g);
-    G.interact.push({ x, y: 0, layer: '', disc: 'corner_' + cat, run: () => learning.showCorner(cat), hintY: 2.9, ownRing: true });
-    (G.learnSigns = G.learnSigns || []).push(g);
-  } }
+// (build 124) The learning spots that stood along the main street (a pad with a floating toy) are gone at the family's
+// request: Dawson never used them. The learning games themselves are unchanged (learn.js).
 // build 18: one quality pass over the finished world (bevelled edges, round silhouettes, sharp textures, no wet-plastic gloss)
 try { const ex = new Set(); if (G.paint && G.paint.mesh) ex.add(G.paint.mesh); G.refine = refineScene(scene, renderer, { exclude: ex, budget: MOBILE ? 120000 : 400000, phone: MOBILE }); } catch (e) { console.log('refine skipped', e); }
 // compile all the shaders first (in the background where the browser allows it), then start
@@ -1729,7 +1730,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '123'; G.build = GAME_BUILD;
+const GAME_BUILD = '124'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

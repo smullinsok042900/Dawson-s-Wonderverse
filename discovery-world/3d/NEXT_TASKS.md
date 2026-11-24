@@ -4,6 +4,15 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
+## Family request (build 124): walk-through, overlapping and floating things — continue
+Build 124 rebuilt the drawing friends as round toys, made the Ferris wheel a walk-in ride, moved every Earth climbing set out
+of her path and removed the learning-game screens (nothing opens `learn.js` now; delete it and its tests in a later build).
+`tests/adventures-browser.cjs` fails at its map-picture check (`.mpT svg`) on builds 123 and 124: update the test to the current map.
+ The planet ray scan found nothing in her path. Next: a picture tour
+of Earth for objects that overlap each other. Ask the family for pictures of
+any spot still wrong. On the iPhone: ride the Ferris wheel and meet the drawing friends (Adventure Trail bridge, Sunny
+Seaside, Lab Gardens, Art Plaza).
+
 ## Active family request: the next thirty creations
 Build 121's sixteen additional residents and build 122's next thirty are integrated. All 128 native checks, the actual touch/PAW, cleanup/revisit and save/reload tours and the full desktop gameplay suite pass. The build-120 versus build-122 performance audit runs as the opt-in `performance-audit` GitHub Actions job (`tests/perf/family-friends.cjs` over all 46 homes, matched shown/hidden rounds and area-entry shader audits) and writes `tests/PERFORMANCE_BUILD122.json`. Keep both confirmed twin pairs distinct; use `FAMILY_FRIENDS.md` for all fifty-three family characters, including the original seven.
 

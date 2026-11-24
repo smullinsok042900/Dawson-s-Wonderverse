@@ -23,7 +23,7 @@ const UG_F = -6;
   const DRIVER_NOTE = /^\[\.WebGL-[0-9a-fx]+\]GL Driver Message \(OpenGL, Performance, [A-Z_]+, High\): GPU stall due to ReadPixels( \(this message will no longer repeat\))?$/; // (the same desktop driver note, sometimes with this ending)
   page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !DRIVER_NOTE.test(m.text())) errors.push(m.type() + ': ' + m.text()); });
   const cdp = await ctx.newCDPSession(page);
-  const S = () => page.evaluate(() => { const D = __DDW3, P = D.player; return { x: P.x, y: P.y, z: P.z, vx: P.vx, grounded: P.grounded, jumps: P.jumps, creature: P.creature, ride: P.ride ? P.ride.type : null, layer: P.layer, stair: P.stair ? P.stair.k : null, disc: [...D.world.disc], bits: D.world.bits.size, fl: D.fluffs.map(f => f.state), bubbles: D.bubbles(), sound: D.Sound.on, painted: !!D.world.painted, door: D.nearDoor() }; });
+  const S = () => page.evaluate(() => { const D = __DDW3, P = D.player; return { x: P.x, y: P.y, z: P.z, vx: P.vx, grounded: P.grounded, jumps: P.jumps, creature: P.creature, ride: P.ride ? P.ride.type : null, wheelPhase: P.ride && P.ride.type === 'wheel' ? P.ride.phase : null, layer: P.layer, stair: P.stair ? P.stair.k : null, disc: [...D.world.disc], bits: D.world.bits.size, fl: D.fluffs.map(f => f.state), bubbles: D.bubbles(), sound: D.Sound.on, painted: !!D.world.painted, door: D.nearDoor() }; });
   const center = async sel => { const b = await page.locator(sel).boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
   const touch = (type, pts) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map((p, i) => ({ x: p.x, y: p.y, id: p.id ?? i + 1, radiusX: 6, radiusY: 6, force: 1 })) });
   const scr = (x, y, z = 0) => page.evaluate(([x, y, z]) => __DDW3.toScreen(x, y, z), [x, y, z]);
@@ -361,7 +361,14 @@ const UG_F = -6;
   await waitFor(s => s.grounded, 3000);
   await teleport(159); await page.evaluate(() => __DDW3.G.rideWheel()); c = await S(); check('ride the Ferris wheel', c.ride === 'wheel');
   c = await waitFor(s => s.y > 1.5, 4000); /* (wait for it to rise: a fixed 2.5 s gave 1.48-1.8 m depending on how fast the test browser drew) */ check('the Ferris wheel lifts you up', c.y > 1.5, `y=${c.y.toFixed(2)}`); await shot('11_ferris_wheel.jpg');
-  await press('#jumpBtn'); await waitFor(s => s.grounded, 5000);
+  await press('#jumpBtn'); c = await waitFor(s => s.grounded && !s.ride, 8000); check('JUMP low on the Ferris wheel steps her out of the car onto the ground', c.grounded && !c.ride && c.y < .1 && Math.abs(c.z) < .1, `y=${c.y.toFixed(2)} z=${c.z.toFixed(2)} ride=${c.ride}`);
+  { // (build 124) the wheel stops a car at the ground and she walks into it: her feet are on the car's floor, inside its walls
+    await teleport(157); await page.evaluate(() => __DDW3.G.rideWheel()); c = await waitFor(s => s.wheelPhase === 'ride', 20000);
+    const r = await page.evaluate(() => { const P = __DDW3.player, W = __DDW3.G.wheel, g = W.gondolas[P.ride.i].g, q = g.getWorldPosition(new __DDW3.THREE.Vector3()); return { dx: P.x - q.x, dy: P.y - (q.y - 1.88), dz: P.z - q.z, fy: q.y - 1.95 }; });
+    check('the Ferris wheel brings a car down to the ground to board', c.wheelPhase === 'ride' && r.fy < .4, JSON.stringify(r));
+    check('she stands on the floor inside the car (not beside or above it)', Math.abs(r.dx) < .5 && Math.abs(r.dy) < .12 && Math.abs(r.dz) < .6, JSON.stringify(r));
+    await press('#jumpBtn'); await waitFor(s => s.grounded && !s.ride, 8000);
+  }
   // ---------- star bits ----------
   const b0 = (await S()).bits; await teleport(151); await holdBtn('#rightBtn', 1200); c = await S(); check('walk through star bits to collect them', c.bits > b0, `${b0} → ${c.bits}`);
   // ---------- Fluffkin rescue + the walk-in house ----------
@@ -449,8 +456,10 @@ const UG_F = -6;
   // 1. the camera is further out, and at the Block Builder the whole wall (all 5 rows) is on screen
   await teleport(214.4); await sleep(3500);
   { const r = await page.evaluate(() => { const top = __DDW3.toScreen(214.4, 5.0, -1.7), bot = __DDW3.toScreen(214.4, 0, -1.7); return { top: Math.round(top.y), bot: Math.round(bot.y), h: innerHeight }; }); check('the Block Builder wall fits on screen, top row included', r.top > 0 && r.bot < r.h, JSON.stringify(r)); }
-  // 2. the learning corners are play spots with a floating toy (no signposts), and still open their games
-  { const r = await page.evaluate(() => (__DDW3.G.learnSigns || []).map(g => !!g.userData.toy && !!g.userData.ring)); check('the learning corners are play spots with a floating toy (no signposts)', r.length === 7 && r.every(Boolean), JSON.stringify(r)); }
+  // 2. (build 124) the learning spots were removed at the family's request; the games still open (checked further on)
+  { // (build 124) the family asked for the learning spots (a pad with a floating toy) to be removed: none are left in the world
+    const r = await page.evaluate(() => ({ spots: (__DDW3.G.learnSigns || []).length, paws: __DDW3.G.interact.filter(i => (i.disc || '').startsWith('corner_')).length }));
+    check('no floating learning spots are left in the world', r.spots === 0 && r.paws === 0, JSON.stringify(r)); }
   // 3. the seesaw: walk onto it and it rocks you up and down; jump at the top for a super bounce
   await teleport(632); await page.evaluate(() => __DDW3.G.expansion.buildNow(632)); await sleep(800);
   await page.evaluate(() => { __DDW3.keys.right = true; }); for (let i = 0; i < 60 && (await page.evaluate(() => __DDW3.player.x)) < 635.6; i++) await sleep(100); await page.evaluate(() => { __DDW3.keys.right = false; });

@@ -1,6 +1,10 @@
 // Five of the daughter's marker drawings, filled out as solid painted toy residents.
 // The pale surfaces interpret the unfilled drawings; the original marker colors and odd proportions stay visible.
 import * as THREE from 'three';
+import { limb, eye as shinyEye } from './plush.js';
+// (build 124) arms, legs and antennae (the strokes beside the body, not the face lines) become chunky round plush limbs
+const isLimb = (pts, r) => r >= .018 && r < .04 && pts.every(p => Math.abs(p[2]) < .06);
+const fat = r => Math.max(.05, r * 2.2);
 
 const BALL = new THREE.SphereGeometry(1, 12, 9);
 const SMALL = new THREE.SphereGeometry(1, 8, 6);
@@ -15,6 +19,7 @@ function ball(b, color, x, y, z, sx, sy = sx, sz = sx, small = true) {
   b.put(small ? SMALL : BALL, x, y, z, color, [sx, sy, sz]);
 }
 function rod(b, color, a, c, radius = .025) {
+  if (isLimb([a, c], radius)) return limb(b, color, [a, c], fat(radius), fat(radius) * .9, 3, fat(radius) * (c[1] > a[1] + .15 ? .95 : 1.25)); // (an antenna gets a small round bobble, a hand or foot a bigger one)
   const start = new THREE.Vector3(...a), end = new THREE.Vector3(...c), delta = end.clone().sub(start);
   const turn = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, delta.clone().normalize()));
   const center = start.add(end).multiplyScalar(.5);
@@ -22,6 +27,7 @@ function rod(b, color, a, c, radius = .025) {
 }
 // Every curved stroke has real round caps. All parts are merged by the existing NPC batch, never separate draw calls.
 function stroke(b, color, points, radius = .025, segments = 8) {
+  if (isLimb(points, radius)) return limb(b, color, points, fat(radius), fat(radius) * .9, segments + 2, fat(radius) * 1.25);
   const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
   const shape = new THREE.TubeGeometry(curve, segments, radius, 4, false);
   b.put(shape, 0, 0, 0, color);
@@ -49,8 +55,8 @@ function buildBlue(b) {
     rod(b, NAVY, [s * .15, .55, 0], [s * .20, .07, .02], .033);
     ball(b, NAVY, s * .20, .07, .02, .035, .04, .035);
   }
-  ball(b, NAVY, -.22, 1.02, .313, .08, .12, .045);
-  ball(b, NAVY, .18, 1.055, .313, .145, .17, .046);
+  shinyEye(b, -.22, 1.02, .27, .085, { tall: 1.45, iris: NAVY });
+  shinyEye(b, .18, 1.055, .26, .14, { tall: 1.2, iris: NAVY });
   b.put(HALF, -.025, .87, .333, NAVY, [.075, .085, .25], [0, 0, Math.PI]);
   stroke(b, NAVY, [[-.57, .73, .10], [-.43, .57, .13], [-.30, .63, .19], [-.23, .57, .17]], .022, 8);
 }
