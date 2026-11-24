@@ -57,8 +57,8 @@ Game root: `discovery-world/3d` · build: `npm run build` → one `index.html`
 | 24 | Uranus | done (stage 27) | eight narrow ring annuli with real gaps, banded deck with depth, roll and diamond rain re-verified |
 | 25 | Neptune | done (stage 28) | banded deck with depth, band-aligned banks, Great Dark Spot kept readable, wind rides re-verified |
 | 26 | Pluto | done (stage 29) | 208x82 layered terrain, heart-shaped ice-plain basin with a tholin rim (bezier outline, checked from a pinned top-down camera), ice peaks, rides re-verified |
-| 27 | characters and pets | done (stage 30) | own soft toy-paint material plus a top-lit gradient baked into each shared shape; taps, animations and save fields unchanged |
-| 28 | Phase 3 finish | **next** | bevels on the hard-edged family characters, eye highlights sized for phone distance, LOD for far followers |
+| 27 | characters and pets | done (stage 30) | own soft toy-paint material (`lifeMat`); the baked vertex-colour gradient was reverted because it changed the family drawings' exact paint, so paint-preserving aoMap shading moves to stage 31 |
+| 28 | Phase 3 finish | **next** | bevels on the hard-edged family characters, eye highlights sized for phone distance, LOD for far followers, paint-preserving baked shading |
 
 Order: Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto (plus Earth orbit/sky stairs).
 Per planet: crater rims + ejecta, layered regolith vertex colours, ring geometry, cloud bands, horizon
@@ -69,8 +69,9 @@ atmosphere, attraction structures. Reuse the loft / vertex-colour / merge helper
 Material and shape pass only (no rig changes): fur-shell tuning, eye highlights, bevels on hard edges,
 shared materials, LOD for far followers. Preserve every animation, pet behaviour and save field.
 
-Shared materials and baked body shading landed in stage 30 (`lifeMat`, top-lit gradient baked into each shared shape);
-bevels, eye-highlight sizing and follow-LOD remain for stage 31.
+Shared materials landed in stage 30 (`lifeMat`). The top-lit gradient baked into each shared shape was reverted on
+release validation: the drawings' exact paint colours are part of their design and are asserted by tests. Bevels,
+eye-highlight sizing, follow-LOD and paint-preserving (aoMap) shading remain for stage 31.
 
 ## Phase 4 — collision, placement and regression checks
 

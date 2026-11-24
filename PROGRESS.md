@@ -633,17 +633,18 @@ Audit at x 12, 60 and 205 (the heart plain): **z-fighting 0** at all three, soli
 x 60; it did not reproduce in three later runs, so it is a streaming artefact rather than a terrain or basin regression. Frames: 56 calls / 87,378 triangles at the approach, 58 / 86,160 on the plain and 61 / 89,000 at
 the heart; whole place 30 meshes / 73,354 triangles at the approach. No FPS claim.
 
-### Stage 30 — Characters and pets: a soft toy paint and shading baked into their shapes
+### Stage 30 — Characters and pets: their own soft toy paint
 
 - **Their own material**: every character and pet now draws with a new `lifeMat()` - vertex-coloured, roughness 0.58,
   metalness 0 - instead of the glossy machinery paint (roughness 0.34, metalness 0.08) it shared with rockets and ice.
   The hard white specular hotspot that read as a plastic blob at phone distance is gone, with the same single shader
   program and the same one draw call per creature.
-- **Shading painted into the shape**: each species' shared painted mesh is now shaded once at build time with a soft
-  top-lit gradient (0.72 at the feet rising to 1.1 at the top, plus a darker contact band underneath), so a body made of
-  a few balls reads as a rounded shape instead of one flat shade per ball. Measured on the shared `frostfluff` shape: 948
-  vertices, the baked gradient spans median luminance 0.857 with the dark eye paint at 0.016; nothing is recomputed per
-  frame and no geometry was added.
+- **Shading tried, then reverted**: a top-lit gradient baked into each species' shared mesh was built and measured (948
+  vertices on `frostfluff`, median luminance 0.857 against 0.016 for the eye paint), then removed during release
+  validation: the chalk, marker, doodle, keepsake and craft families are drawings whose exact paint colours are part of
+  their design and are asserted by `tests/chalk-friends.test.mjs`, so shading must not edit vertex colours. The soft look
+  therefore comes from the material alone, and true shading via a baked ambient-occlusion map (which leaves the paint
+  untouched) is scheduled for stage 31.
 - **Kept working**: all 11 character and pet taps on Pluto still resolve (`pet_frostfluff`, `pal_snowballkid`,
   `pal_heartling`, `pet_heartbun`, `pal_charondot`, ...), a `pal_heartling` tap runs with no error, and the hop, float,
   roll and breathe animations are untouched (no rig change). Frames unchanged at 56 calls / 87,378 triangles on the plain.
@@ -652,6 +653,16 @@ Evidence in `docs/screenshots/stage30/`: `character-closeup.png` (Heartling clos
 with the snowball character behind) and `characters.png` / `pets.png` (the walking camera at x 24 and x 12). Audit at
 x 12, 60 and 205: z-fighting 0, solids 12/16/16, platforms 108/111/120, 0 malformed, 0 duplicate or heavy-overlap
 solids, 0 page errors. No FPS claim.
+
+### Interim release checkpoint (2026-11-24)
+
+Release validation found and fixed a **stage 28 regression**: the Neptune storm clearing read `spot[0]`/`spot[1]` inside
+the height function shared by all four gas giants, where `spot` is null for Jupiter, Saturn and Uranus, so those three
+planets threw while building (`Cannot read properties of null`) and `tests/space-lifecycle.test.mjs` failed. The clearing
+is now gated on Neptune (`spot ? ... : 0`); Jupiter, Saturn and Uranus build and capture again (57/64/71 draw calls,
+96,250/82,398/81,730 triangles, 0 page errors) and their audits are clean (z-fighting 0, solids 12, platforms
+108/113/108). The stage 30 vertex-colour bake was removed for the same reason (see above). All 20 native suites pass, the
+phone-viewport checks pass, and PR #104 is frozen as an interim release awaiting review.
 
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 

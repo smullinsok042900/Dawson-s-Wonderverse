@@ -306,20 +306,12 @@ export const PET_KINDS = Object.keys(SPECIES).filter(k => SPECIES[k].pet);
 
 // one shared painted shape per species (made the first time it is needed, then reused)
 const SHAPES = {};
-// (stage 30) bake a soft top-lit gradient and a darker underside into the shared painted shape, once per species: every
-// character and pet then reads as a rounded body at phone distance instead of one flat shade per ball, and it costs
-// nothing per frame (the geometry is built once and shared by every copy of that species)
-const shadeCreature = g => {
-  const p = g.attributes.position, c = g.attributes.color; if (!p || !c) return;
-  let lo = 1e9, hi = -1e9; for (let i = 0; i < p.count; i++) { const y = p.getY(i); if (y < lo) lo = y; if (y > hi) hi = y; }
-  const span = Math.max(.001, hi - lo);
-  for (let i = 0; i < p.count; i++) { const u = (p.getY(i) - lo) / span, k = .72 + .38 * Math.pow(u, .7) - .08 * Math.max(0, 1 - u * 5);
-    c.setXYZ(i, Math.min(1, c.getX(i) * k), Math.min(1, c.getY(i) * k), Math.min(1, c.getZ(i) * k)); }
-  c.needsUpdate = true;
-};
+// (stage 30) the residents' paint stays exactly as authored - the chalk, marker, doodle, keepsake and craft families are
+// drawings, so their colours are part of the design and are asserted by tests. The soft look therefore comes from their
+// own material only (lifeMat), never from editing vertex colours.
 export function creatureMesh(kind) {
   const sp = SPECIES[kind]; if (!sp) return null;
-  if (!SHAPES[kind]) { const b = makeBatch(), put = b.put.bind(b); b.put = (geo, x, y, z, col, sc, ...rest) => { if (geo === GEO.ball) { const m = Array.isArray(sc) ? Math.max(...sc) : sc; geo = m <= .075 ? GEO.dot : m <= .16 ? GEO.ballS : GEO.ball; } return put(geo, x, y, z, col, sc, ...rest); }; /* (build 117: lighter shapes, the same look) */ sp.build(b); SHAPES[kind] = b.geometry ? b.geometry() : b.mesh(shinyMat()).geometry; shadeCreature(SHAPES[kind]); SHAPES[kind].userData.shared = true; }
+  if (!SHAPES[kind]) { const b = makeBatch(), put = b.put.bind(b); b.put = (geo, x, y, z, col, sc, ...rest) => { if (geo === GEO.ball) { const m = Array.isArray(sc) ? Math.max(...sc) : sc; geo = m <= .075 ? GEO.dot : m <= .16 ? GEO.ballS : GEO.ball; } return put(geo, x, y, z, col, sc, ...rest); }; /* (build 117: lighter shapes, the same look) */ sp.build(b); SHAPES[kind] = b.geometry ? b.geometry() : b.mesh(shinyMat()).geometry; SHAPES[kind].userData.shared = true; }
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body); const m = new THREE.Mesh(SHAPES[kind], lifeMat()); m.castShadow = false; /* (build 108: no shadow pass: cheaper) */ m.scale.setScalar(sp.size || 1); body.add(m);
   g.userData.body = body; g.userData.kind = kind; g.userData.dynamic = true; return g;
 }

@@ -639,16 +639,17 @@ pinned camera looking down on the plain). Audit at 12/60/205: z-fighting 0, soli
 not reproduce in three later runs). Frames 56 calls / 87,378 tris at the approach, 58 / 86,160 on the plain, 61 / 89,000
 at the heart. No FPS claim.
 
-## Stage 30 — Characters and pets: a soft toy paint, shading baked into their shapes
+## Stage 30 — Characters and pets: their own soft toy paint
 
 - **Their own material**: characters and pets now draw with a new `lifeMat()` (vertex-coloured, roughness 0.58, metalness
   0) instead of the glossy machinery paint they shared with rockets and ice (roughness 0.34, metalness 0.08). The hard
   white specular hotspot that read as a plastic blob at phone distance is gone; same shader program, same one draw call
   per creature.
-- **Shading painted into the shape**: every species' shared painted mesh is shaded once at build time with a soft top-lit
-  gradient (0.72 at the feet to 1.1 at the top, with a darker contact band underneath), so a body made of a few balls
-  reads round instead of one flat shade per ball. On the shared `frostfluff` shape (948 vertices) the baked gradient spans
-  median luminance 0.857 against 0.016 for the dark eye paint; nothing is recomputed per frame and no geometry was added.
+- **Shading tried, then reverted**: a top-lit gradient baked into each species' shared mesh was built and measured (948
+  vertices on `frostfluff`, median luminance 0.857 against 0.016 for the eye paint), then removed during release
+  validation: the five family artwork collections are drawings whose exact paint colours are part of their design and are
+  asserted by `tests/chalk-friends.test.mjs`, so shading must not edit vertex colours. The soft look comes from the
+  material alone; shading via a baked ambient-occlusion map (paint untouched) is scheduled for stage 31.
 - **Kept working**: all 11 character and pet taps on Pluto resolve (`pet_frostfluff`, `pal_snowballkid`, `pal_heartling`,
   `pet_heartbun`, `pal_charondot`, ...), a `pal_heartling` tap runs clean, and hop/float/roll/breathe are untouched (no
   rig change). Frames unchanged at 56 calls / 87,378 triangles.
@@ -657,5 +658,10 @@ Evidence: `docs/screenshots/stage30/` (`character-closeup.png`, `characters.png`
 z-fighting 0, solids 12/16/16, platforms 108/111/120, 0 malformed, duplicate or heavy-overlap entries, 0 page errors.
 No FPS claim.
 
+Release validation (2026-11-24) also fixed a stage 28 regression: the Neptune storm clearing read `spot[0]` inside the
+height function shared by all four gas giants, where `spot` is null for Jupiter, Saturn and Uranus, so those three planets
+threw while building. It is now gated on Neptune; the three build and capture again (57/64/71 calls, 96,250/82,398/81,730
+tris, audits clean). All 20 native suites pass and PR #104 is frozen as an interim release.
+
 Next: the rest of Phase 3 - bevels on the hard-edged family characters, eye highlights sized for phone distance, LOD for
-far followers.
+far followers, and paint-preserving baked shading (aoMap).

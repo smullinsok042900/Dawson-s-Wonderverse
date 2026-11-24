@@ -401,7 +401,7 @@ export function initSpace(G, api) {
         // the walkway is almost level already (a 24x7 pass moved 0.1 m and no pixel at all, a 42x20 one only a thin
         // crest line), so the clearing has to reach 70 m by 38 m back to where the ridge crests are 4-5 m tall, and it
         // is gated off within 7 m of the path, so the walkway itself is left exactly as flat as it was
-        const q = Math.exp(-Math.pow((x - spot[0]) / 70, 2) - Math.pow((z - spot[1]) / 38, 2)) * K.sstep(-7, -13, z);
+        const q = spot ? Math.exp(-Math.pow((x - spot[0]) / 70, 2) - Math.pow((z - spot[1]) / 38, 2)) * K.sstep(-7, -13, z) : 0; // (only Neptune has a storm clearing; Jupiter, Saturn and Uranus keep the plain banded deck)
         return h * (1 - .92 * q) + .35 * q; };
       const bandCol = (x, z, h, ny, o) => {
         const v = bandV(x, z), t = ((v % 6) + 6) % 6, k = Math.floor(t);
