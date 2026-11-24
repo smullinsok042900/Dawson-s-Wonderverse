@@ -11,6 +11,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { populate } from './planet-life.js';
+import { sun } from './sun.js'; // (build 126) the Sun's attractions
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
 import { toy } from './creatures.js';
 import { makeBatch, shinyMat, glowMat } from './spacekit.js';
@@ -71,7 +72,7 @@ const moon = {
     k => { const X = k.s0;
       // a giant crater: climb its rim, hop down inside, and land on the bouncy middle
       const cx = X + 20; k.sball(cx, -.2, -2.5, 9, .9, 4, '#b8b8c4', { r: .95 }); k.sball(cx, .05, -2.5, 6.5, .2, 3, '#8f8f9c', { r: 1 });
-      for (const s of [-1, 1]) { k.sbox(cx + s * 7.5, 0, -1.2, 2.2, 1.2, 2, '#c9c9d4', { r: .9 }); k.plat(cx + s * 7.5 - 1.1, cx + s * 7.5 + 1.1, 1.2, { step: true, stepMax: 1.3 }); }
+      for (const s of [-1, 1]) { k.sbox(cx + s * 7.5, 0, -2.05, 2.2, 1.2, 2, '#c9c9d4', { r: .9 }); k.plat(cx + s * 7.5 - 1.1, cx + s * 7.5 + 1.1, 1.2, { step: true, stepMax: 1.3, z: -1.9 }); } /* (build 126: just behind her path, she steps back onto them) */
       const pad = k.sball(cx, .02, -1.2, 1.3, .12, 1.3, '#ffd23f', { em: '#ffb000', ei: .5 }); let cool = 0;
       k.tapIt(pad, () => k.fact('🌕 Stand on the yellow spot in the crater and you bounce up high!', 'moonbounce'), cx, 'moonbounce');
       k.U.push((dt, t) => { const P = k.P; cool = Math.max(0, cool - dt); pad.scale.y = .12 + Math.sin(t * 4) * .02; if (!cool && P.grounded && P.layer === 'space' && Math.abs(P.x - cx) < 1.2 && P.y < .2) { cool = .6; P.vy = 5.5; P.grounded = false; P.jumps = 2; k.Sound.boing(); k.disc('moonbounce'); } });
@@ -100,7 +101,7 @@ const moon = {
     // ----- area 3: MOON MOUNTAINS and the HIDDEN CAVE -----
     k => { const X = k.s0;
       // a moon mountain to climb (big steps; a star waits at the top)
-      const steps = [[X + 12, 1.4], [X + 15, 2.8], [X + 18, 4.2], [X + 21, 5.6], [X + 24, 7]] /* (no gaps between steps) */; for (const [x, h] of steps) { k.sbox(x, 0, -1.6, 3, h, 2.4, '#b4b4c0', { r: .9 }); k.plat(x - 1.5, x + 1.5, h, { step: true, stepMax: 1.5 }); }
+      const steps = [[X + 12, 1.4], [X + 15, 2.8], [X + 18, 4.2], [X + 21, 5.6], [X + 24, 7]] /* (no gaps between steps) */; for (const [x, h] of steps) { k.sbox(x, 0, -2.3, 3, h, 2.4, '#b4b4c0', { r: .9 }); k.plat(x - 1.5, x + 1.5, h, { step: true, stepMax: 1.5, z: -1.9 }); } /* (build 126: just behind her path, she steps back onto them) */
       k.sball(X + 20, -2, -8, 12, 11, 6, '#a4a4b2', { r: .95 });
       const star = k.sball(X + 24, 8, -1.6, .45, .45, .15, '#ffd23f', { em: '#ffd23f', ei: .8 }); let won = false;
       k.U.push((dt, t) => { star.rotation.y += dt * 2; star.position.y = 8 + Math.sin(t * 2) * .1; const P = k.P; if (!won && P.layer === 'space' && P.y > 6.8 && Math.abs(P.x - (X + 24)) < 1.6) { won = true; k.Sound.chime(); k.api.burst && k.api.burst(X + 24, 8, -1.6, ['#ffd23f', '#ffffff'], 18, 3); k.fact('⛰️ You climbed a moon mountain! What a view!', 'moonpeak'); } });
@@ -141,8 +142,8 @@ const mars = {
     k => { const X = k.s0;
       // two tall flat-topped rocks (mesas) with big steps, and a deep canyon between them
       for (const [mx, top] of [[X + 16, 6], [X + 34, 7.2]]) { k.sbox(mx, 0, -3.6, 8, top, 4, '#b8573a', { r: .95 }); }
-      for (const [a, b, y] of [[X + 9, X + 11, 1.5], [X + 10.2, X + 12, 3], [X + 11.2, X + 13, 4.5], [X + 12, X + 20, 6]]) { k.sbox((a + b) / 2, 0, -1.2, b - a, y, 1.6, '#c8653f', { r: .9 }); k.plat(a, b, y, { step: true, stepMax: 1.6 }); }
-      k.plat(X + 30, X + 38, 7.2, { z: -1.2 }); k.sbox(X + 34, 0, -1.2, 8, 7.2, 1.6, '#c8653f', { r: .9 }); marsCanyonTramp(k); // (build 86) the canyon trampoline
+      for (const [a, b, y] of [[X + 9, X + 11, 1.5], [X + 10.2, X + 12, 3], [X + 11.2, X + 13, 4.5], [X + 12, X + 20, 6]]) { k.sbox((a + b) / 2, 0, -1.95, b - a, y, 1.6, '#c8653f', { r: .9 }); k.plat(a, b, y, { step: true, stepMax: 1.6, z: -1.9 }); } /* (build 126: just behind her path, she steps back onto them) */
+      k.plat(X + 30, X + 38, 7.2, { z: -1.9 }); k.sbox(X + 34, 0, -1.95, 8, 7.2, 1.6, '#c8653f', { r: .9 }); marsCanyonTramp(k); // (build 86) the canyon trampoline
       marsBounceRace(k); // (build 89) the bounce race
       const flag = k.sbox(X + 19, 6, -1.4, .08, 1.8, .08, '#ffffff'); const cloth = k.sbox(X + 19.5, 7.2, -1.4, .9, .55, .04, '#2fa8ff'); let viewed = false;
       k.U.push((dt, t) => { cloth.rotation.y = Math.sin(t * 2) * .2; const P = k.P; if (!viewed && P.layer === 'space' && P.y > 5.8 && P.x > X + 12 && P.x < X + 20) { viewed = true; k.Sound.chime(); k.fact('🏜️ What a view! Mars has a giant canyon called Valles Marineris. It is much, much bigger than the Grand Canyon on Earth!', 'marscanyon'); } });
@@ -343,8 +344,10 @@ function uranusIceCastle(k, cx) {
 function uranusRink(k, cx) {
   const P = k.P, rx = 32, rz = 5, cz = -2.6, b = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 64); /* (build 71: rx 32, was 22) */
   b.put(cyl, cx, .03, cz, '#8fd0ff', [rx, .06, rz]); b.put(cyl, cx, .035, cz, '#c9ecff', [rx - 1.2, .06, rz - .7]); /* (a blue rink with a pale centre: it stands out from the icy ground) */
-  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, x = cx + Math.cos(a) * (rx + .3), z = cz + Math.sin(a) * (rz + .25); if (z > .6) continue; b.put(new THREE.CylinderGeometry(1, 1, 1, 8), x, .4, z, i % 2 ? '#5aa8ff' : '#ffffff', [.09, .8, .09]); }
-  b.put(new THREE.TorusGeometry(1, .03, 6, 64), cx, .82, cz, '#ffffff', [rx + .3, rz + .25, 1], [Math.PI / 2, 0, 0]);
+  for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2, x = cx + Math.cos(a) * (rx + .3), z = cz + Math.sin(a) * (rz + .25); if (z > -.7) continue; /* (build 126: no post in her path) */ b.put(new THREE.CylinderGeometry(1, 1, 1, 8), x, .4, z, i % 2 ? '#5aa8ff' : '#ffffff', [.09, .8, .09]); }
+  { // (build 126) the top rail goes round the back of the rink only: the full loop crossed her path twice, at knee height
+    const lim = Math.asin((-.7 - cz) / (rz + .25)), pts = []; for (let i = 0; i <= 60; i++) { const a = Math.PI - lim + i / 60 * (Math.PI + 2 * lim); pts.push(new THREE.Vector3(cx + Math.cos(a) * (rx + .3), .82, cz + Math.sin(a) * (rz + .25))); }
+    const rail = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, .03, 6, false); b.put(rail, 0, 0, 0, '#ffffff'); rail.dispose(); }
   const rink = b.mesh(shinyMat()); rink.receiveShadow = true; k.add(rink);
   // three snowy skaters gliding round and round
   const skaters = [0, 1, 2].map(i => { const g = new THREE.Group(), sb = makeBatch(), ball = new THREE.SphereGeometry(1, 14, 10); sb.put(ball, 0, .5, 0, '#ffffff', .45); sb.put(ball, 0, 1.15, 0, '#ffffff', .32); sb.put(new THREE.TorusGeometry(.26, .07, 6, 14), 0, .92, 0, ['#ff4f6a', '#5aa8ff', '#ffd23f'][i], 1, [Math.PI / 2, 0, 0]);
@@ -774,7 +777,7 @@ const saturn = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn }; // (build 68: + Saturn's Star Blaster and Ring Raceway) // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
+export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn, sun }; // (build 68: + Saturn's Star Blaster and Ring Raceway) // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;
 

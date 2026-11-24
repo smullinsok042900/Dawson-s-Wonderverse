@@ -12,6 +12,12 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 126: open space and the Sun
+- **🌌 Fly the rocket yourself through space:** steer, speed up, slow down, or pick a picture on the map and the rocket flies there. Land on any planet you fly up to.
+- **Spacewalks:** float outside the rocket in a bubble helmet with a jetpack, and tap 🚀 to go back in. Dock at Star Station and collect floating stars, fly through the giant hoops, visit the comet, collect crystals in the asteroid belt.
+- **☀️ The Sun:** magic golden platforms over the glowing Sun, with sunspot trampolines, a solar flare roller coaster, a launch tower, solar wind surfing on a hoverboard and a light lab.
+- Build 125's fixes from the family's pictures are included (barn, slides, boats, playhouse, greenhouses, the Moon platform), and more planet steps stand out of her path.
+
 ## 3D build 124: round 3D drawing friends, a walk-in Ferris wheel
 - **The twenty drawing friends are round plush toys now** (the doodle twins, the bean, square, spiral-eyed, big-head, leaf, tuft, tall, big-eared and flower friends, the marker friends and both scribble friends): soft round bodies in their drawing's colours, shiny eyes, chunky arms and legs. Same names, homes, voices and games.
 - **Ferris wheel:** the wheel stops with a car at the ground, she walks into the open car, rides round, and steps out at the bottom.

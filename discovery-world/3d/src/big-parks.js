@@ -28,7 +28,7 @@ export function plutoInflatablePark(k) {
   notes.forEach((f, i) => { const px = x(9 + i * 2); b.put(G0.cyl, px, .2, -1.2, RB[i], [.85, .4, .85]); puff(px, .42, -1.2, '#ffffff', .6, .12, .6);
     launcher(k, px - .8, px + .8, 0, 3.6, 0, () => { S.tone(f, .25, 'triangle', .07, 1); k.disc('plutomusicpads', '🎵 Musical bounce pads! Each one sings a note.'); }); });
   // ---- the inflatable obstacle course (22–40): soft pillars to hop along, and arches to go through ----
-  [[23, .8], [25, 1.6], [27, 2.4], [29, 3.2], [31, 2.4], [33, 1.6], [35, .8]].forEach(([px, h], i) => { b.put(G0.cyl, x(px), h / 2, -1.2, RB[i % 7], [.85, h, .85]); puff(x(px), h, -1.2, '#ffffff', .75, .15, .75); k.plat(x(px - .85), x(px + .85), h, { z: -1.2, step: true, stepMax: 1 }); });
+  [[23, .8], [25, 1.6], [27, 2.4], [29, 3.2], [31, 2.4], [33, 1.6], [35, .8]].forEach(([px, h], i) => { b.put(G0.cyl, x(px), h / 2, -1.85, RB[i % 7], [.85, h, .85]); puff(x(px), h, -1.85, '#ffffff', .75, .15, .75); k.plat(x(px - .85), x(px + .85), h, { z: -1.85, /* (build 126: just behind her path; she steps back onto them) */ step: true, stepMax: 1 }); });
   for (const ax of [21, 37.5, 40]) b.put(G0.torus, x(ax), 2.2, -1.2, RB[ax % 7], [2.2, 2.2, 1.3]);
   // ---- the 14 m inflatable tower (44–56): bouncy ledges up the front, and a soft climbing wall ----
   const tx = x(51); for (let i = 0; i < 5; i++) puff(tx, 1.5 + i * 2.8, -4, i % 2 ? '#ff6fae' : '#9fd8ff', 4.2 - i * .3, 1.9, 2.4);
@@ -50,7 +50,7 @@ export function plutoInflatablePark(k) {
   let cool = 0; k.U.push(dt => { cool = Math.max(0, cool - dt); if (!cool && P.layer === 'space' && !P.ride && P.grounded && Math.abs(P.y - 14) < .2 && P.x > x(55.2) && P.vx > .3) { cool = 2; G.startSlide(path, { vmax: 9, acc: 4 }); k.say('🎈 Wheee! Down the giant inflatable slide!', true); k.disc('plutoslide'); } });
   G.interact.push({ x: x(53), y: 14, layer: 'space', disc: 'plutoslidego', run: () => { if (Math.abs(P.y - 14) < 1) { P.x = x(55.4); G.startSlide(path, { vmax: 9, acc: 4 }); k.disc('plutoslide'); } }, hintY: 2.4 });
   // ---- the BOUNCE PIT (82–92) with three hoops above it ----
-  b.put(G0.box, x(87), .25, -1.2, '#ff4f6a', [10, .5, 3.2]); for (const z of [-2.9, .5]) puff(x(87), .7, z, '#ffd23f', 5.2, .5, .5);
+  b.put(G0.box, x(87), .25, -2.0, '#ff4f6a', [10, .5, 3.2]); puff(x(87), .7, -3.7, '#ffd23f', 5.2, .5, .5); puff(x(87), .62, -.62, '#ffd23f', 5.2, .36, .3); /* (build 126: the big trampoline stands back; its front roll no longer hides her feet) */
   launcher(k, x(82.2), x(91.8), .5, 5.5, 0, () => S.boing());
   const hoops = [[84, 9], [87, 10.5], [90, 9]].map(([hx, hy], i) => { gb.put(G0.ring, x(hx), hy, -1.2, RB[i * 2], 1.1); return { x: x(hx), y: hy, hit: 0 }; });
   k.U.push(dt => { for (const h of hoops) { h.hit = Math.max(0, h.hit - dt); if (!h.hit && P.layer === 'space' && Math.abs(P.x - h.x) < 1 && Math.abs(P.y + .6 - h.y) < .8) { h.hit = 1.5; S.tone(700, .2, 'sine', .07, 1.5); k.api.burst(h.x, h.y, -1.2, RB, 14, 2); k.disc('plutohoops', '🎈 Bounce up through the hoops!'); } } });
@@ -97,7 +97,7 @@ export function uranusIcePalace(k) {
   const P = k.P, G = k.G, X0 = k.s0, G0 = GEO(), S = k.Sound, x = v => X0 + v, F2 = 6, b = makeBatch(), gb = makeBatch(), ice = '#bfe6ff', pale = '#e8f6ff', deep = '#7fbde8';
   // the palace: back wall, columns, an upper floor (balcony) with windows, towers and spires
   b.put(G0.box, x(85), 6, -5.6, pale, [46, 12, .5]); b.put(G0.box, x(85), F2 - .15, -3, ice, [44, .3, 5]); k.plat(x(63), x(107), F2, { z: -1.2 });
-  for (let i = 0; i < 9; i++) { const cx = x(63 + i * 5.5); b.put(G0.cyl, cx, F2 / 2, -.6, pale, [.3, F2, .3]); b.put(G0.cyl, cx, F2 + 1.5, -.6, ice, [.2, 3, .2]); }
+  for (let i = 0; i < 9; i++) { const cx = x(63 + i * 5.5); b.put(G0.cyl, cx, F2 / 2, -1.05, pale, [.3, F2, .3]); b.put(G0.cyl, cx, F2 + 1.5, -1.05, ice, [.2, 3, .2]); /* (build 126: the balcony pillars stand back out of her path) */ }
   for (let i = 0; i < 7; i++) b.put(G0.box, x(66 + i * 6), F2 + 3.2, -5.3, '#9fd8ff', [2.6, 3, .1]);                  // tall windows
   for (const tx of [62, 108]) { b.put(G0.cyl, x(tx), 8, -4.5, pale, [2, 16, 2]); b.put(G0.cone, x(tx), 18, -4.5, deep, [2.3, 4, 2.3]); gb.put(G0.oct, x(tx), 20.6, -4.5, '#ffffff', .5); }
   for (let i = 0; i < 22; i++) b.put(G0.cone, x(63 + i * 2), F2 - .55, -.5, '#ffffff', [.12, .7, .12], [Math.PI, 0, 0]);     // icicles along the balcony

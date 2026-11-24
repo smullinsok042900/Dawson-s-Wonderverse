@@ -104,7 +104,7 @@ export function buildMoonCoaster(k) {
     idx.grp.add(cg.mesh(glowMat)); for (const j of [0, idx.length - 1]) { V(idx[j], pos, pA); glow.put(torusC, pA.x, pA.y, pA.z, '#b07bff', 1, ringRot(idx[j])); } });
   // ---------- the station: a long platform with a striped roof and big glowing arches ----------
   { const sx = X + STATION.dx, sb = skel;
-    sb.put(box, sx - 4, .35, -.6, '#e8e0ff', [16, .7, 2.6]); for (let i = 0; i < 9; i++) sb.put(box, sx - 11.5 + i * 2, 4.4, -2.2, i % 2 ? '#ffffff' : '#ff4f9a', [2, .2, 4.4]);
+    sb.put(box, sx - 4, .35, -.6, '#e8e0ff', [16, .7, 2.6]); k.plat(sx - 12, sx + 4, .7, { step: true, stepMax: .8 }); /* (build 125) the platform is solid underfoot: she steps up onto it instead of walking through it */ for (let i = 0; i < 9; i++) sb.put(box, sx - 11.5 + i * 2, 4.4, -2.2, i % 2 ? '#ffffff' : '#ff4f9a', [2, .2, 4.4]);
     for (const dx of [-11.5, 3.5]) { sb.put(cyl, sx + dx, 2.2, -.4, '#ffffff', [.16, 4.4, .16]); sb.put(cyl, sx + dx, 2.2, -4, '#ffffff', [.16, 4.4, .16]); }
     for (const dx of [-12, 4]) glow.put(new THREE.TorusGeometry(3.4, .16, 6, 30, Math.PI), sx + dx, 0, -2.4, '#62f0ff', 1, [0, Math.PI / 2, 0]); }
   // when all slices are done, the skeleton becomes two meshes
