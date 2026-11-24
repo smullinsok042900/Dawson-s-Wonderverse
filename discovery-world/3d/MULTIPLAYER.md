@@ -109,6 +109,15 @@ Everyone in the room uses **the same rocket** on each launch pad:
 again, the shared rocket simply does not appear (each phone flies its own rocket, as before) and everything else in a
 room works exactly as it did. After publishing, it works at once (no update needed on the phones).
 
+## Open space together (build 127)
+Friends in one room who fly up into open space (🌌) see each other's **rockets** out there, gliding smoothly, and a friend on a
+**spacewalk** floating beside their rocket, as themselves. Each player sends their rocket as one short text, `dk`
+(`"x,y,z,turn"`), and, while out there, their own place as a half-size offset from that rocket (so every number stays
+inside the database's limits; the tether keeps a spacewalker within 110 m). **Needs the rules once more:** paste the
+updated [`firebase-rules.json`](firebase-rules.json) (it adds `dk`, a text under 60 letters) and press **Publish**. Until then
+a phone in open space is not accepted by the room while it is out there (it shows again as soon as it lands); everything
+else works as before. The simple rules need no change. Test: `node tests/space-together.cjs`.
+
 ## Magic bubbles (build 106)
 - In a room there is a big 🫧 button. Tap it and your friend blows a rainbow bubble at the nearest friend (it aims for
   you: no aiming needed; if nobody is near, the bubble just floats off and pops).

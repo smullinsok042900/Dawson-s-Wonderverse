@@ -50,6 +50,9 @@
               "a": {
                 ".validate": "newData.isString() && newData.val().length < 60"
               },
+              "dk": {
+                ".validate": "newData.isString() && newData.val().length < 60"
+              },
               "b": {
                 ".validate": "newData.val() === 1"
               },

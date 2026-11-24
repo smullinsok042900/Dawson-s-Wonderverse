@@ -85,8 +85,8 @@ function firebaseTransport(cfg) {
     offs.push(D.onValue(D.ref(db, '.info/serverTimeOffset'), s => { T.offset = Number(s.val()) || 0; })); /* (build 100: one clock for everyone, for shared rides) */
     return me;
   };
-  const noA = st => { if (!T.noA || !st || (st.a == null && st.b == null)) return st; const { a, b, ...rest } = st; return rest; }; /* (build 106: and the bubble flag) */ /* (build 101: rules older than build 101 refuse the outfit field: then it is simply not sent) */
-  const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); const p = D.set(meRef, { ...noA(last), t: D.serverTimestamp() }).catch(e => { if (last && (last.a != null || last.b != null) && !T.noA) { T.noA = true; return D.set(meRef, { ...noA(last), t: D.serverTimestamp() }); } throw e; }); if (voiceOn) p.then(() => putVoice(true)).catch(() => { }); return p; };
+  const noA = st => { if (!T.noA || !st || (st.a == null && st.b == null && st.dk == null)) return st; const { a, b, dk, ...rest } = st; return rest; }; /* (build 127: and the open-space rocket; then a friend out there is simply not seen until they land) */ /* (build 106: and the bubble flag) */ /* (build 101: rules older than build 101 refuse the outfit field: then it is simply not sent) */
+  const putMe = () => { const { D, db } = fb; meRef = D.ref(db, `${ROOM_PATH}/${room}/players/${me}`); D.onDisconnect(meRef).remove(); const p = D.set(meRef, { ...noA(last), t: D.serverTimestamp() }).catch(e => { if (last && (last.a != null || last.b != null || last.dk != null) && !T.noA) { T.noA = true; return D.set(meRef, { ...noA(last), t: D.serverTimestamp() }); } throw e; }); if (voiceOn) p.then(() => putVoice(true)).catch(() => { }); return p; };
   // (build 62) talking: who has it on (voice/<uid>), and each player's private inbox for setting up calls (sig/<uid>)
   const putVoice = async on => { const { D, db } = fb, ref = D.ref(db, `${ROOM_PATH}/${room}/voice/${me}`); if (on) { await D.set(ref, true); D.onDisconnect(ref).remove(); } else { D.onDisconnect(ref).cancel(); await D.remove(ref); } };
   T.join = async (code, state) => {
@@ -113,7 +113,7 @@ function firebaseTransport(cfg) {
     offs.push(D.onChildAdded(inbox, s => { const v = s.val(); D.remove(s.ref).catch(quiet); if (!v || typeof v.d !== 'string' || v.d.length > 20000 || typeof v.f !== 'string') return; let msg; try { msg = JSON.parse(v.d); } catch (e) { return; } T.onSignal(v.f, msg); }, quiet));
     return { ok: true };
   };
-  T.send = state => { last = state; if (meRef) fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { if ((state.a != null || state.b != null) && !T.noA) { T.noA = true; fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { }); } }); };
+  T.send = state => { last = state; if (meRef) fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { if ((state.a != null || state.b != null || state.dk != null) && !T.noA) { T.noA = true; fb.D.update(meRef, { ...noA(state), t: fb.D.serverTimestamp() }).catch(() => { }); } }); };
   T.setShared = (key, obj) => {
     if (!fb || !room) return;
     const { D, db } = fb, ref = D.ref(db, `${ROOM_PATH}/${room}/objects/${key}`);
@@ -304,7 +304,8 @@ export function initMultiplayer(G, api) {
     o.petSig = typeof s.ps === 'string' ? s.ps : (Array.isArray(s.p) ? s.p.join(',') : '');
     const kind = api.CREATURES && api.CREATURES[s.c] ? s.c : 'pip'; /* (build 59: an unknown creature, e.g. from a newer game, shows as Pip) */
     o.outfit = typeof s.a === 'string' && s.a.length < 60 ? s.a : '';
-    o.interp.push(now, { x: +s.x || 0, y: +s.y || 0, z: +s.z || 0, f: s.f || 1, g: !!s.g, r: !!s.r, l: s.l || '', h: !!s.h, c: kind, b: s.b === 1 ? 1 : 0 });
+    const dk = typeof s.dk === 'string' && s.dk.length < 60 ? s.dk.split(',').map(Number) : null, dkOk = dk && dk.length === 4 && dk.every(Number.isFinite) && s.l === 'deep'; /* (build 127) a friend's rocket in open space: exactly 4 numbers, or nothing */
+    o.interp.push(now, { x: dkOk ? dk[0] + (+s.x || 0) * 2 : +s.x || 0, y: dkOk ? dk[1] + (+s.y || 0) * 2 : +s.y || 0, z: dkOk ? dk[2] + (+s.z || 0) * 2 : +s.z || 0, dk: dkOk ? dk : 0, f: s.f || 1, g: !!s.g, r: !!s.r, l: s.l || '', h: !!s.h, c: kind, b: s.b === 1 ? 1 : 0 });
     if (o.kind !== kind) buildModel(o, kind);
     if (o.model && o.model.parts && o.wornCode !== o.outfit + '|' + kind) { o.wornCode = o.outfit + '|' + kind; wear(o.model.parts, kind, outfitFrom(o.outfit)); } /* (build 101: dressed as they dressed themselves) */
     if (o.ring && o.ring.userData.c !== o.colour) { o.ring.material.color.set(COLOURS[o.colour % 4]); o.mark.material.color.set(COLOURS[o.colour % 4]); o.mark.material.emissive.set(COLOURS[o.colour % 4]); o.ring.userData.c = o.colour; }
@@ -520,7 +521,7 @@ export function initMultiplayer(G, api) {
       if (!P.ride && front < C.homeI + 70 && now - joinedAt > 20000 && Math.abs(P.x - (C.stationX - 4)) < 9 && P.y < 1.6 && Math.abs((P.z || 0) + 1) < 3 && G.startCoaster) {
         const seat = [1, 2, 3].find(k => !occupied.has(k)); if (seat != null) { joinedAt = now; trainOut = false; G.startCoaster(C, { i: front + 1, seat }); say('🎢 You hop on the coaster with your friend!', true); Sound.chime && Sound.chime(); } } }
   }
-  function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', dk: G.deepRocket || 0, h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']), b: G.bubbles && G.bubbles.stateFlag() ? 1 : null }; } /* (null: Firebase's update removes the flag again when the bubble pops) */ /* (build 106: b while inside a magic bubble) */
+  function myState() { const r = n => Math.round(n * 100) / 100; const dk = P.layer === 'deep' && G.deepRocket; /* (build 127) in open space: my place is sent as a half-size offset from my rocket (it stays within the database's limits; the tether keeps her < 110 m away), and the rocket as one short text */ return { x: dk ? r((P.x - dk[0]) / 2) : r(P.x), y: dk ? r((P.y - dk[1]) / 2) : r(P.y), z: dk ? r((P.z - dk[2]) / 2) : r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', dk: dk ? dk.join(',') : null, h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']), b: G.bubbles && G.bubbles.stateFlag() ? 1 : null }; } /* (null: Firebase's update removes the flag again when the bubble pops) */ /* (build 106: b while inside a magic bubble) */
   function myPets() { const list = Array.isArray(world.pets) ? world.pets : []; return list.slice(0, LIMITS.pets).map(petKey); }
   function update(dt) {
     if (G.bubbles && bubShown !== !!room) { bubShown = !!room; G.bubbles.showButton(bubShown); } /* (build 106: 🫧 only in a room) */
