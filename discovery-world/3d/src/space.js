@@ -396,11 +396,13 @@ export function initSpace(G, api) {
         const h = K.sstep(-11, -20, z) * depth * (ridge * 5.2 + fine * 1.1 + 1.2) * BS                                 // the ridges themselves
           + K.sstep(-30, -80, z) * (K.fbm2(x * .08, z * .12, 3) - .5) * 3 * BS                                           // lumpy cloud tops behind them
           + K.sstep(-52, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' ? 34 : id === 'saturn' ? 18 : id === 'uranus' ? 12 : 22); // the far deck, banked up
-        // (stage 28) a TIGHT calm plateau under the Great Dark Spot: it flattens the ridges inside the painted oval so the
-        // storm is not cut in half by a crest, and because it blends towards the deck's own zero it never lifts the
-        // walkway - the steep falloff (24 m by 7 m) keeps the whole effect inside the storm's own footprint
-        const q = Math.exp(-Math.pow((x - spot[0]) / 24, 2) - Math.pow((z - spot[1]) / 7, 2));
-        return h * (1 - .9 * q); };
+        // (stage 28) the calm plateau under the Great Dark Spot: inside its footprint the ridges are blended down to a
+        // low flat shelf, so the storm sits in a calm clearing instead of being cut by a crest. The deck within 20 m of
+        // the walkway is almost level already (a 24x7 pass moved 0.1 m and no pixel at all, a 42x20 one only a thin
+        // crest line), so the clearing has to reach 70 m by 38 m back to where the ridge crests are 4-5 m tall, and it
+        // is gated off within 7 m of the path, so the walkway itself is left exactly as flat as it was
+        const q = Math.exp(-Math.pow((x - spot[0]) / 70, 2) - Math.pow((z - spot[1]) / 38, 2)) * K.sstep(-7, -13, z);
+        return h * (1 - .92 * q) + .35 * q; };
       const bandCol = (x, z, h, ny, o) => {
         const v = bandV(x, z), t = ((v % 6) + 6) % 6, k = Math.floor(t);
         o.copy(K.col(pal[k])).lerp(K.col(pal[(k + 1) % 6]), K.sstep(.3, .7, t - k));                                    // crisp belt and zone edges

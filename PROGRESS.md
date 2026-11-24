@@ -574,11 +574,16 @@ Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platform
   standing out of the funnel, each turning at its own speed. It sits over its painted oval on the banded deck, so the
   storm keeps a wide dark reach (darkest deck vertices luminance 0.021 against a 0.213 median), and it reads as a funnel
   rather than a dark puddle from the normal walking camera, and is tappable.
-- **The plateau, retuned**: the calm plateau under the storm measurably changes the capture (13,700 pixels, max channel
-  difference 148), so it stays - but its first form blended the deck toward a fixed 2.4 m and would have lifted the
-  footpath by about 1.6 m once the storm moved beside the walkway. It now has a tighter falloff (24 m along the storm,
-  7 m across) and multiplies the deck height down toward its own level instead of raising it, so it can only flatten
-  ridges and can never lift the path; deck samples along the storm's centre line read exactly 0 at the walkway.
+- **The plateau, measured on a frozen frame**: the calm plateau under the storm is real and it stays, but two of its
+  retunes were effectively no-ops, and pixel-diffing separate browser runs cannot show that - two runs of the *same*
+  build differ by 523,963 pixels because the clouds drift. The A/B therefore stops the frame loop, renders one camera
+  twice, and swaps the plateau on and off in place by dividing the deck heights by its factor; the control is exact
+  (0 pixels between two renders of one state). Measured against that, at the walking camera x 99: a 24 m x 7 m falloff
+  moved 60 of 8,909 deck vertices by at most 9.7 cm and changed **0 pixels**; 42 m x 20 m reached only 989 pixels (max
+  channel difference 78, a thin crest line); the shipped 70 m x 38 m clearing moves 1,599 vertices by up to 3.68 m and
+  changes **38,874 pixels** (4.2% of the frame, max 150). It blends the ridges down to a 0.35 m shelf and is gated by
+  `sstep(-7, -13, z)`, which is exactly 0 within 7 m of the walkway, so the path cannot be raised. (The earlier
+  13,700-pixel figure came from the pre-fix look-out camera and is superseded by these measurements.)
 - **Kept working**: the windsock's gust still pushes the player (3.79 m in 1.6 s) and the wind-ride button still blows
   for the swings (windBlow 3.48 with the empty swings lifted), with 0 page errors.
 
