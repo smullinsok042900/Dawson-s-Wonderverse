@@ -602,8 +602,15 @@ reproduce in two reruns, so it is a streaming artefact rather than a deck regres
   mesh **1 mesh / 40,772 triangles**; the walkway strip and the ice-slide lane still measure exactly flat (largest
   deviation 0.000 m across 57 lane vertices).
 - **The heart plain, with depth**: Pluto's nitrogen-ice plain (Sputnik Planitia) is now a **heart-shaped basin 6.2 m deep
-  with a 3.2 m raised tholin rim**, cut out of the crust with an implicit heart outline. The basin is gated by
-  `sstep(-8, -16, z)`, so nothing within 8 m of the walkway changes height. Terrain relief now spans -5.85 m (plain floor)
+  with a 3.2 m raised tholin rim** on open ground at x +205 (z -34, 30x28 m), on its own shelf 12 m off the heart-glacier
+  mountain rather than inside it. The outline is the glacier's own bezier heart, sampled to 64 points and turned into a
+  signed-distance field, so the two lobes, the top notch and the point drive both the height and the colour, and a dark
+  tholin line follows the rim. Its near edge stops at z -6, so the walkway itself stays flat.
+- **Checked from above, then fixed**: a pinned top-down camera showed the first basin as an *oval* - the implicit curve
+  `(u^2+w^2-1)^3 - u^2 w^3` has no notch at these proportions - and its old centre sat inside the heart-glacier
+  mountain's smooth-face suppression, which punched out the upper half. Moving the plain to x +205 and re-cutting it with
+  the bezier outline fixed both: the same pinned camera now reads a heart, with both lobes, the notch and the point
+  visible (`heart-top.png`), and the surrounding tholin crust grades into the plains instead of hiding it. Terrain relief now spans -5.85 m (plain floor)
   to +36.5 m (the ice mountains beyond), where the old sheet had one jagged ridge band and a flat painted patch.
 - **Layered surface**: a tholin-stained crust with stacked frost strata exposed on the scarps, a dark tholin stain, the
   bright ice plain floor with polygonal convection cells and darker lanes between them, a tholin rim around the plain,
@@ -617,14 +624,34 @@ reproduce in two reruns, so it is a streaming artefact rather than a deck regres
   from the same speed). The heart glacier, Charon and every tap still work, with 0 page errors.
 
 Evidence in `docs/screenshots/stage29/`: `pluto-approach.png` (the landing pad under the layered peaks),
-`pluto-heart-plain.png` (the ice basin with its bright floor and banked rim beside the player) and `pluto-heart.png`
-(the heart glacier on the slope, the ice blocks across the plain and the mountain walls behind).
+`pluto-heart-plain.png` (the ice basin with its bright floor and banked rim beside the player), `pluto-heart.png`
+(the heart glacier on the slope, the ice blocks across the plain and the mountain walls behind), plus `heart-top.png`
+and `heart-wide.png`, the pinned-camera views straight down onto the heart plain.
 
-Audit at x 12, 60, 120 and 200: **z-fighting 0** at 60/120/200, solids 12/16/16/16, platforms 108/111/111/120,
-0 malformed, 0 duplicate or heavy-overlap solids, 0 page errors. One run flagged a pair of streamed scenery planes
-3 cm apart (77.7% overlap) at x 12; it did not reproduce in two reruns, so it is a streaming artefact rather than a
-terrain regression. Frames: 56 calls / 87,378 triangles at the approach, 58 / 86,160 on the plain and 61 / 89,000 at
+Audit at x 12, 60 and 205 (the heart plain): **z-fighting 0** at all three, solids 12/16/16, platforms 108/111/120,
+0 malformed, 0 duplicate or heavy-overlap solids, 0 page errors. A pair of streamed scenery planes was flagged once at
+x 60; it did not reproduce in three later runs, so it is a streaming artefact rather than a terrain or basin regression. Frames: 56 calls / 87,378 triangles at the approach, 58 / 86,160 on the plain and 61 / 89,000 at
 the heart; whole place 30 meshes / 73,354 triangles at the approach. No FPS claim.
+
+### Stage 30 — Characters and pets: a soft toy paint and shading baked into their shapes
+
+- **Their own material**: every character and pet now draws with a new `lifeMat()` - vertex-coloured, roughness 0.58,
+  metalness 0 - instead of the glossy machinery paint (roughness 0.34, metalness 0.08) it shared with rockets and ice.
+  The hard white specular hotspot that read as a plastic blob at phone distance is gone, with the same single shader
+  program and the same one draw call per creature.
+- **Shading painted into the shape**: each species' shared painted mesh is now shaded once at build time with a soft
+  top-lit gradient (0.72 at the feet rising to 1.1 at the top, plus a darker contact band underneath), so a body made of
+  a few balls reads as a rounded shape instead of one flat shade per ball. Measured on the shared `frostfluff` shape: 948
+  vertices, the baked gradient spans median luminance 0.857 with the dark eye paint at 0.016; nothing is recomputed per
+  frame and no geometry was added.
+- **Kept working**: all 11 character and pet taps on Pluto still resolve (`pet_frostfluff`, `pal_snowballkid`,
+  `pal_heartling`, `pet_heartbun`, `pal_charondot`, ...), a `pal_heartling` tap runs with no error, and the hop, float,
+  roll and breathe animations are untouched (no rig change). Frames unchanged at 56 calls / 87,378 triangles on the plain.
+
+Evidence in `docs/screenshots/stage30/`: `character-closeup.png` (Heartling close up - rounded body, soft matte finish,
+with the snowball character behind) and `characters.png` / `pets.png` (the walking camera at x 24 and x 12). Audit at
+x 12, 60 and 205: z-fighting 0, solids 12/16/16, platforms 108/111/120, 0 malformed, 0 duplicate or heavy-overlap
+solids, 0 page errors. No FPS claim.
 
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 

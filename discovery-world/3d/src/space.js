@@ -618,11 +618,24 @@ export function initSpace(G, api) {
       // into the crust and ringed by a raised tholin rim, with ice mountains standing beyond it, so the plain has edges and
       // depth the walking camera can see instead of being a flat painted patch. The depth is gated off within 8 m of the
       // walkway, and the terrain grid carries it at nx 208 / nz 82, about 2 m columns where you walk.
-      const PX = X + 46, PZ = -34, PRX = 34, PRZ = 26;
-      const heartF = (x, z) => { const u = (x - PX) / PRX, w = -(z - PZ) / PRZ, q = u * u + w * w - 1; return q * q * q - u * u * w * w * w; };
-      const plain = (x, z) => { const f = heartF(x, z), near = K.sstep(-8, -16, z);
-        return near * (-6.2 * K.sstep(.12, -.14, f) + 3.2 * K.sstep(.34, .02, Math.abs(f))); };                 // (a bowl with a banked rim)
-      const MTS = [[PX - 52, -86, 32, 11], [PX + 4, -98, 38, 14], [PX + 58, -84, 29, 10]];                      // (the ice mountains beyond the plain)
+      // (stage 30) the plain's outline is the SAME bezier heart as the ice glacier, sampled once and measured with a signed
+      // distance: the implicit heart curve I first used came out as a plain oval from above, so the basin never read as a
+      // heart. It stands in open ground at x 205 so nothing else sits in the basin, and the walkway keeps its own flat strip.
+      const PX = X + 205, PZ = -34, PRX = 30, PRZ = 28;
+      const HP = (() => { const s = new THREE.Shape(); s.moveTo(0, -1); s.bezierCurveTo(-1.75, .15, -1.15, 1.35, 0, .62); s.bezierCurveTo(1.15, 1.35, 1.75, .15, 0, -1);
+        return s.getPoints(64).map(p => [p.x, p.y]); })();
+      const heartSD = (x, z) => { const u = (x - PX) / PRX, v = -(z - PZ) / PRZ;                                  // metres outside the outline
+        let best = 1e9, inside = false;
+        for (let i = 0, j = HP.length - 1; i < HP.length; j = i++) {
+          const xi = HP[i][0], yi = HP[i][1], xj = HP[j][0], yj = HP[j][1], ex = xj - xi, ey = yj - yi;
+          const t = Math.max(0, Math.min(1, ((u - xi) * ex + (v - yi) * ey) / (ex * ex + ey * ey || 1e-9)));
+          const dx = u - (xi + ex * t), dy = v - (yi + ey * t);
+          best = Math.min(best, dx * dx + dy * dy);
+          if ((yi > v) !== (yj > v) && u < ex * (v - yi) / (ey || 1e-9) + xi) inside = !inside; }
+        return (inside ? -1 : 1) * Math.sqrt(best) * PRZ; };
+      const plain = (x, z) => { const sd = heartSD(x, z);
+        return -6.2 * K.sstep(1.4, -1.4, sd) + 3.2 * K.sstep(3.6, .6, Math.abs(sd)); };                          // (a bowl with a banked rim)
+      const MTS = [[PX - 58, -92, 32, 11], [PX + 2, -104, 38, 14], [PX + 56, -90, 29, 10]];                     // (the ice mountains beyond the plain)
       H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, nx: 208, nz: 82, height: (x, z) => { const fm = Math.exp(-Math.pow((x - hc) / 26, 4)) * K.sstep(-34, -42, z); const jag = K.sstep(-20, -52, z) * Math.pow(K.ridge2(x * .03 + 2, z * .03, 4), 2.2) * 30;
           let h = (K.fbm2(x * .06, z * .06, 4) - .5) * 3 + jag * (1 - fm) + face(x, z) + K.sstep(-70, -150, z) * 10 * fm;
           h += plain(x, z) * (1 - fm);
@@ -633,7 +646,7 @@ export function initSpace(G, api) {
           const strata = Math.sin(h * 2.2 + (K.noise2(x * .07, z * .07) - .5) * 2.4) * .5 + .5;                 // every frost layer the scarps expose
           const icy = K.sstep(6.5, 15, h + n * 3) * K.sstep(.4, .78, ny + n * .2);                                // bright ice on the high ground
           const crev = K.sstep(.56, .84, K.ridge2(x * .1 + 2, z * .1, 2));                                        // crevasse shadows in the ice
-          const f = heartF(x, z), near = K.sstep(-8, -16, z), inPlain = K.sstep(.12, -.14, f) * near;
+          const sd = heartSD(x, z), inPlain = K.sstep(1.4, -1.4, sd);
           const cell = K.sstep(.56, .82, K.ridge2(x * .085, z * .085, 2)), thaw = K.sstep(.5, .88, K.noise2(x * .06 + 3, z * .06));
           K.ramp(['#8f6a58', '#c39a80', '#e8cfb8'], .18 + n * .55 + big * .22, o);                                // tholin-stained crust
           o.lerp(K.col('#6a4438'), dark * .5);
@@ -641,7 +654,8 @@ export function initSpace(G, api) {
           o.lerp(K.col('#dfe9f6'), inPlain * (.72 + thaw * .18));                                                 // the nitrogen-ice plain floor
           o.lerp(K.col('#f7fbff'), inPlain * cell * .5);                                                          // bright polygon centres
           o.lerp(K.col('#93827c'), inPlain * (1 - cell) * .34);                                                   // dark tholin lanes between them
-          o.lerp(K.col('#a8896f'), K.sstep(.34, .02, Math.abs(f)) * near * .55);                                   // the raised tholin rim around the plain
+          o.lerp(K.col('#a8896f'), K.sstep(3.6, .6, Math.abs(sd)) * .6);                                           // the raised tholin rim around the plain
+          o.lerp(K.col('#5e4232'), K.sstep(1.5, .2, Math.abs(sd)) * .45);                                          // a dark tholin edge along the outline
           o.lerp(K.ramp(['#bcd4f2', '#f4f8ff'], n, T3), icy * .9);
           o.lerp(K.col('#6a5040'), icy * crev * .42);                                                             // dark crevasses and rock showing through
           const lane = K.sstep(1, 0, Math.hypot((x - (X + 44.5)) / 7.6, (z + .6) / 3.9)); if (lane > 0) { const cell = K.sstep(.42, .5, Math.abs(K.noise2(x * .7, z * .7) - .5) * 2 + .3); o.lerp(K.ramp(['#cfe2f6', '#ffffff'], cell, T3), Math.min(1, lane * 3)); }

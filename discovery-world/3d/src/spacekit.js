@@ -55,6 +55,10 @@ export const shinyMat = () => PAINT_SHINY || (PAINT_SHINY = new THREE.MeshStanda
 let PAINT_GLOW = null;
 export const glowMat = () => PAINT_GLOW || (PAINT_GLOW = new THREE.MeshBasicMaterial({ vertexColors: true }));
 export const softMat = () => PAINT_SOFT || (PAINT_SOFT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .62, metalness: 0 }));
+/** (stage 30) the characters and pets: a soft matte toy paint, so their bodies read as soft rounded shapes at phone
+ *  distance instead of picking up the hard specular highlight of the glossy machinery material */
+let PAINT_LIFE = null;
+export const lifeMat = () => PAINT_LIFE || (PAINT_LIFE = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .58, metalness: 0 }));
 
 // ---------- a batch: many shapes merged into one mesh with painted colours ----------
 const V = new THREE.Vector3(), N = new THREE.Vector3(), NM = new THREE.Matrix3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), E = new THREE.Euler(), S3 = new THREE.Vector3(), C2 = new THREE.Color();

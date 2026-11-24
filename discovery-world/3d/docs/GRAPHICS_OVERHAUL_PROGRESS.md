@@ -615,8 +615,14 @@ a pair of streamed scenery planes 1.8 cm apart at x 44; it did not reproduce in 
   scarps, plain edges and ice peaks are carried by geometry instead of averaged away: ground mesh **40,772 triangles**,
   while the walkway and the ice-slide lane still measure exactly flat (largest deviation 0.000 m over 57 lane vertices).
 - **The heart plain, with depth**: Pluto's nitrogen-ice plain is now a heart-shaped basin **6.2 m deep with a 3.2 m raised
-  tholin rim**, cut from the crust with an implicit heart outline and gated by `sstep(-8, -16, z)` so nothing within 8 m
-  of the walkway changes height. Relief now runs from -5.85 m on the plain floor to +36.5 m at the ice mountains, where
+  tholin rim**, on open ground at x +205 (z -34, 30x28 m) on its own shelf 12 m off the heart-glacier mountain. The
+  outline is the glacier's own bezier heart, sampled to 64 points into a signed-distance field, so the two lobes, the top
+  notch and the point drive both the height and the colour, with a dark tholin line following the rim; the near edge stops
+  at z -6 so the walkway stays flat.
+- **Checked from above, then fixed**: a pinned top-down camera showed the first basin as an *oval* (the implicit curve
+  `(u^2+w^2-1)^3 - u^2 w^3` has no notch at these proportions) with its old centre inside the heart-glacier mountain's
+  smooth-face suppression, which punched out the upper half. The plain was moved to x +205 and re-cut from the bezier
+  outline; the same pinned camera now reads a heart, both lobes, notch and point included (`heart-top.png`). Relief now runs from -5.85 m on the plain floor to +36.5 m at the ice mountains, where
   the old sheet had one ridge band and a flat painted patch.
 - **Layered surface**: tholin-stained crust with stacked frost strata on the scarps, a dark tholin stain, the bright ice
   floor with polygonal convection cells and darker lanes between them, a tholin rim around the plain, and bright ice with
@@ -627,9 +633,29 @@ a pair of streamed scenery planes 1.8 cm apart at x 44; it did not reproduce in 
   still squishes (**4 walls to 3**), the matching game is built (`G.plutoMatch`), and the heart's ice lane still slides
   (**0.35 m** coast against 0.22 m off the lane), with 0 page errors.
 
-Evidence: `docs/screenshots/stage29/` (approach, heart plain, heart). Audit at 12/60/120/200: z-fighting 0 at 60/120/200,
-solids 12/16/16/16, platforms 108/111/111/120, 0 malformed, duplicate or heavy-overlap entries, 0 page errors (one run
-flagged a pair of streamed scenery planes 3 cm apart at x 12; it did not reproduce in two reruns). Frames 56 calls /
-87,378 tris at the approach, 58 / 86,160 on the plain, 61 / 89,000 at the heart. No FPS claim.
+Evidence: `docs/screenshots/stage29/` (approach, heart plain, heart, plus `heart-top.png` and `heart-wide.png` from a
+pinned camera looking down on the plain). Audit at 12/60/205: z-fighting 0, solids 12/16/16, platforms 108/111/120,
+0 malformed, duplicate or heavy-overlap entries, 0 page errors (a streamed scenery-plane pair flagged once at x 60 did
+not reproduce in three later runs). Frames 56 calls / 87,378 tris at the approach, 58 / 86,160 on the plain, 61 / 89,000
+at the heart. No FPS claim.
 
-Next: the character/pet material pass.
+## Stage 30 — Characters and pets: a soft toy paint, shading baked into their shapes
+
+- **Their own material**: characters and pets now draw with a new `lifeMat()` (vertex-coloured, roughness 0.58, metalness
+  0) instead of the glossy machinery paint they shared with rockets and ice (roughness 0.34, metalness 0.08). The hard
+  white specular hotspot that read as a plastic blob at phone distance is gone; same shader program, same one draw call
+  per creature.
+- **Shading painted into the shape**: every species' shared painted mesh is shaded once at build time with a soft top-lit
+  gradient (0.72 at the feet to 1.1 at the top, with a darker contact band underneath), so a body made of a few balls
+  reads round instead of one flat shade per ball. On the shared `frostfluff` shape (948 vertices) the baked gradient spans
+  median luminance 0.857 against 0.016 for the dark eye paint; nothing is recomputed per frame and no geometry was added.
+- **Kept working**: all 11 character and pet taps on Pluto resolve (`pet_frostfluff`, `pal_snowballkid`, `pal_heartling`,
+  `pet_heartbun`, `pal_charondot`, ...), a `pal_heartling` tap runs clean, and hop/float/roll/breathe are untouched (no
+  rig change). Frames unchanged at 56 calls / 87,378 triangles.
+
+Evidence: `docs/screenshots/stage30/` (`character-closeup.png`, `characters.png`, `pets.png`). Audit at 12/60/205:
+z-fighting 0, solids 12/16/16, platforms 108/111/120, 0 malformed, duplicate or heavy-overlap entries, 0 page errors.
+No FPS claim.
+
+Next: the rest of Phase 3 - bevels on the hard-edged family characters, eye highlights sized for phone distance, LOD for
+far followers.
