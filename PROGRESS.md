@@ -567,20 +567,25 @@ Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platform
   layers instead of rolling as one smooth sheet.
 - **Cloud banks and wisps**: the ten random five-puff heaps became four band-aligned rows of half-buried domes, and the
   wisp layers lie low on the deck as thin streaks, still driven at Neptune's fast speed.
-- **The Great Dark Spot**: the storm is a painted oval on the deck, and it moved into the shared banded colour path so it
-  still paints over the new belts (darkest deck vertices luminance 0.021 against a 0.213 median) with its pale rim.
-  A calm plateau is blended into the deck under the storm so the oval is not cut in half by a ridge, and a look-out
-  capture from the middle of the place shows it whole.
+- **The Great Dark Spot, visible from the walk**: the storm used to be a painted oval about 62 m out, where only a
+  look-out camera could find it - at walking height a flat decal is seen almost edge-on and vanishes. It is now a raised
+  vortex beside the walkway at offset 110: a pale foam collar, a deep navy bowl with a dark eye and two pale spiral arms
+  standing out of the bowl, each turning at its own speed, over a painted oval on the banded deck so the storm keeps a
+  wide dark reach (darkest deck vertices luminance 0.021 against a 0.213 median). It reads from the normal walking
+  camera and is tappable, and its five meshes cost 2,880 triangles.
+- **The plateau was measured, not assumed**: a calm plateau under the storm changed the look-out capture by 13,700
+  pixels (max channel difference 148), so it was doing real work; but once the storm moved beside the walkway the same
+  Gaussian would have lifted the footpath by about 1.6 m, so it was dropped in favour of the raised geometry.
 - **Kept working**: the windsock's gust still pushes the player (3.79 m in 1.6 s) and the wind-ride button still blows
   for the swings (windBlow 3.48 with the empty swings lifted), with 0 page errors.
 
 Evidence in `docs/screenshots/stage28/`: `neptune-approach.png` and `neptune-deck.png` (the banded, ridged deck with
-its banked far deck behind), and `neptune-dark-spot.png` (the storm oval from a look-out camera, since it sits about
-277 m into the 544 m place, far from the landing site).
+its banked far deck behind), and `neptune-dark-spot.png` (the storm from the normal walking camera at x 99, beside the
+player, with its pale collar and dark bowl).
 
-Audit at x 12, 44, 72 and 120: **z-fighting 0**, solids 12, platforms 108, 0 malformed, 0 duplicate or heavy-overlap
-solids, 0 page errors. One run flagged a pair of streamed scenery planes 1.8 cm apart at x 44; it did not reproduce in
-two reruns, so it is a streaming artefact rather than a deck regression. No FPS claim.
+Audit at x 12, 44, 72 and 99: **z-fighting 0**, solids 12, platforms 108, 0 malformed, 0 duplicate or heavy-overlap
+solids, 0 page errors. One run earlier flagged a pair of streamed scenery planes 1.8 cm apart at x 44; it did not
+reproduce in two reruns, so it is a streaming artefact rather than a deck regression. No FPS claim.
 
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 

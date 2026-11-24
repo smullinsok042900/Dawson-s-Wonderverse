@@ -375,7 +375,9 @@ export function initSpace(G, api) {
       // ---------- the gas giants: you walk on a soft deck of cloud, with hills of cloud, towers of cloud and drifting wisps ----------
       const BD = CLOUDS[id], amp = { jupiter: 1, saturn: .6, uranus: .34, neptune: .75 }[id];
       const bandAt = (x, z, o) => { const v = z * .085 + (K.fbm2(x * .028, z * .028, 3) - .5) * 5.5 + Math.sin(x * .045 + z * .02) * .7, t = ((v % BD.length) + BD.length) % BD.length, k = Math.floor(t); return o.copy(K.col(BD[k])).lerp(K.col(BD[(k + 1) % BD.length]), K.sstep(.25, .75, t - k)); };
-      const spot = id === 'neptune' ? [MID + 14, -62, 26, 9] : null;
+      // (stage 28) the Great Dark Spot is painted on the deck beside the walkway, under its raised vortex (built below), so
+      // the storm has both a wide dark reach on the banded deck and a shape that reads from the walking camera
+      const spot = id === 'neptune' ? [X + 110, -9, 22, 8] : null;
       // (stage 28) the Great Dark Spot is painted onto the banded deck as well as the plain one: a deep navy oval with a
       // pale rim of drawn-out cloud, so the storm still reads now that Neptune's deck carries the shared band colours
       const spotPaint = spot ? (x, z, o) => { const d = Math.hypot((x - spot[0]) / spot[2], (z - spot[1]) / spot[3]);
@@ -394,9 +396,7 @@ export function initSpace(G, api) {
         const h = K.sstep(-11, -20, z) * depth * (ridge * 5.2 + fine * 1.1 + 1.2) * BS                                 // the ridges themselves
           + K.sstep(-30, -80, z) * (K.fbm2(x * .08, z * .12, 3) - .5) * 3 * BS                                           // lumpy cloud tops behind them
           + K.sstep(-52, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' ? 34 : id === 'saturn' ? 18 : id === 'uranus' ? 12 : 22); // the far deck, banked up
-        if (!spot) return h;
-        const q = Math.exp(-Math.pow((x - spot[0]) / 30, 2) - Math.pow((z - spot[1]) / 16, 2));                        // (stage 28) a calm plateau under the
-        return h * (1 - q) + 2.4 * q; };                                                                              // Great Dark Spot, so the oval reads whole
+        return h; };
       const bandCol = (x, z, h, ny, o) => {
         const v = bandV(x, z), t = ((v % 6) + 6) % 6, k = Math.floor(t);
         o.copy(K.col(pal[k])).lerp(K.col(pal[(k + 1) % 6]), K.sstep(.3, .7, t - k));                                    // crisp belt and zone edges
@@ -561,6 +561,30 @@ export function initSpace(G, api) {
     }
     yield;
     if (id === 'neptune') {
+      // (stage 28) THE GREAT DARK SPOT, raised out of the deck beside the walkway: a pale collar of drawn-out cloud around a
+      // deep navy bowl with a dark eye, each turn at its own speed. A painted oval alone is invisible at walking height - it
+      // is seen almost edge-on - so the storm needs a shape that stands up, the way Jupiter's red spot does.
+      const spn = new THREE.Group(); spn.position.set(X + 110, .04, -6.2); add(spn);
+      const ringG = (r0, r1, seg, hf, cf) => { const g = new THREE.RingGeometry(r0, r1, 72, seg); g.rotateX(-Math.PI / 2);
+        const p = g.attributes.position; for (let q = 0; q < p.count; q++) { const px = p.getX(q), pz = p.getZ(q), r = Math.hypot(px, pz), a = Math.atan2(pz, px);
+          p.setY(q, hf(r) + .03 * Math.sin(a * 4 + r * 7)); } g.computeVertexNormals();                                 // (a faintly rippled, shaped surface)
+        return model(b => b.add(g, null, (px, py, pz, nx, ny, nz, o) => cf(Math.hypot(px, pz), Math.atan2(pz, px), py, o)), K.softMat(), false); };
+      const collar = ringG(1.06, 1.52, 4, r => .52 - (r - 1.06) * .8, (r, a, y, o) => { const n = K.noise2(Math.cos(a) * 5 + 2, Math.sin(a) * 5);
+        o.copy(K.col('#dff0ff')).lerp(K.col('#ffffff'), K.sstep(.45, .92, n) * .62); o.lerp(K.col('#8fb0ff'), K.sstep(.42, .1, n) * .5); });  // (a pale foam rampart)
+      const bowl = ringG(.05, 1.02, 6, r => .06 + .32 * (1 - r) * (1 - r), (r, a, y, o) => { const s = Math.sin(a * 2 + r * 6) * .5 + .5;
+        K.ramp(['#070f38', '#102463', '#1c4190', '#2f62b4'], .1 + s * .5 + r * .22, o);                             // (a deep navy bowl, drawn out into spiral arms)
+        o.lerp(K.col('#eaf2ff'), K.sstep(.88, .985, r) * .55); });                                                     // (a pale inner rim)
+      const eye = ringG(.02, .28, 5, () => .02, (r, a, y, o) => { o.copy(K.col('#050a26')).lerp(K.col('#122a6e'), r); });
+      spn.add(collar, bowl, eye); spn.scale.set(4.2, 1, 2.9); let spin = 0;
+      // two pale spiral arms standing out of the bowl, so the swirl reads in silhouette from walking height as well as in colour
+      const arms = []; for (const [rr, th, arc, y0, col] of [[1.14, .085, Math.PI * 1.6, .3, '#eaf2ff'], [.82, .065, Math.PI * 1.35, .22, '#9fb8ff']]) {
+        const tg = new THREE.TorusGeometry(rr, th, 6, 30, arc); tg.rotateX(-Math.PI / 2);
+        const sw = model(b => b.add(tg, null, col), K.softMat(), false); sw.position.y = y0; spn.add(sw); arms.push(sw); }
+      tapIt(spn, () => { spin = 4; Sound.noise && Sound.noise(1.2, 180, 620, .05); fact('🌀 The Great Dark Spot! A storm as wide as our whole Earth.', 'greatdarkspot'); }, X + 110, 'greatdarkspot');
+      U.push((dt, t) => { spin = Math.max(0, spin - dt); bowl.rotation.y -= dt * (.16 + spin * 2); collar.rotation.y += dt * (.1 + spin * 1.6);
+        eye.rotation.y -= dt * (.3 + spin * 3); spn.position.y = .04 + Math.sin(t * .5) * .03;
+        arms[0].rotation.y -= dt * (.24 + spin * 2.2); arms[1].rotation.y += dt * (.32 + spin * 2.6); arms.forEach((a2, q) => { a2.position.y = (q ? .22 : .3) + Math.sin(t * 1.3 + q) * .03; });
+        if (spin > 0 && Math.random() < dt * 10) api.burst(X + 110 + (Math.random() - .5) * 7, .5, -7, ['#8fb0ff', '#eaf2ff', '#2f62b4'], 1, 1.4); });
       const tr = inSky((yield* K.skyBodySteps('triton', 8.5, { size: 256 })), MID - 30, 38, -175); U.push(dt => { tr.rotation.y += dt * .02; });
       // the windsock: a striped sock on a pole that streams out and flaps in the wind
       const sock = new THREE.Group(); sock.position.set(X + 44, 0, -2.4); add(sock); sock.add(model(b => { b.put(K.lathe([[0, .16], [.2, .14], [.3, 0], [0, 0]], 14), 0, 0, 0, '#8a8fa0'); b.put(K.geo.cyl(10), 0, 1.3, 0, '#f2f4fa', [.05, 2.6, .05]); b.put(K.geo.torus(.12, 16), .12, 2.5, 0, '#ffd23f', [.34, .34, .34], [0, Math.PI / 2, 0]); }));
