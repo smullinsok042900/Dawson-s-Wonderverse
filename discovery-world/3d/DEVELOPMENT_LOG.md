@@ -6,6 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 127 — OPEN SPACE TOGETHER (friends' rockets and spacewalks) and pets on spacewalks
+- **Play Together in open space:** friends in one room who fly up into 🌌 see each other's **rockets** out there (gliding
+  smoothly between updates), and a friend on a spacewalk floats beside their rocket as themselves; back in the rocket, only
+  the rocket shows. Friends are shown within 300 m in space (80 m along the path on the ground, as before).
+- **How it is sent:** the rocket goes as one short text `dk` ("x,y,z,turn"), checked on arrival to be exactly four numbers;
+  while out there, her own place is sent as a half-size offset from her rocket, so every number stays inside the database's
+  limits (the tether keeps a spacewalker within 110 m). `firebase-rules.json` adds `dk` (text under 60 letters; the family
+  must publish the rules once more, MULTIPLAYER.md). With older rules a phone in space simply drops `dk` and is not seen
+  until it lands; nothing else changes.
+- **Pets:** her chosen friend floats along on spacewalks in its own little bubble, never far away (the voice says so once),
+  and waits in the rocket otherwise.
+- Tests (desktop, software rendering): `space-together` 6/6 (two browsers, test relay with 120 ms delay), `open-space`
+  24/24 (+ the pet check), Firebase rules emulator test adds two `dk` cases (not run here: no emulator).
+
 ## Checkpoint: build 126 — OPEN SPACE (fly the rocket, spacewalks, Star Station) and THE SUN; build 125's fixes included
 The family's big request: make space itself a place to explore, let her get out of the rocket and float about, and make the Sun a destination with huge attractions. This build does the first verified phases of it.
 - **🌌 Open space** (new `src/deepspace.js`): the first picture in the rocket menu. After blast-off she flies the rocket herself in a 3D solar system: ◀ ▶ steer, ▲ faster, ▼ slower (arcade flight, never stuck: a soft push keeps her out of planets, and the edge of the solar system turns her back). The **picture map** (🗺️) lists every planet, the Moon, Pluto, the Sun, Star Station, the hoop trail, the comet and the asteroid belt; tapping one starts the **autopilot**, which flies faster the farther the goal is (seconds, never minutes) and slows down on arrival; touching the arrows takes over again. Close to a planet, **🛬 lands** on it (the normal landing on its pad); from any planet's rocket, 🌌 goes back up, starting beside that planet.
