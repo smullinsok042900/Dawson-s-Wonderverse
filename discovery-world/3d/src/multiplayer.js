@@ -151,7 +151,7 @@ export function makeInterp(delay = 150) {
     push(t, s) { buf.push({ t, s }); if (buf.length > 30) buf.shift(); },
     at(now) { const rt = now - delay; if (!buf.length) return null; while (buf.length > 2 && buf[1].t <= rt) buf.shift(); const a = buf[0], b = buf[1];
       if (!b || rt <= a.t) return { ...a.s }; const k = Math.min(1, (rt - a.t) / Math.max(1, b.t - a.t)); const o = { ...b.s }; for (const f of ['x', 'y', 'z']) o[f] = a.s[f] + (b.s[f] - a.s[f]) * k;
-      o.vx = (b.s.x - a.s.x) / Math.max(.03, (b.t - a.t) / 1000); o.vy = (b.s.y - a.s.y) / Math.max(.03, (b.t - a.t) / 1000); if (Math.abs(b.s.x - a.s.x) > 6) { o.x = b.s.x; o.vx = 0; } return o; },
+      if (a.s.dk && b.s.dk) { o.dk = b.s.dk.map((v, i) => i < 3 ? a.s.dk[i] + (v - a.s.dk[i]) * k : a.s.dk[3] + Math.atan2(Math.sin(v - a.s.dk[3]), Math.cos(v - a.s.dk[3])) * k); } /* (build 127) a friend's rocket in open space glides smoothly too */ o.vx = (b.s.x - a.s.x) / Math.max(.03, (b.t - a.t) / 1000); o.vy = (b.s.y - a.s.y) / Math.max(.03, (b.t - a.t) / 1000); if (Math.abs(b.s.x - a.s.x) > 6) { o.x = b.s.x; o.vx = 0; } return o; },
     size: () => buf.length };
 }
 
@@ -321,6 +321,7 @@ export function initMultiplayer(G, api) {
   }
   function removeOther(id, quiet) { const o = others.get(id); if (!o) return; if (G.bubbles) G.bubbles.drop(o); others.delete(id); vc.drop(id); voiceIds.delete(id); for (const m of [o.model && o.model.root, o.ring, o.mark, o.waveM, o.talkM]) if (m) scene.remove(m); if (o.model) freeLater(o.model.root); /* (build 107: free a friend who left) */
     for (const pet of o.petModels || []) scene.remove(pet.root);
+    if (o.deepRk) scene.remove(o.deepRk); // (build 127: their rocket in open space; its shape is shared, nothing to free)
     if (o.ring) { o.ring.geometry.dispose(); o.ring.material.dispose(); o.mark.geometry.dispose(); o.mark.material.dispose(); }
     if (!quiet) { say('👋 A friend left the room.', true); if (o.model && o.model.root.visible) api.burst && api.burst(o.model.root.position.x, o.model.root.position.y + 1, o.model.root.position.z, [COLOURS[o.colour % 4], '#ffffff'], 14, 2.5); }
     if (panel.classList.contains('show') && room) render('room'); }
@@ -519,7 +520,7 @@ export function initMultiplayer(G, api) {
       if (!P.ride && front < C.homeI + 70 && now - joinedAt > 20000 && Math.abs(P.x - (C.stationX - 4)) < 9 && P.y < 1.6 && Math.abs((P.z || 0) + 1) < 3 && G.startCoaster) {
         const seat = [1, 2, 3].find(k => !occupied.has(k)); if (seat != null) { joinedAt = now; trainOut = false; G.startCoaster(C, { i: front + 1, seat }); say('🎢 You hop on the coaster with your friend!', true); Sound.chime && Sound.chime(); } } }
   }
-  function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']), b: G.bubbles && G.bubbles.stateFlag() ? 1 : null }; } /* (null: Firebase's update removes the flag again when the bubble pops) */ /* (build 106: b while inside a magic bubble) */
+  function myState() { const r = n => Math.round(n * 100) / 100; return { x: r(P.x), y: r(P.y), z: r(P.z), f: P.facing >= 0 ? 1 : -1, g: !!(P.grounded || P.ride), r: !!(P.ride && P.ride.type !== 'slide'), l: P.layer || '', dk: G.deepRocket || 0, h: !!G.playerHidden, c: P.creature || 'pip', k: myColour, ps: myPets().join(','), a: outfitCode((world.wear || {})[P.creature || 'pip']), b: G.bubbles && G.bubbles.stateFlag() ? 1 : null }; } /* (null: Firebase's update removes the flag again when the bubble pops) */ /* (build 106: b while inside a magic bubble) */
   function myPets() { const list = Array.isArray(world.pets) ? world.pets : []; return list.slice(0, LIMITS.pets).map(petKey); }
   function update(dt) {
     if (G.bubbles && bubShown !== !!room) { bubShown = !!room; G.bubbles.showButton(bubShown); } /* (build 106: 🫧 only in a room) */
@@ -532,7 +533,12 @@ export function initMultiplayer(G, api) {
       if (now - o.seen > 20000) { removeOther(o.id); continue; } // (a phone that vanished without saying goodbye)
       syncPeerPets(o);
       const st = o.interp.at(now); if (!st || !o.model) continue; const R = o.model.root;
-      const show = st.l === (P.layer || '') && !st.h && Math.abs(st.x - P.x) < 80;
+      // (build 127) OPEN SPACE TOGETHER: out there things are far apart in every direction, so it is the distance in 3D that
+      // counts; a friend flying is seen as their rocket, a friend on a spacewalk as themselves
+      const deepHere = st.l === 'deep' && P.layer === 'deep';
+      if (deepHere && st.dk) { if (!o.deepRk && api.rocketMesh) { o.deepRk = api.rocketMesh(); scene.add(o.deepRk); } if (o.deepRk) { o.deepRk.visible = true; o.deepRk.position.set(st.dk[0], st.dk[1], st.dk[2]); o.deepRk.rotation.set(0, st.dk[3], 0); } }
+      else if (o.deepRk) o.deepRk.visible = false;
+      const show = st.l === (P.layer || '') && !st.h && (deepHere ? Math.hypot(st.x - P.x, st.y - P.y, st.z - P.z) < 300 : Math.abs(st.x - P.x) < 80);
       R.visible = o.ring.visible = o.mark.visible = show;
       for (const pet of o.petModels) pet.root.visible = show;
       if (o.waveM) o.waveM.visible = show && now - (o.waveAt || 0) < 2200;

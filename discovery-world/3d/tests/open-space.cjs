@@ -20,6 +20,7 @@ const HTML = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.h
     await ev(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; }); await sleep(500);
     await ev(() => __DDW3.G.openRocket()); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
     check('the rocket menu shows the 🌌 open-space picture first', await ev(() => document.querySelector('#rocketPanel .rkT')?.dataset.id === 'deep'));
+    await ev(() => __DDW3.G.setPalFollow('crab', true)); // (build 127) a friend comes along
     await tap('#rocketPanel .rkT[data-id=deep]');
     await until(() => __DDW3.G.deep.active() && __DDW3.player.layer === 'deep', null, 120000);
     let s = await st(); check('she is in open space, inside her rocket', s.layer === 'deep' && s.ride === 'deep' && s.hidden && s.deep.mode === 'fly', JSON.stringify(s.deep));
@@ -43,6 +44,8 @@ const HTML = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.h
     await tap('#deepWalk'); await sleep(400); s = await st();
     check('🧑‍🚀 lets her out of the rocket into space, visible', s.deep.mode === 'walk' && !s.hidden && s.deep.walk, JSON.stringify(s.deep.mode));
     check('she wears a bubble helmet and a little jetpack', await ev(() => !!__DDW3.G.me().root.getObjectByName('spacesuit')));
+    await sleep(1500); { const r = await ev(() => { const W = __DDW3.G.deepWalk; const m = __DDW3.G.followerMeshes().find(q => q.visible) || null; return { W: !!W, m: !!m, d: m && W ? m.position.distanceTo(W.pos) : -1 }; });
+      check('her friend floats beside her on the spacewalk (in a bubble), never far away', r.W && r.m && r.d > 0 && r.d < 4, JSON.stringify(r)); }
     const w0 = s.deep.walk; await hold('ArrowRight', 2000); s = await st();
     check('the arrows float her through space', Math.hypot(s.deep.walk[0] - w0[0], s.deep.walk[2] - w0[2]) > .6, `${w0.map(v => v.toFixed(1))} → ${s.deep.walk.map(v => v.toFixed(1))}`);
     const h0 = s.deep.walk[1]; await page.keyboard.press(' '); await sleep(2000); s = await st();
