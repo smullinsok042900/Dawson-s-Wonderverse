@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 123: fixes from the family's pictures
+- Pets wait on the ground during rides and jumps, the zip-line handle is in her hands, the shadow screen shows dark shadows on the iPhone, train platforms stand beside the track, the seesaw stands behind the path, the magnet hangs on a rope, and no toy sticks out of Dottie's neck.
+
 ## 3D build 122: thirty more creations across the world
 - **Thirty more family creations join the sixteen from build 121:** decorated animals, ponies, friendly ghosts, a pumpkin, all three bees and the colorful shark. Dad Duck keeps his mustache, tie, coffee and ramen.
 - Six live around Earth; three each live on the Moon, Mercury, Mars, Venus, Saturn, Uranus, Neptune and Pluto. Each has a spoken welcome and a dance, song, bounce, hug or sparkle reaction.

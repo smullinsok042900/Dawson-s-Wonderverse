@@ -88,15 +88,15 @@ export function initTrain(G, api) {
   // ---------- the stations ----------
   STATIONS.forEach((st, i) => {
     const g = new THREE.Group(); g.position.set(st.x, 0, 0); add(g);
-    const plat = new THREE.Mesh(new RoundedBoxGeometry(4.2, .22, .8, 2, .08), toy('#fff1dc', { r: .5, cc: .4 })); plat.position.set(0, .11, TRAIN.z + .95); plat.receiveShadow = true; g.add(plat);
-    for (let k = 0; k < 6; k++) { const t = new THREE.Mesh(new THREE.BoxGeometry(.6, .03, .12), toy(k % 2 ? '#ff4f9a' : '#ffd23f')); t.position.set(-1.75 + k * .7, .235, TRAIN.z + .6); g.add(t); }
+    const plat = new THREE.Mesh(new RoundedBoxGeometry(4.2, .22, .8, 2, .08), toy('#fff1dc', { r: .5, cc: .4 })); plat.position.set(0, .11, TRAIN.z + 1.25); plat.receiveShadow = true; g.add(plat); // (build 120: beside the track, clear of the rail and sleepers; it overlapped the front rail)
+    { const t = new THREE.Mesh(new THREE.BoxGeometry(4, .03, .1), toy('#ffd23f')); t.position.set(0, .235, TRAIN.z + .92); g.add(t); } // (one yellow safety line along the edge: the pink and yellow tiles looked like a keyboard on the tracks)
     // a picture sign with a bell at both ends of the platform (so one is always on screen)
     st.bells = [];
     for (const sx of [-2.4, 2.4]) {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(.04, .06, .4, 10), toy('#ffffff')); post.position.set(sx, .2, TRAIN.z + .9); // (build 43: smaller and lower, so it never stands in front of the view) post.castShadow = true; g.add(post);
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(.04, .06, .4, 10), toy('#ffffff')); post.position.set(sx, .2, TRAIN.z + 1.2); // (build 43: smaller and lower, so it never stands in front of the view) post.castShadow = true; g.add(post);
       const sign = new THREE.Mesh(new THREE.CircleGeometry(.25, 32), new THREE.MeshBasicMaterial({ map: emojiTex(st.e, ['#ff6fae', '#3d9bff', '#a15cff', '#3cc46e', '#ff9a2e', '#ffd23f', '#5bc8ff'][i % 7]), transparent: true }));
-      sign.position.set(sx, .6, TRAIN.z + .95); /* low, so it never hides your creature */ g.add(sign);
-      const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(sx + .42, .55, TRAIN.z + .95); bell.rotation.x = Math.PI; g.add(bell);
+      sign.position.set(sx, .6, TRAIN.z + 1.25); /* low, so it never hides your creature */ g.add(sign);
+      const bell = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), toy('#ffd23f', { m: .7, r: .2 })); bell.position.set(sx + .42, .55, TRAIN.z + 1.25); bell.rotation.x = Math.PI; g.add(bell);
       st.bells.push(bell);
     }
     api.tap(g, () => call(i));

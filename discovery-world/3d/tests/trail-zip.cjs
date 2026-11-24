@@ -20,9 +20,10 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   // ride with ▶ (zoom) and ▲ (high stars)
   await ev(() => __DDW3.G.interact.find(i => i.disc === 'zipline').run()); const rid = await ev(() => __DDW3.player.ride && __DDW3.player.ride.type);
   check('grab the handle: she rides the zip line', rid === 'zipline', String(rid));
-  await page.keyboard.down('ArrowRight'); const fast0 = await ev(() => __DDW3.player.ride.f); const t0 = Date.now(); await sleep(4000); const fast1 = await ev(() => __DDW3.player.ride ? __DDW3.player.ride.f : 1), fastT = (Date.now() - t0) / 1000; await page.keyboard.up('ArrowRight');
-  await page.keyboard.down('ArrowLeft'); const slow0 = await ev(() => __DDW3.player.ride ? __DDW3.player.ride.f : 1); const t1 = Date.now(); await sleep(4000); const slow1 = await ev(() => __DDW3.player.ride ? __DDW3.player.ride.f : 1), slowT = (Date.now() - t1) / 1000; await page.keyboard.up('ArrowLeft');
-  check('▶ zooms faster than ◀', (fast1 - fast0) / fastT > (slow1 - slow0) / slowT * 1.4, JSON.stringify({ fast: ((fast1 - fast0) / fastT).toFixed(3), slow: ((slow1 - slow0) / slowT).toFixed(3) }));
+  // (the test browser runs at 1–2 frames a second, so compare the ride's own speed after holding each arrow)
+  await page.keyboard.down('ArrowRight'); await until(() => __DDW3.player.ride && __DDW3.player.ride.t > 3, null, 60000); const vFast = await ev(() => __DDW3.player.ride ? __DDW3.player.ride.v : 0); await page.keyboard.up('ArrowRight');
+  await page.keyboard.down('ArrowLeft'); const t1 = await ev(() => __DDW3.player.ride ? __DDW3.player.ride.t : 0); await until(t1 => __DDW3.player.ride && __DDW3.player.ride.t > t1 + 3, t1, 60000); const vSlow = await ev(() => __DDW3.player.ride ? __DDW3.player.ride.v : 0); await page.keyboard.up('ArrowLeft');
+  check('▶ zooms faster than ◀', vFast > vSlow * 1.6, JSON.stringify({ fast: vFast.toFixed(3), slow: vSlow.toFixed(3) }));
   // the rest: hold ▲ for a high star, then ride to the end
   const yHi = await ev(async () => { const k = new KeyboardEvent('keydown', { key: 'ArrowUp' }); dispatchEvent(k); await new Promise(r => setTimeout(r, 1500)); const y = __DDW3.player.y - (__DDW3.player.ride ? 0 : 99); dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp' })); return y; });
   const done = await until(() => !__DDW3.player.ride, null, 120000); const end = await ev(() => ({ x: +__DDW3.player.x.toFixed(1), y: +__DDW3.player.y.toFixed(2), n: __DDW3.G.disc ? null : null }));

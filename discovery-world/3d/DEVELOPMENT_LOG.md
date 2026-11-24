@@ -6,6 +6,19 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 123 — fixes from the family's iPhone pictures (on top of the 3D overhaul, builds 120–122)
+- **Pets:** on a ride (Ferris wheel, carousel, zip line, paper plane...) they wait on the ground and run after her when she gets off; when she jumps they stay where she last stood (they used to float in the air beside or under her).
+- **Zip line:** her hands are on the handle (it hung a metre above her head); the stars moved to match.
+- **Shadow screen (Lab Gardens):** the shadows are dark on the iPhone too (Safari ignores canvas filters, so it showed colour pictures).
+- **Train stops:** the platform stands beside the track with one yellow edge line (the pink and yellow tiles lay over the rail and looked like a keyboard).
+- **Seesaw (Toy Town):** stands behind the path, so she walks past it instead of through the plank; she steps back onto it to ride.
+- **Magnet crane:** the magnet hangs on a rope.
+- **Dottie the dinosaur:** the "me" learning corner (a floating toy) stood where she lowers her head and stuck out of her neck; moved to x 393.6.
+- **Meadow:** the two picture signs high above the block wall and the colouring board are gone (one showed behind the top buttons like a broken button).
+- The Ferris wheel fix written first (rod, canopy, open basket) was dropped: the overhaul (builds 120–122, PR #104) had already rebuilt the wheel and its gondolas, and its version is kept.
+- Tests (desktop, software rendering): `trail-zip` (its speed check now compares the ride's own speed; the old one measured wall-clock time at 1–2 frames a second): all passed. Speed: see PERFORMANCE_LOG. **Full smoke test: 342/342** (the first two runs: 341/342 — console warnings from the overhaul's scenery code giving plain materials sheen and clearcoat, removed; then the desktop ReadPixels driver note in a longer form the test's filter missed, filter widened for that ending only). Not tried on an iPhone.
+- Still to look at (asked the family): which learning game showed plain white cards on the iPhone (every game shows its pictures on desktop); the little door high on the barn; the 3D learning pictures follow the world's adaptive sharpness (blocky letters on a busy phone).
+
 ## Checkpoint: build 122 — thirty further family creations, forty-six additions together
 - **The next thirty creations are real 3D world friends:** decorated animals, Dad Duck, ponies, three separately colored bees, a friendly shark, and separate pumpkin/ghost figures. Three exact photo reuploads share one character each; twenty-seven unique later photos yield thirty principal figures. Both confirmed pairs of twins from build 121 remain separate, and the original seven drawing friends keep their homes.
 - Six new residents live on Earth; three each live in the expanded areas of the Moon, Mercury, Mars, Venus, Saturn, Uranus, Neptune and Pluto. Jupiter's busy playground has no added residents. Planet homes build through `PLANET_EXTRA.sections`, use whole-planet offsets, and free their taps/updates with the planet. One home manifest supplies placement, registry destination, verification and the parent guide.

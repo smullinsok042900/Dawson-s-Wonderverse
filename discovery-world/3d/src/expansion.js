@@ -44,7 +44,8 @@ function emojiMat(e, shadow) {
   const k = e + (shadow ? '#s' : ''); if (emojiMats.has(k)) return emojiMats.get(k);
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
   g.font = '100px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  if (shadow) g.filter = 'brightness(0) opacity(.75)'; g.fillText(e, 64, 72);
+  g.fillText(e, 64, 72);
+  if (shadow) { g.globalCompositeOperation = 'source-in'; g.fillStyle = 'rgba(40,30,62,.78)'; g.fillRect(0, 0, 128, 128); g.globalCompositeOperation = 'source-over'; } // (build 120: a real dark shadow on the iPhone too: Safari ignores canvas filters, so it showed the colour picture)
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const m = new THREE.SpriteMaterial({ map: t, depthWrite: false }); emojiMats.set(k, m); return m;
 }
 const pictureSign = (e, s = 1, shadow) => { const sp = new THREE.Sprite(emojiMat(e, shadow)); sp.scale.setScalar(s); return sp; };
@@ -228,7 +229,7 @@ export function initExpansion(G, api) {
   for (const k of Object.keys(PALS)) if (X.pals[k] && X.pals[k].follow) setFollow(k, true);
   function updateFollowers(dt, t) {
     let slot = 0; for (const k of Object.keys(followers)) { const f = followers[k], m = f.m; slot++;
-      const out = (P.layer === '' || P.layer === 'space') && !G.playerHidden && !(P.ride && P.ride.type === 'rocket'), tx = out ? P.x - (P.facing || 1) * (1.6 + slot * 1.3) : m.position.x, ty = out ? Math.max(P.layer === 'space' ? -50 : 0, P.y - .1) : m.position.y; /* (build 107: they come along to the planets too, riding in the rocket with her) */ /* (build 48: pets wait on the ground while you fly off in the rocket) */
+      const out = (P.layer === '' || P.layer === 'space') && !G.playerHidden && !(P.ride && P.ride.type === 'rocket'), aboard = !!(P.ride && P.ride.type !== 'rocket') /* (build 120: on a ride — the Ferris wheel, the zip line, a plane — they wait on the ground and run after her when she gets off; they used to float in the air beside her) */, tx = out && !aboard ? P.x - (P.facing || 1) * (1.6 + slot * 1.3) : m.position.x, ty = out && !aboard ? (P.grounded || f.lastGround == null ? (f.lastGround = Math.max(P.layer === 'space' ? -50 : 0, P.y - .1)) : f.lastGround) /* (build 120: when she jumps they stay where she last stood; they used to rise into the air under her) */ : (aboard && P.layer === '' ? 0 : m.position.y); /* (build 107: they come along to the planets too, riding in the rocket with her) */ /* (build 48: pets wait on the ground while you fly off in the rocket) */
       if (Math.abs(tx - m.position.x) > 25) m.position.x = tx; // (after a jump somewhere else, it arrives with you)
       const dx = tx - m.position.x; m.position.x += dx * Math.min(1, dt * 3); m.position.y += (ty - m.position.y) * Math.min(1, dt * 6); m.position.z += (1.5 + slot * .45 - m.position.z) * Math.min(1, dt * 3);
       const moving = Math.abs(dx) > .3; m.userData.body.position.y = moving ? Math.abs(Math.sin(t * 12 + slot)) * .12 : 0;
@@ -282,7 +283,7 @@ export function initExpansion(G, api) {
       const handle = new THREE.Mesh(new THREE.TorusGeometry(.3, .06, 6, 16), mat('#ff4f6a', { r: .3 })); handle.userData.dynamic = true; c.add(handle);
       const home = () => { handle.position.copy(T0); handle.position.y -= .45; }; home();
       const starG = new THREE.OctahedronGeometry(.32, 0);
-      const stars = [[.18, 1], [.34, -1], [.5, 1], [.66, -1], [.82, 1]].map(([f, hi]) => { const sb = makeBatch(); sb.put(starG, 0, 0, 0, '#ffd23f', [1, 1.3, 1]); const m = sb.mesh(shinyMat()); /* (build 118: the shared paint: no new shader) */ m.userData.dynamic = true; const p = T0.clone().addScaledVector(D, f); m.position.set(p.x, p.y - 1.4 + hi * .9, -1); c.add(m); return { m, f, hi, got: false }; });
+      const stars = [[.18, 1], [.34, -1], [.5, 1], [.66, -1], [.82, 1]].map(([f, hi]) => { const sb = makeBatch(); sb.put(starG, 0, 0, 0, '#ffd23f', [1, 1.3, 1]); const m = sb.mesh(shinyMat()); /* (build 118: the shared paint: no new shader) */ m.userData.dynamic = true; const p = T0.clone().addScaledVector(D, f); m.position.set(p.x, p.y - .8 + hi * .55, -1); c.add(m); return { m, f, hi, got: false }; });
       let R = null, floatDown = false, ready = 0;
       const start = () => { if (P.layer !== '' || P.ride || Math.abs(P.x - 489) > 2.2 || P.y < 4.5) { if (!P.ride) c.say('🪜 Climb up the tower beside the lookout rocks, then grab the zip line!'); return; }
         c.disc('zipline', '🪢 The zip line! Climb the tower and grab the handle!'); c.say('🪢 Hold on! ▶ to zoom, ◀ to slow down, ▲ ▼ to catch the stars, JUMP to let go!'); Sound.whoosh && Sound.whoosh();
@@ -294,9 +295,9 @@ export function initExpansion(G, api) {
         const st = api.stick ? api.stick() : { x: 0, y: 0 }; dt = Math.min(dt, .1); R.t += dt;
         R.v += ((st.x > .3 ? .075 : st.x < -.3 ? .018 : .04) - R.v) * Math.min(1, dt * 2); R.f = Math.min(1, R.f + R.v * dt);                 // (▶ zoom, ◀ slow; it never stops)
         R.lift += ((st.y > .3 ? .9 : st.y < -.3 ? -.9 : 0) - R.lift) * Math.min(1, dt * 6);
-        handle.position.copy(T0).addScaledVector(D, R.f); handle.position.y -= .45; P.x = handle.position.x; P.y = handle.position.y - 2.1 + R.lift * .6; P.z = -1; P.facing = 1; P.vx = R.v * D.x;
+        handle.position.copy(T0).addScaledVector(D, R.f); handle.position.y -= .45; P.x = handle.position.x; P.y = handle.position.y - 1.45 + R.lift * .6; /* (build 120: her hands on the handle; it was a metre above her head) */ P.z = -1; P.facing = 1; P.vx = R.v * D.x;
         if (Math.random() < dt * (4 + R.v * 80)) c.burst(handle.position.x, handle.position.y + .3, -1, ['#ffffff', '#ffd23f'], 1, .8);
-        for (const q of stars) if (!q.got && Math.abs(q.f - R.f) < .03 && Math.abs((P.y + 1.1) - q.m.position.y) < .75) { q.got = true; q.m.visible = false; R.n++; Sound.tone(520 + R.n * 70, .15, 'sine', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1, ['#ffd23f', '#ffffff'], 10, 1.6); }
+        for (const q of stars) if (!q.got && Math.abs(q.f - R.f) < .03 && Math.abs((P.y + 1.1) - q.m.position.y) < .45) { q.got = true; q.m.visible = false; R.n++; Sound.tone(520 + R.n * 70, .15, 'sine', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1, ['#ffd23f', '#ffffff'], 10, 1.6); }
         if (R.f >= 1 || R.letGo) { const r = R; R = null; P.ride = null; P.z = 0; home();
           if (r.letGo) { P.vy = 0; P.grounded = false; floatDown = true; c.say('🪂 You let go! Float down gently...'); }
           else { P.y = .3; P.x = 530; P.vy = 0; P.grounded = true; c.burst(529.5, 1, 0, RB, 18, 2.4); Sound.boing(); c.say(r.n === 5 ? '🌟 WOW! All five stars on the zip line!' : `🪢 What a zip! You caught ${NUM[r.n] || r.n} star${r.n === 1 ? '' : 's'}! Climb up again!`); if (r.n === 5) c.disc('zipstars', '🌟 Catch all five stars on the zip line!'); } } }; },
@@ -353,19 +354,19 @@ export function initExpansion(G, api) {
       return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.t += dt; const k = Math.min(1, u.t / 1.1); b.position.set(616.6 + (624.4 - 616.6) * k, 1.6 + Math.sin(k * Math.PI) * 3.4 + (3.6 - 1.6) * k, -2); if (k >= 1) { b.position.y -= (u.t - 1.1) * 6; if (!u.s) { u.s = 1; swish++; Sound.chime(); c.burst(624.4, 3.5, -2, ['#ffd23f', '#fff'], 14, 2.5); c.say(swish % 5 === 0 ? `🏀 Swish! ${swish} baskets!` : '🏀 Swish!'); c.disc('cannon', '🏀 Tap the cannon to shoot a ball into the hoop!'); } if (u.t > 1.6) { c.remove(b); balls.splice(i, 1); } } } }; },
     // (build 43) A REAL SEESAW: stand on either end and it rocks you up and down (a teddy friend rides the other end).
     // Press JUMP as your end rises for a super bounce. A gem floats above the high end.
-    () => { c.cyl(638, 0, -.2, .25, .35, .7, '#ff9a2e'); const pivot = new THREE.Group(); pivot.position.set(638, .8, -.2); c.add(pivot);
+    () => { const SZ = -1.5; /* (build 120: behind the path, so she walks past it instead of through the plank; on it, she steps back onto it) */ c.cyl(638, 0, SZ, .25, .35, .7, '#ff9a2e'); const pivot = new THREE.Group(); pivot.position.set(638, .8, SZ); c.add(pivot);
       const plank = new THREE.Mesh(W.rbox(6, .18, 1.2, .08), mat('#ffc21c', { r: .5 })); plank.castShadow = true; pivot.add(plank);
       for (const s2 of [-1, 1]) { const seat = new THREE.Mesh(W.rbox(.7, .12, 1.1, .05), mat('#ff4f9a', { r: .5 })); seat.position.set(s2 * 2.6, .15, 0); pivot.add(seat); const hd = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .7, 8), mat('#ffffff')); hd.position.set(s2 * 2.2, .45, 0); pivot.add(hd); }
       const teddy = c.toy('🧸', 1, 0, 0, 0); let ph = 0, on = 0, side = 0, rides = 0;
       const endY = (sd, a) => .8 + .24 + Math.sin(a) * 2.6 * sd; // (height of the seat at side sd: -1 left, 1 right; a positive tilt lifts the right end)
       return dt => {
-        const near = P.layer === '' && !P.ride && Math.abs(P.x - 638) > .6 && Math.abs(P.x - 638) < 3.2 && Math.abs(P.z + .2) < 1.2;
+        const near = P.layer === '' && !P.ride && Math.abs(P.x - 638) > .6 && Math.abs(P.x - 638) < 3.2 && P.z > SZ - .6 && P.z < .8;
         const sd = Math.sign(P.x - 638), a0 = pivot.rotation.z;
         if (!on && near && P.vy <= 0 && P.y <= endY(sd, a0) + .35 && Math.abs(a0 + sd * .34) < .06) { on = 1; side = sd; rides++; ph = side < 0 ? Math.PI / 2 : -Math.PI / 2; /* (starts from the low end, where you stepped on) */ c.disc('seesaw', '🎢 Up and down on the seesaw! Jump at the top for a big bounce!'); Sound.boing(); }
-        if (on) { if (!near || Math.sign(P.x - 638) !== side || P.vy > .5) { on = 0; if (P.vy > .5 && Math.sin(pivot.rotation.z) * side > .2) { P.vy += 5; Sound.whoosh ? Sound.whoosh() : Sound.boing(); c.say('🚀 Super bounce!'); } }
-          else { ph += dt * 2.6; pivot.rotation.z = Math.sin(ph) * .34; P.y = endY(side, pivot.rotation.z); P.vy = 0; P.grounded = true; P.jumps = 0; if (Math.abs(Math.cos(ph)) > .99 && Math.sin(pivot.rotation.z) * side < 0) Sound.tone(300, .05, 'triangle', .03, 1); } }
+        if (on) { if (!near || Math.sign(P.x - 638) !== side || P.vy > .5) { on = 0; P.groundZ = 0; if (P.vy > .5 && Math.sin(pivot.rotation.z) * side > .2) { P.vy += 5; Sound.whoosh ? Sound.whoosh() : Sound.boing(); c.say('🚀 Super bounce!'); } }
+          else { ph += dt * 2.6; pivot.rotation.z = Math.sin(ph) * .34; P.y = endY(side, pivot.rotation.z); P.groundZ = SZ; P.vy = 0; P.grounded = true; P.jumps = 0; if (Math.abs(Math.cos(ph)) > .99 && Math.sin(pivot.rotation.z) * side < 0) Sound.tone(300, .05, 'triangle', .03, 1); } }
         else { const want = near ? -sd * .34 : 0; pivot.rotation.z += (want - pivot.rotation.z) * Math.min(1, dt * 4); } // (the near end dips down to the ground so you can step on)
-        const tx = 638 - (on ? side : 1) * 2.6 * Math.cos(pivot.rotation.z); teddy.position.set(tx, .8 + .7 + Math.sin(pivot.rotation.z) * 2.6 * -(on ? side : 1), -.2); }; },
+        const tx = 638 - (on ? side : 1) * 2.6 * Math.cos(pivot.rotation.z); teddy.position.set(tx, .8 + .7 + Math.sin(pivot.rotation.z) * 2.6 * -(on ? side : 1), SZ); }; },
     // (build 119) THE PAPER-PLANE GLIDER: climb the giant toy blocks at the end of Toy Town, hop on the big paper plane and
     //  glide back over the town. ▲ pulls up (slower), ▼ dives (faster), nothing held = a gentle glide down; catch the stars at
     //  different heights; land anywhere soft (the musical floor plays you in), or JUMP to hop off and float down.
@@ -454,10 +455,10 @@ export function initExpansion(G, api) {
       c.tap(btn, () => { on = 4; c.say('💦 Splash! Water fountains!'); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('jets', '💦 Press the blue button for water fountains!'); }, 740);
       return (dt, t) => { on = Math.max(0, on - dt); jets.forEach((j, i) => { const h = on ? 2 + Math.sin(t * 6 + i) * 1.2 : .01; j.scale.y += (h - j.scale.y) * Math.min(1, dt * 8); j.position.y = j.scale.y / 2; if (on && Math.random() < .2) c.burst(742 + i * 2, j.scale.y, -2.6, ['#9fe6ff', '#ffffff'], 1, 1); }); }; },
     // the magnet crane: metal things jump up to the magnet, others stay
-    () => { c.cyl(762, 0, -3.2, .2, .25, 4.6, '#ffc21c'); c.block(764, 4.4, -3.2, 4.4, .35, .35, '#ffc21c', { r: .1 }); const mg = c.toy('🧲', 1.1, 765.6, 3.4, -3.2); const can = c.toy('🥫', .9, 765.6, .45, -3.2), apple = c.toy('🍎', .9, 767.4, .45, -3.2); let t0 = -1;
+    () => { c.cyl(762, 0, -3.2, .2, .25, 4.6, '#ffc21c'); c.block(764, 4.4, -3.2, 4.4, .35, .35, '#ffc21c', { r: .1 }); const mg = c.toy('🧲', 1.1, 765.6, 3.4, -3.2); const rope = c.cyl(765.6, 0, -3.2, .035, .035, 1, '#5a4a3a'); /* (build 120: the magnet hangs on a rope; it floated under the arm) */ const hang = () => { const top = 4.4, bot = mg.position.y + .45; const L = Math.max(.05, top - bot); rope.scale.y = L; rope.position.y = bot + L / 2; }; hang(); const can = c.toy('🥫', .9, 765.6, .45, -3.2), apple = c.toy('🍎', .9, 767.4, .45, -3.2); let t0 = -1;
       const go = () => { if (t0 >= 0) return; t0 = 0; Sound.tone(200, .4, 'sawtooth', .02, 1.5); c.disc('magnet2', '🧲 The magnet crane! Metal things jump up to it!'); };
       c.tap(mg, go, 765.6); c.tap(can, go); c.tap(apple, () => { c.say('🍎 The apple does not stick. It is not metal.'); Sound.click(); });
-      return dt => { if (t0 < 0) return; t0 += dt; const down = t0 < 1 ? t0 : t0 < 3 ? 1 : Math.max(0, 4 - t0); mg.position.y = 3.4 - down * 1.6; can.position.y = t0 > 1 && t0 < 4 ? mg.position.y - .8 : .45; if (t0 > 1 && t0 - dt <= 1) { Sound.tone(900, .15, 'square', .03, 1); c.say('🧲 Click! The can is metal, so it sticks!'); } if (t0 > 4.2) t0 = -1; }; },
+      return dt => { if (t0 < 0) return; t0 += dt; const down = t0 < 1 ? t0 : t0 < 3 ? 1 : Math.max(0, 4 - t0); mg.position.y = 3.4 - down * 1.6; hang(); can.position.y = t0 > 1 && t0 < 4 ? mg.position.y - .8 : .45; if (t0 > 1 && t0 - dt <= 1) { Sound.tone(900, .15, 'square', .03, 1); c.say('🧲 Click! The can is metal, so it sticks!'); } if (t0 > 4.2) t0 = -1; }; },
   ];
 
   // =================== 🖍️ ART PLAZA ===================
