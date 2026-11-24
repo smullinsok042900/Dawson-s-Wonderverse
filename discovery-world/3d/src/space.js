@@ -396,7 +396,11 @@ export function initSpace(G, api) {
         const h = K.sstep(-11, -20, z) * depth * (ridge * 5.2 + fine * 1.1 + 1.2) * BS                                 // the ridges themselves
           + K.sstep(-30, -80, z) * (K.fbm2(x * .08, z * .12, 3) - .5) * 3 * BS                                           // lumpy cloud tops behind them
           + K.sstep(-52, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' ? 34 : id === 'saturn' ? 18 : id === 'uranus' ? 12 : 22); // the far deck, banked up
-        return h; };
+        // (stage 28) a TIGHT calm plateau under the Great Dark Spot: it flattens the ridges inside the painted oval so the
+        // storm is not cut in half by a crest, and because it blends towards the deck's own zero it never lifts the
+        // walkway - the steep falloff (24 m by 7 m) keeps the whole effect inside the storm's own footprint
+        const q = Math.exp(-Math.pow((x - spot[0]) / 24, 2) - Math.pow((z - spot[1]) / 7, 2));
+        return h * (1 - .9 * q); };
       const bandCol = (x, z, h, ny, o) => {
         const v = bandV(x, z), t = ((v % 6) + 6) % 6, k = Math.floor(t);
         o.copy(K.col(pal[k])).lerp(K.col(pal[(k + 1) % 6]), K.sstep(.3, .7, t - k));                                    // crisp belt and zone edges
@@ -569,21 +573,28 @@ export function initSpace(G, api) {
         const p = g.attributes.position; for (let q = 0; q < p.count; q++) { const px = p.getX(q), pz = p.getZ(q), r = Math.hypot(px, pz), a = Math.atan2(pz, px);
           p.setY(q, hf(r) + .03 * Math.sin(a * 4 + r * 7)); } g.computeVertexNormals();                                 // (a faintly rippled, shaped surface)
         return model(b => b.add(g, null, (px, py, pz, nx, ny, nz, o) => cf(Math.hypot(px, pz), Math.atan2(pz, px), py, o)), K.softMat(), false); };
-      const collar = ringG(1.06, 1.52, 4, r => .52 - (r - 1.06) * .8, (r, a, y, o) => { const n = K.noise2(Math.cos(a) * 5 + 2, Math.sin(a) * 5);
-        o.copy(K.col('#dff0ff')).lerp(K.col('#ffffff'), K.sstep(.45, .92, n) * .62); o.lerp(K.col('#8fb0ff'), K.sstep(.42, .1, n) * .5); });  // (a pale foam rampart)
-      const bowl = ringG(.05, 1.02, 6, r => .06 + .32 * (1 - r) * (1 - r), (r, a, y, o) => { const s = Math.sin(a * 2 + r * 6) * .5 + .5;
-        K.ramp(['#070f38', '#102463', '#1c4190', '#2f62b4'], .1 + s * .5 + r * .22, o);                             // (a deep navy bowl, drawn out into spiral arms)
-        o.lerp(K.col('#eaf2ff'), K.sstep(.88, .985, r) * .55); });                                                     // (a pale inner rim)
-      const eye = ringG(.02, .28, 5, () => .02, (r, a, y, o) => { o.copy(K.col('#050a26')).lerp(K.col('#122a6e'), r); });
-      spn.add(collar, bowl, eye); spn.scale.set(4.2, 1, 2.9); let spin = 0;
+      const collar = ringG(1.12, 1.4, 3, r => .56 - (r - 1.12) * 1.9, (r, a, y, o) => { const n = K.noise2(Math.cos(a) * 5 + 2, Math.sin(a) * 5);
+        o.copy(K.col('#cfe4ff')).lerp(K.col('#ffffff'), K.sstep(.45, .92, n) * .55); o.lerp(K.col('#7fa4ff'), K.sstep(.5, .12, n) * .55); }); // (a thin pale rampart)
+      // three stepped rings, each one lower and darker than the one outside it, with the cloud drawn out into two spiral
+      // arms and the inner wall of every step in shadow: the storm reads as a funnel instead of a dark puddle
+      const steps = [];
+      for (const [r0, r1, h0, h1, cols] of [[.88, 1.12, .34, .2, ['#1d4490', '#2f62b4']], [.6, .88, .19, .13, ['#102463', '#1d4490']], [.3, .6, .12, .08, ['#071030', '#102463']]]) {
+        steps.push(ringG(r0, r1, 3, r => h1 + (h0 - h1) * (r1 - r) / (r1 - r0), (r, a, y, o) => {
+          const sp = Math.sin(a * 2 + r * 9) * .5 + .5;
+          K.ramp(cols, .2 + sp * .55, o); o.lerp(K.col('#cfe4ff'), K.sstep(.88, .99, sp) * .34);
+          o.lerp(K.col('#050a20'), K.sstep(.09, 0, y) * .4); }));
+      }
+      const eye = ringG(.02, .3, 4, () => .03, (r, a, y, o) => { o.copy(K.col('#04081c')).lerp(K.col('#0a1a4a'), r * .8); });
+      spn.add(collar, ...steps, eye); spn.scale.set(4.2, 1, 2.9); let spin = 0;
       // two pale spiral arms standing out of the bowl, so the swirl reads in silhouette from walking height as well as in colour
-      const arms = []; for (const [rr, th, arc, y0, col] of [[1.14, .085, Math.PI * 1.6, .3, '#eaf2ff'], [.82, .065, Math.PI * 1.35, .22, '#9fb8ff']]) {
+      const arms = []; for (const [rr, th, arc, y0, col] of [[.95, .075, Math.PI * 1.7, .34, '#f2f8ff'], [.64, .06, Math.PI * 1.45, .24, '#bcd2ff']]) {
         const tg = new THREE.TorusGeometry(rr, th, 6, 30, arc); tg.rotateX(-Math.PI / 2);
         const sw = model(b => b.add(tg, null, col), K.softMat(), false); sw.position.y = y0; spn.add(sw); arms.push(sw); }
       tapIt(spn, () => { spin = 4; Sound.noise && Sound.noise(1.2, 180, 620, .05); fact('🌀 The Great Dark Spot! A storm as wide as our whole Earth.', 'greatdarkspot'); }, X + 110, 'greatdarkspot');
-      U.push((dt, t) => { spin = Math.max(0, spin - dt); bowl.rotation.y -= dt * (.16 + spin * 2); collar.rotation.y += dt * (.1 + spin * 1.6);
+      U.push((dt, t) => { spin = Math.max(0, spin - dt); collar.rotation.y += dt * (.1 + spin * 1.6);
+        steps.forEach((s, k) => { s.rotation.y += dt * (k % 2 ? -.2 : .2) * (1 + spin * 2); });
         eye.rotation.y -= dt * (.3 + spin * 3); spn.position.y = .04 + Math.sin(t * .5) * .03;
-        arms[0].rotation.y -= dt * (.24 + spin * 2.2); arms[1].rotation.y += dt * (.32 + spin * 2.6); arms.forEach((a2, q) => { a2.position.y = (q ? .22 : .3) + Math.sin(t * 1.3 + q) * .03; });
+        arms[0].rotation.y -= dt * (.24 + spin * 2.2); arms[1].rotation.y += dt * (.32 + spin * 2.6); arms.forEach((a2, q) => { a2.position.y = (q ? .24 : .34) + Math.sin(t * 1.3 + q) * .03; });
         if (spin > 0 && Math.random() < dt * 10) api.burst(X + 110 + (Math.random() - .5) * 7, .5, -7, ['#8fb0ff', '#eaf2ff', '#2f62b4'], 1, 1.4); });
       const tr = inSky((yield* K.skyBodySteps('triton', 8.5, { size: 256 })), MID - 30, 38, -175); U.push(dt => { tr.rotation.y += dt * .02; });
       // the windsock: a striped sock on a pole that streams out and flaps in the wind

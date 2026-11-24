@@ -587,13 +587,16 @@ platforms 108/114/114/114, 0 malformed, duplicate or heavy-overlap entries, 0 pa
   wisp layers lie low on the deck as thin streaks, driven at their fast Neptune speed.
 - **The Great Dark Spot, visible from the walk**: the storm used to be a painted oval about 62 m out, where only a
   look-out camera could find it - at walking height a flat decal is seen almost edge-on and vanishes. It is now a raised
-  vortex beside the walkway at offset 110: a pale foam collar, a deep navy bowl with a dark eye and two pale spiral arms
-  standing out of the bowl, each turning at its own speed, over a painted oval on the banded deck so the storm keeps a
-  wide dark reach (darkest deck vertices luminance 0.021 against a 0.213 median). It reads from the normal walking camera
-  and is tappable, and its five meshes cost 2,880 triangles.
-- **The plateau was measured, not assumed**: a calm plateau under the storm changed the look-out capture by 13,700
-  pixels (max channel difference 148), so it was doing real work; but once the storm moved beside the walkway the same
-  Gaussian would have lifted the footpath by about 1.6 m, so it was dropped in favour of the raised geometry.
+  stepped vortex beside the walkway at offset 110: a thin pale rampart, three rings each lower and darker than the one
+  outside it, the cloud drawn out into two spiral arms with a shadow on every inner wall, a dark eye, and two pale arms
+  standing out of the funnel, each turning at its own speed. It sits over its painted oval on the banded deck, so the
+  storm keeps a wide dark reach (darkest deck vertices luminance 0.021 against a 0.213 median), and it reads as a funnel
+  rather than a dark puddle from the normal walking camera, and is tappable.
+- **The plateau, retuned**: the calm plateau under the storm measurably changes the capture (13,700 pixels, max channel
+  difference 148), so it stays - but its first form blended the deck toward a fixed 2.4 m and would have lifted the
+  footpath by about 1.6 m once the storm moved beside the walkway. It now has a tighter falloff (24 m along the storm,
+  7 m across) and multiplies the deck height down toward its own level instead of raising it, so it can only flatten
+  ridges and can never lift the path; deck samples along the storm's centre line read exactly 0 at the walkway.
 - **Kept working**: the windsock's gust still pushes the player (3.79 m in 1.6 s) and the wind-ride button still blows
   for the swings (windBlow 3.48 with the empty swings lifted), with 0 page errors.
 
