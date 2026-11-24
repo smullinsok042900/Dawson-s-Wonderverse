@@ -6,6 +6,17 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 125 — fixes from the family's sixteen pictures
+- **Barn:** the little door picture that floated high on the wall is gone; the barn has a real hayloft door with a white cross. Each door's white rail now slides with its door, so the animal that comes out never stands behind a rail left floating in the doorway. PAW still opens the barn.
+- **Sled run (Frosty Peaks) and hill slide (Balloon Hills):** she used to slide down through empty air. Each now has a real chute along its path (a U-shaped trough with thickness, its floor exactly under her feet), on posts down to the ground: icy blue on the snow, pink on the hill.
+- **Boats:** both boats sat on plain rounded boxes ("a slab on the water"); they have real hulls now (a curved, raised bow and a sloped stern) with a white rim.
+- **Haystack:** the straw top hung off the side of the bales like a flat floating disc; it is a straw mound sitting on the top bale.
+- **Playhouse:** the twisty tube slide came out through the brown toy chest; the chest stands beside the exit now. The little stage and the toy shelf stood over the Splash Pool; the stage is narrower and fits in the corner beside the pool, and the shelf is along the back wall past it.
+- **Under the playhouse:** the pink heart sign that floated above the pet-maker's glass dome stands on a gold stalk on the dome; the machine's lever box stood inside the ring of stars and is moved just outside it (the smoke test's two lever taps follow it).
+- **Lab Gardens:** trees grew through the greenhouse domes; no tree is planted inside a greenhouse now.
+- **Moon (the family: "the character walks through the roller coaster platform"):** the station platform is solid underfoot; she steps up onto it.
+- Checked on desktop: the shadow screen shows a dark shadow (the family's picture showed a colour turtle, from before build 123's fix). The fountain basin in one picture is not in the current game (the pictures were taken on an older version).
+
 ## Checkpoint: build 124 — drawing friends as round 3D toys, a walk-in Ferris wheel, no walking through steps
 - The family asked for the drawing friends added by the other tool (builds 120–122) to be "actual 3D good characters". Twenty of them were flat paper cut-outs or balls with stick arms and line eyes; they are rebuilt as plush toys, keeping each drawing's own outline, colours, faces, ears, feet, names, homes, voices and play actions.
 - **New `src/plush.js`:** `puff` turns a drawing's outline into a round pillowy body with exactly that silhouette (thin parts stay thin from the side) and a lighter tummy; `eye` makes shiny 3D eyes (white, big pupil, two sparkles, optional soft lid); `limb` makes chunky tapered arms, legs, ears and antennae with round mitten hands or bobbles; `boot`, `drawOn` (a smile or brow drawn on the round surface) and `blush`.

@@ -308,34 +308,35 @@ export function buildPlayhouseDetail({ scene, add, rnd }) {
     const mat = new THREE.BoxGeometry(w, .1, d); mat.translate(mx, .05, mz);
     softParts.push(tinted(mat, col)); mat.dispose();
   }
-  const shelf = new THREE.BoxGeometry(4.4, .12, .5); shelf.translate(-9, .75, -4.35);
-  const shelfBase = new THREE.BoxGeometry(4.4, .1, .5); shelfBase.translate(-9, .05, -4.35);
+  const shelf = new THREE.BoxGeometry(4.4, .12, .5); shelf.translate(.4, .75, -4.35); /* (build 125: it stood in the Splash Pool) */
+  const shelfBase = new THREE.BoxGeometry(4.4, .1, .5); shelfBase.translate(.4, .05, -4.35);
   softParts.push(tinted(shelf, '#c98a52'), tinted(shelfBase, '#b8723f')); shelf.dispose(); shelfBase.dispose();
-  for (const sx of [-10.9, -9, -7.1]) { const post = new THREE.BoxGeometry(.14, 1.5, .5); post.translate(sx, .75, -4.35); softParts.push(tinted(post, '#a96f3e')); post.dispose(); }
-  for (let i = 0; i < 14; i++) { const bk = new THREE.BoxGeometry(.18, .34 + (i % 3) * .05, .3); bk.translate(-10.7 + i * .27, .95, -4.4); softParts.push(tinted(bk, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a', '#b07cff'][i % 5])); bk.dispose(); }
+  for (const sx of [-1.5, .4, 2.3]) { const post = new THREE.BoxGeometry(.14, 1.5, .5); post.translate(sx, .75, -4.35); softParts.push(tinted(post, '#a96f3e')); post.dispose(); }
+  for (let i = 0; i < 14; i++) { const bk = new THREE.BoxGeometry(.18, .34 + (i % 3) * .05, .3); bk.translate(-1.3 + i * .27, .95, -4.4); softParts.push(tinted(bk, ['#ff5f8f', '#ffd23f', '#4fa8ff', '#57c97a', '#b07cff'][i % 5])); bk.dispose(); }
   const soft = new THREE.Mesh(mergeParts(softParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .85 }));
   soft.castShadow = true; soft.receiveShadow = true; group.add(soft);
 
   // --- (stage 18) a little stage in the back corner: rail, pleated curtains, valance and footlights
   const stageParts = [], lightParts = [], glowParts = [];
-  const SX = -13.6, SZ = -3.55;
-  for (let i = 0; i < 5; i++) box2(stageParts, '#8a2a4a', .34, 2.2, .18, SX - 3.0 + i * .38, 1.1, SZ + .06);   // left curtain
-  for (let i = 0; i < 5; i++) box2(stageParts, '#8a2a4a', .34, 2.2, .18, SX + 1.5 + i * .38, 1.1, SZ + .06);   // right curtain
-  box2(stageParts, '#bfe6ff', 3.0, 2.1, .1, SX - .4, 1.05, SZ - .18);                                          // backdrop in the gap
-  box2(stageParts, '#b0395f', 6.6, .34, .3, SX + 1.5, 2.3, SZ + .06);                                          // valance
-  box2(stageParts, '#d8c39a', 6.9, .1, .12, SX + 1.5, 2.52, SZ + .02);                                         // rail
-  box2(stageParts, '#7a5a3c', 6.6, .14, 2.2, SX + 1.5, .07, SZ - .55);                                         // low platform
-  for (let i = 0; i < 6; i++) {
-    const x = SX - 1.1 + i * .62;
+  // (build 125) narrower, so the whole stage fits in the corner beside the Splash Pool (it used to stand over the pool)
+  const SX = -14.7, SZ = -3.55;
+  for (let i = 0; i < 3; i++) box2(stageParts, '#8a2a4a', .34, 2.2, .18, SX - 1.9 + i * .38, 1.1, SZ + .06);   // left curtain
+  for (let i = 0; i < 3; i++) box2(stageParts, '#8a2a4a', .34, 2.2, .18, SX + 1.14 + i * .38, 1.1, SZ + .06);  // right curtain
+  box2(stageParts, '#bfe6ff', 2.3, 2.1, .1, SX, 1.05, SZ - .18);                                               // backdrop in the gap
+  box2(stageParts, '#b0395f', 4.2, .34, .3, SX, 2.3, SZ + .06);                                                // valance
+  box2(stageParts, '#d8c39a', 4.3, .1, .12, SX, 2.52, SZ + .02);                                               // rail
+  box2(stageParts, '#7a5a3c', 4.1, .14, 2.2, SX, .07, SZ - .55);                                               // low platform
+  for (let i = 0; i < 4; i++) {
+    const x = SX - 1.2 + i * .8;
     cyl2(lightParts, '#5b4a3d', .07, .09, .18, x, .16, SZ + 1.15, 7);
     const b = new THREE.SphereGeometry(.1, 10, 8); b.translate(x, .3, SZ + 1.15); glowParts.push(tinted(b, '#ffd98a')); b.dispose();
   }
 
   // --- (stage 18) prop chest and a cushioned reading nook with a low book box
   const nookParts = [];
-  box2(nookParts, '#8a5a2a', 1.5, .8, .9, 29.5, .4, -2.6);
-  box2(nookParts, '#c9a24a', 1.56, .1, .96, 29.5, .84, -2.6);
-  box2(nookParts, '#ffd23f', .18, .22, .1, 29.5, .52, -2.14);
+  box2(nookParts, '#8a5a2a', 1.5, .8, .9, 32.2, .4, -3.9); // (build 125: beside the slide's exit, not under the tube)
+  box2(nookParts, '#c9a24a', 1.56, .1, .96, 32.2, .84, -3.9);
+  box2(nookParts, '#ffd23f', .18, .22, .1, 32.2, .52, -3.44);
   box2(nookParts, '#7fd8a0', 2.6, .28, 1.7, 33.5, .2, -2.5);                    // nook base
   box2(nookParts, '#9fe6ff', 2.3, .22, 1.4, 33.5, .44, -2.5);                    // cushion
   for (const [px, pz, col] of [[32.6, -2.1, '#ffb3dc'], [34.3, -2.2, '#ffe28a'], [33.5, -3.1, '#c9a6ff']]) box2(nookParts, col, .7, .34, .5, px, .62, pz, .2);
@@ -356,7 +357,7 @@ export function buildPlayhouseDetail({ scene, add, rnd }) {
   const glow = new THREE.Mesh(mergeParts(glowParts), new THREE.MeshStandardMaterial({ vertexColors: true, emissive: '#ffc85a', emissiveIntensity: .9, roughness: .35 })); group.add(glow);
   const nook = new THREE.Mesh(mergeParts(nookParts), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .88 })); nook.castShadow = nook.receiveShadow = true; group.add(nook);
 
-  return { group, added: { flags: 72, lanterns: glyphs.length + 2, cords: cords.length, mats: 3, books: 18, curtains: 18, footlights: 6, nook: 1, chest: 1 } };
+  return { group, added: { flags: 72, lanterns: glyphs.length + 2, cords: cords.length, mats: 3, books: 18, curtains: 6, footlights: 4, nook: 1, chest: 1 } };
 }
 
 export function buildParkDetail({ scene, add, terrainH, rnd }) {

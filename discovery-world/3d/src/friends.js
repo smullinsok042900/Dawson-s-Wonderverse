@@ -60,8 +60,9 @@ export function initFriends(G, api) {
   const dome = new THREE.Mesh(new THREE.SphereGeometry(1.45, 32, 18, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshPhysicalMaterial({ color: '#e6f8ff', transparent: true, opacity: .32, roughness: .03, clearcoat: 1, iridescence: .6, depthWrite: false }));
   dome.position.y = 1.1; mach.add(dome);
   const rim = new THREE.Mesh(new THREE.TorusGeometry(1.48, .09, 10, 40), M('#ffd84a')); rim.rotation.x = Math.PI / 2; rim.position.y = 1.12; mach.add(rim);
-  const sign = new THREE.Mesh(new THREE.TorusGeometry(.35, .07, 10, 28), M('#ff6fae', { em: '#ff6fae', ei: .4 })); sign.position.set(0, 3.1, 0); mach.add(sign);
-  const heartIn = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 12), M('#ff6fae', { em: '#ff6fae', ei: .6 })); heartIn.position.set(0, 3.1, 0); mach.add(heartIn);
+  const sign = new THREE.Mesh(new THREE.TorusGeometry(.35, .07, 10, 28), M('#ff6fae', { em: '#ff6fae', ei: .4 })); sign.position.set(0, 3.0, 0); mach.add(sign);
+  { const stalk = new THREE.Mesh(new THREE.CylinderGeometry(.05, .07, .5, 10), M('#ffd84a')); stalk.position.set(0, 2.62, 0); mach.add(stalk); } // (build 125: the heart sign stands on a gold stalk on top of the dome, instead of floating in the air)
+  const heartIn = new THREE.Mesh(new THREE.SphereGeometry(.18, 16, 12), M('#ff6fae', { em: '#ff6fae', ei: .6 })); heartIn.position.set(0, 3.0, 0); mach.add(heartIn);
   const preview = new THREE.Group(); preview.position.y = 1.15; mach.add(preview);
   const glowL = new THREE.PointLight('#ffd9f4', 8, 6, 1.6); glowL.userData.zone = 'under'; glowL.position.set(0, 2.2, .8); mach.add(glowL);
   // four big buttons in front, each showing what it changes
@@ -75,7 +76,7 @@ export function initFriends(G, api) {
     const b = { part, g, cap, press: 0 };
     api.tap(g, () => tapButton(b), {}); return b;
   });
-  const lever = new THREE.Group(); lever.position.set(PM.x + 2.4, UGF, -1.2); add(lever);
+  const lever = new THREE.Group(); lever.position.set(PM.x + 3.0, UGF, -1.0); /* (build 125: outside the ring of stars round the machine) */ add(lever);
   { const box = new THREE.Mesh(new THREE.BoxGeometry(.6, .5, .5), M('#5b2f8a')); box.position.y = .25; box.castShadow = true; lever.add(box); }
   const arm = new THREE.Group(); arm.position.y = .5; lever.add(arm);
   { const st = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 1, 10), M('#c9c9d9', { m: .6, r: .3 })); st.position.y = .5; arm.add(st); arm.add(ball(M('#ff4f9a', { em: '#ff4f9a', ei: .3 }), .2, 0, 1.02, 0)); }

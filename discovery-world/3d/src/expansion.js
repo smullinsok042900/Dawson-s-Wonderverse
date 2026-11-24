@@ -62,6 +62,38 @@ function physicalToy(symbol, size = 1) {
   const group = setToySymbol(new THREE.Group(), symbol); group.scale.setScalar(size); return group;
 }
 
+// (build 125) a real little boat hull: a side profile with a raised, curved bow and a sloped stern, given width and rounded
+// edges (the boats used to sit on plain rounded boxes, which looked like slabs on the water)
+function boatHull(len, h, w) {
+  const L = len / 2, sh = new THREE.Shape();
+  sh.moveTo(-L, h); sh.lineTo(-L + .3, 0); sh.lineTo(L - .8, 0); sh.quadraticCurveTo(L - .05, 0, L + .25, h + .2); sh.lineTo(-L, h);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: w, bevelEnabled: true, bevelSize: .12, bevelThickness: .14, bevelSegments: 3, steps: 1, curveSegments: 8 });
+  g.translate(0, 0, -w / 2); return g;
+}
+// (build 125) a slide CHUTE under a ride path: a U-shaped trough (with real thickness) swept along the path, its floor where
+// her feet are (.62 under the path), held up by posts down to the ground. The sled run and the hill slide used to send her
+// down through the empty air.
+function chuteGeometry(path, R = .55, N = 48) {
+  const prof = [], K = 9, open = 1.25, th = .07;
+  for (let k = 0; k <= K; k++) { const a = -open + 2 * open * k / K; prof.push([Math.sin(a) * R, (1 - Math.cos(a)) * R]); }
+  for (let k = K; k >= 0; k--) { const a = -open + 2 * open * k / K; prof.push([Math.sin(a) * (R + th), (1 - Math.cos(a)) * (R + th) - th]); }
+  const M = prof.length, pos = [], idx = [], p = new THREE.Vector3(), t = new THREE.Vector3(), side = new THREE.Vector3(), up = new THREE.Vector3();
+  for (let i = 0; i <= N; i++) {
+    const u = i / N; path.getPointAt(u, p); path.getTangentAt(u, t); side.set(-t.z, 0, t.x).normalize(); if (side.lengthSq() < .5) side.set(0, 0, 1);
+    up.crossVectors(side, t).normalize(); if (up.y < 0) up.negate();
+    for (const [sx, sy] of prof) pos.push(p.x + side.x * sx + up.x * sy, p.y - .62 + side.y * sx + up.y * sy - .02, p.z + side.z * sx + up.z * sy);
+  }
+  for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) { const a = i * M + j, b = i * M + (j + 1) % M, c2 = a + M, d = b + M; idx.push(a, c2, b, b, c2, d); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+function chute(c, mat, path, color, postColor) {
+  const m = new THREE.Mesh(chuteGeometry(path), mat(color, { r: .35 })); m.castShadow = true; m.receiveShadow = true; c.add(m);
+  const p = new THREE.Vector3();
+  const pb = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 8); // all the posts as one painted mesh (one draw)
+  for (let u = .12; u < .95; u += .2) { path.getPointAt(u, p); const h = p.y - .64; if (h < .5) continue; pb.put(cyl, p.x, h / 2, p.z - .1, postColor, [.09, h, .09]); }
+  const posts = pb.mesh(shinyMat()); posts.castShadow = true; c.add(posts); cyl.dispose();
+  return m;
+}
 export function initExpansion(G, api) {
   const { scene, Sound, world, player: P } = api, W = G.W;
   world.exp = world.exp || {}; const X = world.exp; X.gems = X.gems || []; X.stickers = X.stickers || []; X.chests = X.chests || 0; X.balloons = X.balloons || 0;
@@ -74,7 +106,7 @@ export function initExpansion(G, api) {
   // big soft hills far behind, so the new land doesn't end in nothing
   for (let x = 430; x < 910; x += 46) { const h = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), mat(pick(['#9fdc9a', '#8fd18f', '#b1e3a3']), { r: .95, cc: 0 })); h.scale.set(28 + rnd(10), 10 + rnd(8), 14); h.position.set(x + rnd(20), -3, -42 - rnd(10)); h.receiveShadow = true; scene.add(h); }
   // trees along the back of the outdoor neighbourhoods
-  for (const [a, b] of [[432, 546], [672, 786]]) for (let x = a + 4; x < b; x += 9 + rnd(6)) api.makeTree(scene, x, -8.5 - rnd(3), .9 + Math.random() * .3);
+  for (const [a, b] of [[432, 546], [672, 786]]) for (let x = a + 4; x < b; x += 9 + rnd(6)) { const z = -8.5 - rnd(3); if (a === 672 && [682, 724, 766].some(gx => Math.hypot(x - gx, z + 11) < 7.5)) continue; /* (build 125: no tree growing through a greenhouse) */ api.makeTree(scene, x, z, .9 + Math.random() * .3); }
   for (let x = -268; x < -152; x += 6 + rnd(4)) api.makeTree(scene, x, -7.5 - rnd(4), 1 + Math.random() * .35); // (the woods: a real forest behind the path)
   for (let x = -532; x < -410; x += 13 + rnd(5)) api.makeTree(scene, x, -12 - rnd(3), 1 + Math.random() * .3); // (build 35: a few trees behind the farm fields)
   // the sea behind the beach (one big shared plane; it gently bobs)
@@ -559,7 +591,7 @@ export function initExpansion(G, api) {
       return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the little boat: ring the bell on the pier and it sails across the sea and back
     () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
-      const boat = new THREE.Group(); boat.position.set(-115, 0, -12.6); /* (build 62: moored clear of the pier's end, not in its boards) */ c.add(boat); const hull = new THREE.Mesh(W.rbox(3, .7, 1.3, .3), mat('#ff7a5c')); hull.position.y = .3; hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
+      const boat = new THREE.Group(); boat.position.set(-115, 0, -12.6); /* (build 62: moored clear of the pier's end, not in its boards) */ c.add(boat); const hull = new THREE.Mesh(boatHull(3, .75, 1.05), mat('#ff7a5c')); hull.position.y = -.05; { const rim = new THREE.Mesh(W.rbox(2.6, .1, 1.3, .05), mat('#ffffff')); rim.position.y = .74; boat.add(rim); } hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
       const gull = c.toy('🕊️', .8, -115, 4, -12.6); let trip = 0;
       const go = () => { if (trip) return; trip = .001; Sound.bell ? Sound.bell(880, .06) : Sound.chime(); c.say('⛵ Ding ding! The boat is sailing!'); c.disc('boat', '⛵ Ring the bell on the pier and the boat sails away!'); };
       c.tap(bell, go, -115); c.tap(boat, go);
@@ -642,6 +674,7 @@ export function initExpansion(G, api) {
       for (const [a, b, y] of [[-318.5, -320.5, 1.2], [-321, -323, 2.4], [-323.5, -325.5, 3.6], [-326, -331, 4.8]]) { c.block((a + b) / 2, 0, -2.0, Math.abs(b - a), y, 1.6, '#b9dcf5', { r: .3 }); /* (build 62: icy blue steps, not grey boxes against the snow) */ c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.9 }); } /* (build 124: the steps stand just behind her path, so she walks in front of them, never through them; she steps back onto them as she climbs) */
       const sled = new THREE.Group(); sled.position.set(-330, 4.8, -1.9); c.add(sled); const base = new THREE.Mesh(W.rbox(1.3, .18, .7, .08), mat('#ff4f6a')); base.position.y = .25; sled.add(base); for (const z of [-.3, .3]) { const run = new THREE.Mesh(W.rbox(1.5, .06, .06, .03), mat('#ffd23f', { m: .5 })); run.position.set(0, .08, z); sled.add(run); }
       const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-331, 5.4, -1.9), new THREE.Vector3(-334, 4.6, -1.4), new THREE.Vector3(-338, 2.6, -.6), new THREE.Vector3(-342, 1, -.2), new THREE.Vector3(-346, .6, 0)]);
+      chute(c, mat, path, '#cfe9ff', '#ffffff'); /* (build 125) the icy run the sled slides down */
       c.tap(sled, () => { if (P.y < 4.3) { c.say('🛷 Climb up the snowy steps to the sled!'); return; } api.startSlide(path); c.disc('sled', '🛷 Wheee! Sledding down the hill!'); c.say('🛷 Wheee!'); }, -330, { y: 4.8, hintY: 1.4 }); }, // (build 49: PAW works at the top: the sled sits 4.8 m up, and PAW only reaches things near her height)
     // build a snowman: each tap adds a part, then a carrot nose and a hat
     () => { const pile = c.sph(-300, 0, -2.6, .9, '#ffffff', { m: { r: .9, cc: 0 } }); pile.scale.y = .4; const parts = []; let k = 0;
@@ -690,11 +723,12 @@ export function initExpansion(G, api) {
     () => lifeHere(c, [['drawingwave', -486, -4.5]]),
     // the red barn: tap the doors and an animal comes out to say hello (a different one each time)
     () => { c.block(-420, 0, -5.6, 7, 4.2, 4, '#d8443c', { r: .15 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(5, 2.2, 4).rotateY(Math.PI / 4), mat('#8a2a24', { r: .8 })); roof.scale.z = .62; /* (build 48: the barn roof was crooked, like the house's was) */ roof.position.set(-420, 5.3, -5.6); c.add(roof);
-      c.block(-420, 4.2, -3.55, 7.2, .25, .2, '#ffffff', { r: .05 }); const doors = [-1, 1].map(s2 => { const d = c.block(-420 + s2 * .8, 0, -3.5, 1.6, 2.8, .16, '#b8322c', { r: .08 }); c.block(-420 + s2 * .8, 1.4, -3.4, 1.4, .14, .06, '#ffffff', { r: .02 }); return d; });
+      c.block(-420, 4.2, -3.55, 7.2, .25, .2, '#ffffff', { r: .05 }); const rails = [], doors = [-1, 1].map(s2 => { const d = c.block(-420 + s2 * .8, 0, -3.5, 1.6, 2.8, .16, '#b8322c', { r: .08 }); rails.push(c.block(-420 + s2 * .8, 1.4, -3.4, 1.4, .14, .06, '#ffffff', { r: .02 })); return d; }); /* (build 124: each door's white rail slides with its door, so the animal never stands behind a rail floating in the doorway) */
+      c.block(-420, 2.95, -3.55, 1.5, 1.05, .12, '#8a2a24', { r: .06 }); c.block(-420, 2.95, -3.47, 1.6, .1, .06, '#ffffff', { r: .02 }); c.block(-420, 2.95, -3.47, .1, 1.1, .06, '#ffffff', { r: .02 }); /* a real hayloft door with a white cross, instead of the little door picture that floated on the wall */
       const who = c.toy('🐴', 1.4, -420, 1.1, -3.1); who.visible = false; const ANI = [['🐴', 'a horse', 'Neigh!', 520], ['🐄', 'a cow', 'Moo!', 140], ['🐐', 'a goat', 'Maa!', 600], ['🐑', 'a sheep', 'Baa!', 480], ['🐓', 'a rooster', 'Cock-a-doodle-doo!', 900]]; let k = -1, show = 0;
       const open = () => { k = (k + 1) % ANI.length; setToySymbol(who, ANI[k][0]); who.visible = true; show = 3; Sound.tone(ANI[k][3], .25, 'sawtooth', .025, .7); Sound.tone(ANI[k][3] * .8, .3, 'sawtooth', .02, .7, .25); c.say(`${ANI[k][0]} ${ANI[k][2]} It's ${ANI[k][1]}!`); c.disc('barn', '🏚️ Tap the barn doors: who lives inside?'); };
-      for (const d of doors) c.tap(d, open); c.tap(who, open); c.tap(c.sign('🚪', .7, -420, 3.3, -3.3), open, -420);
-      return dt => { if (show > 0) { show -= dt; const o = Math.min(1, (3 - show) * 3, show * 3); doors[0].position.x = -420.8 - o * 1.4; doors[1].position.x = -419.2 + o * 1.4; who.position.z = -3.1 + o * 1.4; if (show <= 0) who.visible = false; } }; },
+      c.tap(doors[0], open, -420); c.tap(doors[1], open); c.tap(who, open);
+      return dt => { if (show > 0) { show -= dt; const o = Math.min(1, (3 - show) * 3, show * 3); doors[0].position.x = -420.8 - o * 1.4; doors[1].position.x = -419.2 + o * 1.4; rails[0].position.x = doors[0].position.x; rails[1].position.x = doors[1].position.x; who.position.z = -3.1 + o * 1.4; if (show <= 0) who.visible = false; } }; },
     // the hen house: tap the hen and she lays an egg in the basket; count to five and the chicks hatch
     () => { c.block(-432, 0, -4.4, 2.6, 1.8, 2, '#f2c27a', { r: .1 }); const rf = new THREE.Mesh(new THREE.ConeGeometry(2, 1, 4).rotateY(Math.PI / 4), mat('#d8443c')); rf.scale.z = .7; /* (build 48: straight coop roof) */ rf.position.set(-432, 2.3, -4.4); c.add(rf);
       const hen = c.toy('🐔', 1.1, -431, .7, -2.6); c.cyl(-433.4, 0, -2.4, .55, .45, .45, '#c8925a', { r: .8 }); const eggs = []; const chicks = []; let hatch = 0;
@@ -716,7 +750,7 @@ export function initExpansion(G, api) {
       c.tap(sheep, () => { k = (k + 1) % COLOURS.length; const m2 = mat(COLOURS[k][0], { r: .95, cc: 0 }); wool.material = m2; puffs.forEach(p2 => { p2.material = m2; }); bounce = 1; Sound.tone(480, .2, 'sawtooth', .02, .7); c.say(`🐑 Baa! Now I am ${COLOURS[k][1]}!`); c.burst(-457, 1.8, -2.6, [COLOURS[k][0], '#fff'], 14, 2.4); c.disc('sheep', '🐑 Tap the sheep to change the colour of her wool!'); }, -457);
       return (dt, t) => { bounce = Math.max(0, bounce - dt * 1.5); sheep.position.y = Math.abs(Math.sin(bounce * 9)) * bounce * .5; head.rotation.z = Math.sin(t * 1.5) * .1; }; },
     // the haystack: climb the bales and bounce on the top (a gem floats above it)
-    () => { c.add(hayBales([[-464, 0, 3], [-466, 1, 3], [-467.5, 2, 2.2]].map(([x, y, w]) => [x, y, -2.05, w, 1, 1.6]))); /* (build 124: the steps stand just behind her path, so she walks in front of them, never through them; she steps back onto them as she climbs) */ /* (build 54: tied straw bales, one mesh) */ c.sph(-468, 3, -2.05, .9, '#f0d070', { m: { r: .95, cc: 0 } }).scale.set(1.4, .5, 1);
+    () => { c.add(hayBales([[-464, 0, 3], [-466, 1, 3], [-467.5, 2, 2.2]].map(([x, y, w]) => [x, y, -2.05, w, 1, 1.6]))); /* (build 124: the steps stand just behind her path, so she walks in front of them, never through them; she steps back onto them as she climbs) */ /* (build 54: tied straw bales, one mesh) */ c.sph(-467.5, 2.95, -2.05, .9, '#f0d070', { m: { r: .95, cc: 0 } }).scale.set(1.15, .55, .85); /* (build 125: a straw mound sitting on the top bale; it hung off the side like a flat floating disc) */
       c.plat(-465.5, -462.5, 1, { z: -1.9, step: true, stepMax: 1.05 }); c.plat(-467.5, -464.5, 2, { z: -1.9, step: true, stepMax: 1.05 }); c.plat(-468.6, -466.4, 3.05, { z: -1.9, pad: true, bounce: 12.5, onLand: () => c.disc('hay', '🌾 Boing! Bounce on the haystack!') }); },
     // the vegetable patch: tap a mound to plant a seed, again for a sprout, again for a carrot, then pull it up
     () => { let pulled = 0; for (let i = 0; i < 4; i++) { const x = -476 - i * 1.6; const mound = c.sph(x, 0, -2.2, .55, '#8a5a3a', { m: { r: .95, cc: 0 } }); mound.scale.y = .35; let st2 = 0; const leaf = c.sph(x, .3, -2.2, .15, '#3cc46e', { m: { r: .7 } }); leaf.scale.set(.6, 1.6, .6); leaf.visible = false; const car = c.toy('🥕', .8, x, .9, -2.2); car.visible = false;
@@ -798,7 +832,7 @@ export function initExpansion(G, api) {
       c.tap(mark, dig, x0, { icon: '❌', label: 'Treasure spot', action: 'Dig', disc: 'treasure' }); c.tap(mound, dig); c.tap(box, dig); c.tap(lid, dig);
       return dt => { if (!up) { chest.position.y += (-1 - chest.position.y) * Math.min(1, dt * 4); return; } up += dt; chest.position.y += (0 - chest.position.y) * Math.min(1, dt * 4); lid.rotation.x = -Math.min(1.1, up * 1.5); lid.position.z = -Math.min(.3, up * .4); if (up > 7) { up = 0; lid.rotation.x = 0; lid.position.z = 0; mound.scale.y = .25; } }; },
     // the sailboat: tap it, toot toot, and it sails a loop on the sea
-    () => { const boat = new THREE.Group(); boat.position.set(-636, 0, -12); c.add(boat); const hull = new THREE.Mesh(W.rbox(3.4, .8, 1.4, .3), mat('#4fa8ff')); hull.position.y = .3; hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 2.8, 8), mat('#7a5236')); mast.position.y = 1.8; boat.add(mast);
+    () => { const boat = new THREE.Group(); boat.position.set(-636, 0, -12); c.add(boat); const hull = new THREE.Mesh(boatHull(3.4, .85, 1.15), mat('#4fa8ff')); hull.position.y = -.05; { const rim = new THREE.Mesh(W.rbox(3, .1, 1.42, .05), mat('#ffffff')); rim.position.y = .84; boat.add(rim); } hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 2.8, 8), mat('#7a5236')); mast.position.y = 1.8; boat.add(mast);
       const sail = new THREE.Mesh(new THREE.ConeGeometry(1, 2.2, 3), mat('#ffffff')); sail.position.set(.4, 1.9, 0); sail.scale.z = .1; boat.add(sail); const flag = new THREE.Mesh(W.rbox(.5, .3, .04, .02), mat('#ff4f9a')); flag.position.set(.25, 3.2, 0); boat.add(flag); let trip = 0;
       const go = () => { if (trip) return; trip = .001; Sound.tone(300, .3, 'square', .03, 1); Sound.tone(300, .3, 'square', .03, 1, .4); c.say('⛵ Toot toot! Off we sail!'); c.disc('sailboat', '⛵ Tap the sailboat and it sails around!'); };
       c.tap(boat, go, -636);
@@ -853,6 +887,7 @@ export function initExpansion(G, api) {
       for (const [a, b, y] of [[-704.5, -706.5, 1.2], [-707, -709, 2.4], [-709.5, -711.5, 3.6], [-712, -716, 4.8]]) { c.block((a + b) / 2, 0, -2.0, Math.abs(b - a), y, 1.6, '#c98b5a', { r: .3 }); c.plat(Math.min(a, b), Math.max(a, b), y, { z: -1.9 }); } /* (build 124: the steps stand just behind her path, so she walks in front of them, never through them; she steps back onto them as she climbs) */ /* (build 62: wooden steps up the hill; green boxes in front of the green hill looked like broken scenery) */
       const matG = new THREE.Group(); matG.position.set(-715, 4.8, -1.9); c.add(matG); RB.slice(0, 6).forEach((col, i) => { const st = new THREE.Mesh(W.rbox(1.4, .1, .16, .04), mat(col)); st.position.set(0, .06, -.4 + i * .16); matG.add(st); });
       const path = new THREE.CatmullRomCurve3([new THREE.Vector3(-716, 5.4, -1.9), new THREE.Vector3(-719, 4.6, -1.4), new THREE.Vector3(-723, 2.6, -.6), new THREE.Vector3(-727, 1, -.2), new THREE.Vector3(-731, .6, 0)]);
+      chute(c, mat, path, '#ff8fc8', '#ffffff'); /* (build 125) the slide down the hill */
       c.tap(matG, () => { if (P.y < 4.3) { c.say('🌈 Climb up the grassy steps to the rainbow mat!'); return; } api.startSlide(path); c.disc('hillslide', '🌈 Wheee! Sliding down the grassy hill!'); c.say('🌈 Wheee!'); api.event?.({ type: 'activity', id: 'hill_slide' }); }, -715, { y: 4.8, hintY: 1.4 }); },
     // mountain goats: tap the goat and it hops up the rocks, counting each hop
     () => { const X = -738, ROCKS = [[-736, .6], [-738.4, 1.4], [-740.8, 2.3], [-743, 3.3]]; c.add(boulders(ROCKS.map(([x, h]) => [x, 0, -3.4, 2, h, 1.6]))); /* (build 54: lumpy mossy boulders, one mesh) */

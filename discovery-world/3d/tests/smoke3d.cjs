@@ -193,10 +193,10 @@ const UG_F = -6;
   await teleport(7.4, -6); // stand to the side so the buttons aren't behind your creature
   { const d0 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft)); await tapWorld(4.25, UG_F + 1.0, -1.15); await sleep(300); const d1 = await page.evaluate(() => JSON.stringify(__DDW3.world.petDraft));
     check('Pet Workshop: tap a big button to change your pet design', d0 !== d1 && (await S()).disc.includes('petmaker'), `${d0} → ${d1}`); }
-  await tapWorld(8.6, UG_F + .25, -1.2); await sleep(200); // the lever's box
+  await tapWorld(9.2, UG_F + .25, -1.0); await sleep(200); // the lever's box (build 125: moved out of the ring of stars)
   { const hatched = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.hasPet()) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever: an egg hatches your very own pet', hatched && (await S()).disc.includes('pet')); }
   await shot('16_pet_workshop.jpg');
-  await tapWorld(8.6, UG_F + .25, -1.2); { const two = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.petCount() >= 2) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever again: a second pet (you can have up to 5)', two && (await S()).disc.includes('pets2'), `pets=${await page.evaluate(() => __DDW3.friends.petCount())}`); }
+  await tapWorld(9.2, UG_F + .25, -1.0); { const two = await page.evaluate(() => new Promise(r => { let n = 0; const f = () => { if (__DDW3.friends.petCount() >= 2) return r(true); if (++n > 500) return r(false); requestAnimationFrame(f); }; f(); })); check('pull the lever again: a second pet (you can have up to 5)', two && (await S()).disc.includes('pets2'), `pets=${await page.evaluate(() => __DDW3.friends.petCount())}`); }
   { const r = await page.evaluate(() => new Promise(res => { const D = __DDW3, P = D.player; D.keys.right = true; let n = 0; const f = () => { if (P.x > 9.5 || ++n > 400) { D.keys.right = false; return res(Math.abs(D.friends.petPos.x - P.x)); } requestAnimationFrame(f); }; f(); })); check('your pet follows you', r < 3, `pet is ${r.toFixed(1)} away`); }
   { // Observe distinct animation frames: two wall-clock samples can be the same slow-rendered frame.
     const aim = await page.evaluate(() => new Promise(resolve => {
