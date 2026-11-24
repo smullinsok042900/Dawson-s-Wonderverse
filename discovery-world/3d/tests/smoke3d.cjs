@@ -20,7 +20,7 @@ const UG_F = -6;
   const errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   // (the one exception: Chromium's own GPU-driver note about the character portraits' one-time picture readback at start-up; see NEXT_TASKS)
-  const DRIVER_NOTE = /^\[\.WebGL-[0-9a-fx]+\]GL Driver Message \(OpenGL, Performance, [A-Z_]+, High\): GPU stall due to ReadPixels$/;
+  const DRIVER_NOTE = /^\[\.WebGL-[0-9a-fx]+\]GL Driver Message \(OpenGL, Performance, [A-Z_]+, High\): GPU stall due to ReadPixels( \(this message will no longer repeat\))?$/; // (the same desktop driver note, sometimes with this ending)
   page.on('console', m => { if ((m.type() === 'error' || m.type() === 'warning') && !DRIVER_NOTE.test(m.text())) errors.push(m.type() + ': ' + m.text()); });
   const cdp = await ctx.newCDPSession(page);
   const S = () => page.evaluate(() => { const D = __DDW3, P = D.player; return { x: P.x, y: P.y, z: P.z, vx: P.vx, grounded: P.grounded, jumps: P.jumps, creature: P.creature, ride: P.ride ? P.ride.type : null, layer: P.layer, stair: P.stair ? P.stair.k : null, disc: [...D.world.disc], bits: D.world.bits.size, fl: D.fluffs.map(f => f.state), bubbles: D.bubbles(), sound: D.Sound.on, painted: !!D.world.painted, door: D.nearDoor() }; });
