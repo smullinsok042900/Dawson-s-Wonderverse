@@ -4,6 +4,9 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 123 (fixes from the family's pictures)
+Desktop, software rendering; `ba.cjs`, builds 122 and 123, six rounds in both orders (script ms per frame, median / mean): park 17.7 / 18.2 → 16.0 / 15.8, creatures 13.35 / 13.0 → 12.95 / 13.2, castle 14.5 / 15.4 → 17.05 / 16.9. The castle view lands in one of two states on any build (about 200–230 or 330–360 draw calls, script 11.7–19.6 ms): build 122 itself measured 344 and 353 in two single runs, and copies of build 123 with each changed file put back measured 191–227 — that is the measurement, not this change. Shader programs 127 in both.
+
 ## Build 120 (seven family-drawn residents)
 
 Desktop Chromium 156, SwiftShader, 844×390 touch viewport, `?hq`. `tests/perf/chalk-friends.cjs` compares the preserved
