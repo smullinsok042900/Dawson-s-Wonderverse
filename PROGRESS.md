@@ -559,6 +559,29 @@ rings above the deck), `uranus-deck.png` (a teal belt against pale zones with th
 Audit at x 12, 44, 72 and 120: **z-fighting 0** at all four, solids 12, platforms 108/114/114/114, 0 malformed,
 0 duplicate or heavy-overlap solids, 0 page errors. No FPS claim.
 
+### Stage 28 — Neptune: a banded deck with depth, and the Great Dark Spot kept readable
+
+- **Banded deck with depth**: Neptune now shares the banded-deck code at `nx 150, nz 58` (ground mesh **1 mesh / 17,400
+  triangles**, up from 12,000) with its own deep-blue palette, wind combs, curls and oval storms - the strongest belts of
+  the four (height strength .9 against Jupiter's 1). The banked far deck rises behind the ridges, so the deck recedes in
+  layers instead of rolling as one smooth sheet.
+- **Cloud banks and wisps**: the ten random five-puff heaps became four band-aligned rows of half-buried domes, and the
+  wisp layers lie low on the deck as thin streaks, still driven at Neptune's fast speed.
+- **The Great Dark Spot**: the storm is a painted oval on the deck, and it moved into the shared banded colour path so it
+  still paints over the new belts (darkest deck vertices luminance 0.021 against a 0.213 median) with its pale rim.
+  A calm plateau is blended into the deck under the storm so the oval is not cut in half by a ridge, and a look-out
+  capture from the middle of the place shows it whole.
+- **Kept working**: the windsock's gust still pushes the player (3.79 m in 1.6 s) and the wind-ride button still blows
+  for the swings (windBlow 3.48 with the empty swings lifted), with 0 page errors.
+
+Evidence in `docs/screenshots/stage28/`: `neptune-approach.png` and `neptune-deck.png` (the banded, ridged deck with
+its banked far deck behind), and `neptune-dark-spot.png` (the storm oval from a look-out camera, since it sits about
+277 m into the 544 m place, far from the landing site).
+
+Audit at x 12, 44, 72 and 120: **z-fighting 0**, solids 12, platforms 108, 0 malformed, 0 duplicate or heavy-overlap
+solids, 0 page errors. One run flagged a pair of streamed scenery planes 1.8 cm apart at x 44; it did not reproduce in
+two reruns, so it is a streaming artefact rather than a deck regression. No FPS claim.
+
 ### Measured cost (single-frame A/B, same camera, group visibility only)
 
 | Area | Batches | Geometry triangles | Δ draw calls | Δ triangles |
@@ -856,7 +879,11 @@ HTML=/tmp/before/discovery-world/3d/index.html node discovery-world/3d/tools/cap
 16. **Uranus — done (stage 27):** eight separate 200-segment ring annuli (rings 6, 5, 4, alpha, beta, gamma, delta and
     the wide epsilon ring) with real gaps over 1024-px ringlet grain, a 150x58 banded deck with the shallowest belts of
     the three gas giants, three band-aligned rows of cloud banks and low wisp streaks; 17,400-triangle ground mesh, the
-    rolling planet and diamond rain re-verified, evidence in `docs/screenshots/stage27/`. Neptune is next.
+    rolling planet and diamond rain re-verified, evidence in `docs/screenshots/stage27/`.
+17. **Neptune — done (stage 28):** a 150x58 banded deck with the strongest belts of the four and a banked far deck, four
+    band-aligned rows of cloud banks, low wisp streaks, the Great Dark Spot repainted over the bands on a calm plateau,
+    and the windsock gust and wind-ride button re-verified; 17,400-triangle ground mesh, evidence in
+    `docs/screenshots/stage28/`. Pluto is next.
 3. **Planets** in order Moon → Mercury → Venus → Mars → Jupiter → Saturn → Uranus → Pluto: crater rims and ejecta
    rays, layered regolith colours, ring geometry, cloud bands; reuse the loft/vertex-colour helpers from stage 7/8.
 4. **Characters and pets:** material/shape pass only (no rig changes) — fur shell tuning, eye catches, bevels.

@@ -376,51 +376,57 @@ export function initSpace(G, api) {
       const BD = CLOUDS[id], amp = { jupiter: 1, saturn: .6, uranus: .34, neptune: .75 }[id];
       const bandAt = (x, z, o) => { const v = z * .085 + (K.fbm2(x * .028, z * .028, 3) - .5) * 5.5 + Math.sin(x * .045 + z * .02) * .7, t = ((v % BD.length) + BD.length) % BD.length, k = Math.floor(t); return o.copy(K.col(BD[k])).lerp(K.col(BD[(k + 1) % BD.length]), K.sstep(.25, .75, t - k)); };
       const spot = id === 'neptune' ? [MID + 14, -62, 26, 9] : null;
+      // (stage 28) the Great Dark Spot is painted onto the banded deck as well as the plain one: a deep navy oval with a
+      // pale rim of drawn-out cloud, so the storm still reads now that Neptune's deck carries the shared band colours
+      const spotPaint = spot ? (x, z, o) => { const d = Math.hypot((x - spot[0]) / spot[2], (z - spot[1]) / spot[3]);
+        o.lerp(K.col('#0b1544'), K.sstep(1, .7, d) * .88); o.lerp(K.col('#eaf2ff'), K.sstep(.12, 0, Math.abs(d - 1.12)) * .72); } : null;
       // (stage 25-27) THE BANDED DECKS of Jupiter, Saturn and Uranus carry height as well as colour: pale zones and darker
       // belts, each with wind combs, whorls and small oval storms, and the deck rises into soft ridges along a zone and
       // sinks into a belt, so the clouds recede in real layers instead of lying flat. Saturn's belts are lower and softer,
       // and Uranus's are shallower and bluer still, so its deck stays the calm ice giant it is.
       const pal = id === 'jupiter' ? ['#fff3de', '#c3733e', '#f8e0ba', '#9e4c26', '#fdeed6', '#cf8a4a']
         : id === 'saturn' ? ['#fff8de', '#d8ac54', '#fbeec2', '#b98c3a', '#fdf3d0', '#d2a656']
-        : id === 'uranus' ? ['#eafdfd', '#6fd2e2', '#cdf6f8', '#44b4cb', '#ddfbfb', '#8ee1ec'] : null;
-      const BS = id === 'jupiter' ? 1 : id === 'saturn' ? .8 : .62, BC = id === 'jupiter' ? 1 : 1;                    // (height strength, contrast)
+        : id === 'uranus' ? ['#eafdfd', '#6fd2e2', '#cdf6f8', '#44b4cb', '#ddfbfb', '#8ee1ec']
+        : id === 'neptune' ? ['#8fb0ff', '#2f4fd0', '#a8c4ff', '#2440b0', '#6f94ff', '#3a5cd8'] : null;
+      const BS = id === 'jupiter' ? 1 : id === 'saturn' ? .8 : id === 'uranus' ? .62 : .9, BC = 1;                      // (height strength, contrast)
       const bandV = (x, z) => z * .1 + (K.fbm2(x * .019 + 1, z * .03, 3) - .5) * 7 + Math.sin(x * .042 + z * .015) * 1.2; // (a warped, wavy band coordinate)
       const bandH = (x, z) => { const w = (K.fbm2(x * .018 + 3, z * .03, 3) - .5) * 2, ridge = Math.pow(Math.sin(z * .12 + w * 2.6) * .5 + .5, 1.7), fine = Math.sin(z * .31 + w * 4 + x * .01) * .5 + .5, depth = .35 + .85 * K.sstep(-18, -60, z);
-        return K.sstep(-11, -20, z) * depth * (ridge * 5.2 + fine * 1.1 + 1.2) * BS                                    // the ridges themselves
+        const h = K.sstep(-11, -20, z) * depth * (ridge * 5.2 + fine * 1.1 + 1.2) * BS                                 // the ridges themselves
           + K.sstep(-30, -80, z) * (K.fbm2(x * .08, z * .12, 3) - .5) * 3 * BS                                           // lumpy cloud tops behind them
-          + K.sstep(-52, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' ? 34 : id === 'saturn' ? 18 : 12); }  // the far deck, banked up
+          + K.sstep(-52, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' ? 34 : id === 'saturn' ? 18 : id === 'uranus' ? 12 : 22); // the far deck, banked up
+        if (!spot) return h;
+        const q = Math.exp(-Math.pow((x - spot[0]) / 30, 2) - Math.pow((z - spot[1]) / 16, 2));                        // (stage 28) a calm plateau under the
+        return h * (1 - q) + 2.4 * q; };                                                                              // Great Dark Spot, so the oval reads whole
       const bandCol = (x, z, h, ny, o) => {
         const v = bandV(x, z), t = ((v % 6) + 6) % 6, k = Math.floor(t);
         o.copy(K.col(pal[k])).lerp(K.col(pal[(k + 1) % 6]), K.sstep(.3, .7, t - k));                                    // crisp belt and zone edges
         const comb = K.sstep(.6, .82, K.noise2(x * .05, z * .34)), curl = K.sstep(.55, .8, K.noise2(x * .028 + 7, z * .06 + 2));
-        o.lerp(K.col('#ffffff'), comb * .38 * BC); o.lerp(K.col(id === 'jupiter' ? '#8c3f1c' : id === 'saturn' ? '#a98a52' : '#4f9fb0'), curl * .2 * BC); // (white combs, darker curls)
+        o.lerp(K.col('#ffffff'), comb * .38 * BC); o.lerp(K.col(id === 'jupiter' ? '#8c3f1c' : id === 'saturn' ? '#a98a52' : id === 'uranus' ? '#4f9fb0' : '#1a3488'), curl * .2 * BC); // (white combs, darker curls)
         const ov = K.fbm2(x * .016 + 9, z * .05 + 4, 2);                                                                // small oval storms lying in the belts
-        o.lerp(K.col(id === 'jupiter' ? '#7a2e12' : id === 'saturn' ? '#bd9a58' : '#3f93a6'), K.sstep(.66, .9, ov) * .45 * BC); o.lerp(K.col(id === 'jupiter' ? '#fff6dc' : id === 'saturn' ? '#fff6dc' : '#e8ffff'), K.sstep(.9, .97, ov) * .42);
+        o.lerp(K.col(id === 'jupiter' ? '#7a2e12' : id === 'saturn' ? '#bd9a58' : id === 'uranus' ? '#3f93a6' : '#15296e'), K.sstep(.66, .9, ov) * .45 * BC); o.lerp(K.col(id === 'jupiter' || id === 'saturn' ? '#fff6dc' : id === 'uranus' ? '#e8ffff' : '#dbe8ff'), K.sstep(.9, .97, ov) * .42);
         o.multiplyScalar(.74 + .2 * ny + .12 * K.sstep(-1, 4, h)); }                                                    // (the ridges catch the light)
-      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : id === 'uranus' ? -10.5 : -4.8, blend: 6, nx: id === 'jupiter' ? 168 : id === 'saturn' || id === 'uranus' ? 150 : 120, nz: id === 'jupiter' ? 62 : id === 'saturn' || id === 'uranus' ? 58 : 50, height: pal ? bandH : (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
-        color: (x, z, h, ny, o) => { if (pal) return bandCol(x, z, h, ny, o);
+      H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, flatZ: id === 'jupiter' ? -11.5 : id === 'saturn' ? -11 : id === 'uranus' ? -10.5 : -11, blend: 6, nx: id === 'jupiter' ? 168 : id === 'saturn' || id === 'uranus' || id === 'neptune' ? 150 : 120, nz: id === 'jupiter' ? 62 : id === 'saturn' || id === 'uranus' || id === 'neptune' ? 58 : 50, height: pal ? bandH : (x, z) => { const n = K.fbm2(x * .055, z * .08, 4), b = Math.pow(K.noise2(x * .2 + 3, z * .24), 2); return amp * ((n - .35) * 4.2 + b * 1.5 + K.sstep(-45, -150, z) * Math.pow(K.fbm2(x * .02 + 5, z * .02, 3), 1.6) * (id === 'jupiter' || id === 'neptune' ? 46 : 20)); },
+        color: (x, z, h, ny, o) => { if (pal) { bandCol(x, z, h, ny, o); if (spotPaint) spotPaint(x, z, o); return o; }
           bandAt(x, z, o); const streak = id === 'neptune' ? K.sstep(.66, .8, K.noise2(x * .035 + 2, z * .55)) : K.sstep(.7, .86, K.noise2(x * .05, z * .4)) * .4; o.lerp(K.col('#ffffff'), streak * .6);
-          if (spot) { const d = Math.hypot((x - spot[0]) / spot[2], (z - spot[1]) / spot[3]); o.lerp(K.col('#101c5c'), K.sstep(1, .7, d) * .85); o.lerp(K.col('#ffffff'), K.sstep(.12, 0, Math.abs(d - 1.12)) * .7); }
           o.multiplyScalar(.78 + .16 * ny + .12 * K.sstep(-.5, 3 * amp, h)); } });
       // puffs of cloud heaped on the deck, and tall storm towers far away
       const puff = (batch, x, y, z, r, k, tint = 0) => { const c0 = bandAt(x, z, new THREE.Color()).lerp(K.col('#ffffff'), .25 + tint); batch.put(K.geo.sph(r > 5 ? 2 : 1), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.74 + .3 * Math.max(0, ny)); }, [r * (1.1 + R(k) * .5), r * (.62 + R(k + 1) * .25), r]); };
-      if (id === 'jupiter' || id === 'saturn' || id === 'uranus') { // (stage 25-27) the cloud banks sit in band-aligned rows, wide and low
+      if (id === 'jupiter' || id === 'saturn' || id === 'uranus' || id === 'neptune') { // (stage 25-28) the cloud banks sit in band-aligned rows, wide and low
         // with gaps between them, so the zones and belts below show through and recede; every row behind is larger and lower
-        const rows = id === 'jupiter' ? 4 : 3, gapZ = id === 'jupiter' ? 12.5 : id === 'saturn' ? 14 : 15;
+        const rows = id === 'jupiter' || id === 'neptune' ? 4 : 3, gapZ = id === 'jupiter' ? 12.5 : id === 'saturn' ? 14 : id === 'uranus' ? 15 : 13;
         let sd = 40;
         for (let row = 0; row < rows; row++) { const z0 = -16 - row * gapZ, n = 6 - row, sc0 = 1.05 + row * .42;
           for (let k = 0; k < n; k++) { const x = X - 24 + (k + .5) * (PW + 48) / n + R(sd++) * 8, z = z0 + (R(sd++) - .5) * 4.5, s = sc0 * (1 + R(sd++) * .55), c0 = bandAt(x, z, new THREE.Color()).lerp(K.col('#ffffff'), .3);
             for (let q = 0; q < 3; q++) { const bx = x + (q - 1) * s * 1.35, bz = z + (R(sd++) - .5) * s * .8, r = s * (.5 + R(sd++) * .3), by = H(bx, bz) + r * .22;             // (each dome sits on the deck, half buried, so no cloud floats)
               soft.put(K.geo.sph(1), bx, by, bz, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.76 + .3 * Math.max(0, ny)); }, [r * 2.1, r * 1.1, r * 1.35]); } } }
-      } else { const heaps = 10;
-        for (let k = 0; k < heaps; k++) { const x = R(k + 20, X - 30, X + 140), z = -7 - Math.pow(R(k + 21), 1.5) * 55 - (id === 'jupiter' || id === 'saturn' ? 7 : 0), s = (.8 + R(k + 22) * 1.3) * (1 + (-z) * .03), y = H(x, z); for (let q = 0; q < 5; q++) puff(soft, x + (q - 2) * s * .8 + R(k * 7 + q) * s * .4, y + s * (.25 + (q === 2 ? .45 : R(k + q) * .25)), z + (R(k + q + 5) - .5) * s, s * (q === 2 ? 1 : .7), k * 5 + q); } }
+      }
       yield;
     if (id === 'jupiter' || id === 'neptune') for (let k = 0; k < 5; k++) { const x = X - 60 + k * 56 + R(k + 30) * 20, z = -95 - R(k + 31) * 60, s = 7 + R(k + 32) * 5, y = H(x, z); for (let q = 0; q < 6; q++) { const up = q / 5; puff(soft, x + (R(k * 9 + q) - .5) * s * (1.8 - up), y + up * s * 2.6, z + (R(k * 9 + q + 3) - .5) * s, s * (1 - up * .35), k * 11 + q, up * .3); } for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s * 1.3, y + s * 2.9, z, s * .9, k * 13 + q, .35); } // (a flat anvil top, like a real storm cloud)
       for (let k = 0; k < 6; k++) { const x = R(k + 400, X, X + 110), z = 4.8 + R(k + 401) * 1.6, s = .55 + R(k + 402) * .5; for (let q = 0; q < 3; q++) puff(soft, x + (q - 1) * s, -.1 + (q === 1 ? .25 : 0), z, s * (q === 1 ? 1 : .75), k * 3 + q, .1); }
       // wisps that really drift along in the wind: two layers, one mesh each
       const speed = { jupiter: 1.3, saturn: .8, uranus: .45, neptune: 5.5 }[id];
       // (stage 25/26: Jupiter's and Saturn's wisps sit lower and rounder, so they read as streaks lying on the deck)
-      const lowWisp = id === 'jupiter' || id === 'saturn' || id === 'uranus';
+      const lowWisp = id === 'jupiter' || id === 'saturn' || id === 'uranus' || id === 'neptune';
       for (const [zz, yy, n, sc, sp] of lowWisp ? [[-13, .16, 9, 1, 1], [-34, .42, 9, 2.4, .6]] : [[-13, .5, 9, 1, 1], [-34, 1.6, 9, 2.4, .6]]) { const span = 190, w = model(b => { for (let k = 0; k < n; k++) { const x = k / n * span + R(k + zz) * 8, z2 = (R(k + 1 + zz) - .5) * 9 * sc, c0 = new THREE.Color(BD[(k + 3) % BD.length]).lerp(K.col('#ffffff'), id === 'neptune' ? .85 : .5); for (let q = 0; q < 3; q++) b.put(K.geo.sph(1), x + (q - 1) * 1.5 * sc, R(k + q) * .3 * sc, z2, (px, py, pz, nx, ny, nz, o) => { o.copy(c0).multiplyScalar(.78 + .28 * Math.max(0, ny)); }, [(id === 'neptune' ? 3.4 : 1.9) * sc * (q === 1 ? 1 : .7), (lowWisp ? .5 : .42) * sc * (q === 1 ? 1 : .7), .9 * sc]); } }, K.softMat(), false);
         w.position.set(X - 40, yy, zz); w.userData.dynamic = true; add(w); const w2 = w.clone(); w2.position.x = X - 40 - span; add(w2); U.push(dt => { for (const m of [w, w2]) { m.position.x += dt * speed * sp; if (m.position.x > X - 40 + span) m.position.x -= span * 2; } }); }
     }

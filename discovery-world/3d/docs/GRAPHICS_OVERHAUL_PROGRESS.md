@@ -577,4 +577,23 @@ platforms 113, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. N
 Evidence: `docs/screenshots/stage27/` (approach, deck, rings). Audit at 12/44/72/120: z-fighting 0, solids 12,
 platforms 108/114/114/114, 0 malformed, duplicate or heavy-overlap entries, 0 page errors. No FPS claim.
 
-Next: Neptune → Pluto, then character/pet material polish.
+## Stage 28 — Neptune: a banded deck with depth, and the Great Dark Spot kept readable
+
+- **Banded deck with depth**: Neptune now shares the banded-deck code at 150x58 (ground mesh 17,400 triangles, up from
+  12,000) with its own deep-blue palette, wind combs, curls and oval storms, and the strongest belts of the four (height
+  strength .9 against Jupiter's 1). The banked far deck rises behind the ridges, so the deck recedes in layers instead
+  of rolling as one smooth sheet.
+- **Cloud banks and wisps**: the ten random five-puff heaps became four band-aligned rows of half-buried domes, and the
+  wisp layers lie low on the deck as thin streaks, driven at their fast Neptune speed.
+- **The Great Dark Spot**: the storm is a painted oval on the deck, and it moved into the shared banded colour path, so
+  it still paints over the new belts (darkest deck vertices luminance 0.021 against a 0.213 median) with its pale rim.
+  A calm plateau is blended into the deck under the storm, so the oval is not cut in half by a ridge, and a look-out
+  capture from the middle of the place shows it whole.
+- **Kept working**: the windsock's gust still pushes the player (3.79 m in 1.6 s) and the wind-ride button still blows
+  for the swings (windBlow 3.48 with the empty swings lifted), with 0 page errors.
+
+Evidence: `docs/screenshots/stage28/` (approach, deck, and the storm from a look-out camera). Audit at 12/44/72/120:
+z-fighting 0, solids 12, platforms 108, 0 malformed, duplicate or heavy-overlap entries, 0 page errors (one run flagged
+a pair of streamed scenery planes 1.8 cm apart at x 44; it did not reproduce in two reruns). No FPS claim.
+
+Next: Pluto, then character/pet material polish.
