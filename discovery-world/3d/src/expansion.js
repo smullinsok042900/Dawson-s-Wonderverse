@@ -87,12 +87,12 @@ function chuteGeometry(path, R = .55, N = 48) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
 function chute(c, mat, path, color, postColor) {
-  const m = new THREE.Mesh(chuteGeometry(path), mat(color, { r: .35 })); m.castShadow = true; m.receiveShadow = true; c.add(m);
-  const p = new THREE.Vector3();
-  const pb = makeBatch(), cyl = new THREE.CylinderGeometry(1, 1, 1, 8); // all the posts as one painted mesh (one draw)
-  for (let u = .12; u < .95; u += .2) { path.getPointAt(u, p); const h = p.y - .64; if (h < .5) continue; pb.put(cyl, p.x, h / 2, p.z - .1, postColor, [.09, h, .09]); }
-  const posts = pb.mesh(shinyMat()); posts.castShadow = true; c.add(posts); cyl.dispose();
-  return m;
+  // one painted mesh (the shared shiny material: no new shader, no heavy glossy coat over a big part of the screen) and no
+  // shadow: the trough and all its posts are a single draw
+  const b = makeBatch(), g = chuteGeometry(path); b.put(g, 0, 0, 0, color); g.dispose();
+  const p = new THREE.Vector3(), cyl = new THREE.CylinderGeometry(1, 1, 1, 8);
+  for (let u = .12; u < .95; u += .2) { path.getPointAt(u, p); const h = p.y - .64; if (h < .5) continue; b.put(cyl, p.x, h / 2, p.z - .1, postColor, [.09, h, .09]); }
+  cyl.dispose(); const m = b.mesh(shinyMat()); m.receiveShadow = true; c.add(m); return m;
 }
 export function initExpansion(G, api) {
   const { scene, Sound, world, player: P } = api, W = G.W;
@@ -724,7 +724,7 @@ export function initExpansion(G, api) {
     // the red barn: tap the doors and an animal comes out to say hello (a different one each time)
     () => { c.block(-420, 0, -5.6, 7, 4.2, 4, '#d8443c', { r: .15 }); const roof = new THREE.Mesh(new THREE.ConeGeometry(5, 2.2, 4).rotateY(Math.PI / 4), mat('#8a2a24', { r: .8 })); roof.scale.z = .62; /* (build 48: the barn roof was crooked, like the house's was) */ roof.position.set(-420, 5.3, -5.6); c.add(roof);
       c.block(-420, 4.2, -3.55, 7.2, .25, .2, '#ffffff', { r: .05 }); const rails = [], doors = [-1, 1].map(s2 => { const d = c.block(-420 + s2 * .8, 0, -3.5, 1.6, 2.8, .16, '#b8322c', { r: .08 }); rails.push(c.block(-420 + s2 * .8, 1.4, -3.4, 1.4, .14, .06, '#ffffff', { r: .02 })); return d; }); /* (build 124: each door's white rail slides with its door, so the animal never stands behind a rail floating in the doorway) */
-      c.block(-420, 2.95, -3.55, 1.5, 1.05, .12, '#8a2a24', { r: .06 }); c.block(-420, 2.95, -3.47, 1.6, .1, .06, '#ffffff', { r: .02 }); c.block(-420, 2.95, -3.47, .1, 1.1, .06, '#ffffff', { r: .02 }); /* a real hayloft door with a white cross, instead of the little door picture that floated on the wall */
+      { const hb = makeBatch(), bx = new THREE.BoxGeometry(1, 1, 1); hb.put(bx, -420, 2.95, -3.55, '#8a2a24', [1.5, 1.05, .12]); hb.put(bx, -420, 2.95, -3.47, '#ffffff', [1.6, .1, .06]); hb.put(bx, -420, 2.95, -3.47, '#ffffff', [.1, 1.1, .06]); c.add(hb.mesh(shinyMat())); bx.dispose(); } /* a real hayloft door with a white cross (one mesh), instead of the little door picture that floated on the wall */
       const who = c.toy('🐴', 1.4, -420, 1.1, -3.1); who.visible = false; const ANI = [['🐴', 'a horse', 'Neigh!', 520], ['🐄', 'a cow', 'Moo!', 140], ['🐐', 'a goat', 'Maa!', 600], ['🐑', 'a sheep', 'Baa!', 480], ['🐓', 'a rooster', 'Cock-a-doodle-doo!', 900]]; let k = -1, show = 0;
       const open = () => { k = (k + 1) % ANI.length; setToySymbol(who, ANI[k][0]); who.visible = true; show = 3; Sound.tone(ANI[k][3], .25, 'sawtooth', .025, .7); Sound.tone(ANI[k][3] * .8, .3, 'sawtooth', .02, .7, .25); c.say(`${ANI[k][0]} ${ANI[k][2]} It's ${ANI[k][1]}!`); c.disc('barn', '🏚️ Tap the barn doors: who lives inside?'); };
       c.tap(doors[0], open, -420); c.tap(doors[1], open); c.tap(who, open);
