@@ -1,6 +1,10 @@
 // Seven unique family keepsakes become solid painted toys. The photographs stay private.
 // Both pairs of paper twins are separate residents in doodle-friends.js.
 import * as THREE from 'three';
+import { limb, eye as shinyEye, puff, drawOn } from './plush.js';
+// (build 124) arms, legs and antennae (the strokes beside the body, not the face lines) become chunky round plush limbs
+const isLimb = (pts, r) => r >= .018 && r < .04 && pts.every(p => Math.abs(p[2]) < .06);
+const fat = r => Math.max(.05, r * 2.2);
 
 const BALL = new THREE.SphereGeometry(1, 12, 9);
 const SMALL = new THREE.SphereGeometry(1, 8, 6);
@@ -14,12 +18,14 @@ function ball(b, color, x, y, z, sx, sy = sx, sz = sx, large = false, rot) {
   b.put(large ? BALL : SMALL, x, y, z, color, [sx, sy, sz], rot);
 }
 function rod(b, color, a, c, radius = .025) {
+  if (isLimb([a, c], radius)) return limb(b, color, [a, c], fat(radius), fat(radius) * .9, 3, fat(radius) * (c[1] > a[1] + .15 ? .95 : 1.25)); // (an antenna gets a small round bobble, a hand or foot a bigger one)
   const start = new THREE.Vector3(...a), end = new THREE.Vector3(...c), d = end.clone().sub(start);
   const rot = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, d.clone().normalize()));
   const p = start.add(end).multiplyScalar(.5);
   b.put(CYL, p.x, p.y, p.z, color, [radius, d.length(), radius], rot.toArray());
 }
 function stroke(b, color, points, radius = .022, segments = 7, closed = false) {
+  if (!closed && isLimb(points, radius)) return limb(b, color, points, fat(radius), fat(radius) * .9, segments + 2, fat(radius) * 1.25);
   const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)), closed);
   const shape = new THREE.TubeGeometry(curve, segments, radius, 4, closed);
   b.put(shape, 0, 0, 0, color); shape.dispose();
@@ -75,7 +81,7 @@ function tuft(b) {
   stroke(b, GREEN, [[-.09, .46, .04], [0, .29, .12], [.10, .44, .09]], .032, 5);
   for (const s of [-1, 1]) {
     stroke(b, GREEN, [[s * .1, .43, 0], [s * .18, .15, 0], [s * .39, .21, .02], [s * .50, .04, .02]], .023, 6);
-    ball(b, BROWN, s * .11, .85, .287, .016, .017, .012);
+    shinyEye(b, s * .12, .87, .25, .07, { iris: BROWN });
   }
   stroke(b, BROWN, [[-.09, .66, .276], [0, .61, .285], [.08, .66, .276]], .018, 5);
   rod(b, BROWN, [-.38, .84, 0], [-.80, .87, 0], .025);
@@ -92,13 +98,13 @@ function tuft(b) {
 function tall(b) {
   // A spun pear gives the narrow top and broad low belly real depth on every side.
   const g = new THREE.LatheGeometry([[.0, .27], [.24, .31], [.39, .52], [.43, .82], [.37, 1.20], [.26, 1.64], [.19, 1.95], [0, 1.98]].map(p => new THREE.Vector2(...p)), 14);
-  b.put(g, 0, 0, 0, '#d5e0ef', [1, 1, .75]); g.dispose();
+  b.put(g, 0, 0, 0, '#b4cdf2', [1, 1, .75]); g.dispose();
   stroke(b, BLUE, [[-.20, 1.91, .025], [-.28, 1.59, .025], [-.38, 1.13, .025], [-.42, .72, .025], [-.28, .36, .025], [0, .28, .025], [.29, .38, .025], [.43, .75, .025], [.35, 1.24, .025], [.19, 1.94, .025]], .024, 16);
   stroke(b, BLUE, [[-.35, 1.02, 0], [-.66, .97, 0], [-.92, .89, .01]], .024, 5);
   stroke(b, BLUE, [[.33, 1.23, 0], [.64, 1.39, 0], [.95, 1.45, .01]], .024, 5);
   for (const s of [-1, 1]) stroke(b, BLUE, [[s * .17, .36, 0], [s * .29, .15, 0], [s * .44, .08, .02]], .024, 5);
-  ball(b, BLUE, -.13, 1.29, .274, .036, .064, .024);
-  ball(b, BLUE, .13, 1.22, .285, .065, .088, .025, false, [0, 0, .35]);
+  shinyEye(b, -.13, 1.29, .25, .065, { tall: 1.5, iris: BLUE });
+  shinyEye(b, .13, 1.22, .26, .085, { tall: 1.2, iris: BLUE });
   for (const x of [-.07, .08]) ball(b, BLUE, x, 1.01, .318, .025, .031, .022);
   ball(b, BLUE, -.035, .86, .327, .022, .036, .022);
   stroke(b, BLUE, [[-.16, .78, .307], [-.08, .70, .327], [0, .69, .334], [.10, .76, .318]], .023, 7);
@@ -109,8 +115,9 @@ function ears(b) {
   ball(b, PALE, -.46, 1.66, -.007, .145, .385, .14, false, [0, 0, .60]);
   ball(b, INK, .49, 1.39, -.02, .245, .265, .16);
   ball(b, PALE, .49, 1.39, .002, .22, .24, .16);
-  solid(b, INK, [[-.02, 1.47], [-.06, 1.80], [.10, 2.01], [.42, 2.03], [.58, 1.91], [.32, 1.91], [.20, 1.78], [.17, 1.48]], .14, -.02);
-  solid(b, PALE, [[.015, 1.53], [-.018, 1.79], [.12, 1.97], [.41, 1.99], [.47, 1.95], [.30, 1.95], [.17, 1.80], [.13, 1.53]], .11, .017);
+  // (build 124) the tall ear that bends over at the top: a soft round tube, dark outside with a pale inside
+  limb(b, INK, [[.06, 1.42, -.02], [.05, 1.78, -.02], [.18, 1.98, -.02], [.40, 2.0, -.02], [.56, 1.93, -.02]], .12, .05, 14);
+  limb(b, PALE, [[.06, 1.5, .03], [.06, 1.78, .04], [.18, 1.95, .04], [.38, 1.97, .03], [.5, 1.93, .02]], .085, .03, 14);
   ball(b, INK, 0, .89, 0, .51, .65, .29, true);
   ball(b, PALE, 0, .89, .017, .486, .626, .289, true);
   const left = [[-.38, .99], [-.36, 1.31], [-.12, 1.19], [-.11, 1.05]];
@@ -118,8 +125,8 @@ function ears(b) {
   solid(b, PALE, [[-.35, 1.02], [-.33, 1.27], [-.15, 1.17], [-.14, 1.07]], .022, .315);
   solid(b, INK, [[.0, .81], [.15, 1.19], [.30, 1.11], [.35, .98]], .025, .29);
   solid(b, PALE, [[.045, .86], [.16, 1.15], [.27, 1.09], [.31, .99]], .022, .315);
-  rod(b, INK, [-.23, 1.15, .357], [-.23, 1.08, .357], .015);
-  rod(b, INK, [.17, 1.03, .357], [.17, .96, .357], .015);
+  shinyEye(b, -.23, 1.12, .33, .065, { iris: INK });
+  shinyEye(b, .19, 1.0, .33, .065, { iris: INK });
   stroke(b, INK, [[-.20, .67, .281], [-.06, .61, .303], [.04, .65, .299]], .019, 6);
   for (const s of [-1, 1]) {
     rod(b, INK, [s * .46, .89, 0], [s * 1.02, .96, .015], .022);
@@ -129,9 +136,9 @@ function ears(b) {
 
 function flower(b) {
   const blue = '#6c9fc1';
-  solid(b, blue, [[.20, .10], [-.32, .20], [-.57, .52], [-.39, .89], [.27, 1.03], [.27, .16]], .31);
-  solid(b, PALE, [[.18, .14], [-.29, .24], [-.52, .52], [-.36, .85], [.23, .98], [.23, .19]], .28, .03);
-  for (const p of [ [[-.42, .73, .20], [-.11, .69, .21], [.25, .61, .20]], [[-.50, .56, .20], [0, .52, .21], [.25, .43, .20]], [[-.32, .30, .20], [-.02, .28, .21], [.23, .19, .20]] ]) stroke(b, blue, p, .018, 6);
+  // (build 124) the drawing's striped pot, puffed into a soft round body
+  const pot = puff(b, '#a9cbe6', [[.20, .10], [-.32, .20], [-.57, .52], [-.39, .89], [.27, 1.03], [.27, .16]], .26, '#eef5fb');
+  for (const p of [ [[-.42, .73], [-.11, .69], [.2, .62]], [[-.48, .56], [0, .52], [.2, .45]], [[-.32, .30], [-.02, .28], [.2, .2]] ]) drawOn(b, blue, pot, p, .02);
   // Each lobe is a rounded volume; the face bridges them as one soft flower toy.
   for (let i = 0; i < 8; i++) {
     const a = Math.PI * 2 * i / 8, x = Math.cos(a) * .36, y = 1.43 + Math.sin(a) * .36, r = a - Math.PI / 2;
@@ -139,8 +146,8 @@ function flower(b) {
     ball(b, PALE, x, y, .014, .17, .22, .20, false, [0, 0, r]);
   }
   ball(b, PALE, 0, 1.43, .015, .38, .38, .235, true);
-  rod(b, blue, [-.12, 1.56, .25], [-.10, 1.40, .26], .017);
-  rod(b, blue, [.13, 1.56, .25], [.12, 1.40, .26], .017);
+  shinyEye(b, -.12, 1.49, .22, .075, { iris: '#2f5878' });
+  shinyEye(b, .13, 1.49, .22, .075, { iris: '#2f5878' });
   stroke(b, blue, [[-.15, 1.35, .253], [-.03, 1.32, .265], [.09, 1.36, .261]], .017, 6);
 }
 

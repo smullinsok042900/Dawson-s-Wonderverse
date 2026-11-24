@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 124 (drawing friends as round 3D toys, walk-in Ferris wheel, steps out of her path)
+Desktop, software rendering; `pearth.cjs` (iPhone-sized touch viewport, adaptive quality frozen), builds 123 and 124, old/new/old/new. Median frame ms per spot / draw calls / k triangles.
+- **Bridge trail** (four drawing twins together at 432–471; 436, 452, 470, 489, 505, 520, 538): mean of the seven spots 651 and 644 ms (build 123) vs 628 and 621 ms (build 124); draw calls identical (90–112); triangles within run-to-run noise.
+- **Art Plaza** (orange scribble friend and the chalk person; 845–880): 295 vs 295.6 ms mean; draw calls identical.
+- Creature shapes (one cached mesh each, same shared material, no new shader): the twenty rebuilt friends went from 1,170–2,520 to 1,430–3,800 triangles (doodle friends 2,600–3,350). The first version measured up to 5,240 and was trimmed (fewer rings and sides) with no visible change.
+- Ferris wheel cars, the learning-toy stands and the moved steps change no draw-call count per area (each car is still one mesh). Not measured on the iPhone.
+
 ## Build 123 (fixes from the family's pictures)
 Desktop, software rendering; `ba.cjs`, builds 122 and 123, six rounds in both orders (script ms per frame, median / mean): park 17.7 / 18.2 → 16.0 / 15.8, creatures 13.35 / 13.0 → 12.95 / 13.2, castle 14.5 / 15.4 → 17.05 / 16.9. The castle view lands in one of two states on any build (about 200–230 or 330–360 draw calls, script 11.7–19.6 ms): build 122 itself measured 344 and 353 in two single runs, and copies of build 123 with each changed file put back measured 191–227 — that is the measurement, not this change. Shader programs 127 in both.
 

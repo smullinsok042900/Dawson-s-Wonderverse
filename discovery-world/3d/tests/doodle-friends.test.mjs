@@ -26,6 +26,9 @@ const vertices = mesh => {
   const p = mesh.geometry.attributes.position, c = mesh.geometry.attributes.color;
   return Array.from({ length: p.count }, (_, i) => ({ x: p.getX(i), y: p.getY(i), z: p.getZ(i), color: new THREE.Color(c.getX(i), c.getY(i), c.getZ(i)) }));
 };
+// (build 124) the family asked for real round 3D characters instead of pale paper cut-outs: the body is now soft toy
+// fabric in a lighter shade of the drawing's own crayon (same hue, clearly lighter), and the marks stay in the crayon itself
+const toyTint = (color, ink) => { const a = {}, b = {}; color.getHSL(a); new THREE.Color(ink).getHSL(b); const dh = Math.min(Math.abs(a.h - b.h), 1 - Math.abs(a.h - b.h)); return dh < .08 && a.l > b.l + .1; };
 const paint = (p, hex) => { const c = new THREE.Color(hex); return Math.hypot(p.color.r - c.r, p.color.g - c.g, p.color.b - c.b) < .03; };
 function front(mesh, x, y) {
   const hit = new THREE.Raycaster(new THREE.Vector3(x, y, 3), new THREE.Vector3(0, 0, -1)).intersectObject(mesh)[0];
@@ -53,7 +56,7 @@ test('every outline is one thick, bounded painted mesh within the mobile triangl
     assert.ok(size.y >= 1.4 && size.y <= 2.2, `${key} is the other residents' size`);
     assert.ok(size.x <= 2.7 && size.z >= .35 && size.z <= .9, `${key} is a solid toy beside the path`);
     assert.ok(mesh.geometry.index.count / 3 <= 3000, `${key} stays below 3000 triangles`);
-    assert.ok(vertices(mesh).filter(p => paint(p, '#fff6df')).length > 50, `${key} retains unfilled paper as pale toy paint`);
+    assert.ok(vertices(mesh).filter(p => toyTint(p.color, DOODLE_FRIENDS[key].play.colors[0])).length > 50, `${key} is soft toy fabric in a lighter shade of its own crayon`);
   }
 });
 
@@ -70,7 +73,7 @@ test('the pink-paper twins remain related but have different heights, silhouette
   assert.ok(twin.max.y > first.max.y + .1, 'second drawing is the taller twin');
   assert.ok(twin.max.x - twin.min.x > first.max.x - first.min.x + .1, 'continuous sled is wider than loop feet');
   assert.ok(paint(front(b, 0, .87), '#684268'), 'taller twin has her own raised smile');
-  assert.ok(paint(front(b, -.30, 1.53), '#fff6df'), 'straighter taller body has a pale upper shoulder');
+  assert.ok(toyTint(front(b, -.30, 1.53).color, '#684268'), 'straighter taller body has a solid light upper shoulder');
   assert.match(DOODLE_FRIENDS.doodleantenna.voice, /twin/); assert.match(DOODLE_FRIENDS.doodleantennatwin.voice, /twin/);
 });
 
@@ -113,7 +116,7 @@ test('blue square keeps its rounded box body and two long vertical eye strokes',
   const m = meshes.doodlebox, ink = '#719ec6';
   assert.ok(paint(front(m, -.17, 1.25), ink)); assert.ok(paint(front(m, .19, 1.27), ink));
   assert.ok(paint(front(m, 0, .94), ink), 'shallow smile');
-  assert.ok(paint(front(m, .38, 1.53), '#fff6df'), 'square upper shoulder remains solid and pale');
+  assert.ok(toyTint(front(m, .38, 1.53).color, '#719ec6'), 'square upper shoulder remains solid and light');
 });
 
 test('loop-eyed friend keeps asymmetric spiral eyes, raised hands and the top curl', () => {

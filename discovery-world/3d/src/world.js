@@ -329,7 +329,7 @@ export function buildWorld(G) {
   // spokes, and a bolted hub with flanges. Steel, accent and brass parts are merged into three meshes;
   // each gondola is one mesh: a bevelled cab, deep tinted windows, a padded bench, a scalloped roof
   // and a hanger arm. That is 13 draws for the whole ride where the old flat version needed 40.
-  const fw = new THREE.Group(); fw.position.set(160, 7.5, -3.2); add(fw);
+  const fw = new THREE.Group(); fw.position.set(160, 8.5, -3.2); add(fw); // (build 124: a metre higher, so the bigger walk-in cars reach the ground at the bottom)
   const frameParts = [], cageSteel = [], rimPink = [], brass = [];
   const legR = y => 2.2 - Math.tan(.28) * (y + 3.9);          // half the spread of the legs at height y
   const bar3 = (ax, ay, az, bx2, by2, bz2, r) => {
@@ -339,11 +339,11 @@ export function buildWorld(G) {
     g.translate((ax + bx2) / 2, (ay + by2) / 2, (az + bz2) / 2); return g;
   };
   for (const z of [-.62, .62]) {
-    for (const s of [-1, 1]) { const l = new THREE.CylinderGeometry(.17, .25, 8.6, 14); l.rotateZ(s * .28); l.translate(s * 2.2, -3.9, z); frameParts.push(tintGeo(l, '#f7fbff')); l.dispose(); }
+    for (const s of [-1, 1]) { const l = new THREE.CylinderGeometry(.17, .25, 9.63, 14); l.rotateZ(s * .28); l.translate(s * legR(-4.4), -4.4, z); frameParts.push(tintGeo(l, '#f7fbff')); l.dispose(); }
     for (const y of [-1.4, -4.4]) frameParts.push(tintGeo(bar3(-legR(y), y, z, legR(y), y, z, .075), '#eef7ff'));
     frameParts.push(tintGeo(bar3(-legR(-7.2), -7.2, z, legR(-1.6), -1.6, z, .055), '#e6f2fb'));
     frameParts.push(tintGeo(bar3(legR(-7.2), -7.2, z, -legR(-1.6), -1.6, z, .055), '#e6f2fb'));
-    for (const s of [-1, 1]) { const foot = new THREE.CylinderGeometry(.46, .56, .26, 12); foot.translate(s * legR(-8.0), -7.95, z); frameParts.push(tintGeo(foot, '#dfeef8')); foot.dispose(); }
+    for (const s of [-1, 1]) { const foot = new THREE.CylinderGeometry(.46, .56, .26, 12); foot.translate(s * legR(-9.0), -8.95, z); frameParts.push(tintGeo(foot, '#dfeef8')); foot.dispose(); }
   }
   { const ax = new THREE.CylinderGeometry(.11, .11, 1.9, 10); ax.rotateX(Math.PI / 2); frameParts.push(tintGeo(ax, '#eef7ff')); ax.dispose(); }
   const wheel = new THREE.Group(); fw.add(wheel);
@@ -375,22 +375,30 @@ export function buildWorld(G) {
   for (let i = 0; i < 10; i++) {
     const g = new THREE.Group(); fw.add(g);
     const parts = [], col = RAINBOW[i % 8];
-    const cab = new RoundedBoxGeometry(1.32, .92, 1.14, 2, .22); cab.translate(0, -.78, 0); parts.push(tintGeo(cab, col));
-    const under = new RoundedBoxGeometry(1.06, .16, .92, 1, .07); under.translate(0, -1.27, 0); parts.push(tintGeo(under, '#fff6fb'));
-    for (const z of [.585, -.585]) { const win = new RoundedBoxGeometry(1.02, .4, .05, 1, .08); win.translate(0, -.7, z); parts.push(tintGeo(win, '#31507a')); }
-    const bench = new RoundedBoxGeometry(.92, .12, .42, 1, .04); bench.translate(0, -1.0, .26); parts.push(tintGeo(bench, '#fff6df'));
-    const bar = new THREE.CylinderGeometry(.035, .035, 1.0, 8); bar.rotateZ(Math.PI / 2); bar.translate(0, -1.34, .5); parts.push(tintGeo(bar, '#ffd84a'));
-    const roof = new THREE.SphereGeometry(.78, 22, 11, 0, Math.PI * 2, 0, Math.PI / 2); roof.scale(1, .72, .88); roof.translate(0, .0, 0); parts.push(tintGeo(roof, '#ffffff'));
-    const skirt = new THREE.TorusGeometry(.78, .045, 8, 30); skirt.rotateX(Math.PI / 2); skirt.scale(1, 1, .88); skirt.translate(0, .015, 0); parts.push(tintGeo(skirt, '#ffd84a'));
-    for (const sx of [-.42, .42]) { const hang = new THREE.CylinderGeometry(.035, .035, .34, 7); hang.translate(sx, -.16, 0); parts.push(tintGeo(hang, '#ffffff')); }
+    // (build 124) an OPEN car she really walks into: a floor, a back wall, side walls with windows, a low front rail
+    // (so she shows above it), four corner posts and the scalloped roof. Still one mesh per car.
+    const box = (w, h, d, x, y, z, c, r = .05) => { const b = new RoundedBoxGeometry(w, h, d, 1, r); b.translate(x, y, z); parts.push(tintGeo(b, c)); };
+    box(1.9, .14, 1.5, 0, -1.95, 0, col, .06);                       // floor
+    box(1.7, .05, 1.3, 0, -1.875, 0, '#fff6fb', .02);                // floor mat
+    box(1.9, 1.05, .1, 0, -1.4, -.72, col);                          // back wall
+    box(1.3, .4, .04, 0, -1.25, -.665, '#31507a', .03);              // back window
+    for (const sx of [-.93, .93]) { box(.1, .62, 1.5, sx, -1.6, 0, col); box(.1, .1, 1.5, sx, -1.08, 0, '#ffd84a', .04); }
+    box(1.9, .4, .1, 0, -1.7, .72, col);                             // low front rail
+    box(1.9, .1, .14, 0, -1.47, .72, '#ffd84a', .04);                 // its padded top
+    box(1.5, .14, .42, 0, -1.6, -.45, '#fff6df', .05);                // bench along the back wall
+    for (const sx of [-.9, .9]) for (const sz of [-.7, .7]) { const post = new THREE.CylinderGeometry(.045, .045, 1.55, 8); post.translate(sx, -1.18, sz); parts.push(tintGeo(post, '#ffffff')); }
+    const roof = new THREE.SphereGeometry(1.05, 22, 11, 0, Math.PI * 2, 0, Math.PI / 2); roof.scale(1.02, .5, .82); roof.translate(0, -.42, 0); parts.push(tintGeo(roof, '#ffffff'));
+    const skirt = new THREE.TorusGeometry(1.05, .05, 8, 30); skirt.rotateX(Math.PI / 2); skirt.scale(1.02, 1, .82); skirt.translate(0, -.41, 0); parts.push(tintGeo(skirt, '#ffd84a'));
+    for (const sx of [-.42, .42]) { const hang = new THREE.CylinderGeometry(.04, .04, .2, 7); hang.translate(sx, -.1, 0); parts.push(tintGeo(hang, '#ffffff')); }
     const pivot = new RoundedBoxGeometry(.52, .09, .18, 1, .05); parts.push(tintGeo(pivot, '#ffd84a'));
+    { const pin = new THREE.CylinderGeometry(.07, .07, 1.0, 10); pin.rotateX(Math.PI / 2); pin.translate(0, 0, -.5); parts.push(tintGeo(pin, '#ffd84a')); } // the pin that hangs the car on the rim
     const shell = new THREE.Mesh(mergeMixed(parts), cabM);
     shell.castShadow = shell.receiveShadow = true; g.add(shell); parts.forEach(x => x.dispose());
-    // (stage 9) the rider stands on the padded bench, not in mid-air above it: the seat sits on the bench top
-    const seat = new THREE.Object3D(); seat.position.set(0, -.94, .26); g.add(seat);
+    // (build 124) the rider stands on the car's floor, in the middle, behind the front rail
+    const seat = new THREE.Object3D(); seat.position.set(0, -1.86, .1); g.add(seat);
     gondolas.push({ g, seat, i });
   }
-  G.wheel = { group: fw, wheel, gondolas, angle: 0, r: 6.4 };
+  G.wheel = { group: fw, wheel, gondolas, angle: 0, r: 6.4, carZ: 1.45 }; // (build 124) the cars hang in front of the rim, never through it
   // build 16: a cute ticket kiosk (panelled walls, a framed window and counter, a striped scalloped awning, light bulbs)
   { const K = new THREE.Group(); K.position.set(167.5, 0, -2.4); add(K);
     const wall = new THREE.Mesh(new RoundedBoxGeometry(2.2, 1.9, 2, 4, .22), toy('#bfe6ff', { r: .55, cc: .3 })); wall.position.y = .95; wall.castShadow = wall.receiveShadow = true; K.add(wall);

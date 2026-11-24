@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 124: round 3D drawing friends, a walk-in Ferris wheel
+- **The twenty drawing friends are round plush toys now** (the doodle twins, the bean, square, spiral-eyed, big-head, leaf, tuft, tall, big-eared and flower friends, the marker friends and both scribble friends): soft round bodies in their drawing's colours, shiny eyes, chunky arms and legs. Same names, homes, voices and games.
+- **Ferris wheel:** the wheel stops with a car at the ground, she walks into the open car, rides round, and steps out at the bottom.
+- **No more walking through steps:** the climbing steps in Balloon Hills, Frosty Peaks, the farm, the pier, the trail and Toy Town stand behind her path, and she climbs onto them. The learning-game screens and their floating spots are gone (the family asked); quests that used them now send her to places in the world, and quests already finished keep their rewards.
+
 ## 3D build 123: fixes from the family's pictures
 - Pets wait on the ground during rides and jumps, the zip-line handle is in her hands, the shadow screen shows dark shadows on the iPhone, train platforms stand beside the track, the seesaw stands behind the path, the magnet hangs on a rope, and no toy sticks out of Dottie's neck.
 
