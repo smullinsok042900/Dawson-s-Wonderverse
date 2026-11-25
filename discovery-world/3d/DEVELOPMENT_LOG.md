@@ -6,6 +6,16 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 134 — FRIENDS' ROCKETS IN OPEN SPACE REALLY SHOW (family report)
+The family saw that in Play Together, friends in open space could not see each other's rockets. Cause: build 127 sent the
+rocket in a new player field, `dk`; the family's Firebase database only accepts it after the rules are published again, and
+until then the game (on purpose, so nothing else breaks) leaves it out — so the rocket never arrived. The test relay accepts
+any field, so the tests could not see it. Fix: the rocket now rides in the pets text (`~x,y,z,turn`, under 60 letters), a field
+every version of the rules accepts; receivers read it from there (or from `dk`). No rules change needed. Pets are not sent
+while in open space (they wait in the rocket there anyway).
+- `space-together.cjs` 7/7, with a new check that from open space only the fields of the older rules are sent (it would
+  have failed on builds 127–133).
+
 ## Checkpoint: build 133 — THE BUBBLE UNIVERSE (the third dimension)
 A third 🌀 wormhole (soft white, blue and pink) leads to **the Bubble Universe** (`src/bubble.js`): foam hills, giant bubbles
 resting on the foam and drifting up through a pastel sky, and a very light, floaty pull (3.2 m/s², made-up).
