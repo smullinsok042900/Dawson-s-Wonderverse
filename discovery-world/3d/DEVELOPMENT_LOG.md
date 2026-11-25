@@ -18,7 +18,7 @@ book and two little hero toys). They live together on the Adventure Trail, just 
 - Each one speaks to Dawson ("Hi Dawson! It is Dad! I love you so much!") and plays when tapped (hug, twirl, sparkle, bounce).
 - Placed clear of the trail's activity spots (read from the running game; `tests/activity-spots.json` now also lists the
   trail, the woods and the pier) and of every older friend; Grandpa was moved off the zip-line pole after a picture check.
-- Tests: `family.test.mjs` 4/4; all 142 unit tests pass.
+- Tests: `family.test.mjs` 4/4; all 142 unit tests pass. **Full smoke test: 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 129 — THIRTY MORE STORY FRIENDS (the family's second set of pictures)
 Again original friends in the spirit of the shows in the pictures (the real characters belong to other companies), built

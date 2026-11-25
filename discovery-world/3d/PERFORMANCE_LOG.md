@@ -4,6 +4,10 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 130 (Dawson and her family on the Adventure Trail)
+Desktop, software rendering; `pearth.cjs trail`, build 129 vs build 130, two rounds each, mean of the 7 spots' median frame ms:
+592 → 548 ms (not slower; within the run-to-run spread). Draw calls +4 to +8 where the family is in view (one per character). Not measured on the iPhone.
+
 ## Build 129 (thirty more story friends)
 Desktop, software rendering; `pearth.cjs`, build 128 vs build 129, two rounds each, mean of the spots' median frame ms.
 - **Toy Town** (the four monsters and the toy clinic): 276 → 281 ms (+2%, within the ±5% noise); draw calls +4 to +6 where the clinic is in view.
