@@ -19,7 +19,7 @@ resting on the foam and drifting up through a pastel sky, and a very light, floa
   checked along the whole step (so a slow phone never misses one).
 - One see-through material for every bubble; the still ones are batched. Creatures: the Bloopers; pets **Glub** (a fish in its
   own bubble) and **Foamy** (a soap-foam puppy).
-- Tests: `multiverse.cjs` 33/33 (10 new bubble checks, with the real arrow keys and JUMP).
+- Tests: `multiverse.cjs` 33/33 (10 new bubble checks, with the real arrow keys and JUMP). **Full smoke test: 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 132 — THE GIANT TOY UNIVERSE (the second dimension)
 A second 🌀 wormhole (yellow, red and blue) leads to **the Giant Toy Universe** (`src/toy.js`): she is the size of a toy mouse,
