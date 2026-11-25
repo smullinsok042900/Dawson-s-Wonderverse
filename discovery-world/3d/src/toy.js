@@ -13,6 +13,7 @@ import * as K from './spacekit.js';
 import { toy } from './creatures.js';
 import { populate } from './planet-life.js';
 import { tubeAlong, pathRide, star } from './upside.js';
+import { brickHouse } from './lego.js';
 
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 16), BALL = new THREE.SphereGeometry(1, 18, 12), BOX = new THREE.BoxGeometry(1, 1, 1), CONE = new THREE.ConeGeometry(1, 1, 14);
 CYL.userData.shared = BALL.userData.shared = BOX.userData.shared = CONE.userData.shared = true;
@@ -42,7 +43,7 @@ export function* toyLanding(c) {
   for (let k = 0; k < 6; k++) props.put(CYL, X + 200, .6 + k * 1.2, -30, BRIGHT[k], [6 - k * .8, 1.1, 6 - k * .8]); props.put(CYL, X + 200, 4, -30, '#c8a070', [.5, 8, .5]); // ring stacker
   yield;
   // GIANT BLOCK TOWERS to climb: each block is a real step (1.2 m: she hops up), with a lookout on top and a star
-  const kk = { add, Sound, api, tapIt, U, P, G, disc: id => api.discover && api.discover(id) }; // (what star() needs)
+  const kk = { add, Sound, api, tapIt, U, P, G, say: c.say, disc: id => api.discover && api.discover(id) }; // (what star() needs)
   for (let j = 0; j < 6; j++) { const x = X + 24 + j * 2.4; for (let r = 0; r <= j; r++) for (const dx of [-.6, .6]) block(props, x + dx, r * 1.2, -.4, 1.2, BRIGHT[(j + r + (dx > 0 ? 1 : 0)) % 6]);
     c.G.platforms.push({ a: x - 1.2, b: x + 1.2, y: (j + 1) * 1.2, layer: 'space', z: -.4, step: true, stepMax: 1.3 }); }
   c.G.platforms.push({ a: X + 36, b: X + 41, y: 7.2, layer: 'space', z: -.4, step: true, stepMax: 1.3 }); // the lookout on top
@@ -57,6 +58,8 @@ export function* toyLanding(c) {
     c.G.platforms.push({ a: x - r * .7, b: x + r * .7, y: r * 2, layer: 'space', z: -.5, pad: true, bounce, nudge: j < balls.length - 1 ? (balls[j + 1][0] - x - .5) / 1.1 : 0, /* (the sideways push lasts 1.1 s: aimed at the next ball's middle) */ onLand: () => { ballMeshes[j].squish = 1; Sound.tone && Sound.tone(392 * Math.pow(1.26, j), .14, 'sine', .06, 1.4); if (j === balls.length - 1) kk.disc('bouncyballs'); } });
   }
   U.push(dt => { for (const o of ballMeshes) { if (o.squish > 0) o.squish = Math.max(0, o.squish - dt * 3); const q = Math.sin(o.squish * 9) * o.squish * .22; o.m.scale.set(o.r * (1 + q), o.r * (1 - q), o.r * (1 + q)); o.m.position.y = o.r * (1 - q); } });
+  // (build 135) DAWSON'S OWN BRICK HOUSE: she designs it brick by brick, puts the door on, and walks inside (lego.js)
+  G.brickHouse = brickHouse(kk, X + 72.6, -1);
   // THE GIANT WIND-UP KEY: tap it and the clockwork parade marches (a duck, a drum and a mouse waddle along the mat)
   const key = new THREE.Group(); key.position.set(X + 86, 0, -2.6); add(key);
   { const kb = K.makeBatch(); kb.put(BOX, 0, 2.8, 0, '#c8a070', [.5, 5.6, .5]); for (const s of [-1, 1]) kb.put(CYL, s * 1.5, 5.8, 0, '#ffd23f', [1.4, .4, 1.4], [Math.PI / 2, 0, 0]); kb.put(CYL, 0, 5.8, 0, '#ffd23f', [.5, .7, .5], [0, 0, Math.PI / 2]); key.add(kb.mesh(K.shinyMat())); }
