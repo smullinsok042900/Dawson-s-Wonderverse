@@ -27,14 +27,14 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     const X = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
     // fall UP: step on the first arrow
     await p.evaluate(X => { const P = __DDW3.player; P.ride = null; P.x = X + 19; P.y = 0; P.vx = 2; __DDW3.G.playerHidden = false; }, X);
-    const up = await until(() => __DDW3.G.gravSign === -1 && __DDW3.player.grounded && Math.abs(__DDW3.player.y - 15) < .05, null, 30000);
+    const up = await until(() => __DDW3.G.gravSign === -1 && __DDW3.player.grounded && Math.abs(__DDW3.player.y - 10.5) < .05, null, 30000);
     const flipped = await p.evaluate(() => ({ y: __DDW3.player.y, k: __DDW3.G.flipK }));
     check('a ⬆️ arrow flips gravity: she falls UP and stands on the sky land, head down', up && flipped.k > .9, JSON.stringify(flipped));
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'upside-ceiling.jpg'), type: 'jpeg', quality: 85 });
     await p.evaluate(() => { window.__minY = 99; const f = () => { const P = __DDW3.player; window.__minY = Math.min(window.__minY, P.y); if (performance.now() < window.__until) requestAnimationFrame(f); }; window.__until = performance.now() + 4000; f(); });
     await p.locator('#jumpBtn').tap(); await sleep(4200); const jump = await p.evaluate(() => window.__minY);
-    check('jumping on the sky land goes DOWN (away from it), then she falls back up', jump < 14, 'lowest y ' + jump);
-    await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 15) < .05, null, 20000);
+    check('jumping on the sky land goes DOWN (away from it), then she falls back up', jump < 9.5, 'lowest y ' + jump);
+    await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 10.5) < .05, null, 20000);
     // walk to the ⬇️ arrow: she floats gently back down
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 45; P.vx = 2; }, X);
     const down = await until(() => __DDW3.G.gravSign === 1 && __DDW3.player.grounded && __DDW3.player.y < .05 && __DDW3.G.flipK < .05, null, 30000);
@@ -43,15 +43,15 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 150; P.y = 0; }, X); await sleep(6000);
     const ledges = await p.evaluate(() => __DDW3.G.platforms.filter(z => z.layer === 'space' && z.ceil && z.y < 14.9).length);
     check('Upside-Down Town and the hanging castle are built: ledges to stand on underneath', ledges >= 9, ledges + ' ledges');
-    await p.evaluate(X => { const P = __DDW3.player; __DDW3.G.gravSign = -1; P.x = X + 110 + 52 - 7 + 1.5; P.y = 13; P.vy = 2; P.grounded = false; }, X);
-    check('she lands on the underside of a castle ledge (13.5 m)', await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 13.5) < .05, null, 15000));
-    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 92; P.y = 15; P.grounded = true; P.vy = 0; const it = __DDW3.G.interact.find(i => i.icon === '🛝'); it && it.run(); }, X);
+    await p.evaluate(X => { const P = __DDW3.player; __DDW3.G.gravSign = -1; P.x = X + 110 + 52 - 7 + 1.5; P.y = 8.5; P.vy = 2; P.grounded = false; }, X);
+    check('she lands on the underside of a castle ledge (1.5 m below the sky land)', await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 9) < .05, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 92; P.y = 10.5; P.grounded = true; P.vy = 0; const it = __DDW3.G.interact.find(i => i.icon === '🛝'); it && it.run(); }, X);
     const slid = await until(() => !__DDW3.player.ride && __DDW3.G.gravSign === 1 && __DDW3.player.y < 1 && __DDW3.G.flipK < .05, null, 30000);
     check('the gravity slide takes her from the sky land down to the meadow, the right way up', slid);
     // area 3: the flip coaster goes upside down along the sky land and comes home
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 226; P.y = 0; }, X); await sleep(6000);
     const top = await p.evaluate(async () => { const it = __DDW3.G.interact.find(i => i.icon === '🎢'); if (!it) return -1; __DDW3.player.x = it.x; it.run(); let best = 0, k = 0; for (let n = 0; n < 200 && __DDW3.player.ride; n++) { await new Promise(r => setTimeout(r, 100)); if (__DDW3.player.y > best) { best = __DDW3.player.y; k = __DDW3.G.flipK; } } return { best, k, ride: !!__DDW3.player.ride }; });
-    check('the flip coaster climbs onto the sky land, upside down, and comes back', top.best > 13.5 && top.k > .8 && !top.ride, JSON.stringify(top));
+    check('the flip coaster climbs onto the sky land, upside down, and comes back', top.best > 9.3 && top.k > .8 && !top.ride, JSON.stringify(top));
     // the pets of this world
     check('the Upside-Down pets live here (Topsy and Dropsy)', await p.evaluate(() => ['pet_flipbun', 'pet_dropsy'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
     // fly home: everything back to normal

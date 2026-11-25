@@ -1,6 +1,6 @@
 // ===================================================================
 // upside.js (build 131): THE UPSIDE-DOWN WORLD, the first dimension behind a wormhole (dimensions.js).
-// Over the meadow, 15 m up, hangs a whole upside-down land: grass, trees, houses, a castle and a river, all hanging down.
+// Over the meadow, 10.5 m up, hangs a whole upside-down land: grass, trees, houses, a castle and a river, all hanging down.
 // GRAVITY REALLY FLIPS: step on a glowing ⬆️ arrow and she falls UP, lands on the underside of the sky land and walks on
 // it head-down (main.js: G.gravSign; landing on `ceil` surfaces from below). A ⬇️ arrow up there flips her back and she
 // floats gently down. The camera stays upright and eases a little lower (no spinning world), and the voice explains, so
@@ -18,7 +18,7 @@ import * as K from './spacekit.js';
 import { toy } from './creatures.js';
 import { populate } from './planet-life.js';
 
-export const CEIL = 15; // where the sky land's underside is
+export const CEIL = 10.5; // where the sky land's underside is
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 14), BALL = new THREE.SphereGeometry(1, 16, 12), BOX = new THREE.BoxGeometry(1, 1, 1), CONE = new THREE.ConeGeometry(1, 1, 12);
 CYL.userData.shared = BALL.userData.shared = BOX.userData.shared = CONE.userData.shared = true;
 const FLIP = Math.PI;
@@ -88,9 +88,9 @@ export function* upsideLanding(c) {
   yield;
   // THE SKY LAND: its underside is a field of grass hanging over everything, with hanging hills further back
   const under = new THREE.PlaneGeometry(PW + 80, 64, 120, 32); under.rotateX(Math.PI / 2);
-  { const p = under.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i) + MID, z = p.getZ(i) - 29; p.setXYZ(i, x, CEIL - K.sstep(-6, -26, z) * (K.fbm2(x * .025, z * .04, 3) * 14 + 1.5), z); } under.computeVertexNormals(); }
+  { const p = under.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i) + MID, z = p.getZ(i) - 30; p.setXYZ(i, x, CEIL - K.sstep(-6, -26, z) * (K.fbm2(x * .025, z * .04, 3) * 9 + 1), z); } under.computeVertexNormals(); }
   matte.put(under, 0, 0, 0, (px, py, pz, nx, ny, nz, o) => { const n = K.fbm2(px * .5, pz * .5, 3); K.ramp(['#5fb878', '#8fd890', '#c8f0a8'], .3 + n * .5, o); if (K.noise2(px * 1.6, pz * 1.6) > .78) o.set(['#ff9ad8', '#fff07a'][Math.floor(K.hash2(px, pz) * 2)]); if (pz > 1) o.set('#8a6a4a'); });
-  props.put(BOX, MID, CEIL + 1.4, 1.6, '#8a6a4a', [PW + 80, 2.8, 2.6]); // the front edge of the sky land: earth and roots
+  props.put(BOX, MID, CEIL + .35, 1.2, '#6fbf7a', [PW + 80, .7, 1.6]); props.put(BOX, MID, CEIL + .75, 1.2, '#8a6a4a', [PW + 80, .2, 1.5]); // the front rim of the sky land: grass and a strip of earth
   for (let k = 0; k < 40; k++) props.put(CYL, X - 38 + k * ((PW + 76) / 40), CEIL - .25, 2.6, '#6a4a2a', [.06, .5 + (k % 3) * .2, .06]); // dangling roots
   yield;
   // hanging trees all along the sky land, houses near the landing, and mountains hanging far back
@@ -138,22 +138,22 @@ function town(k) {
     const ly = CEIL - h + .2; b.put(BOX, x, ly + .25, -.6, '#c89a6a', [3.2, .5, 1.6]); cp(x - 1.6, x + 1.6, ly);
     star(k, glowB, x + .9, ly - 1.1, 'housestar' + i);
   }
-  // THE HANGING CASTLE: towers point down; hop down its ledges (13.5 → 12 → 10.5 → 9) to the star at the very tip
-  const cx = s + 52; b.put(BOX, cx, CEIL - 2.2, -5, '#e8e0ff', [14, 4.4, 5]);
-  for (const [dx, hh] of [[-5.5, 9], [0, 11], [5.5, 9]]) { b.put(CYL, cx + dx, CEIL - hh / 2, -5, '#f0eaff', [1.6, hh, 1.6]); b.put(CONE, cx + dx, CEIL - hh - 1.2, -5, '#7a5ae0', [1.9, 2.4, 1.9], [FLIP, 0, 0]); b.put(CYL, cx + dx, CEIL - hh - 2.6, -5, '#ffd23f', [.04, .8, .04]); }
-  for (let w = 0; w < 7; w++) b.put(BOX, cx - 6 + w * 2, CEIL - 3.6, -2.45, '#fff3a6', [.6, .9, .05]);
-  for (const [j, y] of [13.5, 12, 10.5, 9].entries()) { const a = cx - 7 + j * 3.4, c2 = a + 3; b.put(BOX, (a + c2) / 2, y + .3, -.6, '#d8ccff', [3, .6, 1.8]); cp(a, c2, y); }
-  star(k, glowB, cx + 5.9, 7.6, 'castletip');
-  KIT.pads && k.G.interact.push({ x: cx + 5.9, y: 9, layer: 'space', icon: '⬇️', action: 'Float down!', hintY: -2.4, run: () => KIT.flip && KIT.flip(1) });
+  // THE HANGING CASTLE: towers point down; hop down its ledges (1.5, 3, 4.5 and 6 m below the sky land) to the star at the very tip
+  const cx = s + 52; b.put(BOX, cx, CEIL - 1.6, -5, '#e8e0ff', [14, 3.2, 5]);
+  for (const [dx, hh] of [[-5.5, 6], [0, 7.4], [5.5, 6]]) { b.put(CYL, cx + dx, CEIL - hh / 2, -5, '#f0eaff', [1.6, hh, 1.6]); b.put(CONE, cx + dx, CEIL - hh - 1.2, -5, '#7a5ae0', [1.9, 2.4, 1.9], [FLIP, 0, 0]); b.put(CYL, cx + dx, CEIL - hh - 2.6, -5, '#ffd23f', [.04, .8, .04]); }
+  for (let w = 0; w < 7; w++) b.put(BOX, cx - 6 + w * 2, CEIL - 2.4, -2.45, '#fff3a6', [.6, .9, .05]);
+  for (const [j, y] of [CEIL - 1.5, CEIL - 3, CEIL - 4.5, CEIL - 6].entries()) { const a = cx - 7 + j * 3.4, c2 = a + 3; b.put(BOX, (a + c2) / 2, y + .3, -.6, '#d8ccff', [3, .6, 1.8]); cp(a, c2, y); }
+  star(k, glowB, cx + 5.9, CEIL - 7.3, 'castletip');
+  KIT.pads && k.G.interact.push({ x: cx + 5.9, y: CEIL - 6, layer: 'space', icon: '⬇️', action: 'Float down!', hintY: -2.4, run: () => KIT.flip && KIT.flip(1) });
   // TWO-WAY ISLANDS: stand on top (normal gravity) or underneath (upside down). A bouncy pad on the meadow below.
   for (const [j, x] of [s + 70, s + 80].entries()) {
-    const y = 7.2 + j * .6; b.put(BALL, x, y, -.8, '#a8e8a0', [3.2, .7, 2]); b.put(BALL, x, y - .5, -.8, '#8a6a4a', [2.6, .6, 1.7]); hangTree(b, x + 1.2, -1.4, .5, false); // (a little tree on top...)
+    const y = 4.6 + j * .5; b.put(BALL, x, y, -.8, '#a8e8a0', [3.2, .7, 2]); b.put(BALL, x, y - .5, -.8, '#8a6a4a', [2.6, .6, 1.7]); hangTree(b, x + 1.2, -1.4, .5, false); // (a little tree on top...)
     b.put(CYL, x - 1, y + .6 + .9, -1.4, '#8a5a3a', [.12, 1.8, .12]); b.put(BALL, x - 1, y + .6 + 2, -1.4, '#ffb0e0', .7); b.put(CYL, x + 1, y - 1.1 - .7, -1.4, '#8a5a3a', [.12, 1.4, .12]); b.put(BALL, x + 1, y - 1.1 - 1.6, -1.4, '#c58cff', .6); // (...and one hanging underneath)
     k.plat(x - 2.8, x + 2.8, y + .6, { z: -.6 }); cp(x - 2.4, x + 2.4, y - 1.1);
-    b.put(CYL, x - 4.4, .12, -.6, '#ff6fd8', [1, .24, 1]); k.plat(x - 5.2, x - 3.6, .24, { pad: true, bounce: 16.5 + j * 1.2, z: -.6, step: true });
+    b.put(CYL, x - 4.4, .12, -.6, '#ff6fd8', [1, .24, 1]); k.plat(x - 5.2, x - 3.6, .24, { pad: true, bounce: 13.6 + j * .8, z: -.6, step: true });
   }
   // THE GRAVITY SLIDE: from the sky land down to the meadow; she turns the right way up on the way down
-  const sx = s + 92, path = [[sx, CEIL], [sx + 3, CEIL - 1.5], [sx + 7, 10], [sx + 11, 5], [sx + 15, 1.6], [sx + 18, .2]];
+  const sx = s + 92, path = [[sx, CEIL], [sx + 3, CEIL - 1.2], [sx + 7, 7], [sx + 11, 3.6], [sx + 15, 1.2], [sx + 18, .2]];
   tubeAlong(b, path.map(([x, y]) => [x, y - .25]), .5, '#ff6fd8', -1.2); tubeAlong(b, path.map(([x, y]) => [x, y - .2]), .12, '#ffffff', -.55); tubeAlong(b, path.map(([x, y]) => [x, y - .2]), .12, '#ffffff', -1.85);
   let sliding = false; const startSlide = () => { if (sliding || k.P.ride || k.G.gravSign !== -1) return; sliding = true; k.Sound.whoosh ? k.Sound.whoosh() : k.Sound.chime(); k.say('🛝 The GRAVITY SLIDE! Down you go, and you turn the right way up!', true);
     pathRide(k, path, { z: -1.2, speed: 8, flipAt: u => 1 - K.sstep(.25, .7, u), done: () => { k.G.gravSign = 1; sliding = false; k.disc && k.disc('gravityslide'); } }); };
@@ -173,18 +173,18 @@ function star(k, b, x, y, id) {
 // =================== area 3: the FLIP COASTER and the SKY PLAYGROUND ===================
 function coaster(k) {
   const s = k.s0, b = K.makeBatch(), z = -2.4;
-  const path = [[s + 6, .7], [s + 14, .9], [s + 22, 3.5], [s + 28, 8.5], [s + 30, 12.6], [s + 34, 14.1], [s + 42, 14.1], [s + 56, 13.9], [s + 66, 14.1], [s + 72, 12.4], [s + 76, 8], [s + 81, 3.4], [s + 88, 1], [s + 94, .7]];
+  const T = CEIL - .9, path = [[s + 6, .7], [s + 14, .9], [s + 22, 3], [s + 27, 6.5], [s + 30, T - 1.2], [s + 34, T], [s + 42, T], [s + 56, T - .2], [s + 66, T], [s + 72, T - 1.4], [s + 76, 6], [s + 81, 2.8], [s + 88, 1], [s + 94, .7]];
   tubeAlong(b, path.map(([x, y]) => [x, y - .35]), .16, '#ff6fd8', z - .45); tubeAlong(b, path.map(([x, y]) => [x, y - .35]), .16, '#ff6fd8', z + .45);
-  for (let j = 0; j < path.length; j += 1) { const [x, y] = path[j]; if (y < 7) b.put(CYL, x, (y - .4) / 2, z, '#b07cff', [.12, Math.max(.1, y - .4), .12]); else b.put(CYL, x, (CEIL + y) / 2, z, '#4fe0e0', [.12, Math.max(.1, CEIL - y), .12]); }
+  for (let j = 0; j < path.length; j += 1) { const [x, y] = path[j]; if (y < CEIL / 2) b.put(CYL, x, (y - .4) / 2, z, '#b07cff', [.12, Math.max(.1, y - .4), .12]); else b.put(CYL, x, (CEIL + y) / 2, z, '#4fe0e0', [.12, Math.max(.1, CEIL - y), .12]); }
   b.put(BOX, s + 6, .3, z, '#ffd23f', [3, .6, 2.4]); // the station
   const cart = new THREE.Mesh(BOX, toy('#ff4f9a', { r: .4 })); cart.scale.set(1.3, .5, 1); cart.userData.dynamic = true; k.add(cart); cart.position.set(s + 6, .9, z);
   let riding = false; const go = () => { if (riding || k.P.ride || k.G.gravSign === -1) return; riding = true; k.say('🎢 The FLIP COASTER! Up the loop and along the sky land, UPSIDE DOWN! Hold on!', true); k.Sound.chime();
-    const R = pathRide(k, path, { z, speed: 9, flipAt: (u, y) => K.sstep(9, 13.5, y), done: () => { riding = false; cart.position.set(s + 6, .9, z); cart.rotation.z = 0; k.disc && k.disc('flipcoaster'); } });
+    const R = pathRide(k, path, { z, speed: 9, flipAt: (u, y) => K.sstep(CEIL - 5, CEIL - 1.4, y), done: () => { riding = false; cart.position.set(s + 6, .9, z); cart.rotation.z = 0; k.disc && k.disc('flipcoaster'); } });
     k.U.push(() => { if (k.P.ride !== R) return; cart.position.set(k.P.x, k.P.y + (R.flipK > .5 ? .45 : -.45), z); cart.rotation.z = R.flipK * Math.PI; }); };
   k.tapIt(cart, go); k.G.interact.push({ x: s + 6, y: 0, layer: 'space', icon: '🎢', action: 'Flip coaster!', hintY: 2.4, run: go });
   // the SKY PLAYGROUND: bouncy clouds on the sky land (bounce DOWN, then fall back up) and hanging swings
   for (const [j, x] of [s + 98, s + 103].entries()) { b.put(BALL, x, CEIL - .3, -.6, '#ffffff', [1.6, .5, 1.2]); k.plat(x - 1.4, x + 1.4, CEIL - .55, { ceil: true, pad: true, bounce: 12 + j * 2, z: -.6 }); }
-  for (const x of [s + 100.5, s + 107]) { for (const d of [-.6, .6]) b.put(CYL, x + d, 3.2, -4, '#c8a8ff', [.04, 6.4, .04]); b.put(BOX, x, 6.5, -4, '#ff6fd8', [1.6, .15, .7]); b.put(BOX, x, 0, -4, '#8a6a4a', [2.6, .06, .2]); }
+  for (const x of [s + 100.5, s + 107]) { for (const d of [-.6, .6]) b.put(CYL, x + d, CEIL - 2.2, -4, '#c8a8ff', [.04, 4.4, .04]); b.put(BOX, x, CEIL - 4.4, -4, '#ff6fd8', [1.6, .15, .7]); b.put(BOX, x, 0, -4, '#8a6a4a', [2.6, .06, .2]); }
   k.add(b.mesh(K.shinyMat()));
   populate(k, [['flipbun', s + 100 - k.X, -2.8]]);
   k.rocketSign(s + 108.6);

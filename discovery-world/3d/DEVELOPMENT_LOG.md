@@ -6,6 +6,29 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 131 — THE MULTIVERSE BEGINS: WORMHOLES and THE UPSIDE-DOWN WORLD
+The family's big request: wormholes in open space that lead to wild other dimensions. Phases 1 and 2 are done:
+- **The dimension registry** (`src/dimensions.js`): each dimension is one entry (its look, gravity, wormhole place and colours,
+  creatures) + its areas module (PLANET_EXTRA) + its landing ground (space.js). It streams like a planet: only one dimension
+  is in memory, each area is built when she walks near it, all of it is freed when she flies away. Dimensions are not in the
+  rocket menu (still 12 pictures); they are reached through wormholes.
+- **Wormholes** (deepspace.js): a giant soft spiral (one small shader: no flashing, it never draws the other world), a
+  glowing rim, a halo and a ring of sparks. A 🌀 picture on the 🗺️ map; the autopilot glides right in; flying into it starts a
+  warp swirl over the screen, and she arrives. Home: the rocket menu, as from any planet.
+- **The Upside-Down World** (`src/upside.js`, 330 m): over the meadow hangs a whole land upside down, 10.5 m up: grass, trees,
+  houses, hills and mountains hanging down, a river flowing along the sky, a waterfall that falls UP.
+  - **Gravity really flips** (main.js): `G.gravSign` turns gravity UP; `ceil` surfaces are landed on from below; jumps and
+    small steps work mirrored; her figure turns over; no ground shadow; the camera stays upright and eases lower. Glowing ⬆️
+    arrows make her fall up, ⬇️ arrows float her gently down. Help: a soft speed limit, never lost off the ends, the voice explains.
+  - **Upside-Down Town** (hanging houses with porch ledges and stars), **the Hanging Castle** (towers point down: hop down
+    four ledges to the star at the tip), **two-way islands** (stand on top or underneath; a bouncy pad below),
+    **the Gravity Slide** (from the sky land to the meadow, turning her the right way up), **the Flip Coaster** (it loops up
+    onto the sky land and races along it upside down), **the Sky Playground** (bouncy clouds: bounce down, fall back up).
+  - Creatures: **Flipsies**; pets **Topsy** (an upside-down bunny) and **Dropsy** (a jelly drop that drips up).
+- Picture check: the sky land was too high to see from the meadow (15 m): lowered to 10.5 m, everything scaled with it; the
+  thick front edge that covered the view from up there became a thin grassy rim.
+- Tests: `multiverse.cjs` 14/14 (desktop, software rendering).
+
 ## Checkpoint: build 130 — DAWSON AND HER FAMILY
 From the family's pictures (the photographs are not in the game; only colours, hair, glasses and clothes), built as round toys
 like the story friends (`src/family.js`; the person builder gained glasses, beards, long, short and combed hair, a coloring

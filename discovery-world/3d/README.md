@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 131: wormholes and the Upside-Down World
+- In open space (🌌), a 🌀 wormhole on the map leads to the Upside-Down World: step on a glowing arrow and fall UP onto the
+  land hanging in the sky, walk upside down, hop down a hanging castle, ride the gravity slide and the flip coaster.
+
 ## 3D build 130: Dawson and her family
 - Dawson, Mom, Dad, Aunt Ayla, Gigi, Grandpa and Buck the dog live together on the Adventure Trail as round toy characters.
   Each one says hello to Dawson and plays when tapped.
