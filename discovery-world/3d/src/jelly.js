@@ -14,6 +14,7 @@ import { populate } from './planet-life.js';
 import { tubeAlong, pathRide, star } from './upside.js';
 
 const BALL = new THREE.SphereGeometry(1, 20, 14), BOX = new THREE.BoxGeometry(1, 1, 1, 2, 2, 2), CYL = new THREE.CylinderGeometry(1, 1, 1, 18), DOT = new THREE.SphereGeometry(1, 6, 4);
+const BEAN = new THREE.SphereGeometry(1, 8, 6); BEAN.userData.shared = true; // (decoration: 96 triangles, not 560)
 BALL.userData.shared = BOX.userData.shared = CYL.userData.shared = DOT.userData.shared = true;
 const JELLY = ['#ff4f8a', '#ffb02e', '#7fe05a', '#4fb8ff', '#b07cff', '#ff6f4f'];
 const MATS = {}; // one jelly material per colour, shared by every piece of that colour
@@ -40,8 +41,8 @@ export function* jellyLanding(c) {
     color: (x, z, h, ny, o) => { const n = K.fbm2(x * .15, z * .15, 3); K.ramp(['#ffd6e8', '#ffe8c8', '#ffc0d8'], .3 + n * .5, o); if (Math.sin(x * .3 + Math.sin(z * .4) * 3) > .92) o.set('#ff4f8a'); if (K.noise2(x * 2, z * 2) > .82) o.set('#ffffff'); o.multiplyScalar(.9 + .12 * ny); } });
   yield;
   // jelly-bean trees, gummy rocks and a jam pond (batched)
-  for (let k = 0; k < 24; k++) { const x = X - 20 + k * 15, z = -7 - (k % 4) * 4, col = JELLY[k % 6]; props.put(CYL, x, 1.8, z, '#ffffff', [.18, 3.6, .18]); for (let j = 0; j < 6; j++) props.put(BALL, x + Math.cos(j * 1.1) * 1.1, 3.6 + Math.sin(j * 1.7) * .6, z + Math.sin(j * 1.1) * .8, JELLY[(k + j) % 6], [.55, .3, .3], [0, j, .5]); }
-  for (let k = 0; k < 30; k++) props.put(BALL, X - 25 + k * 12.5, .25, -4.5 - (k % 3) * 2, JELLY[(k * 5) % 6], [.6, .4, .5]);
+  for (let k = 0; k < 24; k++) { const x = X - 20 + k * 15, z = -7 - (k % 4) * 4, col = JELLY[k % 6]; props.put(CYL, x, 1.8, z, '#ffffff', [.18, 3.6, .18]); for (let j = 0; j < 6; j++) props.put(BEAN, x + Math.cos(j * 1.1) * 1.1, 3.6 + Math.sin(j * 1.7) * .6, z + Math.sin(j * 1.1) * .8, JELLY[(k + j) % 6], [.55, .3, .3], [0, j, .5]); }
+  for (let k = 0; k < 30; k++) props.put(BEAN, X - 25 + k * 12.5, .25, -4.5 - (k % 3) * 2, JELLY[(k * 5) % 6], [.6, .4, .5]);
   props.put(CYL, X + 96, .04, -7, '#c8102e', [6, .08, 3.5]);
   yield;
   // JELLY HILLS to bounce across: each one wobbles under her (and gives a little bounce)
