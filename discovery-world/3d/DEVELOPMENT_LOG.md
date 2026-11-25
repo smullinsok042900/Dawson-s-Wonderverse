@@ -19,6 +19,10 @@ swirls and sugar sparkles, jelly-bean trees, and everything made of shiny jelly 
   walk into (a jelly sofa and a jelly bed; they only catch her while she is inside).
 - Creatures: the Wobblers; pets **Gummy** (a gummy bear) and **Wiggle** (a jelly blob).
 - Tests: `multiverse.cjs` 52/52 (10 new jelly checks).
+- The first full smoke run (344/345) caught **Beepo the robot** (it rolls about) wandering close enough to the green scribble
+  friend in Lab Gardens that the 🐾 picked Beepo: the 5 m rule did not allow for friends that wander. Now every new friend
+  stands **5 m plus how far it wanders** from every older one (all three friend tests check it); 12 friends moved a little
+  (Beepo, the rescue pups and the pig family along the farm, Waffles, Twinkle, Rosa).
 
 ## Checkpoint: build 135 — the family's requests: fly up and down, toy fixes, the bubble house, the castle inside, HER OWN BRICK HOUSE
 - **Open space: ⏫ ⏬** (hold to fly up or down; shown while flying). The wormholes float above and below the planets, so
