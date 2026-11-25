@@ -316,8 +316,10 @@ export function initDeep(G, api) {
       const css = document.createElement('style'); css.textContent = '#warpFx{position:fixed;inset:-50%;z-index:80;pointer-events:none;opacity:0;transition:opacity .5s;border-radius:50%;animation:warpSpin 1.6s linear infinite}#warpFx.on{opacity:1}@keyframes warpSpin{to{transform:rotate(360deg) scale(1.15)}}'; document.head.appendChild(css); }
     const [c1, c2, c3] = d.wormhole.colors; warpDiv.style.background = `repeating-conic-gradient(from 0deg, ${c1} 0 12deg, ${c2} 12deg 24deg, ${c3} 24deg 36deg)`; warpDiv.style.webkitMaskImage = warpDiv.style.maskImage = 'radial-gradient(circle, transparent 0, #000 70%)';
     requestAnimationFrame(() => warpDiv.classList.add('on'));
-    setTimeout(() => { leave(); api.land(d.id, null); }, 1300);
-    setTimeout(() => warpDiv && warpDiv.classList.remove('on'), 2600);
+    // (build 137) the world starts building at once, under the swirl, and the swirl stays until she has arrived: the busy
+    // moment of arriving is hidden (at least 1.3 s of swirl; never more than 8 s, whatever happens)
+    const ready = Promise.race([api.preload ? api.preload(d.id) : Promise.resolve(), new Promise(r => setTimeout(r, 8000))]);
+    Promise.all([ready, new Promise(r => setTimeout(r, 1300))]).then(async () => { leave(); try { await api.land(d.id, null); } catch (e) { } setTimeout(() => warpDiv && warpDiv.classList.remove('on'), 900); });
   }
   function land() {
     if (!S || !S.near || !S.near.land) return; const id = S.near.id; Sound.chime(); say(`🛬 Landing on ${id === 'earth' ? 'Earth, home' : id === 'moon' ? 'the Moon' : id[0].toUpperCase() + id.slice(1)}!`);

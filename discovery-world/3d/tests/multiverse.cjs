@@ -185,6 +185,36 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('the jelly pets live here (Gummy and Wiggle)', await p.evaluate(() => ['pet_gummybear', 'pet_jellyblob'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
     await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
     check('home again from the jelly', await p.evaluate(() => __DDW3.player.layer === ''));
+    // ===== (build 137) THE WACKY GRAVITY WORLD: a fifth wormhole; gravity changes from zone to zone =====
+    await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
+    await p.locator('#rocketPanel .rkT[data-id=deep]').tap(); await until(() => __DDW3.G.deep.active(), null, 120000);
+    await p.evaluate(() => __DDW3.G.deep.flyTo('wh:wacky'));
+    check('a fifth wormhole leads to the Wacky Gravity World', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'wacky', null, 300000));
+    await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'wacky-arrive.jpg'), type: 'jpeg', quality: 85 });
+    const WX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 18; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; }, WX); await sleep(1500);
+    const moon = await p.evaluate(async () => { const P = __DDW3.player, s = __DDW3.G.gravScale; P.vy = 9; P.grounded = false; let top = 0; for (let n = 0; n < 40; n++) { await new Promise(r => setTimeout(r, 100)); top = Math.max(top, P.y); } return { s, top }; });
+    check('the moon-bounce meadow has floaty gravity: the same jump goes much higher', moon.s < .3 && moon.top > 6, JSON.stringify(moon)); // (a 9 m/s jump: 1.7 m in normal gravity, about 7.7 m here)
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 52; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; }, WX);
+    check('the anti-gravity lift floats her up onto the sky platform (and she stays there)', await until(() => { const P = __DDW3.player; return P.grounded && Math.abs(P.y - 12) < .05; }, null, 30000) && (await sleep(2500), await p.evaluate(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 12) < .05)));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 2; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; }, WX); await sleep(6000);
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 13; }, WX); await sleep(800); await p.evaluate(X => { __DDW3.player.x = X + 110 + 15.5; }, WX);
+    const fl = await until(() => __DDW3.G.gravSign === -1 && __DDW3.player.grounded && Math.abs(__DDW3.player.y - 8) < .05, null, 30000);
+    check('an orange stripe in the flip corridor flips gravity: she falls UP and walks on the ceiling, head down', fl && await p.evaluate(() => __DDW3.G.flipK > .9), JSON.stringify(await p.evaluate(() => ({ y: __DDW3.player.y, s: __DDW3.G.gravSign, k: __DDW3.G.flipK }))));
+    await p.evaluate(X => { __DDW3.player.x = X + 110 + 23; }, WX); await sleep(800); await p.evaluate(X => { __DDW3.player.x = X + 110 + 25.5; }, WX);
+    check('the next stripe flips her back down to the floor', await until(() => __DDW3.G.gravSign === 1 && __DDW3.player.grounded && __DDW3.player.y < .5 && __DDW3.G.flipK < .05, null, 30000));
+    const wheel = await p.evaluate(async () => { const it = __DDW3.G.interact.find(i => i.icon === '🎡' && i.action === 'Gravity wheel!'); if (!it) return -1; const P = __DDW3.player; P.x = it.x; P.y = 0; it.run(); let k = 0, top = 0; for (let n = 0; n < 400 && P.ride; n++) { await new Promise(r => setTimeout(r, 100)); k = Math.max(k, __DDW3.G.flipK); top = Math.max(top, P.y); } return { k, top, ride: !!P.ride }; });
+    check('the gravity wheel takes her all the way round, upside down at the top', wheel.k > .8 && wheel.top > 11 && !wheel.ride, JSON.stringify(wheel));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 230; P.y = 0; P.vy = 0; P.grounded = true; }, WX); await sleep(6000);
+    check('the floating obstacle course has low gravity', await p.evaluate(() => __DDW3.G.gravScale < .5));
+    const carry = await p.evaluate(async X => { const pl = __DDW3.G.platforms.find(q => q.layer === 'space' && Math.abs((q.a + q.b) / 2 - (X + 220 + 12)) < 3 && Math.abs(q.y - 2) < .3 && q.b - q.a === 3); if (!pl) return -1; const P = __DDW3.player; P.x = (pl.a + pl.b) / 2; P.y = pl.y; P.vy = 0; P.grounded = true; let lo = P.x, hi = P.x, on = 0; for (let n = 0; n < 60; n++) { await new Promise(r => setTimeout(r, 100)); if (P.grounded && P.x >= pl.a - .01 && P.x <= pl.b + .01) on++; lo = Math.min(lo, P.x); hi = Math.max(hi, P.x); } return { moved: hi - lo, on }; }, WX);
+    check('a moving platform carries her along', carry.moved > .5 && carry.on > 55, JSON.stringify(carry));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 84; P.y = 2; P.vy = 0; P.vx = 0; P.grounded = false; }, WX);
+    const well = await p.evaluate(async () => { const P = __DDW3.player; let top = 0, v = 0; for (let n = 0; n < 80; n++) { await new Promise(r => setTimeout(r, 100)); top = Math.max(top, P.y); v = Math.max(v, P.vy); } return { top, v }; });
+    check('the gravity well launches her super high (and she floats down slowly)', well.v > 12 && well.top > 12, JSON.stringify(well));
+    check('the wacky pets live here (Zoom and Floaty)', await p.evaluate(() => ['pet_zoomzoom', 'pet_floatyfox'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
+    await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
+    check('home again from the wacky world, with gravity back to normal', await p.evaluate(() => __DDW3.player.layer === '' && __DDW3.G.gravSign === 1 && (__DDW3.G.gravScale || 1) === 1 && !__DDW3.G.flipK));
     check('no page errors', !errs.length, errs.slice(0, 3).join(' | '));
   } catch (e) { console.log('FAIL exception: ' + e.message); fail++; }
   finally { console.log(`${ok} checks passed`); await b.close(); process.exit(fail ? 1 : 0); }

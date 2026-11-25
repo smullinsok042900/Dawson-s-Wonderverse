@@ -274,6 +274,13 @@ export const SPECIES = {
       b.put(GEO.ball, 0, .6, .22, '#ff9a80', [.1, .07, .06]); b.put(GEO.ball, 0, .62, .27, '#2a2333', .03); b.put(GEO.ball, -.1, .8, .14, '#ffd0c0', .05); eyes(b, .7, .08, .2, .04); } },
   jellyblob: { name: 'Wiggle', planet: 'jelly', pet: true, move: 'bounce', v: 1.6, r: 2.5, size: .8, voice: 'Blorp! Jiggle jiggle!', where: 'by the jelly tower', emoji: '⭐',
     build: b => { b.put(GEO.ball, 0, .26, 0, '#7fe05a', [.32, .26, .3]); b.put(GEO.ball, 0, .5, 0, '#9ff07a', [.18, .14, .16]); b.put(GEO.ball, -.12, .38, .22, '#e0ffd0', .05); eyes(b, .34, .1, .26, .05); smile(b, .2, .29, .05); } },
+  // ---- (build 137) THE WACKY GRAVITY WORLD: pets (a zooming spring bug and a fox who floats) ----
+  zoomzoom: { name: 'Zoom', planet: 'wacky', pet: true, move: 'bounce', v: 1.8, r: 2.5, size: .8, voice: 'Zoom zoom! Boing!', where: 'by the gravity wheel', emoji: '🐞',
+    build: b => { b.put(GEO.ball, 0, .34, 0, '#ff9a2e', [.3, .24, .32]); b.put(GEO.ball, 0, .36, .02, '#2a2333', [.04, .25, .33]); for (const q of [[-.14, .44, .14], [.14, .44, .14], [-.16, .32, -.12], [.12, .3, -.1]]) b.put(GEO.ball, ...q, '#2a2333', .05);
+      b.put(GEO.ball, 0, .5, .26, '#4fd8c8', .16); for (const k of [-1, 1]) { b.put(GEO.ball, k * .08, .74, .3, '#4fd8c8', [.02, .12, .02]); b.put(GEO.ball, k * .1, .86, .3, '#ffd23f', .045); b.put(GEO.ball, k * .16, .08, 0, '#b07cff', [.05, .08, .05]); } eyes(b, .54, .07, .4, .04); smile(b, .44, .41, .04); } },
+  floatyfox: { name: 'Floaty', planet: 'wacky', pet: true, move: 'float', v: 1.2, r: 2.5, size: .85, hover: 1, voice: 'Wheee! I can float!', where: 'floating near the flip corridor', emoji: '🦊',
+    build: b => { b.put(GEO.ball, 0, .3, 0, '#b07cff', [.24, .22, .3]); b.put(GEO.ball, 0, .56, .2, '#b07cff', .2); b.put(GEO.ball, 0, .5, .38, '#ffffff', [.1, .07, .08]); b.put(GEO.ball, 0, .52, .45, '#2a2333', .03);
+      for (const k of [-1, 1]) { b.put(GEO.cone, k * .12, .78, .18, '#b07cff', [.07, .14, .05]); b.put(GEO.ball, k * .14, .12, .1, '#c8b8ff', .06); } b.put(GEO.ball, 0, .36, -.36, '#4fd8c8', [.12, .12, .2]); b.put(GEO.ball, 0, .4, -.52, '#ffffff', .07); eyes(b, .6, .08, .36, .04); } },
   // ---- PLUTO: characters (build 116) ----
   snowballkid: { name: 'Snowy', planet: 'pluto', move: 'hop', v: 1.6, r: 3, size: 1, hopH: .2, voice: 'Snowball fight!',
     build: b => { b.put(GEO.ball, 0, .34, 0, '#f4f8ff', .34); b.put(GEO.ball, 0, .82, 0, '#ffffff', .26); b.put(GEO.ball, 0, 1.06, 0, '#ff6f9a', [.24, .12, .24]); b.put(GEO.ball, 0, 1.2, 0, '#ffffff', .07); b.put(GEO.tor, 0, .62, 0, '#ff6f9a', [.18, .18, .5], [Math.PI / 2, 0, 0]);
