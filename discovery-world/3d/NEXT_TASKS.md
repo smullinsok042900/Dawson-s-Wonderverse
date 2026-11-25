@@ -19,7 +19,9 @@ two-way islands, gravity slide, flip coaster, sky playground, Flipsies, pets Top
 3. ~~Bubble Universe~~ done in build 133 (more later: bubble houses to go inside, a bubble race, giant bubble wands to blow).
 4. ~~Squishy Jelly World~~ done in build 136 (more later: a jelly maze, jelly cars that bounce, a jelly-making machine).
 5. ~~Wacky Gravity World~~ done in build 137 (`G.gravScale` zones; more later: sideways-gravity walls, a gravity-switch maze).
-6. **Speed** (build 137: the world is now built during the warp swirl; see PERFORMANCE_LOG for what is still seen): prepare each dimension's special materials (the bubble film, the wormhole swirl) during the warp swirl, so
+6. **Speed** (build 137: the world is now built under the warp swirl, which stays until the frames settle; the biggest frame
+   still SEEN, 344–601 ms on desktop, comes about 5 s after arriving, when she steps out of the rocket: find what starts then
+   and spread it out — it was there in build 136 too, 458–462 ms): prepare each dimension's special materials (the bubble film, the wormhole swirl) during the warp swirl, so
    arrival has no first-use hitch (build 133 measured 336–612 ms on the Bubble Universe's arrival spot; build 136 646–833 ms on the Jelly World's).
 7. Tiny & Giant (P.sizeMul already exists), Rainbow Chaos, Clockwork, Mirror Reality, Dream Dimension, then new ideas.
 Measure each on desktop and on the iPhone (Performance Test) before the next.

@@ -6,6 +6,24 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 137 — THE WACKY GRAVITY WORLD (the fifth dimension)
+A fifth 🌀 wormhole (purple, teal and orange) leads to **the Wacky Gravity World** (`src/wacky.js`), where gravity changes from
+place to place. One small new rule in `main.js`: `G.gravScale` (how strong gravity is here), next to build 131's `G.gravSign`
+(which way it pulls). Each zone shows its colour (blue = floaty, purple = up, orange = flip), and the voice says what it does
+the first time. Leaving the world puts gravity back to normal (`gravSign`, `gravScale`, `flipK`, `camLift`).
+- **Moon-bounce meadow:** gravity almost gone (0.22): one jump goes about 7.6 m up, across bobbing floating rocks to a star.
+- **The anti-gravity lift:** a purple column floats her up to a sky platform (12 m) and stops pushing once she is up (the first
+  test found she bobbed in the column forever: fixed); a slide back down.
+- **The flip corridor:** orange stripes flip gravity, so she falls up and walks on the ceiling head down; the next one flips her back.
+- **The gravity wheel:** a giant ring she rides all the way round, upside down at the top.
+- **The floating obstacle course** (low gravity, platforms that move sideways and up and down, carrying her) and **the gravity
+  well**, a swirly pad that launches her about 18 m up in floaty gravity (four stars on the way).
+- Creatures: the Zoomers; pets **Zoom** (a spring bug) and **Floaty** (a fox who floats).
+- **Wormhole arrival:** the world now starts building under the warp swirl, and the swirl stays until the frames settle
+  (0.9–4 s; never more than 8 s waiting for the build). Measured: the frames under the swirl stay light, but the biggest seen
+  frame (about 5 s later, when she steps out of the rocket) is unchanged: see PERFORMANCE_LOG and NEXT_TASKS.
+- Tests: `multiverse.cjs` (12 new wacky checks), unit tests 142/142. Desktop, software rendering; not tried on the iPhone.
+
 ## Checkpoint: build 136 — THE SQUISHY JELLY WORLD (the fourth dimension)
 A fourth 🌀 wormhole (pink, orange and green) leads to **the Squishy Jelly World** (`src/jelly.js`): a candy floor with jam
 swirls and sugar sparkles, jelly-bean trees, and everything made of shiny jelly that SQUISHES and WOBBLES when she lands on it

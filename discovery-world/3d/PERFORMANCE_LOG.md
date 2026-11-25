@@ -4,6 +4,17 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 137 (the Wacky Gravity World; the world is built under the warp swirl)
+Desktop, software rendering. Open space, build 136 vs 137, four rounds each (mean of the median frame ms): flying 97 → 93 ms,
+spacewalk 226 → 228 ms, 78–79 draw calls (no change). Squishy Jelly World, two rounds each, build 136 vs 137: the same on
+every spot (128–153 ms); the first spot (she lands on a bouncy jelly hill) is noisy in both builds (136: 145–532 ms, 137:
+275–606 ms). **Wacky Gravity World** (`pplanet.cjs wacky`, two rounds): 120–159 ms per frame, 57–66 draw calls, 64–72k
+triangles (the lightest dimension); first spot 302–659 ms (arrival, as in the other dimensions).
+Arrival through a wormhole (`parrive.cjs jelly`: the longest frame under the swirl, and the longest one seen after it):
+build 136 hidden 209–247 / seen 458–462 ms; build 137 hidden 165–280 / seen 344–601 ms. Building the world under the swirl
+works (the frames under it stay light), but it did not make the seen moment smoother: the biggest seen frame comes about 5 s
+after the swirl, when she steps out of the rocket (next task in NEXT_TASKS). Not measured on the iPhone.
+
 ## Build 136 (the Squishy Jelly World)
 Desktop, software rendering. First version: 157–200 ms per frame but ~190k triangles (24 jelly-bean trees and 30 gummy rocks
 made of 560-triangle spheres) — made lighter before shipping (96-triangle decorations). After: `pplanet.cjs jelly`, two rounds:
