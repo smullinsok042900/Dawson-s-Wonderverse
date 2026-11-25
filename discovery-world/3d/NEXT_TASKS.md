@@ -20,7 +20,7 @@ two-way islands, gravity slide, flip coaster, sky playground, Flipsies, pets Top
 4. ~~Squishy Jelly World~~ done in build 136 (more later: a jelly maze, jelly cars that bounce, a jelly-making machine).
 5. **Wacky Gravity World** (low-gravity zones, sideways tunnels, rotating gravity rings: reuses build 131's gravity rules).
 6. **Speed:** prepare each dimension's special materials (the bubble film, the wormhole swirl) during the warp swirl, so
-   arrival has no first-use hitch (build 133 measured 336–612 ms on the Bubble Universe's arrival spot).
+   arrival has no first-use hitch (build 133 measured 336–612 ms on the Bubble Universe's arrival spot; build 136 646–833 ms on the Jelly World's).
 7. Tiny & Giant (P.sizeMul already exists), Rainbow Chaos, Clockwork, Mirror Reality, Dream Dimension, then new ideas.
 Measure each on desktop and on the iPhone (Performance Test) before the next.
 

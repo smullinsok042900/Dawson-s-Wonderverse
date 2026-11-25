@@ -4,6 +4,14 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 136 (the Squishy Jelly World)
+Desktop, software rendering. First version: 157–200 ms per frame but ~190k triangles (24 jelly-bean trees and 30 gummy rocks
+made of 560-triangle spheres) — made lighter before shipping (96-triangle decorations). After: `pplanet.cjs jelly`, two rounds:
+**135–165 ms per frame, 58–70 draw calls, 86–96k triangles** (the lightest of the four dimensions). Open space, build 135 vs
+136, two rounds: spacewalk 251 → 226 ms, flying 128 → 80 ms, 78–79 draw calls. **The arrival spot is the heaviest yet: 646–833
+ms** (the jelly pieces and their highlight dots are built and compiled on arrival): it joins the arrival-smoothing task in
+NEXT_TASKS (prepare a dimension's materials and first area during the warp swirl). Not measured on the iPhone.
+
 ## Build 135 (her brick house, the castle inside, the bubble house, fly up and down, toy fixes)
 Desktop, software rendering; build 134 vs 135, two rounds, mean of the spots' median frame ms.
 - Open space (spacewalk): 247 → 242 ms. Toy Universe: 170 → 174 ms (+2%; +6 draw calls where her brick house stands).
