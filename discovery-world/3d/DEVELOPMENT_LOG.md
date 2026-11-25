@@ -6,6 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 132 — THE GIANT TOY UNIVERSE (the second dimension)
+A second 🌀 wormhole (yellow, red and blue) leads to **the Giant Toy Universe** (`src/toy.js`): she is the size of a toy mouse,
+the ground is a huge play mat, crayons stand like trees, a giant teddy and a toy house stand far away. It is one more entry in
+`dimensions.js` (its own look, a bouncy 7 m/s² pull, the Tinkers) — the registry made this a plug-in.
+- **Giant block towers**: each block is a real step, so she climbs them by walking, to a lookout with a star.
+- **Giant bouncy balls**: land on one and it bounces her to the next (each a different note); the push is aimed at the
+  next ball's middle (the first version fell short between the 2nd and 3rd: the test caught it).
+- **The giant wind-up key**: tap it and a clockwork parade (duck, drum, mouse) marches across the mat.
+- **The wind-up toy train she DRIVES**: ▶ faster, ◀ slower and backwards, over a block bridge, collecting stars.
+- **The block mountain** to climb, with **the giant toy slide** all the way down; **the wooden toy coaster**; **the spinning top**;
+  **the jack-in-the-box** that bounces her up to a shelf of giant toys.
+- Pets: **Clicky** (a wind-up mouse with its key) and **Blocky** (a puppy made of toy blocks).
+- Tests: `multiverse.cjs` 23/23 (the Upside-Down World's 14 and 9 for the toys, using real held arrow keys for climbing and driving).
+
 ## Checkpoint: build 131 — THE MULTIVERSE BEGINS: WORMHOLES and THE UPSIDE-DOWN WORLD
 The family's big request: wormholes in open space that lead to wild other dimensions. Phases 1 and 2 are done:
 - **The dimension registry** (`src/dimensions.js`): each dimension is one entry (its look, gravity, wormhole place and colours,
