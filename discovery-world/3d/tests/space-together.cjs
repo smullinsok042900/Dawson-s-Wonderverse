@@ -26,6 +26,12 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     for (const p of [A, B]) await p.evaluate(() => __DDW3.G.deep.flyTo('mars'));
     await until(A, () => __DDW3.G.deep.state()?.near === 'mars', null, 240000); await until(B, () => __DDW3.G.deep.state()?.near === 'mars', null, 240000); await sleep(1500);
     const seen = p => p.evaluate(() => { const o = [...__DDW3.G.mp.others.values()][0]; const P = __DDW3.player, r = o && o.deepRk; return { rk: !!(r && r.visible), d: r ? Math.hypot(r.position.x - P.x, r.position.y - P.y, r.position.z - P.z) : -1, avatar: !!(o && o.model && o.model.root.visible) }; });
+    // (build 134) what a player sends from open space must pass the database rules the family already has (the relay used
+    // here accepts anything; Firebase does not): only the fields of the rules published before build 128, no `dk`
+    const sent = await A.evaluate(() => { const s = __DDW3.G.mp._state(); return Object.keys(s).filter(k => s[k] != null); });
+    const OLD_RULES = ['x', 'y', 'z', 't', 'f', 'g', 'r', 'h', 'l', 'c', 'k', 'ps', 'a', 'b'];
+    const ps = await A.evaluate(() => __DDW3.G.mp._state().ps);
+    check('from open space she sends only fields the existing database rules accept (the rocket rides in the pets text)', sent.every(k => OLD_RULES.includes(k)) && /^~[-\d.]+,[-\d.]+,[-\d.]+,[-\d.]+$/.test(ps) && ps.length < 60, JSON.stringify({ sent, ps }));
     let a = await seen(A), bb = await seen(B);
     check('each sees the other\'s rocket out in space, close by at Mars', a.rk && bb.rk && a.d < 200 && bb.d < 200, JSON.stringify({ a, bb }));
     await A.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'space-together.jpg'), type: 'jpeg', quality: 85 });
