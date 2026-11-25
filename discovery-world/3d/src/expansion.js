@@ -17,6 +17,7 @@ import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeA
 import { PET_PICS } from './pet-pictures.js';
 import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
+import { STORY_FRIEND_HOMES } from './story-friends.js';
 import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail, buildHillsDetail, buildTrailDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -163,7 +164,7 @@ export function initExpansion(G, api) {
   }
   const builders = {};
   // One small build part per resident keeps their shapes inside the district's normal frame budget.
-  const familyParts = (c, district) => [...FAMILY_FRIEND_HOMES, ...CRAFT_FRIEND_HOMES.filter(home => home.planet === 'earth')].filter(home => home.district === district)
+  const familyParts = (c, district) => [...FAMILY_FRIEND_HOMES, ...STORY_FRIEND_HOMES, ...CRAFT_FRIEND_HOMES.filter(home => home.planet === 'earth')].filter(home => home.district === district)
     .map(home => () => lifeHere(c, [[home.kind, home.x, home.z]]));
   function startBuild(st) {
     st.g = new THREE.Group(); st.g.name = 'district:' + st.d.id; st.taps = []; st.inter = []; st.step = 0; st.state = 'building';
@@ -258,8 +259,24 @@ export function initExpansion(G, api) {
     if (on && !followers[kind]) { const m = makePalMesh(kind); m.position.set(P.x - 2, 0, .9); scene.add(m); followers[kind] = { m, hop: 0 }; G.taps.push(m); m.traverse(o => { o.userData.tap = () => { setFollow(kind, false); say(`${PAL_EMOJI[kind]} ${PAL_NAME[kind]} will wait ${PAL_WHERE[kind]}!`); }; }); }
     if (!on && followers[kind]) { scene.remove(followers[kind].m); const i = G.taps.indexOf(followers[kind].m); if (i >= 0) G.taps.splice(i, 1); delete followers[kind]; }
   }
+  G.setPalFollow = setFollow; G.followerMeshes = () => Object.values(followers).map(f => f.m); // (tests)
   for (const k of Object.keys(PALS)) if (X.pals[k] && X.pals[k].follow) setFollow(k, true);
+  G.followerCount = () => Object.keys(followers).length;
+  let petBubble = null; // (build 127) the bubble her first friend floats in on a spacewalk (made once, kept)
   function updateFollowers(dt, t) {
+    if (P.layer === 'deep') { // (build 127) OPEN SPACE: her first friend floats beside her on a spacewalk (in a bubble of its own); the others wait
+      const W = G.deepWalk; let first = true;
+      for (const k of Object.keys(followers)) { const m = followers[k].m;
+        if (first && W) { first = false; const yaw = W.yaw || 0, tx = W.pos.x - Math.cos(yaw) * 1.6 - Math.sin(yaw) * .8, tz = W.pos.z + Math.sin(yaw) * 1.6 - Math.cos(yaw) * .8, ty = W.pos.y + .6 + Math.sin(t * 1.6) * .25;
+          if (m.position.distanceTo(W.pos) > 12) m.position.set(tx, ty, tz); // (never lost: if it is far behind, it pops right back beside her)
+          m.position.x += (tx - m.position.x) * Math.min(1, dt * 2.5); m.position.y += (ty - m.position.y) * Math.min(1, dt * 2.5); m.position.z += (tz - m.position.z) * Math.min(1, dt * 2.5);
+          m.rotation.y = yaw + Math.sin(t * .7) * .4; m.rotation.z = Math.sin(t * 1.1) * .15; m.visible = true;
+          if (!petBubble) { petBubble = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshStandardMaterial({ color: '#cfeeff', transparent: true, opacity: .2, roughness: .05, depthWrite: false })); petBubble.userData.dynamic = true; scene.add(petBubble); }
+          petBubble.visible = true; petBubble.position.copy(m.position).add(new THREE.Vector3(0, .5, 0)); petBubble.scale.setScalar(.95 + Math.sin(t * 3) * .03);
+          if (LIFE[k]) lifeAnimate(k, m, t, false); }
+        else m.visible = false; }
+      if (first && petBubble) petBubble.visible = false; return; }
+    if (petBubble) petBubble.visible = false;
     let slot = 0; for (const k of Object.keys(followers)) { const f = followers[k], m = f.m; slot++;
       const out = (P.layer === '' || P.layer === 'space') && !G.playerHidden && !(P.ride && P.ride.type === 'rocket'), aboard = !!(P.ride && P.ride.type !== 'rocket') /* (build 120: on a ride — the Ferris wheel, the zip line, a plane — they wait on the ground and run after her when she gets off; they used to float in the air beside her) */, tx = out && !aboard ? P.x - (P.facing || 1) * (1.6 + slot * 1.3) : m.position.x, ty = out && !aboard ? (P.grounded || f.lastGround == null ? (f.lastGround = Math.max(P.layer === 'space' ? -50 : 0, P.y - .1)) : f.lastGround) /* (build 120: when she jumps they stay where she last stood; they used to rise into the air under her) */ : (aboard && P.layer === '' ? 0 : m.position.y); /* (build 107: they come along to the planets too, riding in the rocket with her) */ /* (build 48: pets wait on the ground while you fly off in the rocket) */
       if (Math.abs(tx - m.position.x) > 25) m.position.x = tx; // (after a jump somewhere else, it arrives with you)

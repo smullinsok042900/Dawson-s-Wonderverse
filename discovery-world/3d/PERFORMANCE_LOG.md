@@ -4,11 +4,21 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 128 (eighteen story friends; build 127's open space together included)
+Desktop, software rendering; `pearth.cjs` (iPhone-sized touch viewport, adaptive quality frozen), build 126 vs build 128,
+two rounds each, mean of the spots' median frame ms. Noise between runs of the same file is about ±5%.
+- **Happy Farm** (Skipper, Ginger, Dotty, Noodle, Patch): 503 → 479 ms. **Frosty Peaks** (the snow family, Blizzard): 269 → 269 ms.
+- **Art Plaza** (the singing trio): 243 → 248 ms (+2%); draw calls +1 to +4 where the trio is in view (one per friend), triangles +12k at 845.
+- **Toy Town** (Grinny, Fluffy, Waffles): 259 → 269 ms (+4%: round 1 275, round 2 263 vs 259); draw calls +1 to +2. Within noise; watch it on the iPhone.
+- **Open space** (`pdeep.cjs`, build 126 vs 127, two rounds): flying 265 vs 266 ms, spacewalk 229 vs 225 ms, 78–79 draw calls both.
+- **Woods** (no change there; build 126 vs 127, two rounds): 707 vs 749 ms, inside the ±50 ms spread this spot shows between runs; the only new per-frame work on Earth is one layer comparison.
+- Each story friend: 2,300–3,500 triangles, one mesh, the shared creature material (no new shader). Not measured on the iPhone.
+
 ## Builds 125 + 126 (the family's picture fixes; open space and the Sun)
 Desktop, software rendering; `pearth.cjs` / `pplanet.cjs` (iPhone-sized touch viewport, adaptive quality frozen), build 124 vs build 126 (which contains 125). Median frame ms per spot; noise between runs of the SAME file is about ±5% per run and 2% on a 10-sample mean (an A/A test in the woods).
 - **Faster or the same:** Lab Gardens 650 → 573 ms (mean of 3 spots × 2 runs; fewer trees, none inside the greenhouses); Moon 294 → 265; Mars 297 → 276; Pluto 351 → 348; Uranus 271 → 268 (5 spots each).
 - **Balloon Hills and Frosty Peaks:** the first version of the slide chutes (a glossy material, casting shadows) measured up to 2× slower where the chute filled the view (-720: 342–510 → 621–753 ms). Rebuilt as one painted mesh (the shared material) with no shadow: Hills 310 → 314 ms (8 samples each), Frosty 292 → 299 (6 each): within noise.
-- **Farm:** the barn's new hayloft door was 3 separate meshes; merged into 1. Pooled (8 samples each, one cold-start outlier excluded): -420 552 → 616 ms (median), -440 519 → 550, -466 523 → 553. **The woods** (nothing changed there) 716 → 775 ms (10 each). Draw calls and triangles are the same or lower at both, so this looks like a small game-wide difference or noise; not yet settled (a 124/125/126 three-way run was stopped to run the full smoke test). To check next: the open-space module's setup (an invisible sky mesh added at start) and the Sun's entry in the planet list.
+- **Farm:** the barn's new hayloft door was 3 separate meshes; merged into 1. Pooled (8 samples each, one cold-start outlier excluded): -420 552 → 616 ms (median), -440 519 → 550, -466 523 → 553. **The woods** (nothing changed there) 716 → 775 ms (10 each). Draw calls and triangles are the same or lower at both, **Settled after the full smoke test:** a three-way run in the woods, builds 124, 125 and 126 in turn, 4 rounds × 5 spots = 20 samples each: mean 761 / 749 / 723 ms, median 747 / 753 / 744 ms. No slowdown: the earlier 6–8% was run-to-run noise (an A/A run of the same file differed by 2%). The farm's draw calls and triangles are back to build 124's.
 - Open space and the Sun cost nothing while she is on Earth (built only when she goes there, freed when she leaves). Not measured on the iPhone.
 
 ## Build 124 (drawing friends as round 3D toys, walk-in Ferris wheel, steps out of her path)

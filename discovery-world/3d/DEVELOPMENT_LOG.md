@@ -6,6 +6,36 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 128 — EIGHTEEN NEW STORY FRIENDS; build 127 (open space together) included
+The family sent pictures of characters Dawson loves from films and shows. Those belong to other companies, so (with the
+family's OK) these are **original friends in the same spirit**, built as round toys like the drawing friends (`src/story-friends.js`):
+- **Art Plaza, a pop-star trio:** Juno (purple braid, yellow jacket, microphone), Rosa (long pink ponytail) and Mina (dark buns).
+- **Toy Town:** Grinny the Stripy Cat, a big blue-violet cat with a wide happy grin and a tiny top hat; Fluffy the pink poodle and Waffles the pug.
+- **Frosty Peaks, a snow family:** Princess Crystal (ice-blue gown, snowflake wand), Snowball Buddy (a classic snowman with a
+  scarf and bobble hat), Pinecone the Reindeer, Rowan the Mountain Guide and Blizzard the Husky.
+- **Happy Farm and Balloon Hills, more puppies:** Skipper (blue), Ginger (red), Dotty (spots), Noodle (long), Patch (sheep pup), Sunny (golden) and Pepper (beagle).
+- Each says hello when she comes near and plays when tapped (sing, twirl, bounce, sparkle, hug). One painted solid each
+  (2,300–3,500 triangles, the same shared material: no new shader), streamed with its district like the drawing friends.
+- Tests: `story-friends.test.mjs` 3/3 (all registered, finite, on the ground, under 3,600 triangles, one home each, apart);
+  all 133 unit tests pass; a picture tour of every home (moved: the princess stood behind the big ice block, the cat by the crates).
+  The first full smoke run (344/345) caught the princess standing on the family's snow sculpture friend, so its tap check
+  failed; she and two singers (next to the orange scribble friend) were moved, and the unit test now checks every new home
+  against every resident who already lived there (≥ 2.5 m). **Full smoke test after the move: 345/345** (desktop, software rendering).
+
+### Build 127 — OPEN SPACE TOGETHER (friends' rockets and spacewalks) and pets on spacewalks
+- **Play Together in open space:** friends in one room who fly up into 🌌 see each other's **rockets** out there (gliding
+  smoothly between updates), and a friend on a spacewalk floats beside their rocket as themselves; back in the rocket, only
+  the rocket shows. Friends are shown within 300 m in space (80 m along the path on the ground, as before).
+- **How it is sent:** the rocket goes as one short text `dk` ("x,y,z,turn"), checked on arrival to be exactly four numbers;
+  while out there, her own place is sent as a half-size offset from her rocket, so every number stays inside the database's
+  limits (the tether keeps a spacewalker within 110 m). `firebase-rules.json` adds `dk` (text under 60 letters; the family
+  must publish the rules once more, MULTIPLAYER.md). With older rules a phone in space simply drops `dk` and is not seen
+  until it lands; nothing else changes.
+- **Pets:** her chosen friend floats along on spacewalks in its own little bubble, never far away (the voice says so once),
+  and waits in the rocket otherwise.
+- Tests (desktop, software rendering): `space-together` 6/6 (two browsers, test relay with 120 ms delay), `open-space`
+  24/24 (+ the pet check), Firebase rules emulator test adds two `dk` cases (not run here: no emulator).
+
 ## Checkpoint: build 126 — OPEN SPACE (fly the rocket, spacewalks, Star Station) and THE SUN; build 125's fixes included
 The family's big request: make space itself a place to explore, let her get out of the rocket and float about, and make the Sun a destination with huge attractions. This build does the first verified phases of it.
 - **🌌 Open space** (new `src/deepspace.js`): the first picture in the rocket menu. After blast-off she flies the rocket herself in a 3D solar system: ◀ ▶ steer, ▲ faster, ▼ slower (arcade flight, never stuck: a soft push keeps her out of planets, and the edge of the solar system turns her back). The **picture map** (🗺️) lists every planet, the Moon, Pluto, the Sun, Star Station, the hoop trail, the comet and the asteroid belt; tapping one starts the **autopilot**, which flies faster the farther the goal is (seconds, never minutes) and slows down on arrival; touching the arrows takes over again. Close to a planet, **🛬 lands** on it (the normal landing on its pad); from any planet's rocket, 🌌 goes back up, starting beside that planet.

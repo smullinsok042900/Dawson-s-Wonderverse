@@ -12,6 +12,13 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 128: eighteen new story friends, and open space together
+- New original friends to meet: a pop-star trio in Art Plaza, Grinny the big stripy cat in Toy Town, a snow family in Frosty
+  Peaks (an ice princess, a snowman buddy, a reindeer and a mountain guide) and ten puppies around Toy Town, Happy Farm,
+  Frosty Peaks and Balloon Hills. Tap them to sing, dance and play.
+- Play Together in space: friends in one room see each other's rockets and spacewalks out in open space (publish the
+  updated database rules once: MULTIPLAYER.md). Her pet floats along on spacewalks in its own bubble.
+
 ## 3D build 126: open space and the Sun
 - **🌌 Fly the rocket yourself through space:** steer, speed up, slow down, or pick a picture on the map and the rocket flies there. Land on any planet you fly up to.
 - **Spacewalks:** float outside the rocket in a bubble helmet with a jetpack, and tap 🚀 to go back in. Dock at Star Station and collect floating stars, fly through the giant hoops, visit the comet, collect crystals in the asteroid belt.

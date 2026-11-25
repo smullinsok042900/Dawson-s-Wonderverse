@@ -67,6 +67,13 @@ function planetTex(id) {
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return (TEX[id] = t);
 }
 
+// the toy rocket as one painted mesh lying along its flight direction (+ -z is forward); friends' rockets use it too
+let ROCKET_GEO = null;
+export function rocketMesh() {
+  if (!ROCKET_GEO) { const rb = K.makeBatch(); for (const [g2, c, x = 0, y = 0, z = 0, sc = 1, rot] of K.rocketParts()) rb.put(g2, x, y, z, c, sc, rot); ROCKET_GEO = rb.mesh(K.shinyMat()).geometry; ROCKET_GEO.userData.shared = true; }
+  const hull = new THREE.Mesh(ROCKET_GEO, K.shinyMat()); hull.rotation.x = -Math.PI / 2; hull.position.z = 3.4; const g = new THREE.Group(); g.add(hull); g.userData.dynamic = true; return g;
+}
+
 export function initDeep(G, api) {
   const { scene, Sound, player: P } = api;
   const say = (m, speak = true) => api.toast(m, speak);
@@ -90,8 +97,7 @@ export function initDeep(G, api) {
       yield;
     }
     // the rocket she flies: the same toy rocket, merged into one painted mesh, lying along its flight direction
-    const rb = K.makeBatch(); for (const [g2, c, x = 0, y = 0, z = 0, sc = 1, rot] of K.rocketParts()) rb.put(g2, x, y, z, c, sc, rot);
-    const hull = rb.mesh(K.shinyMat()); hull.rotation.x = -Math.PI / 2; hull.position.z = 3.4; const rocket = new THREE.Group(); rocket.add(hull); rocket.userData.dynamic = true; root.add(rocket);
+    const rocket = rocketMesh(); root.add(rocket);
     const glass = new THREE.Mesh(K.rocketGlass(), new THREE.MeshStandardMaterial({ color: '#9fe6ff', emissive: '#3a7fb0', emissiveIntensity: .4, roughness: .1 })); glass.position.set(0, .9, 3.4 - 3.6); rocket.add(glass);
     const flame = K.glow('#ffb040', 3.2, .9); flame.position.set(0, 0, 3.6); rocket.add(flame);
     S = { bodies, rocket, flame, glass, pos: new THREE.Vector3(), yaw: 0, speed: 0, auto: null, mode: 'fly', near: null, walk: null, t: 0, cam: new THREE.Vector3(), camYaw: 0, told: {}, got: { stars: 0, hoops: 0, crystals: 0 } };
@@ -271,7 +277,7 @@ export function initDeep(G, api) {
     root.traverse(o => { if (o.isMesh && o.geometry && !o.geometry.userData.shared) o.geometry.dispose(); if (o.material && !o.material.map?.isCanvasTexture && o.material !== K.shinyMat()) o.material.dispose?.(); });
     scene.remove(root); root = null; S = null;
   }
-  function leave() { showHud(false); if (mapPanel) mapPanel.style.display = 'none'; sky.mesh.visible = false; G.camOverride = null; G.deepFace = null; G.deepActive = false; endSuit(); api.light(null); free(); }
+  function leave() { G.deepRocket = null; G.deepWalk = null; showHud(false); if (mapPanel) mapPanel.style.display = 'none'; sky.mesh.visible = false; G.camOverride = null; G.deepFace = null; G.deepActive = false; endSuit(); api.light(null); free(); }
   function land() {
     if (!S || !S.near || !S.near.land) return; const id = S.near.id; Sound.chime(); say(`🛬 Landing on ${id === 'earth' ? 'Earth, home' : id === 'moon' ? 'the Moon' : id[0].toUpperCase() + id.slice(1)}!`);
     const pad = S.pad; leave(); api.land(id, pad);
@@ -294,7 +300,7 @@ export function initDeep(G, api) {
     if (S.mode !== 'fly') return; S.speed = 0; S.auto = null; S.mode = 'walk';
     const side = V.set(Math.cos(S.yaw), 0, -Math.sin(S.yaw)); // the rocket's right side
     S.walk = { pos: S.pos.clone().addScaledVector(side, 2.4).add(V2.set(0, -.6, 0)), vel: side.clone().multiplyScalar(1.5), yaw: S.camYaw, up: 0, down: 0, far: 0 };
-    G.playerHidden = false; wearSuit(); Sound.whoosh && Sound.whoosh(); refreshHud();
+    G.playerHidden = false; wearSuit(); Sound.whoosh && Sound.whoosh(); refreshHud(); if (api.hasPet && api.hasPet() && !S.told.pet) { S.told.pet = 1; setTimeout(() => say('🐾 Your friend floats with you, in a little bubble of its own!', true), 3500); }
     say('🧑‍🚀 Floating in space! Your bubble helmet keeps you safe. Arrows to float, JUMP to go up, ⬇️ to go down. 🚀 takes you back!');
     api.discover('spacewalk');
   }
@@ -355,6 +361,8 @@ export function initDeep(G, api) {
       const want = V.set(Math.sin(S.camYaw) * 7, 2.4, Math.cos(S.camYaw) * 7).add(W.pos); S.cam.lerp(want, Math.min(1, dt * 3));
       G.camOverride = { pos: S.cam.toArray(), look: [W.pos.x, W.pos.y + 1, W.pos.z] };
     }
+    const r2 = n => Math.round(n * 100) / 100; G.deepRocket = [r2(S.pos.x), r2(S.pos.y), r2(S.pos.z), r2(S.yaw)]; // (build 127) friends in the room see my rocket
+    G.deepWalk = S.walk && S.mode !== 'fly' ? S.walk : null;                                                     // (build 127) my pet floats beside me
     const here = S.mode === 'fly' ? S.pos : S.walk.pos; updateBelt(here); updatePlaces(dt, here);
   }
 

@@ -11,6 +11,8 @@ const player = { x: 5, y: 0, z: 0, t: serverTimestamp(), f: 1, g: true, r: false
 let pass = 0, fail = 0; const ok = async (name, p) => { try { await p; console.log('PASS', name); pass++; } catch (e) { console.log('FAIL', name, e.message); fail++; } };
 await ok('player u1 joins (unchanged rule)', assertSucceeds(set(ref(db('u1'), `${R}/players/u1`), player)));
 await ok('player u2 joins', assertSucceeds(set(ref(db('u2'), `${R}/players/u2`), { ...player, k: 1 })));
+await ok('(build 127) a player in open space sends their rocket as short text', assertSucceeds(set(ref(db('u2'), `${R}/players/u2`), { ...player, k: 1, l: 'deep', x: 12.5, y: -3, z: 40, dk: '30120.5,4,-880.25,1.57' })));
+await ok('(build 127) but not a long one', assertFails(set(ref(db('u2'), `${R}/players/u2`), { ...player, k: 1, l: 'deep', dk: 'x'.repeat(80) })));
 const msg = f => ({ f, d: '{"t":"h"}', at: serverTimestamp() });
 await ok('u1 (in the room) sends a call message to u2', assertSucceeds(push(ref(db('u1'), `${R}/sig/u2`), msg('u1'))));
 await ok('a stranger (not in the room) can NOT send to u2', assertFails(push(ref(db('stranger'), `${R}/sig/u2`), msg('stranger'))));

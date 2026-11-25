@@ -50,7 +50,7 @@ import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
 import { makeIntervalIndex } from './spatial.js';
-import { initDeep } from './deepspace.js'; // (build 126) open space: fly the rocket, spacewalks
+import { initDeep, rocketMesh as deepRocketMesh } from './deepspace.js'; // (build 126) open space: fly the rocket, spacewalks
 import { runInSlices as deepSlices } from './stream-work.js'; // (overhaul) indexed collision lookups
 import { auditScene } from './scene-audit.js'; // (overhaul) automated geometry/placement validation
 
@@ -287,7 +287,7 @@ function spaceLight(L) {
   sky.visible = !L; renderer.shadowMap.needsUpdate = true;
 }
 G.space = space;
-const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest) });
+const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest), hasPet: () => !!(G.followerCount && G.followerCount()) });
 G.deep = deep;
 // (build 126) landing on a planet flown up to in open space: the normal landing (the rocket comes down onto that planet's pad)
 // (The rocket she took off in may not exist any more: the place it stands on is freed while she is far away in space, so
@@ -1754,7 +1754,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '126'; G.build = GAME_BUILD;
+const GAME_BUILD = '128'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
@@ -1888,7 +1888,7 @@ function trainArrived(i) {
 // (build 55) PLAY TOGETHER: private family rooms (multiplayer.js). Nothing connects until Create or Join is pressed.
 // (build 56) The room shares the WORLD too, so the game hands it the two things it can build for everyone (the Block
 // Builder wall and the big paint wall) and lets it draw what friends made.
-const mp = initMultiplayer(G, { scene, player, world, makeCreature, CREATURES, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g),
+const mp = initMultiplayer(G, { rocketMesh: () => deepRocketMesh(), scene, player, world, makeCreature, CREATURES, toy, Sound, voice, toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), compile: g => compileGroup(g),
   applyBlock: (i, t) => meadow.setBuildCell(i, t), applyPaint: segs => { for (const s of segs) paintRemote(s); }, applyClear: () => clearPaintRemote() });
 G.mp = mp;
 SHARE.block = (i, t) => mp.block(i, t);
