@@ -17,7 +17,10 @@ family's OK) these are **original friends in the same spirit**, built as round t
 - Each says hello when she comes near and plays when tapped (sing, twirl, bounce, sparkle, hug). One painted solid each
   (2,300–3,500 triangles, the same shared material: no new shader), streamed with its district like the drawing friends.
 - Tests: `story-friends.test.mjs` 3/3 (all registered, finite, on the ground, under 3,600 triangles, one home each, apart);
-  all 133 unit tests pass; a picture tour of every home (two moved: the princess stood behind the big ice block, the cat by the crates).
+  all 133 unit tests pass; a picture tour of every home (moved: the princess stood behind the big ice block, the cat by the crates).
+  The first full smoke run (344/345) caught the princess standing on the family's snow sculpture friend, so its tap check
+  failed; she and two singers (next to the orange scribble friend) were moved, and the unit test now checks every new home
+  against every resident who already lived there (≥ 2.5 m).
 
 ### Build 127 — OPEN SPACE TOGETHER (friends' rockets and spacewalks) and pets on spacewalks
 - **Play Together in open space:** friends in one room who fly up into 🌌 see each other's **rockets** out there (gliding
