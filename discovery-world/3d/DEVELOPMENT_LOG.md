@@ -18,7 +18,7 @@ the ground is a huge play mat, crayons stand like trees, a giant teddy and a toy
 - **The block mountain** to climb, with **the giant toy slide** all the way down; **the wooden toy coaster**; **the spinning top**;
   **the jack-in-the-box** that bounces her up to a shelf of giant toys.
 - Pets: **Clicky** (a wind-up mouse with its key) and **Blocky** (a puppy made of toy blocks).
-- Tests: `multiverse.cjs` 23/23 (the Upside-Down World's 14 and 9 for the toys, using real held arrow keys for climbing and driving).
+- Tests: `multiverse.cjs` 23/23 (the Upside-Down World's 14 and 9 for the toys, using real held arrow keys for climbing and driving). **Full smoke test: 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 131 — THE MULTIVERSE BEGINS: WORMHOLES and THE UPSIDE-DOWN WORLD
 The family's big request: wormholes in open space that lead to wild other dimensions. Phases 1 and 2 are done:
