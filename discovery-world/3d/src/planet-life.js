@@ -17,6 +17,7 @@ import { DOODLE_FRIENDS } from './doodle-friends.js';
 import { KEEPSAKE_FRIENDS } from './keepsake-friends.js';
 import { STORY_FRIENDS } from './story-friends.js';
 import { STORY_FRIENDS_2 } from './story-friends-2.js';
+import { FAMILY } from './family.js';
 import { CRAFT_FRIENDS } from './craft-friends.js';
 
 const GEO = { box: new THREE.BoxGeometry(1, 1, 1), ball: new THREE.SphereGeometry(1, 11, 8), cone: new THREE.ConeGeometry(1, 1, 9), cyl: new THREE.CylinderGeometry(1, 1, 1, 8), tor: new THREE.TorusGeometry(1, .22, 5, 12), ballS: new THREE.SphereGeometry(1, 8, 6), dot: new THREE.SphereGeometry(1, 6, 4) }; // (light: about 150 triangles a big ball; build 117: small balls use fewer (80), tiny ones (eyes, spots) far fewer (36))
@@ -33,6 +34,7 @@ export const SPECIES = {
   ...MARKER_FRIENDS,
   ...DOODLE_FRIENDS,
   ...KEEPSAKE_FRIENDS,
+  ...FAMILY, // (build 130) Dawson and her family
   ...STORY_FRIENDS_2, // (build 129) monsters, rescue pups, sea friends, pig family, toy doctor, robot, fluffy bunnies
   ...STORY_FRIENDS, // (build 128) original singers, stripy cat, snow family and puppies
   ...CRAFT_FRIENDS,

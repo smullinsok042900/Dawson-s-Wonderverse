@@ -6,6 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 130 — DAWSON AND HER FAMILY
+From the family's pictures (the photographs are not in the game; only colours, hair, glasses and clothes), built as round toys
+like the story friends (`src/family.js`; the person builder gained glasses, beards, long, short and combed hair, a coloring
+book and two little hero toys). They live together on the Adventure Trail, just past the zip line, and greet her by name:
+- **Dawson** (ponytail, black long-sleeve top, red leggings, a hero toy in each hand), **Mom** (long dark hair, clear glasses,
+  maroon plaid flannel over a black top, grey joggers, a coloring book), **Dad** (strawberry-blond hair, big beard, maroon
+  T-shirt, grey sweatpants), **Aunt Ayla** (golden hair, lilac dress, mint cardigan), **Gigi** (short dark hair, blue T-shirt,
+  long cream skirt), **Grandpa** (combed dark hair, black glasses, beard, navy jacket over a light blue shirt, jeans) and
+  **Buck the Dog** (tan and black, floppy ears, a pink bandana).
+- Each one speaks to Dawson ("Hi Dawson! It is Dad! I love you so much!") and plays when tapped (hug, twirl, sparkle, bounce).
+- Placed clear of the trail's activity spots (read from the running game; `tests/activity-spots.json` now also lists the
+  trail, the woods and the pier) and of every older friend; Grandpa was moved off the zip-line pole after a picture check.
+- Tests: `family.test.mjs` 4/4; all 142 unit tests pass.
+
 ## Checkpoint: build 129 — THIRTY MORE STORY FRIENDS (the family's second set of pictures)
 Again original friends in the spirit of the shows in the pictures (the real characters belong to other companies), built
 as round toys in the creature batch (`src/story-friends-2.js`, sharing build 128's parts):
@@ -25,7 +39,7 @@ as round toys in the creature batch (`src/story-friends-2.js`, sharing build 128
   The next smoke run failed the farm and Balloon Hills activity checks: some friends stood exactly on an activity's 🐾 spot
   (Sparky on the carrots, Zoom on the apples, Papa Pig on the ducks, Rose on the wind chimes), so the 🐾 picked the friend.
   Every activity spot was read from the running game (`tests/activity-spots.json`) and every story friend now stands at
-  least 2.5 m from one (26 small moves); both friend tests check it.
+  least 2.5 m from one (26 small moves); both friend tests check it. **Full smoke test after the fix: 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 128 — EIGHTEEN NEW STORY FRIENDS; build 127 (open space together) included
 The family sent pictures of characters Dawson loves from films and shows. Those belong to other companies, so (with the

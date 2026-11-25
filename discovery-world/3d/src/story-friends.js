@@ -10,6 +10,7 @@ const SMALL = new THREE.SphereGeometry(1, 8, 6);
 const DOT = new THREE.SphereGeometry(1, 6, 4);
 const CONE = new THREE.ConeGeometry(1, 1, 10);
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 10);
+const BOX_S = new THREE.BoxGeometry(1, 1, 1);
 const INK = '#2a2333';
 
 const dot = (b, color, x, y, z, sx, sy = sx, sz = sx, rot) => b.put(DOT, x, y, z, color, [sx, sy, sz], rot);
@@ -56,6 +57,12 @@ function person(b, o) {
   for (const s of [-1, 1]) eye(b, s * .068, 1.45, face(s * .068, 1.45) - .012, .042, { iris, tall: 1.25, core: INK });
   drawOn(b, lips, face, [[-.05, 1.355], [0, 1.34], [.05, 1.355]], .012, .006);
   for (const s of [-1, 1]) blush(b, '#ff9fb5', face, s * .11, 1.38, .032);
+  if (o.style === 'long') { ball(b, hair, 0, 1.3, -.12, .2, .32, .08); for (const s of [-1, 1]) ball(b, hair, s * .17, 1.24, .0, .06, .2, .07); }   // (build 130) long hair down the back and over the shoulders
+  if (o.style === 'slick') ball(b, hair, .04, 1.6, .02, .2, .07, .17, false, [0, 0, -.15]);                                                            // (build 130) hair combed to one side
+  if (o.glasses) for (const s of [-1, 1]) { b.put(CYL, s * .068, 1.45, face(s * .068, 1.45) + .012, o.glasses, [.052, .008, .046], [Math.PI / 2, 0, 0]); b.put(CYL, s * .068, 1.45, face(s * .068, 1.45) + .016, '#eaf6ff', [.04, .004, .035], [Math.PI / 2, 0, 0]); }
+  if (o.beard) { ball(b, o.beard, 0, 1.33, face(0, 1.33) - .07, .15, o.bigBeard ? .14 : .09, .08); for (const s of [-1, 1]) ball(b, o.beard, s * .13, 1.38, face(s * .13, 1.38) - .05, .04, .08, .05); }
+  if (o.figures) { ball(b, '#e3344a', -.33, .84, .1, .035, .07, .03); ball(b, '#2f5fa8', .33, .84, .1, .035, .07, .03); }   // (build 130) two little hero toys, one in each hand
+  if (o.book) { b.put(BOX_S, 0, .86, .16, '#ffffff', [.24, .17, .02], [-.5, 0, 0]); b.put(BOX_S, .04, .87, .175, '#7fd3ef', [.1, .08, .005], [-.5, 0, 0]); }
   if (o.mic) { b.put(CYL, .31, .86, .1, '#3b3b4a', [.018, .14, .018]); ball(b, o.mic, .31, .95, .1, .045); }
   if (o.wand) { b.put(CYL, -.31, .86, .1, '#d6f3ff', [.012, .2, .012]); ball(b, '#bff0ff', -.31, .98, .1, .04); }
   if (o.pack) ball(b, o.pack, 0, 1.0, -.2, .17, .2, .08);
