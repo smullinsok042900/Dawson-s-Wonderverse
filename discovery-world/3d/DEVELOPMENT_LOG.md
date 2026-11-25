@@ -27,7 +27,8 @@ The family's big request: wormholes in open space that lead to wild other dimens
   - Creatures: **Flipsies**; pets **Topsy** (an upside-down bunny) and **Dropsy** (a jelly drop that drips up).
 - Picture check: the sky land was too high to see from the meadow (15 m): lowered to 10.5 m, everything scaled with it; the
   thick front edge that covered the view from up there became a thin grassy rim.
-- Tests: `multiverse.cjs` 14/14 (desktop, software rendering).
+- Tests: `multiverse.cjs` 14/14; **full smoke test: 345/345** (its planet checks now visit the Upside-Down World too: aliens,
+  activities, a 330 m place, only it kept in memory). Desktop, software rendering.
 
 ## Checkpoint: build 130 — DAWSON AND HER FAMILY
 From the family's pictures (the photographs are not in the game; only colours, hair, glasses and clothes), built as round toys
