@@ -6,6 +6,21 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 133 — THE BUBBLE UNIVERSE (the third dimension)
+A third 🌀 wormhole (soft white, blue and pink) leads to **the Bubble Universe** (`src/bubble.js`): foam hills, giant bubbles
+resting on the foam and drifting up through a pastel sky, and a very light, floaty pull (3.2 m/s², made-up).
+- **Ride INSIDE a giant bubble**: tap the bubble blower; the arrows steer the bubble (it drifts gently up by itself), JUMP pops
+  it and she floats softly down. Stars hang high up where only a bubble can reach.
+- **Bubble trampolines** (they squish), **bubble houses** on giant bubbles that bob up and down — their floors really move and
+  carry her — up to a cloud with a star, and **the bubble slide** (a soapy see-through tube) all the way down.
+- **The bubble bus**: a giant bubble that floats her over three floating islands to the far stop.
+- **The bubble pop garden**: walk into the little bubbles to pop them, each with its own note. The test found that at a slow
+  frame rate a fast step skipped bubbles, and half of them were too high to reach: they are lower now and the touch is
+  checked along the whole step (so a slow phone never misses one).
+- One see-through material for every bubble; the still ones are batched. Creatures: the Bloopers; pets **Glub** (a fish in its
+  own bubble) and **Foamy** (a soap-foam puppy).
+- Tests: `multiverse.cjs` 33/33 (10 new bubble checks, with the real arrow keys and JUMP). **Full smoke test: 345/345** (desktop, software rendering).
+
 ## Checkpoint: build 132 — THE GIANT TOY UNIVERSE (the second dimension)
 A second 🌀 wormhole (yellow, red and blue) leads to **the Giant Toy Universe** (`src/toy.js`): she is the size of a toy mouse,
 the ground is a huge play mat, crayons stand like trees, a giant teddy and a toy house stand far away. It is one more entry in

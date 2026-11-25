@@ -88,6 +88,36 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('the toy pets live here (Clicky and Blocky)', await p.evaluate(() => ['pet_windmouse', 'pet_blockpup'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
     await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
     check('home again from the toys', await p.evaluate(() => __DDW3.player.layer === '' && __DDW3.G.gravSign !== -1));
+    // ===== (build 133) THE BUBBLE UNIVERSE: a third wormhole =====
+    await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
+    await p.locator('#rocketPanel .rkT[data-id=deep]').tap(); await until(() => __DDW3.G.deep.active(), null, 120000);
+    await p.evaluate(() => __DDW3.G.deep.flyTo('wh:bubble'));
+    check('a third wormhole leads to the Bubble Universe', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'bubble', null, 300000));
+    await sleep(1500);
+    const BX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 20; P.y = 0; const it = __DDW3.G.interact.find(i => i.disc === 'bubbleride'); it.run(); }, BX);
+    const inB = await p.evaluate(() => __DDW3.player.ride && __DDW3.player.ride.type); const y0 = await p.evaluate(() => __DDW3.player.y);
+    await p.keyboard.down('ArrowUp'); await sleep(4000); await p.keyboard.up('ArrowUp'); const y1 = await p.evaluate(() => __DDW3.player.y);
+    check('the bubble blower puts her inside a giant bubble, and ▲ floats it up', inB === 'bubble' && y1 > y0 + 2, JSON.stringify({ inB, y0, y1 }));
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-ride.jpg'), type: 'jpeg', quality: 85 });
+    await p.locator('#jumpBtn').tap();
+    check('JUMP pops the bubble and she drifts gently down to the foam', await until(() => !__DDW3.player.ride && __DDW3.player.grounded && __DDW3.player.y < .3, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 48; P.y = 3; P.vy = 0; P.grounded = false; }, BX);
+    check('a bubble trampoline bounces her up', await until(() => __DDW3.player.vy > 5, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 140; P.y = 0; P.vy = 0; P.vx = 0; }, BX); await sleep(6000);
+    const ride = await p.evaluate(async X => { const P = __DDW3.player; const pl = __DDW3.G.platforms.find(z => z.layer === 'space' && Math.abs(z.a - (X + 110 + 17 - 1.4)) < .01); if (!pl) return { none: true }; P.x = X + 127; P.y = pl.y + .5; P.vy = 0; P.grounded = false;
+      await new Promise(r => setTimeout(r, 1500)); let lo = 99, hi = -99, ok = true; for (let n = 0; n < 40; n++) { await new Promise(r => setTimeout(r, 100)); lo = Math.min(lo, P.y); hi = Math.max(hi, P.y); if (!P.grounded || Math.abs(P.y - pl.y) > .05) ok = false; } return { lo, hi, ok }; }, BX);
+    check('a bubble house floor bobs up and down and carries her with it', ride.ok && ride.hi - ride.lo > .3, JSON.stringify(ride));
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 9); const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); });
+    check('the bubble slide brings her down from the cloud', await until(() => !__DDW3.player.ride && __DDW3.player.y < .6, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 226; P.y = 0; }, BX); await sleep(6000);
+    const bus = await p.evaluate(async () => { const it = __DDW3.G.interact.find(i => i.icon === '🚌'); if (!it) return -1; __DDW3.player.x = it.x; it.run(); let best = 0; for (let n = 0; n < 300 && __DDW3.player.ride; n++) { await new Promise(r => setTimeout(r, 100)); best = Math.max(best, __DDW3.player.y); } return { best, ride: !!__DDW3.player.ride, x: __DDW3.player.x - it.x }; });
+    check('the bubble bus floats her over the islands to the far stop', bus.best > 8 && !bus.ride && bus.x > 55, JSON.stringify(bus));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 79; P.y = 0; P.vx = 0; }, BX); await p.keyboard.down('ArrowRight'); await sleep(5000); await p.keyboard.up('ArrowRight');
+    check('walking through the bubble pop garden pops the bubbles', await p.evaluate(() => __DDW3.world.disc.has('bubblepop')));
+    check('the bubble pets live here (Glub and Foamy)', await p.evaluate(() => ['pet_bubblefish', 'pet_foamy'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
+    await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
+    check('home again from the bubbles', await p.evaluate(() => __DDW3.player.layer === '' && !__DDW3.player.ride));
     check('no page errors', !errs.length, errs.slice(0, 3).join(' | '));
   } catch (e) { console.log('FAIL exception: ' + e.message); fail++; }
   finally { console.log(`${ok} checks passed`); await b.close(); process.exit(fail ? 1 : 0); }

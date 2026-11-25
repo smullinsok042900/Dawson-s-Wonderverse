@@ -33,6 +33,18 @@ export const DIMENSIONS = [
     },
     alien: { name: 'Tinkers', body: '#ff9a2e', eye: 2, ant: 1, shape: 'cube', move: 'walk', note: 740, hi: 'Tick tock! We are Tinkers, the wind-up toy people! Wind us up and watch us go!', iris: '#2a2333' },
   },
+  {
+    id: 'bubble', icon: '🫧', name: 'the Bubble Universe',
+    colors: ['#e8f6ff', '#b0d8ff'],
+    gravity: 3.2, // a very light, floaty pull: everything drifts (made-up)
+    hello: 'The Bubble Universe! Everything here floats! Tap the bubble blower to ride inside a giant bubble, bounce on bubble trampolines, and ride the bubble bus!',
+    wormhole: { at: [5.2, 600, 40], colors: ['#c8e8ff', '#ffc8e8', '#ffffff'] },
+    look: {
+      sky: { top: '#a8c8ff', mid: '#d8e8ff', hor: '#fff0fa', low: '#ffe8f4', stars: 0, sunDir: [-.3, .5, -.8], sunCol: '#ffffff', glow: [5, .4, .2], band: '#ffffff', bandK: .2, wind: .01 },
+      sun: ['#ffffff', 2.4], hemi: ['#f0f4ff', '#ffd8f0', 1.4], fog: ['#f4ecff', 110, 360], env: .3, rim: ['#d8f0ff', .7],
+    },
+    alien: { name: 'Bloopers', body: '#c8e8ff', eye: 2, ant: 1, shape: 'balloon', move: 'float', note: 880, hi: 'Bloop bloop! We are Bloopers! We float everywhere in our bubbly world!', iris: '#3a6ab0' },
+  },
 ];
 export const DIM = Object.fromEntries(DIMENSIONS.map(d => [d.id, d]));
 export const isDimension = id => !!DIM[id];
