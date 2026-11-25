@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 130: Dawson and her family
+- Dawson, Mom, Dad, Aunt Ayla, Gigi, Grandpa and Buck the dog live together on the Adventure Trail as round toy characters.
+  Each one says hello to Dawson and plays when tapped.
+
 ## 3D build 129: thirty more story friends
 - Fuzzy monsters and a toy doctor's clinic in Toy Town, a rescue pup team and a pig family at Happy Farm, sea explorers and
   seaside friends at Sunny Seaside, Beepo the wheel robot in Lab Gardens and five fluffy rainbow bunnies in Balloon Hills.

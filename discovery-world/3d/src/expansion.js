@@ -19,6 +19,7 @@ import { FAMILY_FRIEND_HOMES } from './family-friend-homes.js';
 import { CRAFT_FRIEND_HOMES } from './craft-friend-homes.js';
 import { STORY_FRIEND_HOMES } from './story-friends.js';
 import { STORY_FRIEND_HOMES_2 } from './story-friends-2.js';
+import { FAMILY_HOMES } from './family.js';
 import { buildToyTownDetail, buildLabGardenDetail, buildArtPlazaDetail, buildSeasideDetail, buildWoodsDetail, buildFrostyDetail, buildFarmDetail, buildPierDetail, buildHillsDetail, buildTrailDetail } from './scenery-detail.js';
 
 export const EXP = { x0: 424, x1: 940, xMin: -830 }; // (build 49: Balloon Hills, past the pier) // (build 43: both ends now lead up stairs into the sky) // (build 30: the world also grows to the LEFT of the Playhouse; build 35: on to the farm)
@@ -165,7 +166,7 @@ export function initExpansion(G, api) {
   }
   const builders = {};
   // One small build part per resident keeps their shapes inside the district's normal frame budget.
-  const familyParts = (c, district) => [...FAMILY_FRIEND_HOMES, ...STORY_FRIEND_HOMES, ...STORY_FRIEND_HOMES_2, ...CRAFT_FRIEND_HOMES.filter(home => home.planet === 'earth')].filter(home => home.district === district)
+  const familyParts = (c, district) => [...FAMILY_FRIEND_HOMES, ...STORY_FRIEND_HOMES, ...STORY_FRIEND_HOMES_2, ...FAMILY_HOMES, ...CRAFT_FRIEND_HOMES.filter(home => home.planet === 'earth')].filter(home => home.district === district)
     .map(home => () => lifeHere(c, [[home.kind, home.x, home.z]]));
   function startBuild(st) {
     st.g = new THREE.Group(); st.g.name = 'district:' + st.d.id; st.taps = []; st.inter = []; st.step = 0; st.state = 'building';
