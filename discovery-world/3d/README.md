@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 129: thirty more story friends
+- Fuzzy monsters and a toy doctor's clinic in Toy Town, a rescue pup team and a pig family at Happy Farm, sea explorers and
+  seaside friends at Sunny Seaside, Beepo the wheel robot in Lab Gardens and five fluffy rainbow bunnies in Balloon Hills.
+
 ## 3D build 128: eighteen new story friends, and open space together
 - New original friends to meet: a pop-star trio in Art Plaza, Grinny the big stripy cat in Toy Town, a snow family in Frosty
   Peaks (an ice princess, a snowman buddy, a reindeer and a mountain guide) and ten puppies around Toy Town, Happy Farm,

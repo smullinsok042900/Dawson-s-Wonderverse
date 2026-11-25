@@ -6,6 +6,23 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 129 — THIRTY MORE STORY FRIENDS (the family's second set of pictures)
+Again original friends in the spirit of the shows in the pictures (the real characters belong to other companies), built
+as round toys in the creature batch (`src/story-friends-2.js`, sharing build 128's parts):
+- **Toy Town:** four fuzzy neighbourhood monsters (Fuzzle, Bopsy, tall Ziggy with antennae, Plum with a flower), and a toy
+  clinic: Doctor Daisy in her white coat with Ellie the plush elephant (nurse cap), Rexy the plush dino and Tilly the plush giraffe.
+- **Happy Farm:** a rescue pup team with helmets, hats, goggles and vests (Sparky the fire pup, Digger the builder, Zoom the
+  pilot, Medic Mo, Splash the water pup), and a pig family (Papa with glasses, Mama, Poppy with a bow, baby Pip).
+- **Sunny Seaside:** sea explorers in sailor hats (Captain Wally the walrus, Pip the otter, Shelly the turtle) and seaside
+  friends (Twinkle the starfish, Pinchy the crab, Ollie the octopus in a sunhat, Shimmer the snail).
+- **Lab Gardens:** Beepo, a little robot on one wheel with a screen face. **Balloon Hills:** five fluffy rainbow bunnies.
+- 1,000–3,000 triangles each, one mesh, the shared creature material. Rescue pups use new hat and vest options of the puppy builder.
+- Tests: `story-friends-2.test.mjs` 3/3 (it found Papa and Mama Pig on top of the purple bee friend and Beepo next to the green
+  scribble friend: moved); all 136 unit tests pass; a picture tour of every home found Ollie inside the lighthouse (moved).
+  The first smoke run failed the big-eared seaside friend's PAW check: the PAW button picks the nearest friend, and Ollie
+  stood 4 m away. Every story friend (both batches) now stands at least 5 m from every older resident, and both tests
+  check it (moved: Ollie, Twinkle, Pinchy, Shimmer, and from build 128 Princess Crystal, Snowball Buddy, Waffles and Pepper).
+
 ## Checkpoint: build 128 — EIGHTEEN NEW STORY FRIENDS; build 127 (open space together) included
 The family sent pictures of characters Dawson loves from films and shows. Those belong to other companies, so (with the
 family's OK) these are **original friends in the same spirit**, built as round toys like the drawing friends (`src/story-friends.js`):
