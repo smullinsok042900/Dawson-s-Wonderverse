@@ -16,7 +16,7 @@ two-way islands, gravity slide, flip coaster, sky playground, Flipsies, pets Top
    upside-down swings and a ceiling slide ride, a gravity maze; Play Together: send the flip (`G.gravSign`) with the player
    state so friends see each other head-down (needs one more small field and the rules); shared rocket through a wormhole.
 2. ~~Giant Toy Universe~~ done in build 132 (more later: toy houses to walk into, a toy car race, building blocks she stacks).
-3. **Bubble Universe** (enter giant bubbles and float in them, bubble slides, bubble trampolines, bubble buses).
+3. ~~Bubble Universe~~ done in build 133 (more later: bubble houses to go inside, a bubble race, giant bubble wands to blow).
 4. **Squishy Jelly World** (jelly hills that wobble when she lands: vertex-shader wobble, not physics; wobbly bridges).
 5. **Wacky Gravity World** (low-gravity zones, sideways tunnels, rotating gravity rings: reuses build 131's gravity rules).
 6. Tiny & Giant (P.sizeMul already exists), Rainbow Chaos, Clockwork, Mirror Reality, Dream Dimension, then new ideas.

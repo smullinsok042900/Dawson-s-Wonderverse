@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 133: the Bubble Universe
+- A third 🌀 wormhole: float inside a giant bubble (steer it with the arrows, JUMP pops it), bounce on bubble trampolines,
+  hop across bubble houses that bob up and down, ride the bubble slide and the bubble bus, pop bubbles, meet Glub and Foamy.
+
 ## 3D build 132: the Giant Toy Universe
 - A second 🌀 wormhole: everything is an enormous toy. Climb giant blocks, bounce across giant balls, drive the wind-up train,
   ride the toy coaster and the toy slide, wind the giant key, and meet Clicky and Blocky.
