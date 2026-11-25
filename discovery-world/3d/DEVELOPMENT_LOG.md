@@ -20,7 +20,7 @@ family's OK) these are **original friends in the same spirit**, built as round t
   all 133 unit tests pass; a picture tour of every home (moved: the princess stood behind the big ice block, the cat by the crates).
   The first full smoke run (344/345) caught the princess standing on the family's snow sculpture friend, so its tap check
   failed; she and two singers (next to the orange scribble friend) were moved, and the unit test now checks every new home
-  against every resident who already lived there (≥ 2.5 m).
+  against every resident who already lived there (≥ 2.5 m). **Full smoke test after the move: 345/345** (desktop, software rendering).
 
 ### Build 127 — OPEN SPACE TOGETHER (friends' rockets and spacewalks) and pets on spacewalks
 - **Play Together in open space:** friends in one room who fly up into 🌌 see each other's **rockets** out there (gliding
