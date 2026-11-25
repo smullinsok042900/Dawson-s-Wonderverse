@@ -55,3 +55,9 @@ test('every friend has exactly one home, behind her path and apart from the othe
   assert.ok(fixed.length >= 8 && residents.length >= 20);
   for (const a of STORY_FRIEND_HOMES) for (const c of residents) assert.ok(Math.hypot(a.x - c.x, a.z - c.z) >= 5, `${a.kind} is too close to ${c.kind}`); // (5 m: the PAW button picks the nearest friend)
 });
+
+test('no story friend stands on an activity (its 🐾 spot would take the activity\'s place)', () => {
+  // tests/activity-spots.json: every activity's 🐾 spot per district, read from the running game (build 129); refresh it when activities move
+  const spots = JSON.parse(readFileSync(join(root, 'tests/activity-spots.json'), 'utf8'));
+  for (const h of STORY_FRIEND_HOMES) for (const x of spots[h.district] || []) assert.ok(Math.abs(h.x - x) >= 2.5, `${h.kind} at ${h.x} stands on the activity at ${x}`);
+});
