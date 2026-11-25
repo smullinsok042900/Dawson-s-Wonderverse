@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 129 (thirty more story friends)
+Desktop, software rendering; `pearth.cjs`, build 128 vs build 129, two rounds each, mean of the spots' median frame ms.
+- **Toy Town** (the four monsters and the toy clinic): 276 → 281 ms (+2%, within the ±5% noise); draw calls +4 to +6 where the clinic is in view.
+- **Happy Farm** (the spots at -420…-466; the rescue pups and the pig family stand just past them): 535 → 532 ms.
+- Not measured (to save time, the family's request): Sunny Seaside and Balloon Hills, where the lightest new friends stand
+  (1,000–2,400 triangles each). Each friend is one mesh with the shared creature material (no new shader). Not measured on the iPhone.
+
 ## Build 128 (eighteen story friends; build 127's open space together included)
 Desktop, software rendering; `pearth.cjs` (iPhone-sized touch viewport, adaptive quality frozen), build 126 vs build 128,
 two rounds each, mean of the spots' median frame ms. Noise between runs of the same file is about ±5%.
