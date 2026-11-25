@@ -6,7 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
-## Checkpoint: build 127 — OPEN SPACE TOGETHER (friends' rockets and spacewalks) and pets on spacewalks
+## Checkpoint: build 128 — EIGHTEEN NEW STORY FRIENDS; build 127 (open space together) included
+The family sent pictures of characters Dawson loves from films and shows. Those belong to other companies, so (with the
+family's OK) these are **original friends in the same spirit**, built as round toys like the drawing friends (`src/story-friends.js`):
+- **Art Plaza, a pop-star trio:** Juno (purple braid, yellow jacket, microphone), Rosa (long pink ponytail) and Mina (dark buns).
+- **Toy Town:** Grinny the Stripy Cat, a big blue-violet cat with a wide happy grin and a tiny top hat; Fluffy the pink poodle and Waffles the pug.
+- **Frosty Peaks, a snow family:** Princess Crystal (ice-blue gown, snowflake wand), Snowball Buddy (a classic snowman with a
+  scarf and bobble hat), Pinecone the Reindeer, Rowan the Mountain Guide and Blizzard the Husky.
+- **Happy Farm and Balloon Hills, more puppies:** Skipper (blue), Ginger (red), Dotty (spots), Noodle (long), Patch (sheep pup), Sunny (golden) and Pepper (beagle).
+- Each says hello when she comes near and plays when tapped (sing, twirl, bounce, sparkle, hug). One painted solid each
+  (2,300–3,500 triangles, the same shared material: no new shader), streamed with its district like the drawing friends.
+- Tests: `story-friends.test.mjs` 3/3 (all registered, finite, on the ground, under 3,600 triangles, one home each, apart);
+  all 133 unit tests pass; a picture tour of every home (two moved: the princess stood behind the big ice block, the cat by the crates).
+
+### Build 127 — OPEN SPACE TOGETHER (friends' rockets and spacewalks) and pets on spacewalks
 - **Play Together in open space:** friends in one room who fly up into 🌌 see each other's **rockets** out there (gliding
   smoothly between updates), and a friend on a spacewalk floats beside their rocket as themselves; back in the rocket, only
   the rocket shows. Friends are shown within 300 m in space (80 m along the path on the ground, as before).

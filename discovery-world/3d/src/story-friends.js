@@ -152,7 +152,7 @@ export const STORY_FRIENDS = {
   singerrosa: resident('Rosa the Singer', 'Hello! I am Rosa! Let’s dance to the music!', b => person(b, { ...person0, skin: '#f6d2bd', hair: '#ff5c8a', top: '#2a2333', bottom: '#ffd23f', skirt: true, style: 'pony', shoes: '#2a2333', belt: '#c9c9d6', iris: '#5a3a2a' }), 'twirl', 'Spin and twirl! You dance so well!', ['#ff5c8a', '#ffd23f']),
   singermina: resident('Mina the Singer', 'Hi there! I am Mina! Let’s clap to the beat!', b => person(b, { ...person0, skin: '#efc3a0', hair: '#24203a', top: '#2ec4c4', bottom: '#5865c9', style: 'buns', shoes: '#f7f7ff', belt: '#2ec4c4' }), 'bounce', 'Clap, clap, jump! Great beat!', ['#2ec4c4', '#5865c9']),
   // the big grinning stripy cat (Toy Town)
-  stripycat: resident('Grinny the Stripy Cat', 'Hello! I am Grinny! Look at my big happy smile!', stripyCat, 'bounce', 'Purr purr! Pounce, pounce!', ['#6f6fe0', '#f0a13a'], 'slide', { v: .25, r: .6 }),
+  stripycat: resident('Grinny the Stripy Cat', 'Hello! I am Grinny! Look at my big happy smile!', stripyCat, 'bounce', 'Purr purr! Pounce, pounce!', ['#6f6fe0', '#f0a13a'], 'slide', { v: .25, r: .6, size: 1.6 }),
   // the snow family (Frosty Peaks)
   iceprincess: resident('Princess Crystal', 'Hello! I am Princess Crystal! Let’s make snowflakes sparkle!', b => person(b, { ...person0, skin: '#f8dccb', hair: '#f6edc4', top: '#a9e4f7', gown: '#7fd3ef', cape: '#d6f3ff', style: 'sidebraid', tiara: '#bff0ff', wand: true, iris: '#2f78b8', lips: '#e0708f' }), 'sparkle', 'Sparkle, sparkle! Snowflakes everywhere!', ['#7fd3ef', '#ffffff']),
   snowbuddy: resident('Snowball Buddy', 'Hi! I am Snowball Buddy! I love warm hugs!', snowBuddy, 'hug', 'A big snowy hug!', ['#f7fbff', '#e3344a'], 'slide', { v: .3 }),
@@ -176,8 +176,8 @@ export const STORY_FRIEND_HOMES = [
   { kind: 'singerjuno', district: 'artplaza', x: 853, z: -4.4 },
   { kind: 'singerrosa', district: 'artplaza', x: 851.5, z: -4.6 },
   { kind: 'singermina', district: 'artplaza', x: 854.5, z: -4.6 },
-  { kind: 'stripycat', district: 'toytown', x: 600, z: -4.6 },
-  { kind: 'iceprincess', district: 'frosty', x: -330, z: -4.2 },
+  { kind: 'stripycat', district: 'toytown', x: 604, z: -4.6 },
+  { kind: 'iceprincess', district: 'frosty', x: -350, z: -4.2 },
   { kind: 'snowbuddy', district: 'frosty', x: -340, z: -4.0 },
   { kind: 'reindeerpal', district: 'frosty', x: -362, z: -4.2 },
   { kind: 'mountainguide', district: 'frosty', x: -372, z: -4.0 },
@@ -187,7 +187,7 @@ export const STORY_FRIEND_HOMES = [
   { kind: 'pupfluffy', district: 'toytown', x: 570, z: -3.9 },
   { kind: 'pupwaffles', district: 'toytown', x: 590, z: -3.8 },
   { kind: 'pupnoodle', district: 'farm', x: -455, z: -4.2 },
-  { kind: 'pupblizzard', district: 'frosty', x: -345, z: -3.8 },
+  { kind: 'pupblizzard', district: 'frosty', x: -357, z: -3.8 },
   { kind: 'pupsunny', district: 'hills', x: -730, z: -3.8 },
   { kind: 'puppepper', district: 'hills', x: -745, z: -3.9 },
   { kind: 'puppatch', district: 'farm', x: -470, z: -3.9 },
