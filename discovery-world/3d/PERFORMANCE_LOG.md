@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 133 (the Bubble Universe)
+Desktop, software rendering. `pdeep.cjs`, build 132 vs 133, two rounds: flying 105 → 105 ms, spacewalk 225 → 214 ms, draw calls
+79 → 78. `pplanet.cjs bubble`, four rounds, six spots: 149–170 ms per frame, 56–70 draw calls, 105–126k triangles. **The
+arrival spot is heavier than in the other dimensions: 336–612 ms** (the Toy Universe 178–306): most likely the first use of the
+see-through bubble material (a new shader variant) while the areas build. Next: prepare that material during the warp swirl
+(NEXT_TASKS). Not measured on the iPhone.
+
 ## Build 132 (the Giant Toy Universe)
 Desktop, software rendering. `pdeep.cjs`, build 131 vs 132, two rounds: flying 422 → 119 ms (build 131's flying samples were
 unusually slow this run: noise), spacewalk 209 → 222 ms (+6%, inside the ±15 ms this spot moved between runs of the same build),
