@@ -20,6 +20,9 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await sleep(800); await p.locator('#deepMap').tap(); await sleep(600);
     check('the 🗺️ map has a 🌀 wormhole picture', await p.locator('#deepMapPanel .deepTile[data-id="wh:upside"]').count() === 1);
     await p.evaluate(() => { const m = document.getElementById('deepMapPanel'); if (m) m.style.display = 'none'; });
+    { const y0 = await p.evaluate(() => __DDW3.G.deep.state().y); const btn = p.locator('#deepRise'); const box = await btn.boundingBox();
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p.mouse.down(); await sleep(3000); await p.mouse.up(); const y1 = await p.evaluate(() => __DDW3.G.deep.state().y);
+      check('in open space, holding ⏫ flies the rocket UP (to reach the wormholes without the map)', y1 > y0 + 10, JSON.stringify({ y0, y1 })); }
     await p.evaluate(() => __DDW3.G.deep.flyTo('wh:upside'));
     const arrived = await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'upside', null, 300000);
     check('the autopilot flies into the wormhole and she arrives in the Upside-Down World', arrived);
@@ -70,6 +73,10 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await p.keyboard.down('ArrowRight'); const climbed = await until(() => __DDW3.player.y > 7.1 && __DDW3.player.grounded, null, 40000); await p.keyboard.up('ArrowRight');
     check('she climbs the giant block steps to the lookout on top (by walking: each block is a step)', climbed, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-blocks.jpg'), type: 'jpeg', quality: 85 });
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 45; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, TX);
+    await p.keyboard.down('ArrowRight'); await sleep(3500); await p.keyboard.up('ArrowRight');
+    const blocked = await p.evaluate(X => __DDW3.player.x - X, TX);
+    check('she cannot walk through a giant ball: it stops her (she jumps on top)', blocked < 49.5, 'x ' + blocked.toFixed(2));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.grounded = false; }, TX);
     check('the giant bouncy balls bounce her from ball to ball, to the last one', await until(X => __DDW3.player.x > X + 66, TX, 40000), 'x ' + await p.evaluate(X => (__DDW3.player.x - X).toFixed(1), TX));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 117; P.y = 0; P.vy = 0; P.vx = 0; }, TX); await sleep(6000);
@@ -77,6 +84,8 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     const x0 = await p.evaluate(() => __DDW3.player.x); await p.keyboard.down('ArrowRight'); await sleep(5000); await p.keyboard.up('ArrowRight');
     const tr = await p.evaluate(() => ({ x: __DDW3.player.x, ride: __DDW3.player.ride && __DDW3.player.ride.type }));
     check('she drives the wind-up train with the arrows (▶ goes)', tr.ride === 'toytrain' && tr.x > x0 + 5, JSON.stringify({ x0, ...tr }));
+    if (tr.ride === 'toytrain') { await p.keyboard.down('ArrowRight'); const t2 = await p.evaluate(async () => { let best = 0; for (let n = 0; n < 120; n++) { await new Promise(r => setTimeout(r, 100)); let c = 0; __DDW3.scene.traverse(o => { if (o.isGroup && o.userData.dynamic && o.children.length === 1 && Math.abs(o.rotation.z) > .05 && Math.abs(o.rotation.z) < .4 && o.position.y > .3) c++; }); best = Math.max(best, c); } return best; }); await p.keyboard.up('ArrowRight');
+      check('on the block bridge the engine and wagons each tilt with the track (the train follows it)', t2 >= 2, 'cars tilted at once: ' + t2); }
     await p.evaluate(() => { __DDW3.player.ride = null; });
     await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 7); const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); });
     check('the giant toy slide takes her from the block mountain summit to the ground', await until(() => !__DDW3.player.ride && __DDW3.player.y < .5, null, 30000));
@@ -102,6 +111,12 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-ride.jpg'), type: 'jpeg', quality: 85 });
     await p.locator('#jumpBtn').tap();
     check('JUMP pops the bubble and she drifts gently down to the foam', await until(() => !__DDW3.player.ride && __DDW3.player.grounded && __DDW3.player.y < .3, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; P.x = X + 86 + 5; P.y = 0; P.vx = 0; P.vy = 0; P.grounded = true; P.facing = 1; }, BX);
+    await p.keyboard.down('ArrowRight'); const f1 = await until(() => Math.abs(__DDW3.player.y - 3.6) < .05 && __DDW3.player.grounded, null, 20000); await p.keyboard.up('ArrowRight');
+    await p.keyboard.down('ArrowLeft'); const f2 = f1 && await until(() => Math.abs(__DDW3.player.y - 7.2) < .05 && __DDW3.player.grounded, null, 30000); await p.keyboard.up('ArrowLeft');
+    await p.keyboard.down('ArrowRight'); const f3 = f2 && await until(() => Math.abs(__DDW3.player.y - 10.8) < .05 && __DDW3.player.grounded, null, 30000); await p.keyboard.up('ArrowRight');
+    check('the big bubble house: she walks in and climbs its stairs floor by floor to the lookout at the top', f1 && f2 && f3, JSON.stringify({ f1, f2, f3 }));
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-house.jpg'), type: 'jpeg', quality: 85 });
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 48; P.y = 3; P.vy = 0; P.grounded = false; }, BX);
     check('a bubble trampoline bounces her up', await until(() => __DDW3.player.vy > 5, null, 15000));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 140; P.y = 0; P.vy = 0; P.vx = 0; }, BX); await sleep(6000);

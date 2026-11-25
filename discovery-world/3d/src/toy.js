@@ -53,6 +53,7 @@ export function* toyLanding(c) {
   const ballMeshes = [];
   for (const [j, [x, r, col, bounce]] of balls.entries()) {
     const m = new THREE.Mesh(BALL, toy(col, { r: .35 })); m.scale.setScalar(r); m.position.set(x, r, -.5); m.userData.dynamic = true; add(m); ballMeshes.push({ m, r, squish: 0 });
+    { const key = 'toyball' + j; for (let q = c.G.solids.length - 1; q >= 0; q--) if (c.G.solids[q].key === key) c.G.solids.splice(q, 1); c.G.solids.push({ a: x - r * .8, b: x + r * .8, top: r * 2 - .05, layer: 'space', key }); } // (build 135: solid: she can't walk through a ball, she jumps on it)
     c.G.platforms.push({ a: x - r * .7, b: x + r * .7, y: r * 2, layer: 'space', z: -.5, pad: true, bounce, nudge: j < balls.length - 1 ? (balls[j + 1][0] - x - .5) / 1.1 : 0, /* (the sideways push lasts 1.1 s: aimed at the next ball's middle) */ onLand: () => { ballMeshes[j].squish = 1; Sound.tone && Sound.tone(392 * Math.pow(1.26, j), .14, 'sine', .06, 1.4); if (j === balls.length - 1) kk.disc('bouncyballs'); } });
   }
   U.push(dt => { for (const o of ballMeshes) { if (o.squish > 0) o.squish = Math.max(0, o.squish - dt * 3); const q = Math.sin(o.squish * 9) * o.squish * .22; o.m.scale.set(o.r * (1 + q), o.r * (1 - q), o.r * (1 + q)); o.m.position.y = o.r * (1 - q); } });
@@ -80,23 +81,26 @@ function train(k) {
   for (let x = x0 + 26; x <= x1 - 26; x += 3) block(b, x, 0, z, Math.max(.6, trackY(x) - .6), BRIGHT[(x | 0) % 6]);
   b.put(BOX, x0 - 1.5, .4, z, '#ffd23f', [2.4, .8, 3]); b.put(BOX, x1 + 1.5, .4, z, '#ffd23f', [2.4, .8, 3]); // the two stations
   // the train: an engine with a big wind-up key and two little wagons
-  const tr = new THREE.Group(); tr.userData.dynamic = true; k.add(tr);
-  { const tb = K.makeBatch(); tb.put(BOX, 0, .9, 0, '#ff4f6a', [2.2, 1.1, 1.5]); tb.put(BOX, -.6, 1.8, 0, '#ff4f6a', [1, .9, 1.4]); tb.put(CYL, .7, 1.8, 0, '#2a2333', [.28, .9, .28]); tb.put(CYL, .7, 2.3, 0, '#ffd23f', [.4, .2, .4]);
-    for (const dx of [-.7, .7]) for (const s2 of [-1, 1]) tb.put(CYL, dx, .4, s2 * .75, '#2a2333', [.36, .12, .36], [Math.PI / 2, 0, 0]);
-    tb.put(BOX, -1.2, 1.8, 0, '#c8a070', [.12, .12, .8]); tb.put(CYL, -1.4, 1.8, 0, '#ffd23f', [.4, .1, .4], [0, 0, Math.PI / 2]);
-    for (const w of [1, 2]) { tb.put(BOX, -w * 2.5, .9, 0, BRIGHT[w + 1], [2, .9, 1.4]); for (const dx of [-.6, .6]) for (const s2 of [-1, 1]) tb.put(CYL, -w * 2.5 + dx, .4, s2 * .75, '#2a2333', [.3, .1, .3], [Math.PI / 2, 0, 0]); }
-    tr.add(tb.mesh(K.shinyMat())); }
-  tr.position.set(x0, trackY(x0) - .35, z);
+  // (build 135) the engine and the two wagons are separate cars: each sits on the track where it is and tilts with it,
+  // so the whole train climbs over the block bridge (before, it was one stiff piece that stayed straight)
+  const car = (fn) => { const g = new THREE.Group(); g.userData.dynamic = true; k.add(g); const cb = K.makeBatch(); fn(cb); g.add(cb.mesh(K.shinyMat())); return g; };
+  const wheels = (cb, w = .36) => { for (const dx of [-.7, .7]) for (const s2 of [-1, 1]) cb.put(CYL, dx, .4, s2 * .75, '#2a2333', [w, .12, w], [Math.PI / 2, 0, 0]); };
+  const engine = car(tb => { tb.put(BOX, 0, .9, 0, '#ff4f6a', [2.2, 1.1, 1.5]); tb.put(BOX, -.6, 1.8, 0, '#ff4f6a', [1, .9, 1.4]); tb.put(CYL, .7, 1.8, 0, '#2a2333', [.28, .9, .28]); tb.put(CYL, .7, 2.3, 0, '#ffd23f', [.4, .2, .4]); wheels(tb);
+    tb.put(BOX, -1.2, 1.8, 0, '#c8a070', [.12, .12, .8]); tb.put(CYL, -1.4, 1.8, 0, '#ffd23f', [.4, .1, .4], [0, 0, Math.PI / 2]); });
+  const wagons = [1, 2].map(w => car(tb => { tb.put(BOX, 0, .9, 0, BRIGHT[w + 1], [2, .9, 1.4]); wheels(tb, .3); tb.put(BOX, 1.15, .6, 0, '#5a5a6a', [.3, .12, .12]); }));
+  const cars = [engine, ...wagons], tr = engine;
+  const place = x => { for (const [i, g] of cars.entries()) { const cx = Math.max(x0 - 5, x - i * 2.5); g.position.set(cx, trackY(cx) - .35, z); g.rotation.z = Math.atan2(trackY(cx + .6) - trackY(cx - .6), 1.2); } };
+  place(x0);
   // the stars along the track (collected as the train passes them)
   const sb = K.makeBatch(); for (let j = 0; j < 6; j++) star(k, sb, x0 + 8 + j * 10, trackY(x0 + 8 + j * 10) + 2.4, 'trainstar' + j); k.add(sb.mesh(K.shinyMat()));
   let R = null;
   const board = () => { const P = k.P; if (P.ride || R) return; k.Sound.chime(); k.say('🚂 All aboard the wind-up train! ▶ goes faster, ◀ slows down and backs up. Collect the stars!', true);
-    R = { type: 'toytrain', t: 0, noExit: false, stick: true, v: 0, x: tr.position.x }; P.ride = R; P.vx = P.vy = 0; k.disc && k.disc('toytrain'); };
-  k.tapIt(tr, board); k.G.interact.push({ x: x0, y: 0, layer: 'space', icon: '🚂', action: 'Drive the train!', hintY: 2.4, run: board });
+    R = { type: 'toytrain', t: 0, noExit: false, stick: true, v: 0, x: engine.position.x }; P.ride = R; P.vx = P.vy = 0; k.disc && k.disc('toytrain'); };
+  for (const g of cars) k.tapIt(g, board); k.G.interact.push({ x: x0, y: 0, layer: 'space', icon: '🚂', action: 'Drive the train!', hintY: 2.4, run: board });
   k.U.push((dt, t) => { const P = k.P;
     if (R && P.ride !== R) { R = null; return; } if (!R) return;
     const st = stick(k), want = st.x * 9; R.v += (want - R.v) * Math.min(1, dt * 1.6); R.x = Math.max(x0, Math.min(x1, R.x + R.v * dt)); if (R.x === x0 || R.x === x1) R.v *= .3;
-    tr.position.set(R.x, trackY(R.x) - .35, z); tr.rotation.z = (trackY(R.x + .5) - trackY(R.x - .5)) * .9;
+    place(R.x);
     P.x = R.x - .6; P.y = trackY(R.x) + .8; P.z = z; P.facing = R.v >= 0 ? 1 : -1;
     if (Math.abs(R.v) > .5 && Math.random() < dt * 2) k.api.burst(R.x + .7, trackY(R.x) + 2.4, z, ['#ffffff', '#e8e8f0'], 3, 1); });
   // THE BLOCK MOUNTAIN: a big staircase of giant blocks to a summit, and the TOY SLIDE all the way down
