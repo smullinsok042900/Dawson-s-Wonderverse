@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -10,10 +11,10 @@ import * as THREE from 'three';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const temp = await mkdtemp(join(tmpdir(), 'discovery-story-friends-'));
-let STORY_FRIENDS, STORY_FRIEND_HOMES, SPECIES, makeBatch, shinyMat;
+let STORY_FRIENDS, STORY_FRIEND_HOMES, FAMILY_FRIEND_HOMES, CRAFT_FRIEND_HOMES, SPECIES, makeBatch, shinyMat;
 try {
-  await build({ stdin: { contents: `export { STORY_FRIENDS, STORY_FRIEND_HOMES } from './src/story-friends.js'; export { SPECIES } from './src/planet-life.js'; export { makeBatch, shinyMat } from './src/spacekit.js';`, resolveDir: root }, bundle: true, platform: 'node', format: 'esm', outfile: join(temp, 'models.mjs'), logLevel: 'error' });
-  ({ STORY_FRIENDS, STORY_FRIEND_HOMES, SPECIES, makeBatch, shinyMat } = await import(pathToFileURL(join(temp, 'models.mjs'))));
+  await build({ stdin: { contents: `export { STORY_FRIENDS, STORY_FRIEND_HOMES } from './src/story-friends.js'; export { FAMILY_FRIEND_HOMES } from './src/family-friend-homes.js'; export { CRAFT_FRIEND_HOMES } from './src/craft-friend-homes.js'; export { SPECIES } from './src/planet-life.js'; export { makeBatch, shinyMat } from './src/spacekit.js';`, resolveDir: root }, bundle: true, platform: 'node', format: 'esm', outfile: join(temp, 'models.mjs'), logLevel: 'error' });
+  ({ STORY_FRIENDS, STORY_FRIEND_HOMES, FAMILY_FRIEND_HOMES, CRAFT_FRIEND_HOMES, SPECIES, makeBatch, shinyMat } = await import(pathToFileURL(join(temp, 'models.mjs'))));
 } finally { await rm(temp, { recursive: true, force: true }); }
 const keys = Object.keys(STORY_FRIENDS);
 
@@ -47,4 +48,10 @@ test('every friend has exactly one home, behind her path and apart from the othe
   assert.deepEqual(STORY_FRIEND_HOMES.map(h => h.kind).sort(), [...keys].sort());
   for (const h of STORY_FRIEND_HOMES) assert.ok(h.z <= -3.5 && h.z >= -5, `${h.kind}: z ${h.z}`);
   for (const a of STORY_FRIEND_HOMES) for (const c of STORY_FRIEND_HOMES) if (a !== c) assert.ok(Math.hypot(a.x - c.x, a.z - c.z) >= 1.4, `${a.kind} and ${c.kind} too close`);
+  // and well away from every resident who already lived there (the family's friends and the fixed residents in expansion.js)
+  const src = readFileSync(join(root, 'src/expansion.js'), 'utf8');
+  const fixed = [...src.matchAll(/lifeHere\(c, \[\['(\w+)', (-?[\d.]+), (-?[\d.]+)\]/g)].map(m => ({ kind: m[1], x: +m[2], z: +m[3] }));
+  const residents = [...FAMILY_FRIEND_HOMES, ...CRAFT_FRIEND_HOMES.filter(h => h.planet === 'earth'), ...fixed];
+  assert.ok(fixed.length >= 8 && residents.length >= 20);
+  for (const a of STORY_FRIEND_HOMES) for (const c of residents) assert.ok(Math.hypot(a.x - c.x, a.z - c.z) >= 2.5, `${a.kind} is too close to ${c.kind}`);
 });
