@@ -52,5 +52,5 @@ test('every friend has exactly one home, behind her path and apart from the othe
   const fixed = [...src.matchAll(/lifeHere\(c, \[\['(\w+)', (-?[\d.]+), (-?[\d.]+)\]/g)].map(m => ({ kind: m[1], x: +m[2], z: +m[3] }));
   const residents = [...FIRST_HOMES, ...FAMILY_FRIEND_HOMES, ...CRAFT_FRIEND_HOMES.filter(h => h.planet === 'earth'), ...fixed];
   assert.ok(fixed.length >= 8 && residents.length >= 20);
-  for (const a of STORY_FRIEND_HOMES) for (const c of residents) assert.ok(Math.hypot(a.x - c.x, a.z - c.z) >= 2.5, `${a.kind} is too close to ${c.kind}`);
+  for (const a of STORY_FRIEND_HOMES) for (const c of residents) assert.ok(Math.hypot(a.x - c.x, a.z - c.z) >= 5, `${a.kind} is too close to ${c.kind}`); // (5 m: the PAW button picks the nearest friend)
 });

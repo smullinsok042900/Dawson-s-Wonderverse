@@ -19,6 +19,9 @@ as round toys in the creature batch (`src/story-friends-2.js`, sharing build 128
 - 1,000–3,000 triangles each, one mesh, the shared creature material. Rescue pups use new hat and vest options of the puppy builder.
 - Tests: `story-friends-2.test.mjs` 3/3 (it found Papa and Mama Pig on top of the purple bee friend and Beepo next to the green
   scribble friend: moved); all 136 unit tests pass; a picture tour of every home found Ollie inside the lighthouse (moved).
+  The first smoke run failed the big-eared seaside friend's PAW check: the PAW button picks the nearest friend, and Ollie
+  stood 4 m away. Every story friend (both batches) now stands at least 5 m from every older resident, and both tests
+  check it (moved: Ollie, Twinkle, Pinchy, Shimmer, and from build 128 Princess Crystal, Snowball Buddy, Waffles and Pepper).
 
 ## Checkpoint: build 128 — EIGHTEEN NEW STORY FRIENDS; build 127 (open space together) included
 The family sent pictures of characters Dawson loves from films and shows. Those belong to other companies, so (with the
