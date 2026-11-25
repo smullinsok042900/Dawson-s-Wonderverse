@@ -18,6 +18,7 @@
 import * as THREE from 'three';
 import * as K from './spacekit.js';
 
+import { DIMENSIONS } from './dimensions.js';
 export const DEEP = { ox: 30000, oy: 0, oz: 0 };
 const SKY_R = 430;
 // [id, radius, orbit radius, angle, picture colours, what the voice says, landable]
@@ -147,10 +148,36 @@ export function initDeep(G, api) {
     const tail = []; for (let k = 0; k < 7; k++) { const g = K.glow(k % 2 ? '#bfe8ff' : '#ffffff', 14 + k * 7, .5 - k * .06); comet.add(g); tail.push(g); }
     S.comet = { g: comet, tail, a: 2.2 };
     yield;
+    // (build 131) THE WORMHOLES: a giant swirl for each dimension (dimensions.js). One small animated shader each (a soft
+    // spiral, no flashing); it never draws the other world, so it costs the same as one big disc. Fly in to travel there.
+    S.worm = [];
+    for (const d of DIMENSIONS) {
+      const [a, r, h] = d.wormhole.at, [c1, c2, c3] = d.wormhole.colors, R = 26, g = new THREE.Group(); g.userData.dynamic = true; root.add(g);
+      g.position.set(DEEP.ox + Math.cos(a) * r, DEEP.oy + h, DEEP.oz + Math.sin(a) * r); g.lookAt(DEEP.ox, DEEP.oy + h, DEEP.oz);
+      const mat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false,
+        uniforms: { uT: { value: 0 }, uA: { value: new THREE.Color(c1) }, uB: { value: new THREE.Color(c2) }, uC: { value: new THREE.Color(c3) } },
+        vertexShader: 'varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }',
+        fragmentShader: `precision mediump float; uniform float uT; uniform vec3 uA, uB, uC; varying vec2 vP;
+          void main(){ float r = length(vP) / ${R.toFixed(1)}, a = atan(vP.y, vP.x); float sw = sin(a * 3. + log(r + .02) * 7. - uT * 1.6) * .5 + .5;
+            vec3 c = mix(mix(uA, uB, sw), uC, smoothstep(.55, 1., sin(a * 5. - log(r + .02) * 4. + uT) * .5 + .5) * .6);
+            c = mix(vec3(1.), c, smoothstep(.0, .28, r)); float alpha = smoothstep(1., .82, r) * .92; gl_FragColor = vec4(c, alpha); }` });
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(R, 72), mat); g.add(disc);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 1.6, 10, 72), new THREE.MeshStandardMaterial({ color: c2, emissive: c1, emissiveIntensity: .6, roughness: .4 })); g.add(rim);
+      const halo = K.glow(c1, R * 3.2, .35); g.add(halo);
+      const pts = new Float32Array(240 * 3); for (let k2 = 0; k2 < 240; k2++) { const q = k2 / 240, ang = q * 30, rad = R * (1.1 + q * .9); pts.set([Math.cos(ang) * rad, Math.sin(ang) * rad, (Math.sin(k2) * 4)], k2 * 3); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+      const sparks = new THREE.Points(pg, new THREE.PointsMaterial({ color: c3, size: 1.6, transparent: true, opacity: .85, depthWrite: false })); g.add(sparks);
+      g.traverse(o => { o.userData.dynamic = true; });
+      S.worm.push({ d, g, mat, sparks, R }); SPOTS['wh:' + d.id] = g.position.clone();
+    }
+    yield;
   }
   const ROUND = new THREE.Vector3();
   function updatePlaces(dt, near) {
     const t = S.t;
+    for (const w of S.worm || []) { w.mat.uniforms.uT.value = t; w.sparks.rotation.z = -t * .25; const dist = S.pos.distanceTo(w.g.position);
+      if (S.mode === 'fly' && !S.warping && dist < w.R * .7) warp(w.d);
+      else if (dist < 160 && !S.told['wh' + w.d.id]) { S.told['wh' + w.d.id] = 1; say(`🌀 A WORMHOLE! It goes to ${w.d.name}! Fly right into it!`); api.discover && api.discover('wormhole'); } }
     // the comet: round the Sun, its tail always pointing away from it
     const c = S.comet; c.a += dt * .006; c.g.position.set(DEEP.ox + Math.cos(c.a) * 1500, DEEP.oy + 30, DEEP.oz + Math.sin(c.a) * 1500); SPOTS.comet = c.g.position.clone().add(V.set(0, 0, 30));
     const away = V2.copy(c.g.position).sub(V.set(DEEP.ox, DEEP.oy, DEEP.oz)).normalize(); c.tail.forEach((g, k) => g.position.copy(away).multiplyScalar(6 + k * 9));
@@ -231,10 +258,10 @@ export function initDeep(G, api) {
     if (!mapPanel) {
       mapPanel = document.createElement('div'); mapPanel.id = 'deepMapPanel';
       Object.assign(mapPanel.style, { position: 'fixed', inset: '0', background: 'rgba(10,8,40,.72)', zIndex: 70, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '10px', padding: '60px 20px' });
-      for (const b of [...BODIES.map(q => q[0]), 'belt', 'station', 'hoops', 'comet']) {
+      for (const b of [...BODIES.map(q => q[0]), 'belt', 'station', 'hoops', 'comet', ...DIMENSIONS.map(d => 'wh:' + d.id)]) {
         const t = document.createElement('button'); t.className = 'deepTile'; t.dataset.id = b; t.setAttribute('aria-label', b);
         Object.assign(t.style, { width: '84px', height: '84px', borderRadius: '50%', border: '4px solid #fff', backgroundSize: 'cover', backgroundColor: '#22184a', fontSize: '40px' });
-        if (b === 'belt' || b === 'station' || b === 'hoops' || b === 'comet') t.textContent = { belt: '🪨', station: '🛰️', hoops: '⭕', comet: '☄️' }[b]; else if (b === 'sun') { t.textContent = '☀️'; t.style.backgroundColor = '#ffb040'; } else t.style.backgroundImage = `url(${api.art(b)})`;
+        if (b.startsWith('wh:')) { const d = DIMENSIONS.find(q => 'wh:' + q.id === b); t.textContent = '🌀'; t.style.background = `radial-gradient(circle, #fff 0 12%, ${d.wormhole.colors[0]} 40%, ${d.wormhole.colors[1]} 75%)`; t.setAttribute('aria-label', 'wormhole to ' + d.name); } else if (b === 'belt' || b === 'station' || b === 'hoops' || b === 'comet') t.textContent = { belt: '🪨', station: '🛰️', hoops: '⭕', comet: '☄️' }[b]; else if (b === 'sun') { t.textContent = '☀️'; t.style.backgroundColor = '#ffb040'; } else t.style.backgroundImage = `url(${api.art(b)})`;
         t.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); flyTo(b); closeMap(); }); mapPanel.appendChild(t);
       }
       const x = document.createElement('button'); x.textContent = '✖'; x.className = 'pill'; Object.assign(x.style, { position: 'absolute', top: '14px', right: '14px', fontSize: '28px' });
@@ -245,7 +272,7 @@ export function initDeep(G, api) {
   }
   function flyTo(id) {
     S.auto = id; Sound.chime();
-    const name = id === 'station' ? 'Star Station' : id === 'hoops' ? 'the hoop trail' : id === 'comet' ? 'the comet' : id === 'belt' ? 'the asteroid belt' : id === 'sun' ? 'the Sun' : id === 'moon' ? 'the Moon' : id[0].toUpperCase() + id.slice(1);
+    const name = id.startsWith('wh:') ? 'the wormhole' : id === 'station' ? 'Star Station' : id === 'hoops' ? 'the hoop trail' : id === 'comet' ? 'the comet' : id === 'belt' ? 'the asteroid belt' : id === 'sun' ? 'the Sun' : id === 'moon' ? 'the Moon' : id[0].toUpperCase() + id.slice(1);
     say(`🚀 Off we go to ${name}!`);
   }
   const targetPos = (id, out) => {
@@ -278,6 +305,16 @@ export function initDeep(G, api) {
     scene.remove(root); root = null; S = null;
   }
   function leave() { G.deepRocket = null; G.deepWalk = null; showHud(false); if (mapPanel) mapPanel.style.display = 'none'; sky.mesh.visible = false; G.camOverride = null; G.deepFace = null; G.deepActive = false; endSuit(); api.light(null); free(); }
+  let warpDiv = null;
+  function warp(d) {
+    S.warping = true; S.auto = null; Sound.whoosh ? Sound.whoosh() : Sound.chime(); say(`🌀 Whoooosh! Through the wormhole to ${d.name}!`, true);
+    if (!warpDiv) { warpDiv = document.createElement('div'); warpDiv.id = 'warpFx'; document.body.appendChild(warpDiv);
+      const css = document.createElement('style'); css.textContent = '#warpFx{position:fixed;inset:-50%;z-index:80;pointer-events:none;opacity:0;transition:opacity .5s;border-radius:50%;animation:warpSpin 1.6s linear infinite}#warpFx.on{opacity:1}@keyframes warpSpin{to{transform:rotate(360deg) scale(1.15)}}'; document.head.appendChild(css); }
+    const [c1, c2, c3] = d.wormhole.colors; warpDiv.style.background = `repeating-conic-gradient(from 0deg, ${c1} 0 12deg, ${c2} 12deg 24deg, ${c3} 24deg 36deg)`; warpDiv.style.webkitMaskImage = warpDiv.style.maskImage = 'radial-gradient(circle, transparent 0, #000 70%)';
+    requestAnimationFrame(() => warpDiv.classList.add('on'));
+    setTimeout(() => { leave(); api.land(d.id, null); }, 1300);
+    setTimeout(() => warpDiv && warpDiv.classList.remove('on'), 2600);
+  }
   function land() {
     if (!S || !S.near || !S.near.land) return; const id = S.near.id; Sound.chime(); say(`🛬 Landing on ${id === 'earth' ? 'Earth, home' : id === 'moon' ? 'the Moon' : id[0].toUpperCase() + id.slice(1)}!`);
     const pad = S.pad; leave(); api.land(id, pad);
@@ -313,7 +350,7 @@ export function initDeep(G, api) {
     if (S.mode === 'fly') {
       if (S.auto) { // autopilot: turn toward the goal, faster the farther it is, and slow down on arrival
         const tp = targetPos(S.auto, V2), want = Math.atan2(-(tp.x - S.pos.x), -(tp.z - S.pos.z)); let d = want - S.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); S.yaw += Math.sign(d) * Math.min(Math.abs(d), 1.6 * dt);
-        const goal = ['belt', 'station', 'hoops', 'comet'].includes(S.auto) ? (S.auto === 'comet' ? 12 : 0) : S.bodies.find(b => b.id === S.auto).r, dist = S.pos.distanceTo(tp) - goal;
+        const goal = S.auto.startsWith('wh:') ? -40 /* (build 131: glide right in) */ : ['belt', 'station', 'hoops', 'comet'].includes(S.auto) ? (S.auto === 'comet' ? 12 : 0) : S.bodies.find(b => b.id === S.auto).r, dist = S.pos.distanceTo(tp) - goal;
         const v = Math.max(0, Math.min(420, (dist - 22) * .9)) * (Math.abs(d) < .6 ? 1 : .3); S.speed += (v - S.speed) * Math.min(1, dt * 1.5);
         S.pos.y += (tp.y - S.pos.y) * Math.min(1, dt * .6);
         if (dist < 30) { S.auto = null; S.speed *= .3; }

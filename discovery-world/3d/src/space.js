@@ -20,6 +20,8 @@ import * as K from './spacekit.js';
 import { runInSlices } from './stream-work.js';
 import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 import { BIG_CRATER } from './coaster-course.js';
+import { DIMENSIONS, DIM } from './dimensions.js';
+import { upsideLanding } from './upside.js';
 
 export const SPACE = { ox: 5000, gap: 400, w: 110 };
 let venusCloudMat = null, venusCloudFar = null; // (stage 23/24) Venus's shared cloud material, and a coarser ball for its far sheets
@@ -39,6 +41,7 @@ export const PLACES = [
   // golden platforms float safely above it, with a light, floaty pull (not a real value: there is nowhere to stand).
   ['sun', ['#fff3b0', '#ff9a1a'], 4.9, false, "The Sun! It's our star, a gigantic ball of super hot glowing gas, with no ground at all. In our game, magic golden platforms float safely high above it. Jump! You float down gently here."],
 ];
+for (const d of DIMENSIONS) PLACES.push([d.id, d.colors, d.gravity, false, d.hello, { dim: true }]); // (build 131) the dimensions behind the wormholes (not in the rocket menu)
 export const EARTH_G = 9.81;
 
 // ---------- (build 49) how each place LOOKS: its sky, its light, its haze and what drifts in the air ----------
@@ -75,6 +78,7 @@ const LOOK = {
     sun: ['#eef2ff', 2.3], hemi: ['#8a9cd0', '#6a4a44', .85], fog: ['#141c34', 120, 900], env: .12, rim: ['#8fb0ff', .9], sunOff: [-14, 9, 9],
     dust: { color: '#eaf2ff', size: .09, opacity: .7, box: [46, 10, 24], vel: [.25, -.3, 0], sway: .3, n: 56 } },
 };
+for (const d of DIMENSIONS) LOOK[d.id] = d.look; // (build 131) each dimension's own sky and light
 const CLOUDS = { jupiter: ['#f3d6ae', '#c57a40', '#ebb680', '#fff1de', '#b96a3a'], saturn: ['#f6e3aa', '#e6c676', '#fff4d2', '#d8b268', '#f0d898'], uranus: ['#bdf1f1', '#93e2ea', '#dbfcfc', '#74d2dc', '#aeecee'], neptune: ['#5c86f2', '#2f4fd0', '#84a8ff', '#2440b0', '#4a70e4'] };
 
 export function initSpace(G, api) {
@@ -683,6 +687,7 @@ export function initSpace(G, api) {
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
       inSky(K.glow('#ffffff', 9, 1), MID - 86, 17, -180); inSky(K.glow('#bcd0ff', 34, .35), MID - 86, 17, -182);
     }
+    if (id === 'upside') H = yield* upsideLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 131) the Upside-Down World
     if (id === 'sun') {
       // (build 126) golden platforms floating over the glowing surface: the walkway and a broad golden terrace, then the edge,
       // and far below the bright, slowly boiling surface of the Sun (an animated picture, not real heat!) with giant flares
@@ -743,7 +748,7 @@ export function initSpace(G, api) {
       neptune: { name: 'Windies', body: '#5a82f0', eye: 2, ant: 0, shape: 'wisp', move: 'swoosh', note: 450, hi: 'Whoosh! The wind is so fast on Neptune!', iris: '#12308a' },
       sun: { name: 'Sunnies', body: '#ffcf3a', eye: 2, ant: 2, shape: 'spiky', move: 'float', note: 820, hi: 'Hello! We are Sunnies! We wear sunglasses because the Sun is SO bright!', shades: 1, iris: '#a0521a' },
       pluto: { name: 'Heartlings', body: '#ff9fd2', eye: 2, ant: 2, shape: 'heart', move: 'hop', note: 1000, hi: 'Hello, friend! We love our big icy heart!', iris: '#b02a7a' },
-    }[id];
+    }[id] || DIM[id]?.alien; // (build 131) a dimension brings its own creatures
     const placeAlien = (x0, z0, k, interactId = null) => { const a = alien(AL, k); a.position.set(x0, 0, z0); add(a); let boing = 0, blink = 2 + k, px = x0, air = 0; const b = a.userData.body, lids = a.userData.lids, ants = a.userData.ants;
       tapIt(a, () => { boing = 1; Sound.tone(AL.note, .12, 'sine', .05, 1.4); Sound.tone(AL.note * 1.25, .12, 'sine', .05, 1.3, .14); api.burst(a.position.x, a.position.y + 1.5, z0, ['#ffffff', '#ffe36e', AL.body], 6, 2); say(`👽 ${AL.hi}`, true); disc('alien_' + id, `Meet the aliens on every planet!`); }, x0, interactId);
       U.push((dt, t) => { if (Math.abs(P.x - x0) > 45 && !boing) return; boing = Math.max(0, boing - dt * 1.5); const ph = t * 1.3 + k * 2; let sq = 0; // sq: squash (+) and stretch (-), so nothing moves like a stiff toy

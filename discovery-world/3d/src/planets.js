@@ -9,6 +9,7 @@
 // kit (from space.js): { X, s0 (where this area starts), add, sball, sbox, tapIt, fact, say, disc, Sound, U,
 //   P, G, api, placeAlien, plat, rocketSign, setSkyColor }
 // ===================================================================
+import { upside } from './upside.js';
 import * as THREE from 'three';
 import { populate } from './planet-life.js';
 import { sun } from './sun.js'; // (build 126) the Sun's attractions
@@ -777,7 +778,7 @@ const saturn = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn, sun }; // (build 68: + Saturn's Star Blaster and Ring Raceway) // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
+export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn, sun, upside }; // (build 131) + the Upside-Down World (upside.js) // (build 68: + Saturn's Star Blaster and Ring Raceway) // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;
 export const SECTION = 110;
 
