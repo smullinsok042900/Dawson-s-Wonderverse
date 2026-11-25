@@ -24,6 +24,7 @@ import { DIMENSIONS, DIM } from './dimensions.js';
 import { upsideLanding } from './upside.js';
 import { toyLanding } from './toy.js';
 import { bubbleLanding } from './bubble.js';
+import { jellyLanding } from './jelly.js';
 
 export const SPACE = { ox: 5000, gap: 400, w: 110 };
 let venusCloudMat = null, venusCloudFar = null; // (stage 23/24) Venus's shared cloud material, and a coarser ball for its far sheets
@@ -689,6 +690,7 @@ export function initSpace(G, api) {
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
       inSky(K.glow('#ffffff', 9, 1), MID - 86, 17, -180); inSky(K.glow('#bcd0ff', 34, .35), MID - 86, 17, -182);
     }
+    if (id === 'jelly') H = yield* jellyLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 136) the Squishy Jelly World
     if (id === 'bubble') H = yield* bubbleLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 133) the Bubble Universe
     if (id === 'toy') H = yield* toyLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 132) the Giant Toy Universe
     if (id === 'upside') H = yield* upsideLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 131) the Upside-Down World

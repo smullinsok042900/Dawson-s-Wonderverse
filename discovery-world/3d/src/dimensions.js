@@ -45,6 +45,18 @@ export const DIMENSIONS = [
     },
     alien: { name: 'Bloopers', body: '#c8e8ff', eye: 2, ant: 1, shape: 'balloon', move: 'float', note: 880, hi: 'Bloop bloop! We are Bloopers! We float everywhere in our bubbly world!', iris: '#3a6ab0' },
   },
+  {
+    id: 'jelly', icon: '🍮', name: 'the Squishy Jelly World',
+    colors: ['#ff4f8a', '#7fe05a'],
+    gravity: 6, // a soft, bouncy pull (made-up)
+    hello: 'The Squishy Jelly World! Everything is made of wobbly jelly! Bounce on the jelly hills, cross the wobbly bridge, and climb the jelly tower!',
+    wormhole: { at: [.2, 1250, -30], colors: ['#ff4f8a', '#ffb02e', '#7fe05a'] },
+    look: {
+      sky: { top: '#ff9ac8', mid: '#ffc8e0', hor: '#fff0e0', low: '#ffe0d0', stars: 0, sunDir: [.2, .5, -.8], sunCol: '#fff8f0', glow: [4, .4, .2], band: '#fff0f4', bandK: .2, wind: .01 },
+      sun: ['#fff8f0', 2.5], hemi: ['#ffe8f0', '#ffb0c8', 1.35], fog: ['#ffe4ee', 120, 360], env: .3, rim: ['#ffd0e8', .7],
+    },
+    alien: { name: 'Wobblers', body: '#7fe05a', eye: 2, ant: 2, shape: 'jelly', move: 'hop', note: 600, hi: 'Wibble wobble! We are Wobblers, the jelly people! Everything here jiggles!', iris: '#1f6a2a' },
+  },
 ];
 export const DIM = Object.fromEntries(DIMENSIONS.map(d => [d.id, d]));
 export const isDimension = id => !!DIM[id];

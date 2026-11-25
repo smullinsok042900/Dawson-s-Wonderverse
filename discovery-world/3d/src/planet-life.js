@@ -268,6 +268,12 @@ export const SPECIES = {
   foamy: { name: 'Foamy', planet: 'bubble', pet: true, move: 'bounce', v: 1.6, r: 2.5, size: .85, voice: 'Arf! Fluffy foam!', where: 'near the bubble slide', emoji: '🐶',
     build: b => { for (let i = 0; i < 9; i++) { const a = i * 2.4; b.put(GEO.ball, Math.cos(a) * .2, .32 + Math.sin(i * 1.7) * .12, Math.sin(a) * .18, '#ffffff', .16); } b.put(GEO.ball, 0, .62, .2, '#ffffff', .2); for (const k of [-1, 1]) { b.put(GEO.ball, k * .17, .7, .16, '#e8f4ff', [.07, .14, .07]); b.put(GEO.ball, k * .1, .08, .12, '#f0f8ff', .07); }
       b.put(GEO.ball, 0, .58, .4, '#ff9ad8', .035); b.put(GEO.ball, .25, .9, 0, '#c8e8ff', .06); b.put(GEO.ball, -.2, 1, -.1, '#ffc8e8', .045); eyes(b, .68, .08, .37, .045); } },
+  // ---- (build 136) THE SQUISHY JELLY WORLD: pets (a wobbly gummy bear and a little jelly blob) ----
+  gummybear: { name: 'Gummy', planet: 'jelly', pet: true, move: 'hop', v: 1.8, r: 2.5, size: .8, hopH: .3, voice: 'Wibble wobble!', where: 'near the wobbly bridge', emoji: '🐻',
+    build: b => { b.put(GEO.ball, 0, .3, 0, '#ff6f4f', [.26, .3, .22]); b.put(GEO.ball, 0, .66, .04, '#ff6f4f', .22); for (const k of [-1, 1]) { b.put(GEO.ball, k * .16, .84, 0, '#ff6f4f', .08); b.put(GEO.ball, k * .22, .36, .06, '#ff6f4f', [.08, .14, .08]); b.put(GEO.ball, k * .12, .04, .05, '#ff6f4f', [.1, .07, .12]); }
+      b.put(GEO.ball, 0, .6, .22, '#ff9a80', [.1, .07, .06]); b.put(GEO.ball, 0, .62, .27, '#2a2333', .03); b.put(GEO.ball, -.1, .8, .14, '#ffd0c0', .05); eyes(b, .7, .08, .2, .04); } },
+  jellyblob: { name: 'Wiggle', planet: 'jelly', pet: true, move: 'bounce', v: 1.6, r: 2.5, size: .8, voice: 'Blorp! Jiggle jiggle!', where: 'by the jelly tower', emoji: '⭐',
+    build: b => { b.put(GEO.ball, 0, .26, 0, '#7fe05a', [.32, .26, .3]); b.put(GEO.ball, 0, .5, 0, '#9ff07a', [.18, .14, .16]); b.put(GEO.ball, -.12, .38, .22, '#e0ffd0', .05); eyes(b, .34, .1, .26, .05); smile(b, .2, .29, .05); } },
   // ---- PLUTO: characters (build 116) ----
   snowballkid: { name: 'Snowy', planet: 'pluto', move: 'hop', v: 1.6, r: 3, size: 1, hopH: .2, voice: 'Snowball fight!',
     build: b => { b.put(GEO.ball, 0, .34, 0, '#f4f8ff', .34); b.put(GEO.ball, 0, .82, 0, '#ffffff', .26); b.put(GEO.ball, 0, 1.06, 0, '#ff6f9a', [.24, .12, .24]); b.put(GEO.ball, 0, 1.2, 0, '#ffffff', .07); b.put(GEO.tor, 0, .62, 0, '#ff6f9a', [.18, .18, .5], [Math.PI / 2, 0, 0]);

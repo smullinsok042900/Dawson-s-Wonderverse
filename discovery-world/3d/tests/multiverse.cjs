@@ -156,6 +156,33 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('the bubble pets live here (Glub and Foamy)', await p.evaluate(() => ['pet_bubblefish', 'pet_foamy'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
     await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
     check('home again from the bubbles', await p.evaluate(() => __DDW3.player.layer === '' && !__DDW3.player.ride));
+    // ===== (build 136) THE SQUISHY JELLY WORLD: a fourth wormhole =====
+    await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
+    await p.locator('#rocketPanel .rkT[data-id=deep]').tap(); await until(() => __DDW3.G.deep.active(), null, 120000);
+    await p.evaluate(() => __DDW3.G.deep.flyTo('wh:jelly'));
+    check('a fourth wormhole leads to the Squishy Jelly World', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'jelly', null, 300000));
+    await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'jelly-arrive.jpg'), type: 'jpeg', quality: 85 });
+    const JX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 22; P.y = 4; P.vy = 0; P.vx = 0; P.grounded = false; }, JX);
+    check('a jelly hill bounces her up', await until(() => __DDW3.player.vy > 5, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 120; P.y = 0; P.vy = 0; }, JX); await sleep(6000);
+    const sag = await p.evaluate(async X => { const P = __DDW3.player; P.x = X + 110 + 18; P.y = 3; P.vy = 0; P.grounded = false; await new Promise(r => setTimeout(r, 2500)); const ys = []; for (let n = 0; n < 20; n++) { await new Promise(r => setTimeout(r, 100)); ys.push(P.y); } return { lo: Math.min(...ys), g: P.grounded }; }, JX);
+    check('the wobbly bridge sags under her (and carries her: she stays on it)', sag.g && sag.lo < 1.95 && sag.lo > 1.4, JSON.stringify(sag));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 44; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, JX);
+    await p.keyboard.down('ArrowRight'); const tower = await until(() => __DDW3.player.y > 7.1 && __DDW3.player.grounded, null, 40000); await p.keyboard.up('ArrowRight');
+    check('she climbs the jelly tower step by step (walking)', tower, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 7); if (it) { const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); } });
+    check('the jelly slide brings her down', await until(() => !__DDW3.player.ride && __DDW3.player.y < .6, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 230; P.y = 0; }, JX); await sleep(6000);
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 38; P.y = 4; P.vy = 0; P.grounded = false; }, JX);
+    check('the biggest jelly trampoline bounces her very high', await until(() => __DDW3.player.vy > 15, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 60; P.y = 0; P.vy = 0; P.grounded = true; const it = __DDW3.G.interact.find(i => i.action === 'Into the jelly house!'); it.run(); }, JX); await sleep(2500);
+    check('she goes into the squishy jelly house', await p.evaluate(() => __DDW3.player.z < -2.5));
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go outside' && i.icon === '🚪' && Math.abs(i.x - __DDW3.player.x) < 8); it && it.run(); }); await sleep(1500);
+    check('and back out', await p.evaluate(() => __DDW3.player.z > -1));
+    check('the jelly pets live here (Gummy and Wiggle)', await p.evaluate(() => ['pet_gummybear', 'pet_jellyblob'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
+    await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
+    check('home again from the jelly', await p.evaluate(() => __DDW3.player.layer === ''));
     check('no page errors', !errs.length, errs.slice(0, 3).join(' | '));
   } catch (e) { console.log('FAIL exception: ' + e.message); fail++; }
   finally { console.log(`${ok} checks passed`); await b.close(); process.exit(fail ? 1 : 0); }
