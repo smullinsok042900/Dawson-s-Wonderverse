@@ -26,6 +26,7 @@ are in `PERFORMANCE_LOG.md`.
 - Tests: `multiverse.cjs` 42/42 (new: ⏫ lifts the rocket; a ball stops her; the cars tilt on the bridge; she climbs the bubble
   house floor by floor; she walks into the castle and hops to its shelf; she builds her house by tapping the real building
   screen, goes in through her door and comes back out).
+- **Build 135b** (the bubble speed fix, PR #117): `multiverse.cjs` 42/42 and **full smoke test 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 134 — FRIENDS' ROCKETS IN OPEN SPACE REALLY SHOW (family report)
 The family saw that in Play Together, friends in open space could not see each other's rockets. Cause: build 127 sent the
