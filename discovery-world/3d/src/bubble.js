@@ -16,12 +16,13 @@ import { populate } from './planet-life.js';
 import { tubeAlong, pathRide, star } from './upside.js';
 
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 16), BALL = new THREE.SphereGeometry(1, 20, 14), BOX = new THREE.BoxGeometry(1, 1, 1), CONE = new THREE.ConeGeometry(1, 1, 12);
+const DOT = new THREE.SphereGeometry(1, 6, 4); DOT.userData.shared = true; // (build 135: the shine spots need only 48 triangles, not 560)
 CYL.userData.shared = BALL.userData.shared = BOX.userData.shared = CONE.userData.shared = true;
 let FILM = null; // the one see-through, softly shining bubble material (shared by every bubble)
 const film = () => FILM || (FILM = new THREE.MeshStandardMaterial({ color: '#bfe2ff', emissive: '#7fc0ff', emissiveIntensity: .22, roughness: .05, metalness: .15, transparent: true, opacity: .5, depthWrite: false })); // (build 135: stronger, so the bubbles show against the pale sky)
 let SHINE = null; const shineMat = () => SHINE || (SHINE = toy('#ffffff', { em: '#ffffff', ei: .9 }));
 /** (build 135) the bright shine spot every bubble has, so it reads as a bubble at a glance */
-const shine = m => { const d = new THREE.Mesh(BALL, shineMat()); d.scale.set(.18, .24, .08); d.position.set(-.38, .48, .72); d.rotation.z = .5; m.add(d); return m; };
+const shine = m => { const d = new THREE.Mesh(DOT, shineMat()); d.scale.set(.18, .24, .08); d.position.set(-.38, .48, .72); d.rotation.z = .5; m.add(d); return m; };
 const PASTEL = ['#ffc8e8', '#c8e8ff', '#d8ffc8', '#fff0b8', '#e0d0ff'];
 const stick = k => (k.api.stick ? k.api.stick() : { x: 0, y: 0 });
 
@@ -50,11 +51,11 @@ export function* bubbleLanding(c) {
   yield;
   // big still bubbles resting on the foam (one batched, see-through mesh) and soap-foam clumps
   const still = K.makeBatch();
-  for (let k = 0; k < 26; k++) { const x = X - 20 + k * 14 + Math.sin(k * 5.3) * 4, z = -8 - (k % 4) * 6, r = 1.5 + Math.abs(Math.sin(k * 2.1)) * 3; still.put(BALL, x, r * .9, z, '#ffffff', r); props.put(BALL, x - r * .38, r * .9 + r * .48, z + r * .72, '#ffffff', [r * .18, r * .24, r * .08], [0, 0, .5]); }
+  for (let k = 0; k < 26; k++) { const x = X - 20 + k * 14 + Math.sin(k * 5.3) * 4, z = -8 - (k % 4) * 6, r = 1.5 + Math.abs(Math.sin(k * 2.1)) * 3; still.put(BALL, x, r * .9, z, '#ffffff', r); props.put(DOT, x - r * .38, r * .9 + r * .48, z + r * .72, '#ffffff', [r * .18, r * .24, r * .08], [0, 0, .5]); }
   { const m = still.mesh(film()); m.receiveShadow = false; add(m); }
   for (let k = 0; k < 40; k++) props.put(BALL, X - 25 + k * 9.5, .2, -5 - (k % 5) * 1.6, '#ffffff', [.6 + (k % 3) * .3, .35, .5]);
   // bubbles drifting up through the sky (a few separate meshes that rise and come round again)
-  const drift = []; for (let k = 0; k < 8; k++) { const m = shine(new THREE.Mesh(BALL, film())); m.scale.setScalar(1 + (k % 3) * .7); m.userData.dynamic = true; add(m); drift.push({ m, x: X + 10 + k * 30, z: -6 - (k % 3) * 5, y: k * 2.2 }); }
+  const drift = []; for (let k = 0; k < 8; k++) { const m = new THREE.Mesh(BALL, film()); /* (build 135: no separate shine on these far drifting ones: one draw each, not two) */ m.scale.setScalar(1 + (k % 3) * .7); m.userData.dynamic = true; add(m); drift.push({ m, x: X + 10 + k * 30, z: -6 - (k % 3) * 5, y: k * 2.2 }); }
   U.push((dt, t) => { for (const d of drift) { d.y += dt * (.6 + (d.x % 3) * .1); if (d.y > 22) d.y = -1; d.m.position.set(d.x + Math.sin(t * .5 + d.x) * 1.5, d.y, d.z); } });
   yield;
   // THE BUBBLE BLOWER: a big wand machine; tap it and she floats inside a giant bubble
@@ -80,7 +81,7 @@ export function* bubbleLanding(c) {
 // a fish bubble), the bedroom (a bubble bed to bounce on), and the lookout at the top (a telescope and a star), then a slide out.
 function bigHouse(k, cx) {
   const b = K.makeBatch(), G = k.G, P = k.P, R0 = 13, z = -2.2, F1 = 3.6, F2 = 7.2, F3 = 10.8;
-  const domeMat = film().clone(); domeMat.opacity = .2; const dome = shine(new THREE.Mesh(BALL, domeMat)); // (a lighter film: she is easy to see inside) dome.scale.set(R0 + 2, R0, 9); dome.position.set(cx, R0 * .82, -4.5); dome.userData.dynamic = true; k.add(dome);
+  const domeMat = film().clone(); domeMat.opacity = .2; const dome = shine(new THREE.Mesh(BALL, domeMat)); // (a lighter film: she is easy to see inside) dome.scale.set(R0 + 2, R0, 9); dome.position.set(cx, R0 * .82, -4.5); dome.userData.dynamic = true; k.add(dome); dome.visible = false; // (build 135: drawn only when she is near: a huge see-through sphere costs a lot of fill)
   b.put(CYL, cx, .06, -4.5, '#fff0fa', [R0 + 1.5, .12, 8.6]); // the round floor
   b.put(BOX, cx - R0 - 1.6, 1.5, z, '#ff9ad8', [.4, 3, 2.4]); b.put(BOX, cx - R0 - 1.6, 3.1, z, '#ffd23f', [.5, .3, 2.6]); // the door arch
   const floor = (a, c2, y, col) => { b.put(BOX, (a + c2) / 2, y - .15, -3.6, col, [c2 - a, .3, 4.4]); G.platforms.push({ a, b: c2, y, layer: 'space', z, step: true, stepMax: 1.3 }); };
@@ -105,7 +106,7 @@ function bigHouse(k, cx) {
   G.interact.push({ x: cx + 6.8, y: F3, layer: 'space', icon: '🛝', action: 'Slide out!', hintY: 2.4, run: slide });
   k.U.push(() => { if (!sliding && P.grounded && !P.ride && Math.abs(P.y - F3) < .1 && P.x > cx + 6.4 && P.vx > .5) slide(); });
   G.interact.push({ x: cx - R0 - 1.6, y: 0, layer: 'space', icon: '🏠', action: 'Into the bubble house!', hintY: 2.4, run: () => { k.say && k.say('🏠 The big bubble house! Walk in, climb the stairs, and find the star at the very top!', true); k.disc('bubblehouse'); P.x = cx - R0 + 1; } });
-  k.U.push((dt, t) => { fish.position.set(cx + 3 + Math.sin(t) * .5, 1.3 + Math.sin(t * 1.7) * .2, -6); fish.rotation.y = Math.cos(t) > 0 ? 0 : Math.PI; dome.scale.set(R0 + 2 + Math.sin(t * .8) * .15, R0 - Math.sin(t * .8) * .15, 9); });
+  k.U.push((dt, t) => { fish.position.set(cx + 3 + Math.sin(t) * .5, 1.3 + Math.sin(t * 1.7) * .2, -6); fish.rotation.y = Math.cos(t) > 0 ? 0 : Math.PI; dome.visible = Math.abs(P.x - cx) < 34 && P.layer === 'space'; if (dome.visible) dome.scale.set(R0 + 2 + Math.sin(t * .8) * .15, R0 - Math.sin(t * .8) * .15, 9); });
   k.add(b.mesh(K.shinyMat()));
 }
 

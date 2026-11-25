@@ -4,6 +4,17 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 135 (her brick house, the castle inside, the bubble house, fly up and down, toy fixes)
+Desktop, software rendering; build 134 vs 135, two rounds, mean of the spots' median frame ms.
+- Open space (spacewalk): 247 → 242 ms. Toy Universe: 170 → 174 ms (+2%; +6 draw calls where her brick house stands).
+  Upside-Down World: 188 → 196 ms (+4%, inside the run-to-run noise; the castle is batched).
+- **Bubble Universe: the first version measured +9% (168 → 184 ms) and was fixed before shipping.** Causes: the shine spots
+  used the 560-triangle bubble sphere (26 of them: +19k triangles everywhere), the far drifting bubbles each got a second draw
+  for their shine, and the house's huge see-through bubble was drawn from everywhere. Now: 48-triangle shine spots, no extra
+  shine draws on far bubbles, the house bubble drawn only near it. After: 163 → 168 ms (round 1 166 → 175, round 2 161 → 161);
+  triangles back to build 134's (±1–6k). Right at the Big Bubble House (new content, +6 draw calls) the spot is about 8% heavier.
+- Not measured on the iPhone.
+
 ## Build 133 (the Bubble Universe)
 Desktop, software rendering. `pdeep.cjs`, build 132 vs 133, two rounds: flying 105 → 105 ms, spacewalk 225 → 214 ms, draw calls
 79 → 78. `pplanet.cjs bubble`, four rounds, six spots: 149–170 ms per frame, 56–70 draw calls, 105–126k triangles. **The
