@@ -4,6 +4,16 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 128 (eighteen story friends; build 127's open space together included)
+Desktop, software rendering; `pearth.cjs` (iPhone-sized touch viewport, adaptive quality frozen), build 126 vs build 128,
+two rounds each, mean of the spots' median frame ms. Noise between runs of the same file is about ±5%.
+- **Happy Farm** (Skipper, Ginger, Dotty, Noodle, Patch): 503 → 479 ms. **Frosty Peaks** (the snow family, Blizzard): 269 → 269 ms.
+- **Art Plaza** (the singing trio): 243 → 248 ms (+2%); draw calls +1 to +4 where the trio is in view (one per friend), triangles +12k at 845.
+- **Toy Town** (Grinny, Fluffy, Waffles): 259 → 269 ms (+4%: round 1 275, round 2 263 vs 259); draw calls +1 to +2. Within noise; watch it on the iPhone.
+- **Open space** (`pdeep.cjs`, build 126 vs 127, two rounds): flying 265 vs 266 ms, spacewalk 229 vs 225 ms, 78–79 draw calls both.
+- **Woods** (no change there; build 126 vs 127, two rounds): 707 vs 749 ms, inside the ±50 ms spread this spot shows between runs; the only new per-frame work on Earth is one layer comparison.
+- Each story friend: 2,300–3,500 triangles, one mesh, the shared creature material (no new shader). Not measured on the iPhone.
+
 ## Builds 125 + 126 (the family's picture fixes; open space and the Sun)
 Desktop, software rendering; `pearth.cjs` / `pplanet.cjs` (iPhone-sized touch viewport, adaptive quality frozen), build 124 vs build 126 (which contains 125). Median frame ms per spot; noise between runs of the SAME file is about ±5% per run and 2% on a 10-sample mean (an A/A test in the woods).
 - **Faster or the same:** Lab Gardens 650 → 573 ms (mean of 3 spots × 2 runs; fewer trees, none inside the greenhouses); Moon 294 → 265; Mars 297 → 276; Pluto 351 → 348; Uranus 271 → 268 (5 spots each).

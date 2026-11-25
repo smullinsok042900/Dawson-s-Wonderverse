@@ -15,6 +15,12 @@ destination with five attractions. Next, in order:
 3. **More space:** a second station with rooms inside, asteroid caves to float into, satellites to find, a nebula.
 4. Speed: measure the Sun and open space on the real iPhone (Performance Test while there).
 
+## Story friends (build 128)
+Eighteen original friends inspired by the family's pictures (shows and films Dawson loves; the real characters belong to
+other companies, so these are our own). Next: ask the family which ones Dawson likes best, and give the singers a little
+stage with lights and a song; the puppies could play fetch. Toy Town measured +4% on desktop (within noise): check on the iPhone.
+`tests/multiplayer.cjs` times out at its page-reload step on this machine for build 126 too (not the game): look at the test.
+
 ## Family request (build 124): walk-through, overlapping and floating things — continue
 Build 124 rebuilt the drawing friends as round toys, made the Ferris wheel a walk-in ride, moved every Earth climbing set out
 of her path and removed the learning-game screens (nothing opens `learn.js` now; delete it and its tests in a later build).
