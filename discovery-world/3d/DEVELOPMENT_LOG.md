@@ -22,7 +22,7 @@ swirls and sugar sparkles, jelly-bean trees, and everything made of shiny jelly 
 - The first full smoke run (344/345) caught **Beepo the robot** (it rolls about) wandering close enough to the green scribble
   friend in Lab Gardens that the 🐾 picked Beepo: the 5 m rule did not allow for friends that wander. Now every new friend
   stands **5 m plus how far it wanders** from every older one (all three friend tests check it); 12 friends moved a little
-  (Beepo, the rescue pups and the pig family along the farm, Waffles, Twinkle, Rosa).
+  (Beepo, the rescue pups and the pig family along the farm, Waffles, Twinkle, Rosa). **Full smoke test after the fix: 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 135 — the family's requests: fly up and down, toy fixes, the bubble house, the castle inside, HER OWN BRICK HOUSE
 - **Open space: ⏫ ⏬** (hold to fly up or down; shown while flying). The wormholes float above and below the planets, so
