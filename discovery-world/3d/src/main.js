@@ -573,7 +573,7 @@ G.useLift = () => {
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
 // (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
 // countdown, and off you fly. Earth (first) takes you home to the launch pad.
-const ROCKET_NAMES = { deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
+const ROCKET_NAMES = { upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
 let rocketPanel = null, launching = false, blastBtn = null, flightSequence = 0;
 // (build 48) A REAL ROCKET RIDE. PAW (or a tap) at the rocket: she walks up and climbs in, and her face shows in the round
 // window. The planet pictures come up; after she picks one, a BIG RED BUTTON appears. Pressing it starts the countdown
@@ -791,7 +791,7 @@ function planetArt(id) {
 }
 function showPicker() {
   if (!rocketPanel) { rocketPanel = document.createElement('div'); rocketPanel.id = 'rocketPanel';
-    const tiles = [['deep', ['#22184a', '#05031a']], ['earth', ['#5fa8ff', '#2f6fd0']], ...space.places.map(p => [p[0], p[1]])]; /* (build 126) 🌌 open space first */
+    const tiles = [['deep', ['#22184a', '#05031a']], ['earth', ['#5fa8ff', '#2f6fd0']], ...space.places.filter(p => !(p[5] && p[5].dim)).map(p => [p[0], p[1]])]; /* (build 126) 🌌 open space first */
     rocketPanel.innerHTML = `<div class="mpIn"><button class="mpX" aria-label="close">✖</button><div class="rkGrid">${tiles.map(([id]) => `<button class="rkT ${id}" data-id="${id}" aria-label="${ROCKET_NAMES[id]}"><img src="${planetArt(id)}" alt=""><span class="rkName">${ROCKET_NAMES[id].replace(/^the /, 'The ')}</span></button>`).join('')}</div></div>`; // (build 64: painted planets with their names)
     document.body.appendChild(rocketPanel);
     rocketPanel.querySelector('.mpX').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); rocketPanel.classList.remove('show'); Sound.click(); const R = seated(); if (R && R.phase === 'in') climbOut(G.rockets[R.key]); });
@@ -919,7 +919,7 @@ function jump() {
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
   if (P.ride) { if (P.ride.type === 'slide' || P.ride.type === 'coaster' || P.ride.noExit) return; /* (build 65: no hopping out of the roller coaster mid-air) */ const wasWhale = P.ride.type === 'whale'; P.y = Math.max(P.y, 0); const z = P.z; endRide(P.ride.type === 'carousel' ? 3 * P.facing : 0, 7); P.z = wasWhale ? 0 : z; if (wasWhale) { P.floaty = true; toast('🪂 Floating down gently!'); } Sound.jump(1); return; }
   if (P.swim) { P.vy = 5.6; Sound.tone(420 + Math.random() * 120, .12, 'sine', .05, 1.6); burst(P.x, P.y + .3, P.z, ['#65dcec', '#ffda68', '#ff67ab', '#fff'], 6, 1.5); discover('swim', 'Swim, swim! Tap JUMP to swim up.'); return; }
-  if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps] * (world.comfort?.relaxed ? 1.08 : 1); P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
+  if (P.jumps < 2) { const J = CREATURES[P.creature].jump; P.vy = J[P.jumps] * (world.comfort?.relaxed ? 1.08 : 1) * (P.layer === 'space' && G.gravSign === -1 ? -1 : 1); P.jumps++; P.grounded = false; Sound.jump(P.jumps); burst(P.x, P.y + .1, P.z, ['#ffec83', '#fff', '#a9efff'], 8, 1.5); if (P.jumps === 2) discover('doublejump', 'Double jump! Reach the high places.'); }
 }
 function doAction() {
   const P = player; if (!started || G.activityOpen || P.stair) return;
@@ -1096,8 +1096,9 @@ function updatePlayer(dt) {
   P.crawl = crawl || !!(P.layer === 'space' && G.crawlZone && G.crawlZone(P)); // (build 80: a planet can have a crawl tunnel too)
   const top = (swim ? (P.layer === 'sea' ? 3.6 : 2.2) : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
+  const gs = P.layer === 'space' && G.gravSign === -1 ? -1 : 1; // (build 131) the Upside-Down World: gravity can point UP
   // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
-  for (const s of solidIndex.query(G.solids, P.x, P.layer, frameNow)) {
+  if (gs > 0) for (const s of solidIndex.query(G.solids, P.x, P.layer, frameNow)) {
     if (s.layer !== P.layer || P.y >= s.top - .02 || P.y + 1.4 <= (s.bottom ?? 0)) continue;
     const L = s.a - .35, Rr = s.b + .35;
     if (P.x > L && P.x < Rr) {
@@ -1110,15 +1111,21 @@ function updatePlayer(dt) {
   }
   P.z += (P.groundZ - P.z) * Math.min(1, dt * 6);
   const oldY = P.y, wasG = P.grounded;
-  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * (P.layer === 'space' ? (G.spaceG || 1) : 1) * dt; /* (build 45: the real gravity of the Moon, the planets and Pluto, relative to Earth) */ if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
+  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * (P.layer === 'space' ? (G.spaceG || 1) : 1) * gs * dt; /* (build 45: the real gravity of the Moon, the planets and Pluto, relative to Earth) */ if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
   P.y += P.vy * dt; P.grounded = false;
   // land on the HIGHEST surface you reach (so a bouncy puff on top of a cloud wins over the cloud)
   let land = null, landStep = false;
-  if (P.vy <= 0) for (const z of platformIndex.query(G.platforms, P.x, P.layer, frameNow)) {
-    if (z.layer !== P.layer || P.x < z.a || P.x > z.b) continue;
+  if (gs > 0 && P.vy <= 0) for (const z of platformIndex.query(G.platforms, P.x, P.layer, frameNow)) {
+    if (z.layer !== P.layer || P.x < z.a || P.x > z.b || z.ceil) continue;
     const stepUp = z.step && wasG && z.y > oldY - .01 && z.y - oldY < (z.stepMax || .5);
     if (((oldY >= z.y - .02 && P.y <= z.y) || stepUp) && (!land || z.y > land.y)) { land = z; landStep = stepUp; }
   }
+  if (gs < 0 && P.vy >= 0) { let c = null; // (build 131) falling UP: land on the underside of a `ceil` surface
+    for (const z of platformIndex.query(G.platforms, P.x, P.layer, frameNow)) { if (z.layer !== P.layer || !z.ceil || P.x < z.a || P.x > z.b) continue;
+      const stepDn = z.step !== false && wasG && z.y < oldY + .01 && oldY - z.y < (z.stepMax || .5);
+      if (((oldY <= z.y + .02 && P.y >= z.y) || stepDn) && (!c || z.y < c.y)) c = z; }
+    if (c) { const impact = P.vy; P.y = c.y; P.vy = 0; P.grounded = true; P.groundZ = c.z || 0; if (c.onLand && !wasG) c.onLand(c);
+      if (c.pad) { P.vy = -(c.bounce || 12); P.grounded = false; P.jumps = 1; Sound.boing(); burst(P.x, c.y - .2, 0, ['#9ff7c8', '#fff'], 10, 2); } else if (impact > 6) Sound.land(); } }
   if (land) {
     const z = land, stepUp = landStep;
     {
@@ -1470,7 +1477,7 @@ function frame() {
   creature.root.position.set(ix, iy, iz); creature.root.visible = !G.playerHidden;
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
-  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide' && !(P.ride.type === 'deep' && G.deepFace != null), facing: P.facing, happy: P.happy }); if (G.deepFace != null) creature.root.rotation.y = G.deepFace; /* (build 126: floating in space, she faces the way she drifts) */ tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; /* (build 101: wings flap; swipe to turn her round while dressing up) */
+  creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide' && !(P.ride.type === 'deep' && G.deepFace != null), facing: P.facing, happy: P.happy }); if (G.deepFace != null) creature.root.rotation.y = G.deepFace; /* (build 126: floating in space, she faces the way she drifts) */ tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; if (G.flipK || creature.root.userData.flipped) { const fk = G.flipK || 0; creature.root.rotation.x = Math.PI * fk; creature.root.userData.flipped = fk > 0; if (fk > .3) blob.visible = false; } /* (build 131) upside down on the sky land */ /* (build 101: wings flap; swipe to turn her round while dressing up) */
   G.bubbles.update(dt); /* (build 106: after the friend's own animation, so the bubble's sway and the tumble show) */
   creature.root.rotation.z = P.ride && P.ride.roll != null ? P.ride.roll : 0; // (build 65: tilt with the coaster car) (build 68: any ride can tilt you: bungee, skydiving)
   if (G.mp) G.mp.update(dt); // (build 52: the other players in your room)
@@ -1754,7 +1761,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '130'; G.build = GAME_BUILD;
+const GAME_BUILD = '131'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

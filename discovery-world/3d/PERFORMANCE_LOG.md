@@ -4,6 +4,20 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 131 (wormholes and the Upside-Down World)
+Desktop, software rendering. `pdeep.cjs` (open space, flying near Mars and on a spacewalk), build 130 vs 131, two rounds:
+flying 220 → 193 ms, spacewalk 234 → 220 ms, 79 → 78 draw calls (the wormholes are beyond the far plane there; each is one
+disc with a small shader, a ring and a few hundred sparks). `pplanet.cjs`, build 131, two rounds, six spots each:
+- **The Upside-Down World:** 165–205 ms per frame, 55–63 draw calls, 156–171k triangles (the sky land's hanging underside, the
+  hanging trees and houses are batched). The first spot, on arrival while the areas are built in slices, measured 598 then 290 ms.
+- **The Sun** (same spots, for reference): 132–181 ms (first spot 181 / 238), 72–83 draw calls, 83–101k triangles.
+- Existing places are unchanged: nothing of the dimension is built until she arrives, and it is freed when she leaves. The
+  gravity rules are one branch per physics step. Not measured on the iPhone.
+
+## Build 130 (Dawson and her family on the Adventure Trail)
+Desktop, software rendering; `pearth.cjs trail`, build 129 vs build 130, two rounds each, mean of the 7 spots' median frame ms:
+592 → 548 ms (not slower; within the run-to-run spread). Draw calls +4 to +8 where the family is in view (one per character). Not measured on the iPhone.
+
 ## Build 129 (thirty more story friends)
 Desktop, software rendering; `pearth.cjs`, build 128 vs build 129, two rounds each, mean of the spots' median frame ms.
 - **Toy Town** (the four monsters and the toy clinic): 276 → 281 ms (+2%, within the ±5% noise); draw calls +4 to +6 where the clinic is in view.
