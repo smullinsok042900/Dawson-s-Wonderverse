@@ -6,6 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 136 — THE SQUISHY JELLY WORLD (the fourth dimension)
+A fourth 🌀 wormhole (pink, orange and green) leads to **the Squishy Jelly World** (`src/jelly.js`): a candy floor with jam
+swirls and sugar sparkles, jelly-bean trees, and everything made of shiny jelly that SQUISHES and WOBBLES when she lands on it
+(each piece squashes and jiggles back: a cheap scale wobble, no soft-body physics; one shared material per colour).
+- **Jelly hills** to bounce across; a **giant jelly cube** that wobbles and giggles when tapped.
+- **The wobbly bridge** over a jam river: each piece sags under her and jiggles, carrying her with it.
+- **The jelly tower** to climb (stacked jellies) and **the jelly slide** down. The test found two problems, both fixed: at a
+  slow frame rate a step could be skipped (the steps now touch and each can lift her two steps), and the slide started past the
+  end of the top step, so walking on dropped her off the tower (now the slide starts on the top step itself).
+- **The giant jelly trampoline park** (each bouncier than the last, stars higher and higher) and **the squishy jelly house** to
+  walk into (a jelly sofa and a jelly bed; they only catch her while she is inside).
+- Creatures: the Wobblers; pets **Gummy** (a gummy bear) and **Wiggle** (a jelly blob).
+- Tests: `multiverse.cjs` 52/52 (10 new jelly checks).
+
 ## Checkpoint: build 135 — the family's requests: fly up and down, toy fixes, the bubble house, the castle inside, HER OWN BRICK HOUSE
 - **Open space: ⏫ ⏬** (hold to fly up or down; shown while flying). The wormholes float above and below the planets, so
   without these only the map could reach them.

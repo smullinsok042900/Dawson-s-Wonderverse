@@ -70,10 +70,10 @@ function bridge(k) {
       g.p.y = y; g.m.position.y = y - .25; g.m.scale.set(2.9 * (1 - g.sag * .3), .5 * (1 + g.sag * .6), 2); if (on) P.y = y; }
     if (P.x > s + 36 && P.y > 1.9 && !k.G._jb) { k.G._jb = 1; k.disc && k.disc('jellybridge'); } });
   // THE JELLY TOWER: stacked jellies to climb (each step wobbles), a star on top
-  const t0 = s + 46; for (let j = 0; j < 6; j++) jellyPiece(k, BOX, JELLY[j % 6], t0 + j * 2.2, 0, -.6, 2.2, 1.2 * (j + 1), 2.2, { z: -.6, stepMax: 1.3 });
-  const top = 7.2; star(k, b, t0 + 11.5, top + 1.3, 'jellytower');
+  const t0 = s + 46; for (let j = 0; j < 6; j++) { const w = jellyPiece(k, BOX, JELLY[j % 6], t0 + j * 2.6, 0, -.6, 2.6, 1.2 * (j + 1), 2.2, { z: -.6, stepMax: 2.5 }); w.plat.a = t0 + j * 2.6 - 1.3; w.plat.b = t0 + j * 2.6 + 1.3; } // (build 136: steps that touch, and each can lift her two steps: a slow frame never leaves her stuck at the bottom)
+  const top = 7.2; star(k, b, t0 + 13.5, top + 1.3, 'jellytower');
   // THE JELLY SLIDE: a shiny jelly tube all the way down
-  const sx = t0 + 12.2, path = [[sx, top], [sx + 3, top - 1], [sx + 8, 4], [sx + 13, 1.4], [sx + 17, .2]];
+  const sx = t0 + 13.6, path /* (on the top step itself: walking off the top always starts the slide, she never drops off) */ = [[sx, top], [sx + 3, top - 1], [sx + 8, 4], [sx + 13, 1.4], [sx + 17, .2]];
   tubeAlong(b, path.map(([x, y]) => [x, y - .3]), .55, '#ff4f8a', -1.2);
   let sliding = false; const slide = () => { if (sliding || P.ride) return; sliding = true; k.Sound.chime(); k.say('🛝 Down the jelly slide! Squish squish!', true); pathRide(k, path, { z: -1.2, speed: 8, done: () => { sliding = false; k.disc && k.disc('jellyslide'); } }); };
   k.G.interact.push({ x: sx, y: top, layer: 'space', icon: '🛝', action: 'Jelly slide!', hintY: 2.4, run: slide });

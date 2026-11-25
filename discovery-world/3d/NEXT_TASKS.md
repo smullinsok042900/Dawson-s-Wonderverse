@@ -17,7 +17,7 @@ two-way islands, gravity slide, flip coaster, sky playground, Flipsies, pets Top
    state so friends see each other head-down (needs one more small field and the rules); shared rocket through a wormhole.
 2. ~~Giant Toy Universe~~ done in build 132 (more later: toy houses to walk into, a toy car race, building blocks she stacks).
 3. ~~Bubble Universe~~ done in build 133 (more later: bubble houses to go inside, a bubble race, giant bubble wands to blow).
-4. **Squishy Jelly World** (jelly hills that wobble when she lands: vertex-shader wobble, not physics; wobbly bridges).
+4. ~~Squishy Jelly World~~ done in build 136 (more later: a jelly maze, jelly cars that bounce, a jelly-making machine).
 5. **Wacky Gravity World** (low-gravity zones, sideways tunnels, rotating gravity rings: reuses build 131's gravity rules).
 6. **Speed:** prepare each dimension's special materials (the bubble film, the wormhole swirl) during the warp swirl, so
    arrival has no first-use hitch (build 133 measured 336–612 ms on the Bubble Universe's arrival spot).

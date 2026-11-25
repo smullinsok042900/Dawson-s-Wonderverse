@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 136: the Squishy Jelly World
+- A fourth 🌀 wormhole: everything is wobbly jelly. Bounce on jelly hills, cross the wobbly bridge, climb the jelly tower and
+  slide down, bounce higher and higher in the jelly trampoline park, walk into the jelly house, meet Gummy and Wiggle.
+
 ## 3D build 135: build your own house, the castle inside, the bubble house
 - In the Giant Toy Universe, Dawson builds her OWN brick house (colours, windows, her door) and walks inside it. The upside-down
   castle and the Big Bubble House can be explored inside. ⏫ ⏬ fly up and down in open space. Toy balls are solid; the toy

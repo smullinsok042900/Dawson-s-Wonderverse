@@ -169,8 +169,10 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     const sag = await p.evaluate(async X => { const P = __DDW3.player; P.x = X + 110 + 18; P.y = 3; P.vy = 0; P.grounded = false; await new Promise(r => setTimeout(r, 2500)); const ys = []; for (let n = 0; n < 20; n++) { await new Promise(r => setTimeout(r, 100)); ys.push(P.y); } return { lo: Math.min(...ys), g: P.grounded }; }, JX);
     check('the wobbly bridge sags under her (and carries her: she stays on it)', sag.g && sag.lo < 1.95 && sag.lo > 1.4, JSON.stringify(sag));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 44; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, JX);
-    await p.keyboard.down('ArrowRight'); const tower = await until(() => __DDW3.player.y > 7.1 && __DDW3.player.grounded, null, 40000); await p.keyboard.up('ArrowRight');
-    check('she climbs the jelly tower step by step (walking)', tower, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
+    await p.evaluate(() => { window.__maxY = 0; window.__slid = false; const f = () => { const P = __DDW3.player; if (P.grounded && !P.ride) window.__maxY = Math.max(window.__maxY, P.y); if (P.ride) window.__slid = true; if (performance.now() < window.__untilT) requestAnimationFrame(f); }; window.__untilT = performance.now() + 14000; f(); });
+    await p.keyboard.down('ArrowRight'); await sleep(14000); await p.keyboard.up('ArrowRight');
+    const tw = await p.evaluate(() => ({ maxY: window.__maxY, slid: window.__slid }));
+    check('she climbs the jelly tower step by step (walking) to the top, and walking on starts the jelly slide', tw.maxY >= 4.8 && tw.slid, JSON.stringify(tw)); // (the slide only starts when she stands on the 7.2 m top step, so `slid` proves she reached it; at 1–2 test frames a second the top is crossed in one or two frames)
     await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 7); if (it) { const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); } });
     check('the jelly slide brings her down', await until(() => !__DDW3.player.ride && __DDW3.player.y < .6, null, 30000));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 230; P.y = 0; }, JX); await sleep(6000);
