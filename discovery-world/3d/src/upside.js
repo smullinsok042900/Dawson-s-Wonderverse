@@ -62,7 +62,7 @@ function arrowPad(c, add, x, up) {
 }
 
 /** a tree that grows DOWN from the sky land (or one standing on its head on the meadow) */
-function hangTree(b, x, z, s, down = true) {
+export function hangTree(b, x, z, s, down = true) {
   const sgn = down ? -1 : 1, y0 = down ? CEIL : 0;
   b.put(CYL, x, y0 + sgn * 1.1 * s, z, '#8a5a3a', [.18 * s, 2.2 * s, .18 * s]);
   b.put(BALL, x, y0 + sgn * 2.7 * s, z, '#ff9ad8', [1.1 * s, .9 * s, 1.1 * s]);
@@ -118,9 +118,9 @@ export function* upsideLanding(c) {
 const KIT = { flip: null, pads: null };
 
 // ---------- helpers for the areas ----------
-const tubeAlong = (b, pts, r, col, z = 0) => { const curve = new THREE.CatmullRomCurve3(pts.map(([x, y]) => new THREE.Vector3(x, y, z))); const g = new THREE.TubeGeometry(curve, Math.max(24, pts.length * 10), r, 6, false); b.put(g, 0, 0, 0, col); g.dispose(); };
+export const tubeAlong = (b, pts, r, col, z = 0) => { const curve = new THREE.CatmullRomCurve3(pts.map(([x, y]) => new THREE.Vector3(x, y, z))); const g = new THREE.TubeGeometry(curve, Math.max(24, pts.length * 10), r, 6, false); b.put(g, 0, 0, 0, col); g.dispose(); };
 /** a ride along a 2D path: she moves along it, seated; flipK turns her over where the path is upside down */
-function pathRide(k, pts, { z = -1.2, speed = 7, flipAt = null, done }) {
+export function pathRide(k, pts, { z = -1.2, speed = 7, flipAt = null, done }) {
   const curve = new THREE.CatmullRomCurve3(pts.map(([x, y]) => new THREE.Vector3(x, y, z))), L = curve.getLength(), P = k.P, G = k.G, v = new THREE.Vector3();
   const R = { type: 'upride', t: 0, noExit: true, stick: true, flipK: 0 }; P.ride = R; P.vx = P.vy = 0; let u = 0;
   k.U.push(dt => { if (R.over) return; if (P.ride !== R) { R.over = true; R.flipK = null; return; }
@@ -164,7 +164,7 @@ function town(k) {
   k.rocketSign(s + 2);
 }
 /** a star to collect (it floats; tap it or touch it) */
-function star(k, b, x, y, id) {
+export function star(k, b, x, y, id) {
   const m = new THREE.Mesh(BALL, toy('#ffd23f', { em: '#ffb000', ei: .8 })); m.scale.set(.35, .35, .12); m.position.set(x, y, -.6); k.add(m);
   let got = false; const take = () => { if (got) return; got = true; m.visible = false; k.Sound.chime(); k.api.burst(x, y, -.6, ['#ffd23f', '#ffffff'], 14, 3); k.disc && k.disc(id); };
   k.tapIt(m, take); k.U.push((dt, t) => { if (got) return; m.rotation.y = t * 2; const P = k.P; if (Math.abs(P.x - x) < .9 && Math.abs(P.y + (k.G.gravSign === -1 ? -.8 : .8) - y) < 1.2) take(); });

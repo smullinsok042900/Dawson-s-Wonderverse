@@ -59,6 +59,35 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await sleep(1500);
     const home = await p.evaluate(() => ({ g: __DDW3.G.gravSign, k: __DDW3.G.flipK, layer: __DDW3.player.layer }));
     check('home again: gravity is normal and she is the right way up', home.g === 1 && !home.k && home.layer === '', JSON.stringify(home));
+    // ===== (build 132) THE GIANT TOY UNIVERSE: a second wormhole =====
+    await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
+    await p.locator('#rocketPanel .rkT[data-id=deep]').tap(); await until(() => __DDW3.G.deep.active(), null, 120000);
+    await p.evaluate(() => __DDW3.G.deep.flyTo('wh:toy'));
+    check('a second wormhole leads to the Giant Toy Universe', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'toy', null, 300000));
+    await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-arrive.jpg'), type: 'jpeg', quality: 85 });
+    const TX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 21; P.y = 0; P.vx = 0; P.facing = 1; }, TX); await sleep(500);
+    await p.keyboard.down('ArrowRight'); const climbed = await until(() => __DDW3.player.y > 7.1 && __DDW3.player.grounded, null, 40000); await p.keyboard.up('ArrowRight');
+    check('she climbs the giant block steps to the lookout on top (by walking: each block is a step)', climbed, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-blocks.jpg'), type: 'jpeg', quality: 85 });
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.grounded = false; }, TX);
+    check('the giant bouncy balls bounce her from ball to ball, to the last one', await until(X => __DDW3.player.x > X + 66, TX, 40000), 'x ' + await p.evaluate(X => (__DDW3.player.x - X).toFixed(1), TX));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 117; P.y = 0; P.vy = 0; P.vx = 0; }, TX); await sleep(6000);
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🚂'); __DDW3.player.x = it.x; it.run(); });
+    const x0 = await p.evaluate(() => __DDW3.player.x); await p.keyboard.down('ArrowRight'); await sleep(5000); await p.keyboard.up('ArrowRight');
+    const tr = await p.evaluate(() => ({ x: __DDW3.player.x, ride: __DDW3.player.ride && __DDW3.player.ride.type }));
+    check('she drives the wind-up train with the arrows (▶ goes)', tr.ride === 'toytrain' && tr.x > x0 + 5, JSON.stringify({ x0, ...tr }));
+    await p.evaluate(() => { __DDW3.player.ride = null; });
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 7); const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); });
+    check('the giant toy slide takes her from the block mountain summit to the ground', await until(() => !__DDW3.player.ride && __DDW3.player.y < .5, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 228; P.y = 0; }, TX); await sleep(6000);
+    const tc = await p.evaluate(async () => { const it = __DDW3.G.interact.find(i => i.icon === '🎢'); if (!it) return -1; __DDW3.player.x = it.x; it.run(); let best = 0; for (let n = 0; n < 200 && __DDW3.player.ride; n++) { await new Promise(r => setTimeout(r, 100)); best = Math.max(best, __DDW3.player.y); } return { best, ride: !!__DDW3.player.ride }; });
+    check('the wooden toy coaster goes up its big hill and back', tc.best > 8 && !tc.ride, JSON.stringify(tc));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 92; P.y = 3; P.vy = 0; P.vx = 0; P.grounded = false; }, TX);
+    check('the jack-in-the-box bounces her up onto the shelf of giant toys', await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 6.85) < .05, null, 20000));
+    check('the toy pets live here (Clicky and Blocky)', await p.evaluate(() => ['pet_windmouse', 'pet_blockpup'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
+    await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
+    check('home again from the toys', await p.evaluate(() => __DDW3.player.layer === '' && __DDW3.G.gravSign !== -1));
     check('no page errors', !errs.length, errs.slice(0, 3).join(' | '));
   } catch (e) { console.log('FAIL exception: ' + e.message); fail++; }
   finally { console.log(`${ok} checks passed`); await b.close(); process.exit(fail ? 1 : 0); }

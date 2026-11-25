@@ -4,7 +4,7 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
-## THE MULTIVERSE (family request, 2026-11-25) — phases 1–2 done in build 131
+## THE MULTIVERSE (family request, 2026-11-25) — phases 1–2 done in build 131, the Toy Universe in build 132
 Wormholes in open space lead to other DIMENSIONS. Each dimension is one entry in `src/dimensions.js` (look, gravity, wormhole
 place and colours, creatures) + its areas module in `PLANET_EXTRA` (planets.js) + its landing ground in space.js. It streams
 like a planet (one dimension in memory, areas built when she walks near, freed when she flies away); a wormhole is one small
@@ -15,7 +15,7 @@ two-way islands, gravity slide, flip coaster, sky playground, Flipsies, pets Top
 1. **Upside-Down World, more:** walk up WALLS (a wall-gravity zone: sideways `G.gravDir`), an inverted castle INTERIOR (rooms),
    upside-down swings and a ceiling slide ride, a gravity maze; Play Together: send the flip (`G.gravSign`) with the player
    state so friends see each other head-down (needs one more small field and the rules); shared rocket through a wormhole.
-2. **Giant Toy Universe** (giant blocks to climb, a toy train to drive, wind-up keys that start machines, a toy coaster).
+2. ~~Giant Toy Universe~~ done in build 132 (more later: toy houses to walk into, a toy car race, building blocks she stacks).
 3. **Bubble Universe** (enter giant bubbles and float in them, bubble slides, bubble trampolines, bubble buses).
 4. **Squishy Jelly World** (jelly hills that wobble when she lands: vertex-shader wobble, not physics; wobbly bridges).
 5. **Wacky Gravity World** (low-gravity zones, sideways tunnels, rotating gravity rings: reuses build 131's gravity rules).

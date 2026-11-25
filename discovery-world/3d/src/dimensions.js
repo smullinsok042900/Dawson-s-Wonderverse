@@ -21,6 +21,18 @@ export const DIMENSIONS = [
     },
     alien: { name: 'Flipsies', body: '#9be8ff', eye: 2, ant: 2, shape: 'jelly', move: 'float', note: 680, hi: 'Hi hi! We are Flipsies! Down is up and up is down here!', iris: '#5a2fb0' },
   },
+  {
+    id: 'toy', icon: '🧸', name: 'the Giant Toy Universe',
+    colors: ['#ffd23f', '#ff4f6a'],
+    gravity: 7, // a bouncy, floaty toy-room pull (made-up)
+    hello: 'The Giant Toy Universe! You are as small as a toy mouse, and every toy is ENORMOUS! Climb the giant blocks, bounce on the giant balls, and drive the wind-up train!',
+    wormhole: { at: [3.3, 900, -50], colors: ['#ffd23f', '#ff4f6a', '#4fb0ff'] },
+    look: {
+      sky: { top: '#7ac8ff', mid: '#bfe6ff', hor: '#fff4d8', low: '#ffe8c0', stars: 0, sunDir: [.3, .5, -.8], sunCol: '#fff8e0', glow: [4, .4, .2] },
+      sun: ['#fff8e8', 2.6], hemi: ['#fff0d8', '#ffb880', 1.3], fog: ['#fff0d8', 130, 380], env: .25, rim: ['#fff0c0', .6],
+    },
+    alien: { name: 'Tinkers', body: '#ff9a2e', eye: 2, ant: 1, shape: 'cube', move: 'walk', note: 740, hi: 'Tick tock! We are Tinkers, the wind-up toy people! Wind us up and watch us go!', iris: '#2a2333' },
+  },
 ];
 export const DIM = Object.fromEntries(DIMENSIONS.map(d => [d.id, d]));
 export const isDimension = id => !!DIM[id];

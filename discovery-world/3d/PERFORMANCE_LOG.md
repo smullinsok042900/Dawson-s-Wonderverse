@@ -4,6 +4,12 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 132 (the Giant Toy Universe)
+Desktop, software rendering. `pdeep.cjs`, build 131 vs 132, two rounds: flying 422 → 119 ms (build 131's flying samples were
+unusually slow this run: noise), spacewalk 209 → 222 ms (+6%, inside the ±15 ms this spot moved between runs of the same build),
+78–79 draw calls both. `pplanet.cjs toy`, four rounds, six spots: 129–178 ms per frame (arrival spot 178–306 while the areas
+build in slices), 58–66 draw calls, 86–100k triangles: lighter than the Upside-Down World. Not measured on the iPhone.
+
 ## Build 131 (wormholes and the Upside-Down World)
 Desktop, software rendering. `pdeep.cjs` (open space, flying near Mars and on a spacewalk), build 130 vs 131, two rounds:
 flying 220 → 193 ms, spacewalk 234 → 220 ms, 79 → 78 draw calls (the wormholes are beyond the far plane there; each is one
