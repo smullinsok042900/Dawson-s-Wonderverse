@@ -237,7 +237,10 @@ export function initDeep(G, api) {
         button('deepWalk', '🧑‍🚀', 'float outside the rocket', () => S.mode === 'fly' ? startWalk() : backToRocket(), { top: '182px', right: '18px' }),
         button('deepLand', '🛬', 'land here', land, { top: '248px', right: '18px' }),
         button('deepDock', '🛰️', 'dock at Star Station', () => dock(), { top: '248px', right: '86px' }),
-        button('deepDown', '⬇️', 'float down', () => { if (S.walk) S.walk.down = .9; }, { bottom: '22px', right: '210px' }));
+        button('deepDown', '⬇️', 'float down', () => { if (S.walk) S.walk.down = .9; }, { bottom: '22px', right: '210px' }),
+        button('deepRise', '⏫', 'fly up', () => { S.climb = 1; }, { bottom: '92px', right: '210px' }), // (build 135) hold to fly up or down,
+        button('deepSink', '⏬', 'fly down', () => { S.climb = -1; }, { bottom: '22px', right: '210px' })); // so she can reach the wormholes without the map
+      const stop = () => { if (S) S.climb = 0; }; for (const ev of ['pointerup', 'pointercancel']) window.addEventListener(ev, stop); for (const id of ['deepRise', 'deepSink']) hud.querySelector('#' + id).addEventListener('pointerleave', stop);
       document.body.appendChild(hud);
     }
     if (hud) hud.style.display = on ? '' : 'none';
@@ -247,6 +250,7 @@ export function initDeep(G, api) {
     hud.querySelector('#deepWalk').textContent = w ? '🚀' : '🧑‍🚀'; hud.querySelector('#deepWalk').setAttribute('aria-label', w ? 'back into the rocket' : 'float outside the rocket');
     hud.querySelector('#deepLand').style.display = !w && S.near && S.near.land ? '' : 'none';
     hud.querySelector('#deepDown').style.display = w ? '' : 'none';
+    for (const id of ['deepRise', 'deepSink']) hud.querySelector('#' + id).style.display = w ? 'none' : '';
     hud.querySelector('#deepDock').style.display = !w && S.atDock ? '' : 'none';
     hud.querySelector('#deepMap').style.display = w ? 'none' : '';
   }
@@ -359,12 +363,15 @@ export function initDeep(G, api) {
         S.yaw -= st.x * 1.3 * dt;
         const top = 90; if (st.y > .1) S.speed = Math.min(top, S.speed + 40 * dt * st.y); else if (st.y < -.1) S.speed = Math.max(-12, S.speed - 60 * dt * -st.y); else S.speed *= Math.exp(-.25 * dt);
       }
+      // (build 135) up and down: hold ⏫ or ⏬ (it eases in and out; the autopilot steers height by itself)
+      if (S.climb) S.auto = null; S.vyc = (S.vyc || 0) + ((S.climb || 0) * 32 - (S.vyc || 0)) * Math.min(1, dt * 3); S.pos.y = Math.max(DEEP.oy - 260, Math.min(DEEP.oy + 260, S.pos.y + S.vyc * dt));
+      if (S.climb && !S.told.updown) { S.told.updown = 1; say(S.climb > 0 ? '⏫ Up, up, up!' : '⏬ Down we go!'); }
       F.set(-Math.sin(S.yaw), 0, -Math.cos(S.yaw)); S.pos.addScaledVector(F, S.speed * dt);
       // never inside a planet: a soft push back out
       for (const b of S.bodies) { const d = S.pos.distanceTo(b.pos), min = b.r + 7; if (d < min) S.pos.add(V.copy(S.pos).sub(b.pos).normalize().multiplyScalar(min - d)); }
       // stay inside the solar system
       const rr = Math.hypot(S.pos.x - DEEP.ox, S.pos.z - DEEP.oz); if (rr > 3150) { const k = 3150 / rr; S.pos.x = DEEP.ox + (S.pos.x - DEEP.ox) * k; S.pos.z = DEEP.oz + (S.pos.z - DEEP.oz) * k; if (!S.told.edge) { S.told.edge = 1; say('🌟 That is the edge of our solar system! Let us turn back.'); } }
-      S.rocket.position.copy(S.pos); S.rocket.rotation.set(Math.sin(S.t * 1.3) * .03, S.yaw, -st.x * .25);
+      S.rocket.position.copy(S.pos); S.rocket.rotation.set(Math.sin(S.t * 1.3) * .03 + (S.vyc || 0) * .008, S.yaw, -st.x * .25);
       S.flame.scale.setScalar(1.2 + Math.abs(S.speed) / 40 + Math.random() * .4); S.flame.visible = Math.abs(S.speed) > 1;
       P.x = S.pos.x; P.y = S.pos.y; P.z = S.pos.z;
       // which planet is she next to?

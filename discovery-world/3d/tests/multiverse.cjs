@@ -20,6 +20,9 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await sleep(800); await p.locator('#deepMap').tap(); await sleep(600);
     check('the 🗺️ map has a 🌀 wormhole picture', await p.locator('#deepMapPanel .deepTile[data-id="wh:upside"]').count() === 1);
     await p.evaluate(() => { const m = document.getElementById('deepMapPanel'); if (m) m.style.display = 'none'; });
+    { const y0 = await p.evaluate(() => __DDW3.G.deep.state().y); const btn = p.locator('#deepRise'); const box = await btn.boundingBox();
+      await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p.mouse.down(); await sleep(3000); await p.mouse.up(); const y1 = await p.evaluate(() => __DDW3.G.deep.state().y);
+      check('in open space, holding ⏫ flies the rocket UP (to reach the wormholes without the map)', y1 > y0 + 10, JSON.stringify({ y0, y1 })); }
     await p.evaluate(() => __DDW3.G.deep.flyTo('wh:upside'));
     const arrived = await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'upside', null, 300000);
     check('the autopilot flies into the wormhole and she arrives in the Upside-Down World', arrived);
@@ -45,6 +48,12 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('Upside-Down Town and the hanging castle are built: ledges to stand on underneath', ledges >= 9, ledges + ' ledges');
     await p.evaluate(X => { const P = __DDW3.player; __DDW3.G.gravSign = -1; P.x = X + 110 + 52 - 7 + 1.5; P.y = 8.5; P.vy = 2; P.grounded = false; }, X);
     check('she lands on the underside of a castle ledge (1.5 m below the sky land)', await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 9) < .05, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; __DDW3.G.gravSign = -1; P.x = X + 110 + 52 - 9; P.y = 10.5; P.vy = 0; P.grounded = true; P.facing = 1; }, X);
+    await p.keyboard.down('ArrowRight'); const inC = await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 10.48) < .03 && __DDW3.player.z < -3.5, null, 20000); await p.keyboard.up('ArrowRight');
+    check('walking along the sky land into the upside-down castle, she steps inside it', inC, JSON.stringify(await p.evaluate(() => ({ y: __DDW3.player.y, z: __DDW3.player.z }))));
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'upside-castle-inside.jpg'), type: 'jpeg', quality: 85 });
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 52 + 3; P.y = 7.4; P.vy = 2; P.grounded = false; }, X);
+    check('inside, she hops up onto the shelf (the upper floor) where the treasure star is', await until(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 8.1) < .05, null, 15000));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 92; P.y = 10.5; P.grounded = true; P.vy = 0; const it = __DDW3.G.interact.find(i => i.icon === '🛝'); it && it.run(); }, X);
     const slid = await until(() => !__DDW3.player.ride && __DDW3.G.gravSign === 1 && __DDW3.player.y < 1 && __DDW3.G.flipK < .05, null, 30000);
     check('the gravity slide takes her from the sky land down to the meadow, the right way up', slid);
@@ -66,10 +75,31 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('a second wormhole leads to the Giant Toy Universe', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'toy', null, 300000));
     await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-arrive.jpg'), type: 'jpeg', quality: 85 });
     const TX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 70.6; P.y = 0; localStorage.removeItem('ddw3-brickhouse'); }, TX);
+    await p.evaluate(() => __DDW3.G.brickHouse.open()); await sleep(800);
+    const cell = (r, c) => p.locator(`#brickPanel .brickCell[data-r="${r}"][data-c="${c}"]`), toolB = t => p.locator(`#brickPanel .brickTool[data-tool="${t}"]`);
+    await toolB('1').tap(); for (let r = 0; r < 4; r++) for (const c of [0, 1, 2, 3, 6, 7, 8, 9, 10, 11]) await cell(r, c).tap();
+    await toolB('7').tap(); await cell(2, 1).tap(); await cell(2, 9).tap();
+    await toolB('3').tap(); for (const c of [4, 5]) for (const r of [2, 3]) await cell(r, c).tap();
+    await toolB('8').tap(); await cell(0, 4).tap();
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'brick-builder.jpg'), type: 'jpeg', quality: 85 });
+    await toolB('done').tap(); await sleep(800);
+    const hb = await p.evaluate(() => ({ built: __DDW3.G.brickHouse.built(), door: __DDW3.G.brickHouse.grid().slice(0, 12).indexOf(8), saved: !!localStorage.getItem('ddw3-brickhouse') }));
+    check('she builds her own brick house on the building screen (bricks, windows, her door), and it stands in the world', hb.built >= 40 && hb.door === 4 && hb.saved, JSON.stringify(hb));
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go inside'); __DDW3.player.x = it.x; it.run(); }); await sleep(2500);
+    const inH = await p.evaluate(() => ({ inside: __DDW3.G.brickHouse.inside(), z: __DDW3.player.z }));
+    check('through her door she goes inside her house (the front wall turns see-through)', inH.inside && inH.z < -2.5, JSON.stringify(inH));
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'brick-house-inside.jpg'), type: 'jpeg', quality: 85 });
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go outside'); it.run(); }); await sleep(1500);
+    check('and back out through the door', await p.evaluate(() => !__DDW3.G.brickHouse.inside() && __DDW3.player.z > -1));
     await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 21; P.y = 0; P.vx = 0; P.facing = 1; }, TX); await sleep(500);
     await p.keyboard.down('ArrowRight'); const climbed = await until(() => __DDW3.player.y > 7.1 && __DDW3.player.grounded, null, 40000); await p.keyboard.up('ArrowRight');
     check('she climbs the giant block steps to the lookout on top (by walking: each block is a step)', climbed, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-blocks.jpg'), type: 'jpeg', quality: 85 });
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 45; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, TX);
+    await p.keyboard.down('ArrowRight'); await sleep(3500); await p.keyboard.up('ArrowRight');
+    const blocked = await p.evaluate(X => __DDW3.player.x - X, TX);
+    check('she cannot walk through a giant ball: it stops her (she jumps on top)', blocked < 49.5, 'x ' + blocked.toFixed(2));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.grounded = false; }, TX);
     check('the giant bouncy balls bounce her from ball to ball, to the last one', await until(X => __DDW3.player.x > X + 66, TX, 40000), 'x ' + await p.evaluate(X => (__DDW3.player.x - X).toFixed(1), TX));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 117; P.y = 0; P.vy = 0; P.vx = 0; }, TX); await sleep(6000);
@@ -77,6 +107,8 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     const x0 = await p.evaluate(() => __DDW3.player.x); await p.keyboard.down('ArrowRight'); await sleep(5000); await p.keyboard.up('ArrowRight');
     const tr = await p.evaluate(() => ({ x: __DDW3.player.x, ride: __DDW3.player.ride && __DDW3.player.ride.type }));
     check('she drives the wind-up train with the arrows (▶ goes)', tr.ride === 'toytrain' && tr.x > x0 + 5, JSON.stringify({ x0, ...tr }));
+    if (tr.ride === 'toytrain') { await p.keyboard.down('ArrowRight'); const t2 = await p.evaluate(async () => { let best = 0; for (let n = 0; n < 120; n++) { await new Promise(r => setTimeout(r, 100)); let c = 0; __DDW3.scene.traverse(o => { if (o.isGroup && o.userData.dynamic && o.children.length === 1 && Math.abs(o.rotation.z) > .05 && Math.abs(o.rotation.z) < .4 && o.position.y > .3) c++; }); best = Math.max(best, c); } return best; }); await p.keyboard.up('ArrowRight');
+      check('on the block bridge the engine and wagons each tilt with the track (the train follows it)', t2 >= 2, 'cars tilted at once: ' + t2); }
     await p.evaluate(() => { __DDW3.player.ride = null; });
     await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 7); const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); });
     check('the giant toy slide takes her from the block mountain summit to the ground', await until(() => !__DDW3.player.ride && __DDW3.player.y < .5, null, 30000));
@@ -102,6 +134,12 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-ride.jpg'), type: 'jpeg', quality: 85 });
     await p.locator('#jumpBtn').tap();
     check('JUMP pops the bubble and she drifts gently down to the foam', await until(() => !__DDW3.player.ride && __DDW3.player.grounded && __DDW3.player.y < .3, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; P.x = X + 86 + 5; P.y = 0; P.vx = 0; P.vy = 0; P.grounded = true; P.facing = 1; }, BX);
+    await p.keyboard.down('ArrowRight'); const f1 = await until(() => Math.abs(__DDW3.player.y - 3.6) < .05 && __DDW3.player.grounded, null, 20000); await p.keyboard.up('ArrowRight');
+    await p.keyboard.down('ArrowLeft'); const f2 = f1 && await until(() => Math.abs(__DDW3.player.y - 7.2) < .05 && __DDW3.player.grounded, null, 30000); await p.keyboard.up('ArrowLeft');
+    await p.keyboard.down('ArrowRight'); const f3 = f2 && await until(() => Math.abs(__DDW3.player.y - 10.8) < .05 && __DDW3.player.grounded, null, 30000); await p.keyboard.up('ArrowRight');
+    check('the big bubble house: she walks in and climbs its stairs floor by floor to the lookout at the top', f1 && f2 && f3, JSON.stringify({ f1, f2, f3 }));
+    await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'bubble-house.jpg'), type: 'jpeg', quality: 85 });
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 48; P.y = 3; P.vy = 0; P.grounded = false; }, BX);
     check('a bubble trampoline bounces her up', await until(() => __DDW3.player.vy > 5, null, 15000));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 140; P.y = 0; P.vy = 0; P.vx = 0; }, BX); await sleep(6000);

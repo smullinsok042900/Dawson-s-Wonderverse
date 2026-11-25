@@ -139,9 +139,26 @@ function town(k) {
     star(k, glowB, x + .9, ly - 1.1, 'housestar' + i);
   }
   // THE HANGING CASTLE: towers point down; hop down its ledges (1.5, 3, 4.5 and 6 m below the sky land) to the star at the very tip
-  const cx = s + 52; b.put(BOX, cx, CEIL - 1.6, -5, '#e8e0ff', [14, 3.2, 5]);
-  for (const [dx, hh] of [[-5.5, 6], [0, 7.4], [5.5, 6]]) { b.put(CYL, cx + dx, CEIL - hh / 2, -5, '#f0eaff', [1.6, hh, 1.6]); b.put(CONE, cx + dx, CEIL - hh - 1.2, -5, '#7a5ae0', [1.9, 2.4, 1.9], [FLIP, 0, 0]); b.put(CYL, cx + dx, CEIL - hh - 2.6, -5, '#ffd23f', [.04, .8, .04]); }
-  for (let w = 0; w < 7; w++) b.put(BOX, cx - 6 + w * 2, CEIL - 2.4, -2.45, '#fff3a6', [.6, .9, .05]);
+  // (build 135) THE CASTLE CAN BE ENTERED: its front is open like a dollhouse. Walking along the sky land into it, she steps
+  // inside (upside down, like everything here): for her the rooms stand the right way up. A throne, a long table, a
+  // chandelier, an upper floor to hop up to (jump "down", fall back up onto it) with the treasure star, and a treasure chest.
+  const cx = s + 52, CH = 5.2, zi = -4.6, wall = '#e8e0ff';
+  b.put(BOX, cx, CEIL - .2, -5, wall, [14.4, .4, 5.4]); b.put(BOX, cx, CEIL - CH + .15, -5, '#d8ccff', [14.4, .3, 5.4]); // the "floor" she walks on (on the sky land) and the slab far below her head
+  b.put(BOX, cx, CEIL - CH / 2, -7.5, wall, [14.4, CH, .4]); for (const d of [-1, 1]) b.put(BOX, cx + d * 7, CEIL - CH / 2, -5, wall, [.4, CH, 5.4]); // the back and side walls
+  for (const d of [-7, -2.3, 2.3, 7]) b.put(BOX, cx + d, CEIL - CH / 2, -2.4, '#c8b8ff', [.3, CH, .3]); b.put(BOX, cx, CEIL - CH + .5, -2.4, '#c8b8ff', [14.4, .3, .3]); // an open front: pillars and a beam
+  for (let w = 0; w < 5; w++) { b.put(BOX, cx - 5 + w * 2.5, CEIL - 3.4, -7.28, '#9fd8ff', [.9, 1.4, .05]); b.put(BOX, cx - 5 + w * 2.5, CEIL - 3.4, -7.26, '#ffffff', [.08, 1.4, .05]); } // windows on the back wall
+  for (const [dx, hh] of [[-5.5, 7.6], [0, 9], [5.5, 7.6]]) { b.put(CYL, cx + dx, CEIL - hh / 2, -8.4, '#f0eaff', [1.2, hh, 1.2]); b.put(CONE, cx + dx, CEIL - hh - 1.1, -8.4, '#7a5ae0', [1.5, 2.2, 1.5], [FLIP, 0, 0]); b.put(CYL, cx + dx, CEIL - hh - 2.4, -8.4, '#ffd23f', [.04, .7, .04]); }
+  // inside: the throne and the long table stand on the sky land (they hang down, so for her they stand up)
+  b.put(BOX, cx - 5, CEIL - .6, zi - 1.6, '#ffd23f', [1.4, .8, 1]); b.put(BOX, cx - 5, CEIL - 1.6, zi - 2.1, '#ff6fa5', [1.4, 2, .3]); b.put(BALL, cx - 5, CEIL - 2.7, zi - 2.1, '#ffd23f', .25);
+  b.put(BOX, cx - 1.5, CEIL - .95, zi - 1.2, '#c89a6a', [3.4, .15, 1.2]); for (const d of [-1.4, 1.4]) b.put(CYL, cx - 1.5 + d, CEIL - .45, zi - 1.2, '#a07a4a', [.08, .9, .08]); for (let j = 0; j < 3; j++) b.put(CYL, cx - 2.5 + j, CEIL - 1.1, zi - 1.2, ['#ff6f9a', '#4fb0ff', '#5fd36a'][j], [.15, .25, .15]);
+  b.put(CYL, cx + 1.5, CEIL - CH + .9, zi - .8, '#ffd23f', [.05, 1.2, .05]); b.put(CYL, cx + 1.5, CEIL - CH + 1.6, zi - .8, '#ffd23f', [.9, .1, .9]); for (let j = 0; j < 6; j++) b.put(CYL, cx + 1.5 + Math.cos(j) * .8, CEIL - CH + 1.85, zi - .8 + Math.sin(j) * .8, '#ffffff', [.06, .35, .06]); // a chandelier (for her it hangs from the ceiling)
+  // the upper floor (closer to the meadow, so "up" for her): a shelf to hop up to, with the treasure star and a chest
+  b.put(BOX, cx + 3.5, CEIL - 2.4 + .2, zi - .6, '#c8b8ff', [5, .4, 2.6]); cp(cx + 1, cx + 6, CEIL - 2.4, { z: zi });
+  b.put(BOX, cx + 4.8, CEIL - 2.4 - .5, zi - 1.2, '#a0522d', [1.2, .8, .8]); b.put(BOX, cx + 4.8, CEIL - 2.4 - .95, zi - 1.2, '#ffd23f', [1.24, .12, .84]);
+  star(k, glowB, cx + 3, CEIL - 2.4 - 1.3, 'castletreasure');
+  // its floor: walking into the castle, she steps inside (a surface a hair closer to the meadow than the sky land, set back)
+  cp(cx - 6.8, cx + 6.8, CEIL - .02, { z: zi });
+  k.G.interact.push({ x: cx - 6, y: CEIL, layer: 'space', icon: '🏰', action: 'Into the castle!', hintY: -2.4, need: () => k.G.gravSign === -1, run: () => { k.say('🏰 The upside-down castle! Walk in and look around: hop up to the shelf for the treasure!', true); k.disc && k.disc('castleinside'); } });
   for (const [j, y] of [CEIL - 1.5, CEIL - 3, CEIL - 4.5, CEIL - 6].entries()) { const a = cx - 7 + j * 3.4, c2 = a + 3; b.put(BOX, (a + c2) / 2, y + .3, -.6, '#d8ccff', [3, .6, 1.8]); cp(a, c2, y); }
   star(k, glowB, cx + 5.9, CEIL - 7.3, 'castletip');
   KIT.pads && k.G.interact.push({ x: cx + 5.9, y: CEIL - 6, layer: 'space', icon: '⬇️', action: 'Float down!', hintY: -2.4, run: () => KIT.flip && KIT.flip(1) });

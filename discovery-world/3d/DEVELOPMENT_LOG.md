@@ -6,6 +6,27 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 135 — the family's requests: fly up and down, toy fixes, the bubble house, the castle inside, HER OWN BRICK HOUSE
+- **Open space: ⏫ ⏬** (hold to fly up or down; shown while flying). The wormholes float above and below the planets, so
+  without these only the map could reach them.
+- **Toy Universe:** the giant balls are **solid** (she bumps into them and jumps on top; before, she walked through them); the
+  **wind-up train's engine and wagons are separate cars**, each sitting on the track and tilting with it, so the train climbs
+  over the block bridge (before, it was one stiff piece that stayed straight).
+- **Dawson's own brick house** (`src/lego.js`): tap the pile of giant bricks → the building screen: a 12 × 7 grid (the front of
+  her house), 6 brick colours, a 🪟 window, the 🚪 door (she puts it on herself, along the bottom) and a 🧽 eraser. ✅ and the
+  house stands in the world, built from her design: front wall, back wall (her own pattern, seen from inside), side walls in her
+  favourite colour, a roof. With a door, 🚪 takes her inside (the front wall turns see-through, like a dollhouse) and out again.
+  The design is kept on the device. Each wall is one instanced mesh.
+- **The upside-down castle can be entered**: walking along the sky land into it she steps inside, upside down; the front is open
+  like a dollhouse; for her the rooms stand the right way up (a throne, a long table, a chandelier); she hops up to a shelf
+  with a treasure chest and a star.
+- **Bubble Universe:** bubbles are **more visible** (a stronger, bluer film and a bright shine spot on each) and **the Big Bubble
+  House**: a giant see-through bubble to walk into, three floors joined by stairs (a bouncy sofa, a bubble lamp, a fishbowl
+  bubble, a bubble bed to bounce on), a lookout with a telescope and a star, and a slide out.
+- Tests: `multiverse.cjs` 42/42 (new: ⏫ lifts the rocket; a ball stops her; the cars tilt on the bridge; she climbs the bubble
+  house floor by floor; she walks into the castle and hops to its shelf; she builds her house by tapping the real building
+  screen, goes in through her door and comes back out).
+
 ## Checkpoint: build 134 — FRIENDS' ROCKETS IN OPEN SPACE REALLY SHOW (family report)
 The family saw that in Play Together, friends in open space could not see each other's rockets. Cause: build 127 sent the
 rocket in a new player field, `dk`; the family's Firebase database only accepts it after the rules are published again, and

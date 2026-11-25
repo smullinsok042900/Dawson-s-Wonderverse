@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 135: build your own house, the castle inside, the bubble house
+- In the Giant Toy Universe, Dawson builds her OWN brick house (colours, windows, her door) and walks inside it. The upside-down
+  castle and the Big Bubble House can be explored inside. ⏫ ⏬ fly up and down in open space. Toy balls are solid; the toy
+  train follows its track.
+
 ## 3D build 133: the Bubble Universe
 - A third 🌀 wormhole: float inside a giant bubble (steer it with the arrows, JUMP pops it), bounce on bubble trampolines,
   hop across bubble houses that bob up and down, ride the bubble slide and the bubble bus, pop bubbles, meet Glub and Foamy.
