@@ -97,6 +97,11 @@ function pup(b, o) {
     limb(b, o.antlers, [[s * .13, hy + .3, hz - .07], [s * .06, hy + .44, hz - .02]], .018, .014, 3);
   }
   if (o.collar) ball(b, o.collar, 0, hy - .2, hz - .12, .14, .035, .13);
+  if (o.vest) { ball(b, o.vest, 0, by + .02, .02, .215, .17, .26 * len); if (o.badge) dot(b, o.badge, 0, by + .05, .28 * len, .05, .05, .02); }
+  if (o.hat === 'helmet') { ball(b, o.hatColor, 0, hy + .15, hz - .02, .19, .12, .2); b.put(CYL, 0, hy + .1, hz + .14, o.hatColor, [.17, .02, .1]); dot(b, '#ffd23f', 0, hy + .2, hz + .16, .04, .04, .02); }
+  if (o.hat === 'hard') { ball(b, o.hatColor, 0, hy + .16, hz - .02, .18, .1, .18); b.put(CYL, 0, hy + .12, hz - .02, o.hatColor, [.21, .02, .21]); }
+  if (o.hat === 'cap') { ball(b, o.hatColor, 0, hy + .15, hz - .03, .17, .09, .17); b.put(CYL, 0, hy + .13, hz + .14, o.hatColor, [.12, .015, .1]); if (o.badge) dot(b, o.badge, 0, hy + .2, hz + .12, .035, .035, .015); }
+  if (o.hat === 'goggles') { b.put(CYL, 0, hy + .13, hz - .02, o.hatColor, [.2, .05, .2]); for (const s of [-1, 1]) dot(b, '#9fe0ff', s * .07, hy + .15, hz + .15, .045, .045, .025); }
   if (o.puffs) for (const [x, y, z, r] of o.puffs) ball(b, coat, x, y, z, r);
 }
 
@@ -192,3 +197,6 @@ export const STORY_FRIEND_HOMES = [
   { kind: 'puppepper', district: 'hills', x: -745, z: -3.9 },
   { kind: 'puppatch', district: 'farm', x: -470, z: -3.9 },
 ];
+
+// (build 129) shared with the second batch of story friends
+export { BALL, SMALL, DOT, CONE, CYL, INK, dot, ball, front, person, pup, resident, dog };
