@@ -25,7 +25,7 @@ as round toys in the creature batch (`src/story-friends-2.js`, sharing build 128
   The next smoke run failed the farm and Balloon Hills activity checks: some friends stood exactly on an activity's 🐾 spot
   (Sparky on the carrots, Zoom on the apples, Papa Pig on the ducks, Rose on the wind chimes), so the 🐾 picked the friend.
   Every activity spot was read from the running game (`tests/activity-spots.json`) and every story friend now stands at
-  least 2.5 m from one (26 small moves); both friend tests check it.
+  least 2.5 m from one (26 small moves); both friend tests check it. **Full smoke test after the fix: 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 128 — EIGHTEEN NEW STORY FRIENDS; build 127 (open space together) included
 The family sent pictures of characters Dawson loves from films and shows. Those belong to other companies, so (with the
