@@ -84,7 +84,7 @@ Tested together (one full smoke run for all three). Desktop, software rendering;
   bite ❗ and the lighthouse 🗼 had no 3D toy model (the toy-model rule): 🌟, 🐟 and 💡 instead.
 - **Faster testing, the same checks:** `?norender` (tests only), `tests/perf/compare.cjs` (automatic extra rounds), notes in
   CLAUDE.md.
-- Tests: `hands-on.cjs` 14/14, `ocean.cjs` 15/15, `insides.cjs` 9/9 (all passed), unit tests 142/142; full smoke test: see below.
+- Tests: `hands-on.cjs` 14/14, `ocean.cjs` 15/15, `insides.cjs` 9/9 (all passed), unit tests 142/142; **full smoke test 345/345** (the build-146 page; desktop, software rendering).
 
 ## Checkpoint: build 143 — EVERY FRIEND ON THE START SCREEN (family request) and the SKY KINGDOM'S RAINBOW KITE
 - **The family asked for every character to be choosable from the start**, not just four. The start screen now shows all
