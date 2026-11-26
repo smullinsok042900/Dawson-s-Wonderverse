@@ -122,7 +122,7 @@ let adventures = null;
 let started = false;
 buildWorld(G);
 buildUnderground(G);
-buildSky(G); G.player = player; G.skyApi = { Sound, burst, discover: (id, m) => discover(id, m), toast: m => toast(m) }; // (build 43: the bigger Sky Kingdom's sounds, sparkles and words)
+buildSky(G); G.player = player; G.skyApi = { Sound, burst, discover: (id, m) => discover(id, m), toast: m => toast(m), stick: () => readStick() }; // (build 43: the bigger Sky Kingdom's sounds, sparkles and words)
 const IN = G.inside;
 G.xylo.forEach(k => { k.key.userData.y0 = k.key.position.y; });
 G.platforms.forEach(z => { if (z.top) z.top.userData.s0 = z.top.scale.y; });
