@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 141: the Paint-Pot Balloon
+- In Art Plaza, a hot-air balloon with a paint-pot basket: float over the plaza, ▲ ▼ to catch six paint drops, and paint a
+  rainbow across the sky.
+
 ## 3D build 140: a little lighter characters
 - Her bunny's goggles and the friends' goggles, wings and eye sparkles are drawn in fewer pieces: the same look, less work.
 

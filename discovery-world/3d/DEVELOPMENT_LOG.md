@@ -6,6 +6,17 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 141 — Art Plaza's PAINT-POT BALLOON (ATTRACTIONS row 5)
+The audit (build 118) listed Art Plaza next for a ride. Between the sticker wall and the spin art (x 813) stands a striped hot-air
+balloon with a paint-pot basket. Tap it and it floats her up over the plaza and drifts along to the far end (x 899), where
+it comes down softly. **▲ climbs, ▼ sinks** (3 to 11 m), JUMP hops off (she floats down gently). Six paint drops float at
+different heights (5.5 to 10 m); each one she catches sings a note, and catching all six **paints a big rainbow across the
+sky** (it stays). She rides at the front of the basket, so she is easy to see. One mesh for the balloon, one per paint
+drop, one for the rainbow (hidden until painted). `tests/activity-spots.json` has its 🐾 spot (813).
+- Tests: the new `tests/art-balloon.cjs` (7 checks: ride, lift-off, ▲ ▼, steering to all six drops, the soft landing, the
+  rainbow, JUMP and floating down) all pass; unit tests 142/142; speed and the full smoke test: see below. Desktop, software
+  rendering; not tried on the iPhone.
+
 ## Checkpoint: build 140 — speed: character parts baked together
 The first step of NEXT_TASKS "SPEED: her own character". Parts of a character that never move apart are now baked into one
 geometry (`baked()` in `characters.js`): one draw call instead of several, the same look.
