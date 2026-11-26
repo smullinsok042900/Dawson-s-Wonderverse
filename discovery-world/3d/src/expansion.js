@@ -692,8 +692,8 @@ export function initExpansion(G, api) {
     else if (P.x < TUN0 - .5) { const back = TUNNELS[tun.from]; tun = null; G.roomCam = null; tunnel.visible = false; api.travelTo(back.x + 2.4, '🕳️', 'back out of the tunnel'); } }
   function tunnelMouth(c, x, z, to) {
     const rock = c.sph(x, 0, z, 1.9, '#8a7f74', { m: { r: .95, cc: 0 } }); rock.scale.set(1.2, .9, .7);
-    const pic = new THREE.Mesh(new THREE.CircleGeometry(.95, 28), new THREE.MeshBasicMaterial({ map: tunnelArt(to), toneMapped: false })); pic.position.set(x, .9, z + 1.36); c.add(pic); // (where it leads: a bright little picture of the far side)
-    const ring = c.cyl(x, .9, z + 1.32, 1.05, 1.05, .08, '#6a5a4a'); ring.rotation.x = Math.PI / 2; ring.scale.set(1, 1, 1);
+    const pic = new THREE.Mesh(new THREE.CircleGeometry(.95, 28), new THREE.MeshBasicMaterial({ map: tunnelArt(to), toneMapped: false })); pic.position.set(x, .9, z + 1.48); c.add(pic); /* (build 150: well in front of the rock: its bulge reached z+1.33 at the bottom) */ // (where it leads: a bright little picture of the far side)
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.02, .12, 10, 32), mat('#6a5a4a', { r: .9, cc: 0 })); ring.position.set(x, .9, z + 1.48); c.add(ring); /* (build 150, the family's picture: the stone disc behind the picture was at the very same depth, so on the phone the two flickered through each other: now a stone RING frames it, nothing behind it) */
     for (const dx of [-1.6, 1.6]) { const b = c.sph(x + dx, .5, z + 1.1, .7, '#3f8f4a', { m: { r: .9 } }); b.scale.y = .8; }
     const go = () => { if (P.ride || P.layer !== '') return; enterTunnel(TUNNELS[to].back); }; // (this mouth's own end: TUNNELS[to].back; it leads to `to`)
     c.tap(rock, go, x, { icon: '🕳️', label: 'Secret tunnel', action: 'Into the tunnel!', disc: 'tunnel' }); c.tap(pic, go);

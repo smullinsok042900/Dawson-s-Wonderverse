@@ -6,6 +6,12 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 150 — the tunnel picture is clear (the family's picture from the iPhone)
+- The picture of where a secret tunnel leads looked broken and speckled on the phone. It sat at the same depth as the round
+  stone disc behind it (and the rock bulged to almost that depth at its bottom), so the two flickered through each other.
+  Now a stone RING frames the picture (nothing behind it at that depth), and the picture sits well in front of the rock.
+- Verified: unit tests; the page builds. Desktop (software rendering): checked in the browser after the running tests.
+
 ## Checkpoint: build 149 — real rooms inside (the family's request: "like walking into an actual house")
 - **The igloo and the lighthouse** (new `src/rooms.js`): the door takes her INTO A ROOM of its own (no see-through bubble):
   walls, a floor and a ceiling all round, with a frame around the open front so nothing outside is ever seen. The camera
@@ -84,7 +90,7 @@ Tested together (one full smoke run for all three). Desktop, software rendering;
   bite ❗ and the lighthouse 🗼 had no 3D toy model (the toy-model rule): 🌟, 🐟 and 💡 instead.
 - **Faster testing, the same checks:** `?norender` (tests only), `tests/perf/compare.cjs` (automatic extra rounds), notes in
   CLAUDE.md.
-- Tests: `hands-on.cjs` 14/14, `ocean.cjs` 15/15, `insides.cjs` 9/9 (all passed), unit tests 142/142; full smoke test: see below.
+- Tests: `hands-on.cjs` 14/14, `ocean.cjs` 15/15, `insides.cjs` 9/9 (all passed), unit tests 142/142; **full smoke test 345/345** (the build-146 page; desktop, software rendering).
 
 ## Checkpoint: build 143 — EVERY FRIEND ON THE START SCREEN (family request) and the SKY KINGDOM'S RAINBOW KITE
 - **The family asked for every character to be choosable from the start**, not just four. The start screen now shows all
