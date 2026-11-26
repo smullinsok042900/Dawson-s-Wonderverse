@@ -124,14 +124,15 @@ export function buildSky(G) {
   //  in the sky around the post; catch them all for a gem. JUMP lets go and she floats gently down onto the clouds.
   { const AX = 41, AY = SKY.y + 1.4, AZ = -1.6, KZ = -1.2; // (G.player is set after the sky is built: read it when needed)
     const post = new THREE.Group(); post.position.set(AX, SKY.y, AZ); add(post);
-    post.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 1.5, 10), toy('#c8a070', { r: .6 })), { position: new THREE.Vector3(0, .75, 0) }));
-    post.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 8, 16), toy('#ffd23f', { r: .4 })), { position: new THREE.Vector3(0, 1.45, 0) }));
+    const at = (m, x, y, z) => { m.position.set(x, y, z); return m; };
+    post.add(at(new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 1.5, 10), toy('#c8a070', { r: .6 })), 0, .75, 0));
+    post.add(at(new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 8, 16), toy('#ffd23f', { r: .4 })), 0, 1.45, 0));
     const kite = new THREE.Group(); add(kite);
     { const sh = new THREE.Shape(); sh.moveTo(0, 1.1); sh.lineTo(.8, 0); sh.lineTo(0, -1.3); sh.lineTo(-.8, 0); sh.lineTo(0, 1.1);
       const g = new THREE.ShapeGeometry(sh); const col = []; const p = g.attributes.position; const RB6 = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#36c96b', '#3d9bff', '#a15cff'];
       for (let i = 0; i < p.count; i++) { const c = new THREE.Color(RB6[Math.min(5, Math.max(0, Math.floor((p.getY(i) + 1.3) / 2.4 * 6)))]); col.push(c.r, c.g, c.b); } g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
       const sail = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: .6 })); sail.position.y = 1.2; kite.add(sail);
-      for (let i = 0; i < 5; i++) kite.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), toy(RB6[i], { r: .5 })), { position: new THREE.Vector3(Math.sin(i * 1.3) * .12, -.25 - i * .3, 0) })); } // its tail of bows
+      for (let i = 0; i < 5; i++) kite.add(at(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), toy(RB6[i], { r: .5 })), Math.sin(i * 1.3) * .12, -.25 - i * .3, 0)); } // its tail of bows
     const strM = new THREE.MeshBasicMaterial({ color: '#ffffff' }), str = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1, 5), strM); add(str);
     const RSG = new THREE.OctahedronGeometry(.3), kstars = [[AX - 5, AY + 4], [AX - 2, AY + 7.5], [AX + 2.5, AY + 6], [AX + 5.5, AY + 3.2], [AX - 7, AY + 1.6], [AX + 1, AY + 9.8]].map(([x, y]) => { const m = new THREE.Mesh(RSG, toy('#ffd23f', { em: '#ffb000', ei: .8 })); m.position.set(x, y, KZ); m.visible = false; add(m); return { m, got: false }; });
     let R = null, ang = -.5, len = 3.2, floatDown = false;
