@@ -54,6 +54,12 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('the map sails her back to Home Harbour', await until(() => __DDW3.G.ocean.state() && __DDW3.G.ocean.state().near === 'home', null, 300000));
   await ev(() => __DDW3.G.ocean.land());
   check('🏠 takes her home to the beach, by the boat', await until(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x + 113) < 2, null, 60000));
+  // (build 151, the family's report) the OCEAN PIER sailboat sails too (it used to sail a loop by itself), and home brings her back to the pier
+  await ev(() => __DDW3.teleport(-634)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x + 636) < .2 && i.action === 'Sail the ocean!'), null, 120000); await sleep(1500);
+  await ev(() => { __DDW3.player.x = -635; __DDW3.G.interact.find(i => Math.abs(i.x + 636) < .2 && i.action === 'Sail the ocean!').run(); });
+  check('the Ocean Pier sailboat: tap it and she sails out onto the open ocean', await until(() => __DDW3.player.layer === 'ocean' && __DDW3.G.ocean.active(), null, 120000));
+  await until(() => __DDW3.G.ocean.state() && __DDW3.G.ocean.state().near === 'home', null, 60000); await ev(() => __DDW3.G.ocean.land());
+  check('...and 🏠 brings her home to Ocean Pier, where she set sail', await until(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x + 634) < 2, null, 60000), String(await ev(() => __DDW3.player.x)));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();

@@ -300,9 +300,9 @@ const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp),
 //  through the planets engine like a planet; Home Harbour brings her back to the beach by the pier's boat
 const ocean = initOcean(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L),
   land: id => deepLand(id),
-  home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; G.playerHidden = false; spaceLight(null); P.x = -113; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; expansion.buildNow(-113); snapCamera(); saveSoon(); } });
+  home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; G.playerHidden = false; spaceLight(null); P.x = -113; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; P.x = G.sailHomeX ?? -113; expansion.buildNow(P.x); snapCamera(); saveSoon(); } });
 G.ocean = ocean;
-G.sail = async from => { if (player.layer === 'space') space.hideAll(); G.camOverride = null; await ocean.enter(from || 'home'); };
+G.sail = async (from, backX) => { G.sailHomeX = backX ?? -113; /* (build 151: home again where she set sail: Sunny Beach or Ocean Pier) */ if (player.layer === 'space') space.hideAll(); G.camOverride = null; await ocean.enter(from || 'home'); };
 G.deep = deep;
 // (build 126) landing on a planet flown up to in open space: the normal landing (the rocket comes down onto that planet's pad)
 // (The rocket she took off in may not exist any more: the place it stands on is freed while she is far away in space, so
@@ -1791,7 +1791,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '150'; G.build = GAME_BUILD;
+const GAME_BUILD = '151'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
