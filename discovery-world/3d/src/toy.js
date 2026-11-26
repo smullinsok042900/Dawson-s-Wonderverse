@@ -59,18 +59,18 @@ export function* toyLanding(c) {
   }
   U.push(dt => { for (const o of ballMeshes) { if (o.squish > 0) o.squish = Math.max(0, o.squish - dt * 3); const q = Math.sin(o.squish * 9) * o.squish * .22; o.m.scale.set(o.r * (1 + q), o.r * (1 - q), o.r * (1 + q)); o.m.position.y = o.r * (1 - q); } });
   // (build 135) DAWSON'S OWN BRICK HOUSE: she designs it brick by brick, puts the door on, and walks inside (lego.js)
-  G.brickHouse = brickHouse(kk, X + 72.6, -1);
+  G.brickHouse = brickHouse(kk, X + 92, -1); // (build 139: moved here, its builder at +90, so no giant ball stands in front of it; it was at +72.6)
   // THE GIANT WIND-UP KEY: tap it and the clockwork parade marches (a duck, a drum and a mouse waddle along the mat)
-  const key = new THREE.Group(); key.position.set(X + 86, 0, -2.6); add(key);
+  const key = new THREE.Group(); key.position.set(X + 75, 0, -2.6); add(key);
   { const kb = K.makeBatch(); kb.put(BOX, 0, 2.8, 0, '#c8a070', [.5, 5.6, .5]); for (const s of [-1, 1]) kb.put(CYL, s * 1.5, 5.8, 0, '#ffd23f', [1.4, .4, 1.4], [Math.PI / 2, 0, 0]); kb.put(CYL, 0, 5.8, 0, '#ffd23f', [.5, .7, .5], [0, 0, Math.PI / 2]); key.add(kb.mesh(K.shinyMat())); }
   const parade = []; for (let k = 0; k < 3; k++) { const pb = K.makeBatch(), col = ['#ffd23f', '#ff4f6a', '#b0b0c0'][k];
     pb.put(BALL, 0, .7, 0, col, [.9, .7, .7]); pb.put(BALL, .7, 1.3, 0, col, .5); pb.put(BALL, .95, 1.4, .3, '#2a2333', .08); pb.put(BOX, -.1, 1.7, 0, '#c8a070', [.1, .6, .1]); pb.put(CYL, -.1, 2, 0, '#ffd23f', [.3, .1, .3], [Math.PI / 2, 0, 0]);
     if (k === 0) pb.put(CONE, 1.15, 1.25, 0, '#ff9a2e', [.15, .35, .15], [0, 0, -Math.PI / 2]); if (k === 1) pb.put(CYL, 0, 1.6, 0, '#ffffff', [.5, .3, .5]);
-    const m = pb.mesh(K.shinyMat()); m.position.set(X + 90 + k * 3, 0, -2); m.userData.dynamic = true; add(m); parade.push(m); }
+    const m = pb.mesh(K.shinyMat()); m.position.set(X + 78.5 + k * 3, 0, -2); m.userData.dynamic = true; add(m); parade.push(m); }
   let wound = 0; const wind = () => { if (wound > 1) return; wound = 9; Sound.chime(); c.say('🔑 Click, click, click! The wind-up toys march!', true); };
-  tapIt(key, wind, X + 86, 'windkey');
-  U.push((dt, t) => { key.rotation.z = wound > 0 ? t * 3 : 0; if (wound > 0) { wound -= dt; for (const [k, m] of parade.entries()) { m.position.x = X + 90 + k * 3 + Math.sin((9 - wound) * .5) * 4; m.position.y = Math.abs(Math.sin(t * 8 + k)) * .2; m.rotation.z = Math.sin(t * 8 + k) * .12; } } });
-  c.tapIt(parade[0], () => fact('🦆 A wind-up duck as big as a car! In the Giant Toy Universe, all the toys are enormous.', 'giantduck'), X + 92, 'giantduck');
+  tapIt(key, wind, X + 75, 'windkey');
+  U.push((dt, t) => { key.rotation.z = wound > 0 ? t * 3 : 0; if (wound > 0) { wound -= dt; for (const [k, m] of parade.entries()) { m.position.x = X + 78.5 + k * 3 + Math.sin((9 - wound) * .5) * 4; m.position.y = Math.abs(Math.sin(t * 8 + k)) * .2; m.rotation.z = Math.sin(t * 8 + k) * .12; } } });
+  c.tapIt(parade[0], () => fact('🦆 A wind-up duck as big as a car! In the Giant Toy Universe, all the toys are enormous.', 'giantduck'), X + 80.5, 'giantduck');
   return H;
 }
 

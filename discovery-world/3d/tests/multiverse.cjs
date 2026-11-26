@@ -75,7 +75,7 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('a second wormhole leads to the Giant Toy Universe', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'toy', null, 300000));
     await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-arrive.jpg'), type: 'jpeg', quality: 85 });
     const TX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
-    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 70.6; P.y = 0; localStorage.removeItem('ddw3-brickhouse'); }, TX);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 90; P.y = 0; localStorage.removeItem('ddw3-brickhouse'); }, TX);
     await p.evaluate(() => __DDW3.G.brickHouse.open()); await sleep(800);
     const cell = (r, c) => p.locator(`#brickPanel .brickCell[data-r="${r}"][data-c="${c}"]`), toolB = t => p.locator(`#brickPanel .brickTool[data-tool="${t}"]`);
     await toolB('1').tap(); for (let r = 0; r < 4; r++) for (const c of [0, 1, 2, 3, 6, 7, 8, 9, 10, 11]) await cell(r, c).tap();
