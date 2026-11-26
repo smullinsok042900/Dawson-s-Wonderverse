@@ -7,7 +7,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { plushNormal, microNormal } from './nature.js';
-import { buildCharacter, animateCharacter, setLids } from './characters.js';
+import { buildCharacter, animateCharacter, setLids, baked } from './characters.js';
 import { plush, bipedSpec } from './critterkit.js';
 
 export const CREATURES = {
@@ -86,7 +86,10 @@ function buildPip(st) {
   });
   // flying goggles on the forehead
   const gold = toy('#ffc531', { r: .25, m: .6, cc: 1 }), lens = toy('#8fe3ff', { r: .05, opacity: .7, cc: 1 });
-  [-1, 1].forEach(s => { const r = new THREE.Mesh(new THREE.TorusGeometry(.1, .03, 10, 24), gold); r.position.set(s * .13, .3, .36); r.rotation.x = -.5; head.add(r); const l = ball(lens, .085, s * .13, .3, .36, 1, 1, .3); l.rotation.x = -.5; l.castShadow = false; head.add(l); });
+  { // (build 140) both gold rings in one mesh and both lenses in another (4 draw calls -> 2)
+    const ring = new THREE.TorusGeometry(.1, .03, 10, 24);
+    head.add(new THREE.Mesh(baked([-1, 1].map(s => [ring, [s * .13, .3, .36], [-.5, 0, 0]])), gold));
+    head.add(new THREE.Mesh(baked([-1, 1].map(s => [SPH, [s * .13, .3, .36], [-.5, 0, 0], [.085, .085, .085 * .3]])), lens)); ring.dispose(); }
   // arms / paws and feet
   const arms = [-1, 1].map(s => { const a = ball(fur, .13, s * .4, .62, .12, .9, 1.2, .9); body.add(a); return a; });
   const feet = [-1, 1].map(s => { const f = ball(cream, .15, s * .18, .1, .06, 1, .7, 1.35); root.add(f); return f; });

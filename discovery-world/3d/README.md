@@ -12,8 +12,20 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 142: ride the rocket
+- In Lab Gardens, climb on the big rocket: JUMP pumps it (more pumps = higher), ▲ launches, then steer the parachute ◀ ▶ to
+  catch the stars on the way down.
+
+## 3D build 141: the Paint-Pot Balloon
+- In Art Plaza, a hot-air balloon with a paint-pot basket: float over the plaza, ▲ ▼ to catch six paint drops, and paint a
+  rainbow across the sky.
+
+## 3D build 140: a little lighter characters
+- Her bunny's goggles and the friends' goggles, wings and eye sparkles are drawn in fewer pieces: the same look, less work.
+
 ## 3D build 139: the giant toy balls don't block her
 - In the Giant Toy Universe, walking into a giant ball now hops her up onto it, and it bounces her along: she can always get by.
+  Her brick house moved to an open spot past the balls (nothing in front of it any more).
 
 ## 3D build 138: a little faster on the rocky planets
 - Each area's craters and rocks on Mercury, Mars, the Moon, Pluto and the other rocky places are drawn together (4–6 fewer

@@ -6,6 +6,43 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 142 — Lab Gardens: RIDE THE ROCKET (ATTRACTIONS row 5)
+Lab Gardens is full (activities every few metres), so instead of a new ride squeezed in, its big rocket (x 730: until now it
+only flew up empty when you pressed the button) became a ride with real controls. Tap the rocket and she climbs on (she stands
+at its front, easy to see). **Each JUMP pumps it** (up to three; the more pumps, the higher: about 8.5, 13.5 or 18.5 m); **▲
+launches** (or it launches by itself a moment after the last pump). Up it goes past three stars; at the top **the parachute
+opens** and she **steers it down with ◀ ▶** to two more stars, landing softly; the rocket glides back onto its pad. JUMP on
+the parachute hops off (she floats down gently). The pink button still launches the rocket empty, as before.
+- The first test found the two side stars too far apart for anyone to catch both (the parachute fell past the second one):
+  the parachute now sinks more slowly (1.6 m/s) and steers a little faster, and the stars are closer (726, 11 m and 733, 6 m).
+- Tests: the new `tests/lab-rocket.cjs` (7 checks) all pass. The first full smoke run was 344/345: Rosa the Singer (Art Plaza,
+  not changed in this build) got her first hello from 🐾 instead of her song, because the touch before it had not registered in time;
+  `craft-friends.cjs` alone then passed with no failures, and **the full smoke test run again: 345/345**. Desktop, software
+  rendering; not tried on the iPhone.
+
+## Checkpoint: build 141 — Art Plaza's PAINT-POT BALLOON (ATTRACTIONS row 5)
+The audit (build 118) listed Art Plaza next for a ride. Between the sticker wall and the spin art (x 813) stands a striped hot-air
+balloon with a paint-pot basket. Tap it and it floats her up over the plaza and drifts along to the far end (x 899), where
+it comes down softly. **▲ climbs, ▼ sinks** (3 to 11 m), JUMP hops off (she floats down gently). Six paint drops float at
+different heights (5.5 to 10 m); each one she catches sings a note, and catching all six **paints a big rainbow across the
+sky** (it stays). She rides at the front of the basket, so she is easy to see. One mesh for the balloon, one per paint
+drop, one for the rainbow (hidden until painted). `tests/activity-spots.json` has its 🐾 spot (813).
+- Tests: the new `tests/art-balloon.cjs` (7 checks: ride, lift-off, ▲ ▼, steering to all six drops, the soft landing, the
+  rainbow, JUMP and floating down) all pass (twice); unit tests 142/142; **full smoke test 345/345**. Desktop, software
+  rendering; not tried on the iPhone.
+
+## Checkpoint: build 140 — speed: character parts baked together
+The first step of NEXT_TASKS "SPEED: her own character". Parts of a character that never move apart are now baked into one
+geometry (`baked()` in `characters.js`): one draw call instead of several, the same look.
+- Her bunny (`creatures.js`): the two gold goggle rings in one mesh, the two lenses in another (4 → 2).
+- The friend characters (`characters.js`): Pip's goggles (two rings and the bridge in one mesh, the two lenses in another: 5 → 2), each
+  side's two wing pieces in one mesh (4 → 2), and every eye's two small sparkles in one mesh (2 → 1 per eye).
+- A first try made the mirrored wing look darker (baking a mirrored piece turns its front side inward): mirrored pieces now
+  keep their winding, and the close-up pictures of build 139 and 140 match.
+- What still costs the most in her character (eyes: 6–7 parts each, the mouth, the tail puffs) moves on its own (blinking,
+  glancing, swaying), so it cannot simply be baked; NEXT_TASKS keeps the idea of fewer, shared parts for later.
+- Tests: unit tests 142/142, `dressup.cjs` all passed, **full smoke test 345/345**. Desktop, software rendering; not tried on the iPhone.
+
 ## Checkpoint: build 139 — the giant toy balls no longer block her way (family report)
 The family reported that in the Giant Toy Universe the giant bouncy balls blocked her path, so she could not walk on. Since
 build 135 the balls were solid (she bumped into them and had to jump on top): too hard for a 5-year-old. Now walking into a
@@ -14,7 +51,11 @@ and the ball's bounce carries her on to the next one and past the line. The ball
 one. Walking back with ◀ works the same way.
 - Tests: `multiverse.cjs`: the old check "a giant ball stops her" is replaced by "walking into the giant balls never stops her:
   she hops up onto them (never through them) and gets past the last one", plus the same walking back. The ball-to-ball check
-  now clears the hop left over from the walk before it (it had pushed her off the first ball). See below for the results.
+  now clears the hop left over from the walk before it (it had pushed her off the first ball).
+- **Her brick house moved** (the family: half of it was hidden behind the last giant ball): the house now stands at +92 with
+  its builder (the 🧱 brick pile) at +90, in the open; the wind-up key and the clockwork parade took its old place (+75, +78.5).
+  Her saved house is kept (only its place changed).
+- Tests: `multiverse.cjs` 64/64; unit tests 142/142; **full smoke test 345/345**. Desktop, software rendering; not tried on the iPhone.
 
 ## Checkpoint: build 138 — speed: the rocky planets' rocks, and what the Sky Playground really costs
 From the ATTRACTIONS checklist (row 2: the Jupiter Sky Playground; row 4: the Mercury funhouse, both marked slower). A new

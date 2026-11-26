@@ -4,6 +4,33 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 142 (ride Lab Gardens' rocket)
+Desktop, software rendering; `pearth.cjs labgarden`. The normal run (two rounds each) read build 142 slower at +724 and +745
+(141: 367–514 ms, 142: 547–621 ms), with ~100k more triangles at +724. A mesh listing at +724 showed the same scene in both
+builds (389k against 397k triangles: the same ground and plant pieces, streamed in at slightly different places), so the
+run was measured again: four rounds each, 141 mean 612 ms, 142 mean 632 ms (+3%, ranges 406–906 against 463–804). Then +724
+and +745 alone with 8 s to settle, four rounds each: **+724: 141 mean 633 ms, 142 mean 582 ms; +745: 517 against 531 ms;
+draw calls the same (84–92).** Not slower. Not measured on the iPhone.
+
+## Build 141 (the Paint-Pot Balloon in Art Plaza)
+Desktop, software rendering; `pearth.cjs artplaza` (with the balloon's spot, 813), build 140 vs 141, two rounds each (median
+frame ms / draw calls): 813: 304/304 → 279/295 ms (78 → 77–78 calls); 845: 278/300 → 274/317 (93 → 93–94); 860: 282/303 →
+306–307 (89 → 90); 869.6: 258–305 → 263–309 (93–94 → 95); 880: 252/270 → 258/288 (81–82 → 82–83). Mean of all spots 284 →
+289 ms (+2%, inside this machine's run-to-run noise of 5–15%); 0–2 more draw calls where the paint drops are in view
+(the rainbow is hidden until painted). Not measured on the iPhone.
+
+## Build 140 (character parts baked together)
+Desktop, software rendering. Earth start (draw calls, one round each): build 139 → 140: 218 → 213, 206 → 195, 101 → 92 at
+x 40 / 120 / 300; character meshes in the scene 39 → 32. Jupiter, `pplanet.cjs`, two rounds each (median ms / draw calls):
++60 220–226 → 215–223 ms (79 → 70 calls), +90 215–222 → 200–205 ms (64 → 55–56), +150 211–216 → 200–203 ms (74 → 65),
++205 208–213 → 198–220 ms (77 → 68), +320 192–195 → 179–185 ms (69 → 60); the arrival spot (+30) is noisy in both builds
+(139: 190–432, 140: 363–583 ms). Triangles the same. Not measured on the iPhone.
+
+## Build 139 (the toy balls hop her on; the brick house moved)
+Desktop, software rendering; `pplanet.cjs toy`, build 138 vs 139, two rounds: the same on every spot (+40 152–162 → 162–163 ms,
++60 152–157 → 148–153 ms, +140 151–153 → 149–151 ms, +230 140–142 → 142–144 ms, +320 132–134 → 131 ms); +60 draws 6 fewer
+calls (68 → 62: the house is no longer in that view). Not measured on the iPhone.
+
 ## Build 138 (the rocky planets' craters and rocks batched; the funhouse lamp cords)
 Desktop, software rendering; build 137 vs 138, `pplanet.cjs`, two rounds each (median frame ms / draw calls / k triangles).
 - **Mercury:** +100 161–167 → 159–163 ms; +150 216–224 → 203–227 ms; +180 178–211 → 199–212 ms (the same within the noise);

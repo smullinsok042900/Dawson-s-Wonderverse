@@ -12,6 +12,14 @@ import * as THREE from 'three';
 import { sculpt, makeSkeleton, attach, skin } from './sculpt.js';
 import { plushNormal } from './nature.js';
 import { addFur } from './fur.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+// (build 140) parts that never move apart are baked into one geometry: one draw call instead of several
+const _o = new THREE.Object3D();
+export function baked(parts) { // parts: [geometry, [x, y, z], [rx, ry, rz], [sx, sy, sz]]
+  return mergeGeometries(parts.map(([g, p = [0, 0, 0], r = [0, 0, 0], sc = [1, 1, 1]]) => { _o.position.set(...p); _o.rotation.set(...r); _o.scale.set(...sc); _o.updateMatrix(); const c = g.clone(); c.applyMatrix4(_o.matrix);
+    if (_o.matrix.determinant() < 0 && c.index) { const ix = c.index.array; for (let i = 0; i < ix.length; i += 3) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; } } // (a mirrored part: keep its front side facing out, as a mirrored mesh does)
+    return c; }));
+}
 
 const geoCache = new Map();
 const cached = (key, make) => { if (!geoCache.has(key)) { const g = make(); g.userData.shared = true; geoCache.set(key, g); } return geoCache.get(key); }; /* (build 107: shared: never freed with one creature) */
@@ -50,8 +58,7 @@ function makeEye(r, irisColor, lidMat, light) { // (build 60) light: for small, 
   // catchlights (stay put while the eye glances, like real reflections): a big soft one, a small one, a tiny sparkle
   const sg = cached('shine', () => new THREE.SphereGeometry(1, 14, 10));
   const s1 = new THREE.Mesh(sg, SHINE); s1.scale.set(r * .27, r * .32, r * .05); s1.position.set(-r * .3, r * .33, r * .97); s1.rotation.z = .4; g.add(s1);
-  if (!light) { const s2 = new THREE.Mesh(sg, SHINE2); s2.scale.set(r * .11, r * .11, r * .04); s2.position.set(r * .3, -r * .26, r * .98); g.add(s2);
-  const s3 = new THREE.Mesh(sg, SHINE2); s3.scale.set(r * .06, r * .06, r * .03); s3.position.set(-r * .05, r * .5, r * .89); g.add(s3); }
+  if (!light) g.add(new THREE.Mesh(cached('shine23_' + r, () => baked([[sg, [r * .3, -r * .26, r * .98], [0, 0, 0], [r * .11, r * .11, r * .04]], [sg, [-r * .05, r * .5, r * .89], [0, 0, 0], [r * .06, r * .06, r * .03]]])), SHINE2)); // (build 140: the two small sparkles in one mesh)
   // eyelids: an upper lid that slides down to blink (and half-closes when happy)
   const lidG = cached('lid', () => new THREE.SphereGeometry(1.09, 32, 14, 0, Math.PI * 2, 0, Math.PI / 2));
   const upper = new THREE.Group(); g.add(upper); const lid = new THREE.Mesh(lidG, lidMat); lid.scale.setScalar(r); upper.add(lid);
@@ -315,14 +322,17 @@ export function buildCharacter(kind, style = {}) {
     P.mouth = attach(B.head, makeMouth(.07), 0, 1.125, .375);
     // flying goggles on the forehead
     const gold = new THREE.MeshPhysicalMaterial({ color: '#ffc531', roughness: .22, metalness: .85, clearcoat: 1 }), lens = new THREE.MeshPhysicalMaterial({ color: '#9fe8ff', roughness: .02, transparent: true, opacity: .55, clearcoat: 1, iridescence: .7 });
-    for (const s of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(.085, .025, 12, 28), gold); r.rotation.x = -.6; attach(B.head, r, s * .125, 1.56, .3); const l = new THREE.Mesh(new THREE.SphereGeometry(.075, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), lens); l.rotation.x = Math.PI / 2 - .6; attach(B.head, l, s * .125, 1.56, .3); }
-    { const br = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, .09, 10), gold); br.rotation.z = Math.PI / 2; attach(B.head, br, 0, 1.56, .33); }
+    { // (build 140) the two gold rings and the bridge in one mesh, the two lenses in another (5 draw calls -> 2)
+      const ring = new THREE.TorusGeometry(.085, .025, 12, 28), lensG = new THREE.SphereGeometry(.075, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), brG = new THREE.CylinderGeometry(.025, .025, .09, 10);
+      attach(B.head, new THREE.Mesh(baked([[ring, [.125, 1.56, .3], [-.6, 0, 0]], [ring, [-.125, 1.56, .3], [-.6, 0, 0]], [brG, [0, 1.56, .33], [0, 0, Math.PI / 2]]]), gold), 0, 0, 0);
+      attach(B.head, new THREE.Mesh(baked([[lensG, [.125, 1.56, .3], [Math.PI / 2 - .6, 0, 0]], [lensG, [-.125, 1.56, .3], [Math.PI / 2 - .6, 0, 0]]]), lens), 0, 0, 0);
+      ring.dispose(); lensG.dispose(); brG.dispose(); }
     // fairy wings: thin iridescent membranes with veins
     const wc = document.createElement('canvas'); wc.width = wc.height = 128; const wg = wc.getContext('2d'); const wgr = wg.createRadialGradient(20, 64, 4, 40, 64, 120); wgr.addColorStop(0, 'rgba(255,255,255,.95)'); wgr.addColorStop(1, 'rgba(210,235,255,.55)'); wg.fillStyle = wgr; wg.fillRect(0, 0, 128, 128); wg.strokeStyle = 'rgba(160,140,255,.7)'; wg.lineWidth = 2; for (let i = 0; i < 6; i++) { wg.beginPath(); wg.moveTo(0, 64); wg.quadraticCurveTo(60, 64 + (i - 2.5) * 10, 128, 64 + (i - 2.5) * 30); wg.stroke(); }
     const wt = new THREE.CanvasTexture(wc); wt.colorSpace = THREE.SRGBColorSpace;
     const wm = new THREE.MeshPhysicalMaterial({ map: wt, transparent: true, side: THREE.DoubleSide, roughness: .15, iridescence: 1, iridescenceIOR: 1.5, depthWrite: false });
     const wingShape = (big) => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.bezierCurveTo(.15 * big, .35 * big, .55 * big, .45 * big, .62 * big, .2 * big); sh.bezierCurveTo(.66 * big, 0, .4 * big, -.08 * big, 0, 0); const g = new THREE.ShapeGeometry(sh, 16); const uv = g.attributes.uv, p = g.attributes.position; for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / (.66 * big), .5 + p.getY(i) / (.9 * big)); return g; };
-    P.wings = [1, -1].map(s => { const piv = new THREE.Group(); attach(B.spine, piv, s * .12, .9, -.25); for (const [big, rz] of [[1, .25], [.62, -.55]]) { const w = new THREE.Mesh(wingShape(big), wm); w.rotation.z = rz; w.scale.x = s; w.castShadow = false; piv.add(w); } piv.rotation.y = s * -.5; return piv; });
+    P.wings = [1, -1].map(s => { const piv = new THREE.Group(); attach(B.spine, piv, s * .12, .9, -.25); { const w = new THREE.Mesh(baked([[1, .25], [.62, -.55]].map(([big, rz]) => [wingShape(big), [0, 0, 0], [0, 0, rz], [s, 1, 1]])), wm); w.castShadow = false; piv.add(w); } /* (build 140: both wing pieces of a side in one mesh) */ piv.rotation.y = s * -.5; return piv; });
     // the rainbow tail: soft fluffy puffs on the tail bone
     const tcols = ['#ff7ab8', '#ffb35c', '#ffe066', '#7be08a', '#7fc8ff', '#b58cff'];
     const puffG = new THREE.IcosahedronGeometry(1, 3); { const p = puffG.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); v.multiplyScalar(1 + Math.sin(v.x * 9) * Math.sin(v.y * 8) * Math.sin(v.z * 10) * .08); p.setXYZ(i, v.x, v.y, v.z); } puffG.computeVertexNormals(); }

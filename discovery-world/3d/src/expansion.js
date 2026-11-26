@@ -498,8 +498,34 @@ export function initExpansion(G, api) {
     // the rocket: press the big button
     () => { const rk = new THREE.Group(); rk.position.set(730, 0, -2.6); c.add(rk); const body = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, 2.6, 24), mat('#ffffff', { r: .3 })); body.position.y = 1.7; body.castShadow = true; rk.add(body); const nose = new THREE.Mesh(new THREE.ConeGeometry(.5, 1, 24), mat('#ff4f9a')); nose.position.y = 3.5; rk.add(nose); for (let i = 0; i < 3; i++) { const f = new THREE.Mesh(W.rbox(.12, .8, .7, .04), mat('#2fa8ff')); const a = i * 2.09; f.position.set(Math.cos(a) * .55, .6, Math.sin(a) * .55); f.rotation.y = -a; rk.add(f); } const win = new THREE.Mesh(new THREE.SphereGeometry(.22, 16, 10), mat('#9fe6ff', { em: '#9fe6ff', ei: .5 })); win.position.set(0, 2.2, .45); rk.add(win);
       c.cyl(730, 0, -2.6, 1.2, 1.3, .2, '#9a9a9a'); const btn = c.cyl(727, 0, -1.55, .45, .5, .5, '#ff4f9a', { m: { em: '#ff4f9a', ei: .3 } }); let flying = 0;
-      c.tap(btn, () => { if (flying) return; flying = .001; Sound.whoosh ? Sound.whoosh() : Sound.boing(); c.say('🚀 3... 2... 1... Blast off!'); c.disc('rocket', '🚀 Press the button to launch the rocket!'); }, 727);
-      return dt => { if (!flying) return; flying += dt; const t = flying; rk.position.y = t < 3 ? t * t * 3 : t < 7 ? 27 - (t - 3) * 6.7 : 0; if (t < 3 && Math.random() < .6) c.burst(730, rk.position.y, -2.6, ['#ffd23f', '#ff9a2e', '#ffffff'], 2, 1.5); if (t >= 7) { flying = 0; rk.position.y = 0; Sound.boing(); c.say('🚀 The rocket is home again!'); } }; },
+      c.tap(btn, () => { if (flying || R) return; flying = .001; Sound.whoosh ? Sound.whoosh() : Sound.boing(); c.say('🚀 3... 2... 1... Blast off!'); c.disc('rocket', '🚀 Press the button to launch the rocket!'); }, 727);
+      // (build 142) RIDE THE ROCKET: tap the rocket itself and she climbs on. Each JUMP pumps it (up to three: the more pumps,
+      //  the higher it flies); ▲ (or a little wait) launches. Up it goes past three stars, then the parachute opens and she
+      //  steers it down with ◀ ▶ to catch two side stars, landing softly; the rocket glides back onto its pad.
+      const chute = (() => { const b = makeBatch(); const dome = new THREE.SphereGeometry(1.8, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2); ['#ff4f9a', '#ffd23f', '#2fa8ff'].forEach((col, i) => b.put(new THREE.SphereGeometry(1.8, 6, 8, i * Math.PI * 2 / 3, Math.PI * 2 / 3, 0, Math.PI / 2), 0, 0, 0, col)); dome.dispose();
+        const cyl = new THREE.CylinderGeometry(1, 1, 1, 6); for (const a of [0, 1.57, 3.14, 4.71]) b.put(cyl, Math.cos(a) * .9, -1.1, Math.sin(a) * .9, '#ffffff', [.02, 2.3, .02], [Math.sin(a) * .38, 0, -Math.cos(a) * .38]);
+        const m = b.mesh(shinyMat()); m.position.y = 6; m.visible = false; rk.add(m); return m; })();
+      const RSG = new THREE.OctahedronGeometry(.34, 0), rstars = [[730, 6.5], [730, 11.5], [730, 16.5], [726, 11], [733, 6]].map(([x, y]) => { const sb = makeBatch(); sb.put(RSG, 0, 0, 0, '#ffd23f', [1, 1.3, 1]); const m = sb.mesh(shinyMat()); m.userData.dynamic = true; m.position.set(x, y, -1.6); m.visible = false; c.add(m); return { m, got: false }; });
+      const TOPS = [8.5, 13.5, 18.5]; let R = null, floatDown = false;
+      const ride = () => { if (flying || P.layer !== '' || P.ride || Math.abs(P.x - 730) > 3 || P.y > 1) return;
+        R = { type: 'rocketride', t: 0, noExit: true, stick: true, phase: 'pump', pumps: 0, idle: 0, x: 730, y: 0, vy: 0, n: 0 };
+        R.onJump = () => { if (!R) return; if (R.phase === 'pump') { if (R.pumps < 3) { R.pumps++; R.idle = 0; Sound.tone(220 + R.pumps * 110, .2, 'square', .04, 1.5); c.burst(730, .5, -2.2, ['#9fe6ff', '#ffffff'], 6 + R.pumps * 3, 1.5); c.say(['💦 Pump!', '💦 Pump, pump!', '💦 Full power! Here we go...'][R.pumps - 1]); } } else if (R.phase === 'chute' && R.t > .8) R.hop = true; };
+        P.ride = R; P.vx = P.vy = 0; for (const q of rstars) { q.got = false; q.m.visible = true; }
+        c.disc('rocketride', '🚀 Ride the rocket! Pump it with JUMP, then fly up and float down!'); c.say('🚀 All aboard! Press JUMP to pump it up: the more you pump, the higher you fly! ▲ to launch!'); };
+      c.tap(body, ride, 730, { y: 2.4, icon: '🚀', label: 'Rocket ride', action: 'Climb on!', disc: 'rocketride' });
+      const old = dt => { if (!flying) return; flying += dt; const t = flying; rk.position.y = t < 3 ? t * t * 3 : t < 7 ? 27 - (t - 3) * 6.7 : 0; if (t < 3 && Math.random() < .6) c.burst(730, rk.position.y, -2.6, ['#ffd23f', '#ff9a2e', '#ffffff'], 2, 1.5); if (t >= 7) { flying = 0; rk.position.y = 0; Sound.boing(); c.say('🚀 The rocket is home again!'); } };
+      return (dt, tt) => { old(dt); if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); } for (const q of rstars) if (!q.got && q.m.visible) q.m.rotation.y = tt * 2;
+        if (!R) { if (rk.position.x !== 730 && !flying) { rk.position.x += (730 - rk.position.x) * Math.min(1, dt * 2); if (Math.abs(rk.position.x - 730) < .02) rk.position.x = 730; } return; }
+        if (P.ride !== R) { R = null; chute.visible = false; rk.position.y = 0; for (const q of rstars) q.m.visible = false; return; }
+        dt = Math.min(dt, .1); R.t += dt; const st = api.stick ? api.stick() : { x: 0, y: 0 };
+        if (R.phase === 'pump') { R.idle += dt; if ((R.pumps && (st.y > .3 || R.idle > 2.5)) || (!R.pumps && st.y > .3)) { if (!R.pumps) R.pumps = 1; R.phase = 'up'; R.top = TOPS[R.pumps - 1]; R.vy = Math.sqrt(2 * 14 * R.top); Sound.whoosh ? Sound.whoosh() : Sound.boing(); c.say('🚀 3... 2... 1... Blast off!'); } }
+        else if (R.phase === 'up') { R.vy -= 14 * dt; R.y = Math.max(0, R.y + R.vy * dt); if (Math.random() < .7) c.burst(R.x, R.y, -2.6, ['#9fe6ff', '#ffffff', '#ffd23f'], 2, 1.5); if (R.vy <= 0) { R.phase = 'chute'; R.t = 0; chute.visible = true; Sound.chime(); c.say('🪂 The parachute! ◀ ▶ to steer and catch the stars!'); } }
+        else { R.x = Math.max(721, Math.min(739, R.x + (st.x > .3 ? 3.2 : st.x < -.3 ? -3.2 : 0) * dt)); R.y = Math.max(0, R.y - 1.6 * dt); chute.rotation.z = (st.x > .3 ? -.12 : st.x < -.3 ? .12 : 0); }
+        rk.position.set(R.x, R.y, -2.6); P.x = R.x; P.y = R.y + .2; P.z = -1.75; P.facing = 1; P.vx = 0; P.vy = 0;
+        for (const q of rstars) if (!q.got && Math.abs(q.m.position.x - R.x) < 1.2 && Math.abs(q.m.position.y - (R.y + 1.2)) < 1.4) { q.got = true; q.m.visible = false; R.n++; Sound.tone(520 + R.n * 80, .15, 'sine', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1.6, ['#ffd23f', '#ffffff'], 10, 1.6); }
+        if ((R.phase === 'chute' && R.y <= 0) || R.hop) { const r = R; R = null; P.ride = null; P.z = 0; chute.visible = false; rk.position.y = 0; for (const q of rstars) q.m.visible = false;
+          if (r.hop) { P.y = r.y + .2; P.vy = 0; P.grounded = false; floatDown = true; c.say('🪂 You hopped off! Float down gently...'); }
+          else { P.y = 0; P.vy = 0; P.grounded = true; Sound.boing(); c.burst(P.x, .8, 0, ['#ffd23f', '#ff4f9a', '#2fa8ff'], 16, 2.2); c.say(r.n === 5 ? '🌟 WOW! All five rocket stars!' : `🚀 What a flight! You caught ${NUM[r.n] || r.n} star${r.n === 1 ? '' : 's'}!`); if (r.n === 5) c.disc('rocketstars', '🌟 Catch all five stars on the rocket ride!'); } } }; },
     // water jets: press the button, fountains splash up
     () => { const jets = [742, 744, 746, 748, 750].map(x => { c.cyl(x, 0, -2.6, .25, .3, .15, '#9a9a9a'); const j = new THREE.Mesh(new THREE.CylinderGeometry(.12, .18, 1, 12), mat('#9fe6ff', { r: .1, cc: .6 })); j.position.set(x, 0, -2.6); j.scale.y = .01; c.add(j); return j; });
       const btn = c.cyl(740, 0, -1.55, .45, .5, .5, '#2fa8ff', { m: { em: '#2fa8ff', ei: .3 } }); let on = 0;
@@ -537,6 +563,43 @@ export function initExpansion(G, api) {
       [0, 1, 2].forEach(i => { const b = c.sph(838.5 + i * 1.1, 2.4, -2.4, .35, '#ffd23f', { m: { m: .6 } }); c.cyl(838.5 + i * 1.1, 0, -2.4, .05, .05, 2.1, '#9a9a9a'); c.tap(b, () => { Sound.withMusic(() => Sound.bell ? Sound.bell([784, 988, 1175][i], .06) : Sound.tone(880, .8, 'sine', .05, 1)); c.disc('bells', '🔔 Ding! Tap the bells!'); }); });
       NOTE.forEach((f, i) => { const bar = c.block(843 + i * .55, .8 - i * .03, -2.2, .45, .12, 1.4 - i * .08, RB[i], { r: .04 }); c.tap(bar, () => { Sound.withMusic(() => Sound.tone(f * 2, .5, 'triangle', .07, 1)); c.burst(843 + i * .55, 1.1, -2.2, [RB[i], '#fff'], 4, 1.2); c.disc('xylo2', '🎶 A rainbow xylophone!'); }); });
       c.block(845, 0, -2.2, 4.8, .7, 1.2, '#9a6a3a', { r: .1 }); },
+    // (build 141) THE PAINT-POT BALLOON: tap it (between the sticker wall and the spin art) and it floats her up over the plaza,
+    //  drifting along to the far end. ▲ climbs, ▼ sinks, JUMP hops off (she floats down gently). Six paint drops float at
+    //  different heights; each one she catches sings a note, and all six paint a big rainbow across the sky.
+    () => { const BX = 813, END = 899, ZB = -1.8, sph = new THREE.SphereGeometry(1, 18, 12), cy = new THREE.CylinderGeometry(1, 1, 1, 16), PAINT = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#5fd36a', '#4fb0ff', '#b07cff'];
+      const bal = new THREE.Group(); bal.userData.dynamic = true; c.add(bal);
+      { const b = makeBatch();
+        PAINT.forEach((col, i) => b.put(new THREE.SphereGeometry(1, 4, 12, i * Math.PI / 3, Math.PI / 3), 0, 3.4, 0, col, [1.7, 1.95, 1.7])); // the envelope: six coloured wedges
+        b.put(sph, 0, 1.75, 0, '#ffffff', [.35, .25, .35]);
+        b.put(cy, 0, .45, 0, '#ffffff', [.75, .9, .75]); b.put(cy, 0, .92, 0, '#4fb0ff', [.8, .1, .8]); // the paint-pot basket and its rim
+        for (let i = 0; i < 5; i++) b.put(sph, Math.cos(i * 1.26) * .74, .7 - (i % 2) * .15, Math.sin(i * 1.26) * .74, PAINT[i], [.12, .22, .12]); // paint drips down the pot
+        for (const [dx, dz] of [[.6, .6], [-.6, .6], [.6, -.6], [-.6, -.6]]) b.put(cy, dx * .9, 1.4, dz * .9, '#8a6a4a', [.025, 1, .025]); // ropes
+        bal.add(b.mesh(shinyMat())); }
+      const home = () => { bal.position.set(BX, 0, ZB); bal.rotation.set(0, 0, 0); }; home();
+      const dropG = new THREE.SphereGeometry(.38, 14, 10); dropG.scale(1, 1.25, 1);
+      const drops = [[829, 6.5], [842, 9.5], [855, 5.5], [868, 8.5], [880, 6], [892, 10]].map(([x, y], i) => { const db = makeBatch(); db.put(dropG, 0, 0, 0, PAINT[i]); db.put(sph, -.12, .18, .3, '#ffffff', .09); const m = db.mesh(shinyMat()); m.userData.dynamic = true; m.position.set(x, y, -1.1); c.add(m); return { m, got: false, y }; });
+      const rb = (() => { const b = makeBatch(); PAINT.forEach((col, i) => b.put(new THREE.TorusGeometry(15 - i * .7, .36, 6, 40, Math.PI), 856, 3, -14, col)); const m = b.mesh(shinyMat()); m.visible = false; c.add(m); return m; })();
+      let R = null, floatDown = false;
+      const start = () => { if (P.layer !== '' || P.ride || Math.abs(P.x - BX) > 2.6 || P.y > 1) return;
+        c.disc('paintballoon', '🎈 The paint-pot balloon! Float over Art Plaza and catch the paint drops!'); c.say('🎈 Up we go! ▲ to go higher, ▼ to go lower, catch the paint drops! JUMP to hop off.'); Sound.whoosh && Sound.whoosh();
+        R = { type: 'paintballoon', t: 0, noExit: true, stick: true, x: BX, y: 0, n: 0 }; R.onJump = () => { if (R && R.t > 1) R.hop = true; }; P.ride = R; P.vx = P.vy = 0; for (const q of drops) { q.got = false; q.m.visible = true; } };
+      c.tap(bal, start, BX, { y: 3, icon: '🎈', label: 'Paint balloon', action: 'Float up!', disc: 'paintballoon' });
+      return (dt, t) => { for (const [i, q] of drops.entries()) if (!q.got) { q.m.position.y = q.y + Math.sin(t * 1.5 + i) * .25; q.m.rotation.y = t; }
+        if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); }
+        if (!R) { bal.rotation.z = Math.sin(t * .8) * .03; return; } if (P.ride !== R) { R = null; home(); return; }
+        dt = Math.min(dt, .1); R.t += dt; const st = api.stick ? api.stick() : { x: 0, y: 0 }, up = st.y > .3, dn = st.y < -.3;
+        if (R.x >= END) R.y = Math.max(0, R.y - 2.4 * dt); // (the far end: down she comes, gently)
+        else if (R.t < 2.5) R.y = Math.min(5.5, R.y + 2.4 * dt); // (lift-off)
+        else { R.x = Math.min(END, R.x + 2.4 * dt); R.y = Math.max(3, Math.min(11, R.y + (up ? 2 : dn ? -2 : -.15) * dt)); }
+        bal.position.set(R.x, R.y, ZB); bal.rotation.z = Math.sin(R.t * 1.3) * .05;
+        P.x = R.x; P.y = R.y + .55; P.z = ZB + .9; P.facing = 1; /* (in front of the basket, holding on: easy to see) */ P.vx = 0; P.vy = 0;
+        for (const [i, q] of drops.entries()) if (!q.got && Math.abs(q.m.position.x - R.x) < 1.4 && Math.abs(q.m.position.y - (R.y + 1.4)) < 1.6) { q.got = true; q.m.visible = false; R.n++; Sound.tone([523, 587, 659, 698, 784, 880][i], .3, 'triangle', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1.1, [PAINT[i], '#ffffff'], 14, 2); }
+        const landed = R.x >= END && R.y <= 0;
+        if (landed || R.hop) { const r = R; R = null; P.ride = null; P.z = 0; home();
+          if (r.hop) { P.y = r.y + .55; P.vy = 0; P.grounded = false; floatDown = true; c.say('🪂 You hopped off! Float down gently...'); }
+          else { P.y = 0; P.vy = 0; P.grounded = true; Sound.boing(); c.burst(P.x, .8, 0, RB, 16, 2.2); }
+          if (r.n === 6) { rb.visible = true; Sound.chime(); c.say('🌈 All six paint drops! You painted a RAINBOW across the sky!'); c.disc('paintrainbow', '🌈 Catch all six paint drops on the paint-pot balloon!'); }
+          else if (!r.hop) c.say(`🎈 What a ride! You caught ${NUM[r.n] || r.n} paint drop${r.n === 1 ? '' : 's'}! Ride again from the paint balloon!`); } }; },
     // the light mixer: three coloured lamps shine on a white statue
     () => { const statue = c.sph(860, 1.6, -2.8, 1.1, '#ffffff', { m: { r: .5, em: '#000000', ei: 1 } }); const sm = statue.material = statue.material.clone(); c.cyl(860, 0, -2.8, .7, .8, .6, '#e6e0f0');
       const L = [['red', '#ff2a2a', 856.5], ['green', '#2aff4a', 860], ['blue', '#2a5aff', 863.5]], on = [0, 0, 0];
