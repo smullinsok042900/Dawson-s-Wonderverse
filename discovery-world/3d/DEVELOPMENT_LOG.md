@@ -6,6 +6,14 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 152 — the farm tractor is hands-on (every activity hands-on, district by district)
+- The toy tractor used to drive across the field by itself when tapped. Now tapping it (or 🐾) puts her in the driver's seat:
+  ◀ ▶ drive it along the field (wheels turn, puffs from the pipe, it turns round), and each of the four pumpkins she drives up
+  to hops into the red trailer behind ("one! two! three!"); all four: "You harvested all the pumpkins!" JUMP hops off; the
+  tractor goes back home and the pumpkins grow back. Batched in the shared paint (no new shaders).
+- New test `tests/farm-tractor.cjs` (7 checks): passed drawn and with `&norender`. The smoke test's farm check still runs it.
+- Backup: `backups/3D_build151_index.html`.
+
 ## Checkpoint: build 151 — the Ocean Pier sailboat sails too (the family's report: "sailing on the boat still isn't working")
 - The picture was at Ocean Pier: its blue sailboat only sailed a loop by itself when tapped. Now tapping it (or 🐾) puts her
   in a boat out on the open ocean, like the Sunny Beach boat, and 🏠 at Home Harbour brings her back to the pier where she
