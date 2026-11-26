@@ -4,6 +4,10 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
+## TEST FIX: android-rendering.cjs
+It reads `src/main.js` and looks for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in
+build 101, so it stops with an assertion before testing anything. Update its source matching (keep what it checks).
+
 ## SPEED: her own character (found in build 138)
 Every view draws her character as about 33 separate meshes (head, ears, hands, tail... each its own draw call): more than any
 attraction (the Jupiter Sky Playground adds 9–14). Batching the parts that move together (a static part per bone, merged per

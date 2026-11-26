@@ -119,6 +119,43 @@ export function buildSky(G) {
     cloud(31.5, 38.5, SKY.high + 1, -1.9, 1.5, '#fff7d8'); plat(31.5, 38.5, SKY.high + 1, { z: -1.9 });
     const big = new THREE.Mesh(new THREE.OctahedronGeometry(.45), toy('#fff3a6', { em: '#ffd76a', ei: 1 })); big.position.set(35, SKY.high + 2.2, -1.9); add(big); let got = 0;
     ups.push((dt, t) => { big.rotation.y += dt * 2; big.position.y = SKY.high + 2.2 + Math.sin(t * 2) * .12; const P = G.player; if (!got && P && Math.abs(P.x - 35) < .9 && Math.abs(P.y - (SKY.high + 1)) < .6) { got = 1; big.visible = false; A().Sound && A().Sound.chime(); A().burst && A().burst(35, SKY.high + 2, -1.9, ['#fff3a6', '#ffffff', '#ffd1ec'], 30, 3.5); A().toast && A().toast('🌟 You reached the highest cloud!'); A().discover && A().discover('skytop'); setTimeout(() => { got = 0; big.visible = true; }, 15000); } }); }
+  // (build 143) THE RAINBOW KITE: a big kite tied to a post on the cloud path (x 41). Tap it and she rides it on its string:
+  //  ◀ ▶ swing her across the sky in a big arc, ▲ lets the string out (higher and wider), ▼ pulls it back in. Six stars hang
+  //  in the sky around the post; catch them all for a gem. JUMP lets go and she floats gently down onto the clouds.
+  { const AX = 41, AY = SKY.y + 1.4, AZ = -1.6, KZ = -1.2; // (G.player is set after the sky is built: read it when needed)
+    const post = new THREE.Group(); post.position.set(AX, SKY.y, AZ); add(post);
+    const at = (m, x, y, z) => { m.position.set(x, y, z); return m; };
+    post.add(at(new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 1.5, 10), toy('#c8a070', { r: .6 })), 0, .75, 0));
+    post.add(at(new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 8, 16), toy('#ffd23f', { r: .4 })), 0, 1.45, 0));
+    const kite = new THREE.Group(); add(kite);
+    { const sh = new THREE.Shape(); sh.moveTo(0, 1.1); sh.lineTo(.8, 0); sh.lineTo(0, -1.3); sh.lineTo(-.8, 0); sh.lineTo(0, 1.1);
+      const g = new THREE.ShapeGeometry(sh), p = g.attributes.position, uv = g.attributes.uv, RB6 = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#36c96b', '#3d9bff', '#a15cff'];
+      for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + .8) / 1.6, (p.getY(i) + 1.3) / 2.4);
+      const cv = document.createElement('canvas'); cv.width = 8; cv.height = 64; const cx = cv.getContext('2d'); RB6.forEach((c, i) => { cx.fillStyle = c; cx.fillRect(0, 64 - (i + 1) * 64 / 6, 8, 64 / 6 + 1); }); // (rainbow stripes, red at the bottom)
+      const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.magFilter = THREE.NearestFilter;
+      const sail = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tx, side: THREE.DoubleSide, roughness: .6 })); sail.position.y = .9; kite.add(sail);
+      for (let i = 0; i < 5; i++) kite.add(at(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), toy(RB6[i], { r: .5 })), Math.sin(i * 1.3) * .12, -.25 - i * .3, 0)); } // its tail of bows
+    const strM = new THREE.MeshBasicMaterial({ color: '#ffffff' }), str = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1, 5), strM); add(str);
+    const RSG = new THREE.OctahedronGeometry(.3), kstars = [[AX - 5, AY + 4], [AX - 2, AY + 7.5], [AX + 2.5, AY + 6], [AX + 5.5, AY + 3.2], [AX - 7, AY + 1.6], [AX + 1, AY + 9.8]].map(([x, y]) => { const m = new THREE.Mesh(RSG, toy('#ffd23f', { em: '#ffb000', ei: .8 })); m.position.set(x, y, KZ); m.visible = false; add(m); return { m, got: false }; });
+    let R = null, ang = -.5, len = 3.2, floatDown = false;
+    const place = () => { const x = AX + Math.sin(ang) * len, y = AY + Math.cos(ang) * len; kite.position.set(x, y, KZ); kite.rotation.z = -ang * .6;
+      str.position.set((AX + x) / 2, (AY + y) / 2, (AZ + KZ) / 2); str.scale.y = len; str.rotation.z = -ang; return [x, y]; };
+    place();
+    const start = () => { const P = G.player; if (!P || P.ride || P.layer !== '' || Math.abs(P.y - SKY.y) > .6 || Math.abs(P.x - AX) > 3.5) return;
+      R = { type: 'kite', t: 0, noExit: true, stick: true, n: 0 }; R.onJump = () => { if (R && R.t > .8) R.hop = true; }; P.ride = R; P.vx = P.vy = 0; ang = -.5; len = 3.2; for (const q of kstars) { q.got = false; q.m.visible = true; }
+      A().Sound && A().Sound.whoosh && A().Sound.whoosh(); A().discover && A().discover('skykite', '🪁 The rainbow kite! Fly it across the sky!'); A().toast && A().toast('🪁 Hold on! ◀ ▶ to swing, ▲ to fly higher, ▼ to come lower. Catch the stars! JUMP to let go.'); };
+    tapIt(kite, start, AX, 'skykite', 3.4); tapIt(post, start, AX, null);
+    ups.push((dt, t) => { const P = G.player; if (!P) return; for (const q of kstars) if (!q.got && q.m.visible) q.m.rotation.y = t * 2;
+      if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); }
+      if (!R) { ang = -.35 + Math.sin(t * .7) * .1; len = 1.6; place(); return; } // (resting low over its post, easy to see and tap)
+      if (P.ride !== R) { R = null; for (const q of kstars) q.m.visible = false; return; }
+      dt = Math.min(dt, .1); R.t += dt; const st = A().stick ? A().stick() : { x: 0, y: 0 };
+      ang = Math.max(-1.25, Math.min(1.25, ang + (st.x > .3 ? 1 : st.x < -.3 ? -1 : 0) * 1.1 * dt + Math.sin(t * 1.3) * .05 * dt));
+      len = Math.max(2.5, Math.min(10, len + (st.y > .3 ? 2.6 : st.y < -.3 ? -2.6 : 0) * dt));
+      const [x, y] = place(); P.x = x; P.y = y - .9; P.z = KZ + .25; P.facing = st.x < -.3 ? -1 : 1; P.vx = P.vy = 0;
+      for (const q of kstars) if (!q.got && Math.hypot(q.m.position.x - x, q.m.position.y - (y - .2)) < 1.3) { q.got = true; q.m.visible = false; R.n++; A().Sound && A().Sound.tone && A().Sound.tone(520 + R.n * 70, .15, 'sine', .07, 1.5); A().burst && A().burst(q.m.position.x, q.m.position.y, KZ, ['#ffd23f', '#ffffff'], 10, 1.6);
+        if (R.n === 6) { A().Sound && A().Sound.chime && A().Sound.chime(); A().toast && A().toast('🌟 All six kite stars! You are a super kite flier!'); A().discover && A().discover('kitestars', '🌟 Catch all six stars with the rainbow kite!'); } }
+      if (R.hop) { R = null; P.ride = null; P.z = 0; P.vy = 0; P.grounded = false; floatDown = true; for (const q of kstars) q.m.visible = false; A().toast && A().toast('🪂 You let go! Float down gently...'); } }); }
   G.skyUpdate = (dt, t) => { for (const u of ups) u(dt, t); };
 
   // ---------- star bits in the sky ----------

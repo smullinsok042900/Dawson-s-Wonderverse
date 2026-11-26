@@ -66,6 +66,8 @@ button{font-family:inherit;cursor:pointer;touch-action:manipulation}
 #intro h1{line-height:1.01;margin:6px 0 4px;font-weight:900;font-size:clamp(26px,5.4vw,44px);color:#a551e7;text-shadow:2px 3px #ffe084}
 #intro h1 span{color:#fa65a4}
 .previewCrew{display:flex;justify-content:center;gap:12px;margin:6px 0 10px}
+/* (build 143) all the friends on the start screen: two rows of smaller pictures */
+.previewCrew.many{display:grid;grid-template-columns:repeat(6,auto);gap:8px}.previewCrew.many .introPick{border-width:3px;border-radius:18px;padding:2px}.previewCrew.many .introPick img{width:min(64px,13vh);height:min(64px,13vh)}.previewCrew.many .introPick b{font-size:12px}
 .introPick{background:#fff;border:4px solid #eadcff;border-radius:24px;padding:4px;display:flex;flex-direction:column;align-items:center;box-shadow:0 5px 0 #d9c6f5}
 .introPick img{width:96px;height:96px}
 .introPick b{font-size:15px;color:#7b4fc4}

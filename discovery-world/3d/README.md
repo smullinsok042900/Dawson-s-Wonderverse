@@ -12,6 +12,10 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 143: everyone on the start screen, and the rainbow kite
+- All twelve friends can be picked on the start screen. In the Sky Kingdom, fly the rainbow kite: ◀ ▶ swing, ▲ ▼ higher
+  and lower, catch six stars.
+
 ## 3D build 142: ride the rocket
 - In Lab Gardens, climb on the big rocket: JUMP pumps it (more pumps = higher), ▲ launches, then steer the parachute ◀ ▶ to
   catch the stars on the way down.
