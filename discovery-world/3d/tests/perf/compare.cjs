@@ -9,7 +9,7 @@
 const { chromium } = require('playwright'); const path = require('node:path'); const sleep = ms => new Promise(r => setTimeout(r, ms));
 const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 const EARTH = { pier: [-552, -584, -620], seaside: [-50, -70, -88], artplaza: [813, 845, 860, 880], toytown: [560, 585, 610, 635, 656], trail: [436, 452, 470, 489, 505, 520, 538],
-  hills: [-720, -740, -756], frosty: [-326, -336, -346], farm: [-420, -440, -466], labgarden: [700, 724, 745], woods: [-160, -185, -211, -240, -255] };
+  hills: [-720, -740, -756], frosty: [-326, -336, -346], farm: [-420, -440, -466, -520], labgarden: [700, 724, 745], woods: [-160, -185, -211, -240, -255] };
 const PLANET = { jungle: [20, 40, 140, 162, 240, 300], wacky: [20, 52, 70, 140, 186, 230, 304, 320], jelly: [22, 50, 70, 140, 230, 320], bubble: [20, 50, 80, 140, 230, 320], toy: [20, 40, 60, 140, 230, 320],
   sun: [20, 60, 140, 165, 230, 320], upside: [20, 60, 140, 165, 230, 320], moon: [20, 30, 50, 79], mars: [125, 140, 221, 276], uranus: [60, 95, 185, 270, 320], neptune: [60, 95, 150, 186, 320],
   pluto: [30, 60, 95, 199, 320], venus: [60, 100, 160, 270], saturn: [60, 95, 150, 240, 320], jupiter: [30, 60, 90, 150, 205, 320], mercury: [60, 100, 150, 180] };
