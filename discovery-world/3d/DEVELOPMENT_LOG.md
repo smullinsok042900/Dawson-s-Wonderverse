@@ -19,6 +19,9 @@ are in `PERFORMANCE_LOG.md`.
     otherwise. Saving while inside saves her outside the door (also for the secret tunnel: it saved her at x -5000).
   - Outside, the old in-place inside parts are gone (lighter districts); the doors now register through the district,
     so they are removed with it (they were added again each time the district was rebuilt).
+- **"The tunnel doesn't work"** (the family's picture): in the secret tunnel the camera stayed at the far end of the world
+  (a white wall and rainbow posts) while she was in the tunnel. Now the camera follows her into the tunnel and stays with
+  her all the way through. The test only checked where she was, not what the camera showed: it now checks the camera too.
 - **Her brick house in the Giant Toy World:** going in, the camera steps into the house and frames the room (her own
   brick back wall and windows, the side walls, the roof as the ceiling, a frame around the front in her colour). It is
   furnished: bed, table and chairs with a cake, rug, lamp, bookshelf, a picture, and a toy box that pops its toys out (🧸).

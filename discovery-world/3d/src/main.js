@@ -1180,6 +1180,7 @@ const CAM_UP = 2.9, CAM_LOOK = 1.95; // (build 63: a little higher (2.15 → 2.9
 function camTargetX() {
   const P = player, hw = viewHalfW(CAM_DIST) * .92;
   const x = P.x + camT.look;
+  if ((P.layer === 'tunnel' || P.layer === 'room') && G.tunnelBounds) { const [a, b] = G.tunnelBounds; return clamp(x, a, b); } // (build 149, the family's picture: in the tunnel the camera stayed at the end of the world)
   if (P.layer === 'space' && G.spaceBounds) { const [a, b] = G.spaceBounds; return b - a < 2 * hw ? (a + b) / 2 : clamp(x, a + hw, b - hw); }
   return P.layer === 'sea' ? clamp(x, SEA.ox + Math.min(hw, SEA.w / 2), SEA.ox + SEA.w - Math.min(hw, SEA.w / 2)) : P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
 }

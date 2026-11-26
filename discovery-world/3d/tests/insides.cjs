@@ -45,8 +45,10 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   const mouth = await ev(() => { let pic = false, hole = false; __DDW3.scene.traverse(o => { if (o.isMesh && Math.abs(o.position.x + 232) < .05 && o.position.z > -3.5 && o.position.z < -2.8) { if (o.geometry.type === 'CircleGeometry' && o.material.map) pic = true; if (o.material && o.material.color && o.material.color.getHexString() === '1c1520') hole = true; } }); return { pic, hole }; });
   check('tunnel: the mouth shows a picture of where it leads (no black hole)', mouth.pic && !mouth.hole, JSON.stringify(mouth));
   await ev(() => { __DDW3.player.x = -232; }); await run(-232, 'Into the tunnel!'); await sleep(1500);
-  check('tunnel: she goes into the tunnel (a passage she walks through)', await ev(() => __DDW3.player.layer === 'tunnel'));
+  await sleep(1000); const tv = await ev(() => ({ layer: __DDW3.player.layer, camX: +__DDW3.camera.position.x.toFixed(1), px: +__DDW3.player.x.toFixed(1) }));
+  check('tunnel: she goes into the tunnel, and the camera goes in with her (build 149: it stayed at the end of the world)', tv.layer === 'tunnel' && Math.abs(tv.camX - tv.px) < 12 && tv.camX < -4990, JSON.stringify(tv));
   await page.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'tunnel-inside.jpg'), type: 'jpeg', quality: 85 });
+  for (let n = 0; n < 6; n++) { await page.keyboard.down('ArrowRight'); await sleep(1200); await page.keyboard.up('ArrowRight'); const c = await ev(() => ({ cx: __DDW3.camera.position.x, px: __DDW3.player.x, l: __DDW3.player.layer })); if (c.l !== 'tunnel') break; if (Math.abs(c.cx - c.px) > 12) { check('tunnel: the camera follows her all the way through', false, JSON.stringify(c)); break; } }
   await page.keyboard.down('ArrowRight'); const out = await until(() => __DDW3.player.layer === '' && __DDW3.player.x > 600, null, 60000); await page.keyboard.up('ArrowRight');
   check('tunnel: she walks all the way through and comes out at the far end (Toy Town)', out, String(await ev(() => __DDW3.player.x)));
   await sleep(1500); await ev(() => { __DDW3.player.x = 612.4; }); await run(612.4, 'Into the tunnel!'); await sleep(1500);
