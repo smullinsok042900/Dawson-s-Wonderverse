@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 140 (character parts baked together)
+Desktop, software rendering. Earth start (draw calls, one round each): build 139 → 140: 218 → 213, 206 → 195, 101 → 92 at
+x 40 / 120 / 300; character meshes in the scene 39 → 32. Jupiter, `pplanet.cjs`, two rounds each (median ms / draw calls):
++60 220–226 → 215–223 ms (79 → 70 calls), +90 215–222 → 200–205 ms (64 → 55–56), +150 211–216 → 200–203 ms (74 → 65),
++205 208–213 → 198–220 ms (77 → 68), +320 192–195 → 179–185 ms (69 → 60); the arrival spot (+30) is noisy in both builds
+(139: 190–432, 140: 363–583 ms). Triangles the same. Not measured on the iPhone.
+
 ## Build 139 (the toy balls hop her on; the brick house moved)
 Desktop, software rendering; `pplanet.cjs toy`, build 138 vs 139, two rounds: the same on every spot (+40 152–162 → 162–163 ms,
 +60 152–157 → 148–153 ms, +140 151–153 → 149–151 ms, +230 140–142 → 142–144 ms, +320 132–134 → 131 ms); +60 draws 6 fewer

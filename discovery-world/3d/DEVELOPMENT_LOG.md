@@ -16,7 +16,7 @@ geometry (`baked()` in `characters.js`): one draw call instead of several, the s
   keep their winding, and the close-up pictures of build 139 and 140 match.
 - What still costs the most in her character (eyes: 6–7 parts each, the mouth, the tail puffs) moves on its own (blinking,
   glancing, swaying), so it cannot simply be baked; NEXT_TASKS keeps the idea of fewer, shared parts for later.
-- Tests: unit tests 142/142; dress-up and the full smoke test: see below. Desktop, software rendering; not tried on the iPhone.
+- Tests: unit tests 142/142, `dressup.cjs` all passed, **full smoke test 345/345**. Desktop, software rendering; not tried on the iPhone.
 
 ## Checkpoint: build 139 — the giant toy balls no longer block her way (family report)
 The family reported that in the Giant Toy Universe the giant bouncy balls blocked her path, so she could not walk on. Since
