@@ -11,7 +11,7 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
   const p = await (await b.newContext({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true })).newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   const until = (fn, arg, ms = 60000) => p.waitForFunction(fn, arg, { timeout: ms, polling: 100 }).then(() => true, () => false);
   try {
-    await p.goto(`file://${file}?test`, { timeout: 300000 }); await p.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await p.locator('#playBtn').tap(); await sleep(1500);
+    await p.goto(`file://${file}?test${process.env.DDW_FLAGS || ''}`, { timeout: 300000 }); await p.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await p.locator('#playBtn').tap(); await sleep(1500);
     // the rocket menu keeps its pictures (the dimensions are reached through wormholes)
     await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
     check('the rocket menu still has its 12 pictures (no dimension in it)', await p.locator('#rocketPanel .rkT').count() === 12);

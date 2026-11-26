@@ -9,7 +9,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await (await b.newContext({ viewport: { width: 844, height: 390 } })).newPage(); const errs = []; page.on('pageerror', e => errs.push(e.message));
   const ev = (f, a) => page.evaluate(f, a), until = (fn, a, ms = 30000) => page.waitForFunction(fn, a, { timeout: ms, polling: 50 }).then(() => true, () => false);
-  await page.goto('file://' + file + '?test', { timeout: 600000 }); await page.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await page.locator('#playBtn').click(); await sleep(2500);
+  await page.goto('file://' + file + '?test' + (process.env.DDW_FLAGS || ''), { timeout: 600000 }); await page.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await page.locator('#playBtn').click(); await sleep(2500);
   await ev(() => __DDW3.teleport(813)); await until(() => !!__DDW3.G.interact.find(i => i.disc === 'paintballoon'), null, 120000); await sleep(1500);
   const ride = async () => { await ev(() => { const P = __DDW3.player; P.x = 813; P.y = 0; P.vx = P.vy = 0; P.grounded = true; P.ride = null; }); await sleep(600); await ev(() => __DDW3.G.interact.find(i => i.disc === 'paintballoon').run()); };
   await ride(); const rid = await ev(() => __DDW3.player.ride && __DDW3.player.ride.type);

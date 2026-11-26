@@ -94,6 +94,14 @@ the build workflow in `.github/workflows/build-3d.yml`, which rebuilds this game
    (recoverable state).
 
 ## Testing notes
+- **(build 146) Faster testing, the same checks:**
+  - `?norender`: the game runs fully (physics, rides, streaming, saves, sounds) but frames are not drawn. Feature tests that
+    check the game's state can run with `DDW_FLAGS=\&norender` (hands-on, ocean, insides, art-balloon, lab-rocket, sky-kite,
+    multiverse), which is much faster on this machine (no graphics chip). Run them without it once a build when something
+    visual changed. **The full smoke test always draws** (it is the graphics check), and is never run with it.
+  - `tests/perf/compare.cjs <place> old.html new.html`: the speed comparison for any Earth district or planet place, with
+    automatic extra rounds only where the two builds differ by more than 12% (up to 4 rounds each), and a verdict per spot.
+  - Speed comparisons and the smoke test run one at a time (4 cores, software rendering: two browsers at once skew both).
 - **Playwright:** the browser is pre-installed. Use `NODE_PATH=$(npm root -g)` and launch Chromium with
   `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`.
 - **The test browser renders at about 1–2 fps,** so per-frame movement is large. Anything timing-based must wait for a

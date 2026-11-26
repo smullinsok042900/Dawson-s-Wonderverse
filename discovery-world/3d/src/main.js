@@ -61,6 +61,9 @@ const lerp = (a, b, k) => a + (b - a) * k;
 const SAVE_KEY = 'dawsons-discovery-world-3d-v1';
 // ?test = light mode for the automated logic tests (software WebGL in the test browser is very slow)
 const TEST = /[?&]test/.test(location.search);
+// (build 146) TESTS ONLY: ?norender runs the whole game (physics, rides, streaming, saving, sounds) but does not draw the frames,
+//  so tests that check the game's state run at full speed on a machine without a graphics chip. The full smoke test always draws.
+const NORENDER = /[?&]norender/.test(location.search);
 // build 18: one balanced light rig (key : fill about 3 : 1, so things have form and shadows, and
 // sunlit pastels stay below white instead of clipping). Values were tuned against measured screenshots.
 const LIGHT = { env: .55, hemi: .78, sun: 3.05, rim: .5, exposure: 1.02 };
@@ -1508,7 +1511,7 @@ function frame() {
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
   renderer.shadowMap.needsUpdate = (++shadowTick % shadowEvery) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
   renderer.info.reset(); // (build 26: count every pass of the frame, not just the last one)
-  if (post.enabled) post.render(); else renderer.render(scene, camera);
+  if (NORENDER) { /* (tests only: the frame is not drawn) */ } else if (post.enabled) post.render(); else renderer.render(scene, camera);
   if (!TEST && !/[?&]hq/.test(location.search) && !G.adaptFrozen) { gfx.work += (performance.now() - frameT0 - gfx.work) * .05; adapt(raw); }
   requestAnimationFrame(frame);
 }
@@ -1654,7 +1657,7 @@ function warmPrograms() {
   for (const program of renderer.info.programs) { program.getUniforms(); program.getAttributes(); }
 }
 // (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
-function warmGroup(g) { // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
+function warmGroup(g) { if (NORENDER) return; // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
   try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, CAM_UP, CAM_DIST); cam.lookAt(c.x, CAM_LOOK, 0); cam.updateMatrixWorld();
     const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; if (post.enabled && !post.lite) { G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true }); renderer.setRenderTarget(G.warmRT); renderer.render(scene, cam); } renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm; } catch (e) { }
 }
@@ -1685,7 +1688,7 @@ function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.ena
 // in the middle of a walk into the Dino Kingdom) to a moment when nothing is on screen there.
 const WARM_LAYER = 5, warmCam = new THREE.PerspectiveCamera(45, 2, .1, 60); warmCam.layers.set(WARM_LAYER);
 scene.traverse(o => { if (o.isLight) o.layers.enable(WARM_LAYER); }); // (lights are seen on every layer, so the shaders are the real ones)
-function warmObjects(list) {
+function warmObjects(list) { if (NORENDER) return;
   if (!list.length || !post.enabled) return;
   G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true });
   const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; const V0 = new THREE.Vector3();
@@ -1710,7 +1713,7 @@ try { globalThis.__ddwCompile(planetWarmup); } catch (e) { console.log('paint wa
 // PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
 // upstairs and downstairs, the underground, the clouds, the castle, the park), with the sun's shadow over it. That
 // makes the graphics driver finish every shader and upload every texture and mesh NOW, not the first time you walk in.
-function warmAreas() { const warmT0 = performance.now();
+function warmAreas() { if (NORENDER) return; const warmT0 = performance.now();
   // (build 29) rehearse into the SAME picture buffer the game really draws into (4x anti-aliased, with a depth texture,
   // or the lite one). The graphics driver prepares a separate drawing setup for each kind of buffer; rehearsing into a
   // plain small buffer (builds 24-28) left the real setups to be made on first sight: the stall when entering the house.

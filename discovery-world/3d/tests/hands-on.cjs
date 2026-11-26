@@ -9,7 +9,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const page = await (await b.newContext({ viewport: { width: 844, height: 390 } })).newPage(); const errs = []; page.on('pageerror', e => errs.push(e.message));
   const ev = (f, a) => page.evaluate(f, a), until = (fn, a, ms = 30000) => page.waitForFunction(fn, a, { timeout: ms, polling: 50 }).then(() => true, () => false);
-  await page.goto('file://' + file + '?test', { timeout: 600000 }); await page.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await page.locator('#playBtn').click(); await sleep(2500);
+  await page.goto('file://' + file + '?test' + (process.env.DDW_FLAGS || ''), { timeout: 600000 }); await page.waitForFunction(() => document.getElementById('loading').classList.contains('done'), null, { timeout: 600000 }); await page.locator('#playBtn').click(); await sleep(2500);
   // a tap on a tap-target found by a test, at a world point (like a finger on that spot)
   await ev(() => { window.__tapAt = (pred, p) => { let o = null; for (const t of __DDW3.G.taps) t.traverse(m => { if (!o && m.isMesh && pred(m)) o = m; }); if (!o) return false; o.userData.tap({ point: new __DDW3.THREE.Vector3(...p), object: o }); return true; }; });
   // ---------- FISHING ----------
