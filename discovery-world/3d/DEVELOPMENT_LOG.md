@@ -6,6 +6,25 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 149 — real rooms inside (the family's request: "like walking into an actual house")
+- **The igloo and the lighthouse** (new `src/rooms.js`): the door takes her INTO A ROOM of its own (no see-through bubble):
+  walls, a floor and a ceiling all round, with a frame around the open front so nothing outside is ever seen. The camera
+  (`G.roomCam`, in `main.js`) fits the room and follows her inside it.
+  - Igloo: walls of ice blocks curving into the dome, ice windows, the round doorway, a crackling fire on a fur rug (🔥 warm up),
+    hot cocoa on an ice table (☕), a baby penguin asleep in its snow bed (🐧 a sleepy peep), little lanterns.
+  - Lighthouse: a tall tower room, red stripes, round windows on the sea; three flights of stairs back and forth (she just
+    walks: each stair steps her up) to the lamp room, where she lights the great lamp and its beam sweeps round.
+  - Walking out of the door, or 🐾 at the door, takes her back outside right at the door. Rooms are built the first time
+    she goes in (batched, in the shared paint: no new shaders), on their own layer 'room', far from the world; hidden
+    otherwise. Saving while inside saves her outside the door (also for the secret tunnel: it saved her at x -5000).
+  - Outside, the old in-place inside parts are gone (lighter districts); the doors now register through the district,
+    so they are removed with it (they were added again each time the district was rebuilt).
+- **Her brick house in the Giant Toy World:** going in, the camera steps into the house and frames the room (her own
+  brick back wall and windows, the side walls, the roof as the ceiling, a frame around the front in her colour). It is
+  furnished: bed, table and chairs with a cake, rug, lamp, bookshelf, a picture, and a toy box that pops its toys out (🧸).
+- Tests: `tests/insides.cjs` rewritten for the rooms (the camera inside each room, climbing to the lamp, the fire, cocoa
+  and penguin, out again); `tests/multiverse.cjs` checks the brick-house room camera and the toy box.
+
 ## Checkpoint: build 148 — the black square by the fishing stand (the family's picture from the iPhone)
 - **Cause:** the fishing rod's reel (build 144) was given its material settings one level too deep, so its metalness was an
   object, not a number. On the phone that drew broken pixels, and the glow pass spread them into a big black square with a

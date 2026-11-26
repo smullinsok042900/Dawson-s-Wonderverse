@@ -1091,7 +1091,7 @@ const GRAV = 24;
 const solidIndex = makeIntervalIndex(), platformIndex = makeIntervalIndex();
 G.spatial = { solids: solidIndex, platforms: platformIndex };
 let frameNow = 0; // one clock reading per frame, shared by the collision queries
-function bounds() { const P = player; return P.layer === 'tunnel' && G.tunnelBounds ? G.tunnelBounds /* (build 146) inside a secret tunnel */ : P.layer === 'space' && G.spaceBounds ? G.spaceBounds : P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
+function bounds() { const P = player; return (P.layer === 'tunnel' || P.layer === 'room') && G.tunnelBounds ? /* (build 149: and inside a room) */ G.tunnelBounds /* (build 146) inside a secret tunnel */ : P.layer === 'space' && G.spaceBounds ? G.spaceBounds : P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -1183,6 +1183,7 @@ function camTargetX() {
   if (P.layer === 'space' && G.spaceBounds) { const [a, b] = G.spaceBounds; return b - a < 2 * hw ? (a + b) / 2 : clamp(x, a + hw, b - hw); }
   return P.layer === 'sea' ? clamp(x, SEA.ox + Math.min(hw, SEA.w / 2), SEA.ox + SEA.w - Math.min(hw, SEA.w / 2)) : P.layer === 'in' ? clamp(x, IN.ox + hw, IN.ox + IN.w - hw) : P.layer === 'castle' ? clamp(x, G.castleIn.ox + Math.min(hw, G.castleIn.w / 2), G.castleIn.ox + G.castleIn.w - Math.min(hw, G.castleIn.w / 2)) : clamp(x, EXP.xMin - 4 + hw, EXP.x1 + 4 - hw);
 }
+const roomCamV = new THREE.Vector3(), roomLook = new THREE.Vector3(); let roomCamFor = null;
 function snapCamera() { camT.sp = player.layer === 'space' ? 1 : 0; camT.look = player.ride ? 0 : player.facing * 1.8; camT.x = camTargetX(); camT.y = player.y; if (G.life && G.life.wake) G.life.wake(camT.x); }
 // build 17: frame-rate-independent smoothing (the same camera feel at 30, 60 or 120 frames a second)
 const ease = (dt, rate) => 1 - Math.exp(-dt * rate);
@@ -1204,6 +1205,13 @@ function updateCamera(dt) {
   if (camT.dr) { const d = 4.2, k = camT.dr, cx = P.x - viewHalfW(d) * .55, cz = (P.z || 0); dressCam.set(cx, P.y + 1.05, cz + d); dressLook.set(cx, P.y + .82, cz); camera.position.lerp(dressCam, k); camLook.lerp(dressLook, k); }
   { const nr = camT.dr > .6 ? 2.9 : .3; /* (the camera looks straight at the depth of her friend, 4.2 m away) */ if (Math.abs(camera.near - nr) > .01) { camera.near = nr; camera.updateProjectionMatrix(); } } /* (build 105: while dressing, nothing between the camera and her friend is drawn, so no tree or swing can hide her friend) */
   camera.lookAt(camLook);
+  // (build 149) IN A ROOM (the igloo, the lighthouse, her brick house): the camera looks straight into the room, as close as
+  //  fits its height (or its width, if narrower), and follows her inside it without ever showing past its walls
+  if (G.roomCam) { const Rc = G.roomCam, th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), W = Rc.x1 - Rc.x0, H = Rc.y1 - Rc.y0;
+    let d = (H / 2) / th; if (d * th * camera.aspect * 2 > W) d = (W / 2) / (th * camera.aspect);
+    const hw = d * th * camera.aspect, hh = d * th, cx = W <= 2 * hw + .01 ? (Rc.x0 + Rc.x1) / 2 : clamp(P.x, Rc.x0 + hw, Rc.x1 - hw), cy = H <= 2 * hh + .01 ? (Rc.y0 + Rc.y1) / 2 : clamp(P.y + 1, Rc.y0 + hh, Rc.y1 - hh);
+    if (roomCamFor !== Rc) { roomCamFor = Rc; roomCamV.set(cx, cy, Rc.z + d); } else roomCamV.lerp(roomLook.set(cx, cy, Rc.z + d), ease(dt, 6));
+    camera.position.copy(roomCamV); camera.lookAt(roomCamV.x, roomCamV.y, Rc.z - 5); } else roomCamFor = null;
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride && G.camOverride.coaster && !(player.ride && player.ride.type === 'coaster')) G.coasterOff(); // (build 69: left the coaster another way, e.g. the map)
   if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
@@ -1259,7 +1267,7 @@ function saveSoon() { saveTimer = 1.2; }
 function save() {
   if (G.perfTest || G.erasing) return; // (build 26: the performance test never saves)
   try {
-    const d = { nursery: world.nursery, adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
+    const d = { nursery: world.nursery, adventures: world.adventures, comfort: world.comfort, v: 1, creature: player.creature, x: (player.layer === 'room' || player.layer === 'tunnel') && G.outsideX != null ? G.outsideX /* (build 149: saved outside the door, never inside a far-away room) */ : player.layer === 'in' ? IN.door : player.layer === 'castle' ? KINGDOM.castle : Math.round(player.x * 10) / 10, disc: [...world.disc], bits: [...world.bits], secret: world.secret, fluffs: fluffs.map(f => f.state), sound: Sound.on, learn: world.learn || {}, learnTier: world.learnTier || 1, exp: world.exp || {}, pet: (world.pets || [])[0] || null, pets: world.pets || [], buddies: world.buddies || {}, petStay: world.petStay || [], dinoFollow: world.dinoFollow || [false, false, false], petDraft: world.petDraft || null, balloons: world.balloons || [], build: world.build, colorings: world.colorings, styles: world.styles || {}, sparkle: !!world.sparkle, kart: world.kart, crown: !!world.crown, wand: !!world.wand, dinoEggs: world.dinoEggs };
     if (world.wear) d.wear = world.wear; if (world.wearFound) d.wearFound = world.wearFound; /* (build 101: dress-up, for each friend) */
     if (world.painted) d.paint = G.paint.canvas.toDataURL('image/jpeg', .82);
     else { const old = load(); if (old && old.paint) d.paint = old.paint; }
@@ -1782,7 +1790,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '148'; G.build = GAME_BUILD;
+const GAME_BUILD = '149'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

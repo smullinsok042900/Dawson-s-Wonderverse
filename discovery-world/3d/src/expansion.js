@@ -11,6 +11,7 @@
 // ===================================================================
 import { makeBatch, rocketParts, rocketGlass, shinyMat } from './spacekit.js';
 import * as THREE from 'three';
+import { initRooms } from './rooms.js';
 import { toyHouses, makeSea, crates, hayBales, boulders } from './earthkit.js';
 import { makeToyModel } from './toy-models.js';
 import { SPECIES as LIFE, PET_KINDS as LIFE_PETS, creatureMesh, animate as lifeAnimate, populate } from './planet-life.js'; // (build 107) pets from the planets
@@ -664,6 +665,7 @@ export function initExpansion(G, api) {
   //  open toward us like a dollhouse so she is always seen; she walks through it to the light at the other end and comes out
   //  at the far side. Walking back out the way she came takes her back. (The two ends are far apart in the world, so the
   //  tunnel is a 40 m walk of its own.)
+  const rooms = initRooms({ G, P, scene, Sound, say, disc, world, compile: g => api.compile && api.compile(g), travelTo: (...a) => api.travelTo(...a), snap: () => api.snap && api.snap() }); G.rooms = rooms; // (build 149) real rooms inside the igloo and the lighthouse
   const TUN0 = -5000, TUNLEN = 40; let tunnel = null, tun = null;
   const tunnelArt = to => { const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d'); const sky = g.createLinearGradient(0, 0, 0, 256); sky.addColorStop(0, '#9fd8ff'); sky.addColorStop(1, '#fff6e0'); g.fillStyle = sky; g.fillRect(0, 0, 256, 256);
     g.fillStyle = '#7fd06a'; g.fillRect(0, 170, 256, 86);
@@ -683,7 +685,7 @@ export function initExpansion(G, api) {
   }
   function enterTunnel(from) { const to = TUNNELS[from].back; if (!tunnel) buildTunnel(); tunnel.visible = true; tun = { from, to };
     tunnel.userData.endPic.material.map = tunnelArt(to); tunnel.userData.endPic.material.needsUpdate = true; tunnel.userData.startPic.material.map = tunnelArt(from); tunnel.userData.startPic.material.needsUpdate = true;
-    world.flash = 1; P.layer = 'tunnel'; G.tunnelBounds = [TUN0 - 1, TUN0 + TUNLEN + 1]; P.x = TUN0 + 1; P.y = 0; P.z = 0; P.vx = 0; P.vy = 0; P.grounded = true; P.facing = 1; P.ride = null; api.snap && api.snap();
+    world.flash = 1; G.outsideX = TUNNELS[from].x + 2.4; P.layer = 'tunnel'; G.tunnelBounds = [TUN0 - 1, TUN0 + TUNLEN + 1]; P.x = TUN0 + 1; P.y = 0; P.z = 0; P.vx = 0; P.vy = 0; P.grounded = true; P.facing = 1; P.ride = null; api.snap && api.snap();
     Sound.whoosh ? Sound.whoosh() : Sound.click(); disc('tunnel', '🕳️ A secret tunnel! Walk through it to the other side!'); say('🕳️ Into the secret tunnel! Walk to the light at the end!'); }
   function updateTunnel() { if (!tun) return; if (P.layer !== 'tunnel') { tun = null; if (tunnel) tunnel.visible = false; return; }
     if (P.x > TUN0 + TUNLEN) { const dest = TUNNELS[tun.to]; tun = null; tunnel.visible = false; api.travelTo(dest.x + 2.4, '🕳️', 'the other end of the secret tunnel'); }
@@ -726,22 +728,12 @@ export function initExpansion(G, api) {
       const beam = new THREE.Mesh(new THREE.BoxGeometry(14, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(-95, 7.6, -5.2); beam.visible = false; c.add(beam);
       for (const [a, b, y] of [[-89, -87.4, 1.1], [-91.4, -89.8, 2.2], [-93.8, -92.2, 3.3], [-97.6, -92.6, 4.4]]) { c.block((a + b) / 2, y - .25, -1.9, b - a, .3, 1.2, '#9a6a3a', { r: .06 }); c.plat(a, b, y, { z: -1.6 }); }
       let spin = 0; c.tap(top, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The lighthouse light is shining for the boats!'); c.disc('lighthouse', '💡 Tap the lighthouse lamp! Climb the steps for a gem.'); }, -95);
-      // (build 146, the family's request) GO INSIDE THE LIGHTHOUSE: through the red door; the front of the tower turns see-through and
-      //  a winding staircase climbs up inside to the lamp room at the top (tap the lamp there to make it shine)
-      for (const m of shell) m.material = m.material.clone(); // (build 147: see-through only while she is inside: on some phones the see-through drawing made it vanish)
+      // (build 149, the family's request: "like walking into an actual house") GO INSIDE THE LIGHTHOUSE: the red door takes her
+      //  into the tower's own room (rooms.js): round windows on the sea and stairs climbing up to the great lamp at the top
       const ldoor = c.block(-95, 0, -3.45, 1, 1.8, .14, '#c8102e', { r: .1 }); c.sph(-94.7, .9, -3.36, .06, '#ffd23f');
-      const ib = makeBatch(), bx = new THREE.BoxGeometry(1, 1, 1), STEP = [];
-      for (let k = 0; k < 8; k++) { const y = .75 + k * .78, x = k % 2 ? -94.25 : -95.75; ib.put(bx, x, y - .1, -5.2, '#c8925a', [1.1, .2, 1.4]); ib.put(bx, x, (y - .2) / 2, -5.6, '#a8743a', [.12, y - .2, .12]); STEP.push({ a: x - .6, b: x + .6, y, layer: 'off', z: -5.2, step: true, stepMax: 1 }); }
-      ib.put(bx, -95, 6.95, -5.2, '#c8925a', [2.8, .14, 2.8]); STEP.push({ a: -96.3, b: -93.7, y: 7.02, layer: 'off', z: -5.2, step: true, stepMax: 1 }); // the lamp-room floor
-      ib.put(bx, -95, .02, -5.2, '#d8c8a8', [3, .04, 3]); ib.put(bx, -96.2, 1.2, -5.9, '#4fb0ff', [.05, .8, .6]); // the floor and a little round window
-      const inMesh = ib.mesh(shinyMat()); inMesh.visible = false; c.add(inMesh); bx.dispose(); for (const p2 of STEP) G.platforms.push(p2);
-      let inside = false; const goIn = () => { if (P.ride) return; inside = !inside; Sound.click(); if (inside) { c.say('💡 Inside the lighthouse! Climb the winding stairs up to the light!'); c.disc('lighthousein', '💡 Go inside the lighthouse and climb to the top!'); } else { P.groundZ = 0; P.z = 0; P.y = 0; c.say('🌊 Back outside by the sea!'); } };
-      G.interact.push({ x: -95, y: 0, layer: '', get icon() { return inside ? '🌊' : '🚪'; }, get action() { return inside ? 'Go outside' : 'Go inside!'; }, hintY: 2.4, need: () => P.y < 1, run: goIn }); c.tap(ldoor, goIn);
-      return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; }
-        if (inside && (P.layer !== '' || P.ride || Math.abs(P.x + 95) > 4)) { inside = false; P.groundZ = 0; }
-        for (const m of shell) { const o = m.material.opacity + ((inside ? .22 : 1) - m.material.opacity) * Math.min(1, (dt || 0) * 6), op = o > .985 ? 1 : o; m.material.opacity = op; m.material.transparent = op < 1; } ldoor.visible = !inside; inMesh.visible = inside || shell[0].material.opacity < .9;
-        for (const p2 of STEP) p2.layer = inside ? '' : 'off';
-        if (inside) { P.groundZ = -5.2; P.x = Math.max(-96.3, Math.min(-93.7, P.x)); if (P.y > 6.9 && !G._lhTop) { G._lhTop = 1; c.say('💡 The top of the lighthouse! Tap the lamp to shine the light for the boats!'); c.disc('lighthousetop'); } } }; },
+      const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('lighthouse', -95); };
+      c.tap(ldoor, goIn, -95, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 });
+      return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the little boat: ring the bell on the pier and it sails across the sea and back
     () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
       const boat = new THREE.Group(); boat.position.set(-115, 0, -12.6); /* (build 62: moored clear of the pier's end, not in its boards) */ c.add(boat); const hull = new THREE.Mesh(boatHull(3, .75, 1.05), mat('#ff7a5c')); hull.position.y = -.05; { const rim = new THREE.Mesh(W.rbox(2.6, .1, 1.3, .05), mat('#ffffff')); rim.position.y = .74; boat.add(rim); } hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
@@ -866,25 +858,11 @@ export function initExpansion(G, api) {
         if (on && Math.abs(P.vx) > 1 && held) glide = P.vx; if (on && !held && Math.abs(glide) > .3) { P.x = Math.max(-367.5, Math.min(-354.5, P.x + glide * dt)); glide *= Math.max(0, 1 - dt * .7); if (!was) { c.say('⛸️ Wheee! Slippery ice!'); c.disc('ice', '⛸️ Slide across the frozen pond!'); } was = true; } else if (!on) { glide = 0; was = false; } }; },
     // the igloo: tap it, it glows warm inside
     () => { const ig = c.sph(-380, 0, -4.4, 2.4, '#f3f8ff', { m: { r: .6, cc: 0 } }); ig.scale.y = .8; const door = c.sph(-380, 0, -2.3, .9, '#cfe3f7', { m: { r: .6, cc: 0 } }); door.scale.set(1, 1.1, .8); const glow = c.sph(-380, .2, -2.05, .55, '#ffcf6a', { m: { em: '#ffb23f', ei: .05 } }); glow.material = glow.material.clone(); let warm = 0;
-      // (build 146, the family's request) GO INSIDE THE IGLOO: through the round door; the snow dome turns see-through and inside
-      //  there is a crackling fire, a fur rug, a cup of cocoa (tap it) and a sleepy baby penguin in its bed (tap it)
-      for (const m of [ig, door]) m.material = m.material.clone(); // (build 147: see-through only while she is inside)
-      const ib = makeBatch(), sp = new THREE.SphereGeometry(1, 14, 10), cy = new THREE.CylinderGeometry(1, 1, 1, 14), cn = new THREE.ConeGeometry(1, 1, 7);
-      ib.put(cy, -380, .02, -4.4, '#e8f0f8', [2.2, .04, 2.2]); ib.put(cy, -380.6, .05, -4.2, '#c89a6a', [1, .04, .7]); // the snowy floor and a fur rug
-      for (let k = 0; k < 7; k++) ib.put(sp, -381.4 + Math.cos(k) * .35, .1, -5.2 + Math.sin(k) * .3, '#8a8f98', .13); ib.put(cn, -381.4, .35, -5.2, '#ff9a2e', [.25, .5, .25]); ib.put(cn, -381.4, .3, -5.2, '#ffd23f', [.14, .35, .14]); // the fire, in a ring of stones
-      ib.put(cy, -378.9, .3, -5.3, '#a8743a', [.4, .06, .4]); ib.put(cy, -378.9, .15, -5.3, '#a8743a', [.05, .3, .05]); ib.put(cy, -378.9, .42, -5.3, '#ffffff', [.08, .16, .08]); ib.put(cy, -378.9, .5, -5.3, '#7a4a2a', [.07, .02, .07]); // a little table and the cocoa cup
-      ib.put(cy, -379.2, .12, -3.9, '#7fa8d8', [.5, .2, .35]); ib.put(sp, -379.2, .22, -3.9, '#ffffff', [.45, .1, .3]); // the penguin's little bed
-      const inMesh = ib.mesh(shinyMat()); inMesh.visible = false; c.add(inMesh); sp.dispose(); cy.dispose(); cn.dispose();
-      const chick = groundToy(c.toy('🐧', .5, -379.2, .3, -3.9), .22); chick.visible = false; const fire = c.sph(-381.4, .45, -5.2, .3, '#ffb23f', { m: { em: '#ff9a2e', ei: 1.4 } }); fire.material = fire.material.clone(); fire.visible = false;
-      let inside = false; const goIn = () => { if (P.ride) return; inside = !inside; Sound.click(); if (inside) { warm = 999; c.say('🔥 Inside the igloo! It is cosy and warm in here. Shhh... a baby penguin is sleeping!'); c.disc('igloo', '🏠 Go inside the igloo!'); } else { warm = 0; P.groundZ = 0; P.z = 0; c.say('❄️ Back out in the snow!'); } };
-      G.interact.push({ x: -380, y: 0, layer: '', get icon() { return inside ? '❄️' : '🚪'; }, get action() { return inside ? 'Go outside' : 'Go inside!'; }, hintY: 2.4, run: goIn }); c.tap(door, goIn); c.tap(ig, goIn);
-      c.tap(chick, () => { if (!inside) return; Sound.tone(900, .1, 'sine', .04, 1.4); chick.rotation.z = .3; setTimeout(() => { chick.rotation.z = 0; }, 400); c.say('🐧 Peep! The baby penguin yawns and goes back to sleep.'); c.disc('iglooPenguin'); });
-      c.tap(inMesh, () => { if (inside && Math.abs(P.x + 378.9) < 1.5) { c.say('☕ Hot cocoa in the igloo! Yum!'); Sound.giggle(); } });
-      return (dt, t) => { warm = Math.max(0, warm - dt); glow.material.emissiveIntensity = warm > 0 ? 1.2 + Math.sin(t * 6) * .3 : .05;
-        if (inside && (P.layer !== '' || P.ride || Math.abs(P.x + 380) > 4)) { inside = false; warm = 0; P.groundZ = 0; }
-        for (const m of [ig, door]) { const o = m.material.opacity + ((inside ? .2 : 1) - m.material.opacity) * Math.min(1, (dt || 0) * 6), op = o > .985 ? 1 : o; m.material.opacity = op; m.material.transparent = op < 1; } inMesh.visible = chick.visible = fire.visible = inside || ig.material.opacity < .9;
-        if (fire.visible) { fire.scale.setScalar(1 + Math.sin(t * 14) * .12); fire.material.emissiveIntensity = 1.2 + Math.sin(t * 9) * .3; }
-        if (inside) { P.groundZ = -4.4; P.x = Math.max(-381.8, Math.min(-378.2, P.x)); } }; },
+      // (build 149, the family's request: "like walking into an actual house") GO INSIDE THE IGLOO: the round door takes her into
+      //  the igloo's own room (rooms.js): ice-block walls, a crackling fire, hot cocoa and a sleepy baby penguin. The door glows warm.
+      const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('igloo', -380); c.disc('igloo', '🏠 Go inside the igloo!'); };
+      c.tap(door, goIn, -380, { icon: '🚪', label: 'Igloo', action: 'Go inside!', hintY: 2.4 }); c.tap(ig, goIn);
+      return (dt, t) => { glow.material.emissiveIntensity = .9 + Math.sin(t * 5) * .2; }; },
     // northern lights: tap the star pole and coloured ribbons dance in the sky
     () => { c.cyl(-345, 0, -3.4, .07, .07, 2.6, '#c9a6ff'); const star = c.toy('🌟', 1, -345, 3, -3.4); const rib = [['#3cf0b5', 0], ['#7a7cff', 1.4], ['#ff7ad9', 2.8]].map(([col, k]) => { const r = new THREE.Mesh(new THREE.BoxGeometry(60, 4, .2), mat(col, { em: col, ei: .9 })); r.position.set(-340, 26 + k * 2, -70); r.visible = false; c.add(r); return r; }); let on = 0;
       c.tap(star, () => { on = 10; rib.forEach(r => { r.visible = true; }); Sound.twinkle(); Sound.chime(); c.say('🌌 The northern lights are dancing in the sky!'); c.disc('aurora', '🌌 Tap the star to make the northern lights!'); }, -345);
@@ -1135,7 +1113,7 @@ export function initExpansion(G, api) {
 
   // ---------- per frame ----------
   function update(dt, t, camX) {
-    stream(camX); updateSkyGate(); updateTunnel();
+    stream(camX); updateSkyGate(); updateTunnel(); rooms.update(dt, t);
     if (camX > EXP.x0 - 30 || camX < -10) updateGems(t); // (build 30: gems on both sides of the world)
     for (const st of S) if (st.state === 'ready' && st.updates) for (const u of st.updates) u(dt, t);
     updateFollowers(dt, t);
