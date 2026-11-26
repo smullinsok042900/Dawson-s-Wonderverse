@@ -631,7 +631,7 @@ export function initExpansion(G, api) {
     c.tap(m, () => { if (followers[kind]) return; taps++; boingIt(m); Sound.giggle(); if (X.pals[kind]) { c.remove(m); setFollow(kind, true); say(`${PAL_EMOJI[kind]} ${PAL_NAME[kind]} is coming with you!`); return; }
       if (taps < 3) say(taps === 1 ? `${PAL_EMOJI[kind]} ${{ crab: 'Snap snap', fox: 'Yip', penguin: 'Squeak', robot: 'Beep boop', frog: 'Ribbit', parrot: 'Squawk', pig: 'Oink oink', seal: 'Ar ar', goat: 'Maa' }[kind]}! Hello!` : `${PAL_EMOJI[kind]} ${PAL_NAME[kind]} likes you! One more tap!`);
       else { c.remove(m); setFollow(kind, true); disc('pal_' + kind); say(PALS[kind].hello); c.burst(x, 1.5, z, ['#ff8fc8', '#fff', '#ffd23f'], 24, 3); Sound.chime(); } }, x);
-    return (dt, t) => { if (!m.parent) return; m.position.x = x + Math.sin(t * .9) * (kind === 'crab' ? 1.5 : .6); m.userData.body.position.y = Math.abs(Math.sin(t * 5)) * .05; if (kind === 'fox') m.rotation.y = Math.cos(t * .9) > 0 ? 0 : Math.PI; };
+    const upd = (dt, t) => { if (!m.parent) return; m.position.x = x + Math.sin(t * .9) * (kind === 'crab' ? 1.5 : .6); m.userData.body.position.y = Math.abs(Math.sin(t * 5)) * .05; if (kind === 'fox') m.rotation.y = Math.cos(t * .9) > 0 ? 0 : Math.PI; }; upd.mesh = m; return upd;
   }
   const boingIt = o => { o.userData.bt = 1; };
   // (build 32) SECRET TUNNELS: a cave mouth half-hidden behind bushes; tap it (or PAW next to it) and you whoosh through
@@ -946,7 +946,8 @@ export function initExpansion(G, api) {
     () => { const buoys = RB.slice(0, 5).map((col, i) => { const x = -574 - i * 2.2; const b = c.sph(x, .35, -7.5, .45, col, { m: { r: .4, cc: .6 } }); b.scale.y = .8; const tp = c.cyl(x, .6, -7.5, .06, .06, .5, '#ffffff'); c.tap(b, () => { Sound.withMusic(() => Sound.tone(NOTE[i * 1 + 1], .35, 'sine', .07, 1)); b.userData.hop = .5; c.burst(x, .9, -7.5, [col, '#fff'], 6, 1.5); c.say(['🎵 Low!', '🎵', '🎵', '🎵', '🎵 High!'][i]); c.disc('buoys', '🎵 Tap the buoys to play music, from low to high!'); }, i === 2 ? -578.4 : undefined); return { b, tp, i }; });
       return (dt, t) => { for (const q of buoys) { q.b.userData.hop = Math.max(0, (q.b.userData.hop || 0) - dt); const y = .35 + Math.sin(t * 1.6 + q.i) * .08 + q.b.userData.hop * .6; q.b.position.y = y; q.tp.position.y = y + .25; } }; },
     // Splash the seal waits on a rock by the water
-    () => { const rock = c.sph(-584, 0, -2.4, .9, '#8a7f74', { m: { r: .9 } }); rock.scale.set(1.4, .45, .9); const pal = palAtHome(c, 'seal'); return (dt, t) => { pal && pal(dt, t); }; },
+    () => { const rock = c.sph(-584, 0, -2.4, 1, '#8a7f74', { m: { r: .9 } }); rock.scale.set(1.7, .55, 1.15); const pal = palAtHome(c, 'seal'); /* (build 144, the family's report: the seal hovered above its rock) it lies ON the rock: its height follows the rock's rounded top wherever it wiggles */
+      const top = x => .55 * Math.sqrt(Math.max(0, 1 - ((x + 584) / 1.7) ** 2)); return (dt, t) => { if (!pal) return; pal(dt, t); const m = pal.mesh; if (m.parent) m.position.y = top(m.position.x) - .06; }; },
     // stacked crates (a gem waits on top) next to the dolphin show
     () => { c.add(crates([[-594.5, 0, 2], [-596.5, 1, 2], [-598, 2, 1.6]].map(([x, y, w]) => [x, y, -2.0, w, 1, 1.4]))); /* (build 124: the steps stand just behind her path, so she walks in front of them, never through them; she steps back onto them as she climbs) */ /* (build 54: planked crates, one mesh) */ c.plat(-595.5, -593.5, 1, { z: -1.9, step: true, stepMax: 1.05 }); c.plat(-597.5, -595.5, 2, { z: -1.9, step: true, stepMax: 1.05 }); c.plat(-598.8, -597.2, 2.98, { z: -1.9, onLand: () => c.disc('crates', '📦 You climbed the crates!') }); },
     // the dolphin show: tap the whistle and a dolphin leaps through the hoop
