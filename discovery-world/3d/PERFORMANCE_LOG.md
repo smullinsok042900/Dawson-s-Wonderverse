@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 152 vs build 151, the farm (desktop, software rendering; `tests/perf/compare.cjs farm`; not iPhone numbers)
+- Run 1 (4 rounds): -420: 410 → 262 ms (faster); -440: 489 → 480 (same); -466: 519 → 510 (same).
+- Run 2, with the tractor's own spot added (3 rounds): -420: 327 → 325; -440: 484 → 525 (+9%, same); -466: 545 → 559 (same);
+  **-520 (the tractor): 522 → 505 ms (same)**, draw calls 115 → 121 (the trailer and the four pumpkins). Nothing slower.
+
 ## Builds 149–151 vs build 146 (desktop, software rendering; `tests/perf/compare.cjs`, 4 rounds each; not iPhone numbers)
 - Sunny Beach: -50: 536 → 330 ms (faster); -70: 279 → 276 (same); -88: 277 → 272 (same). Draw calls the same or 1 fewer.
 - Frosty Peaks: -326: 411 → 353 ms (faster); -336: 283 → 294 (same, +4%); -346: 299 → 286 (same).

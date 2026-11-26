@@ -939,12 +939,35 @@ export function initExpansion(G, api) {
     () => { const pond = c.cyl(-514, 0, -3.8, 2.6, 2.6, .05, '#4fb3ff', { r: .15, cc: .6 }); pond.scale.z = .6; const mom = c.toy('🦆', 1, -514, .45, -3.8); const kids = [0, 1, 2].map(() => c.toy('🐤', .5, -514, .3, -3.8)); let swim = 0;
       c.tap(mom, () => { swim = 8; Sound.tone(700, .1, 'square', .02, .7); Sound.tone(650, .1, 'square', .02, .7, .12); c.say('🦆 Quack quack! Follow me! One, two, three ducklings!'); c.disc('ducks', '🦆 Tap the mother duck and the ducklings follow her!'); }, -514); c.tap(pond, () => { c.say('💧 Splash!'); Sound.pop ? Sound.pop() : Sound.click(); c.burst(-514, .3, -3.6, ['#9fdcff', '#fff'], 10, 2); });
       return (dt, t) => { swim = Math.max(0, swim - dt); const sp = swim > 0 ? 1.3 : .3, a = t * sp; mom.position.set(-514 + Math.cos(a) * 1.7, .45, -3.8 + Math.sin(a) * .9); kids.forEach((k2, i) => { const b = a - (i + 1) * .45; k2.position.set(-514 + Math.cos(b) * 1.7, .3 + Math.abs(Math.sin(t * 6 + i)) * .05, -3.8 + Math.sin(b) * .9); }); }; },
-    // the toy tractor: tap it and it drives across the field and back (vroom!)
+    // (build 152, the family's request: every activity hands-on) THE TRACTOR: tap it and she climbs into the driver's seat.
+    //  ◀ ▶ drive it along the field (the wheels turn, puffs from the pipe); drive up to each of the four pumpkins and it
+    //  scoops it into the trailer (pop! one, two, three, four). All four: "You harvested all the pumpkins!". JUMP hops off,
+    //  and the tractor rolls back home; the pumpkins grow back for next time.
     () => { const tr = new THREE.Group(); tr.position.set(-524, 0, -4.1); /* (build 64: further from the fence, which crossed it on screen) */ c.add(tr); const bd = new THREE.Mesh(W.rbox(2, .9, 1.2, .15), mat('#3cc46e', { r: .4 })); bd.position.y = .9; bd.castShadow = true; tr.add(bd); const cab = new THREE.Mesh(W.rbox(.9, 1, 1.1, .1), mat('#ffd23f', { r: .4 })); cab.position.set(-.4, 1.75, 0); tr.add(cab);
       const wheels = []; for (const [x, r] of [[-.6, .6], [.7, .38]]) for (const z of [-.65, .65]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(r, r, .3, 16), mat('#2b2d42', { r: .9 })); w.rotation.x = Math.PI / 2; w.position.set(x, r, z); tr.add(w); wheels.push(w); }
-      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .6, 8), mat('#666')); pipe.position.set(.6, 1.6, 0); tr.add(pipe); let drive = 0;
-      c.tap(tr, () => { if (drive) return; drive = .001; Sound.tone(90, 1.2, 'sawtooth', .03, 1); c.say('🚜 Vroom vroom! The tractor drives across the field!'); c.disc('tractor', '🚜 Tap the tractor and watch it drive!'); }, -524);
-      return (dt, t) => { if (!drive) { bd.position.y = .9 + Math.sin(t * 20) * .01; return; } drive += dt; const k = drive < 4 ? drive / 4 : drive < 8 ? 1 - (drive - 4) / 4 : 0; tr.position.x = -524 + Math.sin(k * Math.PI / 2) * 14; tr.rotation.y = drive < 4 ? 0 : Math.PI; for (const w of wheels) w.rotation.y += dt * 6; if (Math.random() < dt * 4) c.burst(tr.position.x + .6, 2, -5, ['#cccccc', '#ffffff'], 1, .6); if (drive > 8) { drive = 0; tr.position.x = -524; tr.rotation.y = 0; } }; },
+      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .6, 8), mat('#666')); pipe.position.set(.6, 1.6, 0); tr.add(pipe);
+      const trailer = new THREE.Group(); trailer.position.set(-1.9, 0, 0); tr.add(trailer); { const tb = makeBatch(), bx = new THREE.BoxGeometry(1, 1, 1), cy = new THREE.CylinderGeometry(1, 1, 1, 12);
+        tb.put(bx, 0, .75, 0, '#c8343a', [1.5, .12, 1.1]); for (const [x, z, w, d] of [[0, .53, 1.5, .1], [0, -.53, 1.5, .1], [-.72, 0, .1, 1.1]]) tb.put(bx, x, 1.02, z, '#e84a4f', [w, .45, d]); tb.put(bx, .95, .7, 0, '#555', [.5, .08, .08]);
+        for (const z of [-.6, .6]) tb.put(cy, 0, .35, z, '#2b2d42', [.35, .2, .35], [Math.PI / 2, 0, 0]); trailer.add(tb.mesh(shinyMat())); bx.dispose(); cy.dispose(); }
+      const pkG = new THREE.SphereGeometry(.42, 14, 10); pkG.scale(1, .8, 1);
+      const pkMesh = () => { const pb = makeBatch(), st = new THREE.CylinderGeometry(.05, .07, .22, 6); pb.put(pkG, 0, .34, 0, '#ff8a1e'); pb.put(st, 0, .72, 0, '#3f8f4a'); st.dispose(); const m = pb.mesh(shinyMat()); m.userData.dynamic = true; return m; };
+      const PK = [-527.5, -519, -514, -509.5].map(x => { const m = pkMesh(); m.position.set(x, 0, -5.4); c.add(m); return { m, x, got: false }; });
+      const inCart = [0, 1, 2, 3].map(i => { const m = pkMesh(); m.scale.setScalar(.62); m.position.set(-.35 + (i % 2) * .55, .78, i < 2 ? -.22 : .22); m.visible = false; trailer.add(m); return m; });
+      const HOME = -524, X0 = -528, X1 = -508; let R = null, flying = [];
+      const home = () => { tr.position.x = HOME; tr.rotation.y = 0; for (const q of PK) { q.got = false; q.m.visible = true; q.m.position.set(q.x, 0, -5.4); } for (const m of inCart) m.visible = false; };
+      const start = () => { if (P.layer !== '' || P.ride || P.y > 1) return; R = { type: 'tractor', t: 0, noExit: true, stick: true, x: tr.position.x, v: 0, n: 0 }; R.onJump = () => { if (R && R.t > .6) R.hop = true; }; P.ride = R; P.vx = P.vy = 0;
+        Sound.tone(90, .8, 'sawtooth', .03, 1); c.say('🚜 Vroom! You are driving the tractor! ◀ ▶ to drive. Scoop up the four pumpkins! JUMP to hop off.'); c.disc('tractor', '🚜 Drive the tractor and scoop up the pumpkins!'); };
+      c.tap(tr, start, HOME, { icon: '🚜', label: 'Tractor', action: 'Drive the tractor!', disc: 'tractor' });
+      return (dt, t) => {
+        for (let i = flying.length - 1; i >= 0; i--) { const f = flying[i]; f.t += dt; const k = Math.min(1, f.t / .5); const tx = tr.position.x - 1.9 * (tr.rotation.y ? -1 : 1); f.m.position.set(f.x + (tx - f.x) * k, Math.sin(k * Math.PI) * 1.6 + k * .8, -5.4 + (-4.1 + 5.4) * k); if (k >= 1) { f.m.visible = false; inCart[f.i].visible = true; flying.splice(i, 1); } }
+        if (!R) { bd.position.y = .9 + Math.sin(t * 20) * .01; return; } if (P.ride !== R) { R = null; home(); return; }
+        dt = Math.min(dt, .1); R.t += dt; const st = api.stick ? api.stick() : { x: 0, y: 0 }, want = Math.abs(st.x) > .25 ? Math.sign(st.x) * 4.5 : 0;
+        R.v += (want - R.v) * Math.min(1, dt * 3); R.x = Math.max(X0, Math.min(X1, R.x + R.v * dt)); if ((R.x <= X0 || R.x >= X1) && R.v) R.v = 0;
+        tr.position.x = R.x; if (Math.abs(R.v) > .2) { tr.rotation.y = R.v > 0 ? 0 : Math.PI; for (const w of wheels) w.rotation.y += R.v * dt * 2; bd.position.y = .9 + Math.sin(t * 30) * .02; if (Math.random() < dt * 6) c.burst(R.x + (R.v > 0 ? .6 : -.6), 2, -4.1, ['#cccccc', '#ffffff'], 1, .6); }
+        const f = tr.rotation.y ? -1 : 1; P.x = R.x - .4 * f; P.y = 1.25; P.z = -3.2; P.facing = f; P.vx = P.vy = 0;
+        for (const [i, q] of PK.entries()) if (!q.got && Math.abs(q.x - R.x) < 1.3) { q.got = true; R.n++; flying.push({ m: q.m, x: q.x, t: 0, i: R.n - 1 }); Sound.tone([392, 494, 587, 784][R.n - 1], .25, 'triangle', .07, 1.4); c.burst(q.x, .8, -5.4, ['#ff8a1e', '#ffd23f', '#ffffff'], 12, 2);
+          c.say(R.n < 4 ? `🚜 ${NUM[R.n]}! Into the trailer!` : '🚜 Four pumpkins! You harvested all the pumpkins! Hooray!'); if (R.n === 4) { c.disc('pumpkins'); Sound.chime(); } }
+        if (R.hop) { R = null; P.ride = null; P.z = 0; P.y = 1.25; P.vy = 3; P.grounded = false; c.say('🚜 Hop! Thank you, tractor!'); setTimeout(home, 1500); } }; },
     // cows grazing in the far field (tap one: moo!)
     () => { const cows = [[-438, -9], [-485, -10], [-510, -9.5]].map(([x, z]) => { const s = c.toy('🐄', 1.8, x, .9, z); c.tap(s, () => { Sound.tone(140, .5, 'sawtooth', .03, .6); c.say('🐄 Moooo!'); c.disc('cows'); }); return { s, x }; });
       for (let x = -410; x > -534; x -= 3) c.block(x, 0, -7, .14, 1, .14, '#ffffff', { r: .03 }); c.block(-472, .7, -7, 124, .12, .08, '#ffffff', { r: .02 }); c.block(-472, .35, -7, 124, .12, .08, '#ffffff', { r: .02 });

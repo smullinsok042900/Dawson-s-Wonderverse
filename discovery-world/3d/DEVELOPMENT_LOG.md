@@ -6,11 +6,22 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 152 — the farm tractor is hands-on (every activity hands-on, district by district)
+- The toy tractor used to drive across the field by itself when tapped. Now tapping it (or 🐾) puts her in the driver's seat:
+  ◀ ▶ drive it along the field (wheels turn, puffs from the pipe, it turns round), and each of the four pumpkins she drives up
+  to hops into the red trailer behind ("one! two! three!"); all four: "You harvested all the pumpkins!" JUMP hops off; the
+  tractor goes back home and the pumpkins grow back. Batched in the shared paint (no new shaders).
+- New test `tests/farm-tractor.cjs` (7 checks): passed drawn and with `&norender`. The smoke test's farm check still runs it.
+- Backup: `backups/3D_build151_index.html`. **Full smoke test 345/345** (desktop, software rendering). Speed: nothing slower on
+  the farm, the tractor's own spot included (`PERFORMANCE_LOG.md`).
+
 ## Checkpoint: build 151 — the Ocean Pier sailboat sails too (the family's report: "sailing on the boat still isn't working")
 - The picture was at Ocean Pier: its blue sailboat only sailed a loop by itself when tapped. Now tapping it (or 🐾) puts her
   in a boat out on the open ocean, like the Sunny Beach boat, and 🏠 at Home Harbour brings her back to the pier where she
   set sail (`G.sail(from, backX)`; Sunny Beach still comes home to Sunny Beach).
 - Verified (desktop, software rendering): `ocean.cjs` all passed, with two new checks (the pier boat sails, and home is the pier).
+- **Full smoke test of builds 147–151: 345/345** (rerun; the first run had 344/345: one family friend's touch check at Sunny
+  Beach missed once in the long run, and passed when checked on its own twice and in the rerun).
 
 ## Checkpoint: build 150 — the tunnel picture is clear (the family's picture from the iPhone)
 - The picture of where a secret tunnel leads looked broken and speckled on the phone. It sat at the same depth as the round
