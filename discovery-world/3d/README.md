@@ -14,6 +14,7 @@ Play: open `index.html`. It is one self-contained file and works offline. Once m
 
 ## 3D build 139: the giant toy balls don't block her
 - In the Giant Toy Universe, walking into a giant ball now hops her up onto it, and it bounces her along: she can always get by.
+  Her brick house moved to an open spot past the balls (nothing in front of it any more).
 
 ## 3D build 138: a little faster on the rocky planets
 - Each area's craters and rocks on Mercury, Mars, the Moon, Pluto and the other rocky places are drawn together (4–6 fewer

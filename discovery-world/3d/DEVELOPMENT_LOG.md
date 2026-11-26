@@ -14,7 +14,11 @@ and the ball's bounce carries her on to the next one and past the line. The ball
 one. Walking back with ◀ works the same way.
 - Tests: `multiverse.cjs`: the old check "a giant ball stops her" is replaced by "walking into the giant balls never stops her:
   she hops up onto them (never through them) and gets past the last one", plus the same walking back. The ball-to-ball check
-  now clears the hop left over from the walk before it (it had pushed her off the first ball). See below for the results.
+  now clears the hop left over from the walk before it (it had pushed her off the first ball).
+- **Her brick house moved** (the family: half of it was hidden behind the last giant ball): the house now stands at +92 with
+  its builder (the 🧱 brick pile) at +90, in the open; the wind-up key and the clockwork parade took its old place (+75, +78.5).
+  Her saved house is kept (only its place changed).
+- Tests: `multiverse.cjs` 64/64; unit tests 142/142; full smoke test: see below. Desktop, software rendering; not tried on the iPhone.
 
 ## Checkpoint: build 138 — speed: the rocky planets' rocks, and what the Sky Playground really costs
 From the ATTRACTIONS checklist (row 2: the Jupiter Sky Playground; row 4: the Mercury funhouse, both marked slower). A new

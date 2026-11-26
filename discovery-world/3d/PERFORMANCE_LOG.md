@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 139 (the toy balls hop her on; the brick house moved)
+Desktop, software rendering; `pplanet.cjs toy`, build 138 vs 139, two rounds: the same on every spot (+40 152–162 → 162–163 ms,
++60 152–157 → 148–153 ms, +140 151–153 → 149–151 ms, +230 140–142 → 142–144 ms, +320 132–134 → 131 ms); +60 draws 6 fewer
+calls (68 → 62: the house is no longer in that view). Not measured on the iPhone.
+
 ## Build 138 (the rocky planets' craters and rocks batched; the funhouse lamp cords)
 Desktop, software rendering; build 137 vs 138, `pplanet.cjs`, two rounds each (median frame ms / draw calls / k triangles).
 - **Mercury:** +100 161–167 → 159–163 ms; +150 216–224 → 203–227 ms; +180 178–211 → 199–212 ms (the same within the noise);
