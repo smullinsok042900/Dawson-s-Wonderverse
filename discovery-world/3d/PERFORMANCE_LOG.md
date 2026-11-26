@@ -4,6 +4,14 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 142 (ride Lab Gardens' rocket)
+Desktop, software rendering; `pearth.cjs labgarden`. The normal run (two rounds each) read build 142 slower at +724 and +745
+(141: 367–514 ms, 142: 547–621 ms), with ~100k more triangles at +724. A mesh listing at +724 showed the same scene in both
+builds (389k against 397k triangles: the same ground and plant pieces, streamed in at slightly different places), so the
+run was measured again: four rounds each, 141 mean 612 ms, 142 mean 632 ms (+3%, ranges 406–906 against 463–804). Then +724
+and +745 alone with 8 s to settle, four rounds each: **+724: 141 mean 633 ms, 142 mean 582 ms; +745: 517 against 531 ms;
+draw calls the same (84–92).** Not slower. Not measured on the iPhone.
+
 ## Build 141 (the Paint-Pot Balloon in Art Plaza)
 Desktop, software rendering; `pearth.cjs artplaza` (with the balloon's spot, 813), build 140 vs 141, two rounds each (median
 frame ms / draw calls): 813: 304/304 → 279/295 ms (78 → 77–78 calls); 845: 278/300 → 274/317 (93 → 93–94); 860: 282/303 →
