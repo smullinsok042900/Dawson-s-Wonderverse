@@ -14,7 +14,7 @@ different heights (5.5 to 10 m); each one she catches sings a note, and catching
 sky** (it stays). She rides at the front of the basket, so she is easy to see. One mesh for the balloon, one per paint
 drop, one for the rainbow (hidden until painted). `tests/activity-spots.json` has its 🐾 spot (813).
 - Tests: the new `tests/art-balloon.cjs` (7 checks: ride, lift-off, ▲ ▼, steering to all six drops, the soft landing, the
-  rainbow, JUMP and floating down) all pass; unit tests 142/142; speed and the full smoke test: see below. Desktop, software
+  rainbow, JUMP and floating down) all pass (twice); unit tests 142/142; **full smoke test 345/345**. Desktop, software
   rendering; not tried on the iPhone.
 
 ## Checkpoint: build 140 — speed: character parts baked together

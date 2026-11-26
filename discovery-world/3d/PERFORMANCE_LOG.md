@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 141 (the Paint-Pot Balloon in Art Plaza)
+Desktop, software rendering; `pearth.cjs artplaza` (with the balloon's spot, 813), build 140 vs 141, two rounds each (median
+frame ms / draw calls): 813: 304/304 → 279/295 ms (78 → 77–78 calls); 845: 278/300 → 274/317 (93 → 93–94); 860: 282/303 →
+306–307 (89 → 90); 869.6: 258–305 → 263–309 (93–94 → 95); 880: 252/270 → 258/288 (81–82 → 82–83). Mean of all spots 284 →
+289 ms (+2%, inside this machine's run-to-run noise of 5–15%); 0–2 more draw calls where the paint drops are in view
+(the rainbow is hidden until painted). Not measured on the iPhone.
+
 ## Build 140 (character parts baked together)
 Desktop, software rendering. Earth start (draw calls, one round each): build 139 → 140: 218 → 213, 206 → 195, 101 → 92 at
 x 40 / 120 / 300; character meshes in the scene 39 → 32. Jupiter, `pplanet.cjs`, two rounds each (median ms / draw calls):
