@@ -6,6 +6,18 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 142 — Lab Gardens: RIDE THE ROCKET (ATTRACTIONS row 5)
+Lab Gardens is full (activities every few metres), so instead of a new ride squeezed in, its big rocket (x 730: until now it
+only flew up empty when you pressed the button) became a ride with real controls. Tap the rocket and she climbs on (she stands
+at its front, easy to see). **Each JUMP pumps it** (up to three; the more pumps, the higher: about 8.5, 13.5 or 18.5 m); **▲
+launches** (or it launches by itself a moment after the last pump). Up it goes past three stars; at the top **the parachute
+opens** and she **steers it down with ◀ ▶** to two more stars, landing softly; the rocket glides back onto its pad. JUMP on
+the parachute hops off (she floats down gently). The pink button still launches the rocket empty, as before.
+- The first test found the two side stars too far apart for anyone to catch both (the parachute fell past the second one):
+  the parachute now sinks more slowly (1.6 m/s) and steers a little faster, and the stars are closer (726, 11 m and 733, 6 m).
+- Tests: the new `tests/lab-rocket.cjs` (7 checks) all pass; speed and the full smoke test: see below. Desktop, software
+  rendering; not tried on the iPhone.
+
 ## Checkpoint: build 141 — Art Plaza's PAINT-POT BALLOON (ATTRACTIONS row 5)
 The audit (build 118) listed Art Plaza next for a ride. Between the sticker wall and the spin art (x 813) stands a striped hot-air
 balloon with a paint-pot basket. Tap it and it floats her up over the plaza and drifts along to the far end (x 899), where
