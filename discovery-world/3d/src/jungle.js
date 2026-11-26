@@ -93,7 +93,7 @@ function river(k) {
 // =================== area 3: THE TREEHOUSES: a rope ladder, a rope bridge, a zip line ===================
 function treehouses(k) {
   const s = k.s0, b = K.makeBatch(), P = k.P, T1 = s + 20, T2 = s + 44, TY = 7;
-  for (const x of [T1, T2]) { b.put(CYL, x, TY / 2, -2.6, '#6a4a2a', [.7, TY + 2, .7]); b.put(BOX, x, TY - .15, -1.4, '#a8743a', [6, .3, 3.2]); b.put(BOX, x, TY + 1.5, -2.6, '#c8925a', [4, 3, .2]); b.put(CONE, x, TY + 3.8, -1.8, '#3fbf5a', [3.8, 1.8, 2.8], [0, Math.PI / 4, 0]);
+  b.put(BOX, T2 + 3.6, TY - .15, -1.4, '#a8743a', [1.2, .3, 3.2]); k.plat(T2 + 3, T2 + 4.2, TY, { z: -1.4 }); /* (the second deck reaches the zip line's start, so she cannot step off before it) */ for (const x of [T1, T2]) { b.put(CYL, x, TY / 2, -2.6, '#6a4a2a', [.7, TY + 2, .7]); b.put(BOX, x, TY - .15, -1.4, '#a8743a', [6, .3, 3.2]); b.put(BOX, x, TY + 1.5, -2.6, '#c8925a', [4, 3, .2]); b.put(CONE, x, TY + 3.8, -1.8, '#3fbf5a', [3.8, 1.8, 2.8], [0, Math.PI / 4, 0]);
     for (let j = 0; j < 5; j++) b.put(LEAF, x + Math.cos(j * 1.3) * 3, TY + 5 + (j % 2), -2.6 + Math.sin(j * 1.3), GREENS[j % 4], [2.4, 1.6, 2]); k.plat(x - 3, x + 3, TY, { z: -1.4 }); }
   // the rope ladder up to the first treehouse: rungs she climbs by walking into them (each a little step)
   for (let j = 0; j < 9; j++) { const x = T1 - 6 + j * .38, y = .8 + j * .78; b.put(CYL, x, y - .1, -1.3, '#c8925a', [.06, 1.1, .06], [Math.PI / 2, 0, 0]); k.plat(x - .3, x + .3, y, { z: -1.3, step: true, stepMax: .9 }); }
@@ -103,10 +103,10 @@ function treehouses(k) {
   for (const dz of [-2.3, -.5]) b.put(CYL, (T1 + T2) / 2, TY + .9, dz, '#c8925a', [.04, T2 - T1 - 6, .04], [0, 0, Math.PI / 2]);
   k.U.push((dt, t) => { for (const [j, q] of planks.entries()) { const sag = -Math.sin((j + 1) / 10 * Math.PI) * .45 + Math.sin(t * 2 + j) * .03, on = P.grounded && !P.ride && Math.abs(P.y - q.p.y) < .1 && P.x >= q.p.a && P.x <= q.p.b; q.p.y = TY + sag; q.m.position.y = TY + sag - .1; if (on) P.y = q.p.y; } });
   // THE ZIP LINE from the second treehouse down to the jungle floor
-  const zx0 = T2 + 3, zpath = [[zx0, TY + .2], [zx0 + 8, TY - 2], [zx0 + 18, 3], [zx0 + 26, .2]]; tubeAlong(b, zpath.map(([x, y]) => [x, y + 2.1]), .03, '#8a8f98', -1.4);
+  const zx0 = T2 + 4.2, zpath = [[zx0, TY + .2], [zx0 + 8, TY - 2], [zx0 + 18, 3], [zx0 + 26, .2]]; tubeAlong(b, zpath.map(([x, y]) => [x, y + 2.1]), .03, '#8a8f98', -1.4);
   let zipping = false; const zip = () => { if (zipping || P.ride) return; zipping = true; k.Sound.whoosh ? k.Sound.whoosh() : k.Sound.chime(); k.say('🌴 Zip line! Wheeee! Over the jungle!', true); pathRide(k, zpath, { z: -1.4, speed: 9, done: () => { zipping = false; k.disc && k.disc('junglezip'); } }); };
   k.G.interact.push({ x: zx0, y: TY, layer: 'space', icon: '🌴', action: 'Zip line!', hintY: 2.4, run: zip });
-  k.U.push(() => { if (!zipping && P.grounded && !P.ride && Math.abs(P.y - TY) < .15 && P.x > zx0 - .5 && P.vx > .5) zip(); });
+  k.U.push(() => { if (!zipping && P.grounded && !P.ride && Math.abs(P.y - TY) < .15 && P.x > zx0 - 1.5 && P.vx > .5) zip(); }); // (a wide start: at a slow frame rate she must not step past it)
   star(k, b, T1, TY + 1.4, 'treehousestar'); star(k, b, (T1 + T2) / 2, TY + 1.6, 'bridgestar');
   k.add(b.mesh(K.shinyMat()));
   populate(k, [['jmonkey', s + 32 - k.X, -2.8], ['jparrot', s + 90 - k.X, -2.8]]);

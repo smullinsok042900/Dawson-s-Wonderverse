@@ -857,7 +857,7 @@ export function initExpansion(G, api) {
           if (k >= 1) { c.remove(f.b); flying.splice(i, 1); hits++; const d = Math.hypot(f.to.x - TX, f.to.y - TY), where = d < .3 ? 0 : d < .65 ? 1 : 2;
             const sp = c.cyl(f.to.x, f.to.y, f.to.z + .02, .16, .16, .03, '#ffffff'); sp.rotation.x = Math.PI / 2; sp.scale.set(1.4, 1, 1.1); splats.push({ m: sp, life: 6 });
             Sound.tone([880, 520, 300][where], .18, 'square', .03, .6); c.burst(f.to.x, f.to.y, f.to.z + .2, where ? ['#ffffff', '#dff3ff'] : ['#ffd23f', '#ffffff', '#ff4f6a'], where ? 12 : 26, 2);
-            c.disc('snowball', '❄️ Make a snowball and throw it at the target!'); if (!where) c.disc('bullseye', '🌟 Hit the middle of the snowball target!'); // (first: the "new!" note; then what happened, so she hears BULLSEYE)
+            c.disc('snowball'); if (!where) c.disc('bullseye'); // (no separate note: what she hears is what happened, BULLSEYE included)
             c.say(['🌟 BULLSEYE! Right in the middle!', '❄️ Splat! Close to the middle!', '❄️ Splat! On the target!'][where] + (hits % 5 === 0 ? ` ${NUM[5]} snowballs!` : '')); } }
         for (let i = splats.length - 1; i >= 0; i--) { const sp = splats[i]; sp.life -= dt; if (sp.life < 1) sp.m.scale.setScalar(Math.max(.01, sp.life) * 1.2); if (sp.life <= 0) { c.remove(sp.m); splats.splice(i, 1); } } }; },
     // the frozen pond: step on the ice and you glide along (slippery!)
