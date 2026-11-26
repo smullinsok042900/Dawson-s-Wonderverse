@@ -966,7 +966,7 @@ export function initExpansion(G, api) {
         tr.position.x = R.x; if (Math.abs(R.v) > .2) { tr.rotation.y = R.v > 0 ? 0 : Math.PI; for (const w of wheels) w.rotation.y += R.v * dt * 2; bd.position.y = .9 + Math.sin(t * 30) * .02; if (Math.random() < dt * 6) c.burst(R.x + (R.v > 0 ? .6 : -.6), 2, -4.1, ['#cccccc', '#ffffff'], 1, .6); }
         const f = tr.rotation.y ? -1 : 1; P.x = R.x - .4 * f; P.y = 1.25; P.z = -3.2; P.facing = f; P.vx = P.vy = 0;
         for (const [i, q] of PK.entries()) if (!q.got && Math.abs(q.x - R.x) < 1.3) { q.got = true; R.n++; flying.push({ m: q.m, x: q.x, t: 0, i: R.n - 1 }); Sound.tone([392, 494, 587, 784][R.n - 1], .25, 'triangle', .07, 1.4); c.burst(q.x, .8, -5.4, ['#ff8a1e', '#ffd23f', '#ffffff'], 12, 2);
-          c.say(R.n < 4 ? `🎃 ${NUM[R.n]}! Into the trailer!` : '🎃 Four pumpkins! You harvested all the pumpkins! Hooray!'); if (R.n === 4) { c.disc('pumpkins'); Sound.chime(); } }
+          c.say(R.n < 4 ? `🚜 ${NUM[R.n]}! Into the trailer!` : '🚜 Four pumpkins! You harvested all the pumpkins! Hooray!'); if (R.n === 4) { c.disc('pumpkins'); Sound.chime(); } }
         if (R.hop) { R = null; P.ride = null; P.z = 0; P.y = 1.25; P.vy = 3; P.grounded = false; c.say('🚜 Hop! Thank you, tractor!'); setTimeout(home, 1500); } }; },
     // cows grazing in the far field (tap one: moo!)
     () => { const cows = [[-438, -9], [-485, -10], [-510, -9.5]].map(([x, z]) => { const s = c.toy('🐄', 1.8, x, .9, z); c.tap(s, () => { Sound.tone(140, .5, 'sawtooth', .03, .6); c.say('🐄 Moooo!'); c.disc('cows'); }); return { s, x }; });
