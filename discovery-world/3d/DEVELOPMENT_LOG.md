@@ -6,6 +6,23 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 143 — EVERY FRIEND ON THE START SCREEN (family request) and the SKY KINGDOM'S RAINBOW KITE
+- **The family asked for every character to be choosable from the start**, not just four. The start screen now shows all
+  twelve (Pip, Zuzu, Jelly, Sprout, Puffle, Luna, Bloop, Zip, Glimmer, Pompom, Bibble, Cosmo) in two rows of picture
+  buttons with their names; a tap picks one (saved). The eight newer friends' pictures were only drawn when the dress-up
+  panel opened: on the very first start they are now drawn one per frame while the start screen shows (about 30 s on this
+  slow desktop test machine; the names show at once), then saved, so every later start shows all twelve at once. The four
+  quick buttons at the top stay; 👗 has everyone too.
+- **The rainbow kite** (Sky Kingdom, cloud path x 41; ATTRACTIONS row 5): tap it and she rides it on its string: ◀ ▶ swing her
+  across the sky in a big arc, ▲ lets the string out (higher and wider), ▼ pulls it in; six stars to catch; JUMP lets go
+  and she floats gently down onto the clouds. Its first test found the page did not load (three parts positioned with
+  `Object.assign`, which three.js does not allow): fixed. Pictures showed a one-colour sail and a kite resting too high to
+  see: now rainbow stripes, resting low over its post.
+- Tests: the new `tests/sky-kite.cjs` (5 checks) all pass; the start screen checked in the browser (12 pictures, a pick is
+  kept after a reload, no errors); unit tests 142/142; full smoke test: see below. `tests/android-rendering.cjs` fails before
+  and after this build: it looks for `function renderPortraits() {` in the source, renamed in build 101 (NEXT_TASKS).
+  Desktop, software rendering; not tried on the iPhone.
+
 ## Checkpoint: build 142 — Lab Gardens: RIDE THE ROCKET (ATTRACTIONS row 5)
 Lab Gardens is full (activities every few metres), so instead of a new ride squeezed in, its big rocket (x 730: until now it
 only flew up empty when you pressed the button) became a ride with real controls. Tap the rocket and she climbs on (she stands

@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 143 (every friend on the start screen; the rainbow kite)
+Desktop, software rendering; the Sky Kingdom (x 30, 41, 55), build 142 vs 143, two rounds each (median ms): +30 593–650 →
+630–668, +41 371–373 → 337–340, +55 380–405 → 385–386. The same. On the very first start the eight newer friends'
+pictures are drawn one per frame (about 30 s here); later starts read them from the saved copy. Not measured on the iPhone.
+
 ## Build 142 (ride Lab Gardens' rocket)
 Desktop, software rendering; `pearth.cjs labgarden`. The normal run (two rounds each) read build 142 slower at +724 and +745
 (141: 367–514 ms, 142: 547–621 ms), with ~100k more triangles at +724. A mesh listing at +724 showed the same scene in both
