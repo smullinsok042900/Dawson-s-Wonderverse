@@ -537,6 +537,43 @@ export function initExpansion(G, api) {
       [0, 1, 2].forEach(i => { const b = c.sph(838.5 + i * 1.1, 2.4, -2.4, .35, '#ffd23f', { m: { m: .6 } }); c.cyl(838.5 + i * 1.1, 0, -2.4, .05, .05, 2.1, '#9a9a9a'); c.tap(b, () => { Sound.withMusic(() => Sound.bell ? Sound.bell([784, 988, 1175][i], .06) : Sound.tone(880, .8, 'sine', .05, 1)); c.disc('bells', '🔔 Ding! Tap the bells!'); }); });
       NOTE.forEach((f, i) => { const bar = c.block(843 + i * .55, .8 - i * .03, -2.2, .45, .12, 1.4 - i * .08, RB[i], { r: .04 }); c.tap(bar, () => { Sound.withMusic(() => Sound.tone(f * 2, .5, 'triangle', .07, 1)); c.burst(843 + i * .55, 1.1, -2.2, [RB[i], '#fff'], 4, 1.2); c.disc('xylo2', '🎶 A rainbow xylophone!'); }); });
       c.block(845, 0, -2.2, 4.8, .7, 1.2, '#9a6a3a', { r: .1 }); },
+    // (build 141) THE PAINT-POT BALLOON: tap it (between the sticker wall and the spin art) and it floats her up over the plaza,
+    //  drifting along to the far end. ▲ climbs, ▼ sinks, JUMP hops off (she floats down gently). Six paint drops float at
+    //  different heights; each one she catches sings a note, and all six paint a big rainbow across the sky.
+    () => { const BX = 813, END = 899, ZB = -1.8, sph = new THREE.SphereGeometry(1, 18, 12), cy = new THREE.CylinderGeometry(1, 1, 1, 16), PAINT = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#5fd36a', '#4fb0ff', '#b07cff'];
+      const bal = new THREE.Group(); bal.userData.dynamic = true; c.add(bal);
+      { const b = makeBatch();
+        PAINT.forEach((col, i) => b.put(new THREE.SphereGeometry(1, 4, 12, i * Math.PI / 3, Math.PI / 3), 0, 3.4, 0, col, [1.7, 1.95, 1.7])); // the envelope: six coloured wedges
+        b.put(sph, 0, 1.75, 0, '#ffffff', [.35, .25, .35]);
+        b.put(cy, 0, .45, 0, '#ffffff', [.75, .9, .75]); b.put(cy, 0, .92, 0, '#4fb0ff', [.8, .1, .8]); // the paint-pot basket and its rim
+        for (let i = 0; i < 5; i++) b.put(sph, Math.cos(i * 1.26) * .74, .7 - (i % 2) * .15, Math.sin(i * 1.26) * .74, PAINT[i], [.12, .22, .12]); // paint drips down the pot
+        for (const [dx, dz] of [[.6, .6], [-.6, .6], [.6, -.6], [-.6, -.6]]) b.put(cy, dx * .9, 1.4, dz * .9, '#8a6a4a', [.025, 1, .025]); // ropes
+        bal.add(b.mesh(shinyMat())); }
+      const home = () => { bal.position.set(BX, 0, ZB); bal.rotation.set(0, 0, 0); }; home();
+      const dropG = new THREE.SphereGeometry(.38, 14, 10); dropG.scale(1, 1.25, 1);
+      const drops = [[829, 6.5], [842, 9.5], [855, 5.5], [868, 8.5], [880, 6], [892, 10]].map(([x, y], i) => { const db = makeBatch(); db.put(dropG, 0, 0, 0, PAINT[i]); db.put(sph, -.12, .18, .3, '#ffffff', .09); const m = db.mesh(shinyMat()); m.userData.dynamic = true; m.position.set(x, y, -1.1); c.add(m); return { m, got: false, y }; });
+      const rb = (() => { const b = makeBatch(); PAINT.forEach((col, i) => b.put(new THREE.TorusGeometry(15 - i * .7, .36, 6, 40, Math.PI), 856, 3, -14, col)); const m = b.mesh(shinyMat()); m.visible = false; c.add(m); return m; })();
+      let R = null, floatDown = false;
+      const start = () => { if (P.layer !== '' || P.ride || Math.abs(P.x - BX) > 2.6 || P.y > 1) return;
+        c.disc('paintballoon', '🎈 The paint-pot balloon! Float over Art Plaza and catch the paint drops!'); c.say('🎈 Up we go! ▲ to go higher, ▼ to go lower, catch the paint drops! JUMP to hop off.'); Sound.whoosh && Sound.whoosh();
+        R = { type: 'paintballoon', t: 0, noExit: true, stick: true, x: BX, y: 0, n: 0 }; R.onJump = () => { if (R && R.t > 1) R.hop = true; }; P.ride = R; P.vx = P.vy = 0; for (const q of drops) { q.got = false; q.m.visible = true; } };
+      c.tap(bal, start, BX, { y: 3, icon: '🎈', label: 'Paint balloon', action: 'Float up!', disc: 'paintballoon' });
+      return (dt, t) => { for (const [i, q] of drops.entries()) if (!q.got) { q.m.position.y = q.y + Math.sin(t * 1.5 + i) * .25; q.m.rotation.y = t; }
+        if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); }
+        if (!R) { bal.rotation.z = Math.sin(t * .8) * .03; return; } if (P.ride !== R) { R = null; home(); return; }
+        dt = Math.min(dt, .1); R.t += dt; const st = api.stick ? api.stick() : { x: 0, y: 0 }, up = st.y > .3, dn = st.y < -.3;
+        if (R.x >= END) R.y = Math.max(0, R.y - 2.4 * dt); // (the far end: down she comes, gently)
+        else if (R.t < 2.5) R.y = Math.min(5.5, R.y + 2.4 * dt); // (lift-off)
+        else { R.x = Math.min(END, R.x + 2.4 * dt); R.y = Math.max(3, Math.min(11, R.y + (up ? 2 : dn ? -2 : -.15) * dt)); }
+        bal.position.set(R.x, R.y, ZB); bal.rotation.z = Math.sin(R.t * 1.3) * .05;
+        P.x = R.x; P.y = R.y + .55; P.z = ZB + .9; P.facing = 1; /* (in front of the basket, holding on: easy to see) */ P.vx = 0; P.vy = 0;
+        for (const [i, q] of drops.entries()) if (!q.got && Math.abs(q.m.position.x - R.x) < 1.4 && Math.abs(q.m.position.y - (R.y + 1.4)) < 1.6) { q.got = true; q.m.visible = false; R.n++; Sound.tone([523, 587, 659, 698, 784, 880][i], .3, 'triangle', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -1.1, [PAINT[i], '#ffffff'], 14, 2); }
+        const landed = R.x >= END && R.y <= 0;
+        if (landed || R.hop) { const r = R; R = null; P.ride = null; P.z = 0; home();
+          if (r.hop) { P.y = r.y + .55; P.vy = 0; P.grounded = false; floatDown = true; c.say('🪂 You hopped off! Float down gently...'); }
+          else { P.y = 0; P.vy = 0; P.grounded = true; Sound.boing(); c.burst(P.x, .8, 0, RB, 16, 2.2); }
+          if (r.n === 6) { rb.visible = true; Sound.chime(); c.say('🌈 All six paint drops! You painted a RAINBOW across the sky!'); c.disc('paintrainbow', '🌈 Catch all six paint drops on the paint-pot balloon!'); }
+          else if (!r.hop) c.say(`🎈 What a ride! You caught ${NUM[r.n] || r.n} paint drop${r.n === 1 ? '' : 's'}! Ride again from the paint balloon!`); } }; },
     // the light mixer: three coloured lamps shine on a white statue
     () => { const statue = c.sph(860, 1.6, -2.8, 1.1, '#ffffff', { m: { r: .5, em: '#000000', ei: 1 } }); const sm = statue.material = statue.material.clone(); c.cyl(860, 0, -2.8, .7, .8, .6, '#e6e0f0');
       const L = [['red', '#ff2a2a', 856.5], ['green', '#2aff4a', 860], ['blue', '#2a5aff', 863.5]], on = [0, 0, 0];
