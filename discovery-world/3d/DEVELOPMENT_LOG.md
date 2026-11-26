@@ -6,6 +6,18 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 140 — speed: character parts baked together
+The first step of NEXT_TASKS "SPEED: her own character". Parts of a character that never move apart are now baked into one
+geometry (`baked()` in `characters.js`): one draw call instead of several, the same look.
+- Her bunny (`creatures.js`): the two gold goggle rings in one mesh, the two lenses in another (4 → 2).
+- The friend characters (`characters.js`): Pip's goggles (two rings and the bridge in one mesh, the two lenses in another: 5 → 2), each
+  side's two wing pieces in one mesh (4 → 2), and every eye's two small sparkles in one mesh (2 → 1 per eye).
+- A first try made the mirrored wing look darker (baking a mirrored piece turns its front side inward): mirrored pieces now
+  keep their winding, and the close-up pictures of build 139 and 140 match.
+- What still costs the most in her character (eyes: 6–7 parts each, the mouth, the tail puffs) moves on its own (blinking,
+  glancing, swaying), so it cannot simply be baked; NEXT_TASKS keeps the idea of fewer, shared parts for later.
+- Tests: unit tests 142/142; dress-up and the full smoke test: see below. Desktop, software rendering; not tried on the iPhone.
+
 ## Checkpoint: build 139 — the giant toy balls no longer block her way (family report)
 The family reported that in the Giant Toy Universe the giant bouncy balls blocked her path, so she could not walk on. Since
 build 135 the balls were solid (she bumped into them and had to jump on top): too hard for a 5-year-old. Now walking into a
