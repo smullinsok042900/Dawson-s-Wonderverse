@@ -6,6 +6,68 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 139 — the giant toy balls no longer block her way (family report)
+The family reported that in the Giant Toy Universe the giant bouncy balls blocked her path, so she could not walk on. Since
+build 135 the balls were solid (she bumped into them and had to jump on top): too hard for a 5-year-old. Now walking into a
+ball **hops her up onto it by herself**, like a low step (a new `hopMax` on a solid, in `main.js`; the toy balls use 5 m),
+and the ball's bounce carries her on to the next one and past the line. The balls are still solid: she never walks through
+one. Walking back with ◀ works the same way.
+- Tests: `multiverse.cjs`: the old check "a giant ball stops her" is replaced by "walking into the giant balls never stops her:
+  she hops up onto them (never through them) and gets past the last one", plus the same walking back. The ball-to-ball check
+  now clears the hop left over from the walk before it (it had pushed her off the first ball). See below for the results.
+
+## Checkpoint: build 138 — speed: the rocky planets' rocks, and what the Sky Playground really costs
+From the ATTRACTIONS checklist (row 2: the Jupiter Sky Playground; row 4: the Mercury funhouse, both marked slower). A new
+probe (`/tmp` helper, like `pplanet.cjs`) lists every mesh drawn in view, with its triangles and material.
+- **Found on every rocky planet** (Mercury, Venus, Mars, the Moon, Pluto and the other non-gas places): each area's 9 soft craters and 8
+  scattered rocks were 17 separate meshes, **each with its own new material**. They are now one batched mesh per area with the
+  shared rough paint material (`space.js`, `buildArea`), on a lighter sphere (252 triangles instead of 720; they are low and
+  flattened, so they look the same). A first try kept the 720-triangle sphere: 4–6 fewer draw calls, but +8–20k triangles in
+  view (one batch is drawn whole, single rocks were skipped off-screen) and mixed frame times; the lighter sphere fixed it.
+- **Mercury funhouse, the light game:** its four lamp cords were four meshes; now one.
+- **Jupiter Sky Playground:** in view at +150 to +205 it adds only 9–14 of the 72–78 draw calls, most of them tap targets
+  (earlier builds found merging those saves 1–3). The biggest cost in every view is **her own character, about 33 draw calls**
+  (its parts are separate meshes): the most useful speed task for the whole game, now in NEXT_TASKS.
+- Measured (PERFORMANCE_LOG): 4–6 fewer draw calls on Mercury and Mars, frame times the same or faster.
+- Tests: `mercury-funhouse.cjs`, `mercury-maze.cjs` pass; unit tests 142/142; **full smoke test 345/345**. Desktop, software
+  rendering; not tried on the iPhone.
+
+## Checkpoint: build 137 — THE WACKY GRAVITY WORLD (the fifth dimension)
+A fifth 🌀 wormhole (purple, teal and orange) leads to **the Wacky Gravity World** (`src/wacky.js`), where gravity changes from
+place to place. One small new rule in `main.js`: `G.gravScale` (how strong gravity is here), next to build 131's `G.gravSign`
+(which way it pulls). Each zone shows its colour (blue = floaty, purple = up, orange = flip), and the voice says what it does
+the first time. Leaving the world puts gravity back to normal (`gravSign`, `gravScale`, `flipK`, `camLift`).
+- **Moon-bounce meadow:** gravity almost gone (0.22): one jump goes about 7.6 m up, across bobbing floating rocks to a star.
+- **The anti-gravity lift:** a purple column floats her up to a sky platform (12 m) and stops pushing once she is up (the first
+  test found she bobbed in the column forever: fixed); a slide back down.
+- **The flip corridor:** orange stripes flip gravity, so she falls up and walks on the ceiling head down; the next one flips her back.
+- **The gravity wheel:** a giant ring she rides all the way round, upside down at the top.
+- **The floating obstacle course** (low gravity, platforms that move sideways and up and down, carrying her) and **the gravity
+  well**, a swirly pad that launches her about 18 m up in floaty gravity (four stars on the way).
+- Creatures: the Zoomers; pets **Zoom** (a spring bug) and **Floaty** (a fox who floats).
+- **Wormhole arrival:** the world now starts building under the warp swirl, and the swirl stays until the frames settle
+  (0.9–4 s; never more than 8 s waiting for the build). Measured: the frames under the swirl stay light, but the biggest seen
+  frame (about 5 s later, when she steps out of the rocket) is unchanged: see PERFORMANCE_LOG and NEXT_TASKS.
+- Tests: `multiverse.cjs` 63/63 (11 new wacky checks), unit tests 142/142, **full smoke test 345/345**. Desktop, software rendering; not tried on the iPhone.
+
+## Checkpoint: build 136 — THE SQUISHY JELLY WORLD (the fourth dimension)
+A fourth 🌀 wormhole (pink, orange and green) leads to **the Squishy Jelly World** (`src/jelly.js`): a candy floor with jam
+swirls and sugar sparkles, jelly-bean trees, and everything made of shiny jelly that SQUISHES and WOBBLES when she lands on it
+(each piece squashes and jiggles back: a cheap scale wobble, no soft-body physics; one shared material per colour).
+- **Jelly hills** to bounce across; a **giant jelly cube** that wobbles and giggles when tapped.
+- **The wobbly bridge** over a jam river: each piece sags under her and jiggles, carrying her with it.
+- **The jelly tower** to climb (stacked jellies) and **the jelly slide** down. The test found two problems, both fixed: at a
+  slow frame rate a step could be skipped (the steps now touch and each can lift her two steps), and the slide started past the
+  end of the top step, so walking on dropped her off the tower (now the slide starts on the top step itself).
+- **The giant jelly trampoline park** (each bouncier than the last, stars higher and higher) and **the squishy jelly house** to
+  walk into (a jelly sofa and a jelly bed; they only catch her while she is inside).
+- Creatures: the Wobblers; pets **Gummy** (a gummy bear) and **Wiggle** (a jelly blob).
+- Tests: `multiverse.cjs` 52/52 (10 new jelly checks).
+- The first full smoke run (344/345) caught **Beepo the robot** (it rolls about) wandering close enough to the green scribble
+  friend in Lab Gardens that the 🐾 picked Beepo: the 5 m rule did not allow for friends that wander. Now every new friend
+  stands **5 m plus how far it wanders** from every older one (all three friend tests check it); 12 friends moved a little
+  (Beepo, the rescue pups and the pig family along the farm, Waffles, Twinkle, Rosa). **Full smoke test after the fix: 345/345** (desktop, software rendering).
+
 ## Checkpoint: build 135 — the family's requests: fly up and down, toy fixes, the bubble house, the castle inside, HER OWN BRICK HOUSE
 - **Open space: ⏫ ⏬** (hold to fly up or down; shown while flying). The wormholes float above and below the planets, so
   without these only the map could reach them.
@@ -26,6 +88,7 @@ are in `PERFORMANCE_LOG.md`.
 - Tests: `multiverse.cjs` 42/42 (new: ⏫ lifts the rocket; a ball stops her; the cars tilt on the bridge; she climbs the bubble
   house floor by floor; she walks into the castle and hops to its shelf; she builds her house by tapping the real building
   screen, goes in through her door and comes back out).
+- **Build 135b** (the bubble speed fix, PR #117): `multiverse.cjs` 42/42 and **full smoke test 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 134 — FRIENDS' ROCKETS IN OPEN SPACE REALLY SHOW (family report)
 The family saw that in Play Together, friends in open space could not see each other's rockets. Cause: build 127 sent the

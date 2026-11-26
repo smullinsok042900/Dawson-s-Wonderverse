@@ -4,6 +4,37 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 138 (the rocky planets' craters and rocks batched; the funhouse lamp cords)
+Desktop, software rendering; build 137 vs 138, `pplanet.cjs`, two rounds each (median frame ms / draw calls / k triangles).
+- **Mercury:** +100 161–167 → 159–163 ms; +150 216–224 → 203–227 ms; +180 178–211 → 199–212 ms (the same within the noise);
+  draw calls 82 → 76 at +150 and 78 → 72 at +180; triangles the same (98–107k).
+- **Mars:** +140 199 → 191–197 ms, +221 199–200 → 188–189 ms, +276 173–186 → 164–173 ms; draw calls 85 → 80, 80 → 77, 74 → 68.
+  Its first spot (+125, just after arriving) read higher in 138 in the normal run (351–443 against 265–277 ms), so it was
+  measured again with 8 s to settle, four rounds each: **137: 195–205 ms, 87 draw calls; 138: 189–205 ms, 83 draw calls.**
+- The first version (the 720-triangle sphere, batched) added 8–20k triangles in view and was mixed (Mercury +150 +5%,
+  +180 −10%); replaced with a 252-triangle sphere before shipping.
+- Where the draw calls go (a mesh listing in view): Jupiter's Sky Playground adds 9–14 of 72–78; her own character is about
+  33 in every view. Not measured on the iPhone.
+
+## Build 137 (the Wacky Gravity World; the world is built under the warp swirl)
+Desktop, software rendering. Open space, build 136 vs 137, four rounds each (mean of the median frame ms): flying 97 → 93 ms,
+spacewalk 226 → 228 ms, 78–79 draw calls (no change). Squishy Jelly World, two rounds each, build 136 vs 137: the same on
+every spot (128–153 ms); the first spot (she lands on a bouncy jelly hill) is noisy in both builds (136: 145–532 ms, 137:
+275–606 ms). **Wacky Gravity World** (`pplanet.cjs wacky`, two rounds): 120–159 ms per frame, 57–66 draw calls, 64–72k
+triangles (the lightest dimension); first spot 302–659 ms (arrival, as in the other dimensions).
+Arrival through a wormhole (`parrive.cjs jelly`: the longest frame under the swirl, and the longest one seen after it):
+build 136 hidden 209–247 / seen 458–462 ms; build 137 hidden 165–280 / seen 344–601 ms. Building the world under the swirl
+works (the frames under it stay light), but it did not make the seen moment smoother: the biggest seen frame comes about 5 s
+after the swirl, when she steps out of the rocket (next task in NEXT_TASKS). Not measured on the iPhone.
+
+## Build 136 (the Squishy Jelly World)
+Desktop, software rendering. First version: 157–200 ms per frame but ~190k triangles (24 jelly-bean trees and 30 gummy rocks
+made of 560-triangle spheres) — made lighter before shipping (96-triangle decorations). After: `pplanet.cjs jelly`, two rounds:
+**135–165 ms per frame, 58–70 draw calls, 86–96k triangles** (the lightest of the four dimensions). Open space, build 135 vs
+136, two rounds: spacewalk 251 → 226 ms, flying 128 → 80 ms, 78–79 draw calls. **The arrival spot is the heaviest yet: 646–833
+ms** (the jelly pieces and their highlight dots are built and compiled on arrival): it joins the arrival-smoothing task in
+NEXT_TASKS (prepare a dimension's materials and first area during the warp swirl). Not measured on the iPhone.
+
 ## Build 135 (her brick house, the castle inside, the bubble house, fly up and down, toy fixes)
 Desktop, software rendering; build 134 vs 135, two rounds, mean of the spots' median frame ms.
 - Open space (spacewalk): 247 → 242 ms. Toy Universe: 170 → 174 ms (+2%; +6 draw calls where her brick house stands).

@@ -316,8 +316,15 @@ export function initDeep(G, api) {
       const css = document.createElement('style'); css.textContent = '#warpFx{position:fixed;inset:-50%;z-index:80;pointer-events:none;opacity:0;transition:opacity .5s;border-radius:50%;animation:warpSpin 1.6s linear infinite}#warpFx.on{opacity:1}@keyframes warpSpin{to{transform:rotate(360deg) scale(1.15)}}'; document.head.appendChild(css); }
     const [c1, c2, c3] = d.wormhole.colors; warpDiv.style.background = `repeating-conic-gradient(from 0deg, ${c1} 0 12deg, ${c2} 12deg 24deg, ${c3} 24deg 36deg)`; warpDiv.style.webkitMaskImage = warpDiv.style.maskImage = 'radial-gradient(circle, transparent 0, #000 70%)';
     requestAnimationFrame(() => warpDiv.classList.add('on'));
-    setTimeout(() => { leave(); api.land(d.id, null); }, 1300);
-    setTimeout(() => warpDiv && warpDiv.classList.remove('on'), 2600);
+    // (build 137) the world starts building at once, under the swirl, and the swirl stays until she has arrived: the busy
+    // moment of arriving is hidden (at least 1.3 s of swirl; never more than 8 s, whatever happens)
+    const ready = Promise.race([api.preload ? api.preload(d.id) : Promise.resolve(), new Promise(r => setTimeout(r, 8000))]);
+    Promise.all([ready, new Promise(r => setTimeout(r, 1300))]).then(async () => { leave(); try { await api.land(d.id, null); } catch (e) { }
+      // the swirl clears once the frames have settled (three steady frames in a row after the first busy ones; 0.9 s to 4 s)
+      const t0 = performance.now(); let last = t0, best = 1e9, calm = 0; const off = () => warpDiv && warpDiv.classList.remove('on');
+      const tick = () => { const t = performance.now(), f = t - last; last = t; best = Math.min(best, Math.max(f, 16)); calm = f <= best * 1.5 ? calm + 1 : 0;
+        if ((t - t0 > 900 && calm >= 3) || t - t0 > 4000) off(); else requestAnimationFrame(tick); };
+      requestAnimationFrame(tick); });
   }
   function land() {
     if (!S || !S.near || !S.near.land) return; const id = S.near.id; Sound.chime(); say(`🛬 Landing on ${id === 'earth' ? 'Earth, home' : id === 'moon' ? 'the Moon' : id[0].toUpperCase() + id.slice(1)}!`);

@@ -54,7 +54,7 @@ export function* toyLanding(c) {
   const ballMeshes = [];
   for (const [j, [x, r, col, bounce]] of balls.entries()) {
     const m = new THREE.Mesh(BALL, toy(col, { r: .35 })); m.scale.setScalar(r); m.position.set(x, r, -.5); m.userData.dynamic = true; add(m); ballMeshes.push({ m, r, squish: 0 });
-    { const key = 'toyball' + j; for (let q = c.G.solids.length - 1; q >= 0; q--) if (c.G.solids[q].key === key) c.G.solids.splice(q, 1); c.G.solids.push({ a: x - r * .8, b: x + r * .8, top: r * 2 - .05, layer: 'space', key }); } // (build 135: solid: she can't walk through a ball, she jumps on it)
+    { const key = 'toyball' + j; for (let q = c.G.solids.length - 1; q >= 0; q--) if (c.G.solids[q].key === key) c.G.solids.splice(q, 1); c.G.solids.push({ a: x - r * .8, b: x + r * .8, top: r * 2 - .05, layer: 'space', key, hopMax: 5 }); /* (build 139: walking into a ball hops her up onto it, so the balls never block her way) */ } // (build 135: solid: she can't walk through a ball, she jumps on it)
     c.G.platforms.push({ a: x - r * .7, b: x + r * .7, y: r * 2, layer: 'space', z: -.5, pad: true, bounce, nudge: j < balls.length - 1 ? (balls[j + 1][0] - x - .5) / 1.1 : 0, /* (the sideways push lasts 1.1 s: aimed at the next ball's middle) */ onLand: () => { ballMeshes[j].squish = 1; Sound.tone && Sound.tone(392 * Math.pow(1.26, j), .14, 'sine', .06, 1.4); if (j === balls.length - 1) kk.disc('bouncyballs'); } });
   }
   U.push(dt => { for (const o of ballMeshes) { if (o.squish > 0) o.squish = Math.max(0, o.squish - dt * 3); const q = Math.sin(o.squish * 9) * o.squish * .22; o.m.scale.set(o.r * (1 + q), o.r * (1 - q), o.r * (1 + q)); o.m.position.y = o.r * (1 - q); } });

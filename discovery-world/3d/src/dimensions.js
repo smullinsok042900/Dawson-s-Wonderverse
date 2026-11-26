@@ -45,6 +45,30 @@ export const DIMENSIONS = [
     },
     alien: { name: 'Bloopers', body: '#c8e8ff', eye: 2, ant: 1, shape: 'balloon', move: 'float', note: 880, hi: 'Bloop bloop! We are Bloopers! We float everywhere in our bubbly world!', iris: '#3a6ab0' },
   },
+  {
+    id: 'jelly', icon: '🍮', name: 'the Squishy Jelly World',
+    colors: ['#ff4f8a', '#7fe05a'],
+    gravity: 6, // a soft, bouncy pull (made-up)
+    hello: 'The Squishy Jelly World! Everything is made of wobbly jelly! Bounce on the jelly hills, cross the wobbly bridge, and climb the jelly tower!',
+    wormhole: { at: [.2, 1250, -30], colors: ['#ff4f8a', '#ffb02e', '#7fe05a'] },
+    look: {
+      sky: { top: '#ff9ac8', mid: '#ffc8e0', hor: '#fff0e0', low: '#ffe0d0', stars: 0, sunDir: [.2, .5, -.8], sunCol: '#fff8f0', glow: [4, .4, .2], band: '#fff0f4', bandK: .2, wind: .01 },
+      sun: ['#fff8f0', 2.5], hemi: ['#ffe8f0', '#ffb0c8', 1.35], fog: ['#ffe4ee', 120, 360], env: .3, rim: ['#ffd0e8', .7],
+    },
+    alien: { name: 'Wobblers', body: '#7fe05a', eye: 2, ant: 2, shape: 'jelly', move: 'hop', note: 600, hi: 'Wibble wobble! We are Wobblers, the jelly people! Everything here jiggles!', iris: '#1f6a2a' },
+  },
+  {
+    id: 'wacky', icon: '🌀', name: 'the Wacky Gravity World',
+    colors: ['#7a5ae0', '#4fd8c8'],
+    gravity: 9.81, // normal gravity between the zones; each zone changes it (wacky.js, G.gravScale / G.gravSign)
+    hello: 'The Wacky Gravity World! Here gravity changes from place to place! Blue means floaty, purple floats you up, and orange flips you upside down!',
+    wormhole: { at: [2.3, 1050, 20], colors: ['#7a5ae0', '#4fd8c8', '#ff9a2e'] },
+    look: {
+      sky: { top: '#3a2a8a', mid: '#6a5ac8', hor: '#b8f0e8', low: '#d0f8f0', stars: .5, sunDir: [-.2, .5, -.8], sunCol: '#f0f0ff', glow: [4, .4, .2], band: '#c8b8ff', bandK: .3, wind: .02 },
+      sun: ['#f4f0ff', 2.4], hemi: ['#e0e8ff', '#a090e0', 1.35], fog: ['#c8c0f0', 120, 360], env: .3, rim: ['#b8f0e8', .7],
+    },
+    alien: { name: 'Zoomers', body: '#4fd8c8', eye: 2, ant: 2, shape: 'balloon', move: 'float', note: 720, hi: 'Wheee! We are Zoomers! Here you can float, fly up, and walk on the ceiling!', iris: '#3a2a8a' },
+  },
 ];
 export const DIM = Object.fromEntries(DIMENSIONS.map(d => [d.id, d]));
 export const isDimension = id => !!DIM[id];

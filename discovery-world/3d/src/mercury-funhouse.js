@@ -163,7 +163,8 @@ export function mercuryFunhouse(k) {
     G.interact.push({ x: x(271), y: F2, layer: 'space', disc: 'mercuryupsidedown', run: () => room.children[0].userData.tap(), hintY: 2.4 }); }
   // ---------------- F2d: THE LIGHT GAME (280–300): four giant buttons and lamps. Copy the lights the lamps show ----------------
   { const cols = ['#ff4f6a', '#ffd23f', '#5aa8ff', '#7fe0a0'], notes = [330, 392, 494, 587], lamps = [], btns = [], x0 = 284;
-    cols.forEach((c, i) => { const lx = x(x0 + i * 3.6), lb = makeBatch(); lb.put(G0.cyl, lx, F2 + 4.4, ZB + .7, '#ffffff', [.08, 2, .08]); k.add(mesh(lb, shinyMat()));
+    const lb = makeBatch(); // (build 138: the four lamp cords in one mesh, not four)
+    cols.forEach((c, i) => { const lx = x(x0 + i * 3.6); lb.put(G0.cyl, lx, F2 + 4.4, ZB + .7, '#ffffff', [.08, 2, .08]); if (i === cols.length - 1) k.add(mesh(lb, shinyMat()));
       const lamp = new THREE.Mesh(G0.ball, toy(c, { em: c, ei: .05 })); lamp.position.set(lx, F2 + 3.2, ZB + .8); lamp.scale.setScalar(.6); k.add(lamp); lamps.push(lamp);
       const bt = new THREE.Group(); bt.position.set(lx, F2, -2.2); k.add(bt); const bb = makeBatch(); bb.put(G0.cyl, 0, .2, 0, '#ffffff', [.85, .4, .85]); bb.put(G0.cyl, 0, .48, 0, c, [.7, .16, .7]); bt.add(mesh(bb, shinyMat())); btns.push(bt); });
     let seq = [], pos = 0, show = -1, showT = 0, lit = [0, 0, 0, 0], round = 0, done = false; const reward = addStar(x0 + 5.4, F2 + 4.6, true);

@@ -12,6 +12,23 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 139: the giant toy balls don't block her
+- In the Giant Toy Universe, walking into a giant ball now hops her up onto it, and it bounces her along: she can always get by.
+
+## 3D build 138: a little faster on the rocky planets
+- Each area's craters and rocks on Mercury, Mars, the Moon, Pluto and the other rocky places are drawn together (4–6 fewer
+  draw calls), and the funhouse light game's lamp cords are one piece. Nothing to see: the same look, a little less work.
+
+## 3D build 137: the Wacky Gravity World
+- A fifth 🌀 wormhole: gravity changes from place to place. Giant floaty jumps in the moon-bounce meadow, an anti-gravity lift
+  that floats her up to a sky platform (and a slide back down), a flip corridor where orange stripes put her on the ceiling,
+  the gravity wheel (all the way round, upside down at the top), a floating obstacle course on moving platforms, the gravity
+  well launcher, and the pets Zoom and Floaty. Flying into any wormhole now finishes building the world under the warp swirl.
+
+## 3D build 136: the Squishy Jelly World
+- A fourth 🌀 wormhole: everything is wobbly jelly. Bounce on jelly hills, cross the wobbly bridge, climb the jelly tower and
+  slide down, bounce higher and higher in the jelly trampoline park, walk into the jelly house, meet Gummy and Wiggle.
+
 ## 3D build 135: build your own house, the castle inside, the bubble house
 - In the Giant Toy Universe, Dawson builds her OWN brick house (colours, windows, her door) and walks inside it. The upside-down
   castle and the Big Bubble House can be explored inside. ⏫ ⏬ fly up and down in open space. Toy balls are solid; the toy

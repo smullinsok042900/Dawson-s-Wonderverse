@@ -186,7 +186,7 @@ export const STORY_FRIENDS = {
 // where each one lives (streamed with its district, like the family's drawing friends)
 export const STORY_FRIEND_HOMES = [
   { kind: 'singerjuno', district: 'artplaza', x: 856.5, z: -4.4 },
-  { kind: 'singerrosa', district: 'artplaza', x: 845, z: -4.6 },
+  { kind: 'singerrosa', district: 'artplaza', x: 843.5, z: -4.6 },
   { kind: 'singermina', district: 'artplaza', x: 870.5, z: -4.6 },
   { kind: 'stripycat', district: 'toytown', x: 604, z: -4.6 },
   { kind: 'iceprincess', district: 'frosty', x: -342.5, z: -4.2 },
@@ -197,7 +197,7 @@ export const STORY_FRIEND_HOMES = [
   { kind: 'pupginger', district: 'farm', x: -428, z: -4.2 },
   { kind: 'pupdotty', district: 'farm', x: -450.5, z: -3.9 },
   { kind: 'pupfluffy', district: 'toytown', x: 570, z: -3.9 },
-  { kind: 'pupwaffles', district: 'toytown', x: 593, z: -3.8 },
+  { kind: 'pupwaffles', district: 'toytown', x: 593.5, z: -3.8 },
   { kind: 'pupnoodle', district: 'farm', x: -454.5, z: -4.2 },
   { kind: 'pupblizzard', district: 'frosty', x: -357, z: -3.8 },
   { kind: 'pupsunny', district: 'hills', x: -730, z: -3.8 },

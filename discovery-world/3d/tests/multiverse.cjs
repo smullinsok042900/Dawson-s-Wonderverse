@@ -97,10 +97,17 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('she climbs the giant block steps to the lookout on top (by walking: each block is a step)', climbed, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-blocks.jpg'), type: 'jpeg', quality: 85 });
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 45; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, TX);
-    await p.keyboard.down('ArrowRight'); await sleep(3500); await p.keyboard.up('ArrowRight');
-    const blocked = await p.evaluate(X => __DDW3.player.x - X, TX);
-    check('she cannot walk through a giant ball: it stops her (she jumps on top)', blocked < 49.5, 'x ' + blocked.toFixed(2));
-    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.grounded = false; }, TX);
+    // (build 139, the family's report: the balls blocked her way) walking into a ball hops her up onto it; it is still solid
+    await p.evaluate(X => { window.__thru = 0; window.__maxX = 0; const balls = [[50, 1.4], [56, 2], [62.5, 1.6], [69, 2.4]]; const f = () => { const P = __DDW3.player, x = P.x - X; window.__maxX = Math.max(window.__maxX, x);
+      for (const [bx, r] of balls) if (Math.abs(x - bx) < r * .6 && P.y < r * 2 - .8) window.__thru++; if (performance.now() < window.__untilB) requestAnimationFrame(f); }; window.__untilB = performance.now() + 20000; f(); }, TX);
+    await p.keyboard.down('ArrowRight'); await until(X => __DDW3.player.x > X + 74, TX, 20000); await p.keyboard.up('ArrowRight');
+    const walk = await p.evaluate(() => ({ maxX: +window.__maxX.toFixed(1), thru: window.__thru }));
+    check('walking into the giant balls never stops her: she hops up onto them (never through them) and gets past the last one', walk.maxX > 74 && walk.thru === 0, JSON.stringify(walk));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 76; P.y = 0; P.vy = 0; P.vx = 0; P.hopX = 0; P.grounded = true; P.facing = -1; window.__minX = 99; window.__thru = 0; const balls = [[50, 1.4], [56, 2], [62.5, 1.6], [69, 2.4]]; const f = () => { const x = P.x - X; window.__minX = Math.min(window.__minX, x); for (const [bx, r] of balls) if (Math.abs(x - bx) < r * .6 && P.y < r * 2 - .8) window.__thru++; if (performance.now() < window.__untilC) requestAnimationFrame(f); }; window.__untilC = performance.now() + 40000; f(); }, TX);
+    await p.keyboard.down('ArrowLeft'); await until(X => __DDW3.player.x < X + 46, TX, 40000); await p.keyboard.up('ArrowLeft');
+    const back = await p.evaluate(() => ({ minX: +window.__minX.toFixed(1), thru: window.__thru }));
+    check('walking BACK past the balls (◀) works too', back.minX < 46 && back.thru === 0, JSON.stringify(back));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.hopX = 0; P.driftT = 0; P.grounded = false; }, TX); // (no hop or drift left over from the walk above)
     check('the giant bouncy balls bounce her from ball to ball, to the last one', await until(X => __DDW3.player.x > X + 66, TX, 40000), 'x ' + await p.evaluate(X => (__DDW3.player.x - X).toFixed(1), TX));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 117; P.y = 0; P.vy = 0; P.vx = 0; }, TX); await sleep(6000);
     await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🚂'); __DDW3.player.x = it.x; it.run(); });
@@ -156,6 +163,65 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('the bubble pets live here (Glub and Foamy)', await p.evaluate(() => ['pet_bubblefish', 'pet_foamy'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
     await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
     check('home again from the bubbles', await p.evaluate(() => __DDW3.player.layer === '' && !__DDW3.player.ride));
+    // ===== (build 136) THE SQUISHY JELLY WORLD: a fourth wormhole =====
+    await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
+    await p.locator('#rocketPanel .rkT[data-id=deep]').tap(); await until(() => __DDW3.G.deep.active(), null, 120000);
+    await p.evaluate(() => __DDW3.G.deep.flyTo('wh:jelly'));
+    check('a fourth wormhole leads to the Squishy Jelly World', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'jelly', null, 300000));
+    await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'jelly-arrive.jpg'), type: 'jpeg', quality: 85 });
+    const JX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 22; P.y = 4; P.vy = 0; P.vx = 0; P.grounded = false; }, JX);
+    check('a jelly hill bounces her up', await until(() => __DDW3.player.vy > 5, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 120; P.y = 0; P.vy = 0; }, JX); await sleep(6000);
+    const sag = await p.evaluate(async X => { const P = __DDW3.player; P.x = X + 110 + 18; P.y = 3; P.vy = 0; P.grounded = false; await new Promise(r => setTimeout(r, 2500)); const ys = []; for (let n = 0; n < 20; n++) { await new Promise(r => setTimeout(r, 100)); ys.push(P.y); } return { lo: Math.min(...ys), g: P.grounded }; }, JX);
+    check('the wobbly bridge sags under her (and carries her: she stays on it)', sag.g && sag.lo < 1.95 && sag.lo > 1.4, JSON.stringify(sag));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 44; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, JX);
+    await p.evaluate(() => { window.__maxY = 0; window.__slid = false; const f = () => { const P = __DDW3.player; if (P.grounded && !P.ride) window.__maxY = Math.max(window.__maxY, P.y); if (P.ride) window.__slid = true; if (performance.now() < window.__untilT) requestAnimationFrame(f); }; window.__untilT = performance.now() + 14000; f(); });
+    await p.keyboard.down('ArrowRight'); await sleep(14000); await p.keyboard.up('ArrowRight');
+    const tw = await p.evaluate(() => ({ maxY: window.__maxY, slid: window.__slid }));
+    check('she climbs the jelly tower step by step (walking) to the top, and walking on starts the jelly slide', tw.maxY >= 4.8 && tw.slid, JSON.stringify(tw)); // (the slide only starts when she stands on the 7.2 m top step, so `slid` proves she reached it; at 1–2 test frames a second the top is crossed in one or two frames)
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🛝' && i.y > 7); if (it) { const P = __DDW3.player; P.x = it.x; P.y = it.y; P.grounded = true; it.run(); } });
+    check('the jelly slide brings her down', await until(() => !__DDW3.player.ride && __DDW3.player.y < .6, null, 30000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 230; P.y = 0; }, JX); await sleep(6000);
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 38; P.y = 4; P.vy = 0; P.grounded = false; }, JX);
+    check('the biggest jelly trampoline bounces her very high', await until(() => __DDW3.player.vy > 15, null, 15000));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 60; P.y = 0; P.vy = 0; P.grounded = true; const it = __DDW3.G.interact.find(i => i.action === 'Into the jelly house!'); it.run(); }, JX); await sleep(2500);
+    check('she goes into the squishy jelly house', await p.evaluate(() => __DDW3.player.z < -2.5));
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go outside' && i.icon === '🚪' && Math.abs(i.x - __DDW3.player.x) < 8); it && it.run(); }); await sleep(1500);
+    check('and back out', await p.evaluate(() => __DDW3.player.z > -1));
+    check('the jelly pets live here (Gummy and Wiggle)', await p.evaluate(() => ['pet_gummybear', 'pet_jellyblob'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
+    await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
+    check('home again from the jelly', await p.evaluate(() => __DDW3.player.layer === ''));
+    // ===== (build 137) THE WACKY GRAVITY WORLD: a fifth wormhole; gravity changes from zone to zone =====
+    await p.evaluate(() => { const P = __DDW3.player; P.x = 120; P.y = 0; P.z = 0; __DDW3.G.openRocket(); }); await until(() => document.querySelector('#rocketPanel.show'), null, 10000);
+    await p.locator('#rocketPanel .rkT[data-id=deep]').tap(); await until(() => __DDW3.G.deep.active(), null, 120000);
+    await p.evaluate(() => __DDW3.G.deep.flyTo('wh:wacky'));
+    check('a fifth wormhole leads to the Wacky Gravity World', await until(() => __DDW3.player.layer === 'space' && __DDW3.G.space.here() === 'wacky', null, 300000));
+    await sleep(1500); await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'wacky-arrive.jpg'), type: 'jpeg', quality: 85 });
+    const WX = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1);
+    await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 18; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; }, WX); await sleep(1500);
+    const moon = await p.evaluate(async () => { const P = __DDW3.player, s = __DDW3.G.gravScale; P.vy = 9; P.grounded = false; let top = 0; for (let n = 0; n < 40; n++) { await new Promise(r => setTimeout(r, 100)); top = Math.max(top, P.y); } return { s, top }; });
+    check('the moon-bounce meadow has floaty gravity: the same jump goes much higher', moon.s < .3 && moon.top > 6, JSON.stringify(moon)); // (a 9 m/s jump: 1.7 m in normal gravity, about 7.7 m here)
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 52; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; }, WX);
+    check('the anti-gravity lift floats her up onto the sky platform (and she stays there)', await until(() => { const P = __DDW3.player; return P.grounded && Math.abs(P.y - 12) < .05; }, null, 30000) && (await sleep(2500), await p.evaluate(() => __DDW3.player.grounded && Math.abs(__DDW3.player.y - 12) < .05)));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 2; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; }, WX); await sleep(6000);
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 110 + 13; }, WX); await sleep(800); await p.evaluate(X => { __DDW3.player.x = X + 110 + 15.5; }, WX);
+    const fl = await until(() => __DDW3.G.gravSign === -1 && __DDW3.player.grounded && Math.abs(__DDW3.player.y - 8) < .05, null, 30000);
+    check('an orange stripe in the flip corridor flips gravity: she falls UP and walks on the ceiling, head down', fl && await p.evaluate(() => __DDW3.G.flipK > .9), JSON.stringify(await p.evaluate(() => ({ y: __DDW3.player.y, s: __DDW3.G.gravSign, k: __DDW3.G.flipK }))));
+    await p.evaluate(X => { __DDW3.player.x = X + 110 + 23; }, WX); await sleep(800); await p.evaluate(X => { __DDW3.player.x = X + 110 + 25.5; }, WX);
+    check('the next stripe flips her back down to the floor', await until(() => __DDW3.G.gravSign === 1 && __DDW3.player.grounded && __DDW3.player.y < .5 && __DDW3.G.flipK < .05, null, 30000));
+    const wheel = await p.evaluate(async () => { const it = __DDW3.G.interact.find(i => i.icon === '🎡' && i.action === 'Gravity wheel!'); if (!it) return -1; const P = __DDW3.player; P.x = it.x; P.y = 0; it.run(); let k = 0, top = 0; for (let n = 0; n < 400 && P.ride; n++) { await new Promise(r => setTimeout(r, 100)); k = Math.max(k, __DDW3.G.flipK); top = Math.max(top, P.y); } return { k, top, ride: !!P.ride }; });
+    check('the gravity wheel takes her all the way round, upside down at the top', wheel.k > .8 && wheel.top > 11 && !wheel.ride, JSON.stringify(wheel));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 230; P.y = 0; P.vy = 0; P.grounded = true; }, WX); await sleep(6000);
+    check('the floating obstacle course has low gravity', await p.evaluate(() => __DDW3.G.gravScale < .5));
+    const carry = await p.evaluate(async X => { const pl = __DDW3.G.platforms.find(q => q.layer === 'space' && Math.abs((q.a + q.b) / 2 - (X + 220 + 12)) < 3 && Math.abs(q.y - 2) < .3 && q.b - q.a === 3); if (!pl) return -1; const P = __DDW3.player; P.x = (pl.a + pl.b) / 2; P.y = pl.y; P.vy = 0; P.grounded = true; let lo = P.x, hi = P.x, on = 0; for (let n = 0; n < 60; n++) { await new Promise(r => setTimeout(r, 100)); if (P.grounded && P.x >= pl.a - .01 && P.x <= pl.b + .01) on++; lo = Math.min(lo, P.x); hi = Math.max(hi, P.x); } return { moved: hi - lo, on }; }, WX);
+    check('a moving platform carries her along', carry.moved > .5 && carry.on > 55, JSON.stringify(carry));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 220 + 84; P.y = 2; P.vy = 0; P.vx = 0; P.grounded = false; }, WX);
+    const well = await p.evaluate(async () => { const P = __DDW3.player; let top = 0, v = 0; for (let n = 0; n < 80; n++) { await new Promise(r => setTimeout(r, 100)); top = Math.max(top, P.y); v = Math.max(v, P.vy); } return { top, v }; });
+    check('the gravity well launches her super high (and she floats down slowly)', well.v > 12 && well.top > 12, JSON.stringify(well));
+    check('the wacky pets live here (Zoom and Floaty)', await p.evaluate(() => ['pet_zoomzoom', 'pet_floatyfox'].every(d => __DDW3.G.interact.some(i => i.disc === d))));
+    await p.evaluate(() => __DDW3.G.space.goHome()); await sleep(1500);
+    check('home again from the wacky world, with gravity back to normal', await p.evaluate(() => __DDW3.player.layer === '' && __DDW3.G.gravSign === 1 && (__DDW3.G.gravScale || 1) === 1 && !__DDW3.G.flipK));
     check('no page errors', !errs.length, errs.slice(0, 3).join(' | '));
   } catch (e) { console.log('FAIL exception: ' + e.message); fail++; }
   finally { console.log(`${ok} checks passed`); await b.close(); process.exit(fail ? 1 : 0); }

@@ -287,7 +287,7 @@ function spaceLight(L) {
   sky.visible = !L; renderer.shadowMap.needsUpdate = true;
 }
 G.space = space;
-const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest), hasPet: () => !!(G.followerCount && G.followerCount()) });
+const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest), preload: id => space.prepare(id).catch(() => { }), /* (build 137) a wormhole starts building its world under the warp swirl */ hasPet: () => !!(G.followerCount && G.followerCount()) });
 G.deep = deep;
 // (build 126) landing on a planet flown up to in open space: the normal landing (the rocket comes down onto that planet's pad)
 // (The rocket she took off in may not exist any more: the place it stands on is freed while she is far away in space, so
@@ -573,7 +573,7 @@ G.useLift = () => {
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
 // (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
 // countdown, and off you fly. Earth (first) takes you home to the launch pad.
-const ROCKET_NAMES = { bubble: 'the Bubble Universe', toy: 'the Giant Toy Universe', upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
+const ROCKET_NAMES = { wacky: 'the Wacky Gravity World', jelly: 'the Squishy Jelly World', bubble: 'the Bubble Universe', toy: 'the Giant Toy Universe', upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
 let rocketPanel = null, launching = false, blastBtn = null, flightSequence = 0;
 // (build 48) A REAL ROCKET RIDE. PAW (or a tap) at the rocket: she walks up and climbs in, and her face shows in the round
 // window. The planet pictures come up; after she picks one, a BIG RED BUTTON appears. Pressing it starts the countdown
@@ -1097,7 +1097,7 @@ function updatePlayer(dt) {
   const top = (swim ? (P.layer === 'sea' ? 3.6 : 2.2) : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
   const gs = P.layer === 'space' && G.gravSign === -1 ? -1 : 1; // (build 131) the Upside-Down World: gravity can point UP
-  // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
+  // solid things: you can't walk through them. Low ones (up to 1.25 high, or the solid's own `hopMax`) you hop up onto by yourself.
   if (gs > 0) for (const s of solidIndex.query(G.solids, P.x, P.layer, frameNow)) {
     if (s.layer !== P.layer || P.y >= s.top - .02 || P.y + 1.4 <= (s.bottom ?? 0)) continue;
     const L = s.a - .35, Rr = s.b + .35;
@@ -1105,13 +1105,13 @@ function updatePlayer(dt) {
       const fromLeft = ox <= L + .001, fromRight = ox >= Rr - .001;
       if (!fromLeft && !fromRight) continue; // already inside (e.g. just landed): don't trap
       P.x = fromLeft ? L : Rr;
-      if ((P.grounded || P.swim) && s.top - P.y <= 1.25 && Math.sign(P.vx) === (fromLeft ? 1 : -1)) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = fromLeft ? 1 : -1; }
+      if ((P.grounded || P.swim) && s.top - P.y <= (s.hopMax || 1.25) && Math.sign(P.vx) === (fromLeft ? 1 : -1)) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = fromLeft ? 1 : -1; }
       else P.vx = 0;
     }
   }
   P.z += (P.groundZ - P.z) * Math.min(1, dt * 6);
   const oldY = P.y, wasG = P.grounded;
-  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * (P.layer === 'space' ? (G.spaceG || 1) : 1) * gs * dt; /* (build 45: the real gravity of the Moon, the planets and Pluto, relative to Earth) */ if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
+  if (swim) { P.vy -= 5 * dt; if (P.vy < -.95) P.vy += (-.95 - P.vy) * Math.min(1, dt * 2); } else { P.vy -= GRAV * (P.layer === 'space' ? (G.spaceG || 1) * (G.gravScale || 1) : 1) * gs * dt; /* (build 137) G.gravScale: the Wacky Gravity World's zones */ /* (build 45: the real gravity of the Moon, the planets and Pluto, relative to Earth) */ if (P.floaty) { if (P.grounded || P.ride) P.floaty = false; else if (P.vy < -3.5) P.vy = -3.5; } } // in the deep ball pit you sink slowly; (build 43) after hopping off the whale you float down
   P.y += P.vy * dt; P.grounded = false;
   // land on the HIGHEST surface you reach (so a bouncy puff on top of a cloud wins over the cloud)
   let land = null, landStep = false;
@@ -1761,7 +1761,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '135'; G.build = GAME_BUILD;
+const GAME_BUILD = '139'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

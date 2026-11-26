@@ -4,6 +4,12 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
+## SPEED: her own character (found in build 138)
+Every view draws her character as about 33 separate meshes (head, ears, hands, tail... each its own draw call): more than any
+attraction (the Jupiter Sky Playground adds 9–14). Batching the parts that move together (a static part per bone, merged per
+bone group, or one skinned mesh) would make every place faster. Measure with the mesh listing before and after; the dress-up
+accessories and Play Together players use the same parts, so check both.
+
 ## THE MULTIVERSE (family request, 2026-11-25) — phases 1–2 done in build 131, the Toy Universe in build 132
 Wormholes in open space lead to other DIMENSIONS. Each dimension is one entry in `src/dimensions.js` (look, gravity, wormhole
 place and colours, creatures) + its areas module in `PLANET_EXTRA` (planets.js) + its landing ground in space.js. It streams
@@ -17,10 +23,12 @@ two-way islands, gravity slide, flip coaster, sky playground, Flipsies, pets Top
    state so friends see each other head-down (needs one more small field and the rules); shared rocket through a wormhole.
 2. ~~Giant Toy Universe~~ done in build 132 (more later: toy houses to walk into, a toy car race, building blocks she stacks).
 3. ~~Bubble Universe~~ done in build 133 (more later: bubble houses to go inside, a bubble race, giant bubble wands to blow).
-4. **Squishy Jelly World** (jelly hills that wobble when she lands: vertex-shader wobble, not physics; wobbly bridges).
-5. **Wacky Gravity World** (low-gravity zones, sideways tunnels, rotating gravity rings: reuses build 131's gravity rules).
-6. **Speed:** prepare each dimension's special materials (the bubble film, the wormhole swirl) during the warp swirl, so
-   arrival has no first-use hitch (build 133 measured 336–612 ms on the Bubble Universe's arrival spot).
+4. ~~Squishy Jelly World~~ done in build 136 (more later: a jelly maze, jelly cars that bounce, a jelly-making machine).
+5. ~~Wacky Gravity World~~ done in build 137 (`G.gravScale` zones; more later: sideways-gravity walls, a gravity-switch maze).
+6. **Speed** (build 137: the world is now built under the warp swirl, which stays until the frames settle; the biggest frame
+   still SEEN, 344–601 ms on desktop, comes about 5 s after arriving, when she steps out of the rocket: find what starts then
+   and spread it out — it was there in build 136 too, 458–462 ms): prepare each dimension's special materials (the bubble film, the wormhole swirl) during the warp swirl, so
+   arrival has no first-use hitch (build 133 measured 336–612 ms on the Bubble Universe's arrival spot; build 136 646–833 ms on the Jelly World's).
 7. Tiny & Giant (P.sizeMul already exists), Rainbow Chaos, Clockwork, Mirror Reality, Dream Dimension, then new ideas.
 Measure each on desktop and on the iPhone (Performance Test) before the next.
 
