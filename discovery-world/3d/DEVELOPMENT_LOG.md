@@ -15,7 +15,9 @@ opens** and she **steers it down with ◀ ▶** to two more stars, landing softl
 the parachute hops off (she floats down gently). The pink button still launches the rocket empty, as before.
 - The first test found the two side stars too far apart for anyone to catch both (the parachute fell past the second one):
   the parachute now sinks more slowly (1.6 m/s) and steers a little faster, and the stars are closer (726, 11 m and 733, 6 m).
-- Tests: the new `tests/lab-rocket.cjs` (7 checks) all pass; speed and the full smoke test: see below. Desktop, software
+- Tests: the new `tests/lab-rocket.cjs` (7 checks) all pass. The first full smoke run was 344/345: Rosa the Singer (Art Plaza,
+  not changed in this build) got her first hello from 🐾 instead of her song, because the touch before it had not registered in time;
+  `craft-friends.cjs` alone then passed with no failures, and **the full smoke test run again: 345/345**. Desktop, software
   rendering; not tried on the iPhone.
 
 ## Checkpoint: build 141 — Art Plaza's PAINT-POT BALLOON (ATTRACTIONS row 5)
