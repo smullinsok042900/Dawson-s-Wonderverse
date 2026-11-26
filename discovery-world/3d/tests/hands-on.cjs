@@ -31,7 +31,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   await ev(() => __DDW3.teleport(-306)); await until(() => !!__DDW3.G.interact.find(i => i.disc === 'snowball'), null, 120000); await sleep(1500);
   await ev(() => { const P = __DDW3.player; P.x = -306; P.y = 0; P.vx = 0; __DDW3.G.interact.find(i => i.disc === 'snowball').run(); });
   check('snowball: tap the snow pile and she makes a snowball (in her hand)', await ev(() => !!__DDW3.G.holding) && await toastHas('tap the target'));
-  const ring = r => m => m.geometry.type === 'CylinderGeometry' && Math.abs(m.geometry.parameters.radiusTop - 1) < .01 && Math.abs(m.position.x + 312) < .01;
+  const ring = m => m.geometry.type === 'CylinderGeometry' && Math.abs(m.geometry.parameters.radiusTop - 1) < .01 && Math.abs(m.position.x + 312) < .01;
   await ev(w => __tapAt(eval(w), [-312, 2, -3.8]), ring.toString());
   check('snowball: tap the middle of the target: it flies there, BULLSEYE', await until(() => __DDW3.world.disc.has('bullseye'), null, 15000) && await toastHas('BULLSEYE'));
   await ev(() => __DDW3.G.interact.find(i => i.disc === 'snowball').run()); await toastHas('tap the target'); await ev(w => __tapAt(eval(w), [-311.2, 2.1, -3.8]), ring.toString());

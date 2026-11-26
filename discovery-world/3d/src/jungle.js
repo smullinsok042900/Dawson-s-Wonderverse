@@ -94,12 +94,12 @@ function river(k) {
 function treehouses(k) {
   const s = k.s0, b = K.makeBatch(), P = k.P, T1 = s + 20, T2 = s + 44, TY = 7;
   b.put(BOX, T2 + 3.6, TY - .15, -1.4, '#a8743a', [1.2, .3, 3.2]); k.plat(T2 + 3, T2 + 4.2, TY, { z: -1.4 }); /* (the second deck reaches the zip line's start, so she cannot step off before it) */ for (const x of [T1, T2]) { b.put(CYL, x, TY / 2, -2.6, '#6a4a2a', [.7, TY + 2, .7]); b.put(BOX, x, TY - .15, -1.4, '#a8743a', [6, .3, 3.2]); b.put(BOX, x, TY + 1.5, -2.6, '#c8925a', [4, 3, .2]); b.put(CONE, x, TY + 3.8, -1.8, '#3fbf5a', [3.8, 1.8, 2.8], [0, Math.PI / 4, 0]);
-    for (let j = 0; j < 5; j++) b.put(LEAF, x + Math.cos(j * 1.3) * 3, TY + 5 + (j % 2), -2.6 + Math.sin(j * 1.3), GREENS[j % 4], [2.4, 1.6, 2]); k.plat(x - 3, x + 3, TY, { z: -1.4 }); }
+    for (let j = 0; j < 5; j++) b.put(LEAF, x + Math.cos(j * 1.3) * 3, TY + 5 + (j % 2), -2.6 + Math.sin(j * 1.3), GREENS[j % 4], [2.4, 1.6, 2]); k.plat(x - 3, x + 3, TY, { z: -1.4, step: true, stepMax: .6 }); }
   // the rope ladder up to the first treehouse: rungs she climbs by walking into them (each a little step)
   for (let j = 0; j < 9; j++) { const x = T1 - 6 + j * .38, y = .8 + j * .78; b.put(CYL, x, y - .1, -1.3, '#c8925a', [.06, 1.1, .06], [Math.PI / 2, 0, 0]); k.plat(x - .3, x + .3, y, { z: -1.3, step: true, stepMax: .9 }); }
   for (const dz of [-1.85, -.75]) b.put(CYL, T1 - 4.5, 3.7, dz, '#a8743a', [.04, 8, .04], [0, 0, -.45]); // (the ladder's two side ropes)
   // the rope bridge between them: planks that sag a little as she walks
-  const planks = []; for (let j = 0; j < 9; j++) { const x = T1 + 3.6 + j * 1.9, m = new THREE.Mesh(BOX, new THREE.MeshStandardMaterial({ color: '#b07a4a', roughness: .8 })); m.scale.set(1.7, .14, 1.8); m.position.set(x, TY - .1, -1.4); m.userData.dynamic = true; k.add(m); const p = { a: x - .95, b: x + .95, y: TY, layer: 'space', z: -1.4 }; k.G.platforms.push(p); planks.push({ m, p, x }); }
+  const planks = []; for (let j = 0; j < 9; j++) { const x = T1 + 3.6 + j * 1.9, m = new THREE.Mesh(BOX, new THREE.MeshStandardMaterial({ color: '#b07a4a', roughness: .8 })); m.scale.set(1.7, .14, 1.8); m.position.set(x, TY - .1, -1.4); m.userData.dynamic = true; k.add(m); const p = { a: x - .95, b: x + .95, y: TY, layer: 'space', z: -1.4, step: true, stepMax: .6 }; k.G.platforms.push(p); planks.push({ m, p, x }); } // (step: the planks sag in a curve, so on the way up each one is a little higher)
   for (const dz of [-2.3, -.5]) b.put(CYL, (T1 + T2) / 2, TY + .9, dz, '#c8925a', [.04, T2 - T1 - 6, .04], [0, 0, Math.PI / 2]);
   k.U.push((dt, t) => { for (const [j, q] of planks.entries()) { const sag = -Math.sin((j + 1) / 10 * Math.PI) * .45 + Math.sin(t * 2 + j) * .03, on = P.grounded && !P.ride && Math.abs(P.y - q.p.y) < .1 && P.x >= q.p.a && P.x <= q.p.b; q.p.y = TY + sag; q.m.position.y = TY + sag - .1; if (on) P.y = q.p.y; } });
   // THE ZIP LINE from the second treehouse down to the jungle floor
