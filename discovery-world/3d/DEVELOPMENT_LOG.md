@@ -18,7 +18,7 @@ one. Walking back with ◀ works the same way.
 - **Her brick house moved** (the family: half of it was hidden behind the last giant ball): the house now stands at +92 with
   its builder (the 🧱 brick pile) at +90, in the open; the wind-up key and the clockwork parade took its old place (+75, +78.5).
   Her saved house is kept (only its place changed).
-- Tests: `multiverse.cjs` 64/64; unit tests 142/142; full smoke test: see below. Desktop, software rendering; not tried on the iPhone.
+- Tests: `multiverse.cjs` 64/64; unit tests 142/142; **full smoke test 345/345**. Desktop, software rendering; not tried on the iPhone.
 
 ## Checkpoint: build 138 — speed: the rocky planets' rocks, and what the Sky Playground really costs
 From the ATTRACTIONS checklist (row 2: the Jupiter Sky Playground; row 4: the Mercury funhouse, both marked slower). A new
