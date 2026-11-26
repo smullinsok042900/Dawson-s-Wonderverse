@@ -19,7 +19,7 @@ are in `PERFORMANCE_LOG.md`.
   `Object.assign`, which three.js does not allow): fixed. Pictures showed a one-colour sail and a kite resting too high to
   see: now rainbow stripes, resting low over its post.
 - Tests: the new `tests/sky-kite.cjs` (5 checks) all pass; the start screen checked in the browser (12 pictures, a pick is
-  kept after a reload, no errors); unit tests 142/142; full smoke test: see below. `tests/android-rendering.cjs` fails before
+  kept after a reload, no errors); unit tests 142/142; **full smoke test 345/345**. `tests/android-rendering.cjs` fails before
   and after this build: it looks for `function renderPortraits() {` in the source, renamed in build 101 (NEXT_TASKS).
   Desktop, software rendering; not tried on the iPhone.
 
