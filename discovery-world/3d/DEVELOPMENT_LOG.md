@@ -10,7 +10,13 @@ are in `PERFORMANCE_LOG.md`.
 - The picture of where a secret tunnel leads looked broken and speckled on the phone. It sat at the same depth as the round
   stone disc behind it (and the rock bulged to almost that depth at its bottom), so the two flickered through each other.
   Now a stone RING frames the picture (nothing behind it at that depth), and the picture sits well in front of the rock.
-- Verified: unit tests; the page builds. Desktop (software rendering): checked in the browser after the running tests.
+- **The lighthouse room's stairs had two gaps** (found by the new test): at the first landing the next flight began just past its
+  edge, so turning there dropped her back onto the flight below; the second landing ended before the stair. Both now overlap.
+- **"The lighthouse is still gone":** the picture was of Ocean Pier (the crates with the gem, the dolphin-show hoop), not
+  Sunny Beach; the lighthouse is on Sunny Beach, the beach nearest home (checked there in an iPhone-sized browser).
+- Verified (desktop, software rendering): `insides.cjs` 12/12 (drawn and with `&norender`), `multiverse.cjs` 65/65 (the brick
+  house room and toy box), `hands-on.cjs` and `ocean.cjs` all passed on build 149; unit tests 142/142. Pictures checked:
+  igloo, lighthouse lamp room, tunnel, brick-house room.
 
 ## Checkpoint: build 149 — real rooms inside (the family's request: "like walking into an actual house")
 - **The igloo and the lighthouse** (new `src/rooms.js`): the door takes her INTO A ROOM of its own (no see-through bubble):

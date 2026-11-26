@@ -88,9 +88,9 @@ export function initRooms(k) {
     // the stairs: three flights back and forth, with landings, up to the lamp room
     const step = (x, y) => { b.put(BOX, x, y - .12, -1.1, '#b07a4a', [1.2, .24, 2.4]); b.put(BOX, x, (y - .24) / 2, -2.3, '#8a5a3a', [.14, Math.max(.05, y - .24), .14]); plats.push({ a: x - .6, b: x + .6, y, z: 0, layer: 'room', step: true, stepMax: .75 }); };
     for (let i = 0; i < 7; i++) step(2.6 + i * 1.2, .6 * (i + 1)); // flight 1, going right: up to 4.2
-    b.put(BOX, 11.1, 4.8 - .12, -1.1, '#b07a4a', [1.6, .24, 2.4]); plats.push({ a: 10.3, b: 11.85, y: 4.8, z: 0, layer: 'room', step: true, stepMax: .75 }); // landing
-    for (let i = 0; i < 7; i++) step(9.4 - i * 1.2, 5.4 + .6 * i); // flight 2, going left: up to 9
-    b.put(BOX, .95, 9.6 - .12, -1.1, '#b07a4a', [1.6, .24, 2.4]); plats.push({ a: .15, b: 1.7, y: 9.6, z: 0, layer: 'room', step: true, stepMax: .75 }); // landing
+    b.put(BOX, 11.03, 4.8 - .12, -1.1, '#b07a4a', [1.65, .24, 2.4]); plats.push({ a: 10.2, b: 11.85, y: 4.8, z: 0, layer: 'room', step: true, stepMax: .75 }); // landing
+    for (let i = 0; i < 7; i++) step(9.7 - i * 1.2, 5.4 + .6 * i); // flight 2, going left: up to 9 (its first stair overlaps the landing, so turning there never drops her)
+    b.put(BOX, 1.1, 9.6 - .12, -1.1, '#b07a4a', [1.9, .24, 2.4]); plats.push({ a: .15, b: 2.05, y: 9.6, z: 0, layer: 'room', step: true, stepMax: .75 }); // landing
     for (let i = 0; i < 7; i++) step(2.6 + i * 1.2, 10.2 + .6 * i); // flight 3, going right: up to 13.8
     b.put(BOX, 11.1, 14.4 - .12, -1.1, '#b07a4a', [1.6, .24, 2.4]); plats.push({ a: 10.3, b: 11.85, y: 14.4, z: 0, layer: 'room', step: true, stepMax: .75 });
     b.put(BOX, 5.2, 14.4 - .12, -1.6, '#c8925a', [10.2, .24, 3.4]); plats.push({ a: .15, b: 10.3, y: 14.4, z: 0, layer: 'room', step: true, stepMax: .75 }); // the lamp-room floor

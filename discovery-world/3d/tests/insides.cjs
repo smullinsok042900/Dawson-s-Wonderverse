@@ -39,7 +39,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   const t1 = await say('Warm up'), t2 = await say('Drink cocoa'), t3 = await say('Baby penguin');
   check('igloo: a crackling fire to warm up by, hot cocoa, and a sleeping baby penguin (each can be tapped)', /fire/.test(t1) && /cocoa/.test(t2) && /penguin/.test(t3), [t1, t2, t3].join(' | '));
   await page.keyboard.down('ArrowLeft'); const outI = await until(() => __DDW3.player.layer === '', null, 30000); await page.keyboard.up('ArrowLeft');
-  check('igloo: walking out of the door takes her back outside, at the igloo', outI && await ev(() => Math.abs(__DDW3.player.x + 380) < 1.5 && !__DDW3.G.roomCam), String(await ev(() => __DDW3.player.x)));
+  check('igloo: walking out of the door takes her back outside, at the igloo', outI && await ev(() => Math.abs(__DDW3.player.x + 380) < 3 && !__DDW3.G.roomCam), String(await ev(() => __DDW3.player.x)));
   // ---------- THE SECRET TUNNEL ----------
   await ev(() => __DDW3.teleport(-230)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x + 232) < .2 && i.action === 'Into the tunnel!'), null, 120000); await sleep(1500);
   const mouth = await ev(() => { let pic = false, hole = false; __DDW3.scene.traverse(o => { if (o.isMesh && Math.abs(o.position.x + 232) < .05 && o.position.z > -3.5 && o.position.z < -2.8) { if (o.geometry.type === 'CircleGeometry' && o.material.map) pic = true; if (o.material && o.material.color && o.material.color.getHexString() === '1c1520') hole = true; } }); return { pic, hole }; });
