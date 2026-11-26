@@ -16,7 +16,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   await ev(() => __DDW3.teleport(-551)); await until(() => !!__DDW3.G.interact.find(i => i.disc === 'fishing'), null, 120000); await sleep(1500);
   await ev(() => { const P = __DDW3.player; P.x = -551; P.y = 0; P.vx = 0; __DDW3.G.interact.find(i => i.disc === 'fishing').run(); });
   check('fishing: she takes the rod (it is in her hand)', await ev(() => !!__DDW3.G.holding));
-  const water = m => m.geometry.type === 'PlaneGeometry' && m.geometry.parameters.width === 26;
+  const water = m => m.geometry.type === 'PlaneGeometry' && m.geometry.parameters.width === 60;
   check('fishing: tap the water to cast: the bobber flies out to that spot', await ev(w => __tapAt(eval(w), [-548, .08, -12]), water.toString()) && await until(() => { let ok = false; __DDW3.scene.traverse(o => { if (o.isMesh && o.visible && o.geometry.type === 'SphereGeometry' && Math.abs(o.position.z + 12) < .3 && Math.abs(o.position.x + 548) < .3 && o.position.y < .3) ok = true; }); return ok; }, null, 10000));
   const toastHas = s => until(s => (document.getElementById('toast').textContent || '').includes(s), s, 15000);
   check('fishing: wait... the bobber dips: "A bite!"', await toastHas('A bite'));
@@ -27,6 +27,17 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('fishing: too slow, and the fish swims away (cast again)', await toastHas('swam away'));
   await ev(() => { __DDW3.player.x = -540; }); await sleep(1500);
   check('fishing: walking away puts the rod back on its stand', await ev(() => !__DDW3.G.holding));
+  // (build 148, the family's report: "it doesn't let you cast, it just puts the rod back") like a finger: 🐾 again casts, and a
+  //  real tap on the screen far out on the sea casts there (it used to walk her away, and the rod went back on its stand)
+  const bobOut = () => until(() => { let ok = false; __DDW3.scene.traverse(o => { if (o.isMesh && o.visible && o.geometry.type === 'SphereGeometry' && o.position.z < -6 && o.position.y < .3 && Math.abs(o.position.x + 552) < 12) ok = true; }); return ok; }, null, 10000);
+  await ev(() => { const P = __DDW3.player; P.x = -551; P.y = 0; P.vx = 0; __DDW3.snap && __DDW3.snap(); __DDW3.G.interact.find(i => i.disc === 'fishing').run(); }); await sleep(800);
+  await ev(() => __DDW3.G.interact.find(i => i.disc === 'fishing').run());
+  check('fishing: pressing 🐾 again casts the line (the rod stays in her hand)', await bobOut() && await ev(() => !!__DDW3.G.holding));
+  await ev(() => { __DDW3.player.x = -540; }); await sleep(1500); await ev(() => { const P = __DDW3.player; P.x = -551; P.vx = 0; __DDW3.G.interact.find(i => i.disc === 'fishing').run(); }); await sleep(1500);
+  const far = await ev(() => { const v = new __DDW3.THREE.Vector3(-549, .08, -40).project(__DDW3.camera), r = __DDW3.renderer.domElement.getBoundingClientRect(); return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height }; });
+  await page.mouse.click(far.x, far.y); await sleep(500);
+  check('fishing: a real tap far out on the sea casts there (she keeps the rod)', await bobOut() && await ev(() => !!__DDW3.G.holding && Math.abs(__DDW3.player.x + 551) < 1), JSON.stringify(far));
+  await ev(() => { __DDW3.player.x = -540; }); await sleep(1500);
   // ---------- SNOWBALLS ----------
   await ev(() => __DDW3.teleport(-306)); await until(() => !!__DDW3.G.interact.find(i => i.disc === 'snowball'), null, 120000); await sleep(1500);
   await ev(() => { const P = __DDW3.player; P.x = -306; P.y = 0; P.vx = 0; __DDW3.G.interact.find(i => i.disc === 'snowball').run(); });
@@ -36,6 +47,8 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('snowball: tap the middle of the target: it flies there, BULLSEYE', await until(() => __DDW3.world.disc.has('bullseye'), null, 15000) && await toastHas('BULLSEYE'));
   await ev(() => __DDW3.G.interact.find(i => i.disc === 'snowball').run()); await toastHas('tap the target'); await ev(w => __tapAt(eval(w), [-311.2, 2.1, -3.8]), ring.toString());
   check('snowball: a throw at the edge lands there (not the middle)', await toastHas('On the target'));
+  await ev(() => __DDW3.G.interact.find(i => i.disc === 'snowball').run()); await toastHas('tap the target'); await ev(() => { document.getElementById('toast').textContent = ''; __DDW3.G.interact.find(i => i.disc === 'snowball').run(); });
+  check('snowball: 🐾 again throws it at the middle of the target (build 148)', await toastHas('BULLSEYE') && await ev(() => !__DDW3.G.holding));
   // ---------- THE BARN ANIMALS ----------
   await ev(() => __DDW3.teleport(-420)); await until(() => !!__DDW3.G.taps.find(t => { let ok = false; t.traverse(m => { if (m.isMesh && Math.abs(m.position.x + 420.8) < .05 && Math.abs(m.position.z + 3.5) < .05) ok = true; }); return ok; }), null, 120000); await sleep(1500);
   await ev(() => __tapAt(m => Math.abs(m.position.x + 420.8) < .05 && Math.abs(m.position.z + 3.5) < .05, [-420.8, 1.4, -3.4]));

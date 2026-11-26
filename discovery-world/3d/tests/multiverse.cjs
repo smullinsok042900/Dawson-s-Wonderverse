@@ -87,11 +87,13 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     const hb = await p.evaluate(() => ({ built: __DDW3.G.brickHouse.built(), door: __DDW3.G.brickHouse.grid().slice(0, 12).indexOf(8), saved: !!localStorage.getItem('ddw3-brickhouse') }));
     check('she builds her own brick house on the building screen (bricks, windows, her door), and it stands in the world', hb.built >= 40 && hb.door === 4 && hb.saved, JSON.stringify(hb));
     await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go inside'); __DDW3.player.x = it.x; it.run(); }); await sleep(2500);
-    const inH = await p.evaluate(() => ({ inside: __DDW3.G.brickHouse.inside(), z: __DDW3.player.z }));
-    check('through her door she goes inside her house (the front wall turns see-through)', inH.inside && inH.z < -2.5, JSON.stringify(inH));
+    const inH = await p.evaluate(X => { const C = __DDW3.camera.position, R = __DDW3.G.roomCam; return { inside: __DDW3.G.brickHouse.inside(), z: __DDW3.player.z, room: !!R, camIn: !!R && C.x > X + 91 && C.x < X + 105 && C.z < 12 && C.z > -1 }; }, TX);
+    check('through her door she goes INSIDE her house: a real room (build 149: the camera steps into the room, furnished; no see-through wall)', inH.inside && inH.z < -2.5 && inH.room && inH.camIn, JSON.stringify(inH));
+    await p.evaluate(() => { document.getElementById('toast').textContent = ''; __DDW3.G.interact.find(i => i.action === 'Open the toy box').run(); });
+    check('inside, the toy box pops its toys out', await p.waitForFunction(() => /Toys pop/.test(document.getElementById('toast').textContent), null, { timeout: 10000 }).then(() => true, () => false));
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'brick-house-inside.jpg'), type: 'jpeg', quality: 85 });
-    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go outside'); it.run(); }); await sleep(1500);
-    check('and back out through the door', await p.evaluate(() => !__DDW3.G.brickHouse.inside() && __DDW3.player.z > -1));
+    await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.action === 'Go outside' && i.layer === 'space'); it.run(); }); await sleep(1500);
+    check('and back out through the door (the room camera lets go)', await p.evaluate(() => !__DDW3.G.brickHouse.inside() && __DDW3.player.z > -1 && !__DDW3.G.roomCam));
     await p.evaluate(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 21; P.y = 0; P.vx = 0; P.facing = 1; }, TX); await sleep(500);
     await p.keyboard.down('ArrowRight'); const climbed = await until(() => __DDW3.player.y > 7.1 && __DDW3.player.grounded, null, 40000); await p.keyboard.up('ArrowRight');
     check('she climbs the giant block steps to the lookout on top (by walking: each block is a step)', climbed, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));

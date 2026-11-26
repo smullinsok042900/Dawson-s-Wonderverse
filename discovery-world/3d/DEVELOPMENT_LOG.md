@@ -6,6 +6,55 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 149 — real rooms inside (the family's request: "like walking into an actual house")
+- **The igloo and the lighthouse** (new `src/rooms.js`): the door takes her INTO A ROOM of its own (no see-through bubble):
+  walls, a floor and a ceiling all round, with a frame around the open front so nothing outside is ever seen. The camera
+  (`G.roomCam`, in `main.js`) fits the room and follows her inside it.
+  - Igloo: walls of ice blocks curving into the dome, ice windows, the round doorway, a crackling fire on a fur rug (🔥 warm up),
+    hot cocoa on an ice table (☕), a baby penguin asleep in its snow bed (🐧 a sleepy peep), little lanterns.
+  - Lighthouse: a tall tower room, red stripes, round windows on the sea; three flights of stairs back and forth (she just
+    walks: each stair steps her up) to the lamp room, where she lights the great lamp and its beam sweeps round.
+  - Walking out of the door, or 🐾 at the door, takes her back outside right at the door. Rooms are built the first time
+    she goes in (batched, in the shared paint: no new shaders), on their own layer 'room', far from the world; hidden
+    otherwise. Saving while inside saves her outside the door (also for the secret tunnel: it saved her at x -5000).
+  - Outside, the old in-place inside parts are gone (lighter districts); the doors now register through the district,
+    so they are removed with it (they were added again each time the district was rebuilt).
+- **"The tunnel doesn't work"** (the family's picture): in the secret tunnel the camera stayed at the far end of the world
+  (a white wall and rainbow posts) while she was in the tunnel. Now the camera follows her into the tunnel and stays with
+  her all the way through. The test only checked where she was, not what the camera showed: it now checks the camera too.
+- **Her brick house in the Giant Toy World:** going in, the camera steps into the house and frames the room (her own
+  brick back wall and windows, the side walls, the roof as the ceiling, a frame around the front in her colour). It is
+  furnished: bed, table and chairs with a cake, rug, lamp, bookshelf, a picture, and a toy box that pops its toys out (🧸).
+- Tests: `tests/insides.cjs` rewritten for the rooms (the camera inside each room, climbing to the lamp, the fire, cocoa
+  and penguin, out again); `tests/multiverse.cjs` checks the brick-house room camera and the toy box.
+
+## Checkpoint: build 148 — the black square by the fishing stand (the family's picture from the iPhone)
+- **Cause:** the fishing rod's reel (build 144) was given its material settings one level too deep, so its metalness was an
+  object, not a number. On the phone that drew broken pixels, and the glow pass spread them into a big black square with a
+  pale edge. Fixed at the reel. The toy-material maker now only takes a number for metalness, so this mistake cannot happen again.
+  The glow and final picture passes also clamp every pixel to a safe range, so one bad pixel can never grow into a square.
+  None of this changes the shader count or the work per frame.
+- **"It doesn't let you cast, it just puts the rod back"** (the family's report). Two causes:
+  - Pressing 🐾 a second time put the rod back.
+  - The invisible water that catches the tap covered only the sea near the shore. A tap further out missed it, so she
+    walked off and the rod went back on its stand.
+
+  Now 🐾 casts while she holds the rod (and reels in a bite), and the whole sea out to the horizon catches the tap (the
+  bobber still lands within reach). The same goes for snowballs: 🐾 again throws a ready snowball at the middle of the
+  target. The hands-on test used to call the tap code directly, which is why it missed this. It now presses 🐾 and taps
+  the real screen far out on the sea, like a finger.
+- **The lighthouse** in the second picture is build 146 (the one on the iPhone now); build 147, waiting to be merged, draws it solid.
+- Verified: unit tests 142/142; the page builds. Checks on the page itself follow after the full smoke test.
+
+## Checkpoint: build 147 — fixes from the family's report on the iPhone (boat and lighthouse)
+- **"You still can't sail on the boat":** the bell at the end of the pier (right on her path, and what 🐾 picked, being the
+  nearest) still ran the old action: the empty boat sailed away by itself. Now the bell, the boat and 🐾 all put her in the
+  boat and sail out onto the ocean (checked: tapping the bell → she is on the ocean).
+- **"The lighthouse is gone":** since build 146 the tower was always drawn as see-through (for when she goes inside), even at
+  full opacity; on some phones' lighter graphics settings that can make it vanish. Now it is drawn solid, and see-through
+  only while she is inside (the igloo the same). Checked: no part of the tower is see-through outside; desktop, software
+  rendering (the iPhone itself was not available here).
+
 ## Checkpoint: builds 144–146 — the family's requests: REALLY DO THINGS, GO INSIDE, SAIL THE OCEAN TO JUNGLE ISLAND
 Tested together (one full smoke run for all three). Desktop, software rendering; not tried on the iPhone.
 - **Build 144: hands-on activities (from the family's pictures).** `G.hold(obj)` (main.js) puts a tool in her hand, whichever
