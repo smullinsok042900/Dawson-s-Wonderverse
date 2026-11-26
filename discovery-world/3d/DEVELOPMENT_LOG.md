@@ -6,6 +6,14 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 153 — fly the Sunny Beach kite yourself (every activity hands-on)
+- The kite used to fly up by itself when tapped. Now tapping it (or 🐾) gives her the kite string (a spool in her hand, a
+  string up to the kite). RUNNING along the beach lifts it higher and higher (the further she runs, the higher: about 30 m
+  to the top); standing still, it drifts down gently and never crashes. Running toward the town it climbs past three
+  stars over the beach (low, middle, high): "Your kite touched all three stars!" Tap the kite again to put it back on its
+  pole (walking far away does it too). Shared paint, no new shaders.
+- New test `tests/beach-kite.cjs` (5 checks): passed with `&norender`. Backup: `backups/3D_build152_index.html`.
+
 ## Checkpoint: build 152 — the farm tractor is hands-on (every activity hands-on, district by district)
 - The toy tractor used to drive across the field by itself when tapped. Now tapping it (or 🐾) puts her in the driver's seat:
   ◀ ▶ drive it along the field (wheels turn, puffs from the pipe, it turns round), and each of the four pumpkins she drives up

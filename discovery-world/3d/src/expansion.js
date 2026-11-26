@@ -742,10 +742,31 @@ export function initExpansion(G, api) {
       const board = () => { if (G.sail) { Sound.bell ? Sound.bell(880, .06) : Sound.chime(); G.sail('home'); } else go(); }; c.tap(bell, board, -115, { icon: '⛵', label: 'Sailboat', action: 'Sail the ocean!', disc: 'ocean' }); c.tap(boat, board); /* (build 147, the family's report: tapping the bell only sent the empty boat away: now the bell, the boat and 🐾 all put her in the boat and sail) */ /* (build 145, the family's request) tap the boat: she climbs in and sails the open ocean to the islands */
       return (dt, t) => { boat.rotation.z = Math.sin(t * 1.4) * .06; boat.position.y = Math.sin(t * 1.1) * .08; gull.userData.fly(boat.position.x + Math.sin(t * .8) * 3, 4.2 + Math.sin(t * 1.6) * .5, boat.position.z - 1 + Math.cos(t * .8) * 2.2, Math.min(dt, .1));
         if (trip) { trip += dt; const k = trip < 6 ? trip / 6 : trip < 12 ? 1 - (trip - 6) / 6 : 0; boat.position.x = -115 - Math.sin(k * Math.PI / 2) * 22; boat.position.z = -12.6 - Math.sin(k * Math.PI) * 6; boat.rotation.y = trip < 6 ? Math.PI : 0; if (trip > 12) { trip = 0; boat.position.set(-115, 0, -11); boat.rotation.y = 0; } } }; },
-    // the kite: tap it and it flies up high, looping in the wind
-    () => { const kite = c.toy('🪁', 1.2, -132, 1.2, -2.6); c.cyl(-132, 0, -2.6, .05, .05, .8, '#9a6a3a'); let fly = 0;
-      c.tap(kite, () => { fly = fly ? 0 : .001; c.say(fly ? '🪁 Whee! The kite is flying!' : '🪁 The kite comes down to rest.'); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('kite', '🪁 Tap the kite and it flies up into the sky!'); }, -132);
-      return (dt, t) => { const h = fly ? Math.min(1, (fly += dt) / 2) : 0; kite.position.set(-132 + Math.sin(t * 1.3) * 2.5 * h, 1.2 + h * (7 + Math.sin(t * 2.1) * 1.2), -2.6 - h * 3); kite.rotation.z = h ? Math.sin(t * 2) * .5 : 0; }; },
+    // (build 153, the family's request: every activity hands-on) THE KITE: tap it (or 🐾) and she takes the kite string (a spool
+    //  in her hand, a string up to the kite). RUN along the beach and the wind lifts the kite higher and higher; stop, and it
+    //  slowly drifts down (it never crashes). Running toward the town, the kite climbs past the three stars over the beach (low, middle, high): all three,
+    //  "Your kite touched all three stars!" Tap the kite again to put it back on its pole (or just walk far away).
+    () => { const KX = -132, kite = c.toy('🪁', 1.2, KX, 1.2, -2.6); c.cyl(KX, 0, -2.6, .05, .05, .8, '#9a6a3a');
+      const spool = new THREE.Group(); { const sb = makeBatch(), cy = new THREE.CylinderGeometry(1, 1, 1, 12); sb.put(cy, 0, 0, 0, '#ffd23f', [.12, .16, .12], [Math.PI / 2, 0, 0]); sb.put(cy, 0, 0, 0, '#ff4f6a', [.08, .2, .08], [Math.PI / 2, 0, 0]); cy.dispose(); spool.add(sb.mesh(shinyMat())); }
+      const line = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, 1, 4), new THREE.MeshBasicMaterial({ color: '#ffffff' })); line.visible = false; c.add(line);
+      const starG = new THREE.OctahedronGeometry(.42, 0), STARS = [[-125, 4.5], [-116, 7.2], [-102, 9.8]].map(([x, y]) => { const sb = makeBatch(); sb.put(starG, 0, 0, 0, '#ffd23f', [1, 1.3, 1]); const m = sb.mesh(shinyMat()); m.userData.dynamic = true; m.position.set(x, y, -3.6); c.add(m); return { m, x, y, got: false }; });
+      let hold = false, k = { x: KX, y: 1.2, h: 0 }, n = 0; const from = new THREE.Vector3(), to = new THREE.Vector3(), dir = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+      const putBack = () => { hold = false; if (G.holding === spool) G.hold(null); line.visible = false; kite.position.set(KX, 1.2, -2.6); kite.rotation.set(0, 0, 0); for (const q of STARS) { q.got = false; q.m.visible = true; } n = 0; };
+      const take = () => { if (hold) { putBack(); c.say('🪁 The kite goes back on its pole.'); return; } if (P.layer !== '' || P.ride || Math.abs(P.x - KX) > 4) return; hold = true; k = { x: KX, y: 1.2, h: 0 }; G.hold(spool); line.visible = true; Sound.whoosh ? Sound.whoosh() : Sound.click();
+        c.say('🪁 You have the kite! RUN along the beach and the wind lifts it up high! Touch the three stars!'); c.disc('kite', '🪁 Take the kite and run to make it fly!'); };
+      c.tap(kite, take, KX, { icon: '🪁', label: 'Kite', action: 'Fly the kite!', disc: 'kite' });
+      return (dt, t) => { for (const [i, q] of STARS.entries()) if (!q.got) { q.m.rotation.y = t * 1.5; q.m.position.y = q.y + Math.sin(t * 1.4 + i) * .2; }
+        if (!hold) { kite.position.set(KX, 1.2, -2.6); return; }
+        if (P.layer !== '' || P.ride || P.x < -175 || P.x > -55 || G.holding !== spool) { putBack(); return; }
+        dt = Math.min(dt, .1); const run = Math.abs(P.vx) > 1.2;
+        k.h = Math.max(0, Math.min(1, k.h + (run ? Math.abs(P.vx) / 30 : -.07) * dt)); // the further she runs, the higher it climbs (30 m: as high as it goes); standing still, it drifts down slowly
+        const ty = 2.2 + k.h * 7.8, tx = P.x - (P.facing || 1) * (3 + k.h * 3);
+        k.x += (tx - k.x) * Math.min(1, dt * 1.5); k.y += (ty - k.y) * Math.min(1, dt * 1.2);
+        kite.position.set(k.x + Math.sin(t * 1.3) * .5 * k.h, k.y + Math.sin(t * 2.1) * .3 * k.h, -3.6); kite.rotation.z = Math.sin(t * 2) * .35 * (.3 + k.h);
+        spool.updateWorldMatrix(true, false); spool.getWorldPosition(from); to.copy(kite.position);
+        line.position.addVectors(from, to).multiplyScalar(.5); line.scale.y = Math.max(.01, from.distanceTo(to)); dir.copy(to).sub(from); if (dir.lengthSq() > 1e-6) line.quaternion.setFromUnitVectors(UP, dir.normalize());
+        for (const [i, q] of STARS.entries()) if (!q.got && Math.abs(q.m.position.x - kite.position.x) < 1.8 && Math.abs(q.m.position.y - kite.position.y) < 1.5) { q.got = true; q.m.visible = false; n++; Sound.tone([659, 784, 988][i], .3, 'triangle', .07, 1.5); c.burst(q.m.position.x, q.m.position.y, -3.6, ['#ffd23f', '#ffffff'], 14, 2);
+          c.say(n < 3 ? `🪁 Your kite touched a star! ${NUM[n]}!` : '🪁 Your kite touched all three stars! What a flyer!'); if (n === 3) { c.disc('kitestars'); Sound.chime(); } } }; },
     // seagulls flying over the beach (tap one: squawk!)
     () => { const gulls = [0, 1, 2].map(i => { const g2 = flyingBird(1.5); g2.position.set(-60 - i * 30, 6, -6); c.add(g2); c.tap(g2, () => { Sound.tone(1200, .12, 'sawtooth', .02, .6); Sound.tone(1000, .12, 'sawtooth', .02, .6, .15); c.say('🕊️ Squawk! A seagull!'); c.disc('gulls'); }); return { g2, i }; });
       return (dt, t) => { for (const { g2, i } of gulls) { const a = t * (.11 + i * .015) + i * 2.1; /* (build 144) a big loop over the beach and out over the sea, rising and dipping */ g2.userData.fly(-85 + Math.sin(a) * 50, 6.5 + Math.sin(a * 3 + i) * 1.2 + i * .6, -9 + Math.cos(a) * 3.5, Math.min(dt, .1)); } }; },
