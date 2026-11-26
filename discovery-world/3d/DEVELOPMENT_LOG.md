@@ -12,6 +12,15 @@ are in `PERFORMANCE_LOG.md`.
   pale edge. Fixed at the reel. The toy-material maker now only takes a number for metalness, so this mistake cannot happen again.
   The glow and final picture passes also clamp every pixel to a safe range, so one bad pixel can never grow into a square.
   None of this changes the shader count or the work per frame.
+- **"It doesn't let you cast, it just puts the rod back"** (the family's report). Two causes:
+  - Pressing 🐾 a second time put the rod back.
+  - The invisible water that catches the tap covered only the sea near the shore. A tap further out missed it, so she
+    walked off and the rod went back on its stand.
+
+  Now 🐾 casts while she holds the rod (and reels in a bite), and the whole sea out to the horizon catches the tap (the
+  bobber still lands within reach). The same goes for snowballs: 🐾 again throws a ready snowball at the middle of the
+  target. The hands-on test used to call the tap code directly, which is why it missed this. It now presses 🐾 and taps
+  the real screen far out on the sea, like a finger.
 - **The lighthouse** in the second picture is build 146 (the one on the iPhone now); build 147, waiting to be merged, draws it solid.
 - Verified: unit tests 142/142; the page builds. Checks on the page itself follow after the full smoke test.
 
