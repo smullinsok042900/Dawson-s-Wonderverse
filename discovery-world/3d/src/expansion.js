@@ -685,11 +685,11 @@ export function initExpansion(G, api) {
   }
   function enterTunnel(from) { const to = TUNNELS[from].back; if (!tunnel) buildTunnel(); tunnel.visible = true; tun = { from, to };
     tunnel.userData.endPic.material.map = tunnelArt(to); tunnel.userData.endPic.material.needsUpdate = true; tunnel.userData.startPic.material.map = tunnelArt(from); tunnel.userData.startPic.material.needsUpdate = true;
-    world.flash = 1; G.outsideX = TUNNELS[from].x + 2.4; P.layer = 'tunnel'; G.tunnelBounds = [TUN0 - 1, TUN0 + TUNLEN + 1]; P.x = TUN0 + 1; P.y = 0; P.z = 0; P.vx = 0; P.vy = 0; P.grounded = true; P.facing = 1; P.ride = null; api.snap && api.snap();
+    world.flash = 1; G.outsideX = TUNNELS[from].x + 2.4; P.layer = 'tunnel'; G.tunnelBounds = [TUN0 - 1, TUN0 + TUNLEN + 1]; G.roomCam = { x0: TUN0 - 2.2, x1: TUN0 + TUNLEN + 2.2, y0: -.2, y1: 4.7, z: 1.9 }; /* (build 149: the camera goes into the tunnel with her) */ P.x = TUN0 + 1; P.y = 0; P.z = 0; P.vx = 0; P.vy = 0; P.grounded = true; P.facing = 1; P.ride = null; api.snap && api.snap();
     Sound.whoosh ? Sound.whoosh() : Sound.click(); disc('tunnel', '🕳️ A secret tunnel! Walk through it to the other side!'); say('🕳️ Into the secret tunnel! Walk to the light at the end!'); }
-  function updateTunnel() { if (!tun) return; if (P.layer !== 'tunnel') { tun = null; if (tunnel) tunnel.visible = false; return; }
-    if (P.x > TUN0 + TUNLEN) { const dest = TUNNELS[tun.to]; tun = null; tunnel.visible = false; api.travelTo(dest.x + 2.4, '🕳️', 'the other end of the secret tunnel'); }
-    else if (P.x < TUN0 - .5) { const back = TUNNELS[tun.from]; tun = null; tunnel.visible = false; api.travelTo(back.x + 2.4, '🕳️', 'back out of the tunnel'); } }
+  function updateTunnel() { if (!tun) return; if (P.layer !== 'tunnel') { tun = null; G.roomCam = null; if (tunnel) tunnel.visible = false; return; }
+    if (P.x > TUN0 + TUNLEN) { const dest = TUNNELS[tun.to]; tun = null; G.roomCam = null; tunnel.visible = false; api.travelTo(dest.x + 2.4, '🕳️', 'the other end of the secret tunnel'); }
+    else if (P.x < TUN0 - .5) { const back = TUNNELS[tun.from]; tun = null; G.roomCam = null; tunnel.visible = false; api.travelTo(back.x + 2.4, '🕳️', 'back out of the tunnel'); } }
   function tunnelMouth(c, x, z, to) {
     const rock = c.sph(x, 0, z, 1.9, '#8a7f74', { m: { r: .95, cc: 0 } }); rock.scale.set(1.2, .9, .7);
     const pic = new THREE.Mesh(new THREE.CircleGeometry(.95, 28), new THREE.MeshBasicMaterial({ map: tunnelArt(to), toneMapped: false })); pic.position.set(x, .9, z + 1.36); c.add(pic); // (where it leads: a bright little picture of the far side)
