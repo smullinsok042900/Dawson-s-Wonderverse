@@ -32,7 +32,7 @@ export function makePost(renderer, scene, camera, { mobile }) {
 
   // bloom: keep only what is brighter than white, then blur it (quarter size)
   const bright = new FullScreenQuad(new THREE.ShaderMaterial({ uniforms: { tIn: { value: null }, uThresh: { value: 1.5 } }, vertexShader: vert,
-    fragmentShader: 'uniform sampler2D tIn; uniform float uThresh; varying vec2 vUv; void main(){ vec3 c = texture2D(tIn, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(uThresh, uThresh + .6, l), 1.); }' }));
+    fragmentShader: 'uniform sampler2D tIn; uniform float uThresh; varying vec2 vUv; void main(){ vec3 c = min(max(texture2D(tIn, vUv).rgb, 0.), vec3(64.)); float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(uThresh, uThresh + .6, l), 1.); }' }));
   const blurMat = new THREE.ShaderMaterial({ uniforms: { tIn: { value: null }, uDir: { value: new THREE.Vector2() } }, vertexShader: vert,
     fragmentShader: 'uniform sampler2D tIn; uniform vec2 uDir; varying vec2 vUv; void main(){ vec3 c = texture2D(tIn, vUv).rgb * .227; c += (texture2D(tIn, vUv + uDir * 1.385).rgb + texture2D(tIn, vUv - uDir * 1.385).rgb) * .316; c += (texture2D(tIn, vUv + uDir * 3.231).rgb + texture2D(tIn, vUv - uDir * 3.231).rgb) * .07; gl_FragColor = vec4(c, 1.); }' });
   const blur = new FullScreenQuad(blurMat);
@@ -49,8 +49,8 @@ export function makePost(renderer, scene, camera, { mobile }) {
       vec3 tm(vec3 c){ return NeutralToneMapping(c); }
       float luma(vec3 c){ return dot(c, vec3(.2126, .7152, .0722)); }
       void main(){
-        vec3 c = tm(texture2D(tIn, vUv).rgb); // (build 20: no sharpening: it amplified fur grain, leaf noise and texture shimmer)
-        c += tm(texture2D(tBloom, vUv).rgb) * uBloom; // glow (only from truly bright things)
+        vec3 c = tm(min(max(texture2D(tIn, vUv).rgb, 0.), vec3(64.))); // (build 148: one broken or overbright pixel can never spread into a black square) // (build 20: no sharpening: it amplified fur grain, leaf noise and texture shimmer)
+        c += tm(min(max(texture2D(tBloom, vUv).rgb, 0.), vec3(64.))) * uBloom; // glow (only from truly bright things)
         float l = luma(c);
         vec3 g = sRGBTransferOETF(vec4(clamp(c, 0., 1.), 1.)).rgb;
         g = (g - .5) * uContrast + .5;                                   // a gentle contrast lift

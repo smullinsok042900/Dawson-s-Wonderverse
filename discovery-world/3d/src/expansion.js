@@ -991,7 +991,7 @@ export function initExpansion(G, api) {
     //  and splashes (and the voice says "A bite!"), tap quickly to reel it in: the catch flies into the bucket. Too slow, and
     //  the fish swims away: cast again. Tap the stand to put the rod back (or just walk away).
     () => { const RX = -552, WZ0 = -6.5; c.cyl(RX, 0, -3.2, .06, .06, 1.6, '#7a5236');
-      const rodGeo = () => { const g = new THREE.Group(); const r = new THREE.Mesh(new THREE.CylinderGeometry(.025, .04, 2.4, 8), mat('#3b2b30')); r.position.set(.55, 1.05, 0); r.rotation.z = -.5; g.add(r); const reel = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .08, 12), mat('#ffd23f', { m: { m: .5 } })); reel.rotation.x = Math.PI / 2; reel.position.set(.08, .1, .06); g.add(reel); return g; };
+      const rodGeo = () => { const g = new THREE.Group(); const r = new THREE.Mesh(new THREE.CylinderGeometry(.025, .04, 2.4, 8), mat('#3b2b30')); r.position.set(.55, 1.05, 0); r.rotation.z = -.5; g.add(r); const reel = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .08, 12), mat('#ffd23f', { m: .5 }) /* (build 148: the family's picture: a black square by the fishing stand; the reel's metalness was an object, not a number) */); reel.rotation.x = Math.PI / 2; reel.position.set(.08, .1, .06); g.add(reel); return g; };
       const rackRod = rodGeo(); rackRod.position.set(RX - .2, .6, -3.25); rackRod.rotation.y = -Math.PI / 2; c.add(rackRod);
       const hand = rodGeo(); hand.scale.setScalar(.8); hand.position.set(-.3, -.5, 0); const handG = new THREE.Group(); handG.add(hand); const TIP = new THREE.Vector3(1.15, 2.1, 0); // (the rod tip, in the rod's own space)
       const bob = c.sph(RX, .15, WZ0, .14, '#ff4f6a', { m: { r: .4 } }); bob.visible = false;

@@ -6,6 +6,15 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 148 — the black square by the fishing stand (the family's picture from the iPhone)
+- **Cause:** the fishing rod's reel (build 144) was given its material settings one level too deep, so its metalness was an
+  object, not a number. On the phone that drew broken pixels, and the glow pass spread them into a big black square with a
+  pale edge. Fixed at the reel. The toy-material maker now only takes a number for metalness, so this mistake cannot happen again.
+  The glow and final picture passes also clamp every pixel to a safe range, so one bad pixel can never grow into a square.
+  None of this changes the shader count or the work per frame.
+- **The lighthouse** in the second picture is build 146 (the one on the iPhone now); build 147, waiting to be merged, draws it solid.
+- Verified: unit tests 142/142; the page builds. Checks on the page itself follow after the full smoke test.
+
 ## Checkpoint: build 147 — fixes from the family's report on the iPhone (boat and lighthouse)
 - **"You still can't sail on the boat":** the bell at the end of the pier (right on her path, and what 🐾 picked, being the
   nearest) still ran the old action: the empty boat sailed away by itself. Now the bell, the boat and 🐾 all put her in the
