@@ -12,7 +12,8 @@ are in `PERFORMANCE_LOG.md`.
   to hops into the red trailer behind ("one! two! three!"); all four: "You harvested all the pumpkins!" JUMP hops off; the
   tractor goes back home and the pumpkins grow back. Batched in the shared paint (no new shaders).
 - New test `tests/farm-tractor.cjs` (7 checks): passed drawn and with `&norender`. The smoke test's farm check still runs it.
-- Backup: `backups/3D_build151_index.html`.
+- Backup: `backups/3D_build151_index.html`. **Full smoke test 345/345** (desktop, software rendering). Speed: nothing slower on
+  the farm, the tractor's own spot included (`PERFORMANCE_LOG.md`).
 
 ## Checkpoint: build 151 — the Ocean Pier sailboat sails too (the family's report: "sailing on the boat still isn't working")
 - The picture was at Ocean Pier: its blue sailboat only sailed a loop by itself when tapped. Now tapping it (or 🐾) puts her
