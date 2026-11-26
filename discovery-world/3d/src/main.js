@@ -1050,7 +1050,7 @@ let picBusy = false; // (one new friend's picture per frame, so opening the pane
 function newFriendPictures() { if (picBusy) return; const miss = Object.keys(CREATURES).filter(k => !portraits[k]); if (!miss.length) return; picBusy = true;
   const next = () => { const k = Object.keys(CREATURES).find(q => !portraits[q]); if (!k) { picBusy = false; try { localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } return; }
     requestAnimationFrame(() => { /* (one picture per frame; background sculpting was tried in build 102 and made each picture much slower to draw, so it is not used) */
-      const t1 = performance.now(); try { Object.assign(portraits, renderPortraits([k])); (G.picTimes = G.picTimes || []).push({ k, drawMs: Math.round(performance.now() - t1) }); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); }); };
+      const t1 = performance.now(); try { Object.assign(portraits, renderPortraits([k])); { const img = document.querySelector(`.introPick[data-c="${k}"] img`); if (img && portraits[k]) img.src = portraits[k]; } (G.picTimes = G.picTimes || []).push({ k, drawMs: Math.round(performance.now() - t1) }); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); }); };
   requestAnimationFrame(next); }
 const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
   setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
@@ -1319,6 +1319,9 @@ function renderPortraits(kinds = Object.keys(CREATURES).filter(k => !CREATURES[k
   return out;
 }
 document.querySelectorAll('.creatureChoice').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); Sound.unlocked = true; setCreature(b.dataset.c); Sound.giggle(); save(); }));
+// (build 143, the family's request) EVERY friend can be picked on the start screen, not just the first four
+{ const crew = document.querySelector('.previewCrew'); if (crew) for (const k of Object.keys(CREATURES)) if (!crew.querySelector(`.introPick[data-c="${k}"]`)) { const b = document.createElement('button'); b.className = 'introPick'; b.dataset.c = k; b.innerHTML = '<img alt=""><b></b>'; b.querySelector('b').textContent = CREATURES[k].name; crew.appendChild(b); }
+  if (crew) crew.classList.toggle('many', crew.children.length > 4); }
 document.querySelectorAll('.introPick').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.introPick').forEach(x => x.classList.toggle('picked', x === b)); setCreature(b.dataset.c); }));
 
 // ---------------- resize + adaptive quality ----------------
@@ -1615,7 +1618,8 @@ function applyTextureQuality() {
   });
   G.textureQuality = { anisotropy: maxA, textures: seenT.size, materials: seenM.size };
 }
-const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { sliceScenery(); mergeSlices(); updateSlices(); } catch (e) { console.log('slices skipped', e); } try { applyTextureQuality(); } catch (e) { } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); }, 60); setTimeout(() => $('loading').classList.add('done'), 250); };
+const begin = () => { if (begun) return; begun = true; G.startupMs = Math.round(performance.now()); try { sliceScenery(); mergeSlices(); updateSlices(); } catch (e) { console.log('slices skipped', e); } try { applyTextureQuality(); } catch (e) { } renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true; requestAnimationFrame(frame); const introPics = () => setTimeout(() => { if (!$('overlay').classList.contains('hidden')) newFriendPictures(); }, 400); /* (build 143) the other friends' pictures for the start screen: started while the start screen shows, one per frame (they finish even if she presses play); only the very first time, then they are saved */
+    if (needPortraits) setTimeout(() => { try { portraits = renderPortraits(); localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } applyPortraits(); introPics(); }, 60); else introPics(); setTimeout(() => $('loading').classList.add('done'), 250); };
 // (build 24) shaders: compile everything in the scene before play starts (the light count is now fixed, so these stay
 // valid), then compile the model files' materials as soon as they arrive (in the background where the phone supports
 // parallel compiling), so nothing compiles the first time it comes into view.
