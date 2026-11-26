@@ -6,6 +6,15 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 147 — fixes from the family's report on the iPhone (boat and lighthouse)
+- **"You still can't sail on the boat":** the bell at the end of the pier (right on her path, and what 🐾 picked, being the
+  nearest) still ran the old action: the empty boat sailed away by itself. Now the bell, the boat and 🐾 all put her in the
+  boat and sail out onto the ocean (checked: tapping the bell → she is on the ocean).
+- **"The lighthouse is gone":** since build 146 the tower was always drawn as see-through (for when she goes inside), even at
+  full opacity; on some phones' lighter graphics settings that can make it vanish. Now it is drawn solid, and see-through
+  only while she is inside (the igloo the same). Checked: no part of the tower is see-through outside; desktop, software
+  rendering (the iPhone itself was not available here).
+
 ## Checkpoint: builds 144–146 — the family's requests: REALLY DO THINGS, GO INSIDE, SAIL THE OCEAN TO JUNGLE ISLAND
 Tested together (one full smoke run for all three). Desktop, software rendering; not tried on the iPhone.
 - **Build 144: hands-on activities (from the family's pictures).** `G.hold(obj)` (main.js) puts a tool in her hand, whichever
