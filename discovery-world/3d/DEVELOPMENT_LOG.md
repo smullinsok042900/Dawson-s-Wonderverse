@@ -11,6 +11,8 @@ are in `PERFORMANCE_LOG.md`.
   in a boat out on the open ocean, like the Sunny Beach boat, and 🏠 at Home Harbour brings her back to the pier where she
   set sail (`G.sail(from, backX)`; Sunny Beach still comes home to Sunny Beach).
 - Verified (desktop, software rendering): `ocean.cjs` all passed, with two new checks (the pier boat sails, and home is the pier).
+- **Full smoke test of builds 147–151: 345/345** (rerun; the first run had 344/345: one family friend's touch check at Sunny
+  Beach missed once in the long run, and passed when checked on its own twice and in the rerun).
 
 ## Checkpoint: build 150 — the tunnel picture is clear (the family's picture from the iPhone)
 - The picture of where a secret tunnel leads looked broken and speckled on the phone. It sat at the same depth as the round
