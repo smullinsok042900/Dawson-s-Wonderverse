@@ -6,6 +6,12 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 150 — the tunnel picture is clear (the family's picture from the iPhone)
+- The picture of where a secret tunnel leads looked broken and speckled on the phone. It sat at the same depth as the round
+  stone disc behind it (and the rock bulged to almost that depth at its bottom), so the two flickered through each other.
+  Now a stone RING frames the picture (nothing behind it at that depth), and the picture sits well in front of the rock.
+- Verified: unit tests; the page builds. Desktop (software rendering): checked in the browser after the running tests.
+
 ## Checkpoint: build 149 — real rooms inside (the family's request: "like walking into an actual house")
 - **The igloo and the lighthouse** (new `src/rooms.js`): the door takes her INTO A ROOM of its own (no see-through bubble):
   walls, a floor and a ceiling all round, with a frame around the open front so nothing outside is ever seen. The camera
