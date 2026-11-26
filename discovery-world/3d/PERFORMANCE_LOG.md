@@ -4,6 +4,12 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Builds 149–151 vs build 146 (desktop, software rendering; `tests/perf/compare.cjs`, 4 rounds each; not iPhone numbers)
+- Sunny Beach: -50: 536 → 330 ms (faster); -70: 279 → 276 (same); -88: 277 → 272 (same). Draw calls the same or 1 fewer.
+- Frosty Peaks: -326: 411 → 353 ms (faster); -336: 283 → 294 (same, +4%); -346: 299 → 286 (same).
+- Nothing slower. The inside rooms are built only the first time she goes in (no new shaders), and the old in-place insides
+  are gone from the districts.
+
 ## Builds 144–146 (hands-on activities, the ocean and Jungle Island, going inside)
 Desktop, software rendering; against build 143 (median frame ms, the mean of the rounds).
 - Woods (four rounds each): overall 724 → 715 ms; per spot -160 878 → 743, -185 697 → 722, -211 601 → 657, -240 774 → 725,
