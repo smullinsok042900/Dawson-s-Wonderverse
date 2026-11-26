@@ -97,10 +97,17 @@ let fail = 0, ok = 0; const check = (name, good, info = '') => { console.log(`${
     check('she climbs the giant block steps to the lookout on top (by walking: each block is a step)', climbed, 'y ' + await p.evaluate(() => __DDW3.player.y.toFixed(2)));
     await p.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'toy-blocks.jpg'), type: 'jpeg', quality: 85 });
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 45; P.y = 0; P.vy = 0; P.vx = 0; P.grounded = true; P.facing = 1; }, TX);
-    await p.keyboard.down('ArrowRight'); await sleep(3500); await p.keyboard.up('ArrowRight');
-    const blocked = await p.evaluate(X => __DDW3.player.x - X, TX);
-    check('she cannot walk through a giant ball: it stops her (she jumps on top)', blocked < 49.5, 'x ' + blocked.toFixed(2));
-    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.grounded = false; }, TX);
+    // (build 139, the family's report: the balls blocked her way) walking into a ball hops her up onto it; it is still solid
+    await p.evaluate(X => { window.__thru = 0; window.__maxX = 0; const balls = [[50, 1.4], [56, 2], [62.5, 1.6], [69, 2.4]]; const f = () => { const P = __DDW3.player, x = P.x - X; window.__maxX = Math.max(window.__maxX, x);
+      for (const [bx, r] of balls) if (Math.abs(x - bx) < r * .6 && P.y < r * 2 - .8) window.__thru++; if (performance.now() < window.__untilB) requestAnimationFrame(f); }; window.__untilB = performance.now() + 20000; f(); }, TX);
+    await p.keyboard.down('ArrowRight'); await until(X => __DDW3.player.x > X + 74, TX, 20000); await p.keyboard.up('ArrowRight');
+    const walk = await p.evaluate(() => ({ maxX: +window.__maxX.toFixed(1), thru: window.__thru }));
+    check('walking into the giant balls never stops her: she hops up onto them (never through them) and gets past the last one', walk.maxX > 74 && walk.thru === 0, JSON.stringify(walk));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 76; P.y = 0; P.vy = 0; P.vx = 0; P.hopX = 0; P.grounded = true; P.facing = -1; window.__minX = 99; window.__thru = 0; const balls = [[50, 1.4], [56, 2], [62.5, 1.6], [69, 2.4]]; const f = () => { const x = P.x - X; window.__minX = Math.min(window.__minX, x); for (const [bx, r] of balls) if (Math.abs(x - bx) < r * .6 && P.y < r * 2 - .8) window.__thru++; if (performance.now() < window.__untilC) requestAnimationFrame(f); }; window.__untilC = performance.now() + 40000; f(); }, TX);
+    await p.keyboard.down('ArrowLeft'); await until(X => __DDW3.player.x < X + 46, TX, 40000); await p.keyboard.up('ArrowLeft');
+    const back = await p.evaluate(() => ({ minX: +window.__minX.toFixed(1), thru: window.__thru }));
+    check('walking BACK past the balls (◀) works too', back.minX < 46 && back.thru === 0, JSON.stringify(back));
+    await p.evaluate(X => { const P = __DDW3.player; P.x = X + 50; P.y = 5; P.vy = 0; P.vx = 0; P.hopX = 0; P.driftT = 0; P.grounded = false; }, TX); // (no hop or drift left over from the walk above)
     check('the giant bouncy balls bounce her from ball to ball, to the last one', await until(X => __DDW3.player.x > X + 66, TX, 40000), 'x ' + await p.evaluate(X => (__DDW3.player.x - X).toFixed(1), TX));
     await p.evaluate(X => { const P = __DDW3.player; P.x = X + 117; P.y = 0; P.vy = 0; P.vx = 0; }, TX); await sleep(6000);
     await p.evaluate(() => { const it = __DDW3.G.interact.find(i => i.icon === '🚂'); __DDW3.player.x = it.x; it.run(); });

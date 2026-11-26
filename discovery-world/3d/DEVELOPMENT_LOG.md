@@ -6,6 +6,16 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 139 — the giant toy balls no longer block her way (family report)
+The family reported that in the Giant Toy Universe the giant bouncy balls blocked her path, so she could not walk on. Since
+build 135 the balls were solid (she bumped into them and had to jump on top): too hard for a 5-year-old. Now walking into a
+ball **hops her up onto it by herself**, like a low step (a new `hopMax` on a solid, in `main.js`; the toy balls use 5 m),
+and the ball's bounce carries her on to the next one and past the line. The balls are still solid: she never walks through
+one. Walking back with ◀ works the same way.
+- Tests: `multiverse.cjs`: the old check "a giant ball stops her" is replaced by "walking into the giant balls never stops her:
+  she hops up onto them (never through them) and gets past the last one", plus the same walking back. The ball-to-ball check
+  now clears the hop left over from the walk before it (it had pushed her off the first ball). See below for the results.
+
 ## Checkpoint: build 138 — speed: the rocky planets' rocks, and what the Sky Playground really costs
 From the ATTRACTIONS checklist (row 2: the Jupiter Sky Playground; row 4: the Mercury funhouse, both marked slower). A new
 probe (`/tmp` helper, like `pplanet.cjs`) lists every mesh drawn in view, with its triangles and material.

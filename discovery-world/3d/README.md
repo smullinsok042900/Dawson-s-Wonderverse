@@ -12,6 +12,9 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D build 139: the giant toy balls don't block her
+- In the Giant Toy Universe, walking into a giant ball now hops her up onto it, and it bounces her along: she can always get by.
+
 ## 3D build 138: a little faster on the rocky planets
 - Each area's craters and rocks on Mercury, Mars, the Moon, Pluto and the other rocky places are drawn together (4–6 fewer
   draw calls), and the funhouse light game's lamp cords are one piece. Nothing to see: the same look, a little less work.

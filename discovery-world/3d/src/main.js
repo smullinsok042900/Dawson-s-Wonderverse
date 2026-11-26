@@ -1097,7 +1097,7 @@ function updatePlayer(dt) {
   const top = (swim ? (P.layer === 'sea' ? 3.6 : 2.2) : crawl ? 3.4 : 5.8) * keys.scale, accel = P.grounded ? 62 : 30; /* (build 25: snappier start and stop) */ if (P.driftT > 0 && !h && !P.grounded) { P.driftT -= dt; P.vx = P.drift; } else { P.driftT = 0; P.vx += clamp(h * top - P.vx, -accel * dt, accel * dt); }
   const [x1, x2] = bounds(); const ox = P.x; P.x = clamp(P.x + P.vx * dt, x1, x2); if (P.x <= x1 || P.x >= x2) P.vx = 0;
   const gs = P.layer === 'space' && G.gravSign === -1 ? -1 : 1; // (build 131) the Upside-Down World: gravity can point UP
-  // solid things: you can't walk through them. Low ones (up to 1.25 high) you hop up onto by yourself.
+  // solid things: you can't walk through them. Low ones (up to 1.25 high, or the solid's own `hopMax`) you hop up onto by yourself.
   if (gs > 0) for (const s of solidIndex.query(G.solids, P.x, P.layer, frameNow)) {
     if (s.layer !== P.layer || P.y >= s.top - .02 || P.y + 1.4 <= (s.bottom ?? 0)) continue;
     const L = s.a - .35, Rr = s.b + .35;
@@ -1105,7 +1105,7 @@ function updatePlayer(dt) {
       const fromLeft = ox <= L + .001, fromRight = ox >= Rr - .001;
       if (!fromLeft && !fromRight) continue; // already inside (e.g. just landed): don't trap
       P.x = fromLeft ? L : Rr;
-      if ((P.grounded || P.swim) && s.top - P.y <= 1.25 && Math.sign(P.vx) === (fromLeft ? 1 : -1)) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = fromLeft ? 1 : -1; }
+      if ((P.grounded || P.swim) && s.top - P.y <= (s.hopMax || 1.25) && Math.sign(P.vx) === (fromLeft ? 1 : -1)) { P.vy = Math.sqrt(2 * 24 * (s.top - P.y + .35)); P.grounded = false; P.jumps = 1; P.hopX = fromLeft ? 1 : -1; }
       else P.vx = 0;
     }
   }
@@ -1761,7 +1761,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '138'; G.build = GAME_BUILD;
+const GAME_BUILD = '139'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
