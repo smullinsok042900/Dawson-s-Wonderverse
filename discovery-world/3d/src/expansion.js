@@ -702,7 +702,7 @@ export function initExpansion(G, api) {
       const boat = new THREE.Group(); boat.position.set(-115, 0, -12.6); /* (build 62: moored clear of the pier's end, not in its boards) */ c.add(boat); const hull = new THREE.Mesh(boatHull(3, .75, 1.05), mat('#ff7a5c')); hull.position.y = -.05; { const rim = new THREE.Mesh(W.rbox(2.6, .1, 1.3, .05), mat('#ffffff')); rim.position.y = .74; boat.add(rim); } hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
       const gull = flyingBird(1.3); gull.position.set(-115, 4, -12.6); c.add(gull); let trip = 0; /* (build 144: a real flying gull circles the boat) */
       const go = () => { if (trip) return; trip = .001; Sound.bell ? Sound.bell(880, .06) : Sound.chime(); c.say('⛵ Ding ding! The boat is sailing!'); c.disc('boat', '⛵ Ring the bell on the pier and the boat sails away!'); };
-      c.tap(bell, go, -115); c.tap(boat, go);
+      c.tap(bell, go, -115); c.tap(boat, () => { if (G.sail) G.sail('home'); }, -115.1, { icon: '⛵', label: 'Sailboat', action: 'Sail the ocean!', disc: 'ocean' }); /* (build 145, the family's request) tap the boat: she climbs in and sails the open ocean to the islands */
       return (dt, t) => { boat.rotation.z = Math.sin(t * 1.4) * .06; boat.position.y = Math.sin(t * 1.1) * .08; gull.userData.fly(boat.position.x + Math.sin(t * .8) * 3, 4.2 + Math.sin(t * 1.6) * .5, boat.position.z - 1 + Math.cos(t * .8) * 2.2, Math.min(dt, .1));
         if (trip) { trip += dt; const k = trip < 6 ? trip / 6 : trip < 12 ? 1 - (trip - 6) / 6 : 0; boat.position.x = -115 - Math.sin(k * Math.PI / 2) * 22; boat.position.z = -12.6 - Math.sin(k * Math.PI) * 6; boat.rotation.y = trip < 6 ? Math.PI : 0; if (trip > 12) { trip = 0; boat.position.set(-115, 0, -11); boat.rotation.y = 0; } } }; },
     // the kite: tap it and it flies up high, looping in the wind
@@ -812,8 +812,8 @@ export function initExpansion(G, api) {
           if (k >= 1) { c.remove(f.b); flying.splice(i, 1); hits++; const d = Math.hypot(f.to.x - TX, f.to.y - TY), where = d < .3 ? 0 : d < .65 ? 1 : 2;
             const sp = c.cyl(f.to.x, f.to.y, f.to.z + .02, .16, .16, .03, '#ffffff'); sp.rotation.x = Math.PI / 2; sp.scale.set(1.4, 1, 1.1); splats.push({ m: sp, life: 6 });
             Sound.tone([880, 520, 300][where], .18, 'square', .03, .6); c.burst(f.to.x, f.to.y, f.to.z + .2, where ? ['#ffffff', '#dff3ff'] : ['#ffd23f', '#ffffff', '#ff4f6a'], where ? 12 : 26, 2);
-            c.say(['🎯 BULLSEYE! Right in the middle!', '❄️ Splat! Close to the middle!', '❄️ Splat! On the target!'][where] + (hits % 5 === 0 ? ` ${NUM[5]} snowballs!` : ''));
-            c.disc('snowball', '❄️ Make a snowball and throw it at the target!'); if (!where) c.disc('bullseye', '🎯 Hit the middle of the snowball target!'); } }
+            c.say(['🌟 BULLSEYE! Right in the middle!', '❄️ Splat! Close to the middle!', '❄️ Splat! On the target!'][where] + (hits % 5 === 0 ? ` ${NUM[5]} snowballs!` : ''));
+            c.disc('snowball', '❄️ Make a snowball and throw it at the target!'); if (!where) c.disc('bullseye', '🌟 Hit the middle of the snowball target!'); } }
         for (let i = splats.length - 1; i >= 0; i--) { const sp = splats[i]; sp.life -= dt; if (sp.life < 1) sp.m.scale.setScalar(Math.max(.01, sp.life) * 1.2); if (sp.life <= 0) { c.remove(sp.m); splats.splice(i, 1); } } }; },
     // the frozen pond: step on the ice and you glide along (slippery!)
     () => { const ice = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .06, 48), mat('#bfe6ff', { r: .08, cc: .8 })); ice.scale.set(7.2, 1, 2.68); /* (build 64: an oval pond, not a hard-edged rectangle) */ ice.position.set(-361, .03, -1.22); /* (build 62: ends at the path's front edge, never past it) */ /* (build 60: the pond stops before the train track) */ ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
@@ -953,7 +953,7 @@ export function initExpansion(G, api) {
         if (st !== 'idle') { const tw = tipWorld();
           if (st === 'hold') { bob.position.copy(tw).y -= .5; bob.visible = line.visible = true; }
           else if (st === 'fly') { t0 += dt; const k = Math.min(1, t0 / .7); bob.position.lerpVectors(from, to, k); bob.position.y += Math.sin(k * Math.PI) * 2.2; if (k >= 1) { st = 'wait'; wait = 1.6 + Math.random() * 2; c.burst(to.x, .15, to.z, ['#9fdcff', '#ffffff'], 6, 1); Sound.tone(300, .1, 'sine', .04, .8); c.say('🎣 Plop! Now wait... watch the bobber!'); } }
-          else if (st === 'wait') { bob.position.y = .12 + Math.sin(t * 2.5) * .04; wait -= dt; if (wait <= 0) { st = 'bite'; t0 = 0; Sound.tone(880, .12, 'square', .04, 1.4); c.say('❗ A bite! Quick, tap to reel it in!'); } }
+          else if (st === 'wait') { bob.position.y = .12 + Math.sin(t * 2.5) * .04; wait -= dt; if (wait <= 0) { st = 'bite'; t0 = 0; Sound.tone(880, .12, 'square', .04, 1.4); c.say('🐟 A bite! Quick, tap to reel it in!'); } }
           else if (st === 'bite') { t0 += dt; bob.position.y = -.08 + Math.sin(t * 22) * .07; if (Math.random() < dt * 12) c.burst(bob.position.x, .1, bob.position.z, ['#9fdcff', '#ffffff'], 2, 1.2); if (t0 > 3) { st = 'hold'; c.say('🐟 Oh! It swam away. Cast again!'); } }
           else if (st === 'reel') { t0 += dt; const k = Math.min(1, t0 / .6); bob.position.lerpVectors(from, tw, k); if (k >= 1) { st = 'hold'; land(); } }
           line.position.addVectors(tw, bob.position).multiplyScalar(.5); line.scale.y = tw.distanceTo(bob.position); line.quaternion.setFromUnitVectors(UP, dir.copy(bob.position).sub(tw).normalize()); }

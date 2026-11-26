@@ -50,6 +50,7 @@ import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
 import { makeIntervalIndex } from './spatial.js';
+import { initOcean } from './ocean.js'; // (build 145) sail the open ocean to the islands
 import { initDeep, rocketMesh as deepRocketMesh } from './deepspace.js'; // (build 126) open space: fly the rocket, spacewalks
 import { runInSlices as deepSlices } from './stream-work.js'; // (overhaul) indexed collision lookups
 import { auditScene } from './scene-audit.js'; // (overhaul) automated geometry/placement validation
@@ -279,7 +280,7 @@ const ROCKET_PAD = 693; // (build 64: moved off the colour pond)
 // the arrow pad / joystick as -1…1 (build 71: planet rides; build 118: Earth rides too)
 function readStick() { const sd = stick && stick.active ? stick : null; return { x: (keys.right ? 1 : 0) - (keys.left ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, sd.dx / 55)) : 0), y: (keys.up ? 1 : 0) - (keys.down ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, -sd.dy / 55)) : 0) }; }
 const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, keysUp: () => !!(keys.up || (stick && stick.active && stick.dy < -25)),
-  stick: () => readStick(), /* (build 71: steer planet rides) */ /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
+  stick: () => readStick(), toOcean: id => G.sail(id), /* (build 145) an island's boat sails her back out to sea */ /* (build 71: steer planet rides) */ /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
 // (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
 // the sun stands (low and from the side on the airless worlds, for long shadows). Only numbers change: no new shaders.
@@ -292,6 +293,13 @@ function spaceLight(L) {
 }
 G.space = space;
 const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest), preload: id => space.prepare(id).catch(() => { }), /* (build 137) a wormhole starts building its world under the warp swirl */ hasPet: () => !!(G.followerCount && G.followerCount()) });
+// (build 145) THE OPEN OCEAN: she climbs into the beach boat and sails to the islands (ocean.js); landing on an island goes
+//  through the planets engine like a planet; Home Harbour brings her back to the beach by the pier's boat
+const ocean = initOcean(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L),
+  land: id => deepLand(id),
+  home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; G.playerHidden = false; spaceLight(null); P.x = -113; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; expansion.buildNow(-113); snapCamera(); saveSoon(); } });
+G.ocean = ocean;
+G.sail = async from => { if (player.layer === 'space') space.hideAll(); G.camOverride = null; await ocean.enter(from || 'home'); };
 G.deep = deep;
 // (build 126) landing on a planet flown up to in open space: the normal landing (the rocket comes down onto that planet's pad)
 // (The rocket she took off in may not exist any more: the place it stands on is freed while she is far away in space, so
@@ -451,6 +459,7 @@ G.coasterOff = () => { G.camOverride = null; coasterButton(false); };
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
 G.startSlide = (path, o) => startSlide(path, o); // (build 66: the planets' slides)
 function updateRide(dt) {
+  if (player.ride && player.ride.type === 'ocean') { ocean.ride(dt); return; } // (build 145) sailing
   if (player.ride && player.ride.type === 'deep') { deep.ride(dt); return; } // (build 126) open space
   const P = player, R = P.ride;
   if (R.type === 'slide') {
@@ -577,7 +586,7 @@ G.useLift = () => {
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
 // (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
 // countdown, and off you fly. Earth (first) takes you home to the launch pad.
-const ROCKET_NAMES = { wacky: 'the Wacky Gravity World', jelly: 'the Squishy Jelly World', bubble: 'the Bubble Universe', toy: 'the Giant Toy Universe', upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
+const ROCKET_NAMES = { jungle: 'Jungle Island', wacky: 'the Wacky Gravity World', jelly: 'the Squishy Jelly World', bubble: 'the Bubble Universe', toy: 'the Giant Toy Universe', upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
 let rocketPanel = null, launching = false, blastBtn = null, flightSequence = 0;
 // (build 48) A REAL ROCKET RIDE. PAW (or a tap) at the rocket: she walks up and climbs in, and her face shows in the round
 // window. The planet pictures come up; after she picks one, a BIG RED BUTTON appears. Pressing it starts the countdown
@@ -1201,7 +1210,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
-  space.update(dt, t); deep.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
+  space.update(dt, t); deep.update(dt, t); ocean.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near

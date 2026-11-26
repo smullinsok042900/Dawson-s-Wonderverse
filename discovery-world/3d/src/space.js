@@ -23,6 +23,8 @@ import { runInSlices } from './stream-work.js';
 import { PLANET_EXTRA, placeWidth, SECTION } from './planets.js';
 import { BIG_CRATER } from './coaster-course.js';
 import { DIMENSIONS, DIM } from './dimensions.js';
+import { ISLANDS, ISLAND } from './islands.js';
+import { jungleLanding } from './jungle.js';
 import { upsideLanding } from './upside.js';
 import { toyLanding } from './toy.js';
 import { bubbleLanding } from './bubble.js';
@@ -47,7 +49,8 @@ export const PLACES = [
   // golden platforms float safely above it, with a light, floaty pull (not a real value: there is nowhere to stand).
   ['sun', ['#fff3b0', '#ff9a1a'], 4.9, false, "The Sun! It's our star, a gigantic ball of super hot glowing gas, with no ground at all. In our game, magic golden platforms float safely high above it. Jump! You float down gently here."],
 ];
-for (const d of DIMENSIONS) PLACES.push([d.id, d.colors, d.gravity, false, d.hello, { dim: true }]); // (build 131) the dimensions behind the wormholes (not in the rocket menu)
+for (const d of DIMENSIONS) PLACES.push([d.id, d.colors, d.gravity, false, d.hello, { dim: true }]);
+for (const d of ISLANDS) PLACES.push([d.id, d.colors, d.gravity, false, d.hello, { dim: true, island: true }]); // (build 145) the islands of the open ocean (reached by boat, not in the rocket menu) // (build 131) the dimensions behind the wormholes (not in the rocket menu)
 export const EARTH_G = 9.81;
 
 // ---------- (build 49) how each place LOOKS: its sky, its light, its haze and what drifts in the air ----------
@@ -84,7 +87,8 @@ const LOOK = {
     sun: ['#eef2ff', 2.3], hemi: ['#8a9cd0', '#6a4a44', .85], fog: ['#141c34', 120, 900], env: .12, rim: ['#8fb0ff', .9], sunOff: [-14, 9, 9],
     dust: { color: '#eaf2ff', size: .09, opacity: .7, box: [46, 10, 24], vel: [.25, -.3, 0], sway: .3, n: 56 } },
 };
-for (const d of DIMENSIONS) LOOK[d.id] = d.look; // (build 131) each dimension's own sky and light
+for (const d of DIMENSIONS) LOOK[d.id] = d.look;
+for (const d of ISLANDS) LOOK[d.id] = d.look; // (build 145) // (build 131) each dimension's own sky and light
 const CLOUDS = { jupiter: ['#f3d6ae', '#c57a40', '#ebb680', '#fff1de', '#b96a3a'], saturn: ['#f6e3aa', '#e6c676', '#fff4d2', '#d8b268', '#f0d898'], uranus: ['#bdf1f1', '#93e2ea', '#dbfcfc', '#74d2dc', '#aeecee'], neptune: ['#5c86f2', '#2f4fd0', '#84a8ff', '#2440b0', '#4a70e4'] };
 
 export function initSpace(G, api) {
@@ -693,6 +697,7 @@ export function initSpace(G, api) {
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
       inSky(K.glow('#ffffff', 9, 1), MID - 86, 17, -180); inSky(K.glow('#bcd0ff', 34, .35), MID - 86, 17, -182);
     }
+    if (id === 'jungle') H = yield* jungleLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 145) Jungle Island
     if (id === 'wacky') H = yield* wackyLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 137) the Wacky Gravity World
     if (id === 'jelly') H = yield* jellyLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 136) the Squishy Jelly World
     if (id === 'bubble') H = yield* bubbleLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 133) the Bubble Universe
@@ -735,6 +740,15 @@ export function initSpace(G, api) {
 
     // ================= the same on every planet: landing pad, rocket, jump pole, aliens =================
     const rx = X + 8, rz = -2.4;
+    if (ISLAND[id]) { // (build 145) an island: a wooden dock and her sailboat (tap it to sail back out to sea), no rocket pad
+      props.put(K.geo.box(), rx - 6, .25, rz - 1, '#9a6a3a', [10, .3, 2.6]); for (let k = 0; k < 5; k++) props.put(K.geo.cyl(10), rx - 10 + k * 2, -.2, rz - 2.2, '#6a4a2a', [.15, 1.2, .15]);
+      const bt = new THREE.Group(); bt.position.set(rx - 6, 0, rz - 4.2); add(bt);
+      bt.add(model(b => { b.put(K.geo.box(), 0, .25, 0, '#ffffff', [3.6, .7, 1.6]); b.put(K.geo.box(), 0, .45, 0, '#4fb0ff', [3.64, .14, 1.64]); b.put(K.geo.box(), .2, .62, 0, '#c8925a', [3, .08, 1.4]); b.put(K.geo.cyl(10), -.4, 2.6, 0, '#8a5a3a', [.08, 4.2, .08]); b.put(K.geo.cyl(10), .3, 2.2, 0, '#ffd23f', [.04, 2.2, .9], [0, 0, -.45]); }));
+      const sailBack = () => { api.toOcean && api.toOcean(id); };
+      bt.traverse(o => { if (o.isMesh) o.userData.tap = sailBack; }); G.taps.push(bt);
+      G.interact.push({ x: rx - 6, y: 0, layer: 'space', disc: 'space_' + id, icon: '⛵', action: 'Sail away!', run: sailBack, hintY: 4.6 });
+      U.push((dt, t) => { bt.position.y = Math.sin(t * 1.2) * .08; bt.rotation.z = Math.sin(t * 1.4) * .04; });
+    } else {
     props.put(K.lathe([[0, .1], [2.2, .1], [2.5, .04], [2.6, 0], [0, 0]], 36), rx, 0, rz, (px, py, pz, nx, ny, nz, o) => { const r = Math.hypot(px - rx, pz - rz), a = Math.atan2(pz - rz, px - rx); o.copy(K.col(r > 2.2 ? '#6a7080' : r > 1.85 && r < 2.1 ? (Math.sin(a * 12) > 0 ? '#ffd23f' : '#33343f') : r < .5 ? '#ff4f9a' : '#9aa0b0')); });
     for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + .78; props.put(K.geo.cyl(10), rx + Math.cos(a) * 2.45, .16, rz + Math.sin(a) * 2.45, '#33343f', [.11, .3, .11]); props.put(K.geo.sph(1), rx + Math.cos(a) * 2.45, .36, rz + Math.sin(a) * 2.45, k % 2 ? '#7dffb0' : '#ff7a7a', .1); }
     const rk = new THREE.Group(); rk.position.set(rx, 0, rz); add(rk);
@@ -743,8 +757,9 @@ export function initSpace(G, api) {
     api.registerRocket && api.registerRocket(id, rk, rwin, rx, 'space', 0); rk.traverse(o => { if (o.isMesh) o.userData.tap = () => api.openPicker(); }); G.taps.push(rk);
     G.interact.push({ x: rx, y: 0, layer: 'space', disc: 'space_' + id, run: () => api.openPicker(), hintY: 4.6 });
     U.push((dt, t) => { rwin.material.emissiveIntensity = .45 + Math.sin(t * 3) * .2; });
+    } // (build 145: end of the rocket pad, not on islands)
     // the jump pole: one stripe for every metre, so you can see how high you jumped
-    for (let m = 0; m < 30; m++) props.put(K.geo.cyl(10), X + 20, m + .5, -1.6, m % 2 ? '#ffffff' : '#ff4f9a', [.13, 1, .13]); props.put(K.geo.sph(1), X + 20, 30.15, -1.6, '#ffd23f', .26); props.put(K.lathe([[0, .2], [.3, .16], [.42, 0], [0, 0]], 14), X + 20, 0, -1.6, '#8a8fa0'); for (let m = 5; m < 30; m += 5) props.put(K.geo.torus(.25, 14), X + 20, m, -1.6, '#ffd23f', [.2, .2, .2], [Math.PI / 2, 0, 0]);
+    if (!ISLAND[id]) { for (let m = 0; m < 30; m++) props.put(K.geo.cyl(10), X + 20, m + .5, -1.6, m % 2 ? '#ffffff' : '#ff4f9a', [.13, 1, .13]); props.put(K.geo.sph(1), X + 20, 30.15, -1.6, '#ffd23f', .26); props.put(K.lathe([[0, .2], [.3, .16], [.42, 0], [0, 0]], 14), X + 20, 0, -1.6, '#8a8fa0'); for (let m = 5; m < 30; m += 5) props.put(K.geo.torus(.25, 14), X + 20, m, -1.6, '#ffd23f', [.2, .2, .2], [Math.PI / 2, 0, 0]); } // (build 145: no jump pole on islands)
 
     // ---------- the ALIENS: a different kind on every planet; tap one and it says hello in its own voice ----------
     const AL = {
@@ -758,7 +773,7 @@ export function initSpace(G, api) {
       neptune: { name: 'Windies', body: '#5a82f0', eye: 2, ant: 0, shape: 'wisp', move: 'swoosh', note: 450, hi: 'Whoosh! The wind is so fast on Neptune!', iris: '#12308a' },
       sun: { name: 'Sunnies', body: '#ffcf3a', eye: 2, ant: 2, shape: 'spiky', move: 'float', note: 820, hi: 'Hello! We are Sunnies! We wear sunglasses because the Sun is SO bright!', shades: 1, iris: '#a0521a' },
       pluto: { name: 'Heartlings', body: '#ff9fd2', eye: 2, ant: 2, shape: 'heart', move: 'hop', note: 1000, hi: 'Hello, friend! We love our big icy heart!', iris: '#b02a7a' },
-    }[id] || DIM[id]?.alien; // (build 131) a dimension brings its own creatures
+    }[id] || DIM[id]?.alien || ISLAND[id]?.alien; // (build 131) a dimension brings its own creatures
     const placeAlien = (x0, z0, k, interactId = null) => { const a = alien(AL, k); a.position.set(x0, 0, z0); add(a); let boing = 0, blink = 2 + k, px = x0, air = 0; const b = a.userData.body, lids = a.userData.lids, ants = a.userData.ants;
       tapIt(a, () => { boing = 1; Sound.tone(AL.note, .12, 'sine', .05, 1.4); Sound.tone(AL.note * 1.25, .12, 'sine', .05, 1.3, .14); api.burst(a.position.x, a.position.y + 1.5, z0, ['#ffffff', '#ffe36e', AL.body], 6, 2); say(`👽 ${AL.hi}`, true); disc('alien_' + id, `Meet the aliens on every planet!`); }, x0, interactId);
       U.push((dt, t) => { if (Math.abs(P.x - x0) > 45 && !boing) return; boing = Math.max(0, boing - dt * 1.5); const ph = t * 1.3 + k * 2; let sq = 0; // sq: squash (+) and stretch (-), so nothing moves like a stiff toy
@@ -794,8 +809,8 @@ export function initSpace(G, api) {
     const sbox = (x, y, z, w, h, d, c, o = {}) => { const m = new THREE.Mesh(UNIT_BOX, toy(c, o)); m.position.set(x, y + h / 2, z); m.scale.set(w, h, d); return add(m); };
     const plat = (a, b, y, o = {}) => G.platforms.push({ a, b, y, layer: 'space', z: -1.2, ...o });
     const rocketSign = x => { const g2 = new THREE.Group(); g2.position.set(x, 0, -1.8); add(g2); const post = new THREE.Mesh(UNIT_BOX, toy('#ffffff', { r: .5 })); post.scale.set(.12, 1.4, .12); post.position.y = .7; g2.add(post);
-      const mini = new THREE.Group(); mini.scale.setScalar(.22); mini.position.y = 1.4; g2.add(mini); rocketModel(mini); const back = () => { const r = G.rockets[id]; if (!r) return; api.flash(); P.x = r.x + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; api.snap(); Sound.whoosh(); say('🚀 Back to the rocket!', true); disc('rocketback', '🚀 Tap a little rocket sign to go back to your rocket.'); };
-      tapIt(g2, back); G.interact.push({ x, y: 0, layer: 'space', run: back, hintY: 2.4, icon: '🚀', action: 'Back to the rocket' }); U.push((dt, t) => { mini.rotation.y = t; mini.position.y = 1.4 + Math.sin(t * 2) * .08; }); };
+      const mini = new THREE.Group(); mini.scale.setScalar(.22); mini.position.y = 1.4; g2.add(mini); if (ISLAND[id]) { mini.scale.setScalar(.4); mini.add(model(b => { b.put(K.geo.box(), 0, .25, 0, '#ffffff', [1.8, .5, .8]); b.put(K.geo.cyl(10), 0, 1.2, 0, '#8a5a3a', [.05, 1.8, .05]); b.put(K.geo.cyl(10), .25, 1.1, 0, '#ffd23f', [.03, 1.2, .5], [0, 0, -.45]); })); } else rocketModel(mini); const back = () => { if (ISLAND[id]) { api.flash(); P.x = placeX(PLACES.findIndex(q => q[0] === id)) + 4; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; api.snap(); Sound.whoosh(); say('⛵ Back to the boat!', true); return; } const r = G.rockets[id]; if (!r) return; api.flash(); P.x = r.x + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; api.snap(); Sound.whoosh(); say('🚀 Back to the rocket!', true); disc('rocketback', '🚀 Tap a little rocket sign to go back to your rocket.'); };
+      tapIt(g2, back); G.interact.push({ x, y: 0, layer: 'space', run: back, hintY: 2.4, icon: ISLAND[id] ? '⛵' : '🚀', action: ISLAND[id] ? 'Back to the boat' : 'Back to the rocket' }); U.push((dt, t) => { mini.rotation.y = t; mini.position.y = 1.4 + Math.sin(t * 2) * .08; }); };
     return { ...K, s0: X + s * SECTION, g: sub, add, sball, sbox, plat, rocketSign };
   }
   function rocketModel(rk) {
