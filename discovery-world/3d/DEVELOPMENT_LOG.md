@@ -6,6 +6,22 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 138 — speed: the rocky planets' rocks, and what the Sky Playground really costs
+From the ATTRACTIONS checklist (row 2: the Jupiter Sky Playground; row 4: the Mercury funhouse, both marked slower). A new
+probe (`/tmp` helper, like `pplanet.cjs`) lists every mesh drawn in view, with its triangles and material.
+- **Found on every rocky planet** (Mercury, Venus, Mars, the Moon, Pluto and the other non-gas places): each area's 9 soft craters and 8
+  scattered rocks were 17 separate meshes, **each with its own new material**. They are now one batched mesh per area with the
+  shared rough paint material (`space.js`, `buildArea`), on a lighter sphere (252 triangles instead of 720; they are low and
+  flattened, so they look the same). A first try kept the 720-triangle sphere: 4–6 fewer draw calls, but +8–20k triangles in
+  view (one batch is drawn whole, single rocks were skipped off-screen) and mixed frame times; the lighter sphere fixed it.
+- **Mercury funhouse, the light game:** its four lamp cords were four meshes; now one.
+- **Jupiter Sky Playground:** in view at +150 to +205 it adds only 9–14 of the 72–78 draw calls, most of them tap targets
+  (earlier builds found merging those saves 1–3). The biggest cost in every view is **her own character, about 33 draw calls**
+  (its parts are separate meshes): the most useful speed task for the whole game, now in NEXT_TASKS.
+- Measured (PERFORMANCE_LOG): 4–6 fewer draw calls on Mercury and Mars, frame times the same or faster.
+- Tests: `mercury-funhouse.cjs`, `mercury-maze.cjs` pass; unit tests 142/142; full smoke test: see below. Desktop, software
+  rendering; not tried on the iPhone.
+
 ## Checkpoint: build 137 — THE WACKY GRAVITY WORLD (the fifth dimension)
 A fifth 🌀 wormhole (purple, teal and orange) leads to **the Wacky Gravity World** (`src/wacky.js`), where gravity changes from
 place to place. One small new rule in `main.js`: `G.gravScale` (how strong gravity is here), next to build 131's `G.gravSign`

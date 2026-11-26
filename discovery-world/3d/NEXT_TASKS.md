@@ -4,6 +4,12 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
+## SPEED: her own character (found in build 138)
+Every view draws her character as about 33 separate meshes (head, ears, hands, tail... each its own draw call): more than any
+attraction (the Jupiter Sky Playground adds 9–14). Batching the parts that move together (a static part per bone, merged per
+bone group, or one skinned mesh) would make every place faster. Measure with the mesh listing before and after; the dress-up
+accessories and Play Together players use the same parts, so check both.
+
 ## THE MULTIVERSE (family request, 2026-11-25) — phases 1–2 done in build 131, the Toy Universe in build 132
 Wormholes in open space lead to other DIMENSIONS. Each dimension is one entry in `src/dimensions.js` (look, gravity, wormhole
 place and colours, creatures) + its areas module in `PLANET_EXTRA` (planets.js) + its landing ground in space.js. It streams
