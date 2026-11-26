@@ -25,7 +25,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   await want([]);
   check('she catches all six kite stars', await ev(() => __DDW3.world.disc.has('kitestars')), String(await ev(() => __DDW3.player.ride && __DDW3.player.ride.n)));
   await page.keyboard.press(' '); const off = await until(() => !__DDW3.player.ride, null, 5000);
-  let minVy = 0; for (let i = 0; i < 40; i++) { const v = await ev(() => __DDW3.player.grounded ? 0 : __DDW3.player.vy); minVy = Math.min(minVy, v); if (await ev(() => __DDW3.player.grounded)) break; await sleep(100); }
+  let minVy = 0; for (let i = 0; i < 200; i++) { /* (she may let go 20 m up: floating down at 3 m/s takes a while) */ const v = await ev(() => __DDW3.player.grounded ? 0 : __DDW3.player.vy); minVy = Math.min(minVy, v); if (await ev(() => __DDW3.player.grounded)) break; await sleep(100); }
   const land = await ev(() => ({ g: __DDW3.player.grounded, y: +__DDW3.player.y.toFixed(2) }));
   check('JUMP lets go, and she floats gently down onto the clouds', off && minVy > -3.1 && land.g && land.y >= 9.4, JSON.stringify({ minVy: +minVy.toFixed(2), ...land }));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));

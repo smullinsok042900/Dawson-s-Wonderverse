@@ -129,9 +129,11 @@ export function buildSky(G) {
     post.add(at(new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 8, 16), toy('#ffd23f', { r: .4 })), 0, 1.45, 0));
     const kite = new THREE.Group(); add(kite);
     { const sh = new THREE.Shape(); sh.moveTo(0, 1.1); sh.lineTo(.8, 0); sh.lineTo(0, -1.3); sh.lineTo(-.8, 0); sh.lineTo(0, 1.1);
-      const g = new THREE.ShapeGeometry(sh); const col = []; const p = g.attributes.position; const RB6 = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#36c96b', '#3d9bff', '#a15cff'];
-      for (let i = 0; i < p.count; i++) { const c = new THREE.Color(RB6[Math.min(5, Math.max(0, Math.floor((p.getY(i) + 1.3) / 2.4 * 6)))]); col.push(c.r, c.g, c.b); } g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-      const sail = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: .6 })); sail.position.y = 1.2; kite.add(sail);
+      const g = new THREE.ShapeGeometry(sh), p = g.attributes.position, uv = g.attributes.uv, RB6 = ['#ff4f6a', '#ff9a2e', '#ffd23f', '#36c96b', '#3d9bff', '#a15cff'];
+      for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + .8) / 1.6, (p.getY(i) + 1.3) / 2.4);
+      const cv = document.createElement('canvas'); cv.width = 8; cv.height = 64; const cx = cv.getContext('2d'); RB6.forEach((c, i) => { cx.fillStyle = c; cx.fillRect(0, 64 - (i + 1) * 64 / 6, 8, 64 / 6 + 1); }); // (rainbow stripes, red at the bottom)
+      const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.magFilter = THREE.NearestFilter;
+      const sail = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: tx, side: THREE.DoubleSide, roughness: .6 })); sail.position.y = .9; kite.add(sail);
       for (let i = 0; i < 5; i++) kite.add(at(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), toy(RB6[i], { r: .5 })), Math.sin(i * 1.3) * .12, -.25 - i * .3, 0)); } // its tail of bows
     const strM = new THREE.MeshBasicMaterial({ color: '#ffffff' }), str = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, 1, 5), strM); add(str);
     const RSG = new THREE.OctahedronGeometry(.3), kstars = [[AX - 5, AY + 4], [AX - 2, AY + 7.5], [AX + 2.5, AY + 6], [AX + 5.5, AY + 3.2], [AX - 7, AY + 1.6], [AX + 1, AY + 9.8]].map(([x, y]) => { const m = new THREE.Mesh(RSG, toy('#ffd23f', { em: '#ffb000', ei: .8 })); m.position.set(x, y, KZ); m.visible = false; add(m); return { m, got: false }; });
@@ -145,7 +147,7 @@ export function buildSky(G) {
     tapIt(kite, start, AX, 'skykite', 3.4); tapIt(post, start, AX, null);
     ups.push((dt, t) => { const P = G.player; if (!P) return; for (const q of kstars) if (!q.got && q.m.visible) q.m.rotation.y = t * 2;
       if (floatDown) { if (P.ride || P.grounded || P.layer !== '') floatDown = false; else P.vy = Math.max(P.vy, -3); }
-      if (!R) { ang = -.5 + Math.sin(t * .7) * .12; len = 3.2; place(); return; }
+      if (!R) { ang = -.35 + Math.sin(t * .7) * .1; len = 1.6; place(); return; } // (resting low over its post, easy to see and tap)
       if (P.ride !== R) { R = null; for (const q of kstars) q.m.visible = false; return; }
       dt = Math.min(dt, .1); R.t += dt; const st = A().stick ? A().stick() : { x: 0, y: 0 };
       ang = Math.max(-1.25, Math.min(1.25, ang + (st.x > .3 ? 1 : st.x < -.3 ? -1 : 0) * 1.1 * dt + Math.sin(t * 1.3) * .05 * dt));
