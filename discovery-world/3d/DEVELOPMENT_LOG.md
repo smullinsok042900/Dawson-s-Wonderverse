@@ -6,6 +6,37 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: builds 144–146 — the family's requests: REALLY DO THINGS, GO INSIDE, SAIL THE OCEAN TO JUNGLE ISLAND
+Tested together (one full smoke run for all three). Desktop, software rendering; not tried on the iPhone.
+- **Build 144: hands-on activities (from the family's pictures).** `G.hold(obj)` (main.js) puts a tool in her hand, whichever
+  friend she plays.
+  - **Fishing (pier):** she takes the rod from its stand; taps the water where to cast (the bobber flies out on its line and
+    lands there); waits; the bobber dips and splashes ("A bite!"); a quick tap reels it in and the catch flies into the
+    bucket; too slow and the fish swims away. Walking off puts the rod back.
+  - **Snowballs (Frosty Peaks):** she taps the snow pile and packs a snowball in her hand, then taps the target where to throw
+    it; it flies there and leaves a splat; the middle is a BULLSEYE.
+  - **No hovering animals:** the barn animals walk out of the barn on the ground (a waddle) and back in; the hen and the
+    hollow-log critters stand on the ground (`groundToy`); the seal lies on its rock (it follows the rock's rounded top).
+  - **The owl path:** big owl pictures on posts that light up one after another after the owl call (they were tiny).
+  - **Birds really fly:** the seagulls and the boat's gull have wings that flap (bursts, then a glide), face the way they
+    fly and bank into turns (`flyingBird`).
+- **Build 145: SAIL THE OCEAN (`ocean.js`) TO JUNGLE ISLAND (`islands.js`, `jungle.js`).** Tap the beach boat and she sails
+  out: ◀ ▶ steer, ▲ ▼ faster/slower, 🗺️ picture map (the boat sails there itself), dolphins, ⚓ lands, 🏠 Home Harbour back to
+  the beach. Islands are places of the planets engine (built when she lands, freed when she sails away), with a dock and her
+  boat instead of a rocket pad. Jungle Island: vine swings over a mud pit (JUMP as she swings forward), stepping stones
+  across the river, walking THROUGH the waterfall into a hidden crystal cave with a treasure chest, treehouses with a rope
+  ladder, a rope bridge and a zip line; pets Coco (monkey) and Rio (parrot).
+- **Build 146: GO INSIDE, and REAL TUNNELS.** The lighthouse (a door; the front turns see-through; winding stairs to the lamp
+  room) and the igloo (a fire, a rug, cocoa, a sleeping baby penguin). The secret tunnels: the mouth shows a picture of where
+  it leads (no black hole); she walks through a lamp-lit tunnel (cut open toward us) and comes out at the far end.
+- **What the tests found and fixed:** the island signs used a helper that did not exist in the island's areas, so two areas
+  did not build; the first BULLSEYE was hidden by the "discovered" note; the rope bridge's rising planks dropped her (now she
+  steps up) and a 1.25 m gap before the second treehouse (now the planks reach both decks); the snowball target emoji 🎯, the
+  bite ❗ and the lighthouse 🗼 had no 3D toy model (the toy-model rule): 🌟, 🐟 and 💡 instead.
+- **Faster testing, the same checks:** `?norender` (tests only), `tests/perf/compare.cjs` (automatic extra rounds), notes in
+  CLAUDE.md.
+- Tests: `hands-on.cjs` 14/14, `ocean.cjs` 15/15, `insides.cjs` 9/9 (all passed), unit tests 142/142; full smoke test: see below.
+
 ## Checkpoint: build 143 — EVERY FRIEND ON THE START SCREEN (family request) and the SKY KINGDOM'S RAINBOW KITE
 - **The family asked for every character to be choosable from the start**, not just four. The start screen now shows all
   twelve (Pip, Zuzu, Jelly, Sprout, Puffle, Luna, Bloop, Zip, Glimmer, Pompom, Bibble, Cosmo) in two rows of picture

@@ -12,6 +12,11 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
+## 3D builds 144–146: really fish, throw snowballs, sail to Jungle Island, go inside
+- Fish with a real rod (cast where you tap, wait for a bite, reel it in), make and throw snowballs where you tap, animals
+  that walk on the ground, birds that really fly. Sail the ocean in the beach boat to Jungle Island: vines, a waterfall cave
+  with treasure, treehouses and a zip line. Go inside the lighthouse and the igloo; walk through the secret tunnels.
+
 ## 3D build 143: everyone on the start screen, and the rainbow kite
 - All twelve friends can be picked on the start screen. In the Sky Kingdom, fly the rainbow kite: ◀ ▶ swing, ▲ ▼ higher
   and lower, catch six stars.

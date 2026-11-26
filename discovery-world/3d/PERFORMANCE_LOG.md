@@ -4,6 +4,16 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Builds 144–146 (hands-on activities, the ocean and Jungle Island, going inside)
+Desktop, software rendering; against build 143 (median frame ms, the mean of the rounds).
+- Woods (four rounds each): overall 724 → 715 ms; per spot -160 878 → 743, -185 697 → 722, -211 601 → 657, -240 774 → 725,
+  -255 671 → 728 (inside the noise: the rounds of one build vary by 200–400 ms here).
+- Pier (four rounds each): -552 764 → 705, -584 572 → 617 (one round of each build read ~320 ms), -620 244 → 241.
+- Farm (two rounds each): -420 513 → 480, -440 492 → 499, -466 557 → 551. Beach (two rounds each): -50 806 → 708,
+  -70 631 → 547, -88 278 → 270. Frosty (one round): -326 298 → 277, -336 289 → 273, -346 275 → 266.
+- Jungle Island (new, two rounds): 148–171 ms per frame on its spots (273 at the landing once), 49–59 draw calls: among the
+  lightest places. The ocean is drawn only while she sails. Not measured on the iPhone.
+
 ## Build 143 (every friend on the start screen; the rainbow kite)
 Desktop, software rendering; the Sky Kingdom (x 30, 41, 55), build 142 vs 143, two rounds each (median ms): +30 593–650 →
 630–668, +41 371–373 → 337–340, +55 380–405 → 385–386. The same. On the very first start the eight newer friends'

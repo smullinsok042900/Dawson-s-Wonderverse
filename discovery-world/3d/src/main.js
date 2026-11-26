@@ -50,6 +50,7 @@ import { LOWSTATS } from './assets.js';
 import { SCULPT_STATS } from './sculpt.js';
 import { FUR } from './fur.js';
 import { makeIntervalIndex } from './spatial.js';
+import { initOcean } from './ocean.js'; // (build 145) sail the open ocean to the islands
 import { initDeep, rocketMesh as deepRocketMesh } from './deepspace.js'; // (build 126) open space: fly the rocket, spacewalks
 import { runInSlices as deepSlices } from './stream-work.js'; // (overhaul) indexed collision lookups
 import { auditScene } from './scene-audit.js'; // (overhaul) automated geometry/placement validation
@@ -60,6 +61,9 @@ const lerp = (a, b, k) => a + (b - a) * k;
 const SAVE_KEY = 'dawsons-discovery-world-3d-v1';
 // ?test = light mode for the automated logic tests (software WebGL in the test browser is very slow)
 const TEST = /[?&]test/.test(location.search);
+// (build 146) TESTS ONLY: ?norender runs the whole game (physics, rides, streaming, saving, sounds) but does not draw the frames,
+//  so tests that check the game's state run at full speed on a machine without a graphics chip. The full smoke test always draws.
+const NORENDER = /[?&]norender/.test(location.search);
 // build 18: one balanced light rig (key : fill about 3 : 1, so things have form and shadows, and
 // sunlit pastels stay below white instead of clipping). Values were tuned against measured screenshots.
 const LIGHT = { env: .55, hemi: .78, sun: 3.05, rim: .5, exposure: 1.02 };
@@ -178,6 +182,10 @@ let creature = null;
 const shadowMat = new THREE.MeshBasicMaterial({ map: G.aoTex, transparent: true, depthWrite: false, opacity: 1, polygonOffset: true, polygonOffsetFactor: -4 });
 const blob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1), shadowMat); blob.rotation.x = -Math.PI / 2; blob.renderOrder = 3; blob.userData.dynamic = true; /* (build 33: it follows you; never part of a scenery slice) */ scene.add(blob);
 function groundUnder(x, y) { if (player.layer === 'sea') return SEA.floor; let g = y > UG.ceil + .05 && !inShaftX(x) ? 0 : player.layer === 'in' ? 0 : UG.floor; if (player.layer === 'in' && y >= IN.f2 - .05) g = IN.f2; for (const z of platformIndex.query(G.platforms, x, player.layer, frameNow)) if (z.layer === player.layer && x >= z.a && x <= z.b && z.y <= y + .01 && z.y > g) g = z.y; return g; }
+// (build 144) SOMETHING IN HER HAND: G.hold(obj) puts a fishing rod, a snowball... at her side, moving with her (whichever
+//  friend she plays); G.hold(null) puts it down. The object is the activity's own (it is not freed here).
+const handG = new THREE.Group(); scene.add(handG);
+G.hold = obj => { for (const o of [...handG.children]) handG.remove(o); if (obj) handG.add(obj); G.holding = obj || null; };
 function setCreature(kind) {
   if (creature) { scene.remove(creature.root); freeLater(creature.root); } /* (build 107: free the old friend: it used to stay on the graphics chip) */
   player.creature = kind; creature = makeCreature(kind, { body: (world.styles || {})[kind] }); scene.add(creature.root); wear(creature.parts, kind, (world.wear || {})[kind]); /* (build 101: her outfit for this friend) */
@@ -275,7 +283,7 @@ const ROCKET_PAD = 693; // (build 64: moved off the colour pond)
 // the arrow pad / joystick as -1…1 (build 71: planet rides; build 118: Earth rides too)
 function readStick() { const sd = stick && stick.active ? stick : null; return { x: (keys.right ? 1 : 0) - (keys.left ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, sd.dx / 55)) : 0), y: (keys.up ? 1 : 0) - (keys.down ? 1 : 0) || (sd ? Math.max(-1, Math.min(1, -sd.dy / 55)) : 0) }; }
 const space = initSpace(G, { registerRocket: (...a) => registerRocket(...a), scene, Sound, player, makeCreature: k => makeCreature(k, { body: (world.styles || {})[k] }), creatureKind: () => player.creature, /* (build 67: the funhouse mirrors) */ toast: m => toast(m), discover: (id, m) => discover(id, m), burst: (...a) => burst(...a), keysHeld: () => keys.left || keys.right, keysUp: () => !!(keys.up || (stick && stick.active && stick.dy < -25)),
-  stick: () => readStick(), /* (build 71: steer planet rides) */ /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
+  stick: () => readStick(), toOcean: id => G.sail(id), /* (build 145) an island's boat sails her back out to sea */ /* (build 71: steer planet rides) */ /* (build 68: climbing) */ flash: () => { world.flash = 1; }, snap: () => snapCamera(), compile: g => compileGroup(g), camX: () => camT.x, camY: () => camT.y, calm: () => world.comfort?.calm, light: L => spaceLight(L), boost: k => { hemi.intensity = (spaceLit ? spaceLit.hemi[2] : LIGHT.hemi) * (1 + k * 2.5); },
   openPicker: () => openRocket(), home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; P.x = ROCKET_PAD + 2.5; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; expansion.buildNow(ROCKET_PAD); snapCamera(); Sound.chime(); toast('🌍 Home to planet Earth!'); saveSoon(); } });
 // (build 49) every planet has its own light: the sun's colour and strength, the light from the sky, the haze, and where
 // the sun stands (low and from the side on the airless worlds, for long shadows). Only numbers change: no new shaders.
@@ -288,6 +296,13 @@ function spaceLight(L) {
 }
 G.space = space;
 const deep = initDeep(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L), art: id => planetArt(id), creatureRoot: () => creature && creature.root, land: dest => deepLand(dest), preload: id => space.prepare(id).catch(() => { }), /* (build 137) a wormhole starts building its world under the warp swirl */ hasPet: () => !!(G.followerCount && G.followerCount()) });
+// (build 145) THE OPEN OCEAN: she climbs into the beach boat and sails to the islands (ocean.js); landing on an island goes
+//  through the planets engine like a planet; Home Harbour brings her back to the beach by the pier's boat
+const ocean = initOcean(G, { scene, Sound, player, toast: (m, sp) => toast(m, sp), speak: t => voice.speak(t), discover: (id, m) => discover(id, m), stick: () => readStick(), slices: it => deepSlices(it), light: L => spaceLight(L),
+  land: id => deepLand(id),
+  home: () => { const P = player; world.flash = 1; P.layer = ''; P.ride = null; G.playerHidden = false; spaceLight(null); P.x = -113; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; expansion.buildNow(-113); snapCamera(); saveSoon(); } });
+G.ocean = ocean;
+G.sail = async from => { if (player.layer === 'space') space.hideAll(); G.camOverride = null; await ocean.enter(from || 'home'); };
 G.deep = deep;
 // (build 126) landing on a planet flown up to in open space: the normal landing (the rocket comes down onto that planet's pad)
 // (The rocket she took off in may not exist any more: the place it stands on is freed while she is far away in space, so
@@ -300,7 +315,7 @@ async function deepLand(dest) {
   P.ride = { type: 'rocket', key: dest, phase: 'land', t0: rkNow(), seat: 0 }; G.playerHidden = true; showFace(r2, true);
   P.x = r2.x; P.y = r2.baseY; P.z = r2.g.position.z + 1.05; r2.g.position.y = r2.baseY + 26; G.camLift = 26; snapCamera(); camT.y = P.y + 26;
 }
-const expansion = initExpansion(G, { stick: () => readStick(), registerRocket: (...a) => registerRocket(...a), scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), rocket: () => openRocket(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]) });
+const expansion = initExpansion(G, { stick: () => readStick(), registerRocket: (...a) => registerRocket(...a), scene, Sound, world, player, MOBILE, toSky: () => G.toSky(), rocket: () => openRocket(), event: e => adventures?.event(e), catch: () => adventures?.catch(), gallery: () => adventures?.gallery(), getKeys: () => keys, startSlide: path => { if (!player.ride) startSlide(path); }, makeTree, burst: (x, y, z, c, n, sp) => burst(x, y, z, c, n, sp), discover: (id, msg) => discover(id, msg), toast: m => toast(m), saveSoon: () => saveSoon(), compile: g => compileGroup(g), warm: g => warmGroup(g), goHome: () => travel(TRAVEL[0]), travelTo: (x, icon, name) => travel([icon, name, x]), snap: () => snapCamera() });
 G.expansion = expansion;
 
 // ---------------- bubbles ----------------
@@ -447,6 +462,7 @@ G.coasterOff = () => { G.camOverride = null; coasterButton(false); };
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
 G.startSlide = (path, o) => startSlide(path, o); // (build 66: the planets' slides)
 function updateRide(dt) {
+  if (player.ride && player.ride.type === 'ocean') { ocean.ride(dt); return; } // (build 145) sailing
   if (player.ride && player.ride.type === 'deep') { deep.ride(dt); return; } // (build 126) open space
   const P = player, R = P.ride;
   if (R.type === 'slide') {
@@ -573,7 +589,7 @@ G.useLift = () => {
 G.startClimb = fromBottom => { const P = player, L = SKY.ladder; if (P.ride || P.layer !== '' || Math.abs(P.x - L.x) > 2) return; if (fromBottom && P.y > .5) return; if (!fromBottom && Math.abs(P.y - L.top) > .5) return; P.ride = { type: 'climb', boost: fromBottom ? .2 : 0 }; if (!fromBottom) P.y = L.top - .05; P.vx = P.vy = 0; Sound.tone(440, .15, 'triangle', .04, 1.3); discover('ladder', 'A rope ladder up to the sky! Hold ▲ to climb.'); };
 // (build 45) THE ROCKET MENU: big round planet pictures (no words to read). Tap one: the voice says its name, a
 // countdown, and off you fly. Earth (first) takes you home to the launch pad.
-const ROCKET_NAMES = { wacky: 'the Wacky Gravity World', jelly: 'the Squishy Jelly World', bubble: 'the Bubble Universe', toy: 'the Giant Toy Universe', upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
+const ROCKET_NAMES = { jungle: 'Jungle Island', wacky: 'the Wacky Gravity World', jelly: 'the Squishy Jelly World', bubble: 'the Bubble Universe', toy: 'the Giant Toy Universe', upside: 'the Upside-Down World', deep: 'open space', sun: 'the Sun', earth: 'Earth', moon: 'the Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto' };
 let rocketPanel = null, launching = false, blastBtn = null, flightSequence = 0;
 // (build 48) A REAL ROCKET RIDE. PAW (or a tap) at the rocket: she walks up and climbs in, and her face shows in the round
 // window. The planet pictures come up; after she picks one, a BIG RED BUTTON appears. Pressing it starts the countdown
@@ -1075,7 +1091,7 @@ const GRAV = 24;
 const solidIndex = makeIntervalIndex(), platformIndex = makeIntervalIndex();
 G.spatial = { solids: solidIndex, platforms: platformIndex };
 let frameNow = 0; // one clock reading per frame, shared by the collision queries
-function bounds() { const P = player; return P.layer === 'space' && G.spaceBounds ? G.spaceBounds : P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
+function bounds() { const P = player; return P.layer === 'tunnel' && G.tunnelBounds ? G.tunnelBounds /* (build 146) inside a secret tunnel */ : P.layer === 'space' && G.spaceBounds ? G.spaceBounds : P.layer === 'sea' ? [SEA.ox + .6, SEA.ox + SEA.w - .6] : P.layer === 'in' ? [IN.ox + .8, IN.ox + IN.w - .8] : P.layer === 'castle' ? [G.castleIn.ox + .8, G.castleIn.ox + G.castleIn.w - .8] : P.y < UG.ceil - .1 ? [UG.x0 + .6, UG.x1 - .6] : [EXP.xMin, EXP.x1]; }
 function updatePlayer(dt) {
   const P = player;
   if (P.stair) { updateStairs(dt); P.z += (IN.stair.z - P.z) * Math.min(1, dt * 8); return; }
@@ -1197,7 +1213,7 @@ function updateCamera(dt) {
 
 // ---------------- world animation ----------------
 function updateWorldAnim(dt, t) {
-  space.update(dt, t); deep.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
+  space.update(dt, t); deep.update(dt, t); ocean.update(dt, t); rkWatchFrame(); wearFind(); /* (build 45: space; build 100: the shared rocket seen by friends on the pad) */
   sea.update(dt, t); // (build 43)
   if (G.skyUpdate && Math.abs(camT.x - 30) < 60) G.skyUpdate(dt, t); // (build 43: the new Sky Kingdom things, only when they're near)
   // (build 43) the learning play spots: the toy turns and bobs, the ring glows, sparkles rise when you come near
@@ -1478,6 +1494,7 @@ function frame() {
   const ix = far ? P.x : prevP.x + (P.x - prevP.x) * a, iy = far ? P.y : prevP.y + (P.y - prevP.y) * a, iz = far ? P.z : prevP.z + (P.z - prevP.z) * a;
   { const sx = P.x, sy = P.y, sz = P.z; P.x = ix; P.y = iy; P.z = iz; updateCamera(raw); P.x = sx; P.y = sy; P.z = sz; }
   creature.root.position.set(ix, iy, iz); creature.root.visible = !G.playerHidden;
+  if (handG.children.length) { const f = P.facing || 1; handG.visible = creature.root.visible; handG.position.set(ix + f * .42, iy + .62, iz + .32); handG.rotation.y = f > 0 ? 0 : Math.PI; } // (build 144) what she holds (a fishing rod, a snowball...)
   { const gy = P.ride ? P.y : groundUnder(P.x, P.y), hgt = Math.max(0, P.y - gy), k = Math.max(.25, 1 - hgt / 4); blob.visible = !(P.ride && (P.ride.type === 'slide' || P.ride.type === 'coaster')) && !P.swim && !G.playerHidden; blob.position.set(P.x, gy + .015, P.z); blob.scale.setScalar(k); shadowMat.opacity = k; }
   { const sliding = P.ride && (P.ride.type === 'slide' || P.ride.type === 'kart' || P.ride.type === 'train' || P.ride.type === 'whale'), k = Math.min(1, dt * 10), sm = (P.layer === 'space' && P.sizeMul) || 1, sy = (P.crawl ? .6 : sliding ? .62 : 1) * sm, sx = (P.crawl ? 1.15 : sliding ? .62 : 1) * sm; /* (build 71: P.sizeMul, the Mercury giant-and-tiny room) */ creature.root.scale.set(lerp(creature.root.scale.x, sx, k), lerp(creature.root.scale.y, sy, k), lerp(creature.root.scale.z, sx, k)); } G.playerBody = creature.root; // (build 48: the crown and wand sit on her as she is drawn: smaller on a ride)
   creature.update(dt, { vx: P.vx, vy: P.vy, grounded: P.grounded || !!P.ride, seated: !!P.ride && P.ride.type !== 'slide' && !(P.ride.type === 'deep' && G.deepFace != null), facing: P.facing, happy: P.happy }); if (G.deepFace != null) creature.root.rotation.y = G.deepFace; /* (build 126: floating in space, she faces the way she drifts) */ tickWorn(creature.parts, T, Math.min(1, Math.abs(P.vx) / 5)); if (G.dressSpin != null) creature.root.rotation.y = G.dressSpin; if (G.flipK || creature.root.userData.flipped) { const fk = G.flipK || 0; creature.root.rotation.x = Math.PI * fk; creature.root.userData.flipped = fk > 0; if (fk > .3) blob.visible = false; } /* (build 131) upside down on the sky land */ /* (build 101: wings flap; swipe to turn her round while dressing up) */
@@ -1494,7 +1511,7 @@ function frame() {
   if (world.flash > 0) { world.flash -= dt * 2.5; $('flash').style.opacity = Math.max(0, world.flash); }
   renderer.shadowMap.needsUpdate = (++shadowTick % shadowEvery) === 0; // (build 24: the sun never moves and most shadow casters stand still: redraw the shadow map every other frame)
   renderer.info.reset(); // (build 26: count every pass of the frame, not just the last one)
-  if (post.enabled) post.render(); else renderer.render(scene, camera);
+  if (NORENDER) { /* (tests only: the frame is not drawn) */ } else if (post.enabled) post.render(); else renderer.render(scene, camera);
   if (!TEST && !/[?&]hq/.test(location.search) && !G.adaptFrozen) { gfx.work += (performance.now() - frameT0 - gfx.work) * .05; adapt(raw); }
   requestAnimationFrame(frame);
 }
@@ -1640,7 +1657,7 @@ function warmPrograms() {
   for (const program of renderer.info.programs) { program.getUniforms(); program.getAttributes(); }
 }
 // (build 29) prepare one newly built neighbourhood's shaders before it appears (in the background where supported)
-function warmGroup(g) { // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
+function warmGroup(g) { if (NORENDER) return; // (build 29) one rehearsal draw of a newly streamed neighbourhood, into the real buffer, before you can see it
   try { const b = new THREE.Box3().setFromObject(g), c = b.getCenter(new THREE.Vector3()), cam = camera.clone(); cam.position.set(c.x, CAM_UP, CAM_DIST); cam.lookAt(c.x, CAM_LOOK, 0); cam.updateMatrixWorld();
     const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; if (post.enabled && !post.lite) { G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true }); renderer.setRenderTarget(G.warmRT); renderer.render(scene, cam); } renderer.setRenderTarget(prev); renderer.shadowMap.autoUpdate = sm; } catch (e) { }
 }
@@ -1671,7 +1688,7 @@ function compileGroup(g) { const prev = renderer.getRenderTarget(); if (post.ena
 // in the middle of a walk into the Dino Kingdom) to a moment when nothing is on screen there.
 const WARM_LAYER = 5, warmCam = new THREE.PerspectiveCamera(45, 2, .1, 60); warmCam.layers.set(WARM_LAYER);
 scene.traverse(o => { if (o.isLight) o.layers.enable(WARM_LAYER); }); // (lights are seen on every layer, so the shaders are the real ones)
-function warmObjects(list) {
+function warmObjects(list) { if (NORENDER) return;
   if (!list.length || !post.enabled) return;
   G.warmRT = G.warmRT || new THREE.WebGLRenderTarget(64, 32, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(64, 32), depthBuffer: true });
   const prev = renderer.getRenderTarget(), sm = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false; const V0 = new THREE.Vector3();
@@ -1696,7 +1713,7 @@ try { globalThis.__ddwCompile(planetWarmup); } catch (e) { console.log('paint wa
 // PRELOAD THE AREAS: while the loading screen shows, draw each area once into a tiny invisible picture (the house
 // upstairs and downstairs, the underground, the clouds, the castle, the park), with the sun's shadow over it. That
 // makes the graphics driver finish every shader and upload every texture and mesh NOW, not the first time you walk in.
-function warmAreas() { const warmT0 = performance.now();
+function warmAreas() { if (NORENDER) return; const warmT0 = performance.now();
   // (build 29) rehearse into the SAME picture buffer the game really draws into (4x anti-aliased, with a depth texture,
   // or the lite one). The graphics driver prepares a separate drawing setup for each kind of buffer; rehearsing into a
   // plain small buffer (builds 24-28) left the real setups to be made on first sight: the stall when entering the house.
@@ -1765,7 +1782,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '143'; G.build = GAME_BUILD;
+const GAME_BUILD = '146'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
