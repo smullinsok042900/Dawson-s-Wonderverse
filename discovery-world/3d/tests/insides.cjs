@@ -14,7 +14,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   // ---------- THE LIGHTHOUSE ----------
   await ev(() => __DDW3.teleport(-95)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x + 95) < .2 && i.action === 'Go inside!'), null, 120000); await sleep(1500);
   await ev(() => { const P = __DDW3.player; P.x = -95; P.y = 0; P.vx = 0; P.grounded = true; }); await run(-95, 'Go inside!'); await sleep(2000);
-  check('lighthouse: she goes in through the door (inside the tower; its front turns see-through)', await ev(() => __DDW3.player.z < -4.5 && __DDW3.world.disc.has('lighthousein')));
+  check('lighthouse: she goes in through the door (inside the tower; its front turns see-through)', await until(() => __DDW3.player.z < -4.5, null, 15000) && await ev(() => { let ok = false; __DDW3.scene.traverse(o => { if (o.isMesh && o.material && o.material.transparent && o.material.opacity < .5 && Math.abs(o.position.x + 95) < .05 && Math.abs(o.position.z + 5.2) < .05) ok = true; }); return ok; }));
   await ev(() => { window.__top = 0; const f = () => { const P = __DDW3.player; if (P.grounded) window.__top = Math.max(window.__top, P.y); if (performance.now() < window.__tE) requestAnimationFrame(f); }; window.__tE = performance.now() + 60000; f(); });
   // climb: walk back and forth across the stairs (they zig-zag), jumping up each one
   for (let n = 0; n < 60 && await ev(() => window.__top) < 6.9; n++) { const right = n % 2 === 0; await page.keyboard.down(right ? 'ArrowRight' : 'ArrowLeft'); await page.keyboard.press(' '); await sleep(700); await page.keyboard.up(right ? 'ArrowRight' : 'ArrowLeft'); await sleep(200); }

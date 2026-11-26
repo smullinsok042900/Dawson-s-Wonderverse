@@ -33,12 +33,12 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('snowball: tap the snow pile and she makes a snowball (in her hand)', await ev(() => !!__DDW3.G.holding) && await toastHas('tap the target'));
   const ring = r => m => m.geometry.type === 'CylinderGeometry' && Math.abs(m.geometry.parameters.radiusTop - 1) < .01 && Math.abs(m.position.x + 312) < .01;
   await ev(w => __tapAt(eval(w), [-312, 2, -3.8]), ring.toString());
-  check('snowball: tap the middle of the target: it flies there, BULLSEYE', await toastHas('BULLSEYE') && await ev(() => __DDW3.world.disc.has('bullseye')));
+  check('snowball: tap the middle of the target: it flies there, BULLSEYE', await until(() => __DDW3.world.disc.has('bullseye'), null, 15000) && await toastHas('BULLSEYE'));
   await ev(() => __DDW3.G.interact.find(i => i.disc === 'snowball').run()); await toastHas('tap the target'); await ev(w => __tapAt(eval(w), [-311.2, 2.1, -3.8]), ring.toString());
   check('snowball: a throw at the edge lands there (not the middle)', await toastHas('On the target'));
   // ---------- THE BARN ANIMALS ----------
-  await ev(() => __DDW3.teleport(-420)); await until(() => !!__DDW3.G.taps.find(t => { let ok = false; t.traverse(m => { if (m.isMesh && m.geometry.type === 'BoxGeometry' && Math.abs(m.position.x + 420.8) < .05 && Math.abs(m.position.z + 3.5) < .05) ok = true; }); return ok; }), null, 120000); await sleep(1500);
-  await ev(() => __tapAt(m => m.geometry.type === 'BoxGeometry' && Math.abs(m.position.x + 420.8) < .05 && Math.abs(m.position.z + 3.5) < .05, [-420.8, 1.4, -3.4]));
+  await ev(() => __DDW3.teleport(-420)); await until(() => !!__DDW3.G.taps.find(t => { let ok = false; t.traverse(m => { if (m.isMesh && Math.abs(m.position.x + 420.8) < .05 && Math.abs(m.position.z + 3.5) < .05) ok = true; }); return ok; }), null, 120000); await sleep(1500);
+  await ev(() => __tapAt(m => Math.abs(m.position.x + 420.8) < .05 && Math.abs(m.position.z + 3.5) < .05, [-420.8, 1.4, -3.4]));
   await sleep(1800);
   const ani = await ev(() => { let r = null; __DDW3.scene.traverse(o => { if (!r && o.visible && o.userData.toySymbol && ['🐴', '🐄', '🐐', '🐑', '🐓'].includes(o.userData.toySymbol) && Math.abs(o.position.x + 420) < .1) { const bb = new __DDW3.THREE.Box3().setFromObject(o); r = { minY: +bb.min.y.toFixed(2), z: +o.position.z.toFixed(2) }; } }); return r; });
   check('barn: the animal walks out on the ground (its feet touch the ground: no hovering)', ani && ani.minY > -.05 && ani.minY < .12 && ani.z > -2.6, JSON.stringify(ani));

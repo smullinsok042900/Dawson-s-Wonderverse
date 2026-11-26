@@ -29,7 +29,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   // the vine swings: grab the first vine, JUMP as she swings forward, three times, and she lands on the far stump
   await ev(X => { const P = __DDW3.player; P.ride = null; __DDW3.G.playerHidden = false; P.x = X + 32; P.y = 0; P.vx = 0; P.grounded = true; __DDW3.G.interact.find(i => i.disc === 'jungleswing').run(); }, JX);
   check('she grabs a vine and swings', await until(() => __DDW3.player.ride && __DDW3.player.ride.type === 'vine', null, 10000));
-  for (let n = 0; n < 400; n++) { const r = await ev(() => { const R = __DDW3.player.ride; return R ? { t: R.type, a: R.ang, w: R.w } : null; }); if (!r) { if (await ev(() => __DDW3.world.disc.has('jungleswing'))) break; } else if (r.t === 'vine' && r.w > .3 && r.a > 0) await page.keyboard.press(' '); await sleep(100); }
+  for (let n = 0; n < 2500; n++) { /* (a slow test browser runs the swings at about a sixth of real speed) */ const r = await ev(() => { const R = __DDW3.player.ride; return R ? { t: R.type, a: R.ang, w: R.w } : null; }); if (!r) { if (await ev(() => __DDW3.world.disc.has('jungleswing'))) break; } else if (r.t === 'vine' && r.w > .3 && r.a > 0) await page.keyboard.press(' '); await sleep(100); }
   check('JUMP as she swings forward leaps from vine to vine, all the way across the mud', await until(() => __DDW3.world.disc.has('jungleswing'), null, 20000), JSON.stringify(await ev(X => ({ x: __DDW3.player.x - X, y: __DDW3.player.y }), JX)));
   // the waterfall cave and its treasure
   await ev(X => { const P = __DDW3.player; P.ride = null; P.x = X + 110 + 52; P.y = 0; P.vx = 0; P.grounded = true; }, JX); await sleep(6000);
