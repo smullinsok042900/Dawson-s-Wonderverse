@@ -49,6 +49,12 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   await ev(() => __DDW3.G.interact.find(i => i.disc === 'woods_listen').run()); await sleep(2500); const o2 = await owls();
   check('owl path: three big owl pictures on posts (about 1 m tall, not tiny)', o1.length === 3 && o1.every(h => h > .8), JSON.stringify(o1));
   check('owl path: after the owl call they light up (grow) one after another', o2.some((h, i) => h > o1[i] + .05), JSON.stringify({ o1, o2 }));
+  // ---------- THE SEAGULLS: really flying ----------
+  await ev(() => __DDW3.teleport(-85)); await sleep(5000);
+  const fly = await ev(async () => { const birds = []; __DDW3.scene.traverse(o => { if (o.userData.fly) birds.push(o); }); if (!birds.length) return null; const g = birds[0], wing = g.children.find(c => c.isGroup), a = [], h = [];
+    for (let n = 0; n < 24; n++) { const p0 = g.position.clone(); await new Promise(r => setTimeout(r, 120)); const d = g.position.clone().sub(p0); const fwd = new __DDW3.THREE.Vector3(1, 0, 0).applyQuaternion(g.quaternion); a.push(wing.rotation.x); if (d.length() > .01) h.push(fwd.x * d.x + fwd.z * d.z > 0); }
+    return { n: birds.length, flap: +(Math.max(...a) - Math.min(...a)).toFixed(2), facing: h.filter(Boolean).length / Math.max(1, h.length) }; });
+  check('the seagulls really fly: wings flap, and they face the way they are going', fly && fly.flap > .5 && fly.facing > .8, JSON.stringify(fly));
   check('no page errors', errs.length === 0, errs.slice(0, 3).join(' | '));
   console.log(fails ? `${fails} FAILED` : 'ALL PASSED'); await b.close(); process.exit(fails ? 1 : 0);
 })();

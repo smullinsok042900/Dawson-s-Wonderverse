@@ -65,6 +65,28 @@ function setToySymbol(group, symbol) {
 // point touches it, wherever the model's own middle is
 const _gb = new THREE.Box3();
 function groundToy(o, y0 = 0) { const py = o.position.y; o.position.y = 0; o.updateMatrixWorld(true); _gb.setFromObject(o); const off = _gb.min.y - (o.parent ? o.parent.getWorldPosition(new THREE.Vector3()).y : 0); o.position.y = y0 - off; o.userData.groundY = o.position.y; return o; }
+// (build 144, the family's request: "make the birds actually fly") A REAL FLYING BIRD: a body, head, beak and tail (one
+// mesh) and two wings on hinges that really flap (bursts of flapping, then a glide with the wings held out). fly(x, y, z, dt)
+// moves it there: it faces where it is going and leans (banks) into its turns, so it looks like it is flying, not sliding.
+const BIRD_GEO = { body: new THREE.SphereGeometry(1, 12, 8), cone: new THREE.ConeGeometry(1, 1, 8), wing: new THREE.BoxGeometry(1, 1, 1) };
+const BIRD_MATS = {}; const birdMat = col => BIRD_MATS[col] || (BIRD_MATS[col] = new THREE.MeshStandardMaterial({ color: col, roughness: .6 }));
+function flyingBird(size = 1, col = '#ffffff', tip = '#3a3f4a') {
+  const g = new THREE.Group(), b = makeBatch();
+  b.put(BIRD_GEO.body, 0, 0, 0, col, [.34, .17, .16]); b.put(BIRD_GEO.body, .3, .08, 0, col, [.13, .12, .11]);
+  b.put(BIRD_GEO.cone, .47, .07, 0, '#ffb02e', [.04, .12, .04], [0, 0, -Math.PI / 2]); b.put(BIRD_GEO.body, .36, .12, .07, '#22222a', .022); b.put(BIRD_GEO.body, .36, .12, -.07, '#22222a', .022);
+  b.put(BIRD_GEO.cone, -.36, .02, 0, col, [.1, .22, .03], [0, 0, Math.PI / 2]);
+  g.add(b.mesh(shinyMat()));
+  const wings = [1, -1].map(sd => { const piv = new THREE.Group(); piv.position.set(.02, .06, sd * .1); const w = new THREE.Mesh(BIRD_GEO.wing, birdMat(col)); w.scale.set(.26, .025, .55); w.position.set(0, 0, sd * .29); piv.add(w);
+    const t2 = new THREE.Mesh(BIRD_GEO.wing, birdMat(tip)); t2.scale.set(.18, .026, .16); t2.position.set(-.03, 0, sd * .5); piv.add(t2); g.add(piv); return { piv, sd }; });
+  g.scale.setScalar(size); g.userData.dynamic = true;
+  let ph = Math.random() * 10, bank = 0, yaw = 0; const last = new THREE.Vector3(NaN, 0, 0);
+  g.userData.fly = (x, y, z, dt) => { ph += dt; const vx = x - last.x, vz = z - last.z, vy = y - last.y;
+    if (last.x === last.x && (vx || vz)) { const ny = Math.atan2(-vz, vx); let d = ny - yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); bank += (-d / Math.max(dt, .016) * .15 - bank) * Math.min(1, dt * 3); bank = Math.max(-.7, Math.min(.7, bank)); yaw += d; g.rotation.set(0, yaw, 0); g.rotateX(bank); g.rotateZ(Math.max(-.35, Math.min(.35, vy / Math.max(dt, .016) * .08))); }
+    last.set(x, y, z); g.position.set(x, y, z);
+    const flapping = (ph % 3.4) < 2, a = flapping ? Math.sin(ph * 13) * .75 : .18 + Math.sin(ph * 2) * .04; // (flap, flap, flap... then glide)
+    for (const w of wings) w.piv.rotation.x = -w.sd * a; };
+  return g;
+}
 function physicalToy(symbol, size = 1) {
   const group = setToySymbol(new THREE.Group(), symbol); group.scale.setScalar(size); return group;
 }
@@ -678,18 +700,18 @@ export function initExpansion(G, api) {
     // the little boat: ring the bell on the pier and it sails across the sea and back
     () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
       const boat = new THREE.Group(); boat.position.set(-115, 0, -12.6); /* (build 62: moored clear of the pier's end, not in its boards) */ c.add(boat); const hull = new THREE.Mesh(boatHull(3, .75, 1.05), mat('#ff7a5c')); hull.position.y = -.05; { const rim = new THREE.Mesh(W.rbox(2.6, .1, 1.3, .05), mat('#ffffff')); rim.position.y = .74; boat.add(rim); } hull.castShadow = true; boat.add(hull); const mast = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, 2.4, 8), mat('#9a6a3a')); mast.position.y = 1.6; boat.add(mast); const sail = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.9, 3), mat('#ffffff')); sail.position.set(.35, 1.7, 0); sail.scale.z = .1; boat.add(sail);
-      const gull = c.toy('🕊️', .8, -115, 4, -12.6); let trip = 0;
+      const gull = flyingBird(1.3); gull.position.set(-115, 4, -12.6); c.add(gull); let trip = 0; /* (build 144: a real flying gull circles the boat) */
       const go = () => { if (trip) return; trip = .001; Sound.bell ? Sound.bell(880, .06) : Sound.chime(); c.say('⛵ Ding ding! The boat is sailing!'); c.disc('boat', '⛵ Ring the bell on the pier and the boat sails away!'); };
       c.tap(bell, go, -115); c.tap(boat, go);
-      return (dt, t) => { boat.rotation.z = Math.sin(t * 1.4) * .06; boat.position.y = Math.sin(t * 1.1) * .08; gull.position.set(boat.position.x + Math.sin(t) * 2, 4 + Math.sin(t * 2) * .3, boat.position.z - 1);
+      return (dt, t) => { boat.rotation.z = Math.sin(t * 1.4) * .06; boat.position.y = Math.sin(t * 1.1) * .08; gull.userData.fly(boat.position.x + Math.sin(t * .8) * 3, 4.2 + Math.sin(t * 1.6) * .5, boat.position.z - 1 + Math.cos(t * .8) * 2.2, Math.min(dt, .1));
         if (trip) { trip += dt; const k = trip < 6 ? trip / 6 : trip < 12 ? 1 - (trip - 6) / 6 : 0; boat.position.x = -115 - Math.sin(k * Math.PI / 2) * 22; boat.position.z = -12.6 - Math.sin(k * Math.PI) * 6; boat.rotation.y = trip < 6 ? Math.PI : 0; if (trip > 12) { trip = 0; boat.position.set(-115, 0, -11); boat.rotation.y = 0; } } }; },
     // the kite: tap it and it flies up high, looping in the wind
     () => { const kite = c.toy('🪁', 1.2, -132, 1.2, -2.6); c.cyl(-132, 0, -2.6, .05, .05, .8, '#9a6a3a'); let fly = 0;
       c.tap(kite, () => { fly = fly ? 0 : .001; c.say(fly ? '🪁 Whee! The kite is flying!' : '🪁 The kite comes down to rest.'); Sound.whoosh ? Sound.whoosh() : Sound.click(); c.disc('kite', '🪁 Tap the kite and it flies up into the sky!'); }, -132);
       return (dt, t) => { const h = fly ? Math.min(1, (fly += dt) / 2) : 0; kite.position.set(-132 + Math.sin(t * 1.3) * 2.5 * h, 1.2 + h * (7 + Math.sin(t * 2.1) * 1.2), -2.6 - h * 3); kite.rotation.z = h ? Math.sin(t * 2) * .5 : 0; }; },
     // seagulls flying over the beach (tap one: squawk!)
-    () => { const gulls = [0, 1, 2].map(i => { const g2 = c.toy('🕊️', .9, -60 - i * 30, 6, -6); c.tap(g2, () => { Sound.tone(1200, .12, 'sawtooth', .02, .6); Sound.tone(1000, .12, 'sawtooth', .02, .6, .15); c.say('🕊️ Squawk! A seagull!'); c.disc('gulls'); }); return { g2, i }; });
-      return (dt, t) => { for (const { g2, i } of gulls) { g2.position.x = -85 + Math.sin(t * .25 + i * 2) * 55; g2.position.y = 6 + Math.sin(t * 1.7 + i) * .8; } }; },
+    () => { const gulls = [0, 1, 2].map(i => { const g2 = flyingBird(1.5); g2.position.set(-60 - i * 30, 6, -6); c.add(g2); c.tap(g2, () => { Sound.tone(1200, .12, 'sawtooth', .02, .6); Sound.tone(1000, .12, 'sawtooth', .02, .6, .15); c.say('🕊️ Squawk! A seagull!'); c.disc('gulls'); }); return { g2, i }; });
+      return (dt, t) => { for (const { g2, i } of gulls) { const a = t * (.11 + i * .015) + i * 2.1; /* (build 144) a big loop over the beach and out over the sea, rising and dipping */ g2.userData.fly(-85 + Math.sin(a) * 50, 6.5 + Math.sin(a * 3 + i) * 1.2 + i * .6, -9 + Math.cos(a) * 3.5, Math.min(dt, .1)); } }; },
   ];
 
   // =================== 🌲 WHISPERING WOODS (x -272 to -150) ===================
