@@ -22,7 +22,7 @@ the first time. Leaving the world puts gravity back to normal (`gravSign`, `grav
 - **Wormhole arrival:** the world now starts building under the warp swirl, and the swirl stays until the frames settle
   (0.9–4 s; never more than 8 s waiting for the build). Measured: the frames under the swirl stay light, but the biggest seen
   frame (about 5 s later, when she steps out of the rocket) is unchanged: see PERFORMANCE_LOG and NEXT_TASKS.
-- Tests: `multiverse.cjs` 63/63 (11 new wacky checks), unit tests 142/142. Desktop, software rendering; not tried on the iPhone.
+- Tests: `multiverse.cjs` 63/63 (11 new wacky checks), unit tests 142/142, **full smoke test 345/345**. Desktop, software rendering; not tried on the iPhone.
 
 ## Checkpoint: build 136 — THE SQUISHY JELLY WORLD (the fourth dimension)
 A fourth 🌀 wormhole (pink, orange and green) leads to **the Squishy Jelly World** (`src/jelly.js`): a candy floor with jam
