@@ -61,6 +61,10 @@ function setToySymbol(group, symbol) {
   group.clear(); group.add(model); group.userData.toySymbol = symbol;
   return group;
 }
+// (build 144, the family's report: "weird animals that just hover") stand a toy model on the ground (or on y0): its lowest
+// point touches it, wherever the model's own middle is
+const _gb = new THREE.Box3();
+function groundToy(o, y0 = 0) { const py = o.position.y; o.position.y = 0; o.updateMatrixWorld(true); _gb.setFromObject(o); const off = _gb.min.y - (o.parent ? o.parent.getWorldPosition(new THREE.Vector3()).y : 0); o.position.y = y0 - off; o.userData.groundY = o.position.y; return o; }
 function physicalToy(symbol, size = 1) {
   const group = setToySymbol(new THREE.Group(), symbol); group.scale.setScalar(size); return group;
 }
@@ -708,18 +712,18 @@ export function initExpansion(G, api) {
     // the hollow log: tap it and a different woodland animal peeks out each time
     () => { const lg = new THREE.Mesh(new THREE.CylinderGeometry(.7, .75, 3, 18), mat('#7a4a2a', { r: .9 })); lg.rotation.z = Math.PI / 2; lg.position.set(-180, .7, -2.8); c.add(lg); const holeEnd = new THREE.Mesh(new THREE.CircleGeometry(.5, 18), mat('#3a2a1a', { r: 1 })); holeEnd.rotation.y = Math.PI / 2; holeEnd.position.set(-178.48, .7, -2.8); c.add(holeEnd); // (a closed log with a dark hole: no double-sided shader needed)
       const who = c.toy('🦔', 1, -178.4, .7, -2.8); who.visible = false; const ANI = [['🦔', 'a hedgehog'], ['🐰', 'a bunny'], ['🐿️', 'a squirrel'], ['🦉', 'an owl'], ['🐸', 'a frog'], ['🦡', 'a badger']]; let k = -1, show = 0;
-      c.tap(lg, () => { k = (k + 1) % ANI.length; setToySymbol(who, ANI[k][0]); who.visible = true; show = 2.5; Sound.giggle(); c.say(`🪵 Peekaboo! It's ${ANI[k][1]}!`); c.disc('log', '🪵 Who is in the hollow log? Tap it to see!'); }, -180);
-      return dt => { if (show > 0) { show -= dt; who.position.x = -178.4 + Math.min(1, (2.5 - show) * 3) * .9; if (show <= 0) who.visible = false; } }; },
+      c.tap(lg, () => { k = (k + 1) % ANI.length; setToySymbol(who, ANI[k][0]); groundToy(who); who.visible = true; show = 2.5; Sound.giggle(); c.say(`🪵 Peekaboo! It's ${ANI[k][1]}!`); c.disc('log', '🪵 Who is in the hollow log? Tap it to see!'); }, -180);
+      return (dt, t) => { if (show > 0) { show -= dt; const w = Math.min(1, (2.5 - show) * 3); who.position.x = -178.4 + w * .9; who.position.y = who.userData.groundY + (w < 1 ? Math.abs(Math.sin(t * 14)) * .12 : 0); if (show <= 0) who.visible = false; } }; }, /* (build 144: it stands and hops on the ground, not in the air) */
     // A sound clue always has matching pictures, so the search works with sound off.
     () => { /* (build 64: a little birdhouse on a post, not a floating ear picture) */ const listen = new THREE.Group(); listen.position.set(-187, 0, -2.2); c.add(listen);
       { const b = makeBatch(); b.put(new THREE.CylinderGeometry(.07, .09, 1.5, 10), 0, .75, 0, '#8a5a3a'); b.put(W.rbox(.6, .6, .5, .08), 0, 1.75, 0, '#ffd9a8');
         b.put(new THREE.ConeGeometry(.55, .4, 4).rotateY(Math.PI / 4), 0, 2.25, 0, '#ff7a9a', [1, 1, .85]); b.put(new THREE.CylinderGeometry(.12, .12, .02, 20), 0, 1.8, .26, '#3a2a1a', 1, [Math.PI / 2, 0, 0]);
         b.put(new THREE.CylinderGeometry(.025, .025, .22, 6), 0, 1.6, .32, '#8a5a3a', 1, [Math.PI / 2, 0, 0]); listen.add(b.mesh(shinyMat())); } /* (one mesh) */ const owl = c.toy('🦉', 1.2, -201, 2.2, -3); owl.visible = false; let listening = world.adventures?.events.includes('woods_listen') || false;
-      [-190, -194, -198].forEach(x => c.sign('🦉', .45, x, .7, -1.4));
+      /* (build 144, the family's report: the little owl pictures were too small to see) big owl pictures on posts along the path; after the owl call they light up one after another, pointing the way */ const owlSigns = [-190, -194, -198].map(x => { c.cyl(x, 0, -2, .06, .07, 1.3, '#8a5a3a'); return c.sign('🦉', 1.05, x, 1.75, -1.95); });
       c.tap(listen, () => { listening = true; api.event?.({ type: 'activity', id: 'woods_listen' }); Sound.tone(420, .3, 'sine', .05, 1); Sound.tone(340, .4, 'sine', .05, 1, .4); c.say('🦉 Hoo hoo! Follow the owl pictures to the hidden owl!'); }, -187, { icon: '👂', label: 'Owl call', action: 'Listen', disc: 'woods_listen' });
       const reveal = () => { if (!listening) { c.say('🏠 Tap the little birdhouse, then follow the owl pictures!'); return; } owl.visible = true; api.event?.({ type: 'activity', id: 'woods_found' }); Sound.giggle(); c.say('🦉 You found the owl! Hoo hoo!'); };
       const hiding = c.sph(-201, .8, -3, .8, '#3f8f4a', { m: { r: .9 } }); c.tap(hiding, reveal, -201, { icon: '🦉', label: 'Hidden owl', action: 'Find owl', disc: 'woods_found' }); c.tap(owl, reveal);
-    },
+      return (dt, t) => { const on = listening && !owl.visible; owlSigns.forEach((sg, i) => { const k = on ? Math.max(0, Math.sin(t * 3 - i * 1.1)) : 0; sg.scale.setScalar(1 + k * .25); sg.position.y = 1.75 + k * .15; }); }; },
     // berry bushes: tap a bush, berries drop into the basket, and we count them
     () => { const bush = c.sph(-195, .9, -3, 1.1, '#3f8f4a', { m: { r: .9 } }); bush.scale.set(1.3, .9, .9); const berries = []; for (let i = 0; i < 6; i++) berries.push(c.sph(-195.8 + (i % 3) * .8, 1.2 + Math.floor(i / 3) * .5, -2.2, .13, '#c2185b', { m: { r: .4 } }));
       c.cyl(-192.4, 0, -2, .5, .4, .5, '#c8925a', { r: .8 }); let n = 0;
@@ -767,11 +771,28 @@ export function initExpansion(G, api) {
       c.tap(roll, () => { roll.rotation.z -= 1; api.event?.({ type: 'activity', id: 'snow_rolled' }); Sound.boing(); c.say('⚪ Roll roll! A snowball for your snow friend!'); }, -302, { icon: '⚪', label: 'Snowball', action: 'Roll snowball', disc: 'snow_rolled' });
       c.tap(pile, () => { if (k < STEPS.length) { parts.push(STEPS[k]()); k++; Sound.tone(400 + k * 70, .12, 'sine', .05, 1.2); c.say(['⛄ A big snowball!', '⛄ Now the middle!', '⛄ And the head!', '🥕 A carrot nose!', '🎩 A hat! Hello, Mister Snowman!'][k - 1]); c.disc('snowman', '⛄ Tap the snow to build a snowman!'); if (k === STEPS.length) { api.event?.({ type: 'activity', id: 'snow_built' }); Sound.giggle(); c.burst(-297, 3.5, -2.6, ['#ffffff', '#9fe6ff'], 20, 3); } }
         else { for (const q of parts) c.remove(q); parts.length = 0; k = 0; c.say('☀️ The sun melted the snowman! Build a new one!'); } }, -300, { icon: '⛄', label: 'Snow friend', action: 'Build snow friend', disc: 'snowman' }); },
-    // snowball toss at a target: tap the snow pile, the snowball flies and splats
-    () => { c.cyl(-312, 0, -4, .08, .08, 2, '#9a6a3a'); const tgt = c.cyl(-312, 2, -3.95, 1, 1, .12, '#ff4f6a'); tgt.rotation.x = Math.PI / 2; const t2 = c.cyl(-312, 2.01, -3.9, .6, .6, .12, '#ffffff'); t2.rotation.x = Math.PI / 2; const t3 = c.cyl(-312, 2.02, -3.85, .25, .25, .12, '#ff4f6a'); t3.rotation.x = Math.PI / 2;
-      const pile = c.sph(-306.5, 0, -1.6, .55, '#ffffff', { m: { r: .9, cc: 0 } }); pile.scale.y = .5; const balls = []; let hits = 0;
-      c.tap(pile, () => { const s2 = c.sph(-306.5, .6, -1.6, .2, '#ffffff', { m: { r: .9, cc: 0 } }); s2.userData.t = 0; balls.push(s2); Sound.whoosh ? Sound.whoosh() : Sound.click(); }, -306.5);
-      return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i]; b.userData.t += dt; const k = Math.min(1, b.userData.t / .8); b.position.set(-306.5 - 5.5 * k, .6 + Math.sin(k * Math.PI) * 2.4 + 1.4 * k, -1.6 - 2.2 * k); if (k >= 1) { c.remove(b); balls.splice(i, 1); hits++; Sound.tone(200, .15, 'square', .03, .6); c.burst(-312, 2, -3.7, ['#ffffff', '#dff3ff'], 12, 2); c.say(hits % 5 === 0 ? `❄️ Splat! ${hits} snowballs!` : '❄️ Splat!'); c.disc('snowball', '❄️ Tap the snow pile to throw snowballs at the target!'); } } }; },
+    // (build 144, the family's request: really throw snowballs) SNOWBALL TOSS: tap the snow pile and she scoops and packs a
+    //  snowball (it grows in her hand). Then tap the target exactly where you want it to go: the snowball flies there and
+    //  leaves a splat. The middle is a bullseye! The splats melt away after a while.
+    () => { const TX = -312, TY = 2, TZ = -3.95; c.cyl(TX, 0, -4, .08, .08, 2, '#9a6a3a'); const rings = [[1, '#ff4f6a', 0], [.6, '#ffffff', .05], [.25, '#ff4f6a', .1]].map(([r, col, dz]) => { const m = c.cyl(TX, TY + dz * .1, TZ + dz, r, r, .12, col); m.rotation.x = Math.PI / 2; return m; });
+      const pile = c.sph(-306.5, 0, -1.6, .55, '#ffffff', { m: { r: .9, cc: 0 } }); pile.scale.y = .5;
+      const ballM = mat('#ffffff', { r: .9, cc: 0 }), held = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), ballM); held.scale.setScalar(.01);
+      let st = 'none', t0 = 0, hits = 0; const flying = [], splats = [];
+      const make = () => { if (st !== 'none' || P.layer !== '' || Math.abs(P.x + 306.5) > 4) return; st = 'make'; t0 = 0; G.hold(held); held.scale.setScalar(.05); Sound.noise ? Sound.noise(.5, 300, 1200, .04) : Sound.click(); c.say('❄️ Scoop, pat, pat... making a snowball!'); };
+      const throwAt = h => { if (st === 'none') { c.say('❄️ Make a snowball first: tap the snow pile!'); return; } if (st !== 'ready') return;
+        const from = new THREE.Vector3(); held.getWorldPosition(from); G.hold(null); st = 'none';
+        const to = h ? h.point.clone() : new THREE.Vector3(TX, TY, TZ + .12); to.z = TZ + .14; const b = new THREE.Mesh(held.geometry, ballM); b.scale.setScalar(.22); b.position.copy(from); c.add(b); flying.push({ b, from, to, t: 0 }); Sound.whoosh ? Sound.whoosh() : Sound.click(); };
+      c.tap(pile, make, -306.5, { icon: '⚪', label: 'Snow pile', action: 'Make a snowball', disc: 'snowball' }); for (const r of rings) c.tap(r, throwAt);
+      return dt => {
+        if (st !== 'none' && (P.layer !== '' || Math.abs(P.x + 306.5) > 12 || G.holding !== held)) { st = 'none'; if (G.holding === held) G.hold(null); }
+        if (st === 'make') { t0 += dt; held.scale.setScalar(.05 + Math.min(1, t0 / .9) * .17); if (t0 >= .9) { st = 'ready'; Sound.tone(520, .1, 'sine', .05, 1.2); c.say('❄️ A snowball! Now tap the target where you want to throw it!'); } }
+        for (let i = flying.length - 1; i >= 0; i--) { const f = flying[i]; f.t += dt; const k = Math.min(1, f.t / .7); f.b.position.lerpVectors(f.from, f.to, k); f.b.position.y += Math.sin(k * Math.PI) * 1.6;
+          if (k >= 1) { c.remove(f.b); flying.splice(i, 1); hits++; const d = Math.hypot(f.to.x - TX, f.to.y - TY), where = d < .3 ? 0 : d < .65 ? 1 : 2;
+            const sp = c.cyl(f.to.x, f.to.y, f.to.z + .02, .16, .16, .03, '#ffffff'); sp.rotation.x = Math.PI / 2; sp.scale.set(1.4, 1, 1.1); splats.push({ m: sp, life: 6 });
+            Sound.tone([880, 520, 300][where], .18, 'square', .03, .6); c.burst(f.to.x, f.to.y, f.to.z + .2, where ? ['#ffffff', '#dff3ff'] : ['#ffd23f', '#ffffff', '#ff4f6a'], where ? 12 : 26, 2);
+            c.say(['🎯 BULLSEYE! Right in the middle!', '❄️ Splat! Close to the middle!', '❄️ Splat! On the target!'][where] + (hits % 5 === 0 ? ` ${NUM[5]} snowballs!` : ''));
+            c.disc('snowball', '❄️ Make a snowball and throw it at the target!'); if (!where) c.disc('bullseye', '🎯 Hit the middle of the snowball target!'); } }
+        for (let i = splats.length - 1; i >= 0; i--) { const sp = splats[i]; sp.life -= dt; if (sp.life < 1) sp.m.scale.setScalar(Math.max(.01, sp.life) * 1.2); if (sp.life <= 0) { c.remove(sp.m); splats.splice(i, 1); } } }; },
     // the frozen pond: step on the ice and you glide along (slippery!)
     () => { const ice = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, .06, 48), mat('#bfe6ff', { r: .08, cc: .8 })); ice.scale.set(7.2, 1, 2.68); /* (build 64: an oval pond, not a hard-edged rectangle) */ ice.position.set(-361, .03, -1.22); /* (build 62: ends at the path's front edge, never past it) */ /* (build 60: the pond stops before the train track) */ ice.receiveShadow = true; c.add(ice); let glide = 0, was = false;
       return dt => { const keys = api.getKeys(), on = P.layer === '' && P.grounded && P.y < .3 && P.x > -368 && P.x < -354 && !P.ride, held = keys.left || keys.right;
@@ -808,12 +829,13 @@ export function initExpansion(G, api) {
       c.block(-420, 4.2, -3.55, 7.2, .25, .2, '#ffffff', { r: .05 }); const rails = [], doors = [-1, 1].map(s2 => { const d = c.block(-420 + s2 * .8, 0, -3.5, 1.6, 2.8, .16, '#b8322c', { r: .08 }); rails.push(c.block(-420 + s2 * .8, 1.4, -3.4, 1.4, .14, .06, '#ffffff', { r: .02 })); return d; }); /* (build 124: each door's white rail slides with its door, so the animal never stands behind a rail floating in the doorway) */
       { const hb = makeBatch(), bx = new THREE.BoxGeometry(1, 1, 1); hb.put(bx, -420, 2.95, -3.55, '#8a2a24', [1.5, 1.05, .12]); hb.put(bx, -420, 2.95, -3.47, '#ffffff', [1.6, .1, .06]); hb.put(bx, -420, 2.95, -3.47, '#ffffff', [.1, 1.1, .06]); c.add(hb.mesh(shinyMat())); bx.dispose(); } /* a real hayloft door with a white cross (one mesh), instead of the little door picture that floated on the wall */
       const who = c.toy('🐴', 1.4, -420, 1.1, -3.1); who.visible = false; const ANI = [['🐴', 'a horse', 'Neigh!', 520], ['🐄', 'a cow', 'Moo!', 140], ['🐐', 'a goat', 'Maa!', 600], ['🐑', 'a sheep', 'Baa!', 480], ['🐓', 'a rooster', 'Cock-a-doodle-doo!', 900]]; let k = -1, show = 0;
-      const open = () => { k = (k + 1) % ANI.length; setToySymbol(who, ANI[k][0]); who.visible = true; show = 3; Sound.tone(ANI[k][3], .25, 'sawtooth', .025, .7); Sound.tone(ANI[k][3] * .8, .3, 'sawtooth', .02, .7, .25); c.say(`${ANI[k][0]} ${ANI[k][2]} It's ${ANI[k][1]}!`); c.disc('barn', '🏚️ Tap the barn doors: who lives inside?'); };
+      const open = () => { k = (k + 1) % ANI.length; setToySymbol(who, ANI[k][0]); who.position.z = -3.4; groundToy(who); who.visible = true; show = 4.2; Sound.tone(ANI[k][3], .25, 'sawtooth', .025, .7); Sound.tone(ANI[k][3] * .8, .3, 'sawtooth', .02, .7, .25); c.say(`${ANI[k][0]} ${ANI[k][2]} It's ${ANI[k][1]}!`); c.disc('barn', '🏚️ Tap the barn doors: who lives inside?'); };
       c.tap(doors[0], open, -420); c.tap(doors[1], open); c.tap(who, open);
-      return dt => { if (show > 0) { show -= dt; const o = Math.min(1, (3 - show) * 3, show * 3); doors[0].position.x = -420.8 - o * 1.4; doors[1].position.x = -419.2 + o * 1.4; rails[0].position.x = doors[0].position.x; rails[1].position.x = doors[1].position.x; who.position.z = -3.1 + o * 1.4; if (show <= 0) who.visible = false; } }; },
+      return (dt, t) => { if (show > 0) { show -= dt; const o = Math.min(1, (4.2 - show) * 3, show * 3), w = Math.min(1, (4.2 - show) / 1.2, show / 1.2); doors[0].position.x = -420.8 - o * 1.4; doors[1].position.x = -419.2 + o * 1.4; rails[0].position.x = doors[0].position.x; rails[1].position.x = doors[1].position.x;
+        /* (build 144) it WALKS out on the ground, step by step (a little waddle), says hello, and walks back in: it no longer floats */ const walking = w < 1; who.position.z = -3.4 + w * 2.2; who.position.y = who.userData.groundY + (walking ? Math.abs(Math.sin(t * 12)) * .08 : 0); who.rotation.z = walking ? Math.sin(t * 12) * .1 : 0; who.rotation.y = show < 1.2 ? Math.PI : 0; if (show <= 0) { who.visible = false; who.rotation.y = 0; } } }; },
     // the hen house: tap the hen and she lays an egg in the basket; count to five and the chicks hatch
     () => { c.block(-432, 0, -4.4, 2.6, 1.8, 2, '#f2c27a', { r: .1 }); const rf = new THREE.Mesh(new THREE.ConeGeometry(2, 1, 4).rotateY(Math.PI / 4), mat('#d8443c')); rf.scale.z = .7; /* (build 48: straight coop roof) */ rf.position.set(-432, 2.3, -4.4); c.add(rf);
-      const hen = c.toy('🐔', 1.1, -431, .7, -2.6); c.cyl(-433.4, 0, -2.4, .55, .45, .45, '#c8925a', { r: .8 }); const eggs = []; const chicks = []; let hatch = 0;
+      const hen = groundToy(c.toy('🐔', 1.1, -431, .7, -2.6)); /* (build 144: on the ground) */ c.cyl(-433.4, 0, -2.4, .55, .45, .45, '#c8925a', { r: .8 }); const eggs = []; const chicks = []; let hatch = 0;
       c.tap(hen, () => { if (hatch) return; const n = eggs.length; const e = c.sph(-433.6 + (n % 3) * .22, .55 + Math.floor(n / 3) * .14, -2.4 + (n % 2) * .1, .11, '#fff6e6', { m: { r: .6 } }); e.scale.y = 1.25; eggs.push(e); Sound.pop ? Sound.pop() : Sound.click(); hen.position.y = 1;
         c.say(`🥚 ${NUM[eggs.length]}!`); c.disc('eggs', '🐔 Tap the hen! Count her eggs.'); if (eggs.length === 5) { hatch = .001; c.say('🥚 Five eggs! Crack crack... the chicks are hatching!'); } }, -431);
       return (dt, t) => { hen.position.y += (.7 - hen.position.y) * Math.min(1, dt * 6); hen.rotation.z = Math.sin(t * 3) * .08;
@@ -880,13 +902,40 @@ export function initExpansion(G, api) {
       const foam = new THREE.Mesh(new THREE.PlaneGeometry(134, .8, 1, 1), mat('#ffffff', { r: .6, cc: 0 })); foam.rotation.x = -Math.PI / 2; foam.position.set(-602, .03, -6.2); c.add(foam);
       c.block(-560, .5, -11, 3, .25, 12, '#b07a4a', { r: .04 }); for (const z of [-6, -10, -14, -17]) for (const dx of [-1.3, 1.3]) c.cyl(-560 + dx, 0, z, .14, .14, .8, '#7a5236');
       return (dt, t) => { foam.position.z = -6.2 + Math.sin(t * .8) * .3; pierSea.update(t); }; },
-    // fishing: tap the rod, wait for the bobber to dip, and a fish jumps into the bucket (count to five, then let them go)
-    () => { c.cyl(-552, 0, -3.2, .06, .06, 1.6, '#7a5236'); const rod = new THREE.Mesh(new THREE.CylinderGeometry(.03, .04, 2.6, 8), mat('#3b2b30')); rod.position.set(-552, 2, -4); rod.rotation.x = -.7; c.add(rod);
-      const bob = c.sph(-552, .15, -6.8, .16, '#ff4f6a', { m: { r: .4 } }); const bucket = c.cyl(-550, 0, -2.2, .4, .32, .55, '#4fa8ff', { r: .5 }); let wait = 0, n = 0, fishCount = 0; const caught = []; let catchCycle = 0;
-      c.tap(rod, () => { if (wait) return; wait = 1.4; c.say('🎣 Shhh... wait for a fish!'); c.disc('fishing', '🎣 Tap the fishing rod and catch a fish!'); }, -552, { icon: '🎣', label: 'Fishing rod', action: 'Catch something', disc: 'fishing' }); c.tap(bob, () => { if (!wait) { wait = 1.4; c.say('🎣 Shhh... wait for a fish!'); } }); c.tap(bucket, () => { c.say(fishCount ? `🪣 ${NUM[Math.min(6, fishCount)]} fish in the bucket!` : '🪣 The bucket is empty. Catch a fish!'); });
-      return (dt, t) => { bob.position.y = .15 + Math.sin(t * 2) * .04; if (wait > 0) { wait -= dt; if (wait < .5) bob.position.y = -.05; if (wait <= 0) { wait = 0; const kind = api.catch?.() ?? ['fish', 'boot', 'shell', 'bottle'][catchCycle++ % 4]; const fishIndex = n % FISH.length; const [e, name] = kind === 'fish' ? FISH[fishIndex] : ({ boot: ['🥾', 'an old boot'], shell: ['🐚', 'a shiny shell'], bottle: ['📜', 'a message bottle with a treasure clue'] }[kind] || FISH[fishIndex]); if (kind === 'fish') { fishCount++; api.event?.({ type: 'activity', id: 'fish_caught' }); api.event?.({ type: 'sea', id: ['bluefish', 'yellowfish', 'puffer', 'bluefish', 'yellowfish'][fishIndex] }); } n++; const f = c.toy(e, .7, -552, .6, -6.8); caught.push({ f, t: 0 }); if (caught.length > 5) c.remove(caught.shift().f); Sound.pop ? Sound.pop() : Sound.click(); c.say(`${e} ${NUM[Math.min(6, n)]}! It's ${name}!`); c.burst(-552, .4, -6.8, ['#9fdcff', '#fff'], 10, 2);
-            if (n === 5) { setTimeout(() => { for (const q of caught) c.remove(q.f); caught.length = 0; n = 0; fishCount = 0; c.say('🌊 The fish swim home. Your other finds go in the beach basket!'); }, 2500); } } }
-        for (const q of caught) { q.t += dt; const k = Math.min(1, q.t / .8); q.f.position.set(-552 + 2 * k, .6 + Math.sin(k * Math.PI) * 1.6 + .2 * k, -6.8 + 4.6 * k); } }; },
+    // (build 144, the family's request: really fish) FISHING: tap the rod on its stand and she takes it (it is in her hand).
+    //  Tap the water where you want to cast: the bobber flies out on its line and lands there. Wait... when the bobber dips
+    //  and splashes (and the voice says "A bite!"), tap quickly to reel it in: the catch flies into the bucket. Too slow, and
+    //  the fish swims away: cast again. Tap the stand to put the rod back (or just walk away).
+    () => { const RX = -552, WZ0 = -6.5; c.cyl(RX, 0, -3.2, .06, .06, 1.6, '#7a5236');
+      const rodGeo = () => { const g = new THREE.Group(); const r = new THREE.Mesh(new THREE.CylinderGeometry(.025, .04, 2.4, 8), mat('#3b2b30')); r.position.set(.55, 1.05, 0); r.rotation.z = -.5; g.add(r); const reel = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .08, 12), mat('#ffd23f', { m: { m: .5 } })); reel.rotation.x = Math.PI / 2; reel.position.set(.08, .1, .06); g.add(reel); return g; };
+      const rackRod = rodGeo(); rackRod.position.set(RX - .2, .6, -3.25); rackRod.rotation.y = -Math.PI / 2; c.add(rackRod);
+      const hand = rodGeo(); hand.scale.setScalar(.8); hand.position.set(-.3, -.5, 0); const handG = new THREE.Group(); handG.add(hand); const TIP = new THREE.Vector3(1.15, 2.1, 0); // (the rod tip, in the rod's own space)
+      const bob = c.sph(RX, .15, WZ0, .14, '#ff4f6a', { m: { r: .4 } }); bob.visible = false;
+      const line = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, 1, 4), new THREE.MeshBasicMaterial({ color: '#f4f4f4' })); line.visible = false; c.add(line);
+      const water = new THREE.Mesh(new THREE.PlaneGeometry(26, 10), new THREE.MeshBasicMaterial({ visible: false })); water.rotation.x = -Math.PI / 2; water.position.set(RX, .08, -11.5); c.add(water);
+      const bucket = c.cyl(-550, 0, -2.2, .4, .32, .55, '#4fa8ff', { r: .5 });
+      let st = 'idle', t0 = 0, wait = 0, n = 0, fishCount = 0, catchCycle = 0; const caught = [], from = new THREE.Vector3(), to = new THREE.Vector3(), tip = new THREE.Vector3(), dir = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+      const tipWorld = () => { hand.updateWorldMatrix(true, false); return tip.copy(TIP).applyMatrix4(hand.matrixWorld); };
+      const take = () => { if (st !== 'idle') { put(); return; } if (P.layer !== '' || Math.abs(P.x - RX) > 4) return; st = 'hold'; rackRod.visible = false; G.hold(handG); Sound.click(); c.say('🎣 You have the fishing rod! Tap the water to cast it out!'); c.disc('fishing', '🎣 Take the fishing rod, cast it into the water and catch a fish!'); };
+      const put = () => { st = 'idle'; rackRod.visible = true; if (G.holding === handG) G.hold(null); bob.visible = line.visible = false; };
+      const cast = h => { if (st !== 'hold') return; to.set(h ? Math.max(RX - 11, Math.min(RX + 11, h.point.x)) : P.x + 1.5, .1, h ? Math.min(WZ0, h.point.z) : -9); from.copy(tipWorld()); st = 'fly'; t0 = 0; bob.visible = line.visible = true; Sound.whoosh ? Sound.whoosh() : Sound.click(); };
+      const reel = () => { if (st !== 'bite') return; st = 'reel'; t0 = 0; from.copy(bob.position); Sound.tone(660, .1, 'square', .03, 1.2); };
+      c.tap(rackRod, take, RX, { icon: '🎣', label: 'Fishing rod', action: 'Take the rod', disc: 'fishing' }); c.tap(water, h => { if (st === 'hold') cast(h); else if (st === 'bite') reel(); else if (st === 'idle') c.say('🎣 Take the fishing rod from its stand first!'); }); c.tap(bob, reel);
+      c.tap(bucket, () => { c.say(fishCount ? `🪣 ${NUM[Math.min(6, fishCount)]} fish in the bucket!` : '🪣 The bucket is empty. Catch a fish!'); });
+      const land = () => { const kind = api.catch?.() ?? ['fish', 'boot', 'shell', 'bottle'][catchCycle++ % 4]; const fishIndex = n % FISH.length; const [e, name] = kind === 'fish' ? FISH[fishIndex] : ({ boot: ['🥾', 'an old boot'], shell: ['🐚', 'a shiny shell'], bottle: ['📜', 'a message bottle with a treasure clue'] }[kind] || FISH[fishIndex]);
+        if (kind === 'fish') { fishCount++; api.event?.({ type: 'activity', id: 'fish_caught' }); api.event?.({ type: 'sea', id: ['bluefish', 'yellowfish', 'puffer', 'bluefish', 'yellowfish'][fishIndex] }); } n++;
+        const f = c.toy(e, .7, bob.position.x, .6, bob.position.z); caught.push({ f, t: 0, x: bob.position.x, z: bob.position.z }); if (caught.length > 5) c.remove(caught.shift().f); Sound.pop ? Sound.pop() : Sound.click(); c.say(`${e} ${NUM[Math.min(6, n)]}! You caught ${name}!`); c.burst(bob.position.x, .4, bob.position.z, ['#9fdcff', '#fff'], 14, 2.2);
+        if (n === 5) setTimeout(() => { for (const q of caught) c.remove(q.f); caught.length = 0; n = 0; fishCount = 0; c.say('🌊 The fish swim home. Your other finds go in the beach basket!'); }, 2500); };
+      return (dt, t) => {
+        if (st !== 'idle' && (P.layer !== '' || Math.abs(P.x - RX) > 9 || G.holding !== handG)) put(); // (she walked away: the rod goes back on its stand)
+        if (st !== 'idle') { const tw = tipWorld();
+          if (st === 'hold') { bob.position.copy(tw).y -= .5; bob.visible = line.visible = true; }
+          else if (st === 'fly') { t0 += dt; const k = Math.min(1, t0 / .7); bob.position.lerpVectors(from, to, k); bob.position.y += Math.sin(k * Math.PI) * 2.2; if (k >= 1) { st = 'wait'; wait = 1.6 + Math.random() * 2; c.burst(to.x, .15, to.z, ['#9fdcff', '#ffffff'], 6, 1); Sound.tone(300, .1, 'sine', .04, .8); c.say('🎣 Plop! Now wait... watch the bobber!'); } }
+          else if (st === 'wait') { bob.position.y = .12 + Math.sin(t * 2.5) * .04; wait -= dt; if (wait <= 0) { st = 'bite'; t0 = 0; Sound.tone(880, .12, 'square', .04, 1.4); c.say('❗ A bite! Quick, tap to reel it in!'); } }
+          else if (st === 'bite') { t0 += dt; bob.position.y = -.08 + Math.sin(t * 22) * .07; if (Math.random() < dt * 12) c.burst(bob.position.x, .1, bob.position.z, ['#9fdcff', '#ffffff'], 2, 1.2); if (t0 > 3) { st = 'hold'; c.say('🐟 Oh! It swam away. Cast again!'); } }
+          else if (st === 'reel') { t0 += dt; const k = Math.min(1, t0 / .6); bob.position.lerpVectors(from, tw, k); if (k >= 1) { st = 'hold'; land(); } }
+          line.position.addVectors(tw, bob.position).multiplyScalar(.5); line.scale.y = tw.distanceTo(bob.position); line.quaternion.setFromUnitVectors(UP, dir.copy(bob.position).sub(tw).normalize()); }
+        for (const q of caught) { q.t += dt; const k = Math.min(1, q.t / .8); q.f.position.set(q.x + (-550 - q.x) * k, .6 + Math.sin(k * Math.PI) * 1.8 + .2 * k, q.z + (-2.2 - q.z) * k); } }; },
     // the tide pool: tap the rocks and a sea creature appears (and is named)
     () => { for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2; const r = c.sph(-566 + Math.cos(a) * 1.3, .1, -3 + Math.sin(a) * .8, .38, '#8a7f74', { m: { r: .9 } }); r.scale.y = .55; } const pool = c.cyl(-566, 0, -3, 1.05, 1.05, .08, '#5fc0f0', { r: .1, cc: .7 }); pool.scale.z = .62;
       const who = c.toy('⭐', .8, -566, .45, -3); who.visible = false; const SEA = [['⭐', 'a starfish'], ['🐌', 'a sea snail'], ['🦀', 'a little crab'], ['🐙', 'an octopus'], ['🦐', 'a shrimp'], ['🪼', 'a jellyfish']]; let k = -1, show = 0;
