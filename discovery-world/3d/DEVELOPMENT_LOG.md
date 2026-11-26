@@ -19,7 +19,7 @@ probe (`/tmp` helper, like `pplanet.cjs`) lists every mesh drawn in view, with i
   (earlier builds found merging those saves 1–3). The biggest cost in every view is **her own character, about 33 draw calls**
   (its parts are separate meshes): the most useful speed task for the whole game, now in NEXT_TASKS.
 - Measured (PERFORMANCE_LOG): 4–6 fewer draw calls on Mercury and Mars, frame times the same or faster.
-- Tests: `mercury-funhouse.cjs`, `mercury-maze.cjs` pass; unit tests 142/142; full smoke test: see below. Desktop, software
+- Tests: `mercury-funhouse.cjs`, `mercury-maze.cjs` pass; unit tests 142/142; **full smoke test 345/345**. Desktop, software
   rendering; not tried on the iPhone.
 
 ## Checkpoint: build 137 — THE WACKY GRAVITY WORLD (the fifth dimension)
