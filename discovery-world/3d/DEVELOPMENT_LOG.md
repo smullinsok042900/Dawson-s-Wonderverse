@@ -6,6 +6,59 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 158 — THE DEEP CAVES and digging her own tunnels (the family's request)
+- "Make the underground underneath the ball pit way bigger, add different caves she can go through and explore, and a
+  shovel so she can dig her own cave tunnels she can actually explore." A glowing cave mouth at the far end of the
+  underground (x 5.6) leads into THE DEEP CAVES (rooms.js, 120 m long, its own camera that follows her up and down):
+  - the GLOW-WORM CAVE: a ceiling of glowing lights, stalactites, glowing mushrooms; a bounce mushroom throws her up onto a
+    high ledge with a glowing gem;
+  - the UNDERGROUND RIVER: stepping stones across, a waterfall behind; falling in splashes her back to the bank (no losing);
+  - the DINOSAUR CAVE: a giant skeleton in the rock (tap: RAWR); the CRYSTAL GROTTO: big crystals that chime (tap or walk by);
+  - THE DIGGING WALL: she takes the SHOVEL (in her hand) and digs into a wall of earth 26 m wide and 12 m deep: walking into
+    the earth digs forward (two bits, her height), ▼ digs down (she falls into the hole), ▲ digs up, a tap on the earth
+    digs there, 🐾 "Dig!" digs. What she digs is really gone: she walks, falls and climbs (single steps, by herself)
+    through her own tunnels; the earth is the tunnel's ceiling (no jumping through it). Ten gems hide in the earth. Her
+    tunnels and gems are kept in the saved game (`world.exp.digs`, `world.exp.digGems`).
+- Engine: `G.roomGround` (a room's ground below its floor: the river, the digging wall) and `roomCam.viewH` (a big room
+  shows part of itself and follows her) in main.js; dynamic 🐾 buttons in rooms; the earth is one instanced mesh; its walls
+  and floors are rebuilt only when she digs.
+- New test `tests/caves.cjs` (14 checks): all passed, drawn and with `&norender`. Pictures: `caves-glow.jpg`,
+  `caves-dino.jpg`, `caves-dig.jpg`.
+- **Full smoke test of builds 153–158: 345/345** (desktop, software rendering). Speed vs build 152: Sunny Beach, Ocean Pier
+  and Lab Gardens the same or faster (`PERFORMANCE_LOG.md`).
+
+## Checkpoint: build 157 — into the greenhouse; the pond off its door (the family's picture and request)
+- **Overlap:** Lab Gardens' colour pond (r 3 at 684, -4.9) ran into the front of the first greenhouse and right across its
+  door. It is now beside the greenhouse, smaller (676, -3.8, r 2.1), with Hoppy the frog moved to its edge; checked: it
+  clears the dome and the door (`insides.cjs`), and the picture shows the door clear.
+- **The greenhouse room** (rooms.js): each greenhouse's door (🐾, or a tap on the door or the glass) takes her inside: glass
+  walls and ribs, planter beds full of flowers, potted plants, butterflies. THE WATERING CAN: she takes it (it is in her
+  hand), waters the three little sprouts, and each grows into a big flower; all three: "All three flowers are blooming!"
+  Walking out (the can stays inside) brings her back to that greenhouse's door.
+- Verified (desktop, software rendering): `insides.cjs` all passed, drawn and with `&norender` (5 new checks); pictures
+  `greenhouse-outside.jpg`, `greenhouse-flowers.jpg`. Ocean Pier speed with its lighthouse vs build 152: the same
+  (-552: 276 → 284, -584: 291 → 304, -620: 259 → 252 ms).
+
+## Checkpoint: build 156 — three more islands (the family's request: "create more islands")
+- New `src/islands2.js` (Volcano Island, Turtle Beach, Treasure Cove), added to `islands.js` (their place on the sea, their
+  sky and light, their creatures), `space.js` (their landing grounds), `planets.js` (their areas) and the 🗺️ sea map (five
+  places now). Each is reached by boat and has hands-on things to do:
+  - 🌋 **Volcano Island:** black sand, a big smoking volcano behind with a glowing top; a warm bubbling HOT SPRING (walk in);
+    lava-rock stepping stones with stars; THE LAVA-ROCK CLIMB up to a lookout where the TELESCOPE makes the volcano puff
+    rainbow smoke; THE ROCK SLIDE back down; THE GEYSER that carries her up on its water jet past a star (she floats down).
+  - 🐢 **Turtle Beach:** three TURTLE NESTS (tap: three baby turtles hatch and waddle down to the sea); a RIDE on the big
+    sea turtle's back along the shore past starfish stars; a SANDCASTLE she builds tower by tower to the flag.
+  - 💎 **Treasure Cove:** big rocks, an old wrecked boat, a TREASURE MAP (three red crosses); DIG at each cross (three
+    taps): chests pop up, the third is the big treasure; tide-pool stepping stones and a lookout rock with stars.
+- New test `tests/islands.cjs` (13 checks, sailing there with the map, landing, and every activity): all passed with `&norender`.
+
+## Checkpoint: build 155 — getting into the lighthouses (the family's report: "you can't enter the other lighthouse either")
+- On Sunny Beach the lamp and the door were both 🐾 targets at the very same spot, and 🐾 chose the lamp (the light
+  shone, no door). Now 🐾 is the door, and the lamp is tapped. Also, tapping ANYWHERE on either lighthouse's tower takes
+  her inside (she taps the tower, not the little door).
+- Checked in an iPhone-sized browser with real touches (desktop, software rendering): a tap on the tower and 🐾 at the
+  door both take her inside, on Sunny Beach and at Ocean Pier; no page errors.
+
 ## Checkpoint: build 154 — a lighthouse at Ocean Pier (the family's pictures: "the lighthouse is still gone")
 - The family's pictures were all taken at Ocean Pier, by the crates and the dolphin hoop, where there was no lighthouse
   (the game's only one stands on Sunny Beach). Now Ocean Pier has its own: a tall red-and-white striped lighthouse on

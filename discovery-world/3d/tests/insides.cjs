@@ -36,6 +36,20 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('Ocean Pier has its own lighthouse beside the crates, and its red door goes into the lighthouse room', plh && (await roomView()).layer === 'room');
   await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Go outside').run()); await sleep(1500);
   check('...and back out at the pier', await ev(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x + 601) < 1));
+  // ---------- (build 157) THE GREENHOUSE at Lab Gardens: its door goes into the greenhouse room; water the three sprouts ----------
+  await ev(() => __DDW3.teleport(684)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x - 682) < .2 && i.action === 'Go inside!'), null, 120000); await sleep(1500); await page.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'greenhouse-outside.jpg'), type: 'jpeg', quality: 85 });
+  const pondOK = await ev(() => { let p = null; __DDW3.scene.traverse(o => { if (o.isMesh && o.geometry.type === 'CylinderGeometry' && o.geometry.parameters.radiusTop === 3 && o.geometry.parameters.height === .08) p = o; }); if (!p) return false; const r = 3 * p.scale.x + .3; return Math.hypot(p.position.x - 682, p.position.z + 11) > 5 + r && Math.hypot(p.position.x - 682, p.position.z + 5.9) > r + .9; });
+  check('the colour pond no longer runs into the greenhouse or across its door', pondOK);
+  await ev(() => { const P = __DDW3.player; P.x = 682; P.y = 0; P.vx = 0; P.grounded = true; }); await run(682, 'Go inside!'); await sleep(2000);
+  const gv = await roomView(); await page.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'greenhouse-inside.jpg'), type: 'jpeg', quality: 85 });
+  check('greenhouse: through its door she walks INTO the greenhouse (a room of glass and flower beds)', gv.layer === 'room' && gv.room && gv.camIn, JSON.stringify(gv));
+  await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Watering can').run());
+  check('greenhouse: she takes the watering can (in her hand)', await ev(() => !!__DDW3.G.holding));
+  await ev(() => { for (const it of __DDW3.G.interact.filter(i => i.layer === 'room' && i.action === 'Water the sprout')) it.run(); });
+  check('greenhouse: she waters the three sprouts and they grow into big flowers ("All three flowers are blooming!")', await until(() => __DDW3.world.disc.has('greenhouseflowers'), null, 10000));
+  await sleep(2500); await page.screenshot({ path: path.join(__dirname, '..', 'screenshots', 'greenhouse-flowers.jpg'), type: 'jpeg', quality: 85 });
+  await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Go outside').run()); await sleep(1500);
+  check('greenhouse: back out at the greenhouse door (the can stays inside)', await ev(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x - 682) < 1 && !__DDW3.G.holding));
   // ---------- THE IGLOO (build 149: a real room inside) ----------
   await ev(() => __DDW3.teleport(-380)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x + 380) < .2 && i.action === 'Go inside!'), null, 120000); await sleep(1500);
   await ev(() => { const P = __DDW3.player; P.x = -380; P.y = 0; P.vx = 0; P.grounded = true; }); await run(-380, 'Go inside!'); await sleep(2000);

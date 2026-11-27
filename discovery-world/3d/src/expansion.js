@@ -225,7 +225,7 @@ export function initExpansion(G, api) {
 
   // ---------- (build 30) PALS: creatures you befriend and keep (a crab at the seaside, a fox cub in the woods) ----------
   X.pals = X.pals || {};
-  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [678, 0, -2.2], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' }, seal: { home: [-584, .36, -2.3], hello: '🦭 Splash the seal is your friend now! Ar ar!' }, goat: { home: [494, 0, -2.4], hello: '🐐 Clover the goat is your friend now! Maa!' } };
+  const PALS = { crab: { home: [-66, 0, -2.4], hello: '🦀 Pinchy the crab is your friend now! Tap Pinchy to stay or to follow.' }, fox: { home: [-262, 0, -2.6], hello: '🦊 Rusty the fox cub is your friend now! Tap Rusty to stay or to follow.' }, penguin: { home: [-372, 0, -2.4], hello: '🐧 Pebble the penguin is your friend now! Tap Pebble to stay or to follow.' }, robot: { home: [646, 0, -2.4], hello: '🤖 Bolt the toy robot is your friend now! Beep boop!' }, frog: { home: [679.6, 0, -1.9], hello: '🐸 Hoppy the frog is your friend now! Ribbit!' }, parrot: { home: [868, 0, -2.4], hello: '🦜 Kiwi the parrot is your friend now! Hello, hello!' }, pig: { home: [-448, 0, -2.4], hello: '🐷 Truffle the piglet is your friend now! Oink oink!' }, seal: { home: [-584, .36, -2.3], hello: '🦭 Splash the seal is your friend now! Ar ar!' }, goat: { home: [494, 0, -2.4], hello: '🐐 Clover the goat is your friend now! Maa!' } };
   const PAL_EMOJI = { crab: '🦀', fox: '🦊', penguin: '🐧', robot: '🤖', frog: '🐸', parrot: '🦜', pig: '🐷', seal: '🦭', goat: '🐐' }, PAL_NAME = { crab: 'Pinchy', fox: 'Rusty', penguin: 'Pebble', robot: 'Bolt', frog: 'Hoppy', parrot: 'Kiwi', pig: 'Truffle', seal: 'Splash', goat: 'Clover' }, PAL_WHERE = { crab: 'at the beach', fox: 'in the woods', penguin: 'in the snow', robot: 'in Toy Town', frog: 'by the pond in the Lab Gardens', parrot: 'in the Art Plaza', pig: 'on the farm', seal: 'at the ocean pier', goat: 'on the Adventure Trail' };
   // (build 107) PETS FROM THE PLANETS join the same friends: befriended where they live (planet-life.js), then they can
   // follow her everywhere, like the Earth pals. At most 4 friends follow at once (to keep the game quick).
@@ -494,15 +494,17 @@ export function initExpansion(G, api) {
     // greenhouse domes behind: raised onto the drum walls and ribs the detail builder adds (stage 9), and now
     // really glazed, so the raised beds and tall planting inside are visible through the panes
     () => { const pane = new THREE.MeshPhysicalMaterial({ color: '#eafcff', roughness: .05, metalness: 0, transparent: true, opacity: .26, clearcoat: 1, clearcoatRoughness: .08, side: THREE.DoubleSide, depthWrite: false });
-      for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), pane); d.position.set(x, .92, -11); d.scale.y = .8; d.renderOrder = 3; c.add(d); } },
+      for (const x of [682, 724, 766]) { const d = new THREE.Mesh(new THREE.SphereGeometry(5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), pane); d.position.set(x, .92, -11); d.scale.y = .8; d.renderOrder = 3; c.add(d);
+        /* (build 157, the family's request) GO INTO THE GREENHOUSE: its door (🐾, or tap the door or the glass) takes her into the greenhouse room (rooms.js) */ const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('greenhouse', x); }; const door = new THREE.Mesh(new THREE.BoxGeometry(1.7, 1.9, .3), new THREE.MeshBasicMaterial({ visible: false })); door.position.set(x, .95, -5.9); c.add(door);
+        c.tap(door, goIn, x, { icon: '🚪', label: 'Greenhouse', action: 'Go inside!', hintY: 2.6 }); c.tap(d, goIn); } },
     // (stage 9) planter beds, greenhouse walls/ribs/doors, edging fences and the potting bench
     () => { G.labGardenDetail = buildLabGardenDetail({ add: c.add }); },
     // a colour-changing pond: tap the water, it changes colour, a fish jumps
     () => { const cols = [['blue', '#3b82f6'], ['pink', '#ff7ac8'], ['green', '#3cc45a'], ['purple', '#9b5cf6'], ['orange', '#ff9a1f'], ['yellow', '#ffd23f']]; const m = mat('#3b82f6', { r: .15, cc: .6 }).clone();
-      const pond = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, .08, 40), m); pond.position.set(684, .03, -4.9); /* (build 64: back from the path) */ c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(3, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(684, .1, -4.9); c.add(rim);
-      const fish = c.toy('🐟', .9, 684, -1, -4.9); let k = 0, jt = 9;
-      c.tap(pond, () => { k = (k + 1) % cols.length; m.color.set(cols[k][1]); c.say(`🎨 The pond is ${cols[k][0]}!`); jt = 0; Sound.tone(500 + k * 60, .3, 'sine', .05, 1.3); c.burst(684, .4, -4.9, [cols[k][1], '#fff'], 12, 2); c.disc('pond', '🎨 A magic pond! Tap it to change its colour!'); }, 684);
-      return dt => { jt += dt; const j = Math.min(1, jt / 1.2); fish.position.set(682.5 + j * 3, j < 1 ? Math.sin(j * Math.PI) * 2 : -1, -4.9); }; },
+      const pond = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, .08, 40), m); pond.position.set(676, .03, -3.8); pond.scale.set(.7, 1, .7); /* (build 157, the family's picture: it ran into the greenhouse's front and across its door; now beside it, smaller) */ c.add(pond); const rim = new THREE.Mesh(new THREE.TorusGeometry(3, .25, 10, 40), mat('#b5ab9e', { r: .8 })); rim.rotation.x = Math.PI / 2; rim.position.set(676, .1, -3.8); rim.scale.set(.7, .7, 1); c.add(rim);
+      const fish = c.toy('🐟', .9, 676, -1, -3.8); let k = 0, jt = 9;
+      c.tap(pond, () => { k = (k + 1) % cols.length; m.color.set(cols[k][1]); c.say(`🎨 The pond is ${cols[k][0]}!`); jt = 0; Sound.tone(500 + k * 60, .3, 'sine', .05, 1.3); c.burst(676, .4, -3.8, [cols[k][1], '#fff'], 12, 2); c.disc('pond', '🎨 A magic pond! Tap it to change its colour!'); }, 676);
+      return dt => { jt += dt; const j = Math.min(1, jt / 1.2); fish.position.set(675 + j * 2, j < 1 ? Math.sin(j * Math.PI) * 1.6 : -1, -3.8); }; },
     // the bubble fountain
     () => { c.cyl(698, 0, -2.2, .8, 1, .7, '#9fe6ff'); const sp = c.cyl(698, .7, -2.2, .15, .2, 1, '#ffffff'); const bubbles = [];
       c.tap(sp.parent ? sp : sp, () => { for (let i = 0; i < 10; i++) { const b = c.toy('🫧', .5 + Math.random() * .5, 698, 1.8, -2.2); b.userData = { vx: (Math.random() - .5) * 1.6, vy: 1 + Math.random() * 1.5, t: 0 }; bubbles.push(b); } Sound.whoosh ? Sound.whoosh() : Sound.click(); c.say('🫧 Bubbles!'); c.disc('fountain', '🫧 The bubble fountain! Tap it for bubbles!'); }, 698);
@@ -665,7 +667,7 @@ export function initExpansion(G, api) {
   //  open toward us like a dollhouse so she is always seen; she walks through it to the light at the other end and comes out
   //  at the far side. Walking back out the way she came takes her back. (The two ends are far apart in the world, so the
   //  tunnel is a 40 m walk of its own.)
-  const rooms = initRooms({ G, P, scene, Sound, say, disc, world, compile: g => api.compile && api.compile(g), travelTo: (...a) => api.travelTo(...a), snap: () => api.snap && api.snap() }); G.rooms = rooms; // (build 149) real rooms inside the igloo and the lighthouse
+  const rooms = initRooms({ G, P, scene, Sound, say, disc, world, compile: g => api.compile && api.compile(g), travelTo: (...a) => api.travelTo(...a), snap: () => api.snap && api.snap(), stick: () => api.stick ? api.stick() : { x: 0, y: 0 }, saveSoon: () => api.saveSoon && api.saveSoon(), burst: (...a) => api.burst && api.burst(...a) }); G.rooms = rooms; // (build 149) real rooms inside the igloo and the lighthouse
   const TUN0 = -5000, TUNLEN = 40; let tunnel = null, tun = null;
   const tunnelArt = to => { const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d'); const sky = g.createLinearGradient(0, 0, 0, 256); sky.addColorStop(0, '#9fd8ff'); sky.addColorStop(1, '#fff6e0'); g.fillStyle = sky; g.fillRect(0, 0, 256, 256);
     g.fillStyle = '#7fd06a'; g.fillRect(0, 170, 256, 86);
@@ -727,12 +729,12 @@ export function initExpansion(G, api) {
     () => { const shell = [c.cyl(-95, 0, -5.2, 1.5, 1.8, 7, '#ffffff', { seg: 28 })]; for (let k = 0; k < 3; k++) shell.push(c.cyl(-95, 1 + k * 2.2, -5.2, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 })); const top = c.cyl(-95, 7, -5.2, 1.1, 1.1, 1.2, '#fff6b0', { m: { em: '#ffe36e', ei: .6 } }); const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.2, 20), mat('#ff4f6a')); roof.position.set(-95, 8.8, -5.2); c.add(roof);
       const beam = new THREE.Mesh(new THREE.BoxGeometry(14, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(-95, 7.6, -5.2); beam.visible = false; c.add(beam);
       for (const [a, b, y] of [[-89, -87.4, 1.1], [-91.4, -89.8, 2.2], [-93.8, -92.2, 3.3], [-97.6, -92.6, 4.4]]) { c.block((a + b) / 2, y - .25, -1.9, b - a, .3, 1.2, '#9a6a3a', { r: .06 }); c.plat(a, b, y, { z: -1.6 }); }
-      let spin = 0; c.tap(top, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The lighthouse light is shining for the boats!'); c.disc('lighthouse', '💡 Tap the lighthouse lamp! Climb the steps for a gem.'); }, -95);
+      let spin = 0; c.tap(top, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The lighthouse light is shining for the boats!'); c.disc('lighthouse', '💡 Tap the lighthouse lamp! Climb the steps for a gem.'); }); /* (build 155, the family's report "you can't enter the lighthouse": the lamp and the door were both 🐾 targets at the very same spot, and 🐾 took the lamp: now 🐾 is the door; the lamp is tapped) */
       // (build 149, the family's request: "like walking into an actual house") GO INSIDE THE LIGHTHOUSE: the red door takes her
       //  into the tower's own room (rooms.js): round windows on the sea and stairs climbing up to the great lamp at the top
       const ldoor = c.block(-95, 0, -3.45, 1, 1.8, .14, '#c8102e', { r: .1 }); c.sph(-94.7, .9, -3.36, .06, '#ffd23f');
       const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('lighthouse', -95); };
-      c.tap(ldoor, goIn, -95, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 });
+      c.tap(ldoor, goIn, -95, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 }); for (const m of shell) c.tap(m, goIn); /* (build 155) tapping anywhere on the tower goes in too (she taps the tower, not the little door) */
       return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the little boat: ring the bell on the pier and it sails across the sea and back
     () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
@@ -1060,7 +1062,7 @@ export function initExpansion(G, api) {
     //  OCEAN PIER LIGHTHOUSE: a tall striped lighthouse on the shore beside the crates, its lamp glowing; tap the lamp and its
     //  beam sweeps over the sea; the red door takes her inside, into the lighthouse room (the stairs up to the great lamp).
     () => { const LX = -601, LZ = -4.6; c.cyl(LX, 0, LZ, 1.95, 2.1, .5, '#8a8f98', { seg: 24 }); /* a rocky base on the shore */
-      c.cyl(LX, .5, LZ, 1.5, 1.8, 7, '#ffffff', { seg: 28 }); for (let k = 0; k < 3; k++) c.cyl(LX, 1.5 + k * 2.2, LZ, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 });
+      const tower = [c.cyl(LX, .5, LZ, 1.5, 1.8, 7, '#ffffff', { seg: 28 })]; for (let k = 0; k < 3; k++) tower.push(c.cyl(LX, 1.5 + k * 2.2, LZ, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 }));
       c.cyl(LX, 7.5, LZ, 1.6, 1.6, .2, '#2b2d42', { seg: 24 }); const lamp = c.cyl(LX, 7.7, LZ, 1.1, 1.1, 1.2, '#fff6b0', { m: { em: '#ffe36e', ei: .8 } });
       const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.2, 20), mat('#ff4f6a')); roof.position.set(LX, 9.5, LZ); c.add(roof); c.sph(LX, 10.15, LZ, .16, '#ffd23f');
       for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; c.cyl(LX + Math.cos(a) * 1.55, 7.7, LZ + Math.sin(a) * 1.55, .03, .03, .55, '#2b2d42', { cast: false }); } // the balcony railing
@@ -1069,7 +1071,7 @@ export function initExpansion(G, api) {
       const beam = new THREE.Mesh(new THREE.BoxGeometry(16, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(LX, 8.3, LZ); beam.visible = false; c.add(beam);
       let spin = 0; c.tap(lamp, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The pier lighthouse is shining for the boats!'); c.disc('pierlighthouse'); });
       const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('lighthouse', LX); };
-      c.tap(door, goIn, LX, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 });
+      c.tap(door, goIn, LX, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 }); for (const m of tower) c.tap(m, goIn); /* (build 155) tap the tower to go in */
       return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the dolphin show: tap the whistle and a dolphin leaps through the hoop
     () => { c.cyl(-606, 0, -3, .06, .06, 1.4, '#ffffff'); const wh = c.toy('📯', .8, -606, 1.7, -3); const hoop = new THREE.Mesh(new THREE.TorusGeometry(1.2, .1, 10, 32), mat('#ff4f9a', { r: .4 })); hoop.position.set(-606, 2.6, -10); c.add(hoop);

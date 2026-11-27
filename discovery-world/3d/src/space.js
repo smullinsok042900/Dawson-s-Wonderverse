@@ -25,6 +25,7 @@ import { BIG_CRATER } from './coaster-course.js';
 import { DIMENSIONS, DIM } from './dimensions.js';
 import { ISLANDS, ISLAND } from './islands.js';
 import { jungleLanding } from './jungle.js';
+import { volcanoLanding, turtleLanding, coveLanding } from './islands2.js';
 import { upsideLanding } from './upside.js';
 import { toyLanding } from './toy.js';
 import { bubbleLanding } from './bubble.js';
@@ -698,6 +699,7 @@ export function initSpace(G, api) {
       inSky(K.glow('#ffffff', 9, 1), MID - 86, 17, -180); inSky(K.glow('#bcd0ff', 34, .35), MID - 86, 17, -182);
     }
     if (id === 'jungle') H = yield* jungleLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 145) Jungle Island
+    { const IL = { volcano: volcanoLanding, turtle: turtleLanding, cove: coveLanding }[id]; if (IL) H = yield* IL({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); } // (build 156) more islands
     if (id === 'wacky') H = yield* wackyLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 137) the Wacky Gravity World
     if (id === 'jelly') H = yield* jellyLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 136) the Squishy Jelly World
     if (id === 'bubble') H = yield* bubbleLanding({ K, matte, props, soft, X, PW, MID, g, add, model, tapIt, U, fact, say, G, P, api, Sound, inSky }); // (build 133) the Bubble Universe
