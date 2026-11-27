@@ -24,6 +24,8 @@ are in `PERFORMANCE_LOG.md`.
   and floors are rebuilt only when she digs.
 - New test `tests/caves.cjs` (14 checks): all passed, drawn and with `&norender`. Pictures: `caves-glow.jpg`,
   `caves-dino.jpg`, `caves-dig.jpg`.
+- **Full smoke test of builds 153–158: 345/345** (desktop, software rendering). Speed vs build 152: Sunny Beach, Ocean Pier
+  and Lab Gardens the same or faster (`PERFORMANCE_LOG.md`).
 
 ## Checkpoint: build 157 — into the greenhouse; the pond off its door (the family's picture and request)
 - **Overlap:** Lab Gardens' colour pond (r 3 at 684, -4.9) ran into the front of the first greenhouse and right across its

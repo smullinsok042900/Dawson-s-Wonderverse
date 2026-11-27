@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Builds 153–158 vs build 152 (desktop, software rendering; `tests/perf/compare.cjs`; not iPhone numbers)
+- Sunny Beach (the kite, the lighthouse door): -50: 241 → 224 ms, -70: 253 → 257, -88: 255 → 251: the same. (A first run
+  showed -50 at 227 → 397 ms; the rerun showed the same: this spot varies a lot between runs: 536, 330, 227, 241 ms.)
+- Ocean Pier (with its new lighthouse): -552: 276 → 284, -584: 291 → 304, -620: 259 → 252 ms: the same.
+- Lab Gardens (the pond moved, the greenhouse doors): 700: 335 → 254 (faster), 724: 548 → 578 (same), 745: 517 → 508 (same).
+- The inside rooms (greenhouse, deep caves) and the islands are built only when she goes there.
+
 ## Build 152 vs build 151, the farm (desktop, software rendering; `tests/perf/compare.cjs farm`; not iPhone numbers)
 - Run 1 (4 rounds): -420: 410 → 262 ms (faster); -440: 489 → 480 (same); -466: 519 → 510 (same).
 - Run 2, with the tractor's own spot added (3 rounds): -420: 327 → 325; -440: 484 → 525 (+9%, same); -466: 545 → 559 (same);
