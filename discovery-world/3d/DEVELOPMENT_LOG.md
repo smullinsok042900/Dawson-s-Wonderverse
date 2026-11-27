@@ -13,8 +13,11 @@ are in `PERFORMANCE_LOG.md`.
   and falls over; all five: "STRIKE! All five pins! Hooray!" and a party; only some: "3 pins! Roll again!" and the rest stay
   down until she knocks them over too. The ball rolls itself home after each roll; after a strike the pins stand up again.
 - The pins are ONE instanced mesh with the same kind of material as the game's coins (no new shader).
-- **Tested** (desktop, software rendering): `tests/uranus-bowling.cjs` (new): RESULTS_TEST
-- RESULTS_SPEED_SMOKE
+- **Tested** (desktop, software rendering): `tests/uranus-bowling.cjs` (new): 7/7 drawn and with `?norender`
+  (five pins standing, the kick rolls it away from her, STRIKE, five pins on the ice, the ball rolls home, the pins stand up,
+  no page errors); `parks` (the Uranus ice palace, rink and trail) still all passed.
+- Speed on Uranus vs build 169: the same (two runs; `PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop, software
+  rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 169 — RIDE THE ICY GEYSER on Neptune (ATTRACTIONS row 18)
 - **Before:** a tap on the icy geyser (Triton's fountains) shot a plume up for 3 s.
