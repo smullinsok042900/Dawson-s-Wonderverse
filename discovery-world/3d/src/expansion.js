@@ -861,9 +861,22 @@ export function initExpansion(G, api) {
         () => { const n = new THREE.Mesh(new THREE.ConeGeometry(.09, .5, 10), mat('#ff8a1f')); n.rotation.z = -Math.PI / 2; n.position.set(-296.5, 2.95, -2.2); n.rotation.y = -.6; c.add(n); return n; }, () => c.toy('🎩', .8, -297, 3.55, -2.6)];
       if (world.adventures?.events?.includes('snow_built')) { for (const build of STEPS) parts.push(build()); k = STEPS.length; }
       const roll = c.sph(-302, .35, -1.5, .35, '#ffffff', { m: { r: .9, cc: 0 } });
-      c.tap(roll, () => { roll.rotation.z -= 1; api.event?.({ type: 'activity', id: 'snow_rolled' }); Sound.boing(); c.say('⚪ Roll roll! A snowball for your snow friend!'); }, -302, { icon: '⚪', label: 'Snowball', action: 'Roll snowball', disc: 'snow_rolled' });
+      // (build 160, every activity hands-on) ROLL THE SNOWBALLS: tap the little snowball (or 🐾) and she pushes it along the
+      //  snow: the further she rolls it, the bigger it grows. Big enough, she pushes it to the snowman and it goes on: the big
+      //  bottom, then the middle, then the head (then tap the snowman for the carrot nose and the hat). Tapping the snow pile
+      //  still builds it quickly too.
+      const SIZES = [.8, .6, .45]; let pushing = false, rr = .25, told = false;
+      const home = () => { pushing = false; rr = .35; roll.scale.setScalar(1); roll.position.set(-302, .35, -1.5); };
+      c.tap(roll, () => { api.event?.({ type: 'activity', id: 'snow_rolled' }); Sound.boing(); if (k >= 3) { c.say('⛄ The snowman has all its snowballs! Tap it for a carrot nose and a hat!'); return; } if (P.layer !== '' || P.ride) return; pushing = true; rr = .25; told = false;
+        c.say(['⚪ Roll the snowball along the snow! It grows bigger and bigger! Make a BIG one for the bottom!', '⚪ Now roll a middle-sized snowball!', '⚪ Now a little one for the head!'][k]); c.disc('snowroll'); }, -302, { icon: '⚪', label: 'Snowball', action: 'Roll snowball', disc: 'snow_rolled' });
       c.tap(pile, () => { if (k < STEPS.length) { parts.push(STEPS[k]()); k++; Sound.tone(400 + k * 70, .12, 'sine', .05, 1.2); c.say(['⛄ A big snowball!', '⛄ Now the middle!', '⛄ And the head!', '🥕 A carrot nose!', '🎩 A hat! Hello, Mister Snowman!'][k - 1]); c.disc('snowman', '⛄ Tap the snow to build a snowman!'); if (k === STEPS.length) { api.event?.({ type: 'activity', id: 'snow_built' }); Sound.giggle(); c.burst(-297, 3.5, -2.6, ['#ffffff', '#9fe6ff'], 20, 3); } }
-        else { for (const q of parts) c.remove(q); parts.length = 0; k = 0; c.say('☀️ The sun melted the snowman! Build a new one!'); } }, -300, { icon: '⛄', label: 'Snow friend', action: 'Build snow friend', disc: 'snowman' }); },
+        else { for (const q of parts) c.remove(q); parts.length = 0; k = 0; c.say('☀️ The sun melted the snowman! Build a new one!'); } }, -300, { icon: '⛄', label: 'Snow friend', action: 'Build snow friend', disc: 'snowman' });
+      return dt => { if (!pushing) return; if (P.layer !== '' || P.ride || P.x < -335 || P.x > -285) { home(); return; }
+        const f = P.facing || 1, want = SIZES[Math.min(2, k)]; if (Math.abs(P.vx) > 1 && P.grounded) { rr = Math.min(want, rr + Math.abs(P.vx) * dt * .045); roll.rotation.z -= P.vx * dt / Math.max(.3, rr); }
+        roll.scale.setScalar(rr / .35); roll.position.set(P.x + f * (rr + .45), rr, -.7);
+        if (rr >= want && !told) { told = true; Sound.tone(660, .15, 'sine', .05, 1.3); c.say('⛄ Big enough! Push it to the snowman!'); }
+        if (rr >= want - .001 && Math.abs(roll.position.x + 297) < 1.4 && k < 3) { parts.push(STEPS[k]()); k++; Sound.tone(400 + k * 70, .15, 'sine', .05, 1.2); c.burst(-297, 1 + k * .8, -2.6, ['#ffffff', '#9fe6ff'], 14, 2);
+          c.say(['⛄ The big bottom snowball!', '⛄ The middle snowball!', '⛄ The head! Now tap the snowman for a carrot nose and a hat!'][k - 1]); c.disc('snowman'); if (k === 3) c.disc('snowrolled3'); home(); } }; },
     // (build 144, the family's request: really throw snowballs) SNOWBALL TOSS: tap the snow pile and she scoops and packs a
     //  snowball (it grows in her hand). Then tap the target exactly where you want it to go: the snowball flies there and
     //  leaves a splat. The middle is a bullseye! The splats melt away after a while.
