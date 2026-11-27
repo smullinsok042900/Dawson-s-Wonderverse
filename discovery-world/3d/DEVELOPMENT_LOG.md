@@ -13,7 +13,9 @@ are in `PERFORMANCE_LOG.md`.
   fountain to either side; four snowflake stars hang at 4, 8, 12 and 16.5 m, two on each side, each a rising note; all
   four: "You caught all the snowflake stars!" and a party. JUMP hops off and she floats gently down.
 - The stars are four small meshes with one shared material, drawn only during the ride.
-- **Tested** (desktop, software rendering): `tests/neptune-geyser.cjs` (new): RESULTS_TEST
+- **Tested** (desktop, software rendering): `tests/neptune-geyser.cjs` (new): 5/5 drawn and with `?norender`
+  (carried up, ▲ higher and sinks when let go, all four stars, JUMP floats her down, no page errors); `control-rides`
+  (the Neptune and Mars rides) still all passed.
 - RESULTS_SPEED_SMOKE
 
 ## Checkpoint: build 168 — RIDE THE MARS DUST DEVIL (ATTRACTIONS row 18)
