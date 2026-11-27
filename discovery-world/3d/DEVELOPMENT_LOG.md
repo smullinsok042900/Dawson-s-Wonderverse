@@ -6,6 +6,14 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 162 — fly the hot-air balloon (every activity hands-on: Balloon Hills)
+- Standing next to the hot-air balloon, a tap (or 🐾) puts her in the basket: HOLD ▲ to fire the burner (a flame, a roar)
+  and it rises; let go and it slows and sinks gently; ◀ ▶ drift with the wind. Three stars float at different heights (low,
+  middle, high): "What a balloon pilot!" It comes down to a soft landing; JUMP hops out. Tapped from further away, it still
+  floats up and down by itself (as before; the smoke test's Balloon Hills check uses that).
+- `tests/perf/compare.cjs`: the first spot of a place now settles 9 s (not 3) before it is measured (NEXT_TASKS, build 161).
+- New test `tests/hills-balloon.cjs` (6 checks): passed with `&norender`. Backup: `backups/3D_build161_index.html`.
+
 ## Checkpoint: build 161 — aim the ball cannon (every activity hands-on: Toy Town)
 - The ball cannon used to put every ball in the hoop by itself. Now she aims it: standing by it, ▲ ▼ tilt the barrel and a
   dotted line shows where the ball will fly; tap the cannon (or 🐾) to fire. The ball really flies (gravity): through the

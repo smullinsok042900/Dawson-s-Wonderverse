@@ -24,8 +24,8 @@ async function round(b, f) {
   if (PLANET[place]) { await p.evaluate(pl => __DDW3.G.space.goTo(__DDW3.G.space.places.findIndex(q => q[0] === pl)), place); await p.waitForFunction(() => __DDW3.player.layer === 'space' && !__DDW3.player.ride, null, { timeout: 240000 }); X = await p.evaluate(() => __DDW3.G.spaceBounds[0] - 1); }
   // visit the whole stretch first, so every area is built (the same for both builds)
   for (const x of [...spots].sort((a, c) => a - c)) { await p.evaluate(x => { const P = __DDW3.player; P.x = x; P.y = 0; }, X + x); await sleep(1500); }
-  const out = [];
-  for (const x of spots) { await p.evaluate(x => { const P = __DDW3.player; P.ride = null; P.x = x; P.y = 0; P.vx = P.vy = 0; P.grounded = true; }, X + x); await sleep(3000);
+  const out = []; let first = true;
+  for (const x of spots) { await p.evaluate(x => { const P = __DDW3.player; P.ride = null; P.x = x; P.y = 0; P.vx = P.vy = 0; P.grounded = true; }, X + x); await sleep(first ? 9000 : 3000); first = false; /* (build 162: the first spot settles longer: right after the walk-through it varied by ±60 ms between rounds) */
     out.push(await p.evaluate(() => new Promise(res => { const fr = []; let last = performance.now(), calls = 0, n = 0; const R = __DDW3.renderer, t0 = last; const f = () => { const t = performance.now(); fr.push(t - last); last = t; calls += R.info.render.calls; n++; if (t - t0 < 6000) requestAnimationFrame(f); else { fr.sort((a, c) => a - c); res({ ms: Math.round(fr[Math.floor(fr.length / 2)]), calls: Math.round(calls / n) }); } }; requestAnimationFrame(f); }))); }
   await ctx.close(); return { out, errs: errs.length };
 }
