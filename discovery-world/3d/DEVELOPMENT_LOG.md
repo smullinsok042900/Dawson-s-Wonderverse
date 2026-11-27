@@ -6,6 +6,16 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 171 — SURF THE GREAT RED SPOT on Jupiter (ATTRACTIONS row 18)
+- **Before:** a tap on the Great Red Spot made the storm spin faster for 4 s.
+- **Now she surfs it** (`space.js`): a tap (or 🐾 on the path beside it) and she hops on a little puffy cloud that the storm
+  carries round and round its oval. ▲ steers her in toward the dark eye (smaller circles, faster, and the storm spins harder),
+  ▼ back out to the foam rim; five storm stars float at different distances from the eye around the oval, each a rising
+  note; all five: "You surfed the giant storm and caught all the storm stars!" and a party. JUMP hops her back onto the path.
+- The stars are five small meshes with one shared material and the cloud board is one mesh, drawn only during the ride.
+- **Tested** (desktop, software rendering): `tests/jupiter-stormsurf.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 170 — UPSIDE-DOWN BOWLING on Uranus (ATTRACTIONS row 18)
 - **Before:** a tap on the striped planet ball (Uranus rolls on its side "like a ball") made it roll a little way and back.
 - **Now it is a bowling game** (`space.js`): tap the ball (or 🐾 beside it) and she kicks it away from her; it rolls down
