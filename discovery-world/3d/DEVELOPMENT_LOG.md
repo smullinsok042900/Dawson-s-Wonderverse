@@ -6,6 +6,17 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 167 — PUMP THE VENUS VOLCANO, catch the lava stars (ATTRACTIONS row 18)
+- **Before:** a tap on one of the two Venus volcanoes made it puff sparks for 3 s.
+- **Now she pumps it** (`space.js`): each tap (or 🐾 beside it) builds the pressure: a deeper rumble each time, the screen
+  shakes a little more, the crater glows brighter and pulses faster, the volcano trembles and the lava rises in the crater;
+  the voice says "Pump the volcano!", "Rumble rumble!", "It's getting hot!", "One more!". The fifth tap: BOOM, it erupts and
+  throws FIVE GLOWING LAVA STARS in high arcs that land beside the path; she walks and jumps to each to collect it (a rising
+  note each); all five: "You caught all the lava stars!" and a party. Both volcanoes do it.
+- The stars are five small meshes with the crater's own lava material (no new shader), drawn only while stars are out.
+- **Tested** (desktop, software rendering): `tests/venus-volcano.cjs` (new): RESULTS_TEST.
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 166 — DRIVE THE MARS ROVER (ATTRACTIONS row 18: the older small planet activities)
 - **Inspected** the older tap-and-watch activities on Venus and Mars (the two Venus volcanoes, the thermometer, the Mars
   rover, the dust devil, Olympus Mons). The rover was the best one to make hands-on: before, a tap made it drive 12 m and
