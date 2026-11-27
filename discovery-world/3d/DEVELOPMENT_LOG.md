@@ -16,7 +16,8 @@ are in `PERFORMANCE_LOG.md`.
 - **Tested** (desktop, software rendering): `tests/neptune-geyser.cjs` (new): 5/5 drawn and with `?norender`
   (carried up, ▲ higher and sinks when let go, all four stars, JUMP floats her down, no page errors); `control-rides`
   (the Neptune and Mars rides) still all passed.
-- RESULTS_SPEED_SMOKE
+- Speed on Neptune vs build 168: the same at all five spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop,
+  software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 168 — RIDE THE MARS DUST DEVIL (ATTRACTIONS row 18)
 - **Before:** a tap made the dust devil twirl faster for 4 s.
