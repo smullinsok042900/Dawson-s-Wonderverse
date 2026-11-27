@@ -727,12 +727,12 @@ export function initExpansion(G, api) {
     () => { const shell = [c.cyl(-95, 0, -5.2, 1.5, 1.8, 7, '#ffffff', { seg: 28 })]; for (let k = 0; k < 3; k++) shell.push(c.cyl(-95, 1 + k * 2.2, -5.2, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 })); const top = c.cyl(-95, 7, -5.2, 1.1, 1.1, 1.2, '#fff6b0', { m: { em: '#ffe36e', ei: .6 } }); const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.2, 20), mat('#ff4f6a')); roof.position.set(-95, 8.8, -5.2); c.add(roof);
       const beam = new THREE.Mesh(new THREE.BoxGeometry(14, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(-95, 7.6, -5.2); beam.visible = false; c.add(beam);
       for (const [a, b, y] of [[-89, -87.4, 1.1], [-91.4, -89.8, 2.2], [-93.8, -92.2, 3.3], [-97.6, -92.6, 4.4]]) { c.block((a + b) / 2, y - .25, -1.9, b - a, .3, 1.2, '#9a6a3a', { r: .06 }); c.plat(a, b, y, { z: -1.6 }); }
-      let spin = 0; c.tap(top, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The lighthouse light is shining for the boats!'); c.disc('lighthouse', '💡 Tap the lighthouse lamp! Climb the steps for a gem.'); }, -95);
+      let spin = 0; c.tap(top, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The lighthouse light is shining for the boats!'); c.disc('lighthouse', '💡 Tap the lighthouse lamp! Climb the steps for a gem.'); }); /* (build 155, the family's report "you can't enter the lighthouse": the lamp and the door were both 🐾 targets at the very same spot, and 🐾 took the lamp: now 🐾 is the door; the lamp is tapped) */
       // (build 149, the family's request: "like walking into an actual house") GO INSIDE THE LIGHTHOUSE: the red door takes her
       //  into the tower's own room (rooms.js): round windows on the sea and stairs climbing up to the great lamp at the top
       const ldoor = c.block(-95, 0, -3.45, 1, 1.8, .14, '#c8102e', { r: .1 }); c.sph(-94.7, .9, -3.36, .06, '#ffd23f');
       const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('lighthouse', -95); };
-      c.tap(ldoor, goIn, -95, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 });
+      c.tap(ldoor, goIn, -95, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 }); for (const m of shell) c.tap(m, goIn); /* (build 155) tapping anywhere on the tower goes in too (she taps the tower, not the little door) */
       return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the little boat: ring the bell on the pier and it sails across the sea and back
     () => { c.block(-115, .15, -6, 2.2, .3, 8, '#9a6a3a', { r: .05 }); const bellPost = c.cyl(-115, 0, -2.2, .06, .06, 1.6, '#9a6a3a'); const bell = c.sph(-115, 1.7, -2.2, .25, '#ffd23f', { m: { m: .6 } });
@@ -1060,7 +1060,7 @@ export function initExpansion(G, api) {
     //  OCEAN PIER LIGHTHOUSE: a tall striped lighthouse on the shore beside the crates, its lamp glowing; tap the lamp and its
     //  beam sweeps over the sea; the red door takes her inside, into the lighthouse room (the stairs up to the great lamp).
     () => { const LX = -601, LZ = -4.6; c.cyl(LX, 0, LZ, 1.95, 2.1, .5, '#8a8f98', { seg: 24 }); /* a rocky base on the shore */
-      c.cyl(LX, .5, LZ, 1.5, 1.8, 7, '#ffffff', { seg: 28 }); for (let k = 0; k < 3; k++) c.cyl(LX, 1.5 + k * 2.2, LZ, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 });
+      const tower = [c.cyl(LX, .5, LZ, 1.5, 1.8, 7, '#ffffff', { seg: 28 })]; for (let k = 0; k < 3; k++) tower.push(c.cyl(LX, 1.5 + k * 2.2, LZ, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 }));
       c.cyl(LX, 7.5, LZ, 1.6, 1.6, .2, '#2b2d42', { seg: 24 }); const lamp = c.cyl(LX, 7.7, LZ, 1.1, 1.1, 1.2, '#fff6b0', { m: { em: '#ffe36e', ei: .8 } });
       const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.2, 20), mat('#ff4f6a')); roof.position.set(LX, 9.5, LZ); c.add(roof); c.sph(LX, 10.15, LZ, .16, '#ffd23f');
       for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; c.cyl(LX + Math.cos(a) * 1.55, 7.7, LZ + Math.sin(a) * 1.55, .03, .03, .55, '#2b2d42', { cast: false }); } // the balcony railing
@@ -1069,7 +1069,7 @@ export function initExpansion(G, api) {
       const beam = new THREE.Mesh(new THREE.BoxGeometry(16, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(LX, 8.3, LZ); beam.visible = false; c.add(beam);
       let spin = 0; c.tap(lamp, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The pier lighthouse is shining for the boats!'); c.disc('pierlighthouse'); });
       const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('lighthouse', LX); };
-      c.tap(door, goIn, LX, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 });
+      c.tap(door, goIn, LX, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 }); for (const m of tower) c.tap(m, goIn); /* (build 155) tap the tower to go in */
       return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the dolphin show: tap the whistle and a dolphin leaps through the hoop
     () => { c.cyl(-606, 0, -3, .06, .06, 1.4, '#ffffff'); const wh = c.toy('📯', .8, -606, 1.7, -3); const hoop = new THREE.Mesh(new THREE.TorusGeometry(1.2, .1, 10, 32), mat('#ff4f9a', { r: .4 })); hoop.position.set(-606, 2.6, -10); c.add(hoop);

@@ -15,6 +15,7 @@ import { bubbleworld } from './bubble.js';
 import { jellyworld } from './jelly.js';
 import { wackyworld } from './wacky.js';
 import { jungleworld } from './jungle.js';
+import { volcanoworld, turtleworld, coveworld } from './islands2.js';
 import * as THREE from 'three';
 import { populate } from './planet-life.js';
 import { sun } from './sun.js'; // (build 126) the Sun's attractions
@@ -783,7 +784,7 @@ const saturn = {
   ],
 };
 
-export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn, sun, upside, toy: toyworld, bubble: bubbleworld, jelly: jellyworld, wacky: wackyworld, jungle: jungleworld }; // (build 136) + the Squishy Jelly World (jelly.js)
+export const PLANET_EXTRA = { moon, mars, pluto, jupiter, uranus, mercury, neptune, venus, saturn, sun, upside, toy: toyworld, bubble: bubbleworld, jelly: jellyworld, wacky: wackyworld, jungle: jungleworld, volcano: volcanoworld, turtle: turtleworld, cove: coveworld }; // (build 136) + the Squishy Jelly World (jelly.js)
 // // (build 133) + the Bubble Universe (bubble.js)
 // // (build 131) + the Upside-Down World (upside.js) (build 132) + the Giant Toy Universe (toy.js) // (build 68: + Saturn's Star Blaster and Ring Raceway) // (build 68: Neptune's wind rides; Venus's log ride)   // (build 66: Jupiter's playground and super slide) 
 export const placeWidth = id => PLANET_EXTRA[id] ? 330 : 110;

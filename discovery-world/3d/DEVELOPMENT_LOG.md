@@ -6,6 +6,26 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 156 — three more islands (the family's request: "create more islands")
+- New `src/islands2.js` (Volcano Island, Turtle Beach, Treasure Cove), added to `islands.js` (their place on the sea, their
+  sky and light, their creatures), `space.js` (their landing grounds), `planets.js` (their areas) and the 🗺️ sea map (five
+  places now). Each is reached by boat and has hands-on things to do:
+  - 🌋 **Volcano Island:** black sand, a big smoking volcano behind with a glowing top; a warm bubbling HOT SPRING (walk in);
+    lava-rock stepping stones with stars; THE LAVA-ROCK CLIMB up to a lookout where the TELESCOPE makes the volcano puff
+    rainbow smoke; THE ROCK SLIDE back down; THE GEYSER that carries her up on its water jet past a star (she floats down).
+  - 🐢 **Turtle Beach:** three TURTLE NESTS (tap: three baby turtles hatch and waddle down to the sea); a RIDE on the big
+    sea turtle's back along the shore past starfish stars; a SANDCASTLE she builds tower by tower to the flag.
+  - 💎 **Treasure Cove:** big rocks, an old wrecked boat, a TREASURE MAP (three red crosses); DIG at each cross (three
+    taps): chests pop up, the third is the big treasure; tide-pool stepping stones and a lookout rock with stars.
+- New test `tests/islands.cjs` (13 checks, sailing there with the map, landing, and every activity): all passed with `&norender`.
+
+## Checkpoint: build 155 — getting into the lighthouses (the family's report: "you can't enter the other lighthouse either")
+- On Sunny Beach the lamp and the door were both 🐾 targets at the very same spot, and 🐾 chose the lamp (the light
+  shone, no door). Now 🐾 is the door, and the lamp is tapped. Also, tapping ANYWHERE on either lighthouse's tower takes
+  her inside (she taps the tower, not the little door).
+- Checked in an iPhone-sized browser with real touches (desktop, software rendering): a tap on the tower and 🐾 at the
+  door both take her inside, on Sunny Beach and at Ocean Pier; no page errors.
+
 ## Checkpoint: build 154 — a lighthouse at Ocean Pier (the family's pictures: "the lighthouse is still gone")
 - The family's pictures were all taken at Ocean Pier, by the crates and the dolphin hoop, where there was no lighthouse
   (the game's only one stands on Sunny Beach). Now Ocean Pier has its own: a tall red-and-white striped lighthouse on
