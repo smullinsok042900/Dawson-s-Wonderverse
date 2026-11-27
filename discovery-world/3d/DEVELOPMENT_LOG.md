@@ -6,6 +6,17 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 168 — RIDE THE MARS DUST DEVIL (ATTRACTIONS row 18)
+- **Before:** a tap made the dust devil twirl faster for 4 s.
+- **Now it is a ride** (`space.js`): a tap next to it scoops her up; she twirls round and round inside the whirl, which
+  grows taller the higher she goes. ▲ spins it faster and lifts her (up to 13 m: Mars gravity is low), ▼ lets her sink,
+  ◀ ▶ steer the whirl across the sand; four glowing red-dust sparkles hang at 3.5, 6.5, 9.5 and 12 m beside it, each a rising
+  note; all four: "You twirled through all the dust sparkles! What a whirl!" and a party. JUMP lets go and she floats gently
+  down. Afterwards the dust devil drifts back to its place.
+- The sparkles are four small meshes with one shared material, drawn only during the ride.
+- **Tested** (desktop, software rendering): `tests/mars-dustdevil.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 167 — PUMP THE VENUS VOLCANO, catch the lava stars (ATTRACTIONS row 18)
 - **Before:** a tap on one of the two Venus volcanoes made it puff sparks for 3 s.
 - **Now she pumps it** (`space.js`): each tap (or 🐾 beside it) builds the pressure: a deeper rumble each time, the screen
