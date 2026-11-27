@@ -6,6 +6,14 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 159 — catch the fireflies (every activity hands-on: the Whispering Woods)
+- The firefly jar used to let ten fireflies swirl by themselves. Now tapping it (or 🐾) lets six fireflies out along the
+  woods path, glowing and drifting; she catches each by walking or jumping into it (the high ones need a jump) or by tapping
+  it: it zips back into the jar, and the jar glows brighter; all six: "the jar glows like a lantern!" Tap again for
+  another go.
+- New test `tests/woods-fireflies.cjs` (6 checks): passed with `&norender` (all six caught by walking and jumping).
+  Backup: `backups/3D_build158_index.html`.
+
 ## Checkpoint: build 158 — THE DEEP CAVES and digging her own tunnels (the family's request)
 - "Make the underground underneath the ball pit way bigger, add different caves she can go through and explore, and a
   shovel so she can dig her own cave tunnels she can actually explore." A glowing cave mouth at the far end of the

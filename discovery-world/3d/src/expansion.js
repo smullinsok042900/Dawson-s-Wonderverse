@@ -816,11 +816,22 @@ export function initExpansion(G, api) {
     // the creek: stepping logs across (jump from log to log), with a gem on the tall one
     () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 13.3), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -4.35); c.add(w); /* (build 60: the creek stops before the train track; it used to run over the rails) */
       for (const [x, y] of [[-223.5, .5], [-226, 1.0], [-228.5, .5]]) { c.cyl(x, 0, -.4, .45, .5, y, '#8a5a2a', { r: .9 }); c.plat(x - .5, x + .5, y, { z: -.4, step: true, stepMax: .6, onLand: () => c.disc('logs', '🪵 Hop across the stepping logs!') }); } },
-    // a jar of fireflies: tap it and they swirl out, glowing
-    () => { const jar = c.cyl(-240, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); c.block(-240, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 }); const flies = []; let out = 0;
-      for (let i = 0; i < 10; i++) { const f = c.sph(-240, 1, -2.4, .06, '#fff58a', { m: { em: '#fff58a', ei: 2 } }); f.visible = false; flies.push({ f, ph: i * .7 }); }
-      c.tap(jar, () => { out = 8; flies.forEach(q => { q.f.visible = true; }); Sound.twinkle(); c.say('✨ The fireflies are dancing!'); c.disc('fireflies', '✨ Tap the jar to let the fireflies dance!'); }, -240);
-      return (dt, t) => { if (out <= 0) return; out -= dt; for (const q of flies) { const r = Math.min(1, (8 - out)) * 2.2; q.f.position.set(-240 + Math.cos(t * 1.5 + q.ph) * r, 1.6 + Math.sin(t * 2.3 + q.ph) * .8, -2.4 + Math.sin(t * 1.5 + q.ph) * r * .5); } if (out <= 0) flies.forEach(q => { q.f.visible = false; }); }; },
+    // (build 159, every activity hands-on) THE FIREFLY JAR: tap it (or 🐾) and six fireflies fly out and drift along the
+    //  woods path, glowing. She catches each one by walking or jumping into it (or tapping it): it zips back into the jar,
+    //  and the jar glows brighter. All six: "the jar glows like a lantern!" Tap the jar again and they fly out for another go.
+    () => { const JX = -240, jar = c.cyl(JX, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); jar.material = jar.material.clone(); jar.material.emissive = new THREE.Color('#fff58a'); jar.material.emissiveIntensity = 0; c.block(JX, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 });
+      const flyM = mat('#fff58a', { em: '#fff58a', ei: 2 }), flies = [-253, -248, -244, -235, -231, -226].map((hx, i) => { const f = new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), flyM); f.visible = false; f.userData.dynamic = true; c.add(f); return { f, hx, hy: 1 + (i % 3) * .6, ph: i * 1.3, st: 'jar', t: 0, i }; });
+      let caught = 0, flying = false;
+      const release = () => { if (flying) return; flying = true; caught = 0; jar.material.emissiveIntensity = 0; for (const q of flies) { q.st = 'out'; q.t = 0; q.f.visible = true; q.f.position.set(JX, 1, -2.4); } Sound.twinkle(); c.say('✨ Out fly the fireflies! Catch them: walk or jump into them, or tap them!'); c.disc('fireflies', '✨ Let the fireflies out and catch them again!'); };
+      const catchOne = q => { if (q.st !== 'out') return; q.st = 'home'; q.t = 0; q.from = q.f.position.clone(); caught++; Sound.tone(880 + caught * 90, .15, 'sine', .05, 1.5); c.burst(q.f.position.x, q.f.position.y, q.f.position.z, ['#fff58a', '#ffffff'], 8, 1.4);
+        c.say(caught < 6 ? `✨ You caught a firefly! ${NUM[caught]}!` : '✨ You caught all six fireflies! The jar glows like a lantern!'); if (caught === 6) { flying = false; c.disc('fireflyjar'); Sound.chime(); } };
+      c.tap(jar, release, JX, { icon: '✨', label: 'Firefly jar', action: 'Let the fireflies out!', disc: 'fireflies' }); for (const q of flies) c.tap(q.f, () => catchOne(q));
+      return (dt, t) => { for (const q of flies) { q.t += dt;
+          if (q.st === 'out') { const k = Math.min(1, q.t / 1.5), x = q.hx + Math.sin(t * .9 + q.ph) * 1.6, y = q.hy + Math.sin(t * 1.7 + q.ph) * .35, z = -.6 + Math.sin(t * 1.1 + q.ph) * .5; q.f.position.set(JX + (x - JX) * k, 1 + (y - 1) * k, -2.4 + (z + 2.4) * k);
+            q.f.scale.setScalar(.8 + Math.abs(Math.sin(t * 6 + q.ph)) * .6); if (k >= 1 && Math.abs(P.x - q.f.position.x) < .8 && q.f.position.y > P.y - .2 && q.f.position.y < P.y + 1.9 && P.layer === '') catchOne(q); }
+          else if (q.st === 'home') { const k = Math.min(1, q.t / .6); q.f.position.set(q.from.x + (JX - q.from.x) * k, q.from.y + (.75 - q.from.y) * k + Math.sin(k * Math.PI) * 1.2, q.from.z + (-2.4 - q.from.z) * k); if (k >= 1) { q.st = 'jar'; } }
+          else if (q.f.visible) { q.f.position.set(JX + Math.sin(t * 3 + q.ph) * .18, .7 + ((q.i * .13 + t * .2) % .5), -2.4 + Math.cos(t * 3 + q.ph) * .18); q.f.scale.setScalar(.55); } }
+        const want = caught / 6 * 1.4 * (.85 + Math.sin(t * 3) * .15); jar.material.emissiveIntensity += (want - jar.material.emissiveIntensity) * Math.min(1, dt * 4); }; },
     // paw prints on the path lead to the fox den, where Rusty the fox cub lives
     () => { for (let i = 0; i < 8; i++) { const pr = c.sign('🐾', .45, -247 - i * 1.6, .03, (i % 2) * .4 - .2);  }
       const den = c.sph(-263, 0, -4.4, 2, '#8a6a4a', { m: { r: .95 } }); den.scale.set(1.3, .7, 1); const hole = c.sph(-263, .4, -2.7, .7, '#3a2a1a', { m: { r: 1 } }); hole.scale.set(1, .8, .3);
