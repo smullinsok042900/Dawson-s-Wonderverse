@@ -6,6 +6,38 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 164 — THE VOLCANO ISLAND ROLLER COASTER, in first person (the family's request)
+- **The ride** (one continuous 1.5 km track, about 1½ minutes; `src/volcano-course.js`, built by the same track builder as the
+  Moon coaster): the station on Volcano Island → a long sweep to the volcano → THE GIANT CLIMB, a chain-lift spiral round the
+  OUTSIDE of the volcano to 74 m (the island and the sea below) → THE DIVE through a hole in the volcano's side → round and
+  down inside the LAVA CHAMBER → a twisting LAVA TUNNEL → out through a hole on the far side → THE DROP into the lagoon →
+  UNDER THE WATER in a glass tunnel → up and out → a BOOSTER → a LOOP-THE-LOOP → round → a CORKSCREW → home to the station.
+- **The volcano is really hollow** (`src/volcano-coaster.js`): an outer cone of rock (lighter rock, glowing lava streaks, a
+  glowing crater) with real holes cut where the track goes in and out (a rocky rim and a glowing ring round each); inside,
+  an inward-facing rock wall lit orange from below with glowing veins, a glowing LAVA LAKE that shimmers, lava flecks, lava
+  falls down the walls, 26 hanging rocks, rock pillars standing in the lava; the lava tunnel's walls glow with veins and rings.
+- **The underwater world**: the lagoon is dug into the island's ground; a sandy seafloor bowl, 70 corals (round, branching),
+  kelp, sea anemones, rocks and four big underwater rocks, sunbeams down through the water, 30 fish swimming round (one
+  instanced mesh), bubbles; the track runs in a clear GLASS TUNNEL with white rings; under the surface the water all round
+  turns sea-blue (the scene's own fog, closer and blue, only while the camera is under the water).
+- **The first-person ride camera** (main.js, reusable: any coaster with `C.fp`): her eyes in the front seat, looking along the
+  track ahead; the camera's "up" follows the track (smoothed: loops and corkscrews turn the view, never jerk; gentler in the
+  calm comfort mode); her own creature is hidden from her camera only. Getting off brings the normal third-person camera
+  back (not rolled). The rest of the game's camera is unchanged. `camOverride.up` lets any ride camera roll.
+- **Things to do on the ride**: six STARS along the track (the voice says when one is coming; 🐾 or JUMP grabs it; all six: "You
+  are a coaster star!"), the 🏁 button gets off at any time, and after the ride a 🔁 button rides again.
+- **Riding together** works on any coaster now (the one where you are: the Moon's or Volcano Island's): friends board the same
+  train in their own seats and see each other (on a first-person coaster you are hidden only from your own camera).
+- **Fixed on the way**: the island sky dome stayed centred on the path, so a ride camera far behind it (the climb, 200 m
+  back and 74 m up) was outside the dome and saw a black disc; the dome now follows the ride camera.
+- **Speed**: everything is painted in the one shared unlit material (no new shaders) and batched; the chamber's inside and the
+  underwater world are drawn only when the camera is near them; rails stream in 120 m pieces near the camera; the one-time
+  work is done 4 ms per frame; the coaster is built only on Volcano Island and freed when she leaves.
+- Tests: `tests/volcano-coaster.cjs` (14 checks: the whole ride round, first person, outside, inside with the chamber drawn
+  and the camera inside, underwater with the world drawn and the camera under the surface, the loop, the stars, home, the
+  normal camera back, 🔁): all passed. `COASTER=volcano tests/coaster-together.cjs` (5 checks, two browsers): all passed.
+  Pictures: `screenshots/volcano-coaster-*.jpg`.
+
 ## Checkpoint: build 163 — a way back down from the top of the lighthouse (the family's report)
 - "There's no way to go back down the stairs in the lighthouse": the lamp-room floor covered the whole tower, so at the top
   she could not get back onto the stairs. Now the lamp room is open at its left end, where a yellow SLIDE POLE goes all the

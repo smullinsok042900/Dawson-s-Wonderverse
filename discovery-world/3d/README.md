@@ -1625,3 +1625,6 @@ One real bug was caught and fixed: the block tray sat over the bottom row of the
 
 **Not tested:**
 - **No physical iPhone or Safari test.** Speed, heat and battery use on a real iPhone are unknown. The game lowers its resolution automatically if it runs slowly.
+
+## Build 164: the Volcano Island roller coaster
+A giant coaster ridden in first person: up round the outside of the volcano, in through a hole in its side, through the glowing lava chamber and a lava tunnel, out and down into the lagoon, under the water in a glass tunnel past coral and fish, then a loop, a corkscrew and home. Grab the six stars with 🐾; 🏁 gets off; 🔁 rides again; friends can ride together.
