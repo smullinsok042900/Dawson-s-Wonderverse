@@ -380,11 +380,38 @@ export function initSpace(G, api) {
         for (const zz of [-.72, .72]) { b.put(K.geo.cyl(8), -.42, .55, zz, '#8a8fa0', [.05, 1.0, .05], [0, 0, 1.05]); b.put(K.geo.cyl(8), .45, .55, zz, '#8a8fa0', [.05, 1.0, .05], [0, 0, -1.05]); } });
       rv.add(body);
       const wheelG = (() => { const b = K.makeBatch(), tyre = new THREE.CylinderGeometry(.3, .3, .24, 18); tyre.rotateX(Math.PI / 2); b.add(tyre, null, '#33343f'); const hub = new THREE.CylinderGeometry(.14, .14, .26, 10); hub.rotateX(Math.PI / 2); b.add(hub, null, '#c9cdd8'); for (let k = 0; k < 9; k++) { const a = k / 9 * 6.283; b.put(K.geo.box(), Math.cos(a) * .3, Math.sin(a) * .3, 0, '#1e1f28', [.1, .06, .26], [0, 0, a + Math.PI / 2]); } return b.geometry(); })();
-      const wheels = []; for (const [x, z] of [[-.82, -.72], [0, -.72], [.82, -.72], [-.82, .72], [0, .72], [.82, .72]]) { const w = new THREE.Mesh(wheelG, K.shinyMat()); w.position.set(x, .33, z); w.castShadow = true; rv.add(w); wheels.push(w); } let drive = 0;
-      tapIt(rv, () => { if (drive) return; drive = .001; Sound.tone(500, .3, 'square', .03, 1.4); fact('🤖 Beep beep! The rover drives across Mars to explore!', 'rover'); }, X + 46, 'rover');
-      U.push((dt, t) => { body.position.y = drive ? Math.sin(t * 17) * .012 + Math.sin(t * 7.3) * .012 : 0; if (!drive) return; drive += dt; const back = drive >= 4.4, k = drive < 4 ? drive / 4 : drive < 4.4 ? 1 : drive < 8.4 ? 1 - (drive - 4.4) / 4 : 0, e = k * k * (3 - 2 * k), px = rv.position.x; rv.position.x = X + 46 + e * 12;
-        const turn = drive < 4 ? 0 : Math.min(1, (drive - 4) / .4); rv.rotation.y = turn * Math.PI; const v = (rv.position.x - px) * (back ? -1 : 1); for (const w of wheels) w.rotation.z -= v / .3; // (the wheels turn exactly as far as it drives: no sliding)
-        if (Math.abs(v) > .001 && Math.random() < dt * 9) api.burst(rv.position.x - (back ? -1 : 1), .2, -3, ['#c86a40', '#e89a6a'], 1, .8); if (drive > 8.8) { drive = 0; rv.rotation.y = 0; rv.position.x = X + 46; } });
+      const wheels = []; for (const [x, z] of [[-.82, -.72], [0, -.72], [.82, -.72], [-.82, .72], [0, .72], [.82, .72]]) { const w = new THREE.Mesh(wheelG, K.shinyMat()); w.position.set(x, .33, z); w.castShadow = true; rv.add(w); wheels.push(w); }
+      // (build 166) DRIVE THE ROVER YOURSELF: tap it and she climbs onto the deck; ◀ ▶ drive it across Mars (the wheels turn
+      // exactly as far as it goes), 🐾 scoops up a shiny Mars rock with the arm when one is beside it, JUMP hops off. Four
+      // coloured rocks (one instanced mesh: one draw call) wait beside its track; all four make a party, then they come back.
+      const RV0 = X + 46, RVA = X + 20, RVB = X + 104, ROCKS = [[X + 27, '#5aa8ff'], [X + 58, '#7fe0a0'], [X + 82, '#b07cff'], [X + 99, '#ffd23f']];
+      const rockM = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.34, 0), K.shinyMat(), ROCKS.length), M4 = new THREE.Matrix4(), got = ROCKS.map(() => false);
+      const putRock = (q, s) => { M4.makeRotationY(q * 1.7).scale(T3.setScalar(s)); M4.setPosition(ROCKS[q][0], .3 + .06 * Math.sin(q), -4.75); rockM.setMatrixAt(q, M4); rockM.instanceMatrix.needsUpdate = true; rockM.computeBoundingSphere(); }; // (bounds kept right, so it is skipped out of view)
+      ROCKS.forEach(([, c], q) => { putRock(q, 1); rockM.setColorAt(q, K.col(c)); }); add(rockM); // (no shadow: small rocks, and a shadow pass would cost a draw call even far away)
+      const arm = new THREE.Group(); arm.position.set(1.05, .95, .55); rv.add(arm); let scoop = 0;
+      arm.add(model(b => { b.put(K.geo.cyl(8), 0, -.35, 0, '#c9cdd8', [.04, .7, .04]); b.put(K.lathe([[0, 0], [.13, .02], [.2, .12]], 10), 0, -.74, 0, '#ffd23f', 1, [Math.PI, 0, 0]); }));
+      let rideR = null, drive = 0, dir = 1, spin = 0;
+      const turnWheels = dx => { for (const w of wheels) w.rotation.z -= dx * dir / .3; if (Math.abs(dx) > .001 && Math.random() < .3) api.burst(rv.position.x - dir, .2, -3, ['#c86a40', '#e89a6a'], 1, .8); };
+      const paw = () => { if (scoop > 0) return; scoop = 1; const q = ROCKS.findIndex(([x], i) => !got[i] && Math.abs(rv.position.x + dir * 1.1 - x) < 2.2);
+        if (q < 0) { Sound.tone(380, .12, 'square', .03, 1.2); say('🤖 Drive next to a shiny rock, then 🐾 to scoop it up!', true); return; }
+        got[q] = true; setTimeout(() => putRock(q, 0), 450); Sound.chime && Sound.chime(); api.burst(ROCKS[q][0], .8, -4.6, [ROCKS[q][1], '#ffffff'], 12, 1.8); const n = got.filter(Boolean).length;
+        if (n < ROCKS.length) say(['🤖 Scoop! A Mars rock!', '🤖 Another Mars rock!', '🤖 One more rock to find!'][n - 1], true);
+        else { say('🤖 You found all the Mars rocks! The scientists say THANK YOU!', true); disc('roverrocks'); api.burst(rv.position.x, 2.5, -3, ['#ff4f6a', '#ffd23f', '#7fe0a0', '#5aa8ff'], 30, 2.6); Sound.giggle && Sound.giggle();
+          setTimeout(() => { got.fill(false); ROCKS.forEach((r, i) => putRock(i, 1)); }, 6000); } };
+      const hopOn = () => { if (P.ride || P.layer !== 'space') return; if (Math.abs(P.x - rv.position.x) > 6) return; fact('🤖 Hop on the rover! ◀ ▶ to drive, 🐾 to scoop up shiny rocks, JUMP to hop off!', 'rover');
+        Sound.tone(500, .3, 'square', .03, 1.4); const R = rideR = { type: 'rover', t: 0, noExit: true }; P.ride = R; P.vx = P.vy = 0;
+        R.onJump = () => { R.off = true; }; R.onPaw = paw;
+        U.push(dt => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; rideR = null; if (P.ride === R) { P.ride = null; P.y = 0; P.z = 0; P.x = rv.position.x + 2.2 * (rv.position.x > RVB - 3 ? -1 : 1); P.vy = 0; P.grounded = true; } return; }
+          dt = Math.min(dt, .1); R.t += dt; const sx = api.stick ? api.stick().x : 0; drive = sx;
+          if (Math.abs(sx) > .15) { const nd = sx > 0 ? 1 : -1; if (nd !== dir) { dir = nd; spin = 1; } }
+          const px = rv.position.x; rv.position.x = Math.max(RVA, Math.min(RVB, px + sx * 4.2 * dt)); turnWheels(rv.position.x - px);
+          P.x = rv.position.x - dir * .25; P.y = 1.18; P.z = -3; P.facing = dir; }); };
+      tapIt(rv, hopOn, RV0, null); G.interact.push({ get x() { return rv.position.x; }, y: 0, layer: 'space', disc: 'rover', run: hopOn, hintY: 2.4 });
+      U.push((dt, t) => { rockM.visible = Math.abs(P.x - X - 63) < 75; // (tiny far away: not drawn when she is far from the rover's track)
+        body.position.y = rideR && Math.abs(drive) > .15 ? Math.sin(t * 17) * .012 + Math.sin(t * 7.3) * .012 : 0;
+        const want = dir > 0 ? 0 : Math.PI; rv.rotation.y += (want - rv.rotation.y) * Math.min(1, dt * 6); spin = Math.max(0, spin - dt);
+        if (scoop > 0) { scoop = Math.max(0, scoop - dt * 1.4); arm.rotation.z = -Math.sin(scoop * Math.PI) * 1.1; }
+        if (!rideR && Math.abs(rv.position.x - RV0) > .05 && Math.abs(P.x - rv.position.x) > 14) { const px = rv.position.x, d = Math.sign(RV0 - px); dir = d; rv.position.x += d * Math.min(Math.abs(RV0 - px), dt * 3); turnWheels(rv.position.x - px); } }); // (left far away, it drives itself home)
       // the dust devil: a see-through twirling funnel of red dust
       const dd = new THREE.Group(); dd.position.set(X + 64, 0, -2.6); add(dd); const ddM = toy('#e0946a', { opacity: .34, r: 1 }); ddM.side = THREE.DoubleSide; ddM.depthWrite = false; const segs = [];
       for (let k = 0; k < 4; k++) { const fg2 = new THREE.CylinderGeometry(.34 + (k + 1) * .26, .34 + k * .26, .85, 16, 1, true), p = fg2.attributes.position; for (let q = 0; q < p.count; q++) p.setX(q, p.getX(q) * (1 + .12 * Math.sin(Math.atan2(p.getZ(q), p.getX(q)) * 3))); const s = new THREE.Mesh(fg2, ddM); s.position.y = .45 + k * .82; dd.add(s); segs.push(s); } let swirl = 0;

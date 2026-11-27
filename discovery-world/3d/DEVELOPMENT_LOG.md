@@ -6,6 +6,21 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 166 — DRIVE THE MARS ROVER (ATTRACTIONS row 18: the older small planet activities)
+- **Inspected** the older tap-and-watch activities on Venus and Mars (the two Venus volcanoes, the thermometer, the Mars
+  rover, the dust devil, Olympus Mons). The rover was the best one to make hands-on: before, a tap made it drive 12 m and
+  back by itself.
+- **Now she drives it** (`space.js`): a tap next to it puts her on the deck; ◀ ▶ drive it across Mars between the landing
+  area and the dust devil and beyond (x +20 to +104; the six wheels turn exactly as far as it goes, it turns round when she
+  changes direction, red dust puffs behind); 🐾 swings the arm down and SCOOPS UP a shiny Mars rock when one is beside it
+  (four coloured rocks, blue, green, purple and gold, beside its track); all four: "You found all the Mars rocks!" and a
+  party, then the rocks come back. JUMP hops off. If she leaves it somewhere and walks away, it drives itself home.
+- The four rocks are one instanced mesh (one draw call). `main.js`: a ride can now have its own 🐾 (`ride.onPaw`).
+- **Tested** (desktop, software rendering): `tests/mars-rover.cjs` (new): 7/7 drawn and 7/7 with `?norender` (climb on, ▶ and ◀ drive, scoop all four
+  rocks, JUMP off, it drives itself home, no page errors).
+- Speed on Mars vs build 165: the same at all seven spots (`PERFORMANCE_LOG.md`; a first version cost a draw call even far
+  away, fixed). **Full smoke test 345/345** on the final version (desktop, software rendering). Not tested on an iPhone.
+
 ## Checkpoint: build 165 — Turtle Beach made beautiful (the family's report: "terrible graphics, they don't look like turtles, no water")
 - **Real turtles** (`turtleModel` in islands2.js): a domed shell with a dark rim and a pattern of plates down the middle and
   sides, a pale belly, a neck and a head with big friendly eyes (with a shine), pink cheeks and a smile, four flippers that
@@ -15,6 +30,8 @@ are in `PERFORMANCE_LOG.md`.
   sea with her on its shell (paddling, bobbing, a trail of foam); the baby turtles waddle down the sand and into the water.
 - **The flat green blobs** on the sand were the planets' "craters" in the island's green: islands no longer get craters.
 - Checked in pictures (desktop, software rendering) and `islands.cjs` (all passed); `volcano-coaster.cjs` still all passed.
+- **Builds 162–165: full smoke test 345/345** (desktop, software rendering); riding together on the Moon coaster 6/6 too; speed
+  on Volcano Island, Turtle Beach and the Moon: nothing slower (`PERFORMANCE_LOG.md`).
 
 ## Checkpoint: build 164 — THE VOLCANO ISLAND ROLLER COASTER, in first person (the family's request)
 - **The ride** (one continuous 1.5 km track, about 1½ minutes; `src/volcano-course.js`, built by the same track builder as the
