@@ -12,10 +12,12 @@ This is the full rebuild of Dawson's Discovery World in real 3D. **It is now the
 
 Play: open `index.html`. It is one self-contained file and works offline. Once merged, it is also on GitHub Pages at `…/discovery-world/3d/`.
 
-## 3D builds 162–166: the balloon, the volcano coaster, Turtle Beach, the Mars rover
+## 3D builds 162–168: the balloon, the volcano coaster, Turtle Beach, the Mars rover, the Venus volcano, the dust devil
 - Fly the hot-air balloon in Balloon Hills; slide down the pole from the top of the lighthouse; ride the giant Volcano Island
   roller coaster in first person (round the outside, through the lava chamber inside, under the lagoon); real turtles and a
-  sea on Turtle Beach; drive the Mars rover yourself (◀ ▶) and scoop up four shiny Mars rocks with its arm (🐾).
+  sea on Turtle Beach; drive the Mars rover yourself (◀ ▶) and scoop up four shiny Mars rocks with its arm (🐾); pump a Venus volcano
+  until it erupts, then catch its five lava stars; ride
+  the Mars dust devil up through four sparkles.
 
 ## 3D builds 144–146: really fish, throw snowballs, sail to Jungle Island, go inside
 - Fish with a real rod (cast where you tap, wait for a bite, reel it in), make and throw snowballs where you tap, animals

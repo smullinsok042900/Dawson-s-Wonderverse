@@ -6,6 +6,35 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 168 — RIDE THE MARS DUST DEVIL (ATTRACTIONS row 18)
+- **Before:** a tap made the dust devil twirl faster for 4 s.
+- **Now it is a ride** (`space.js`): a tap next to it scoops her up; she twirls round and round inside the whirl, which
+  grows taller the higher she goes. ▲ spins it faster and lifts her (up to 13 m: Mars gravity is low), ▼ lets her sink,
+  ◀ ▶ steer the whirl across the sand; four glowing red-dust sparkles hang at 3.5, 6.5, 9.5 and 12 m beside it, each a rising
+  note; all four: "You twirled through all the dust sparkles! What a whirl!" and a party. JUMP lets go and she floats gently
+  down. Afterwards the dust devil drifts back to its place.
+- The sparkles are four small meshes with one shared material, drawn only during the ride.
+- **Tested** (desktop, software rendering): `tests/mars-dustdevil.cjs` (new): 6/6 drawn and with `?norender`
+  (scooped up, ▲ higher, steered through all four sparkles, JUMP floats her down, it drifts home, no page errors);
+  `mars-rover` still all passed. (A first try placed the sparkles where the swaying whirl happened to be when she tapped it,
+  so they moved from ride to ride; they now have fixed places.)
+- Speed on Mars vs build 167: the same at all seven spots, the same draw calls (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
+
+## Checkpoint: build 167 — PUMP THE VENUS VOLCANO, catch the lava stars (ATTRACTIONS row 18)
+- **Before:** a tap on one of the two Venus volcanoes made it puff sparks for 3 s.
+- **Now she pumps it** (`space.js`): each tap (or 🐾 beside it) builds the pressure: a deeper rumble each time, the screen
+  shakes a little more, the crater glows brighter and pulses faster, the volcano trembles and the lava rises in the crater;
+  the voice says "Pump the volcano!", "Rumble rumble!", "It's getting hot!", "One more!". The fifth tap: BOOM, it erupts and
+  throws FIVE GLOWING LAVA STARS in high arcs that land beside the path; she walks and jumps to each to collect it (a rising
+  note each); all five: "You caught all the lava stars!" and a party. Both volcanoes do it.
+- The stars are five small meshes with the crater's own lava material (no new shader), drawn only while stars are out.
+- **Tested** (desktop, software rendering): `tests/venus-volcano.cjs` (new): 5/5 drawn and with `?norender`. The first drawn run
+  found a real bug: the pause between taps counted down only on drawn frames, so at 1–2 frames a second (or on a slow phone)
+  a tap between frames was ignored. The pause now uses the real clock.
+- Speed on Venus vs build 166: the same at all five spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** on the final
+  version (desktop, software rendering). Not tested on an iPhone.
+
 ## Checkpoint: build 166 — DRIVE THE MARS ROVER (ATTRACTIONS row 18: the older small planet activities)
 - **Inspected** the older tap-and-watch activities on Venus and Mars (the two Venus volcanoes, the thermometer, the Mars
   rover, the dust devil, Olympus Mons). The rover was the best one to make hands-on: before, a tap made it drive 12 m and

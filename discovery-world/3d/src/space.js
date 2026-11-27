@@ -309,8 +309,27 @@ export function initSpace(G, api) {
         vg.add(model(b => { const cone = K.lathe([[0, 5.3], [.55, 5.25], [.95, 5.75], [1.25, 5.6], [1.8, 4.5], [2.6, 3.0], [3.7, 1.5], [5.2, .45], [6.6, 0]], 28), p = cone.attributes.position; for (let q = 0; q < p.count; q++) { const px = p.getX(q), py = p.getY(q), pz = p.getZ(q), n = 1 + (K.fbm3(px * .6 + k * 9, py * .6, pz * .6, 3) - .5) * .32 * K.sstep(5.7, 3, py); p.setXYZ(q, px * n, py, pz * n); } cone.computeVertexNormals();
           b.add(cone, null, (px, py, pz, nx, ny, nz, o) => { const a = Math.atan2(pz, px), flow = K.sstep(.8, .93, K.noise2(a * 2.2 + k * 5, 1)) * K.sstep(.6, 5.6, py); K.ramp(['#3a251c', '#5c3b28', '#7d5132'], K.fbm3(px * .8, py * .8, pz * .8, 3) + py * .04, o).multiplyScalar(.75 + .3 * ny); o.lerp(K.col('#ff6a1c'), flow * .85 + K.sstep(5, 5.7, py) * .5); }); }, K.paintMat(), false));
         const pool = new THREE.Mesh(new THREE.CircleGeometry(.62, 16), lavaM); pool.rotation.x = -Math.PI / 2; pool.position.y = 5.32; vg.add(pool); const gl = K.glow('#ff7a2a', 5, .55); gl.position.y = 6; vg.add(gl); let erupt = 0;
-        tapIt(vg, () => { erupt = 3; Sound.noise && Sound.noise(1, 120, 600, .06); G.shake = Math.max(G.shake || 0, .35); fact('🌋 Boom! Venus has lots of volcanoes!', 'venusvolcano'); }, x, k === 0 ? 'venusvolcano' : null);
-        U.push((dt, t) => { gl.scale.setScalar(5 + Math.sin(t * 2 + k) * .6 + (erupt > 0 ? 4 : 0)); if (Math.random() < dt * 1.2) api.burst(x, vg.position.y + 5.6, vz, ['#8a7a6a', '#b8a890'], 1, .6); if (erupt <= 0) return; erupt -= dt; if (Math.random() < dt * 34) api.burst(x + (Math.random() - .5), vg.position.y + 5.6, vz, ['#ff6a2a', '#ffd23f', '#ff3a00'], 3, 4.2); }); }
+        // (build 167) PUMP THE VOLCANO: each tap (or 🐾 beside it) builds the pressure: it rumbles, glows brighter and the lava
+        // rises in the crater; the fifth makes it ERUPT and throw five glowing lava-rock stars that land beside the path; she
+        // runs and jumps to collect them (five small meshes with the crater's own lava material, so no new shader; drawn only while
+        // stars are out).
+        let press = 0, cool = 0; const NS = 5, st = [], starG = new THREE.OctahedronGeometry(.42, 0), stars = []; for (let q = 0; q < NS; q++) { const m = new THREE.Mesh(starG, lavaM); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); stars.push(m); }
+        const top = () => vg.position.y + 5.6, launch = () => { st.length = 0; for (let q = 0; q < NS; q++) { const tx = x - 7 + q * 3.5 + (Math.random() - .5), tz = -.2 - Math.random() * .6; st.push({ x, y: top(), z: vz, tx, tz, ty: H(tx, tz) + .75, f: 0, dur: 1.6 + q * .18, got: false }); } stars.forEach(m => { m.visible = true; }); };
+        const pump = () => { const now = performance.now(); if (erupt > 0 || now < cool) return; cool = now + 300; press++; // (a real-time pause, so a tap on a slow phone between frames still counts) Sound.tone(90 + press * 30, .35, 'sawtooth', .04, .7); G.shake = Math.max(G.shake || 0, .1 + press * .05); api.burst(x, top(), vz, ['#8a7a6a', '#ff8a3a'], 3 + press * 2, 1 + press * .3);
+          if (press === 1) fact('🌋 Pump the volcano! Tap it again and again!', k === 0 ? 'venusvolcano' : null); else if (press < 5) say(['', '', '🌋 Rumble rumble!', '🌋 It\'s getting hot!', '🌋 One more!'][press]);
+          if (press >= 5) { press = 0; erupt = 3; Sound.noise && Sound.noise(1, 120, 600, .06); G.shake = Math.max(G.shake || 0, .5); launch(); fact('🌋 BOOM! Venus has lots of volcanoes! Catch the lava stars!', 'venusvolcano'); } };
+        tapIt(vg, pump, x, k === 0 ? 'venusvolcano' : null); if (k) G.interact.push({ x, y: 0, layer: 'space', run: pump, hintY: 2.4 });
+        U.push((dt, t) => { pool.position.y = 5.32 + press * .07; gl.scale.setScalar(5 + Math.sin(t * (2 + press * 2) + k) * (.6 + press * .2) + press * .6 + (erupt > 0 ? 4 : 0)); vg.position.x = x + Math.sin(t * 40) * .015 * press;
+          if (Math.random() < dt * 1.2) api.burst(x, top(), vz, ['#8a7a6a', '#b8a890'], 1, .6);
+          if (erupt > 0) { erupt -= dt; if (Math.random() < dt * 34) api.burst(x + (Math.random() - .5), top(), vz, ['#ff6a2a', '#ffd23f', '#ff3a00'], 3, 4.2); }
+          if (!st.length) return;
+          st.forEach((s, q) => { const m = stars[q]; if (s.got) { m.visible = false; return; }
+            if (s.f < 1) { s.f = Math.min(1, s.f + dt / s.dur); const f = s.f; s.x = x + (s.tx - x) * f; s.z = vz + (s.tz - vz) * f; s.y = top() + (s.ty - top()) * f + Math.sin(f * Math.PI) * 9; }
+            else s.y = s.ty + Math.sin(t * 3 + q) * .15;
+            m.position.set(s.x, s.y, s.z); m.rotation.y = t * 2.5 + q;
+            if (P.layer === 'space' && Math.abs(P.x - s.x) < 1.1 && Math.abs(P.y + .7 - s.y) < 1.4 && s.f > .6) { s.got = true; const n = st.filter(o => o.got).length; Sound.tone(520 + n * 80, .15, 'sine', .07, 1.5); api.burst(s.x, s.y, s.z, ['#ffd23f', '#ff7a00', '#ffffff'], 10, 1.6);
+              if (n === NS) { say('🌋 You caught all the lava stars! Hot hot hot!', true); disc('venuslavastars'); api.burst(P.x, P.y + 2, 0, ['#ff4f2a', '#ffd23f', '#ff9a2e'], 26, 2.4); Sound.giggle && Sound.giggle(); } } });
+          if (st.every(o => o.got)) st.length = 0; }); }
       // the thermometer: a glass tube with a red bulb; tap it and the red climbs to the top
       const tg = new THREE.Group(); tg.position.set(X + 52, 0, -2.2); add(tg); tg.add(model(b => { b.put(K.lathe([[0, .22], [.5, .2], [.62, 0], [0, 0]], 20), 0, 0, 0, '#8a8fa0'); b.put(K.geo.box(), 0, 1.9, -.16, '#fff8e8', [.9, 3.3, .1]); for (let k = 0; k < 9; k++) b.put(K.geo.box(), .26, .95 + k * .28, -.1, k % 4 === 0 ? '#ff4f4f' : '#6a7080', [k % 4 === 0 ? .26 : .16, .035, .04]); b.put(K.geo.sph(), 0, .52, 0, '#ff2a2a', .3); }));
       const glass = new THREE.Mesh(new THREE.CapsuleGeometry(.14, 2.5, 6, 14), toy('#ffffff', { opacity: .35, r: .1 })); glass.position.y = 2.0; tg.add(glass);
@@ -415,8 +434,29 @@ export function initSpace(G, api) {
       // the dust devil: a see-through twirling funnel of red dust
       const dd = new THREE.Group(); dd.position.set(X + 64, 0, -2.6); add(dd); const ddM = toy('#e0946a', { opacity: .34, r: 1 }); ddM.side = THREE.DoubleSide; ddM.depthWrite = false; const segs = [];
       for (let k = 0; k < 4; k++) { const fg2 = new THREE.CylinderGeometry(.34 + (k + 1) * .26, .34 + k * .26, .85, 16, 1, true), p = fg2.attributes.position; for (let q = 0; q < p.count; q++) p.setX(q, p.getX(q) * (1 + .12 * Math.sin(Math.atan2(p.getZ(q), p.getX(q)) * 3))); const s = new THREE.Mesh(fg2, ddM); s.position.y = .45 + k * .82; dd.add(s); segs.push(s); } let swirl = 0;
-      tapIt(dd, () => { swirl = 4; Sound.noise && Sound.noise(1.2, 300, 900, .04); fact('🌪️ A dust devil! Twirly winds blow the red dust around on Mars.', 'dustdevil'); }, X + 64, 'dustdevil');
-      U.push((dt, t) => { swirl = Math.max(0, swirl - dt); dd.position.x = X + 64 + Math.sin(t * .4) * 2; segs.forEach((s, k) => { s.rotation.y += dt * (2.2 + k * .6 + swirl * 5); s.position.x = Math.sin(t * 2.2 + k * .9) * .09 * (k + 1); s.position.z = Math.cos(t * 1.7 + k * .9) * .06 * (k + 1); }); dd.scale.setScalar(1 + Math.min(1, swirl) * .35); if (Math.random() < dt * (3 + swirl * 8)) api.burst(dd.position.x, .15, -2.6, ['#c86a40', '#e89a6a'], 1, 1.2); });
+      // (build 168) RIDE THE DUST DEVIL: tap it when next to it and the whirl scoops her up: she twirls round and round inside
+      // it; ▲ spins it faster and lifts her higher (up to 13 m: Mars gravity is low), ▼ lets her sink, ◀ ▶ steer the whirl
+      // across the sand; four red-dust sparkles hang at different heights for her to twirl through; JUMP lets go and she
+      // floats gently down. Four small meshes (one shared material), drawn only while she rides.
+      const DDA = X + 50, DDB = X + 84, SPK = [[-4, 3.5], [3, 6.5], [-2, 9.5], [4, 12.2]], spkM = toy('#ff7a4a', { em: '#ff5a2a', ei: .9, m: .2 }), spkG = new THREE.OctahedronGeometry(.45, 0);
+      const spk = SPK.map(() => { const m = new THREE.Mesh(spkG, spkM); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      let ddRide = null, ddx = X + 64, ddHome = X + 64;
+      const ddGo = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - dd.position.x) > 5) return; swirl = 4; Sound.noise && Sound.noise(1.2, 300, 900, .04);
+        fact('🌪️ WHOOSH! The dust devil scoops you up! ▲ spin higher, ▼ go lower, ◀ ▶ steer, JUMP to let go!', 'dustdevil');
+        const R = ddRide = { type: 'dustdevil', t: 0, noExit: true, stick: true, h: .6, a: 0, got: SPK.map(() => false), off: false }; P.ride = R; P.vx = P.vy = 0; ddx = dd.position.x;
+        spk.forEach((m, q) => { m.visible = true; m.position.set(X + 64 + SPK[q][0], SPK[q][1], -2.6); });
+        R.onJump = () => { if (!R.off) { R.off = true; say('🌪️ Let go! Float down gently!'); } };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R) { R.over = true; ddRide = null; spk.forEach(m => { m.visible = false; }); return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          if (!R.off) { ddx = Math.max(DDA, Math.min(DDB, ddx + sk.x * 3.2 * dt)); R.h = Math.max(.6, Math.min(13, R.h + (sk.y > .2 ? 3.2 : sk.y < -.2 ? -3 : -.25) * dt)); swirl = Math.max(swirl, 1 + R.h / 6);
+            R.a += dt * (3 + R.h * .35); const r = .9 + R.h * .07; P.x = ddx + Math.cos(R.a) * r; P.z = -2.6 + Math.sin(R.a) * r * .6; P.y = R.h; P.facing = Math.sin(R.a) > 0 ? -1 : 1;
+            if (Math.random() < dt * 10) api.burst(P.x, P.y, P.z, ['#c86a40', '#e89a6a'], 1, 1);
+            SPK.forEach(([dx, y], q) => { if (R.got[q]) return; const m = spk[q]; m.rotation.y = t * 2.5 + q; if (Math.abs(ddx - m.position.x) < 1.6 && Math.abs(R.h - y) < 1.1) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(520 + n * 90, .15, 'sine', .07, 1.5); api.burst(m.position.x, y, -2.6, ['#ff7a4a', '#ffd23f', '#ffffff'], 10, 1.6);
+              if (n === SPK.length) { say('🌪️ You twirled through all the dust sparkles! What a whirl!', true); disc('dustdevilstars'); api.burst(P.x, P.y, P.z, ['#ff4f6a', '#ffd23f', '#ff9a2e', '#ffffff'], 26, 2.4); Sound.giggle && Sound.giggle(); } } }); }
+          else { P.y = Math.max(0, P.y - dt * 2.4); P.z += (0 - P.z) * Math.min(1, dt * 2); if (P.y <= 0) { R.over = true; ddRide = null; spk.forEach(m => { m.visible = false; }); P.ride = null; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } } }); };
+      tapIt(dd, ddGo, X + 64, null); G.interact.push({ get x() { return dd.position.x; }, y: 0, layer: 'space', disc: 'dustdevil', run: ddGo, hintY: 2.4 });
+      U.push((dt, t) => { swirl = Math.max(0, swirl - dt); if (ddRide && !ddRide.off) ddHome = ddx; else { if (Math.abs(ddHome - X - 64) > .05 && !ddRide) ddHome += Math.sign(X + 64 - ddHome) * Math.min(Math.abs(X + 64 - ddHome), dt * 2); else if (!ddRide) ddHome = X + 64; }
+        dd.position.x = ddHome + (ddRide ? 0 : Math.sin(t * .4) * 2); segs.forEach((s, k) => { s.rotation.y += dt * (2.2 + k * .6 + swirl * 5); s.position.x = Math.sin(t * 2.2 + k * .9) * .09 * (k + 1); s.position.z = Math.cos(t * 1.7 + k * .9) * .06 * (k + 1); }); dd.scale.set(1 + Math.min(1, swirl) * .35, 1 + (ddRide && !ddRide.off ? ddRide.h / 3.2 : Math.min(1, swirl) * .35), 1 + Math.min(1, swirl) * .35); if (Math.random() < dt * (3 + swirl * 8)) api.burst(dd.position.x, .15, -2.6, ['#c86a40', '#e89a6a'], 1, 1.2); });
     }
     yield;
     if (gas) {

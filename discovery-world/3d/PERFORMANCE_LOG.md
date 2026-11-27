@@ -4,6 +4,17 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 168 vs build 167, Mars with the dust devil ride (desktop, software rendering; `tests/perf/compare.cjs mars`; not iPhone numbers)
+- 2 rounds each: 46: 198 → 185 ms; 64: 193 → 176; 90: 185 → 176; 125: 194 → 190; 140: 200 → 198; 221: 201 → 193; 276: 187 → 186:
+  all the same (slightly faster everywhere, within the noise). Draw calls identical at every spot (the four sparkles are
+  hidden until she rides).
+
+## Build 167 vs build 166, Venus with the volcano you pump (desktop, software rendering; `tests/perf/compare.cjs venus`; not iPhone numbers)
+- 2 rounds each: 40: 189 → 200 ms (+6%); 60: 192 → 205 (+7%); 100: 188 → 182; 160: 227 → 216; 270: 179 → 182: all the same
+  (within the 12% this machine varies by). Draw calls the same (66, 68, 69, 57), +1 at 100. The five lava stars are drawn only
+  while they are out. (`compare.cjs`: Venus now also measures 40, beside the first volcano.) Measured before a one-line fix
+  to the tap pause (the real clock instead of frames), which does not change what is drawn.
+
 ## Build 166 vs build 165, Mars with the rover you drive (desktop, software rendering; `tests/perf/compare.cjs mars`; not iPhone numbers)
 - First version (shadow-casting rocks): every spot the same (+3 to +7%), but +1–2 draw calls even 230 m from the rover. A
   probe found the four rocks cost a shadow pass and stayed in the wide far view; they now cast no shadow and are hidden when
