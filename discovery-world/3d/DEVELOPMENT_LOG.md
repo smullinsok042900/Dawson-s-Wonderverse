@@ -6,6 +6,35 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 161 — aim the ball cannon (every activity hands-on: Toy Town)
+- The ball cannon used to put every ball in the hoop by itself. Now she aims it: standing by it, ▲ ▼ tilt the barrel and a
+  dotted line shows where the ball will fly; tap the cannon (or 🐾) to fire. The ball really flies (gravity): through the
+  hoop, SWISH; a miss bounces off the board or the ground, and the voice says which way to aim ("a little higher with ▲" /
+  "a little lower with ▼"). Three swishes: "You are a super shooter!" The hoop is reached by a wide range of the barrel's
+  swing (about a quarter of it), so it is easy to get.
+- New test `tests/toytown-cannon.cjs` (4 checks; it fires, listens to the hint and adjusts, like a child): passed with
+  `&norender` (three swishes in six shots); drawn too. **Full smoke test 345/345** (desktop, software rendering). Speed: Toy
+  Town the same (`PERFORMANCE_LOG.md`).
+
+## Checkpoint: build 160 — roll the snowballs for the snowman (every activity hands-on: Frosty Peaks)
+- Tapping the little snowball (or 🐾) now gives it to her to PUSH along the snow: the further it rolls, the bigger it grows
+  (it spins as it rolls). Big enough ("Push it to the snowman!"), she pushes it to the snowman and it goes on: the big
+  bottom, then the middle, then the head; then tapping the snowman adds the carrot nose and the hat. Tapping the snow pile
+  still builds it quickly too (kept: the adventures' "snow_built" event and its test).
+- New test `tests/frosty-snowman.cjs` (4 checks): passed drawn and with `&norender`. **Full smoke test 345/345** (desktop,
+  software rendering). Speed: Frosty Peaks the same (`PERFORMANCE_LOG.md`).
+- `tests/adventures-browser.cjs` (from build 40) had two checks from before later builds: the map tiles are pictures (img)
+  since the map-thumbnail build, and fishing is hands-on since build 144 (take the rod, cast, wait for the bite, reel in).
+  Both steps now do what the game does; the checks are the same (a picture on each tile, a real catch). It passes again.
+
+## Checkpoint: build 159 — catch the fireflies (every activity hands-on: the Whispering Woods)
+- The firefly jar used to let ten fireflies swirl by themselves. Now tapping it (or 🐾) lets six fireflies out along the
+  woods path, glowing and drifting; she catches each by walking or jumping into it (the high ones need a jump) or by tapping
+  it: it zips back into the jar, and the jar glows brighter; all six: "the jar glows like a lantern!" Tap again for
+  another go.
+- New test `tests/woods-fireflies.cjs` (6 checks): passed with `&norender` (all six caught by walking and jumping).
+  Backup: `backups/3D_build158_index.html`. Drawn run passed too. **Full smoke test 345/345** (desktop, software rendering).
+
 ## Checkpoint: build 158 — THE DEEP CAVES and digging her own tunnels (the family's request)
 - "Make the underground underneath the ball pit way bigger, add different caves she can go through and explore, and a
   shovel so she can dig her own cave tunnels she can actually explore." A glowing cave mouth at the far end of the

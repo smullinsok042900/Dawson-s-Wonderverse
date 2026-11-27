@@ -248,3 +248,7 @@ A tour of every district found these still looking like placeholders. Do them in
 - **One 835 ms long task** on a train trip (desktop, x 202) that did not reproduce.
 - **The test browser is very slow** (software 3D), so a few smoke checks are timing-sensitive. Run the full test alone,
   and tap moving characters where they are (use `tapChar` or re-aim), never at fixed spots.
+
+- **(build 161) `tests/perf/compare.cjs`: settle longer before measuring a place's first spot.** The first spot of a place varies by
+  ±60 ms between rounds and is the one flagged lately (Frosty -326, Sunny Beach -50, Toy Town 560); reruns showed it the same
+  each time. Measure it once more at the end, or wait a few seconds after the walk-through before the first measurement.

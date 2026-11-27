@@ -424,12 +424,27 @@ export function initExpansion(G, api) {
         if (tumble && (tumble += dt) > 3.5) { for (const b of blocks) c.remove(b); blocks.length = 0; tumble = 0; } }; },
     // the bounce park: three trampolines, the last one is super bouncy (a gem floats up high)
     () => { for (const [x, b] of [[592, 11], [597, 12.5], [602, 14]]) { c.cyl(x, 0, 0, .95, 1.05, .35, '#2fa8ff'); c.cyl(x, .35, 0, .85, .85, .06, '#9fe6ff', { m: { em: '#2fa8ff', ei: .3 } }); c.plat(x - .95, x + .95, .41, { pad: true, step: true, bounce: b, onLand: () => c.disc('bouncepark', '🦘 Boing! Bounce from one to the next!') }); } },
-    // the ball cannon: tap it and a ball flies into the hoop. Swish!
-    () => { const can = new THREE.Group(); can.position.set(616, 0, -2); c.add(can); const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.35, .45, 1.6, 20), mat('#5b6cff', { r: .4 })); barrel.rotation.z = -.9; barrel.position.y = 1; barrel.castShadow = true; can.add(barrel); for (const s of [-1, 1]) { const wh = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .2, 20), mat('#ffd23f')); wh.rotation.x = Math.PI / 2; wh.position.set(0, .45, s * .45); can.add(wh); }
-      c.cyl(625, 0, -2, .1, .1, 3.6, '#ffffff'); const ring = new THREE.Mesh(new THREE.TorusGeometry(.6, .07, 10, 30), mat('#ff4f9a')); ring.rotation.x = Math.PI / 2; ring.position.set(624.4, 3.5, -2); c.add(ring); c.block(625.15, 3.4, -2, .1, 1.4, 1.6, '#ffffff', { r: .05 });
-      const balls = []; let swish = 0;
-      c.tap(can, () => { const b = new THREE.Mesh(new THREE.SphereGeometry(.28, 16, 12), mat(pick(RB))); b.position.set(616.6, 1.6, -2); b.userData = { t: 0 }; c.add(b); balls.push(b); Sound.boing(); }, 616);
-      return dt => { for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.t += dt; const k = Math.min(1, u.t / 1.1); b.position.set(616.6 + (624.4 - 616.6) * k, 1.6 + Math.sin(k * Math.PI) * 3.4 + (3.6 - 1.6) * k, -2); if (k >= 1) { b.position.y -= (u.t - 1.1) * 6; if (!u.s) { u.s = 1; swish++; Sound.chime(); c.burst(624.4, 3.5, -2, ['#ffd23f', '#fff'], 14, 2.5); c.say(swish % 5 === 0 ? `🏀 Swish! ${swish} baskets!` : '🏀 Swish!'); c.disc('cannon', '🏀 Tap the cannon to shoot a ball into the hoop!'); } if (u.t > 1.6) { c.remove(b); balls.splice(i, 1); } } } }; },
+    // (build 161, every activity hands-on) THE BALL CANNON: she aims it herself. Standing by it, ▲ ▼ tilt the barrel up and
+    //  down, and a dotted line shows where the ball will fly; tap the cannon (or 🐾) to fire. Through the hoop: SWISH! A miss
+    //  bounces off the backboard or the ground (try again). Three swishes: a cheer.
+    () => { const CX = 616, can = new THREE.Group(); can.position.set(CX, 0, -2); c.add(can); const piv = new THREE.Group(); piv.position.y = 1; can.add(piv); const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.35, .45, 1.6, 20), mat('#5b6cff', { r: .4 })); barrel.position.y = .4; barrel.castShadow = true; piv.add(barrel); for (const s2 of [-1, 1]) { const wh = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, .2, 20), mat('#ffd23f')); wh.rotation.x = Math.PI / 2; wh.position.set(0, .45, s2 * .45); can.add(wh); }
+      const HX = 624.4, HY = 3.5; c.cyl(625, 0, -2, .1, .1, 3.6, '#ffffff'); const ring = new THREE.Mesh(new THREE.TorusGeometry(.6, .07, 10, 30), mat('#ff4f9a')); ring.rotation.x = Math.PI / 2; ring.position.set(HX, HY, -2); c.add(ring); c.block(625.15, 3.4, -2, .1, 1.4, 1.6, '#ffffff', { r: .05 });
+      const V = 10.96, GR = 12; let ang = .7, swish = 0; const balls = [];
+      const dotM = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .8 }), dotG = new THREE.SphereGeometry(.07, 8, 6), dots = []; for (let i = 0; i < 14; i++) { const d = new THREE.Mesh(dotG, dotM); d.visible = false; d.userData.dynamic = true; c.add(d); dots.push(d); }
+      const tip = () => [CX + Math.cos(ang) * .8, 1 + Math.sin(ang) * .8];
+      const fire = () => { const [x0, y0] = tip(); const b = new THREE.Mesh(new THREE.SphereGeometry(.28, 16, 12), mat(pick(RB))); b.position.set(x0, y0, -2); b.userData = { t: 0, vx: V * Math.cos(ang), vy: V * Math.sin(ang), done: false, a: ang }; c.add(b); balls.push(b); Sound.boing(); c.disc('cannon', '🏀 Aim the cannon with ▲ ▼ and fire it into the hoop!'); };
+      c.tap(can, fire, CX, { icon: '🏀', label: 'Ball cannon', action: 'Fire!', disc: 'cannon' });
+      return (dt, t) => { dt = Math.min(dt, .1); const near = P.layer === '' && !P.ride && Math.abs(P.x - CX) < 3;
+        if (near && api.stick) { const st = api.stick(); if (Math.abs(st.y) > .3) ang = Math.max(.35, Math.min(1.35, ang + Math.sign(st.y) * dt * .5)); }
+        piv.rotation.z = -(Math.PI / 2 - ang);
+        // the dotted aim line (where the ball will fly)
+        const [x0, y0] = tip(); for (const [i, d] of dots.entries()) { const tt = (i + 1) * .09, x = x0 + V * Math.cos(ang) * tt, y = y0 + V * Math.sin(ang) * tt - GR * tt * tt / 2; d.visible = near && y > 0 && x < 625; d.position.set(x, y, -2); }
+        for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.t += dt; const px = b.position.x, py = b.position.y; u.vy -= GR * dt; b.position.x += u.vx * dt; b.position.y += u.vy * dt;
+          if (!u.done && px < HX && b.position.x >= HX && u.vy < 0) { const y = py + (b.position.y - py) * (HX - px) / (b.position.x - px); if (Math.abs(y - HY) < .5) { u.done = true; u.vx *= .15; swish++; Sound.chime(); c.burst(HX, HY, -2, ['#ffd23f', '#fff'], 14, 2.5);
+            c.say(swish === 3 ? '🏀 SWISH! Three baskets! You are a super shooter!' : swish % 5 === 0 ? `🏀 Swish! ${swish} baskets!` : '🏀 Swish!'); if (swish === 3) c.disc('cannon3'); } }
+          if (b.position.x > 625 && b.position.y > 2.7 && b.position.y < 4.1 && u.vx > 0) { u.vx = -u.vx * .4; Sound.click(); if (!u.done) { u.done = true; c.say(u.a < .88 ? '🏀 Bonk! Off the board. A little higher with ▲!' : '🏀 Bonk! Off the board. A little lower with ▼!'); } }
+          if (b.position.y < .28) { b.position.y = .28; u.vy = Math.abs(u.vy) * .45; u.vx *= .7; if (!u.done) { u.done = true; c.say(u.a < .88 ? '🏀 Too low! Aim a little higher with ▲!' : '🏀 Too high! Aim a little lower with ▼!'); } } /* (the ball reaches the hoop's height only around the middle of the barrel's swing: below it, higher; above it, lower) */
+          if (u.t > 3) { c.remove(b); balls.splice(i, 1); } } }; },
     // (build 43) A REAL SEESAW: stand on either end and it rocks you up and down (a teddy friend rides the other end).
     // Press JUMP as your end rises for a super bounce. A gem floats above the high end.
     () => { const SZ = -1.5; /* (build 120: behind the path, so she walks past it instead of through the plank; on it, she steps back onto it) */ c.cyl(638, 0, SZ, .25, .35, .7, '#ff9a2e'); const pivot = new THREE.Group(); pivot.position.set(638, .8, SZ); c.add(pivot);
@@ -816,11 +831,22 @@ export function initExpansion(G, api) {
     // the creek: stepping logs across (jump from log to log), with a gem on the tall one
     () => { const w = new THREE.Mesh(new THREE.BoxGeometry(7, .05, 13.3), mat('#4fb3ff', { r: .15, cc: .6 })); w.position.set(-226, .02, -4.35); c.add(w); /* (build 60: the creek stops before the train track; it used to run over the rails) */
       for (const [x, y] of [[-223.5, .5], [-226, 1.0], [-228.5, .5]]) { c.cyl(x, 0, -.4, .45, .5, y, '#8a5a2a', { r: .9 }); c.plat(x - .5, x + .5, y, { z: -.4, step: true, stepMax: .6, onLand: () => c.disc('logs', '🪵 Hop across the stepping logs!') }); } },
-    // a jar of fireflies: tap it and they swirl out, glowing
-    () => { const jar = c.cyl(-240, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); c.block(-240, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 }); const flies = []; let out = 0;
-      for (let i = 0; i < 10; i++) { const f = c.sph(-240, 1, -2.4, .06, '#fff58a', { m: { em: '#fff58a', ei: 2 } }); f.visible = false; flies.push({ f, ph: i * .7 }); }
-      c.tap(jar, () => { out = 8; flies.forEach(q => { q.f.visible = true; }); Sound.twinkle(); c.say('✨ The fireflies are dancing!'); c.disc('fireflies', '✨ Tap the jar to let the fireflies dance!'); }, -240);
-      return (dt, t) => { if (out <= 0) return; out -= dt; for (const q of flies) { const r = Math.min(1, (8 - out)) * 2.2; q.f.position.set(-240 + Math.cos(t * 1.5 + q.ph) * r, 1.6 + Math.sin(t * 2.3 + q.ph) * .8, -2.4 + Math.sin(t * 1.5 + q.ph) * r * .5); } if (out <= 0) flies.forEach(q => { q.f.visible = false; }); }; },
+    // (build 159, every activity hands-on) THE FIREFLY JAR: tap it (or 🐾) and six fireflies fly out and drift along the
+    //  woods path, glowing. She catches each one by walking or jumping into it (or tapping it): it zips back into the jar,
+    //  and the jar glows brighter. All six: "the jar glows like a lantern!" Tap the jar again and they fly out for another go.
+    () => { const JX = -240, jar = c.cyl(JX, .6, -2.4, .35, .35, .8, '#cfefff', { m: { r: .1, cc: .6 } }); jar.material = jar.material.clone(); jar.material.emissive = new THREE.Color('#fff58a'); jar.material.emissiveIntensity = 0; c.block(JX, 0, -2.4, 1, .6, 1, '#9a6a3a', { r: .1 });
+      const flyM = mat('#fff58a', { em: '#fff58a', ei: 2 }), flies = [-253, -248, -244, -235, -231, -226].map((hx, i) => { const f = new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), flyM); f.visible = false; f.userData.dynamic = true; c.add(f); return { f, hx, hy: 1 + (i % 3) * .6, ph: i * 1.3, st: 'jar', t: 0, i }; });
+      let caught = 0, flying = false;
+      const release = () => { if (flying) return; flying = true; caught = 0; jar.material.emissiveIntensity = 0; for (const q of flies) { q.st = 'out'; q.t = 0; q.f.visible = true; q.f.position.set(JX, 1, -2.4); } Sound.twinkle(); c.say('✨ Out fly the fireflies! Catch them: walk or jump into them, or tap them!'); c.disc('fireflies', '✨ Let the fireflies out and catch them again!'); };
+      const catchOne = q => { if (q.st !== 'out') return; q.st = 'home'; q.t = 0; q.from = q.f.position.clone(); caught++; Sound.tone(880 + caught * 90, .15, 'sine', .05, 1.5); c.burst(q.f.position.x, q.f.position.y, q.f.position.z, ['#fff58a', '#ffffff'], 8, 1.4);
+        c.say(caught < 6 ? `✨ You caught a firefly! ${NUM[caught]}!` : '✨ You caught all six fireflies! The jar glows like a lantern!'); if (caught === 6) { flying = false; c.disc('fireflyjar'); Sound.chime(); } };
+      c.tap(jar, release, JX, { icon: '✨', label: 'Firefly jar', action: 'Let the fireflies out!', disc: 'fireflies' }); for (const q of flies) c.tap(q.f, () => catchOne(q));
+      return (dt, t) => { for (const q of flies) { q.t += dt;
+          if (q.st === 'out') { const k = Math.min(1, q.t / 1.5), x = q.hx + Math.sin(t * .9 + q.ph) * 1.6, y = q.hy + Math.sin(t * 1.7 + q.ph) * .35, z = -.6 + Math.sin(t * 1.1 + q.ph) * .5; q.f.position.set(JX + (x - JX) * k, 1 + (y - 1) * k, -2.4 + (z + 2.4) * k);
+            q.f.scale.setScalar(.8 + Math.abs(Math.sin(t * 6 + q.ph)) * .6); if (k >= 1 && Math.abs(P.x - q.f.position.x) < .8 && q.f.position.y > P.y - .2 && q.f.position.y < P.y + 1.9 && P.layer === '') catchOne(q); }
+          else if (q.st === 'home') { const k = Math.min(1, q.t / .6); q.f.position.set(q.from.x + (JX - q.from.x) * k, q.from.y + (.75 - q.from.y) * k + Math.sin(k * Math.PI) * 1.2, q.from.z + (-2.4 - q.from.z) * k); if (k >= 1) { q.st = 'jar'; } }
+          else if (q.f.visible) { q.f.position.set(JX + Math.sin(t * 3 + q.ph) * .18, .7 + ((q.i * .13 + t * .2) % .5), -2.4 + Math.cos(t * 3 + q.ph) * .18); q.f.scale.setScalar(.55); } }
+        const want = caught / 6 * 1.4 * (.85 + Math.sin(t * 3) * .15); jar.material.emissiveIntensity += (want - jar.material.emissiveIntensity) * Math.min(1, dt * 4); }; },
     // paw prints on the path lead to the fox den, where Rusty the fox cub lives
     () => { for (let i = 0; i < 8; i++) { const pr = c.sign('🐾', .45, -247 - i * 1.6, .03, (i % 2) * .4 - .2);  }
       const den = c.sph(-263, 0, -4.4, 2, '#8a6a4a', { m: { r: .95 } }); den.scale.set(1.3, .7, 1); const hole = c.sph(-263, .4, -2.7, .7, '#3a2a1a', { m: { r: 1 } }); hole.scale.set(1, .8, .3);
@@ -850,9 +876,22 @@ export function initExpansion(G, api) {
         () => { const n = new THREE.Mesh(new THREE.ConeGeometry(.09, .5, 10), mat('#ff8a1f')); n.rotation.z = -Math.PI / 2; n.position.set(-296.5, 2.95, -2.2); n.rotation.y = -.6; c.add(n); return n; }, () => c.toy('🎩', .8, -297, 3.55, -2.6)];
       if (world.adventures?.events?.includes('snow_built')) { for (const build of STEPS) parts.push(build()); k = STEPS.length; }
       const roll = c.sph(-302, .35, -1.5, .35, '#ffffff', { m: { r: .9, cc: 0 } });
-      c.tap(roll, () => { roll.rotation.z -= 1; api.event?.({ type: 'activity', id: 'snow_rolled' }); Sound.boing(); c.say('⚪ Roll roll! A snowball for your snow friend!'); }, -302, { icon: '⚪', label: 'Snowball', action: 'Roll snowball', disc: 'snow_rolled' });
+      // (build 160, every activity hands-on) ROLL THE SNOWBALLS: tap the little snowball (or 🐾) and she pushes it along the
+      //  snow: the further she rolls it, the bigger it grows. Big enough, she pushes it to the snowman and it goes on: the big
+      //  bottom, then the middle, then the head (then tap the snowman for the carrot nose and the hat). Tapping the snow pile
+      //  still builds it quickly too.
+      const SIZES = [.8, .6, .45]; let pushing = false, rr = .25, told = false;
+      const home = () => { pushing = false; rr = .35; roll.scale.setScalar(1); roll.position.set(-302, .35, -1.5); };
+      c.tap(roll, () => { api.event?.({ type: 'activity', id: 'snow_rolled' }); Sound.boing(); if (k >= 3) { c.say('⛄ The snowman has all its snowballs! Tap it for a carrot nose and a hat!'); return; } if (P.layer !== '' || P.ride) return; pushing = true; rr = .25; told = false;
+        c.say(['⚪ Roll the snowball along the snow! It grows bigger and bigger! Make a BIG one for the bottom!', '⚪ Now roll a middle-sized snowball!', '⚪ Now a little one for the head!'][k]); c.disc('snowroll'); }, -302, { icon: '⚪', label: 'Snowball', action: 'Roll snowball', disc: 'snow_rolled' });
       c.tap(pile, () => { if (k < STEPS.length) { parts.push(STEPS[k]()); k++; Sound.tone(400 + k * 70, .12, 'sine', .05, 1.2); c.say(['⛄ A big snowball!', '⛄ Now the middle!', '⛄ And the head!', '🥕 A carrot nose!', '🎩 A hat! Hello, Mister Snowman!'][k - 1]); c.disc('snowman', '⛄ Tap the snow to build a snowman!'); if (k === STEPS.length) { api.event?.({ type: 'activity', id: 'snow_built' }); Sound.giggle(); c.burst(-297, 3.5, -2.6, ['#ffffff', '#9fe6ff'], 20, 3); } }
-        else { for (const q of parts) c.remove(q); parts.length = 0; k = 0; c.say('☀️ The sun melted the snowman! Build a new one!'); } }, -300, { icon: '⛄', label: 'Snow friend', action: 'Build snow friend', disc: 'snowman' }); },
+        else { for (const q of parts) c.remove(q); parts.length = 0; k = 0; c.say('☀️ The sun melted the snowman! Build a new one!'); } }, -300, { icon: '⛄', label: 'Snow friend', action: 'Build snow friend', disc: 'snowman' });
+      return dt => { if (!pushing) return; if (P.layer !== '' || P.ride || P.x < -335 || P.x > -285) { home(); return; }
+        const f = P.facing || 1, want = SIZES[Math.min(2, k)]; if (Math.abs(P.vx) > 1 && P.grounded) { rr = Math.min(want, rr + Math.abs(P.vx) * dt * .045); roll.rotation.z -= P.vx * dt / Math.max(.3, rr); }
+        roll.scale.setScalar(rr / .35); roll.position.set(P.x + f * (rr + .45), rr, -.7);
+        if (rr >= want && !told) { told = true; Sound.tone(660, .15, 'sine', .05, 1.3); c.say('⛄ Big enough! Push it to the snowman!'); }
+        if (rr >= want - .001 && Math.abs(roll.position.x + 297) < 1.4 && k < 3) { parts.push(STEPS[k]()); k++; Sound.tone(400 + k * 70, .15, 'sine', .05, 1.2); c.burst(-297, 1 + k * .8, -2.6, ['#ffffff', '#9fe6ff'], 14, 2);
+          c.say(['⛄ The big bottom snowball!', '⛄ The middle snowball!', '⛄ The head! Now tap the snowman for a carrot nose and a hat!'][k - 1]); c.disc('snowman'); if (k === 3) c.disc('snowrolled3'); home(); } }; },
     // (build 144, the family's request: really throw snowballs) SNOWBALL TOSS: tap the snow pile and she scoops and packs a
     //  snowball (it grows in her hand). Then tap the target exactly where you want it to go: the snowball flies there and
     //  leaves a splat. The middle is a bullseye! The splats melt away after a while.

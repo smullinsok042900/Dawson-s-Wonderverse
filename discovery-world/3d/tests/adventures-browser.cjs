@@ -31,11 +31,14 @@ const assert=require('node:assert/strict');const path=require('path');const fs=r
  assert.equal(await page.evaluate(()=>document.documentElement.classList.contains('calm')),true);
  await page.screenshot({path:'screenshots/adventures-comfort.jpg'});
  await page.locator('.comfort-close').click();assert.equal(await page.evaluate(()=>__DDW3.G.activityOpen),false);
- await page.locator('#mapBtn').tap();assert.ok(await page.locator('.mpT svg').count());await page.screenshot({path:'screenshots/adventures-map.jpg'});await page.locator('#mapPanel .mpX').tap();
+ await page.locator('#mapBtn').tap();assert.ok(await page.locator('.mpT img, .mpT svg').count()); // (build 160: the map tiles are pictures (img) since the map-thumbnail build; the check is the same: each tile shows a picture)await page.screenshot({path:'screenshots/adventures-map.jpg'});await page.locator('#mapPanel .mpX').tap();
  // Actual activity targets: find callback by metadata; verify every specified event is wired to real toys.
  await page.evaluate(()=>{__DDW3.teleport(-580);__DDW3.G.expansion.buildNow(-580);});
  await page.waitForFunction(()=>!!__DDW3.G.interact.find(i=>i.disc==='fishing'),null,{timeout:60000});
- await page.evaluate(()=>{__DDW3.teleport(-552);__DDW3.G.doAction();});
+ // (build 160: fishing is hands-on since build 144: 🐾 takes the rod, 🐾 casts, wait for the bite, 🐾 reels it in; still a real catch)
+ await page.evaluate(()=>{__DDW3.teleport(-552);__DDW3.G.doAction();__DDW3.G.doAction();});
+ await page.waitForFunction(()=>/A bite/.test(document.getElementById('toast').textContent||''),null,{timeout:60000});
+ await page.evaluate(()=>{__DDW3.G.doAction();});
  await page.waitForFunction(()=>__DDW3.world.adventures.catches>0,null,{timeout:60000});
  assert.ok(await page.evaluate(()=>__DDW3.world.adventures.events.includes('fish_caught')));
  await page.evaluate(()=>{__DDW3.teleport(-566);__DDW3.G.doAction();});
