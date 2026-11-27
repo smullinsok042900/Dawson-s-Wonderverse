@@ -386,8 +386,8 @@ export function initSpace(G, api) {
       // coloured rocks (one instanced mesh: one draw call) wait beside its track; all four make a party, then they come back.
       const RV0 = X + 46, RVA = X + 20, RVB = X + 104, ROCKS = [[X + 27, '#5aa8ff'], [X + 58, '#7fe0a0'], [X + 82, '#b07cff'], [X + 99, '#ffd23f']];
       const rockM = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(.34, 0), K.shinyMat(), ROCKS.length), M4 = new THREE.Matrix4(), got = ROCKS.map(() => false);
-      const putRock = (q, s) => { M4.makeRotationY(q * 1.7).scale(T3.setScalar(s)); M4.setPosition(ROCKS[q][0], .3 + .06 * Math.sin(q), -4.75); rockM.setMatrixAt(q, M4); rockM.instanceMatrix.needsUpdate = true; };
-      ROCKS.forEach(([, c], q) => { putRock(q, 1); rockM.setColorAt(q, K.col(c)); }); rockM.castShadow = true; add(rockM);
+      const putRock = (q, s) => { M4.makeRotationY(q * 1.7).scale(T3.setScalar(s)); M4.setPosition(ROCKS[q][0], .3 + .06 * Math.sin(q), -4.75); rockM.setMatrixAt(q, M4); rockM.instanceMatrix.needsUpdate = true; rockM.computeBoundingSphere(); }; // (bounds kept right, so it is skipped out of view)
+      ROCKS.forEach(([, c], q) => { putRock(q, 1); rockM.setColorAt(q, K.col(c)); }); add(rockM); // (no shadow: small rocks, and a shadow pass would cost a draw call even far away)
       const arm = new THREE.Group(); arm.position.set(1.05, .95, .55); rv.add(arm); let scoop = 0;
       arm.add(model(b => { b.put(K.geo.cyl(8), 0, -.35, 0, '#c9cdd8', [.04, .7, .04]); b.put(K.lathe([[0, 0], [.13, .02], [.2, .12]], 10), 0, -.74, 0, '#ffd23f', 1, [Math.PI, 0, 0]); }));
       let rideR = null, drive = 0, dir = 1, spin = 0;
@@ -407,7 +407,8 @@ export function initSpace(G, api) {
           const px = rv.position.x; rv.position.x = Math.max(RVA, Math.min(RVB, px + sx * 4.2 * dt)); turnWheels(rv.position.x - px);
           P.x = rv.position.x - dir * .25; P.y = 1.18; P.z = -3; P.facing = dir; }); };
       tapIt(rv, hopOn, RV0, null); G.interact.push({ get x() { return rv.position.x; }, y: 0, layer: 'space', disc: 'rover', run: hopOn, hintY: 2.4 });
-      U.push((dt, t) => { body.position.y = rideR && Math.abs(drive) > .15 ? Math.sin(t * 17) * .012 + Math.sin(t * 7.3) * .012 : 0;
+      U.push((dt, t) => { rockM.visible = Math.abs(P.x - X - 63) < 75; // (tiny far away: not drawn when she is far from the rover's track)
+        body.position.y = rideR && Math.abs(drive) > .15 ? Math.sin(t * 17) * .012 + Math.sin(t * 7.3) * .012 : 0;
         const want = dir > 0 ? 0 : Math.PI; rv.rotation.y += (want - rv.rotation.y) * Math.min(1, dt * 6); spin = Math.max(0, spin - dt);
         if (scoop > 0) { scoop = Math.max(0, scoop - dt * 1.4); arm.rotation.z = -Math.sin(scoop * Math.PI) * 1.1; }
         if (!rideR && Math.abs(rv.position.x - RV0) > .05 && Math.abs(P.x - rv.position.x) > 14) { const px = rv.position.x, d = Math.sign(RV0 - px); dir = d; rv.position.x += d * Math.min(Math.abs(RV0 - px), dt * 3); turnWheels(rv.position.x - px); } }); // (left far away, it drives itself home)
