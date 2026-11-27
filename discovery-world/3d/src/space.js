@@ -552,7 +552,29 @@ export function initSpace(G, api) {
         const ed = vortex(.08, 1, 3, r => .05 * (1 - r), (r, a, y, o) => { o.copy(K.col('#c25630')).lerp(K.col('#f0a074'), Math.sin(a * 2 + r * 5) * .5 + .5);
           o.lerp(K.col('#f8e2c0'), K.sstep(.5, .9, Math.sin(a * 3) * .5 + .5) * .4); });
         ed.position.set(X + 52 + Math.cos(ea) * er * 3.0, .04, -6.5 + Math.sin(ea) * er * 2.0); ed.scale.setScalar(es); add(ed); eddies.push(ed); }
-      tapIt(sp, () => { spin = 4; Sound.noise && Sound.noise(1.2, 200, 700, .05); fact('🌀 The Great Red Spot: a giant storm bigger than our whole Earth!', 'redspot'); }, X + 52, 'redspot');
+      // (build 171) SURF THE GREAT RED SPOT: tap it (or 🐾 beside it) and she hops on a little cloud that the storm carries
+      // round and round its oval; ▲ steers in toward the eye (smaller circles, faster, the storm spins harder), ▼ out to the
+      // foam rim; five storm stars float at different distances from the eye; all five: a party. JUMP hops back to the path.
+      // The stars are five small meshes with one shared material, drawn only during the ride; the cloud board is one mesh.
+      const SX = X + 52, SZ = -6.5, RST = [[.9, 1.95], [2.2, 1.0], [3.4, 1.6], [4.5, .62], [5.6, 1.3]], rsM = toy('#ffd23f', { em: '#ff9a2e', ei: .9, m: .2 }), rsG = new THREE.OctahedronGeometry(.42, 0);
+      const ell = (a, r) => [SX + Math.cos(a) * r * 3.0, SZ + Math.sin(a) * r * 2.0];
+      const rst = RST.map(([a, r]) => { const m = new THREE.Mesh(rsG, rsM); const [x, z] = ell(a, r); m.position.set(x, 1.6, z); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      const board = model(b => { for (const [x, z, r] of [[0, 0, .55], [-.45, .05, .4], [.45, -.05, .42], [0, .25, .36]]) b.put(K.geo.sph(2), x, 0, z, '#fff6ec', [r, r * .45, r * .8]); }, K.softMat(), false); board.visible = false; board.userData.dynamic = true; add(board);
+      let sRide = null;
+      const surf = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - SX) > 8) return; spin = 4; Sound.noise && Sound.noise(1.2, 200, 700, .05);
+        fact('🌀 Surf the Great Red Spot, a giant storm bigger than our whole Earth! ▲ go in to the middle, ▼ go out, JUMP to hop off!', 'redspot');
+        const R = sRide = { type: 'stormsurf', t: 0, noExit: true, stick: true, a: Math.PI / 2, r: 1.9, got: RST.map(() => false) }; P.ride = R; P.vx = P.vy = 0;
+        rst.forEach(m => { m.visible = true; }); board.visible = true;
+        R.onJump = () => { R.off = true; };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; sRide = null; rst.forEach(m => { m.visible = false; }); board.visible = false; if (P.ride === R) { P.ride = null; P.x = SX + Math.cos(R.a) * R.r * 3; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          R.r = Math.max(.55, Math.min(1.95, R.r + (sk.y > .2 ? -.5 : sk.y < -.2 ? .5 : 0) * dt)); R.a -= dt * (.55 / R.r + .15); spin = Math.max(spin, 2.2 - R.r);
+          const [x, z] = ell(R.a, R.r); board.position.set(x, .55 + Math.sin(t * 3) * .06, z); board.rotation.y = -R.a; P.x = x; P.z = z; P.y = .7 + Math.sin(t * 3) * .06; P.facing = Math.sin(R.a) > 0 ? 1 : -1;
+          if (Math.random() < dt * 8) api.burst(x, .6, z, ['#f2a078', '#fff0dc', '#d8573a'], 1, 1);
+          RST.forEach(([sa, sr], q) => { if (R.got[q]) return; const m = rst[q]; m.rotation.y = t * 2.5 + q; m.position.y = 1.6 + Math.sin(t * 2 + q) * .15;
+            if (Math.hypot(m.position.x - x, (m.position.z - z) * 1.2) < 1.3) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(520 + n * 80, .15, 'sine', .07, 1.5); api.burst(m.position.x, 1.6, m.position.z, ['#ffd23f', '#ff9a2e', '#ffffff'], 10, 1.6);
+              if (n === RST.length) { say('🌀 You surfed the giant storm and caught all the storm stars!', true); disc('redspotstars'); api.burst(x, 2, z, ['#d8573a', '#ffd23f', '#ffffff', '#ff8fc8'], 26, 2.4); Sound.giggle && Sound.giggle(); } } }); }); };
+      tapIt(sp, surf, SX, 'redspot');
       U.push((dt, t) => { spin = Math.max(0, spin - dt); const kk = 1 + Math.min(1, spin) * .07;
         arms.rotation.y -= dt * (.18 + spin * 2.6); eye.rotation.y += dt * (.3 + spin * 3.4); collar.rotation.y -= dt * (.11 + spin * 1.8);
         swirls[0].rotation.y -= dt * (.26 + spin * 2.2); swirls[1].rotation.y += dt * (.34 + spin * 2.8); swirls.forEach((sw, q) => { sw.position.y = (q ? .22 : .3) + Math.sin(t * 1.4 + q) * .04; });
@@ -644,8 +666,26 @@ export function initSpace(G, api) {
       inSky((yield* K.skyBodySteps('miranda', 2.6, { size: 128 })), MID + 44, 14, -160); inSky((yield* K.skyBodySteps('grey', 1.6, { size: 128 })), MID - 52, 18, -160);
       // the rolling planet toy: a striped ball with its own ring, tipped on its side
       const roll = new THREE.Group(); roll.position.set(X + 44, .75, -2); add(roll); roll.add(model(b => { b.put(K.geo.sph(), 0, 0, 0, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#6fd8e0', '#b8f4f4', '#8fe4ea', '#d8fcfc', '#7fdce4'], pz * .65 + .5, o); }, .75); const rg = new THREE.RingGeometry(.95, 1.3, 40, 1); b.add(rg, null, '#ffffff'); const rg2 = rg.clone(); rg2.rotateY(Math.PI); b.add(rg2, null, '#e6ffff'); for (const s of [-1, 1]) b.put(K.geo.sph(1), 0, 0, s * .76, '#ffd23f', .09); })); let rv2 = 0;
-      tapIt(roll, () => { rv2 = 6; Sound.boing(); fact('🎳 Uranus spins tipped over on its side, so it rolls like a ball!', 'uranusroll'); }, X + 44, 'uranusroll');
-      U.push((dt, t) => { if (rv2 > 0) { rv2 = Math.max(0, rv2 - dt * 1.2); const nx2 = Math.min(X + 90, roll.position.x + rv2 * dt), d = nx2 - roll.position.x; roll.position.x = nx2; roll.rotation.z -= d / .75; } else if (roll.position.x > X + 44.01) { const d = Math.min(dt * 3, roll.position.x - (X + 44)); roll.position.x -= d; roll.rotation.z += d / .75; } }); // (it rolls back home afterwards, turning exactly as far as it travels)
+      // (build 170) UPSIDE-DOWN BOWLING: Uranus rolls on its side like a ball, so the planet toy is a bowling ball. Tap it (or
+      // 🐾 beside it) and she kicks it away from her; it rolls down the ice lane (its stripes turn exactly as far as it goes)
+      // to FIVE ICE PINS; each pin it reaches wobbles and falls over; all five: "STRIKE!" and a party. A few: "Roll again!".
+      // The ball rolls itself home and the pins stand up again. The pins are ONE instanced mesh (the same kind of material
+      // as the game's coins, so no new shader).
+      const PX = X + 80, PINS = [[0, 0], [.55, -.4], [.55, .4], [1.1, -.75], [1.1, .75]], pinM = new THREE.InstancedMesh(K.lathe([[0, 0], [.17, .02], [.2, .25], [.11, .6], [.09, .72], [.13, .86], [.1, 1.0], [0, 1.04]], 14), toy('#f4fbff', { r: .2, m: .3, cc: 1, em: '#8fd8ff', ei: .35 }), PINS.length);
+      pinM.castShadow = true; add(pinM); const pins = PINS.map(([dx, dz]) => ({ x: PX + dx, z: -2 + dz, a: 0, d: 0, w: 0, down: false })), PM4 = new THREE.Matrix4(), PQ = new THREE.Quaternion(), PE = new THREE.Euler(), PV = new THREE.Vector3(), PS = new THREE.Vector3(1.15, 1.15, 1.15);
+      const drawPins = () => { pins.forEach((p, q) => { PE.set(0, 0, p.a * p.d + Math.sin(p.w * 30) * .12 * Math.min(1, p.w)); PM4.compose(PV.set(p.x + p.a * p.d * .35, 0, p.z), PQ.setFromEuler(PE), PS); pinM.setMatrixAt(q, PM4); }); pinM.instanceMatrix.needsUpdate = true; }; drawPins(); pinM.computeBoundingSphere();
+      let bv = 0, told = false, rest = 0, home = 0;
+      const kick = () => { if (Math.abs(bv) > .5 || home > 0) return; const dir = Math.sign(roll.position.x - P.x) || P.facing || 1; bv = 9 * dir; rest = 0; Sound.boing();
+        if (!told) { told = true; fact('🎳 Uranus spins tipped over on its side, so it rolls like a ball! Knock down the ice pins!', 'uranusroll'); } else say('🎳 Roll!'); };
+      tapIt(roll, kick, X + 44, null); G.interact.push({ get x() { return roll.position.x; }, y: 0, layer: 'space', disc: 'uranusroll', run: kick, hintY: 2.4 });
+      U.push((dt, t) => { dt = Math.min(dt, .1); const bx = roll.position.x;
+        if (Math.abs(bv) > .05) { let nx2 = bx + bv * dt; if (nx2 > X + 92 || nx2 < X + 30) { bv = -bv * .4; nx2 = Math.max(X + 30, Math.min(X + 92, nx2)); } roll.position.x = nx2; roll.rotation.z -= (nx2 - bx) / .75; bv *= Math.max(0, 1 - .2 * dt); if (Math.abs(bv) < .25) bv = 0;
+          for (const p of pins) if (!p.down && Math.abs(nx2 - p.x) < .95 && Math.abs(p.z + 2) < 1) { p.down = true; p.d = bv >= 0 ? -1 : 1; Sound.tone(300 + Math.random() * 200, .12, 'triangle', .05, 1.6); api.burst(p.x, .8, p.z, ['#ffffff', '#cfefff'], 6, 1.2);
+            const n = pins.filter(o => o.down).length; if (n === PINS.length) { say('🎳 STRIKE! All five pins! Hooray!', true); disc('uranusstrike'); api.burst(PX, 2, -2, ['#6fd8e0', '#ffffff', '#ffd23f', '#ff8fc8'], 30, 2.6); Sound.giggle && Sound.giggle(); } } }
+        else if (roll.position.x !== X + 44) { rest += dt; if (rest > 1.2) { if (rest - dt <= 1.2) { const n = pins.filter(o => o.down).length; if (n && n < PINS.length) say(`🎳 ${n} pin${n > 1 ? 's' : ''}! Roll again!`); }
+          home = 1; const d = Math.min(dt * 4, Math.abs(roll.position.x - (X + 44))) * Math.sign(X + 44 - roll.position.x); roll.position.x += d; roll.rotation.z -= d / .75; if (Math.abs(roll.position.x - (X + 44)) < .01) { roll.position.x = X + 44; home = 0; rest = 0; if (pins.every(o => o.down)) pins.forEach(o => { o.down = false; }); } } } // (it rolls back home, turning exactly as far as it travels; after a strike the pins stand up again)
+        let moving = false; for (const p of pins) { const want = p.down ? 1.45 : 0; if (Math.abs(p.a - want) > .001) { p.a += Math.sign(want - p.a) * Math.min(Math.abs(want - p.a), dt * (p.down ? 4 : 2)); moving = true; } if (p.down && p.a < 1.45) p.w = Math.min(1, p.w + dt * 3); else p.w = Math.max(0, p.w - dt * 2); if (p.w > 0) moving = true; }
+        if (moving) drawPins(); });
       // the diamond cloud: tap it and sparkling diamonds rain down
       const dcg = new THREE.Group(); dcg.position.set(X + 62, 6, -3); add(dcg); dcg.add(model(b => { for (const [x, y, z, r] of [[0, 0, 0, 1.2], [-1.15, -.12, 0, .9], [1.2, -.1, 0, .95], [-.45, .5, -.1, .85], [.55, .55, .1, .8], [0, -.3, .3, .95]]) b.put(K.geo.sph(2), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(K.col('#e2fdfd')).multiplyScalar(.72 + .32 * Math.max(0, ny)); }, [r, r * .8, r * .9]); }, K.softMat(), false));
       const gemG = new THREE.OctahedronGeometry(.16, 0), gemM = toy('#eaffff', { r: .05, cc: 1, em: '#9fe8ff', ei: .5 }), gems = []; for (let k = 0; k < 10; k++) { const m = mesh(gemG, gemM, X + 62, 5, -3); m.visible = false; m.scale.y = 1.4; gems.push(m); } let rain = 0, drop = 0;

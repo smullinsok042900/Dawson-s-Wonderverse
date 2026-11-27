@@ -6,6 +6,29 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 171 — SURF THE GREAT RED SPOT on Jupiter (ATTRACTIONS row 18)
+- **Before:** a tap on the Great Red Spot made the storm spin faster for 4 s.
+- **Now she surfs it** (`space.js`): a tap (or 🐾 on the path beside it) and she hops on a little puffy cloud that the storm
+  carries round and round its oval. ▲ steers her in toward the dark eye (smaller circles, faster, and the storm spins harder),
+  ▼ back out to the foam rim; five storm stars float at different distances from the eye around the oval, each a rising
+  note; all five: "You surfed the giant storm and caught all the storm stars!" and a party. JUMP hops her back onto the path.
+- The stars are five small meshes with one shared material and the cloud board is one mesh, drawn only during the ride.
+- **Tested** (desktop, software rendering): `tests/jupiter-stormsurf.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
+## Checkpoint: build 170 — UPSIDE-DOWN BOWLING on Uranus (ATTRACTIONS row 18)
+- **Before:** a tap on the striped planet ball (Uranus rolls on its side "like a ball") made it roll a little way and back.
+- **Now it is a bowling game** (`space.js`): tap the ball (or 🐾 beside it) and she kicks it away from her; it rolls down
+  the ice lane, its stripes turning exactly as far as it goes, to FIVE ICE PINS 36 m away; each pin it reaches clonks, wobbles
+  and falls over; all five: "STRIKE! All five pins! Hooray!" and a party; only some: "3 pins! Roll again!" and the rest stay
+  down until she knocks them over too. The ball rolls itself home after each roll; after a strike the pins stand up again.
+- The pins are ONE instanced mesh with the same kind of material as the game's coins (no new shader).
+- **Tested** (desktop, software rendering): `tests/uranus-bowling.cjs` (new): 7/7 drawn and with `?norender`
+  (five pins standing, the kick rolls it away from her, STRIKE, five pins on the ice, the ball rolls home, the pins stand up,
+  no page errors); `parks` (the Uranus ice palace, rink and trail) still all passed.
+- Speed on Uranus vs build 169: the same (two runs; `PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop, software
+  rendering). Not tested on an iPhone.
+
 ## Checkpoint: build 169 — RIDE THE ICY GEYSER on Neptune (ATTRACTIONS row 18)
 - **Before:** a tap on the icy geyser (Triton's fountains) shot a plume up for 3 s.
 - **Now it is a ride** (`space.js`): a tap next to it and she steps onto the vent; the fountain shoots up under her and

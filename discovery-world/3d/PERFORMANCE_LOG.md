@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 170 vs build 169, Uranus with the bowling lane (desktop, software rendering; `tests/perf/compare.cjs uranus`; not iPhone numbers)
+- Run 1 (1 round each): 60: 151 → 162 ms; 80: 146 → 150; 95: 138 → 140; 185: 187 → 186; 270: 158 → 165; 320: 128 → 143 (+12%, at the edge).
+- Run 2 (1 round each): 60: 152 → 153; 80: 151 → 150; 95: 135 → 148; 185: 192 → 190; 270: 156 → 174 (+12%); 320: 140 → 131.
+- The spot at the edge moved between runs (320 in run 1, 270 in run 2, both far from the lane) with identical draw calls: noise.
+  Verdict: the same. Draw calls +1 at 60 and 80 (the five pins, one instanced mesh); the same everywhere else.
+  (`compare.cjs`: Uranus now also measures 80, at the pins.)
+
 ## Build 169 vs build 168, Neptune with the geyser ride (desktop, software rendering; `tests/perf/compare.cjs neptune`; not iPhone numbers)
 - 1 round each (no spot differed by more than 12%): 64: 197 → 182 ms; 95: 178 → 190; 150: 173 → 181; 186: 165 → 167; 320: 148 → 137:
   all the same. Draw calls the same (+1 at 95, a creature walking by). The snowflake stars are hidden until she rides.
