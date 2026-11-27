@@ -17,7 +17,8 @@ are in `PERFORMANCE_LOG.md`.
 - **Tested** (desktop, software rendering): `tests/venus-volcano.cjs` (new): 5/5 drawn and with `?norender`. The first drawn run
   found a real bug: the pause between taps counted down only on drawn frames, so at 1–2 frames a second (or on a slow phone)
   a tap between frames was ignored. The pause now uses the real clock.
-- RESULTS_SPEED_SMOKE
+- Speed on Venus vs build 166: the same at all five spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** on the final
+  version (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 166 — DRIVE THE MARS ROVER (ATTRACTIONS row 18: the older small planet activities)
 - **Inspected** the older tap-and-watch activities on Venus and Mars (the two Venus volcanoes, the thermometer, the Mars
