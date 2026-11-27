@@ -13,7 +13,9 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   await ev(() => { const P = __DDW3.player; P.x = -683; P.vx = 0; __DDW3.G.interact.find(i => i.disc === 'balloon' && i.x === -684).run(); });
   check('next to the balloon, a tap puts her in the basket', await until(() => __DDW3.player.ride && __DDW3.player.ride.type === 'hotair', null, 10000));
   const y = () => ev(() => __DDW3.player.ride ? __DDW3.player.ride.y : -1);
-  await page.keyboard.down('ArrowUp'); await sleep(2500); const up = await y(); await page.keyboard.up('ArrowUp'); await sleep(2500); const after = await y();
+  // (waits for the condition, not a fixed time: the test browser draws only 1-2 frames a second when drawing)
+  await page.keyboard.down('ArrowUp'); await until(() => __DDW3.player.ride && __DDW3.player.ride.y > 2, null, 60000); const up = await y(); await page.keyboard.up('ArrowUp');
+  await until(u => __DDW3.player.ride && __DDW3.player.ride.y < u - .5, up + .6, 60000); const after = await y();
   check('HOLD ▲ fires the burner and the balloon rises; let go and it sinks gently', up > 1.5 && after < up && after > 0, `${up.toFixed(1)} -> ${after.toFixed(1)}`);
   // fly it like she would: burner on and off to reach each star's height, drifting right
   let held = null; const hold = async k => { if (held === k) return; if (held) await page.keyboard.up(held); held = k; if (k) await page.keyboard.down(k); };
