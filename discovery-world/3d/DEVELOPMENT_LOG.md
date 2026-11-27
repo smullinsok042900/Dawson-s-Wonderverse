@@ -14,7 +14,10 @@ are in `PERFORMANCE_LOG.md`.
   note; all four: "You twirled through all the dust sparkles! What a whirl!" and a party. JUMP lets go and she floats gently
   down. Afterwards the dust devil drifts back to its place.
 - The sparkles are four small meshes with one shared material, drawn only during the ride.
-- **Tested** (desktop, software rendering): `tests/mars-dustdevil.cjs` (new): RESULTS_TEST
+- **Tested** (desktop, software rendering): `tests/mars-dustdevil.cjs` (new): 6/6 drawn and with `?norender`
+  (scooped up, ▲ higher, steered through all four sparkles, JUMP floats her down, it drifts home, no page errors);
+  `mars-rover` still all passed. (A first try placed the sparkles where the swaying whirl happened to be when she tapped it,
+  so they moved from ride to ride; they now have fixed places.)
 - RESULTS_SPEED_SMOKE
 
 ## Checkpoint: build 167 — PUMP THE VENUS VOLCANO, catch the lava stars (ATTRACTIONS row 18)
