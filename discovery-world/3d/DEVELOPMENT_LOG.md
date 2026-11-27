@@ -12,7 +12,7 @@ are in `PERFORMANCE_LOG.md`.
   it: it zips back into the jar, and the jar glows brighter; all six: "the jar glows like a lantern!" Tap again for
   another go.
 - New test `tests/woods-fireflies.cjs` (6 checks): passed with `&norender` (all six caught by walking and jumping).
-  Backup: `backups/3D_build158_index.html`.
+  Backup: `backups/3D_build158_index.html`. Drawn run passed too. **Full smoke test 345/345** (desktop, software rendering).
 
 ## Checkpoint: build 158 — THE DEEP CAVES and digging her own tunnels (the family's request)
 - "Make the underground underneath the ball pit way bigger, add different caves she can go through and explore, and a

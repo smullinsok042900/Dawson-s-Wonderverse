@@ -4,6 +4,10 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 159 vs build 158, the woods (desktop, software rendering; `tests/perf/compare.cjs woods`, 4 rounds; not iPhone numbers)
+- -160: 634 → 414 ms (faster); -185: 683 → 626; -211: 690 → 747 (+8%); -240 (the firefly jar): 737 → 762 (+3%); -255: 816 → 787:
+  the same. Nothing slower.
+
 ## Builds 153–158 vs build 152 (desktop, software rendering; `tests/perf/compare.cjs`; not iPhone numbers)
 - Sunny Beach (the kite, the lighthouse door): -50: 241 → 224 ms, -70: 253 → 257, -88: 255 → 251: the same. (A first run
   showed -50 at 227 → 397 ms; the rerun showed the same: this spot varies a lot between runs: 536, 330, 227, 241 ms.)
