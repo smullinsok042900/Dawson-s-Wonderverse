@@ -16,8 +16,10 @@ are in `PERFORMANCE_LOG.md`.
   (four coloured rocks, blue, green, purple and gold, beside its track); all four: "You found all the Mars rocks!" and a
   party, then the rocks come back. JUMP hops off. If she leaves it somewhere and walks away, it drives itself home.
 - The four rocks are one instanced mesh (one draw call). `main.js`: a ride can now have its own 🐾 (`ride.onPaw`).
-- **Tested** (desktop, software rendering): `tests/mars-rover.cjs` (new) RESULTS_ROVER.
-- Speed and the full smoke test: RESULTS_SPEED_SMOKE.
+- **Tested** (desktop, software rendering): `tests/mars-rover.cjs` (new): 7/7 drawn and 7/7 with `?norender` (climb on, ▶ and ◀ drive, scoop all four
+  rocks, JUMP off, it drives itself home, no page errors).
+- Speed on Mars vs build 165: the same at all seven spots (`PERFORMANCE_LOG.md`; a first version cost a draw call even far
+  away, fixed). **Full smoke test 345/345** on the final version (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 165 — Turtle Beach made beautiful (the family's report: "terrible graphics, they don't look like turtles, no water")
 - **Real turtles** (`turtleModel` in islands2.js): a domed shell with a dark rim and a pattern of plates down the middle and
