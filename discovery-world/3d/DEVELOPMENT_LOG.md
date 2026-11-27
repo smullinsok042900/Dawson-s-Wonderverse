@@ -6,6 +6,15 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 161 — aim the ball cannon (every activity hands-on: Toy Town)
+- The ball cannon used to put every ball in the hoop by itself. Now she aims it: standing by it, ▲ ▼ tilt the barrel and a
+  dotted line shows where the ball will fly; tap the cannon (or 🐾) to fire. The ball really flies (gravity): through the
+  hoop, SWISH; a miss bounces off the board or the ground, and the voice says which way to aim ("a little higher with ▲" /
+  "a little lower with ▼"). Three swishes: "You are a super shooter!" The hoop is reached by a wide range of the barrel's
+  swing (about a quarter of it), so it is easy to get.
+- New test `tests/toytown-cannon.cjs` (4 checks; it fires, listens to the hint and adjusts, like a child): passed with
+  `&norender` (three swishes in six shots).
+
 ## Checkpoint: build 160 — roll the snowballs for the snowman (every activity hands-on: Frosty Peaks)
 - Tapping the little snowball (or 🐾) now gives it to her to PUSH along the snow: the further it rolls, the bigger it grows
   (it spins as it rolls). Big enough ("Push it to the snowman!"), she pushes it to the snowman and it goes on: the big
