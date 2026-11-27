@@ -13,7 +13,8 @@ are in `PERFORMANCE_LOG.md`.
   ▼ back out to the foam rim; five storm stars float at different distances from the eye around the oval, each a rising
   note; all five: "You surfed the giant storm and caught all the storm stars!" and a party. JUMP hops her back onto the path.
 - The stars are five small meshes with one shared material and the cloud board is one mesh, drawn only during the ride.
-- **Tested** (desktop, software rendering): `tests/jupiter-stormsurf.cjs` (new): RESULTS_TEST
+- **Tested** (desktop, software rendering): `tests/jupiter-stormsurf.cjs` (new): 6/6 drawn and with `?norender`
+  (carried round, ▲ in, all five stars, JUMP back to the path, no page errors); `jupiter-world` still all passed.
 - RESULTS_SPEED_SMOKE
 
 ## Checkpoint: build 170 — UPSIDE-DOWN BOWLING on Uranus (ATTRACTIONS row 18)

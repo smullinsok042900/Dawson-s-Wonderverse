@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 171 vs build 170, Jupiter with the storm surfing (desktop, software rendering; `tests/perf/compare.cjs jupiter`; not iPhone numbers)
+- 1 round each (no spot differed by more than 12%): 30: 187 → 190 ms; 52: 209 → 194; 60: 195 → 201; 90: 183 → 204 (+11%); 150: 195 → 185;
+  205: 187 → 188; 320: 155 → 161: all the same. Draw calls identical at every spot (the stars and the cloud board are hidden until
+  she rides). (`compare.cjs`: Jupiter now also measures 52, at the Great Red Spot.)
+
 ## Build 170 vs build 169, Uranus with the bowling lane (desktop, software rendering; `tests/perf/compare.cjs uranus`; not iPhone numbers)
 - Run 1 (1 round each): 60: 151 → 162 ms; 80: 146 → 150; 95: 138 → 140; 185: 187 → 186; 270: 158 → 165; 320: 128 → 143 (+12%, at the edge).
 - Run 2 (1 round each): 60: 152 → 153; 80: 151 → 150; 95: 135 → 148; 185: 192 → 190; 270: 156 → 174 (+12%); 320: 140 → 131.
