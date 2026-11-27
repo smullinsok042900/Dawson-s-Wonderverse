@@ -434,8 +434,29 @@ export function initSpace(G, api) {
       // the dust devil: a see-through twirling funnel of red dust
       const dd = new THREE.Group(); dd.position.set(X + 64, 0, -2.6); add(dd); const ddM = toy('#e0946a', { opacity: .34, r: 1 }); ddM.side = THREE.DoubleSide; ddM.depthWrite = false; const segs = [];
       for (let k = 0; k < 4; k++) { const fg2 = new THREE.CylinderGeometry(.34 + (k + 1) * .26, .34 + k * .26, .85, 16, 1, true), p = fg2.attributes.position; for (let q = 0; q < p.count; q++) p.setX(q, p.getX(q) * (1 + .12 * Math.sin(Math.atan2(p.getZ(q), p.getX(q)) * 3))); const s = new THREE.Mesh(fg2, ddM); s.position.y = .45 + k * .82; dd.add(s); segs.push(s); } let swirl = 0;
-      tapIt(dd, () => { swirl = 4; Sound.noise && Sound.noise(1.2, 300, 900, .04); fact('🌪️ A dust devil! Twirly winds blow the red dust around on Mars.', 'dustdevil'); }, X + 64, 'dustdevil');
-      U.push((dt, t) => { swirl = Math.max(0, swirl - dt); dd.position.x = X + 64 + Math.sin(t * .4) * 2; segs.forEach((s, k) => { s.rotation.y += dt * (2.2 + k * .6 + swirl * 5); s.position.x = Math.sin(t * 2.2 + k * .9) * .09 * (k + 1); s.position.z = Math.cos(t * 1.7 + k * .9) * .06 * (k + 1); }); dd.scale.setScalar(1 + Math.min(1, swirl) * .35); if (Math.random() < dt * (3 + swirl * 8)) api.burst(dd.position.x, .15, -2.6, ['#c86a40', '#e89a6a'], 1, 1.2); });
+      // (build 168) RIDE THE DUST DEVIL: tap it when next to it and the whirl scoops her up: she twirls round and round inside
+      // it; ▲ spins it faster and lifts her higher (up to 13 m: Mars gravity is low), ▼ lets her sink, ◀ ▶ steer the whirl
+      // across the sand; four red-dust sparkles hang at different heights for her to twirl through; JUMP lets go and she
+      // floats gently down. Four small meshes (one shared material), drawn only while she rides.
+      const DDA = X + 50, DDB = X + 84, SPK = [[-4, 3.5], [3, 6.5], [-2, 9.5], [4, 12.2]], spkM = toy('#ff7a4a', { em: '#ff5a2a', ei: .9, m: .2 }), spkG = new THREE.OctahedronGeometry(.45, 0);
+      const spk = SPK.map(() => { const m = new THREE.Mesh(spkG, spkM); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      let ddRide = null, ddx = X + 64, ddHome = X + 64;
+      const ddGo = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - dd.position.x) > 5) return; swirl = 4; Sound.noise && Sound.noise(1.2, 300, 900, .04);
+        fact('🌪️ WHOOSH! The dust devil scoops you up! ▲ spin higher, ▼ go lower, ◀ ▶ steer, JUMP to let go!', 'dustdevil');
+        const R = ddRide = { type: 'dustdevil', t: 0, noExit: true, stick: true, h: .6, a: 0, got: SPK.map(() => false), off: false }; P.ride = R; P.vx = P.vy = 0; ddx = dd.position.x;
+        spk.forEach((m, q) => { m.visible = true; m.position.set(X + 64 + SPK[q][0], SPK[q][1], -2.6); });
+        R.onJump = () => { if (!R.off) { R.off = true; say('🌪️ Let go! Float down gently!'); } };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R) { R.over = true; ddRide = null; spk.forEach(m => { m.visible = false; }); return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          if (!R.off) { ddx = Math.max(DDA, Math.min(DDB, ddx + sk.x * 3.2 * dt)); R.h = Math.max(.6, Math.min(13, R.h + (sk.y > .2 ? 3.2 : sk.y < -.2 ? -3 : -.25) * dt)); swirl = Math.max(swirl, 1 + R.h / 6);
+            R.a += dt * (3 + R.h * .35); const r = .9 + R.h * .07; P.x = ddx + Math.cos(R.a) * r; P.z = -2.6 + Math.sin(R.a) * r * .6; P.y = R.h; P.facing = Math.sin(R.a) > 0 ? -1 : 1;
+            if (Math.random() < dt * 10) api.burst(P.x, P.y, P.z, ['#c86a40', '#e89a6a'], 1, 1);
+            SPK.forEach(([dx, y], q) => { if (R.got[q]) return; const m = spk[q]; m.rotation.y = t * 2.5 + q; if (Math.abs(ddx - m.position.x) < 1.6 && Math.abs(R.h - y) < 1.1) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(520 + n * 90, .15, 'sine', .07, 1.5); api.burst(m.position.x, y, -2.6, ['#ff7a4a', '#ffd23f', '#ffffff'], 10, 1.6);
+              if (n === SPK.length) { say('🌪️ You twirled through all the dust sparkles! What a whirl!', true); disc('dustdevilstars'); api.burst(P.x, P.y, P.z, ['#ff4f6a', '#ffd23f', '#ff9a2e', '#ffffff'], 26, 2.4); Sound.giggle && Sound.giggle(); } } }); }
+          else { P.y = Math.max(0, P.y - dt * 2.4); P.z += (0 - P.z) * Math.min(1, dt * 2); if (P.y <= 0) { R.over = true; ddRide = null; spk.forEach(m => { m.visible = false; }); P.ride = null; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } } }); };
+      tapIt(dd, ddGo, X + 64, null); G.interact.push({ get x() { return dd.position.x; }, y: 0, layer: 'space', disc: 'dustdevil', run: ddGo, hintY: 2.4 });
+      U.push((dt, t) => { swirl = Math.max(0, swirl - dt); if (ddRide && !ddRide.off) ddHome = ddx; else { if (Math.abs(ddHome - X - 64) > .05 && !ddRide) ddHome += Math.sign(X + 64 - ddHome) * Math.min(Math.abs(X + 64 - ddHome), dt * 2); else if (!ddRide) ddHome = X + 64; }
+        dd.position.x = ddHome + (ddRide ? 0 : Math.sin(t * .4) * 2); segs.forEach((s, k) => { s.rotation.y += dt * (2.2 + k * .6 + swirl * 5); s.position.x = Math.sin(t * 2.2 + k * .9) * .09 * (k + 1); s.position.z = Math.cos(t * 1.7 + k * .9) * .06 * (k + 1); }); dd.scale.set(1 + Math.min(1, swirl) * .35, 1 + (ddRide && !ddRide.off ? ddRide.h / 3.2 : Math.min(1, swirl) * .35), 1 + Math.min(1, swirl) * .35); if (Math.random() < dt * (3 + swirl * 8)) api.burst(dd.position.x, .15, -2.6, ['#c86a40', '#e89a6a'], 1, 1.2); });
     }
     yield;
     if (gas) {
