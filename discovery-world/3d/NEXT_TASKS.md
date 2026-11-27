@@ -252,3 +252,8 @@ A tour of every district found these still looking like placeholders. Do them in
 - **(build 161) `tests/perf/compare.cjs`: settle longer before measuring a place's first spot.** The first spot of a place varies by
   ±60 ms between rounds and is the one flagged lately (Frosty -326, Sunny Beach -50, Toy Town 560); reruns showed it the same
   each time. Measure it once more at the end, or wait a few seconds after the walk-through before the first measurement.
+
+- **(2026-11-27, the family's picture) "Everything is dark now"** in the Studio/playhouse (the ball-pit room with the slide), which
+  "fixed itself" a moment later. Find what can dim the whole scene for a moment on the phone: the adaptive graphics changing
+  level (lights or post-processing switching), leaving a room or the caves (G.roomCam / spaceLight), or the exposure. Reproduce
+  in an iPhone-sized browser by walking in and out of the rooms and the caves near the start.

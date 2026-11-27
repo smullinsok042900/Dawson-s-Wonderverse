@@ -94,7 +94,8 @@ export function initRooms(k) {
     b.put(BOX, 1.1, 9.6 - .12, -1.1, '#b07a4a', [1.9, .24, 2.4]); plats.push({ a: .15, b: 2.05, y: 9.6, z: 0, layer: 'room', step: true, stepMax: .75 }); // landing
     for (let i = 0; i < 7; i++) step(2.6 + i * 1.2, 10.2 + .6 * i); // flight 3, going right: up to 13.8
     b.put(BOX, 11.1, 14.4 - .12, -1.1, '#b07a4a', [1.6, .24, 2.4]); plats.push({ a: 10.3, b: 11.85, y: 14.4, z: 0, layer: 'room', step: true, stepMax: .75 });
-    b.put(BOX, 5.2, 14.4 - .12, -1.6, '#c8925a', [10.2, .24, 3.4]); plats.push({ a: .15, b: 10.3, y: 14.4, z: 0, layer: 'room', step: true, stepMax: .75 }); // the lamp-room floor
+    b.put(BOX, 6, 14.4 - .12, -1.6, '#c8925a', [8.6, .24, 3.4]); plats.push({ a: 1.7, b: 10.3, y: 14.4, z: 0, layer: 'room', step: true, stepMax: .75 }); // the lamp-room floor (build 163: open at the left, where the slide pole goes down)
+    b.put(CYL, .9, 7.8, -.5, '#ffd23f', [.07, 15.6, .07]); b.put(CYL, .9, .05, -.5, '#ff4f6a', [.5, .1, .5]); // (build 163, the family's report: no way back down) THE SLIDE POLE, from the lamp room to the ground floor
     for (let x = .6; x < 10; x += 1.1) b.put(CYL, x, 14.9, .05, '#ffffff', [.04, 1, .04]); b.put(BOX, 5.2, 15.4, .05, '#ffffff', [10, .08, .08]); // its railing
     b.put(BOX, 5.2, 16.4, zb + .06, '#7fd0ff', [9, 1.6, .08]); // the wide window up top, out over the sea
     b.put(CYL, 5.2, 14.7, -2.2, '#4a4a5a', [.7, .6, .7]); b.put(CYL, 5.2, 16.95, -2.2, '#4a4a5a', [.95, .2, .95]); // the lamp's base and cap
@@ -106,10 +107,14 @@ export function initRooms(k) {
     let spin = 0;
     const shine = () => { if (P.y < 13.5) { say('💡 Climb the stairs all the way to the top to reach the lamp!'); return; } spin = 8; beam.visible = true; Sound.tone ? Sound.tone(110, 1.2, 'sawtooth', .03, 1) : Sound.chime(); say('💡 You lit the great lamp! Its light shines over the sea for the boats!'); disc('lighthousetop'); disc('lighthouse'); };
     tapObj(lens, shine);
+    // THE SLIDE POLE: walk off the open left end of the lamp room (or 🐾 / tap the pole) and she slides all the way down
+    let poleR = null; const cur0L = cur0, pole = () => { if (poleR || P.ride) return; poleR = { type: 'pole', noExit: true, stick: true }; P.ride = poleR; P.vx = P.vy = 0; Sound.whoosh ? Sound.whoosh() : Sound.click(); say('🚒 Wheee! Down the slide pole!'); disc('lighthousepole'); };
+    const poleHit = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, 15.6, 8), new THREE.MeshBasicMaterial({ visible: false })); poleHit.position.set(.9, 7.8, -.5); g.add(poleHit); tapObj(poleHit, () => { if (P.y > 1) pole(); else say('🚒 The slide pole! Climb the stairs to the top and slide down!'); });
+    const poleStep = dt => { if (!poleR) return; if (P.ride !== poleR) { poleR = null; return; } P.x = cur0L + .9; P.z = -.2; P.vx = 0; P.vy = 0; P.y = Math.max(0, P.y - Math.min(dt, .1) * 7); if (P.y <= 0) { P.ride = null; poleR = null; P.y = 0; P.grounded = true; P.z = 0; say('🚒 Down at the bottom! What a slide!'); } };
     return { W, H, D, door: 1.3, icon: '💡', name: 'the lighthouse', out: 'the beach outside', hello: '💡 Inside the lighthouse! Climb the stairs all the way up to the great lamp!', plats,
-      inter: [{ x: 5.2, y: 14.4, icon: '💡', action: 'Light the lamp', run: shine }],
-      onTop: () => { if (P.y > 14.3 && !G._lhTop) { G._lhTop = 1; say('💡 The top of the lighthouse! Tap the great lamp to make it shine!'); } },
-      update: (dt, t) => { lens.scale.setScalar(1 + Math.sin(t * 3) * .04); if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2.2; if (spin <= 0) beam.visible = false; } } };
+      inter: [{ x: 5.2, y: 14.4, icon: '💡', action: 'Light the lamp', run: shine }, { x: 1.5, y: 14.4, icon: '🚒', action: 'Slide down the pole', run: () => pole() }],
+      onTop: () => { if (!poleR && P.layer === 'room' && P.y > 13 && P.x < cur0L + 1.65 && P.vx < -.3 && !P.ride) pole(); if (P.y > 14.3 && !G._lhTop) { G._lhTop = 1; say('💡 The top of the lighthouse! Tap the great lamp to make it shine!'); } },
+      update: (dt, t) => { poleStep(dt); lens.scale.setScalar(1 + Math.sin(t * 3) * .04); if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2.2; if (spin <= 0) beam.visible = false; } } };
   }
   // ---------- 🌱 THE GREENHOUSE (build 157, the family's request) ----------
   //  glass walls and ceiling ribs, planter beds full of flowers, butterflies; THE WATERING CAN: tap it (or 🐾) and she

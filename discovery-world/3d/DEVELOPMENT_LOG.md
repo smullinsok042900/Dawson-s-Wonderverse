@@ -6,6 +6,63 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 165 — Turtle Beach made beautiful (the family's report: "terrible graphics, they don't look like turtles, no water")
+- **Real turtles** (`turtleModel` in islands2.js): a domed shell with a dark rim and a pattern of plates down the middle and
+  sides, a pale belly, a neck and a head with big friendly eyes (with a shine), pink cheeks and a smile, four flippers that
+  paddle, a little tail. The big sea turtle (3 m) and the baby turtles (now half as big again) use it.
+- **The sea**: the beach now has a sea along its whole length: the sand slopes down under blue water from just behind the
+  path, a white foam line rolls at the edge and waves roll in. The big turtle waits in the shallow water and SWIMS through the
+  sea with her on its shell (paddling, bobbing, a trail of foam); the baby turtles waddle down the sand and into the water.
+- **The flat green blobs** on the sand were the planets' "craters" in the island's green: islands no longer get craters.
+- Checked in pictures (desktop, software rendering) and `islands.cjs` (all passed); `volcano-coaster.cjs` still all passed.
+
+## Checkpoint: build 164 — THE VOLCANO ISLAND ROLLER COASTER, in first person (the family's request)
+- **The ride** (one continuous 1.5 km track, about 1½ minutes; `src/volcano-course.js`, built by the same track builder as the
+  Moon coaster): the station on Volcano Island → a long sweep to the volcano → THE GIANT CLIMB, a chain-lift spiral round the
+  OUTSIDE of the volcano to 74 m (the island and the sea below) → THE DIVE through a hole in the volcano's side → round and
+  down inside the LAVA CHAMBER → a twisting LAVA TUNNEL → out through a hole on the far side → THE DROP into the lagoon →
+  UNDER THE WATER in a glass tunnel → up and out → a BOOSTER → a LOOP-THE-LOOP → round → a CORKSCREW → home to the station.
+- **The volcano is really hollow** (`src/volcano-coaster.js`): an outer cone of rock (lighter rock, glowing lava streaks, a
+  glowing crater) with real holes cut where the track goes in and out (a rocky rim and a glowing ring round each); inside,
+  an inward-facing rock wall lit orange from below with glowing veins, a glowing LAVA LAKE that shimmers, lava flecks, lava
+  falls down the walls, 26 hanging rocks, rock pillars standing in the lava; the lava tunnel's walls glow with veins and rings.
+- **The underwater world**: the lagoon is dug into the island's ground; a sandy seafloor bowl, 70 corals (round, branching),
+  kelp, sea anemones, rocks and four big underwater rocks, sunbeams down through the water, 30 fish swimming round (one
+  instanced mesh), bubbles; the track runs in a clear GLASS TUNNEL with white rings; under the surface the water all round
+  turns sea-blue (the scene's own fog, closer and blue, only while the camera is under the water).
+- **The first-person ride camera** (main.js, reusable: any coaster with `C.fp`): her eyes in the front seat, looking along the
+  track ahead; the camera's "up" follows the track (smoothed: loops and corkscrews turn the view, never jerk; gentler in the
+  calm comfort mode); her own creature is hidden from her camera only. Getting off brings the normal third-person camera
+  back (not rolled). The rest of the game's camera is unchanged. `camOverride.up` lets any ride camera roll.
+- **Things to do on the ride**: six STARS along the track (the voice says when one is coming; 🐾 or JUMP grabs it; all six: "You
+  are a coaster star!"), the 🏁 button gets off at any time, and after the ride a 🔁 button rides again.
+- **Riding together** works on any coaster now (the one where you are: the Moon's or Volcano Island's): friends board the same
+  train in their own seats and see each other (on a first-person coaster you are hidden only from your own camera).
+- **Fixed on the way**: the island sky dome stayed centred on the path, so a ride camera far behind it (the climb, 200 m
+  back and 74 m up) was outside the dome and saw a black disc; the dome now follows the ride camera.
+- **Speed**: everything is painted in the one shared unlit material (no new shaders) and batched; the chamber's inside and the
+  underwater world are drawn only when the camera is near them; rails stream in 120 m pieces near the camera; the one-time
+  work is done 4 ms per frame; the coaster is built only on Volcano Island and freed when she leaves.
+- Tests: `tests/volcano-coaster.cjs` (14 checks: the whole ride round, first person, outside, inside with the chamber drawn
+  and the camera inside, underwater with the world drawn and the camera under the surface, the loop, the stars, home, the
+  normal camera back, 🔁): all passed. `COASTER=volcano tests/coaster-together.cjs` (5 checks, two browsers): all passed.
+  Pictures: `screenshots/volcano-coaster-*.jpg`.
+
+## Checkpoint: build 163 — a way back down from the top of the lighthouse (the family's report)
+- "There's no way to go back down the stairs in the lighthouse": the lamp-room floor covered the whole tower, so at the top
+  she could not get back onto the stairs. Now the lamp room is open at its left end, where a yellow SLIDE POLE goes all the
+  way down to the ground floor: walking off that end, tapping the pole or 🐾 "Slide down the pole" slides her down
+  ("Wheee!"). The stairs up are unchanged.
+- `tests/insides.cjs`: a new check (walk off the lamp room's left end: down the pole to the ground).
+
+## Checkpoint: build 162 — fly the hot-air balloon (every activity hands-on: Balloon Hills)
+- Standing next to the hot-air balloon, a tap (or 🐾) puts her in the basket: HOLD ▲ to fire the burner (a flame, a roar)
+  and it rises; let go and it slows and sinks gently; ◀ ▶ drift with the wind. Three stars float at different heights (low,
+  middle, high): "What a balloon pilot!" It comes down to a soft landing; JUMP hops out. Tapped from further away, it still
+  floats up and down by itself (as before; the smoke test's Balloon Hills check uses that).
+- `tests/perf/compare.cjs`: the first spot of a place now settles 9 s (not 3) before it is measured (NEXT_TASKS, build 161).
+- New test `tests/hills-balloon.cjs` (6 checks): passed with `&norender`. Backup: `backups/3D_build161_index.html`.
+
 ## Checkpoint: build 161 — aim the ball cannon (every activity hands-on: Toy Town)
 - The ball cannon used to put every ball in the hoop by itself. Now she aims it: standing by it, ▲ ▼ tilt the barrel and a
   dotted line shows where the ball will fly; tap the cannon (or 🐾) to fire. The ball really flies (gravity): through the

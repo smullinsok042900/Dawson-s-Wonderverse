@@ -27,6 +27,9 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('lighthouse: she climbs the stairs inside, back and forth, all the way up to the lamp room', top >= 14.3, 'at ' + top.toFixed(2));
   await clearToast(); await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Light the lamp').run());
   check('lighthouse: at the top she lights the great lamp (its beam sweeps over the sea)', /lit the great lamp/.test(await toast()) && await ev(() => __DDW3.world.disc.has('lighthousetop')));
+  // (build 163, the family's report: no way back down) the slide pole: walking off the open left end of the lamp room, she slides down
+  await page.keyboard.down('ArrowLeft'); const slid = await until(() => __DDW3.player.ride && __DDW3.player.ride.type === 'pole', null, 30000); await page.keyboard.up('ArrowLeft');
+  check('lighthouse: walking off the left end of the lamp room, she slides down the pole all the way to the ground', slid && await until(() => !__DDW3.player.ride && __DDW3.player.y < .1 && __DDW3.player.layer === 'room', null, 30000));
   await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Go outside').run()); await sleep(1500);
   check('lighthouse: the door takes her back outside, right at the lighthouse', await ev(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x + 95) < 1 && !__DDW3.G.roomCam));
   // ---------- (build 154) THE OCEAN PIER LIGHTHOUSE: there is one at the pier too, and its door goes into the lighthouse room ----------

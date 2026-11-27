@@ -412,19 +412,25 @@ let coasterBtn = null;
 // in the bottom row: up at the top right they covered ⚙️ and 🔊 when the top buttons wrap onto several rows on a phone
 G.besidePaw = el => { const pb = document.getElementById('pawBtn'); if (!pb || !el) return; const r = pb.getBoundingClientRect(); if (!r.width) return; el.style.top = 'auto'; el.style.left = 'auto'; el.style.transform = 'none'; el.style.right = Math.round(innerWidth - r.left + 12) + 'px'; el.style.bottom = Math.round(innerHeight - r.bottom) + 'px'; };
 addEventListener('resize', () => { for (const id of ['coasterSkip', 'bubbleBtn', 'bubbleEsc']) { const el = document.getElementById(id); if (el) G.besidePaw(el); } });
+let replayBtn = null, replayC = null, replayT = 0;
+function replayButton(show, C) { // (build 164) 🔁 RIDE AGAIN: shown for a while after a coaster ride ends
+  if (!replayBtn) { replayBtn = document.createElement('button'); replayBtn.id = 'coasterReplay'; replayBtn.className = 'pill'; replayBtn.setAttribute('aria-label', 'ride the roller coaster again'); replayBtn.textContent = '🔁';
+    replayBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const c2 = replayC; replayButton(false); if (c2 && !player.ride) { c2.onStart && c2.onStart(); G.startCoaster(c2); } }); document.body.appendChild(replayBtn); }
+  replayC = show ? C : null; replayT = show ? 10 : 0; replayBtn.classList.toggle('show', !!show); if (show) G.besidePaw(replayBtn); }
+G.replayTick = dt => { if (replayT > 0 && (replayT -= dt) <= 0) replayButton(false); };
 function coasterButton(show) {
   if (!coasterBtn) { coasterBtn = document.createElement('button'); coasterBtn.id = 'coasterSkip'; coasterBtn.className = 'pill'; coasterBtn.setAttribute('aria-label', 'get off the roller coaster'); coasterBtn.textContent = '🏁';
     coasterBtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const R = player.ride; if (R && R.type === 'coaster') { R.skip = true; Sound.click(); } }); document.body.appendChild(coasterBtn); }
   coasterBtn.classList.toggle('show', !!show); if (show) G.besidePaw(coasterBtn);
 }
-G.startCoaster = (C, o = {}) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: o.i ?? (C.homeI || 0), seat: o.seat || 0, /* (build 100: riding together: start where a friend's train is, in your own seat) */ clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); };
+G.startCoaster = (C, o = {}) => { const P = player; if (P.ride) return; P.ride = { type: 'coaster', C, i: o.i ?? (C.homeI || 0), seat: o.seat || 0, /* (build 100: riding together: start where a friend's train is, in your own seat) */ clack: 0, said: '', cam: null, look: null, maxY: 0, maxV: 0, t: 0 }; P.vx = P.vy = 0; Sound.chime(); G.coasterRides = (G.coasterRides || 0) + 1; coasterButton(true); if (C.fp) G.playerHidden = true; /* (build 164) first person: she is the rider, the camera is her eyes */ replayButton(false); };
 const CV = { a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3(), u: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3(), e: new THREE.Vector3() };
 function coasterSample(C, i, arr, out) { const N = C.N, j0 = Math.max(0, Math.min(N - 1, Math.floor(i))), j1 = Math.min(N - 1, j0 + 1), f = Math.max(0, Math.min(1, i - j0)); return out.set(arr[j0 * 3] + (arr[j1 * 3] - arr[j0 * 3]) * f, arr[j0 * 3 + 1] + (arr[j1 * 3 + 1] - arr[j0 * 3 + 1]) * f, arr[j0 * 3 + 2] + (arr[j1 * 3 + 2] - arr[j0 * 3 + 2]) * f); }
 const COASTER_SAYS = { L: '🎢 Up, up, up! Look how high we go!', K: '🌋 Down into the GIANT crater!', T: '⛰️ Into the mountain tunnel!', C: '💎 Ooooh! A glowing crystal cave!', B: '🚀 BOOST! Zoom!' };
 function endCoaster(R) {
-  const P = player, C = R.C; C.placeTrain(C.homeI); P.ride = null; G.camOverride = null; coasterButton(false);
+  const P = player, C = R.C; C.placeTrain(C.homeI); P.ride = null; G.camOverride = null; coasterButton(false); if (C.fp) G.playerHidden = false; camera.up.set(0, 1, 0);
   P.x = C.exitX; P.y = 0; P.z = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1; creature.root.rotation.z = 0; snapCamera();
-  burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast(R.skip ? '🎢 Back at the station! Tap the train to ride again.' : '🎢 WOW! What a ride! Tap the train to go again!'); discover('coaster', '🎢 The GIANT Moon roller coaster!');
+  burst(P.x, 1, 0, ['#fff', '#ffe36e', '#9fe6ff'], 18, 2.5); Sound.chime(); toast(R.skip ? '🎢 Back at the station! Tap 🔁 or the train to ride again.' : (C.endSay || '🎢 WOW! What a ride!') + ' Tap 🔁 to go again!'); discover(C.disc || 'coaster', C.disc ? '🌋 The Volcano Island roller coaster!' : '🎢 The GIANT Moon roller coaster!'); replayButton(true, C); /* (build 164) 🔁 ride again */
 }
 function coasterRide(dt, R) {
   const P = player, C = R.C, N = C.N;
@@ -434,7 +440,8 @@ function coasterRide(dt, R) {
   R.i += v * dt / C.STEP;
   if (R.i >= N - 1) { endCoaster(R); return; }
   if (f === 'L' && (R.clack -= dt) < 0) { R.clack = .2; Sound.tone(240, .035, 'square', .02, 1); }
-  if (f && f !== R.said && f !== 'S' && COASTER_SAYS[f]) { R.said = f; toast(COASTER_SAYS[f]); if (f === 'K' || f === 'B') Sound.whoosh(); }
+  const SAYS = C.says || COASTER_SAYS; if (f && f !== R.said && f !== 'S' && SAYS[f]) { R.said = f; toast(SAYS[f]); if (f === 'K' || f === 'B' || f === 'V' || f === 'W') Sound.whoosh(); }
+  C.onTick && C.onTick(R);
   if (!f && R.said) R.said = '';
   if (!R.drop && j > 10 && C.flag[j - 10] === 'L' && f !== 'L') { R.drop = 1; Sound.whoosh(); voice.speak('Wheeeeee!'); }
   C.placeTrain(R.i);
@@ -456,9 +463,16 @@ function coasterRide(dt, R) {
   const kc = 1 - Math.exp(-dt * (inside ? 9 : 4.5)), kl = 1 - Math.exp(-dt * 7);
   R.cam.lerp(want, kc); R.look.lerp(lookAt, kl); if (R.cam.y < pos.y + 1.2) R.cam.y = pos.y + 1.2; /* (build 100: the smoothed camera never drops below the cart, even on a fast climb) */
   G.camOverride = { coaster: true, pos: [R.cam.x, R.cam.y, R.cam.z], look: [R.look.x, R.look.y, R.look.z] };
+  if (C.fp) { // (build 164) THE FIRST-PERSON RIDE CAMERA (reusable: any coaster with C.fp): her eyes in the front seat, looking along
+    //  the track ahead; the camera's "up" follows the track's up (smoothed), so loops and corkscrews turn the view naturally;
+    //  everything is smoothed so it never shakes or jerks (and gentler still in the calm comfort mode)
+    const eye = CV.e.copy(pos).addScaledVector(up, 1.25).addScaledVector(tg, .6), ahead = coasterSample(C, Math.min(N - 1, R.i + 14), C.pos, CV.b), aup = coasterSample(C, Math.min(N - 1, R.i + 14), C.up, CV.d).normalize(); ahead.addScaledVector(aup, 1.1);
+    if (!R.fpUp) { R.fpUp = up.clone(); R.fpLook = ahead.clone(); }
+    const ku = 1 - Math.exp(-dt * (world.comfort?.calm ? 2.5 : 4)), kl2 = 1 - Math.exp(-dt * 8); R.fpUp.lerp(up, ku).normalize(); R.fpLook.lerp(ahead, kl2);
+    G.camOverride = { coaster: true, fp: true, pos: [eye.x, eye.y, eye.z], look: [R.fpLook.x, R.fpLook.y, R.fpLook.z], up: [R.fpUp.x, R.fpUp.y, R.fpUp.z] }; }
   if (v > 22 && Math.random() < dt * 14) burst(pos.x - tg.x * 2, pos.y + .1, pos.z - tg.z * 2, ['#ffffff', '#62f0ff', '#ff6fd8'], 1, .6);
 }
-G.coasterOff = () => { G.camOverride = null; coasterButton(false); };
+G.coasterOff = () => { G.camOverride = null; coasterButton(false); G.playerHidden = false; camera.up.set(0, 1, 0); };
 function endRide(vx = 0, vy = 5) { const P = player; P.ride = null; P.vx = vx; P.vy = vy; P.grounded = false; P.jumps = 1; }
 G.startSlide = (path, o) => startSlide(path, o); // (build 66: the planets' slides)
 function updateRide(dt) {
@@ -930,6 +944,7 @@ function jump() {
   const P = player; if (!started || G.activityOpen || P.stair) return;
   if (P.ride && P.ride.type === 'rocket') { if (P.ride.phase === 'in') { climbOut(G.rockets[P.ride.key]); Sound.jump(1); } return; } // (build 48: JUMP climbs out before take-off)
   if (P.ride && P.ride.type === 'climb') { P.ride.boost = .25; return; }
+  if (P.ride && P.ride.type === 'coaster' && P.ride.C.onPaw) { P.ride.C.onPaw(P.ride); return; } // (build 164: JUMP grabs a star too)
   if (P.ride && P.ride.onJump) { P.ride.onJump(); return; } // (build 71: a planet ride can use the JUMP button: bungee jump, parachute, launch...)
   if (P.ride && P.ride.type === 'train') { train.whistle(); return; }
   if (P.ride && P.ride.type === 'kart') { if (P.ride.hop === 0) { P.ride.hopV = 7.5; Sound.boing(); discover('kartjump', 'Kart jump!'); } return; }
@@ -939,6 +954,7 @@ function jump() {
 }
 function doAction() {
   const P = player; if (!started || G.activityOpen || P.stair) return;
+  if (P.ride && P.ride.type === 'coaster' && P.ride.C.onPaw) { P.ride.C.onPaw(P.ride); return; } // (build 164) a coaster's own 🐾: grab the star
   if (P.ride && P.ride.type === 'rocket') { if (P.ride.phase === 'in') { if (P.ride.dest) blastOff(); else showPicker(); } return; } // (build 48: PAW in the rocket: the planets, or the red button once one is picked)
   if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
   if (P.ride && P.ride.type === 'train') { train.hopOff(); return; }
@@ -1215,7 +1231,7 @@ function updateCamera(dt) {
     camera.position.copy(roomCamV); camera.lookAt(roomCamV.x, roomCamV.y, Rc.z - 5); } else roomCamFor = null;
   if (G.shake > 0) { G.shake = Math.max(0, G.shake - dt); camera.position.x += (Math.random() - .5) * G.shake * .5; camera.position.y += (Math.random() - .5) * G.shake * .5; } // a little stomp shake
   if (G.camOverride && G.camOverride.coaster && !(player.ride && player.ride.type === 'coaster')) G.coasterOff(); // (build 69: left the coaster another way, e.g. the map)
-  if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); camera.lookAt(...o.look); } // (close-up camera for checking models)
+  if (G.camOverride) { const o = G.camOverride; camera.position.set(...o.pos); if (o.up) camera.up.set(...o.up); else camera.up.set(0, 1, 0); camera.lookAt(...o.look); } else if (camera.up.y !== 1) camera.up.set(0, 1, 0); /* (build 164: a ride camera can roll; the normal camera never does) */ // (close-up camera for checking models)
   sky.position.x = camT.x; // the sky dome travels with you (the world is wider than the dome now)
   { const tex = 26 / 2048, sx = Math.round(camT.x / tex) * tex, sy = Math.round(Math.max(0, camT.y) / tex) * tex; const o = G.sunOff; if (o) sun.position.set(sx + o[0], o[1] + sy, o[2]); else sun.position.set(sx - 7, 16 + sy, 10); sun.target.position.set(sx, sy, 0); } // (snapped to shadow texels: no shimmering)
 }
@@ -1252,7 +1268,7 @@ function updateWorldAnim(dt, t) {
   // bushes and trees are not drawn at all
   poolDt += dt; if (++poolTick % 4 === 0) { updateLightPool(poolDt); poolDt = 0; }
   updateSlices(); // (every frame: cheap, and a jump into the house shows its room at once)
-  expansion.update(dt, t, player.layer === '' ? camT.x : -999); // (build 29: stream the new neighbourhoods)
+  expansion.update(dt, t, player.layer === '' ? camT.x : -999); G.replayTick && G.replayTick(dt); // (build 29: stream the new neighbourhoods)
   if (G.updateTrainStrip) G.updateTrainStrip();
   if ((lodTick = (lodTick + 1) % 8) === 0) { for (const it of LOD) { const d = Math.abs(it.x - camT.x); it.o.visible = d < it.r; if (MOBILE && it.parts) { const far = d > (gfx.level >= 4 ? 8 : 16); /* (build 44: at the lightest graphics levels trees switch to their simple shape sooner) */ if (it.far !== far) { it.far = far; for (const q of it.parts) q.m.geometry = far ? q.lo : q.hi; } } } // (build 28: phones show trees and bushes further than 16 m low-detail)
     for (const f of FUR) { f.mesh.getWorldPosition(V); const near = V.distanceTo(camera.position) < (gfx.level >= 4 ? 0 : gfx.level >= 2 ? 10 : 14); /* (build 44: no fur layers at the lightest levels) */ if (f.shells[0] && f.shells[0].visible !== near) for (const s of f.shells) s.visible = near; } }
@@ -1791,7 +1807,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '161'; G.build = GAME_BUILD;
+const GAME_BUILD = '165'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this
