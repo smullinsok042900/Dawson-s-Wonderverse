@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 169 vs build 168, Neptune with the geyser ride (desktop, software rendering; `tests/perf/compare.cjs neptune`; not iPhone numbers)
+- 1 round each (no spot differed by more than 12%): 64: 197 → 182 ms; 95: 178 → 190; 150: 173 → 181; 186: 165 → 167; 320: 148 → 137:
+  all the same. Draw calls the same (+1 at 95, a creature walking by). The snowflake stars are hidden until she rides.
+  (`compare.cjs`: Neptune's first spot is now 64, beside the geyser, instead of 60.)
+
 ## Build 168 vs build 167, Mars with the dust devil ride (desktop, software rendering; `tests/perf/compare.cjs mars`; not iPhone numbers)
 - 2 rounds each: 46: 198 → 185 ms; 64: 193 → 176; 90: 185 → 176; 125: 194 → 190; 140: 200 → 198; 221: 201 → 193; 276: 187 → 186:
   all the same (slightly faster everywhere, within the noise). Draw calls identical at every spot (the four sparkles are

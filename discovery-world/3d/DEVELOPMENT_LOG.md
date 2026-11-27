@@ -6,6 +6,19 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 169 — RIDE THE ICY GEYSER on Neptune (ATTRACTIONS row 18)
+- **Before:** a tap on the icy geyser (Triton's fountains) shot a plume up for 3 s.
+- **Now it is a ride** (`space.js`): a tap next to it and she steps onto the vent; the fountain shoots up under her and
+  carries her high, bobbing on top. HOLD ▲ and it shoots higher (up to 18 m); let go and it slowly sinks; ◀ ▶ lean the
+  fountain to either side; four snowflake stars hang at 4, 8, 12 and 16.5 m, two on each side, each a rising note; all
+  four: "You caught all the snowflake stars!" and a party. JUMP hops off and she floats gently down.
+- The stars are four small meshes with one shared material, drawn only during the ride.
+- **Tested** (desktop, software rendering): `tests/neptune-geyser.cjs` (new): 5/5 drawn and with `?norender`
+  (carried up, ▲ higher and sinks when let go, all four stars, JUMP floats her down, no page errors); `control-rides`
+  (the Neptune and Mars rides) still all passed.
+- Speed on Neptune vs build 168: the same at all five spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop,
+  software rendering). Not tested on an iPhone.
+
 ## Checkpoint: build 168 — RIDE THE MARS DUST DEVIL (ATTRACTIONS row 18)
 - **Before:** a tap made the dust devil twirl faster for 4 s.
 - **Now it is a ride** (`space.js`): a tap next to it scoops her up; she twirls round and round inside the whirl, which
