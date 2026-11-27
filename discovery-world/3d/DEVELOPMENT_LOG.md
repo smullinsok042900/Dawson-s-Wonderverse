@@ -6,6 +6,18 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 157 — into the greenhouse; the pond off its door (the family's picture and request)
+- **Overlap:** Lab Gardens' colour pond (r 3 at 684, -4.9) ran into the front of the first greenhouse and right across its
+  door. It is now beside the greenhouse, smaller (676, -3.8, r 2.1), with Hoppy the frog moved to its edge; checked: it
+  clears the dome and the door (`insides.cjs`), and the picture shows the door clear.
+- **The greenhouse room** (rooms.js): each greenhouse's door (🐾, or a tap on the door or the glass) takes her inside: glass
+  walls and ribs, planter beds full of flowers, potted plants, butterflies. THE WATERING CAN: she takes it (it is in her
+  hand), waters the three little sprouts, and each grows into a big flower; all three: "All three flowers are blooming!"
+  Walking out (the can stays inside) brings her back to that greenhouse's door.
+- Verified (desktop, software rendering): `insides.cjs` all passed, drawn and with `&norender` (5 new checks); pictures
+  `greenhouse-outside.jpg`, `greenhouse-flowers.jpg`. Ocean Pier speed with its lighthouse vs build 152: the same
+  (-552: 276 → 284, -584: 291 → 304, -620: 259 → 252 ms).
+
 ## Checkpoint: build 156 — three more islands (the family's request: "create more islands")
 - New `src/islands2.js` (Volcano Island, Turtle Beach, Treasure Cove), added to `islands.js` (their place on the sea, their
   sky and light, their creatures), `space.js` (their landing grounds), `planets.js` (their areas) and the 🗺️ sea map (five

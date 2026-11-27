@@ -14,7 +14,7 @@
 import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
 
-const BOX = new THREE.BoxGeometry(1, 1, 1), SPH = new THREE.SphereGeometry(1, 12, 9), CYL = new THREE.CylinderGeometry(1, 1, 1, 16), CONE = new THREE.ConeGeometry(1, 1, 10);
+const LEAFG = new THREE.SphereGeometry(1, 8, 6), BOX = new THREE.BoxGeometry(1, 1, 1), SPH = new THREE.SphereGeometry(1, 12, 9), CYL = new THREE.CylinderGeometry(1, 1, 1, 16), CONE = new THREE.ConeGeometry(1, 1, 10);
 const FRONT = 1.6; // the open front of every room (z); the back wall is at FRONT - depth
 
 export function initRooms(k) {
@@ -110,8 +110,48 @@ export function initRooms(k) {
       onTop: () => { if (P.y > 14.3 && !G._lhTop) { G._lhTop = 1; say('💡 The top of the lighthouse! Tap the great lamp to make it shine!'); } },
       update: (dt, t) => { lens.scale.setScalar(1 + Math.sin(t * 3) * .04); if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2.2; if (spin <= 0) beam.visible = false; } } };
   }
+  // ---------- 🌱 THE GREENHOUSE (build 157, the family's request) ----------
+  //  glass walls and ceiling ribs, planter beds full of flowers, butterflies; THE WATERING CAN: tap it (or 🐾) and she
+  //  carries it; tap a little sprout (or 🐾 beside it) and she waters it: it grows up into a big flower. All three blooming:
+  //  "Your flowers are blooming!"
+  function buildGreenhouse(g) {
+    const W = 14, H = 6, D = 6.2, zb = FRONT - D, b = makeBatch();
+    shell(b, W, H, D, '#dff3e6', '#c8b89a', '#e8f6ee', '#cfe3d4');
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 9; c++) b.put(BOX, .8 + c * 1.55, .9 + r * 1.75, zb + .02, (r + c) % 2 ? '#cdeedd' : '#d8f4e4', [1.45, 1.65, .05]); // glass panes
+    for (let c = 0; c <= 9; c++) b.put(BOX, .05 + c * 1.55, H / 2, zb + .06, '#7fae8b', [.08, H, .06]); for (const y of [1.75, 3.5, 5.25]) b.put(BOX, W / 2, y, zb + .06, '#7fae8b', [W, .07, .06]); // the frame
+    for (let i = 0; i < 6; i++) b.put(BOX, 1.2 + i * 2.3, H - .05, FRONT - D / 2, '#7fae8b', [.1, .12, D]); // ceiling ribs
+    b.put(BOX, 1.3, 1, zb + .08, '#31423a', [1.4, 2, .08]); b.put(CYL, 1.3, 1.55, zb + .14, '#bfe9f2', [.2, .04, .2], [Math.PI / 2, 0, 0]); // the door (inside)
+    const FLW = ['#ff4f8a', '#ffd23f', '#b07cff', '#ff9a2e', '#ff6f6f', '#4fb0ff'];
+    for (const [x0, x1] of [[2.4, 6.6], [7.6, 13.2]]) { b.put(BOX, (x0 + x1) / 2, .4, zb + .9, '#8a5a3a', [x1 - x0, .8, 1.2]); b.put(BOX, (x0 + x1) / 2, .78, zb + .9, '#6b4a34', [x1 - x0 - .15, .06, 1.05]);
+      for (let x = x0 + .4, i = 0; x < x1 - .2; x += .55, i++) { b.put(LEAFG, x, 1.05, zb + .9 + (i % 2 ? .25 : -.25), i % 2 ? '#3fbf5a' : '#5fd36a', [.3, .25, .25]); b.put(SPH, x, 1.3 + (i % 3) * .08, zb + .9 + (i % 2 ? .25 : -.25), FLW[i % 6], .11); } } // planter beds full of flowers
+    for (const x of [.8, 13.2]) { b.put(CYL, x, .35, -.6, '#c8603a', [.35, .7, .35]); for (let i = 0; i < 5; i++) b.put(LEAFG, x + Math.cos(i * 1.3) * .3, 1.1 + (i % 2) * .3, -.6 + Math.sin(i * 1.3) * .25, '#3fbf5a', [.35, .5, .25]); } // tall potted plants
+    b.put(BOX, 3, .3, -1.6, '#a8743a', [.7, .6, .7]); // the stool the watering can stands on
+    g.add(b.mesh(shinyMat()));
+    // the watering can (also the one she carries)
+    const can = new THREE.Group(); { const cb = makeBatch(); cb.put(CYL, 0, .22, 0, '#4fb0ff', [.22, .4, .22]); cb.put(CYL, .3, .32, 0, '#4fb0ff', [.04, .45, .04], [0, 0, -1]); cb.put(CYL, .5, .45, 0, '#3a90df', [.07, .06, .07], [0, 0, -1]); cb.put(BOX, -.05, .48, 0, '#3a90df', [.35, .05, .06]); can.add(cb.mesh(shinyMat())); }
+    can.position.set(3, .6, -1.6); g.add(can); const hand = new THREE.Group(); let carrying = false;
+    // the three sprouts: each grows into a big flower when watered
+    const sprouts = [5.2, 8.4, 11.6].map((x, i) => { const grp = new THREE.Group(); grp.position.set(x, 0, -1.4); g.add(grp); const pot = new THREE.Mesh(CYL, new THREE.MeshStandardMaterial({ color: '#c8603a', roughness: .8 })); pot.scale.set(.3, .45, .3); pot.position.y = .22; grp.add(pot);
+      const plant = new THREE.Group(); plant.position.y = .45; grp.add(plant); const fb = makeBatch(); fb.put(CYL, 0, .7, 0, '#3f9a4a', [.05, 1.4, .05]); fb.put(LEAFG, .18, .5, 0, '#5fd36a', [.25, .1, .12]); fb.put(LEAFG, -.18, .85, 0, '#5fd36a', [.25, .1, .12]);
+      for (let p = 0; p < 6; p++) fb.put(SPH, Math.cos(p / 6 * Math.PI * 2) * .26, 1.45 + Math.sin(p / 6 * Math.PI * 2) * .26, .02, FLW[i * 2], [.17, .17, .06]); fb.put(SPH, 0, 1.45, .06, '#ffd23f', .14); plant.add(fb.mesh(shinyMat())); plant.scale.setScalar(.15);
+      return { x, grp, plant, grown: 0, grow: 0 }; });
+    let bloomed = 0;
+    const take = () => { if (carrying) { carrying = false; can.position.set(3, .6, -1.6); g.add(can); G.hold && G.hold(null); say('🪴 The watering can goes back on its stool.'); return; } carrying = true; hand.add(can); can.position.set(.1, -.4, 0); G.hold && G.hold(hand); Sound.click && Sound.click(); say('💧 You have the watering can! Water the little sprouts!'); disc('wateringcan'); };
+    const water = q => { if (!carrying) { say('💧 Take the watering can first! It is on the stool by the door.'); return; } if (q.grown) { say('🌸 This flower is already blooming!'); return; } q.grown = 1; q.grow = 0; Sound.twinkle ? Sound.twinkle() : Sound.chime(); bloomed++;
+      say(bloomed < 3 ? '💧 Splish splash! Look, it is growing into a big flower!' : '🌸 All three flowers are blooming! What a gardener!'); if (bloomed === 3) disc('greenhouseflowers'); };
+    tapObj(can, () => { if (!carrying) take(); }); for (const q of sprouts) tapObj(q.grp, () => water(q));
+    const bfM = ['#ff8fc8', '#ffd23f', '#9fe6ff'].map(c => new THREE.MeshBasicMaterial({ color: c, side: THREE.DoubleSide, toneMapped: false })), flies = bfM.map((m, i) => { const f = new THREE.Group(); for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.CircleGeometry(.14, 10), m); w.position.x = s * .12; w.userData.s = s; f.add(w); } g.add(f); return { f, i }; });
+    const drops = new THREE.Group(); g.add(drops); for (let i = 0; i < 6; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(.04, 6, 4), new THREE.MeshBasicMaterial({ color: '#7fd0ff' })); d.visible = false; drops.add(d); }
+    return { W, H, D, door: 1.3, icon: '🌱', name: 'the greenhouse', out: 'the garden outside', hello: '🌱 Inside the greenhouse! Take the watering can and water the little sprouts!',
+      inter: [{ x: 3, icon: '💧', action: 'Watering can', run: take }, ...sprouts.map(q => ({ x: q.x, icon: '🌱', action: 'Water the sprout', run: () => water(q) }))],
+      onLeave: () => { if (carrying) { carrying = false; can.position.set(3, .6, -1.6); g.add(can); if (G.holding === hand) G.hold(null); } },
+      update: (dt, t) => { for (const q of sprouts) { if (q.grown && q.grow < 1) { q.grow = Math.min(1, q.grow + dt * .6); const d = drops.children; for (const [j, dd] of d.entries()) { dd.visible = q.grow < .5; dd.position.set(q.x + .1 + Math.sin(j) * .1, 1.6 - ((t * 2 + j * .17) % 1) * 1, -1.4); } }
+          q.plant.scale.setScalar(.15 + q.grow * .85); q.plant.rotation.z = Math.sin(t * 1.5 + q.x) * .04; }
+        if (!sprouts.some(q => q.grown && q.grow < .5)) for (const dd of drops.children) dd.visible = false;
+        for (const { f, i } of flies) { const a = t * (.5 + i * .12) + i * 2; f.position.set(W / 2 + Math.sin(a) * (4.5 - i), 2.6 + Math.sin(a * 2.3) * .7 + i * .4, -1.5 - i * .6); for (const w of f.children) w.rotation.y = w.userData.s * (.4 + Math.abs(Math.sin(t * 14 + i)) * .9); } } };
+  }
   let cur0 = 0; // (the x of the room being built)
-  const DEF = { igloo: { x: -5400, build: buildIgloo }, lighthouse: { x: -5600, build: buildLighthouse } };
+  const DEF = { igloo: { x: -5400, build: buildIgloo }, lighthouse: { x: -5600, build: buildLighthouse }, greenhouse: { x: -5800, build: buildGreenhouse } };
 
   function get(id) {
     if (R[id]) return R[id];
@@ -130,10 +170,10 @@ export function initRooms(k) {
     G.roomCam = { x0: r.x0 - .1, x1: r.x0 + r.W + .1, y0: -.15, y1: r.H + .1, z: FRONT + .1 };
     k.world && (k.world.flash = 1); Sound.click && Sound.click(); Sound.chime && Sound.chime(); say(r.hello); disc(id + 'in'); k.snap && k.snap();
   }
-  function leave() { if (!cur) return; const r = cur; cur = null; r.g.visible = false; G.roomCam = null; k.travelTo(r.back, '🚪', r.out); }
+  function leave() { if (!cur) return; const r = cur; cur = null; r.onLeave && r.onLeave(); r.g.visible = false; G.roomCam = null; k.travelTo(r.back, '🚪', r.out); }
   function update(dt, t) {
     if (!cur) return;
-    if (P.layer !== 'room') { cur.g.visible = false; cur = null; G.roomCam = null; return; } // (she left another way: the map, 🏠...)
+    if (P.layer !== 'room') { cur.onLeave && cur.onLeave(); cur.g.visible = false; cur = null; G.roomCam = null; return; } // (she left another way: the map, 🏠...)
     if (P.x < cur.x0 + .05) { leave(); return; } // walked out of the door
     cur.onTop && cur.onTop(); cur.update(dt, t);
   }
