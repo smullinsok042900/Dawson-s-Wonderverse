@@ -4,6 +4,14 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Builds 162–165 vs build 161 (desktop, software rendering; `tests/perf/compare.cjs`; not iPhone numbers)
+- **Volcano Island, with the roller coaster** (4 rounds): 20: 287 → 143 ms (faster); 32: 144 → 145; 135: 154 → 149; 248: 145 → 138
+  (the same). Draw calls 47–49 → 51–57 (the coaster's skeleton, volcano, station, train and the rail pieces near her).
+- **Turtle Beach, with the sea and the turtles** (2 rounds): 20: 135 → 149 (+10%); 44: 136 → 151 (+11%); 130: 141 → 149; 225: 136 → 130:
+  the same (within the 12% this machine varies by). Draw calls +3 to +7 (the sea, the foam and wave lines, the turtle's flippers).
+- **The Moon** (2 rounds): 20: 256 → 226; 30: 165 → 171; 50: 160 → 158; 79: 177 → 160: the same.
+- Nothing slower. The volcano's inside and the underwater world are drawn only when the camera is near them.
+
 ## Build 161 vs build 160, Toy Town (desktop, software rendering; `tests/perf/compare.cjs toytown`; not iPhone numbers)
 - Run 1 (4 rounds): 560: 328 → 443 ms (+35%, flagged SLOWER); 585, 610, 635, 656 the same.
 - Run 2 (every round shown): 560 measured 324, 393 (old) and 327, 446 (new): 359 → 387 ms, the same; 585: 325 → 305; 610: 287 → 287;
