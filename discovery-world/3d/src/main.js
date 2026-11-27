@@ -1155,7 +1155,7 @@ function updatePlayer(dt) {
     }
   }
   // the floor: normally y 0; under the floor (or down the deep shaft) it is the underground floor
-  const gy = P.layer === 'sea' ? SEA.floor : P.layer !== '' ? 0 : (P.y > UG.ceil + .05 && !inShaftX(P.x)) ? 0 : UG.floor;
+  const gy = P.layer === 'sea' ? SEA.floor : P.layer === 'room' && G.roomGround ? G.roomGround(P.x) /* (build 158: the deep caves' river and digging wall go below the floor) */ : P.layer !== '' ? 0 : (P.y > UG.ceil + .05 && !inShaftX(P.x)) ? 0 : UG.floor;
   if (P.y <= gy) { if (!P.grounded && P.vy < -6) Sound.land(); P.y = gy; P.vy = 0; P.grounded = true; P.groundZ = (P.layer === 'space' && G.iceZ != null && G.space && G.space.here() === 'uranus') ? G.iceZ : 0; /* (build 85: the Uranus rink steers your depth) */ if (gy < 0) discover('underground', 'A secret underground world! Explore the caves.'); }
   if (P.layer === '' && P.y < UG.ceil - .05) { // underground ceilings (low in the crawl tunnel, open under the shaft)
     const tun = P.x > UG.tunnel[0] && P.x < UG.tunnel[1], c = tun ? UG.tunnelCeil : inShaftX(P.x) ? null : UG.ceil, Hh = tun ? .9 : 1.5;
@@ -1209,7 +1209,7 @@ function updateCamera(dt) {
   // (build 149) IN A ROOM (the igloo, the lighthouse, her brick house): the camera looks straight into the room, as close as
   //  fits its height (or its width, if narrower), and follows her inside it without ever showing past its walls
   if (G.roomCam) { const Rc = G.roomCam, th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), W = Rc.x1 - Rc.x0, H = Rc.y1 - Rc.y0;
-    let d = (H / 2) / th; if (d * th * camera.aspect * 2 > W) d = (W / 2) / (th * camera.aspect);
+    let d = ((Rc.viewH ? Math.min(Rc.viewH, H) : H) / 2) / th; if (d * th * camera.aspect * 2 > W) d = (W / 2) / (th * camera.aspect); /* (build 158) viewH: a big room (the deep caves) shows a part of itself and follows her */
     const hw = d * th * camera.aspect, hh = d * th, cx = W <= 2 * hw + .01 ? (Rc.x0 + Rc.x1) / 2 : clamp(P.x, Rc.x0 + hw, Rc.x1 - hw), cy = H <= 2 * hh + .01 ? (Rc.y0 + Rc.y1) / 2 : clamp(P.y + 1, Rc.y0 + hh, Rc.y1 - hh);
     if (roomCamFor !== Rc) { roomCamFor = Rc; roomCamV.set(cx, cy, Rc.z + d); } else roomCamV.lerp(roomLook.set(cx, cy, Rc.z + d), ease(dt, 6));
     camera.position.copy(roomCamV); camera.lookAt(roomCamV.x, roomCamV.y, Rc.z - 5); } else roomCamFor = null;
@@ -1791,7 +1791,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '157'; G.build = GAME_BUILD;
+const GAME_BUILD = '158'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

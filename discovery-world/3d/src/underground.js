@@ -75,6 +75,15 @@ export function buildUnderground(G) {
   // a sparkly ring marks the deep part from above
   const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, .07, 10, 48), M('#ffd84a', { em: '#ffd84a', ei: .9 })); ring.rotation.x = Math.PI / 2; ring.position.set((s0 + s1) / 2, 1.05, 0); add(ring);
   G.diveRing = ring;
+  // ---------- (build 158) THE WAY INTO THE DEEP CAVES: a big glowing cave mouth at the far end of the underground ----------
+  G.ugFloor = UG.floor;
+  { const mx = 5.6, mz = -5.7; const rock = sph(mx, UG.floor + 1.3, mz, 2.1, '#3a2a50', { m: { r: .9, cc: 0 } }); rock.scale.set(1.25, 1, .35);
+    const mouth = new THREE.Mesh(new THREE.CircleGeometry(1.35, 28), new THREE.MeshBasicMaterial({ color: '#1a1030' })); mouth.position.set(mx, UG.floor + 1.25, mz + .78); add(mouth);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.4, .09, 8, 32), new THREE.MeshBasicMaterial({ color: '#9fe6ff', toneMapped: false })); ring.position.copy(mouth.position); ring.position.z += .02; add(ring);
+    for (let i = 0; i < 7; i++) sph(mx - .9 + i * .3, UG.floor + 1 + (i % 3) * .4, mz + .82, .06, ['#9fe6ff', '#b0ff7f', '#ffffff'][i % 3], { m: { em: '#ffffff', ei: 1 } });
+    const go = () => { if (G.rooms && G.player.layer === '' && G.player.y < UG.ceil) G.rooms.enter('caves', mx); };
+    tap(mouth, go); tap(rock, go); G.interact.push({ x: mx, y: UG.floor, layer: '', icon: '🕳️', action: 'Into the deep caves!', run: go, hintY: 3 });
+    G.ugCaveRing = ring; }
   // ---------- CAVE HALL: a pile of spilled balls and the bounce mushroom back up ----------
   const sx = (s0 + s1) / 2;
   for (let i = 0; i < 26; i++) sph(sx - 2.2 + (i * .53) % 4.4, UG.floor + .22 + (i % 3) * .18, -1.4 + (i * .37) % 1.2, .22, ['#65dcec', '#ffda68', '#b587ff', '#ff67ab', '#7be08a'][i % 5], { m: { r: .25, cc: 1 } });

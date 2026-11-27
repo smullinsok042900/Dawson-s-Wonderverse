@@ -13,6 +13,7 @@
 // ===================================================================
 import * as THREE from 'three';
 import { makeBatch, shinyMat } from './spacekit.js';
+import { toy } from './creatures.js';
 
 const LEAFG = new THREE.SphereGeometry(1, 8, 6), BOX = new THREE.BoxGeometry(1, 1, 1), SPH = new THREE.SphereGeometry(1, 12, 9), CYL = new THREE.CylinderGeometry(1, 1, 1, 16), CONE = new THREE.ConeGeometry(1, 1, 10);
 const FRONT = 1.6; // the open front of every room (z); the back wall is at FRONT - depth
@@ -150,15 +151,112 @@ export function initRooms(k) {
         if (!sprouts.some(q => q.grown && q.grow < .5)) for (const dd of drops.children) dd.visible = false;
         for (const { f, i } of flies) { const a = t * (.5 + i * .12) + i * 2; f.position.set(W / 2 + Math.sin(a) * (4.5 - i), 2.6 + Math.sin(a * 2.3) * .7 + i * .4, -1.5 - i * .6); for (const w of f.children) w.rotation.y = w.userData.s * (.4 + Math.abs(Math.sin(t * 14 + i)) * .9); } } };
   }
+  // ---------- ⛏️ THE DEEP CAVES (build 158, the family's request: "make the underground way bigger, different caves to go
+  //  through and explore, and a shovel so she can dig her own cave tunnels she can actually explore") ----------
+  //  Through the glowing cave mouth in the underground she walks into the DEEP CAVES, one long cave after another:
+  //   the GLOW-WORM CAVE (a ceiling of glowing lights, stalactites, glowing mushrooms; a bounce mushroom up to a high ledge),
+  //   the UNDERGROUND RIVER (stepping stones across; a waterfall behind; fall in: splash, back to the bank),
+  //   the DINOSAUR CAVE (a giant skeleton in the rock: tap it, RAWR), the CRYSTAL GROTTO (big crystals that chime),
+  //   and THE DIGGING WALL: the SHOVEL waits on a rock; with it she digs into a big wall of soft earth (walk into it, ▼ to
+  //   dig down, ▲ to dig up, tap a bit of earth, or 🐾): every bit she digs is gone, so her tunnels are real tunnels she
+  //   walks, falls and climbs through, with gems hidden in the earth. Her tunnels are kept (saved) for next time.
+  function buildCaves(g) {
+    const W = 120, H = 8, D = 6.4, zb = FRONT - D, zc = (FRONT + zb) / 2, b = makeBatch(), plats = [], X0 = cur0;
+    const DIG0 = 92, NC = 26, NR = 12, YB = -8, RIV = [34, 50];
+    // the cave's shell: back wall, ceiling, ends, the floor (not under the river or the digging wall), a frame round the front
+    b.put(BOX, W / 2, (H + YB) / 2, zb - .15, '#2a2440', [W + .6, H - YB + .4, .3]); b.put(BOX, W / 2, H + .15, zc, '#2a2440', [W + .6, .3, D]);
+    for (const x of [-.15, W + .15]) b.put(BOX, x, (H + YB) / 2, zc, '#2a2440', [.3, H - YB + .4, D]);
+    for (const [a, c2] of [[0, RIV[0]], [RIV[1], DIG0]]) { b.put(BOX, (a + c2) / 2, -.6, zc, '#5a4a6a', [c2 - a, 1.2, D]); plats.push({ a, b: c2, y: 0, z: 0, layer: 'room' }); }
+    b.put(BOX, (RIV[0] + RIV[1]) / 2, -1.7, zc, '#3a3050', [RIV[1] - RIV[0], 1, D]); // the river bed
+    const z = FRONT + .25; b.put(BOX, -20.3, H / 2, z, '#1a1528', [40, 80, .3]); b.put(BOX, W + 20.3, H / 2, z, '#1a1528', [40, 80, .3]); b.put(BOX, W / 2, H + 20.3, z, '#1a1528', [W + 1, 40, .3]); b.put(BOX, W / 2, YB - 20.3, z, '#1a1528', [W + 1, 40, .3]);
+    b.put(BOX, (RIV[0] + DIG0) / 2 - 20, -5, z - .1, '#1a1528', [DIG0 + 40, 9, .3]); // (under the cave floor: rock, not the void)
+    b.put(BOX, 1.3, 1.2, zb + .05, '#ffd27a', [1.6, 2.4, .1]); // the way back to the underground (warm light)
+    // 1) THE GLOW-WORM CAVE (x 4-30): stalactites, glowing mushrooms, a bounce mushroom up to a ledge
+    for (let i = 0; i < 16; i++) { const x = 4 + i * 1.7, l = .6 + (i % 4) * .4; b.put(CONE, x, H - l / 2, -2.5 - (i % 3), '#4a4060', [.35, l, .35], [Math.PI, 0, 0]); }
+    for (const [x, c2] of [[8, '#7fe0ff'], [12, '#ff8fd8'], [16, '#b0ff7f']]) { b.put(CYL, x, .3, -2.6, '#fff3e0', [.18, .6, .18]); b.put(SPH, x, .65, -2.6, c2, [.6, .3, .6]); }
+    b.put(CYL, 21, .3, -1, '#fff3e0', [.3, .6, .3]); b.put(SPH, 21, .7, -1, '#7fe0ff', [1, .4, 1]); plats.push({ a: 20, b: 22, y: 1, z: 0, layer: 'room', pad: true, bounce: 15 });
+    b.put(BOX, 24.6, 4.3, -1.6, '#4a4060', [4.6, .5, 2.4]); plats.push({ a: 22.3, b: 26.9, y: 4.55, z: 0, layer: 'room' });
+    // 2) THE UNDERGROUND RIVER (x 34-50): stepping stones, a waterfall behind
+    const stones = [36.2, 39.6, 43, 46.4]; for (const x of stones) { b.put(CYL, x, -.3, -.6, '#7a7090', [1, .9, .9]); plats.push({ a: x - 1, b: x + 1, y: .15, z: 0, layer: 'room' }); }
+    // 3) THE DINOSAUR CAVE (x 54-72): a giant skeleton in the rock of the back wall
+    { const bx = 63, by = 3.2, zz = zb + .2; for (let i = 0; i < 9; i++) b.put(SPH, bx - 5 + i * 1.1, by + Math.sin(i / 8 * Math.PI) * .8, zz, '#f4efe4', [.42, .3, .2]);
+      for (let i = 0; i < 6; i++) b.put(BOX, bx - 2.5 + i * .9, by - .9, zz, '#f4efe4', [.14, 1.6, .12], [0, 0, .25]);
+      b.put(SPH, bx + 5.6, by + .9, zz, '#f4efe4', [1.1, .7, .3]); b.put(SPH, bx + 5.9, by + 1.1, zz + .2, '#2a2440', .14); for (let i = 0; i < 4; i++) b.put(CONE, bx + 5.2 + i * .3, by + .35, zz + .15, '#ffffff', [.06, .22, .06], [Math.PI, 0, 0]);
+      for (const dx of [-2.2, 2.4]) { b.put(BOX, bx + dx, by - 2.2, zz, '#f4efe4', [.25, 2, .15]); b.put(BOX, bx + dx + .3, .15, zz, '#f4efe4', [.8, .2, .2]); }
+      for (let i = 0; i < 7; i++) b.put(SPH, bx - 6 - i * .9, by - .2 - i * .35, zz, '#f4efe4', [.32 - i * .03, .24 - i * .02, .16]); }
+    // 4) THE CRYSTAL GROTTO (x 74-88)
+    const CRY = [[75, '#9fe6ff', 1.8], [77.5, '#ff9fd8', 2.6], [80, '#c9a6ff', 2], [82.5, '#7dffb0', 2.9], [85, '#fff3a6', 2.2], [87.5, '#ff9a6a', 1.7]];
+    // 5) THE DIGGING WALL: a rock with the shovel; the earth wall (x 92-118, y -8 to 4)
+    b.put(SPH, 90, .3, -1.2, '#6a6080', [.8, .5, .7]);
+    b.put(BOX, DIG0 + NC / 2, (YB + 4) / 2, -3.05, '#3a2618', [NC, 4 - YB, .1]); // the back of the tunnels she digs
+    g.add(b.mesh(shinyMat())); for (const p of plats) { p.a += X0; p.b += X0; G.platforms.push(p); }
+    // glowing things (no light sources: bright paint), a ceiling of glow-worm lights
+    const glowG = new THREE.SphereGeometry(.06, 6, 4), gl = new THREE.InstancedMesh(glowG, new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false }), 160), m4 = new THREE.Matrix4(), cc = new THREE.Color();
+    for (let i = 0; i < 160; i++) { m4.makeTranslation(1 + (i * 7.37) % 88, H - .3 - (i * 1.7) % 2.6, zb + .2 + (i * .53) % 3); gl.setMatrixAt(i, m4); gl.setColorAt(i, cc.set(['#9fe6ff', '#b0ff7f', '#ffffff', '#c9a6ff'][i % 4])); } g.add(gl);
+    const fallM = new THREE.MeshBasicMaterial({ color: '#bfe8ff', transparent: true, opacity: .5, depthWrite: false }), fall = new THREE.Mesh(new THREE.PlaneGeometry(3, 8), fallM); fall.position.set(42, 3, zb + .35); g.add(fall);
+    const water = new THREE.Mesh(new THREE.BoxGeometry(RIV[1] - RIV[0], .1, D), new THREE.MeshBasicMaterial({ color: '#3a9ad8', transparent: true, opacity: .85 })); water.position.set((RIV[0] + RIV[1]) / 2, -.35, zc); g.add(water);
+    const cry = CRY.map(([x, c2, h], i) => { const m = new THREE.Mesh(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: c2, toneMapped: false })); m.scale.set(.5, h / 2, .5); m.position.set(x, h / 2, -2.2 - (i % 2) * .8); g.add(m); return { m, x, i, lit: 0, h }; });
+    const dino = new THREE.Mesh(new THREE.BoxGeometry(14, 6, .4), new THREE.MeshBasicMaterial({ visible: false })); dino.position.set(63, 3, zb + .3); g.add(dino);
+    const rawr = () => { Sound.tone ? (Sound.tone(90, .9, 'sawtooth', .05, .6), Sound.tone(70, .9, 'square', .03, .5, .2)) : Sound.click(); say('🦖 RAWR! A giant dinosaur skeleton, from long, long ago! It was as big as a bus!'); disc('dinobones'); };
+    tapObj(dino, rawr); for (const q of cry) tapObj(q.m, () => { q.lit = 1; Sound.bell ? Sound.bell([523, 587, 659, 784, 880, 988][q.i], .05) : Sound.chime(); disc('cavecrystals'); });
+    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.35, 0), new THREE.MeshBasicMaterial({ color: '#ff4f8a', toneMapped: false })); gem.position.set(24.8, 5.4, -1); g.add(gem); let gemGot = false;
+    // ---------- THE DIGGING WALL ----------
+    const X = k.world && (k.world.exp = k.world.exp || {}); const dug = new Set((X && X.digs) || []);
+    const idx = (c2, r) => r * NC + c2, filled = (c2, r) => c2 >= 0 && c2 < NC && r >= 0 && r < NR && !dug.has(idx(c2, r)), cellOf = (x, y) => [Math.floor(x - X0 - DIG0), Math.floor(y - YB)];
+    const dirtM = toy('#ffffff', { r: .9 }), dirt = new THREE.InstancedMesh(BOX, dirtM, NC * NR); dirt.frustumCulled = false; g.add(dirt);
+    const EARTH = ['#8a5a3a', '#7a4e32', '#9a6a44', '#6e4630'];
+    const S1 = new THREE.Matrix4(), SV = new THREE.Vector3(), SQ = new THREE.Quaternion(), SS = new THREE.Vector3();
+    const draw = () => { for (let r = 0; r < NR; r++) for (let c2 = 0; c2 < NC; c2++) { const i = idx(c2, r), on = filled(c2, r); S1.compose(SV.set(DIG0 + c2 + .5, YB + r + .5, -1.1), SQ, on ? SS.set(.99, .99, 3.8) : SS.set(0, 0, 0)); dirt.setMatrixAt(i, S1); dirt.setColorAt(i, cc.set(r >= NR - 1 ? '#5a7a3a' : EARTH[(c2 * 7 + r * 3) % 4])); } dirt.instanceMatrix.needsUpdate = true; dirt.instanceColor.needsUpdate = true; };
+    // gems hidden in the earth (the same places every time)
+    const GEMS = [[3, 7], [6, 5], [9, 9], [12, 3], [15, 6], [18, 2], [20, 8], [23, 4], [8, 1], [24, 9]].map(([c2, r], i) => { const m = new THREE.Mesh(new THREE.OctahedronGeometry(.28, 0), new THREE.MeshBasicMaterial({ color: ['#ff4f8a', '#4fb0ff', '#ffd23f', '#7dffb0', '#c9a6ff'][i % 5], toneMapped: false })); m.position.set(DIG0 + c2 + .5, YB + r + .5, .2); g.add(m); return { m, c2, r, got: ((X && X.digGems) || []).includes(i), i }; });
+    let walk = [], solidsL = [];
+    const physics = () => { for (const p of walk) { const i = G.platforms.indexOf(p); if (i >= 0) G.platforms.splice(i, 1); } for (const s2 of solidsL) { const i = G.solids.indexOf(s2); if (i >= 0) G.solids.splice(i, 1); } walk = []; solidsL = [];
+      for (let c2 = 0; c2 < NC; c2++) for (let r = 0; r < NR; r++) if (filled(c2, r)) { const x = X0 + DIG0 + c2, y = YB + r; if (!filled(c2, r + 1)) walk.push({ a: x, b: x + 1, y: y + 1, z: 0, layer: 'room', key: 'dig' }); solidsL.push({ a: x + .02, b: x + .98, top: y + 1, bottom: y, layer: 'room', key: 'dig', hopMax: filled(c2, r + 1) ? .01 : 1.1 }); } // (a single step she hops up by herself; a wall of earth stops her, to be dug)
+      walk.push({ a: X0 + DIG0, b: X0 + DIG0 + NC, y: YB, z: 0, layer: 'room', key: 'dig' }); for (const p of walk) G.platforms.push(p); for (const s2 of solidsL) G.solids.push(s2); };
+    draw(); physics();
+    const shovel = new THREE.Group(); { const sb = makeBatch(); sb.put(CYL, 0, .55, 0, '#a8743a', [.04, 1.1, .04]); sb.put(BOX, 0, 1.12, 0, '#a8743a', [.3, .06, .06]); sb.put(BOX, 0, -.08, 0, '#9aa3b0', [.28, .36, .04]); shovel.add(sb.mesh(shinyMat())); }
+    const restShovel = () => { shovel.position.set(90, .9, -1.2); shovel.rotation.set(0, 0, .5); g.add(shovel); }; restShovel(); const hand = new THREE.Group(); let holding = false, digT = 0, found = 0;
+    const take = () => { if (holding) { holding = false; restShovel(); if (G.holding === hand) G.hold(null); say('⛏️ The shovel goes back on its rock.'); return; } holding = true; hand.add(shovel); shovel.position.set(.05, -.1, 0); shovel.rotation.set(0, 0, -.6); G.hold && G.hold(hand); Sound.click && Sound.click();
+      say('⛏️ You have the shovel! Walk into the earth to dig a tunnel! ▼ digs down, ▲ digs up. Find the hidden gems!'); disc('cavesshovel'); };
+    const save = () => { if (!X) return; X.digs = [...dug]; X.digGems = GEMS.filter(q => q.got).map(q => q.i); k.saveSoon && k.saveSoon(); };
+    const digCells = list => { let n = 0; for (const [c2, r] of list) if (filled(c2, r) && r < NR - 0) { dug.add(idx(c2, r)); n++; } if (!n) return false; draw(); physics(); save();
+      Sound.tone ? Sound.tone(160 + Math.random() * 60, .12, 'square', .03, .7) : Sound.click(); const [c2, r] = list[0]; k.burst && k.burst(X0 + DIG0 + c2 + .5, YB + r + .5, .4, ['#8a5a3a', '#c8925a', '#6e4630'], 8, 1.6); disc('cavesdig'); return true; };
+    const here = () => cellOf(P.x, P.y + .05);
+    const digForward = () => { const [c2, r] = here(), f = P.facing || 1, cf = Math.floor(P.x + f * .75 - X0 - DIG0); return digCells([[cf, r], [cf, r + 1]]); };
+    const digDown = () => { const [c2, r] = here(); return digCells([[c2, r - 1]]); };
+    const digUp = () => { const [c2, r] = here(); return digCells([[c2, r + 2], [c2, r + 3]]); };
+    tapObj(dirt, h => { if (!holding) { say('⛏️ Take the shovel first! It is on the rock by the earth wall.'); return; } const i = h && h.instanceId; if (i == null) return; const c2 = i % NC, r = Math.floor(i / NC), x = X0 + DIG0 + c2 + .5, y = YB + r + .5; if (Math.hypot(x - P.x, y - (P.y + .7)) > 3) { say('⛏️ Walk closer to dig there!'); return; } digCells([[c2, r]]); });
+    tapObj(shovel, () => { if (!holding) take(); });
+    const inZone = () => P.layer === 'room' && P.x > X0 + DIG0 - 2.5;
+    return { W, H, D, yMin: YB, viewH: 7.5, door: 1.3, icon: '⛏️', name: 'the deep caves', out: 'the underground', hello: '⛏️ The Deep Caves! Glowing caves, an underground river, dinosaur bones, crystals... and a shovel to dig your own tunnels!', plats,
+      inter: [{ x: 21, icon: '🍄', action: 'Bounce mushroom', run: () => { P.x = X0 + 21; P.vy = 15; P.grounded = false; P.drift = 3; P.driftT = 1.2; Sound.boing && Sound.boing(); } }, { x: 63, icon: '🦖', action: 'Dinosaur bones', run: rawr }, { x: 81, icon: '💎', action: 'Crystals', run: () => { for (const q of cry) q.lit = 1; Sound.chime(); disc('cavecrystals'); } }, { x: 90, icon: '⛏️', action: 'Take the shovel', run: take, need: () => !holding },
+        { x: -1e9, icon: '⛏️', action: 'Dig!', run: () => { if (!digForward()) digDown(); }, dynamic: { get x() { return holding && inZone() ? P.x : -1e9; }, get y() { return P.y; } } }],
+      onLeave: () => { if (holding) { holding = false; restShovel(); if (G.holding === hand) G.hold(null); } },
+      exit: r0 => { P.layer = ''; P.ride = null; P.x = r0.back; P.y = G.ugFloor ?? -6; P.z = 0; P.groundZ = 0; P.vx = P.vy = 0; P.grounded = true; G.roomCam = null; k.world && (k.world.flash = 1); say('🕳️ Back in the underground!'); k.snap && k.snap(); },
+      ground: x => { const lx = x - X0; if (lx > RIV[0] && lx < RIV[1]) return -1.2; if (lx >= DIG0 - .01) return YB; return 0; },
+      update: (dt, t) => { gl.rotation.y = 0; fallM.opacity = .42 + Math.sin(t * 8) * .08; for (const q of cry) { q.lit = Math.max(0, q.lit - dt); q.m.scale.set(.5 + q.lit * .25, q.h / 2 * (1 + q.lit * .15), .5 + q.lit * .25); q.m.rotation.y = t * .3 + q.i;
+          if (!q.lit && P.grounded && Math.abs(P.x - X0 - q.x) < .4 && Math.abs(P.vx) > 1) { q.lit = 1; Sound.bell && Sound.bell([523, 587, 659, 784, 880, 988][q.i], .04); } }
+        if (!gemGot) { gem.rotation.y = t * 2; if (Math.abs(P.x - X0 - 24.8) < 2.2 && P.y > 4) { gemGot = true; gem.visible = false; Sound.chime(); say('💎 A glowing cave gem, way up on the ledge!'); disc('cavegem'); } }
+        if (P.y < -1 && P.x - X0 > RIV[0] && P.x - X0 < RIV[1]) { Sound.whoosh && Sound.whoosh(); k.burst && k.burst(P.x, -.3, .4, ['#bfe8ff', '#ffffff'], 14, 2); P.x = X0 + RIV[0] - .6; P.y = 0; P.vy = 0; say('💦 Splash! Back to the bank. Hop across on the stepping stones!'); }
+        for (const q of GEMS) { const open = !filled(q.c2, q.r); q.m.visible = open && !q.got; if (open && !q.got) { q.m.rotation.y = t * 2; if (Math.abs(P.x - q.m.position.x - X0) < .8 && Math.abs(P.y + .6 - q.m.position.y) < 1) { q.got = true; found++; Sound.chime(); k.burst && k.burst(q.m.position.x + X0, q.m.position.y, .4, ['#ffd23f', '#ffffff'], 12, 2); say(`💎 You dug up a hidden gem! ${GEMS.filter(z2 => z2.got).length} of ${GEMS.length}!`); disc('cavesgem'); save(); } } }
+        if (holding && inZone() && P.layer === 'room') {
+          // the ceiling of her tunnel: she cannot jump up through the earth
+          if (P.vy > 0) { const [c2, r] = cellOf(P.x, P.y + 1.45); if (filled(c2, r)) { P.y = YB + r - 1.45; P.vy = 0; } }
+          const st = k.stick ? k.stick() : { x: 0, y: 0 }; let want = null;
+          if (P.grounded && Math.abs(st.x) > .3) { const f = Math.sign(st.x), cf = Math.floor(P.x + f * .75 - X0 - DIG0), [, r] = here(); if (filled(cf, r) || filled(cf, r + 1)) want = digForward; }
+          else if (P.grounded && st.y < -.5) want = digDown; else if (P.grounded && st.y > .5) want = digUp;
+          if (want) { digT += dt; if (digT > .3) { digT = 0; want(); } } else digT = 0; }
+        else if (P.layer === 'room' && P.vy > 0 && P.x > X0 + DIG0) { const [c2, r] = cellOf(P.x, P.y + 1.45); if (filled(c2, r)) { P.y = YB + r - 1.45; P.vy = 0; } } } };
+  }
   let cur0 = 0; // (the x of the room being built)
-  const DEF = { igloo: { x: -5400, build: buildIgloo }, lighthouse: { x: -5600, build: buildLighthouse }, greenhouse: { x: -5800, build: buildGreenhouse } };
+  const DEF = { igloo: { x: -5400, build: buildIgloo }, lighthouse: { x: -5600, build: buildLighthouse }, greenhouse: { x: -5800, build: buildGreenhouse }, caves: { x: -6400, build: buildCaves } };
 
   function get(id) {
     if (R[id]) return R[id];
     const d = DEF[id], g = new THREE.Group(); g.position.set(d.x, 0, 0); g.visible = false; scene.add(g); cur0 = d.x;
     const r = d.build(g); r.g = g; r.x0 = d.x; r.items = [];
     const doorIt = { x: d.x + r.door, y: 0, layer: 'room', icon: '🚪', action: 'Go outside', hintY: 2.4, run: () => leave() }; G.interact.push(doorIt);
-    for (const it of r.inter) G.interact.push({ hintY: 2.4, layer: 'room', ...it, x: d.x + it.x, y: it.y || 0 });
+    for (const it of r.inter) { if (it.dynamic) { const dyn = it.dynamic, o = { hintY: 2.4, layer: 'room', icon: it.icon, action: it.action, run: it.run }; Object.defineProperty(o, 'x', { get: () => dyn.x }); Object.defineProperty(o, 'y', { get: () => dyn.y }); G.interact.push(o); continue; } G.interact.push({ hintY: 2.4, layer: 'room', ...it, x: d.x + it.x, y: it.y || 0 }); }
     k.compile && k.compile(g);
     return (R[id] = r);
   }
@@ -167,13 +265,13 @@ export function initRooms(k) {
     const r = get(id); if (cur) cur.g.visible = false; cur = r; r.back = back; r.g.visible = true; G.outsideX = back;
     P.ride = null; P.stair = null; P.layer = 'room'; P.x = r.x0 + r.door + .9; P.y = 0; P.z = 0; P.groundZ = 0; P.vx = P.vy = 0; P.grounded = true; P.facing = 1;
     G.tunnelBounds = [r.x0 - .3, r.x0 + r.W - .5];
-    G.roomCam = { x0: r.x0 - .1, x1: r.x0 + r.W + .1, y0: -.15, y1: r.H + .1, z: FRONT + .1 };
+    G.roomCam = { x0: r.x0 - .1, x1: r.x0 + r.W + .1, y0: r.yMin ?? -.15, y1: r.H + .1, z: FRONT + .1, viewH: r.viewH }; G.roomGround = r.ground ? x => r.ground(x) : null;
     k.world && (k.world.flash = 1); Sound.click && Sound.click(); Sound.chime && Sound.chime(); say(r.hello); disc(id + 'in'); k.snap && k.snap();
   }
-  function leave() { if (!cur) return; const r = cur; cur = null; r.onLeave && r.onLeave(); r.g.visible = false; G.roomCam = null; k.travelTo(r.back, '🚪', r.out); }
+  function leave() { if (!cur) return; const r = cur; cur = null; r.onLeave && r.onLeave(); r.g.visible = false; G.roomCam = null; G.roomGround = null; if (r.exit) r.exit(r); else k.travelTo(r.back, '🚪', r.out); }
   function update(dt, t) {
     if (!cur) return;
-    if (P.layer !== 'room') { cur.onLeave && cur.onLeave(); cur.g.visible = false; cur = null; G.roomCam = null; return; } // (she left another way: the map, 🏠...)
+    if (P.layer !== 'room') { cur.onLeave && cur.onLeave(); cur.g.visible = false; cur = null; G.roomCam = null; G.roomGround = null; return; } // (she left another way: the map, 🏠...)
     if (P.x < cur.x0 + .05) { leave(); return; } // walked out of the door
     cur.onTop && cur.onTop(); cur.update(dt, t);
   }

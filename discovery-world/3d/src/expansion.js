@@ -667,7 +667,7 @@ export function initExpansion(G, api) {
   //  open toward us like a dollhouse so she is always seen; she walks through it to the light at the other end and comes out
   //  at the far side. Walking back out the way she came takes her back. (The two ends are far apart in the world, so the
   //  tunnel is a 40 m walk of its own.)
-  const rooms = initRooms({ G, P, scene, Sound, say, disc, world, compile: g => api.compile && api.compile(g), travelTo: (...a) => api.travelTo(...a), snap: () => api.snap && api.snap() }); G.rooms = rooms; // (build 149) real rooms inside the igloo and the lighthouse
+  const rooms = initRooms({ G, P, scene, Sound, say, disc, world, compile: g => api.compile && api.compile(g), travelTo: (...a) => api.travelTo(...a), snap: () => api.snap && api.snap(), stick: () => api.stick ? api.stick() : { x: 0, y: 0 }, saveSoon: () => api.saveSoon && api.saveSoon(), burst: (...a) => api.burst && api.burst(...a) }); G.rooms = rooms; // (build 149) real rooms inside the igloo and the lighthouse
   const TUN0 = -5000, TUNLEN = 40; let tunnel = null, tun = null;
   const tunnelArt = to => { const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d'); const sky = g.createLinearGradient(0, 0, 0, 256); sky.addColorStop(0, '#9fd8ff'); sky.addColorStop(1, '#fff6e0'); g.fillStyle = sky; g.fillRect(0, 0, 256, 256);
     g.fillStyle = '#7fd06a'; g.fillRect(0, 170, 256, 86);

@@ -6,6 +6,25 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 158 — THE DEEP CAVES and digging her own tunnels (the family's request)
+- "Make the underground underneath the ball pit way bigger, add different caves she can go through and explore, and a
+  shovel so she can dig her own cave tunnels she can actually explore." A glowing cave mouth at the far end of the
+  underground (x 5.6) leads into THE DEEP CAVES (rooms.js, 120 m long, its own camera that follows her up and down):
+  - the GLOW-WORM CAVE: a ceiling of glowing lights, stalactites, glowing mushrooms; a bounce mushroom throws her up onto a
+    high ledge with a glowing gem;
+  - the UNDERGROUND RIVER: stepping stones across, a waterfall behind; falling in splashes her back to the bank (no losing);
+  - the DINOSAUR CAVE: a giant skeleton in the rock (tap: RAWR); the CRYSTAL GROTTO: big crystals that chime (tap or walk by);
+  - THE DIGGING WALL: she takes the SHOVEL (in her hand) and digs into a wall of earth 26 m wide and 12 m deep: walking into
+    the earth digs forward (two bits, her height), ▼ digs down (she falls into the hole), ▲ digs up, a tap on the earth
+    digs there, 🐾 "Dig!" digs. What she digs is really gone: she walks, falls and climbs (single steps, by herself)
+    through her own tunnels; the earth is the tunnel's ceiling (no jumping through it). Ten gems hide in the earth. Her
+    tunnels and gems are kept in the saved game (`world.exp.digs`, `world.exp.digGems`).
+- Engine: `G.roomGround` (a room's ground below its floor: the river, the digging wall) and `roomCam.viewH` (a big room
+  shows part of itself and follows her) in main.js; dynamic 🐾 buttons in rooms; the earth is one instanced mesh; its walls
+  and floors are rebuilt only when she digs.
+- New test `tests/caves.cjs` (14 checks): all passed, drawn and with `&norender`. Pictures: `caves-glow.jpg`,
+  `caves-dino.jpg`, `caves-dig.jpg`.
+
 ## Checkpoint: build 157 — into the greenhouse; the pond off its door (the family's picture and request)
 - **Overlap:** Lab Gardens' colour pond (r 3 at 684, -4.9) ran into the front of the first greenhouse and right across its
   door. It is now beside the greenhouse, smaller (676, -3.8, r 2.1), with Hoppy the frog moved to its edge; checked: it
