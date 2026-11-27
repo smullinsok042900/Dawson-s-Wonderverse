@@ -6,6 +6,13 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 163 — a way back down from the top of the lighthouse (the family's report)
+- "There's no way to go back down the stairs in the lighthouse": the lamp-room floor covered the whole tower, so at the top
+  she could not get back onto the stairs. Now the lamp room is open at its left end, where a yellow SLIDE POLE goes all the
+  way down to the ground floor: walking off that end, tapping the pole or 🐾 "Slide down the pole" slides her down
+  ("Wheee!"). The stairs up are unchanged.
+- `tests/insides.cjs`: a new check (walk off the lamp room's left end: down the pole to the ground).
+
 ## Checkpoint: build 162 — fly the hot-air balloon (every activity hands-on: Balloon Hills)
 - Standing next to the hot-air balloon, a tap (or 🐾) puts her in the basket: HOLD ▲ to fire the burner (a flame, a roar)
   and it rises; let go and it slows and sinks gently; ◀ ▶ drift with the wind. Three stars float at different heights (low,
