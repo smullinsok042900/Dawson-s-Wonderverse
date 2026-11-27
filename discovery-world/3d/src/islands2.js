@@ -22,6 +22,28 @@ const NUM = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'];
 const palm = (b, x, z, h = 5) => { b.put(CYL, x, h / 2, z, '#a07a4a', [.22, h, .22], [0, 0, .1]); for (let i = 0; i < 6; i++) b.put(LEAF, x + .3 + Math.cos(i) * 1.2, h + .1, z + Math.sin(i), '#4fcf6a', [1.4, .2, .45], [0, i, -.35]); };
 const kitOf = c => ({ add: c.add, Sound: c.Sound, api: c.api, tapIt: c.tapIt, U: c.U, P: c.P, G: c.G, say: c.say, disc: id => c.api.discover && c.api.discover(id) });
 
+// (build 165, the family's report: "they don't even look like turtles") A REAL TURTLE: a domed shell with a rim and a pattern of
+//  plates on top, a pale belly, a head on a neck with big friendly eyes, pink cheeks and a smile, four flippers that paddle,
+//  a little tail. One batched mesh for the body, the flippers separate so they can move. Facing +x, about 2 m long at size 1.
+function turtleModel(size = 1, shell = '#4a8a3a', plate = '#7ab84a', skin = '#8fcf6a') {
+  const g = new THREE.Group(), b = K.makeBatch();
+  b.put(SPH, 0, .28, 0, '#e8d89a', [1.05, .22, .78]);                                  // the belly
+  b.put(SPH, 0, .4, 0, '#2f6a2a', [1.2, .42, .9]);                                    // the shell's rim
+  b.put(SPH, 0, .46, 0, shell, [1.12, .5, .82]);                                       // the domed shell
+  for (const x of [-.42, 0, .42]) b.put(SPH, x, .92, 0, plate, [.27, .07, .22]);      // the plates down the middle
+  for (const sx of [-.5, -.17, .17, .5]) for (const sz of [-1, 1]) b.put(SPH, sx, .78, sz * .42, plate, [.22, .07, .18], [sz * .45, 0, 0]); // and down the sides
+  b.put(SPH, 1.02, .42, 0, skin, [.26, .2, .22]);                                      // the neck
+  b.put(SPH, 1.36, .55, 0, skin, [.36, .3, .3]);                                       // the head
+  for (const z of [-.14, .14]) { b.put(SPH, 1.6, .68, z, '#ffffff', .1); b.put(SPH, 1.68, .69, z, '#1a1a24', .055); b.put(SPH, 1.71, .72, z + .02, '#ffffff', .018); b.put(SPH, 1.58, .53, z * 1.7, '#ff9fb8', .05); } // big eyes and pink cheeks
+  b.put(new THREE.TorusGeometry(.08, .016, 4, 10, Math.PI), 1.69, .52, 0, '#2a1a1a', 1, [0, Math.PI / 2, Math.PI]); // a smile
+  b.put(CONE, -1.18, .38, 0, skin, [.1, .3, .1], [0, 0, Math.PI / 2]);                 // the tail
+  const body = b.mesh(K.shinyMat()); g.add(body);
+  const fb = K.makeBatch(); fb.put(SPH, 0, 0, 0, skin, [.5, .07, .22]); const fg = fb.geometry(), flips = [];
+  for (const [x, z, sc] of [[.55, .82, 1], [.55, -.82, 1], [-.72, .66, .65], [-.72, -.66, .65]]) { const m = new THREE.Mesh(fg, K.shinyMat()); m.position.set(x, .3, z); m.scale.setScalar(sc); m.rotation.y = z > 0 ? -.45 : .45; g.add(m); flips.push(m); }
+  g.scale.setScalar(size); g.userData.flips = flips;
+  g.userData.paddle = t => { for (const [i, m] of flips.entries()) { m.rotation.x = Math.sin(t * 5 + (i % 2) * Math.PI) * .45; m.rotation.z = Math.sin(t * 5 + (i < 2 ? 0 : 1.5)) * .25; } };
+  return g;
+}
 // a sandy start by the sea, then the island's own ground; sea along the back
 function* ground(c, sand, land, hills = 6, dig = null) {
   const { matte, X, PW, MID, props } = c;
@@ -88,29 +110,35 @@ export const volcanoworld = { all(k) { buildVolcanoCoaster(k); }, sections: [k =
 // =================== 🐢 TURTLE BEACH ===================
 export function* turtleLanding(c) {
   const { props, X, add, U, say, Sound, api } = c, k = kitOf(c);
-  const H = yield* ground(c, '#f0d8a0', ['#f0d8a0', '#e8cc90', '#d8e8a0'], 3); yield;
-  for (const [x, z] of [[X + 2, -5], [X + 14, -6], [X + 40, -6.5], [X + 70, -6]]) palm(props, x, z, 5 + (x % 3));
+  // (build 165, the family's report: "the water isn't even visible") THE SEA along the whole beach: the sand slopes down under
+  //  blue water from just behind the path, with a white foam line at the edge and waves rolling in
+  const H = yield* ground(c, '#f0d8a0', ['#f0d8a0', '#e8cc90', '#d8e8a0'], 3, (x, z) => z < -4.4 ? Math.min(6, (-z - 4.4) * .7) + 3 * K.sstep(-12, -40, z) : 0); yield;
+  { const sea = new THREE.Mesh(new THREE.PlaneGeometry(460, 130), new THREE.MeshBasicMaterial({ color: '#3fb4e8', transparent: true, opacity: .86 })); sea.rotation.x = -Math.PI / 2; sea.position.set(X + 180, .12, -69); add(sea);
+    const foamM = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .85 }), foam = new THREE.Mesh(new THREE.PlaneGeometry(460, .55), foamM); foam.rotation.x = -Math.PI / 2; foam.position.set(X + 180, .14, -4.6); add(foam);
+    const waves = [0, 1, 2].map(n => { const w = new THREE.Mesh(new THREE.PlaneGeometry(460, .22), new THREE.MeshBasicMaterial({ color: '#dff6ff', transparent: true, opacity: .55 })); w.rotation.x = -Math.PI / 2; w.position.set(X + 180, .13, -9 - n * 5); add(w); return w; });
+    U.push((dt, t) => { foam.position.z = -4.6 + Math.sin(t * 1.1) * .25; for (const [n, w] of waves.entries()) { const k2 = ((t * .15 + n / 3) % 1); w.position.z = -16 + k2 * 11; w.material.opacity = .55 * Math.sin(k2 * Math.PI); } }); }
+  for (const [x, z] of [[X + 2, -3.6], [X + 14, -3.8], [X + 40, -3.9], [X + 70, -3.7]]) palm(props, x, z, 5 + (x % 3));
   // THE TURTLE NESTS (x +28, +44, +60): tap one and three baby turtles hatch and waddle down to the sea
   const babyM = new THREE.MeshStandardMaterial({ color: '#3f8f4a', roughness: .6 }), nests = [X + 28, X + 44, X + 60].map((x, i) => {
     props.put(SPH, x, 0, -2.2, '#e8cc90', [.9, .3, .7]); for (let j = 0; j < 3; j++) props.put(SPH, x - .3 + j * .3, .22, -2.2, '#ffffff', .14);
-    const babies = [0, 1, 2].map(j => { const m = new THREE.Mesh(SPH, babyM); m.scale.set(.22, .1, .26); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+    const babies = [0, 1, 2].map(j => { const m = turtleModel(.32, '#3f7a3a', '#6aa84a', '#9fdf7a'); m.visible = false; m.userData.dynamic = true; add(m); return m; }); void babyM; /* (build 165: real little turtles) */
     return { x, i, babies, t: -1 }; });
   let hatched = 0; const hatch = q => { if (q.t >= 0) return; q.t = 0; Sound.twinkle ? Sound.twinkle() : Sound.chime(); say('🐢 Crack crack! Baby turtles! One, two, three! Off they go to the sea!'); k.disc('turtlenest'); if (++hatched === 3) { k.disc('turtlehatch'); setTimeout(() => say('🐢 All the baby turtles are safe in the sea! Hooray!'), 2500); } };
   for (const q of nests) c.G.interact.push({ x: q.x, y: 0, layer: 'space', icon: '🥚', action: 'Turtle nest', hintY: 1.6, need: () => q.t < 0, run: () => hatch(q) });
-  U.push(dt => { for (const q of nests) { if (q.t < 0) continue; q.t += dt; for (const [j, m] of q.babies.entries()) { const u = Math.max(0, Math.min(1, (q.t - j * .4) / 4)); m.visible = u > 0 && u < 1; m.position.set(q.x - .3 + j * .3 + Math.sin(q.t * 8 + j) * .08, .08, -2.2 - u * 9); m.rotation.y = Math.PI; } } });
+  U.push(dt => { for (const q of nests) { if (q.t < 0) continue; q.t += dt; for (const [j, m] of q.babies.entries()) { const u = Math.max(0, Math.min(1, (q.t - j * .4) / 4)); m.visible = u > 0 && u < 1; m.position.set(q.x - .3 + j * .3 + Math.sin(q.t * 8 + j) * .08, u > .3 ? Math.max(-.08, .02 - (u - .3) * .3) : .02, -2.2 - u * 9); m.rotation.set(0, Math.PI / 2, Math.sin(q.t * 9 + j) * .12); m.userData.paddle(q.t * 1.6 + j); } } }); /* (heading down the sand to the sea, paddling, and into the water) */
   return H;
 }
 function turtleRide(k) { // area 2: THE BIG SEA TURTLE: she rides on its back along the shore, past starfish stars
   const s = k.s0, b = K.makeBatch(), P = k.P, tx = s + 10;
-  b.put(BOX, s + 45, -.03, -3.5, '#4fb0e8', [80, .06, 3]); // the shallow water along the shore
-  const turtle = new THREE.Group(); turtle.position.set(tx, 0, -2.6); turtle.userData.dynamic = true; k.add(turtle);
-  { const tb = K.makeBatch(); tb.put(SPH, 0, .55, 0, '#3f8f4a', [1.6, .55, 1.1]); for (let i = 0; i < 6; i++) tb.put(SPH, Math.cos(i) * .7, .85, Math.sin(i) * .5, '#5fbf5a', [.4, .12, .32]); tb.put(SPH, 1.7, .55, 0, '#7fbf6a', [.42, .36, .36]); tb.put(SPH, 1.95, .65, .2, '#2a2a38', .06); tb.put(SPH, 1.95, .65, -.2, '#2a2a38', .06);
-    for (const [x, z] of [[.9, .9], [.9, -.9], [-.9, .9], [-.9, -.9]]) tb.put(SPH, x, .3, z, '#7fbf6a', [.45, .12, .25]); turtle.add(tb.mesh(K.shinyMat())); }
-  const path = [[tx, 1.2], [tx + 15, 1.5], [tx + 30, 1.1], [tx + 45, 1.6], [tx + 60, 1.2], [tx + 72, 1.2]];
-  let riding = false; const ride = () => { if (riding || P.ride) return; riding = true; k.Sound.whoosh && k.Sound.whoosh(); k.say('🐢 Hop on the big sea turtle! Off we swim along the shore! Catch the starfish!', true);
-    pathRide(k, path, { z: -2.4, speed: 4.5, done: () => { riding = false; P.y = 0; k.say('🐢 Thank you, big turtle! What a ride!', true); k.disc && k.disc('turtleride'); } }); };
+  // (build 165) THE BIG SEA TURTLE (a real turtle model, 3 m long) waits in the shallow water; she rides on its shell as it swims
+  //  out through the sea and along the beach, paddling, bobbing on the waves, a wake of foam behind it
+  const TZ = -6.4, turtle = turtleModel(1.55); turtle.position.set(tx, -.35, TZ); turtle.userData.dynamic = true; k.add(turtle);
+  const path = [[tx, .95], [tx + 15, 1.15], [tx + 30, .9], [tx + 45, 1.2], [tx + 60, .95], [tx + 72, .95]];
+  let riding = false; const ride = () => { if (riding || P.ride) return; riding = true; k.Sound.whoosh && k.Sound.whoosh(); k.say('🐢 Hop on the big sea turtle! Off we swim through the sea! Catch the starfish!', true);
+    pathRide(k, path, { z: TZ, speed: 4.5, done: () => { riding = false; P.y = 0; P.z = 0; P.x = tx + 72; k.say('🐢 Thank you, big turtle! What a swim!', true); k.disc && k.disc('turtleride'); } }); };
   k.G.interact.push({ x: tx, y: 0, layer: 'space', icon: '🐢', action: 'Ride the turtle!', hintY: 2.4, run: ride }); k.tapIt(turtle, ride);
-  k.U.push((dt, t) => { if (riding) { turtle.position.set(P.x, -.55 + Math.sin(t * 3) * .05, -2.6); turtle.rotation.z = Math.sin(t * 2) * .05; } else { turtle.position.set(tx, Math.sin(t * 1.5) * .03, -2.6); turtle.rotation.z = 0; } });
+  k.U.push((dt, t) => { if (riding) { turtle.position.set(P.x - .2, -.4 + Math.sin(t * 2.4) * .06, TZ); turtle.rotation.set(Math.sin(t * 1.7) * .03, 0, Math.sin(t * 2) * .04); turtle.userData.paddle(t * 1.3); if (Math.random() < dt * 8 && k.api.burst) k.api.burst(P.x - 2.4, .15, TZ, ['#ffffff', '#dff6ff'], 2, .8); }
+    else { turtle.position.set(tx, -.38 + Math.sin(t * 1.5) * .04, TZ); turtle.rotation.set(0, Math.sin(t * .4) * .15, 0); turtle.userData.paddle(t * .4); } });
   for (const [i, x] of [tx + 15, tx + 32, tx + 50].entries()) star(k, b, x, 2.5, 'starfish' + i);
   k.add(b.mesh(K.shinyMat()));
 }

@@ -828,7 +828,7 @@ export function initSpace(G, api) {
     const [, [, c2], , gas] = PLACES[PLACES.findIndex(p => p[0] === id)];
     // (build 138) all 17 in ONE batched mesh with one shared material: before, each was its own mesh with its own new material
     // (up to 17 extra draw calls in view on every rocky planet)
-    if (!gas) { const rb = SK.makeBatch(); for (let j = 0; j < 9; j++) rb.put(ROCK_BALL, X0 + 8 + j * 11.5 + (j % 3) * 2, -.15, -6 - (j % 3) * 2.6, c2, [1.2 + (j % 3) * .6, .22, 1.2 + (j % 3) * .6]); for (let j = 0; j < 8; j++) rb.put(ROCK_BALL, X0 + 12 + j * 12.5, .2, -7.5 - (j % 2) * 3, c2, [.35 + (j % 3) * .2, .28 + (j % 3) * .15, .35 + (j % 3) * .2]); sub.add(rb.mesh(SK.paintMat())); } /* (the shared rough paint: never disposed with a place) */
+    if (!gas && !ISLAND[id]) { /* (build 165, the family's picture: on Turtle Beach these 'craters', in the island's green, looked like flat green blobs; islands have no craters) */ const rb = SK.makeBatch(); for (let j = 0; j < 9; j++) rb.put(ROCK_BALL, X0 + 8 + j * 11.5 + (j % 3) * 2, -.15, -6 - (j % 3) * 2.6, c2, [1.2 + (j % 3) * .6, .22, 1.2 + (j % 3) * .6]); for (let j = 0; j < 8; j++) rb.put(ROCK_BALL, X0 + 12 + j * 12.5, .2, -7.5 - (j % 2) * 3, c2, [.35 + (j % 3) * .2, .28 + (j % 3) * .15, .35 + (j % 3) * .2]); sub.add(rb.mesh(SK.paintMat())); } /* (the shared rough paint: never disposed with a place) */
     }, () => PLANET_EXTRA[id].sections[s - 1](k),
     () => { if (kits[id] !== K) return; sub.traverse(o => { if (o.isMesh) o.castShadow = false; }); api.compile && api.compile(sub); },
     () => { if (kits[id] !== K) return; K.g.add(sub); });

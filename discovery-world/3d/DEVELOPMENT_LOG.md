@@ -6,6 +6,16 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 165 — Turtle Beach made beautiful (the family's report: "terrible graphics, they don't look like turtles, no water")
+- **Real turtles** (`turtleModel` in islands2.js): a domed shell with a dark rim and a pattern of plates down the middle and
+  sides, a pale belly, a neck and a head with big friendly eyes (with a shine), pink cheeks and a smile, four flippers that
+  paddle, a little tail. The big sea turtle (3 m) and the baby turtles (now half as big again) use it.
+- **The sea**: the beach now has a sea along its whole length: the sand slopes down under blue water from just behind the
+  path, a white foam line rolls at the edge and waves roll in. The big turtle waits in the shallow water and SWIMS through the
+  sea with her on its shell (paddling, bobbing, a trail of foam); the baby turtles waddle down the sand and into the water.
+- **The flat green blobs** on the sand were the planets' "craters" in the island's green: islands no longer get craters.
+- Checked in pictures (desktop, software rendering) and `islands.cjs` (all passed); `volcano-coaster.cjs` still all passed.
+
 ## Checkpoint: build 164 — THE VOLCANO ISLAND ROLLER COASTER, in first person (the family's request)
 - **The ride** (one continuous 1.5 km track, about 1½ minutes; `src/volcano-course.js`, built by the same track builder as the
   Moon coaster): the station on Volcano Island → a long sweep to the volcano → THE GIANT CLIMB, a chain-lift spiral round the
