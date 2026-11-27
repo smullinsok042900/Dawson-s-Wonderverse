@@ -315,11 +315,11 @@ export function initSpace(G, api) {
         // stars are out).
         let press = 0, cool = 0; const NS = 5, st = [], starG = new THREE.OctahedronGeometry(.42, 0), stars = []; for (let q = 0; q < NS; q++) { const m = new THREE.Mesh(starG, lavaM); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); stars.push(m); }
         const top = () => vg.position.y + 5.6, launch = () => { st.length = 0; for (let q = 0; q < NS; q++) { const tx = x - 7 + q * 3.5 + (Math.random() - .5), tz = -.2 - Math.random() * .6; st.push({ x, y: top(), z: vz, tx, tz, ty: H(tx, tz) + .75, f: 0, dur: 1.6 + q * .18, got: false }); } stars.forEach(m => { m.visible = true; }); };
-        const pump = () => { if (erupt > 0 || cool > 0) return; cool = .35; press++; Sound.tone(90 + press * 30, .35, 'sawtooth', .04, .7); G.shake = Math.max(G.shake || 0, .1 + press * .05); api.burst(x, top(), vz, ['#8a7a6a', '#ff8a3a'], 3 + press * 2, 1 + press * .3);
+        const pump = () => { const now = performance.now(); if (erupt > 0 || now < cool) return; cool = now + 300; press++; // (a real-time pause, so a tap on a slow phone between frames still counts) Sound.tone(90 + press * 30, .35, 'sawtooth', .04, .7); G.shake = Math.max(G.shake || 0, .1 + press * .05); api.burst(x, top(), vz, ['#8a7a6a', '#ff8a3a'], 3 + press * 2, 1 + press * .3);
           if (press === 1) fact('🌋 Pump the volcano! Tap it again and again!', k === 0 ? 'venusvolcano' : null); else if (press < 5) say(['', '', '🌋 Rumble rumble!', '🌋 It\'s getting hot!', '🌋 One more!'][press]);
           if (press >= 5) { press = 0; erupt = 3; Sound.noise && Sound.noise(1, 120, 600, .06); G.shake = Math.max(G.shake || 0, .5); launch(); fact('🌋 BOOM! Venus has lots of volcanoes! Catch the lava stars!', 'venusvolcano'); } };
         tapIt(vg, pump, x, k === 0 ? 'venusvolcano' : null); if (k) G.interact.push({ x, y: 0, layer: 'space', run: pump, hintY: 2.4 });
-        U.push((dt, t) => { cool = Math.max(0, cool - dt); pool.position.y = 5.32 + press * .07; gl.scale.setScalar(5 + Math.sin(t * (2 + press * 2) + k) * (.6 + press * .2) + press * .6 + (erupt > 0 ? 4 : 0)); vg.position.x = x + Math.sin(t * 40) * .015 * press;
+        U.push((dt, t) => { pool.position.y = 5.32 + press * .07; gl.scale.setScalar(5 + Math.sin(t * (2 + press * 2) + k) * (.6 + press * .2) + press * .6 + (erupt > 0 ? 4 : 0)); vg.position.x = x + Math.sin(t * 40) * .015 * press;
           if (Math.random() < dt * 1.2) api.burst(x, top(), vz, ['#8a7a6a', '#b8a890'], 1, .6);
           if (erupt > 0) { erupt -= dt; if (Math.random() < dt * 34) api.burst(x + (Math.random() - .5), top(), vz, ['#ff6a2a', '#ffd23f', '#ff3a00'], 3, 4.2); }
           if (!st.length) return;

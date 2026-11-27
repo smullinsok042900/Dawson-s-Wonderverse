@@ -14,7 +14,9 @@ are in `PERFORMANCE_LOG.md`.
   throws FIVE GLOWING LAVA STARS in high arcs that land beside the path; she walks and jumps to each to collect it (a rising
   note each); all five: "You caught all the lava stars!" and a party. Both volcanoes do it.
 - The stars are five small meshes with the crater's own lava material (no new shader), drawn only while stars are out.
-- **Tested** (desktop, software rendering): `tests/venus-volcano.cjs` (new): RESULTS_TEST.
+- **Tested** (desktop, software rendering): `tests/venus-volcano.cjs` (new): 5/5 drawn and with `?norender`. The first drawn run
+  found a real bug: the pause between taps counted down only on drawn frames, so at 1–2 frames a second (or on a slow phone)
+  a tap between frames was ignored. The pause now uses the real clock.
 - RESULTS_SPEED_SMOKE
 
 ## Checkpoint: build 166 — DRIVE THE MARS ROVER (ATTRACTIONS row 18: the older small planet activities)
