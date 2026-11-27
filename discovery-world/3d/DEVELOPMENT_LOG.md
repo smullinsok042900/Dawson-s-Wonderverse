@@ -13,7 +13,8 @@ are in `PERFORMANCE_LOG.md`.
   "a little lower with ▼"). Three swishes: "You are a super shooter!" The hoop is reached by a wide range of the barrel's
   swing (about a quarter of it), so it is easy to get.
 - New test `tests/toytown-cannon.cjs` (4 checks; it fires, listens to the hint and adjusts, like a child): passed with
-  `&norender` (three swishes in six shots).
+  `&norender` (three swishes in six shots); drawn too. **Full smoke test 345/345** (desktop, software rendering). Speed: Toy
+  Town the same (`PERFORMANCE_LOG.md`).
 
 ## Checkpoint: build 160 — roll the snowballs for the snowman (every activity hands-on: Frosty Peaks)
 - Tapping the little snowball (or 🐾) now gives it to her to PUSH along the snow: the further it rolls, the bigger it grows
