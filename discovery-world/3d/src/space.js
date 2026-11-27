@@ -930,7 +930,7 @@ export function initSpace(G, api) {
     if (P.layer !== 'space') { if (here) { if (groups[here]?.userData.leave) groups[here].userData.leave(); here = null; G.spaceG = 1; show(); unbuildOthers(null); } return; }
     const i = PLACES.findIndex(p => p[0] === here); if (i < 0) return;
     const X = placeX(i), MID = X + placeWidth(here) / 2, cx = api.camX(), cy = api.camY ? api.camY() : P.y;
-    sky.mesh.position.set(cx, cy, 0); sky.U.uTime.value = t;
+    { const cp = G.camOverride && G.camera ? G.camera.position : null; sky.mesh.position.set(cp ? cp.x : cx, cp ? cp.y : cy, cp ? cp.z : 0); } /* (build 164: a ride camera far behind the path (the volcano coaster's climb, 200 m back and 74 m up) was outside the sky dome: a black disc. The dome now follows the ride camera itself) */ sky.U.uTime.value = t;
     for (const s of skies[here] || []) { s[0].position.x = s[1] + (cx - MID) * .93 + (s[0].userData.off || 0); if (!s[0].userData.off) s[0].position.y = s[2] + cy * .9; }
     dust.update(dt, t, cx, cy);
     if (boost > 0) { boost = Math.max(0, boost - dt * 2.5); api.boost && api.boost(boost); }

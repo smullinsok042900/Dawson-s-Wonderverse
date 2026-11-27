@@ -506,7 +506,7 @@ export function initMultiplayer(G, api) {
   const seatAt = (C, iFront, k, out) => { const i = Math.max(0, iFront - Math.min(2, k) * C.CAR_GAP), j = Math.min(C.N - 1, Math.floor(i)), p = C.pos, u = C.up;
     out[0] = p[j * 3] + u[j * 3] * .55; out[1] = p[j * 3 + 1] + u[j * 3 + 1] * .55 - .25; out[2] = p[j * 3 + 2] + u[j * 3 + 2] * .55; if (k > 2) out[2] += .6; return out; };
   function coasterTogether(now) {
-    const C = G.moonCoaster; const riders = [];
+    const here = G.space && G.space.here ? G.space.here() : null, C = (here && G.coasters && G.coasters[here]) || G.moonCoaster; const riders = []; /* (build 164) riding together on whichever coaster is here: the Moon's or Volcano Island's */
     for (const o of others.values()) { o.snap = null; if (!C || !C.ready || !C.CAR_GAP || P.layer !== 'space') { o.ci = null; continue; }
       const st = o.interp.at(now); if (!st || !st.r || st.b || st.l !== 'space') { o.ci = null; continue; }
       const [i, d] = nearI(C, st.x, st.y, st.z, o.ci); if (i < 0 || d > 3) { o.ci = null; continue; } o.ci = i; riders.push(o); }

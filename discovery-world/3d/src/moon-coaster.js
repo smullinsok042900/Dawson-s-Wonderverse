@@ -163,7 +163,7 @@ export function buildMoonCoaster(k) {
     G.camOverride = { showcase: true, pos: [px + (cx - px) * e2, py + (cy - py) * e2, pz + (cz - pz) * e2], look: [P.x + (lx - P.x) * e2, P.y + 2 + (ly - P.y - 2) * e2, (lz) * e2] };
     if (show >= T) { G.camOverride = null; show = -2; }
   });
-  G.moonCoaster = C;
+  G.moonCoaster = C; G.coasters = G.coasters || {}; G.coasters.moon = C;
   return C;
 }
 function Y0() { return new THREE.Vector3(0, 1, 0); }

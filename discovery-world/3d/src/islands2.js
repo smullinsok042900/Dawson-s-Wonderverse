@@ -13,6 +13,8 @@
 import * as THREE from 'three';
 import * as K from './spacekit.js';
 import { pathRide, star } from './upside.js';
+import { buildVolcanoCoaster } from './volcano-coaster.js';
+import { LAGOON, VOLCANO } from './volcano-course.js';
 
 const BOX = new THREE.BoxGeometry(1, 1, 1), CYL = new THREE.CylinderGeometry(1, 1, 1, 14), SPH = new THREE.SphereGeometry(1, 14, 10), CONE = new THREE.ConeGeometry(1, 1, 14), LEAF = new THREE.SphereGeometry(1, 8, 6);
 for (const g of [BOX, CYL, SPH, CONE, LEAF]) g.userData.shared = true;
@@ -21,10 +23,10 @@ const palm = (b, x, z, h = 5) => { b.put(CYL, x, h / 2, z, '#a07a4a', [.22, h, .
 const kitOf = c => ({ add: c.add, Sound: c.Sound, api: c.api, tapIt: c.tapIt, U: c.U, P: c.P, G: c.G, say: c.say, disc: id => c.api.discover && c.api.discover(id) });
 
 // a sandy start by the sea, then the island's own ground; sea along the back
-function* ground(c, sand, land, hills = 6) {
+function* ground(c, sand, land, hills = 6, dig = null) {
   const { matte, X, PW, MID, props } = c;
   const H = yield* K.terrainSteps(matte, { cx: MID, wNear: PW + 100, nx: 180, nz: 60,
-    height: (x, z) => (K.fbm2(x * .05, z * .05, 3) - .5) * .5 + K.sstep(-12, -40, z) * K.fbm2(x * .03 + 3, z * .03, 3) * hills,
+    height: (x, z) => (K.fbm2(x * .05, z * .05, 3) - .5) * .5 + K.sstep(-12, -40, z) * K.fbm2(x * .03 + 3, z * .03, 3) * hills - (dig ? dig(x, z) : 0),
     color: (x, z, h, ny, o) => { const s = K.sstep(X + 16, X + 4, x); K.ramp(land, .3 + K.fbm2(x * .2, z * .2, 3) * .5, o); if (s > 0) o.lerp(K.col(sand), s); o.multiplyScalar(.85 + .2 * ny); } });
   props.put(BOX, X - 30, -.05, -6, '#2f8fd8', [60, .1, 40]); // the sea behind her boat
   return H;
@@ -33,10 +35,11 @@ function* ground(c, sand, land, hills = 6) {
 // =================== 🌋 VOLCANO ISLAND ===================
 export function* volcanoLanding(c) {
   const { props, X, MID, add, U, P, say, Sound, api } = c, k = kitOf(c);
-  const H = yield* ground(c, '#3a3540', ['#4a4450', '#5a6a4a', '#6a7a4a'], 4); yield;
-  // the big volcano behind everything: a tall cone with a glowing top, puffing smoke
-  props.put(CONE, MID + 30, 22, -150, '#5a5058', [70, 46, 40]); props.put(CONE, MID + 30, 40, -150, '#4a4048', [18, 10, 12]);
-  c.G.volcanoX = MID + 30; const glow = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 1, 20), new THREE.MeshBasicMaterial({ color: '#ff8a1e', toneMapped: false })); glow.position.set(MID + 30, 45.2, -150); add(glow);
+  // (build 164) the island's ground has the LAGOON dug into it (the coaster dives into it); THE VOLCANO itself is the coaster's
+  //  hollow volcano (volcano-coaster.js), built with the island
+  const dig = (x, z) => { const d = Math.hypot(x - (X + LAGOON.cx), z - LAGOON.cz) / (LAGOON.r + 4); return d < 1 ? (LAGOON.depth + 2) * (1 - d * d) : 0; };
+  const H = yield* ground(c, '#3a3540', ['#4a4450', '#5a6a4a', '#6a7a4a'], 4, dig); yield;
+  c.G.volcanoX = X + VOLCANO.cx; const glow = { scale: { setScalar() { } } };
   for (const x of [X + 3, X + 12]) palm(props, x, -5);
   for (let i = 0; i < 30; i++) props.put(SPH, X + 18 + i * 10 + (i % 3) * 2, .3, -4 - (i % 4) * 2, ['#2a2630', '#3a3540', '#4a4450'][i % 3], [.9, .5, .7]); // lava rocks
   // THE HOT SPRING (x +28 to +36): warm water, steam; walk in or tap it
@@ -44,7 +47,7 @@ export function* volcanoLanding(c) {
   let told = false; const soak = () => { Sound.whoosh && Sound.whoosh(); api.burst(X + 32, .6, -1.6, ['#ffffff', '#bfe8ff'], 14, 1.6); say('♨️ A warm hot spring! The volcano warms the water. Ahhh!'); k.disc('hotspring'); };
   c.G.interact.push({ x: X + 32, y: 0, layer: 'space', icon: '♨️', action: 'Warm hot spring', hintY: 2, run: soak });
   U.push((dt, t) => { if (Math.random() < dt * 4) api.burst(X + 31 + Math.random() * 2, .4, -1.6, ['#ffffff', '#e8f4ff'], 1, .8); glow.scale.setScalar(1 + Math.sin(t * 2) * .05);
-    if (Math.random() < dt * 1.5) api.burst(MID + 30 + (Math.random() - .5) * 8, 47, -150, ['#bfbfc8', '#e8e8f0', '#9a9aa8'], 2, 3);
+    if (Math.random() < dt * 1.5) api.burst(X + VOLCANO.cx + (Math.random() - .5) * 8, VOLCANO.h + 2, VOLCANO.cz, ['#bfbfc8', '#e8e8f0', '#9a9aa8'], 2, 3);
     const inSpring = P.layer === 'space' && Math.abs(P.x - (X + 32)) < 3 && P.y < .5; if (inSpring && !told) { told = true; soak(); } if (!inSpring) told = false; });
   // three lava-rock stepping stones with stars (x +50 to +66)
   const sb = K.makeBatch(); for (const [j, x] of [X + 50, X + 56, X + 62].entries()) { sb.put(CYL, x, (.6 + j * .7) / 2, -1, '#3a3540', [1.3, .6 + j * .7, 1.1]); c.G.platforms.push({ a: x - 1.3, b: x + 1.3, y: .6 + j * .7, layer: 'space', z: -1, step: true, stepMax: .8 }); star(k, sb, x, 1.9 + j * .7, 'lavastar' + j); }
@@ -64,7 +67,7 @@ function lookout(k) { // area 2: THE LAVA-ROCK CLIMB, THE LOOKOUT and THE ROCK S
   let sliding = false; const slide = () => { if (sliding || P.ride) return; sliding = true; k.Sound.whoosh && k.Sound.whoosh(); k.say('🌋 The rock slide! Wheee!', true); pathRide(k, sp, { z: -1.3, speed: 8, done: () => { sliding = false; k.disc && k.disc('rockslide'); } }); };
   k.G.interact.push({ x: tx + 4, y: TOP, layer: 'space', icon: '🛝', action: 'Rock slide!', hintY: 2.4, run: slide });
   k.U.push((dt, t) => { if (!sliding && P.grounded && !P.ride && Math.abs(P.y - TOP) < .15 && P.x > tx + 3.6 && P.vx > .5) slide();
-    if (rumble > 0) { rumble -= dt; if (Math.random() < dt * 20) k.api.burst((k.G.volcanoX || s) + (Math.random() - .5) * 10, 48, -150, ['#ff4f6a', '#ffd23f', '#4fb0ff', '#3fc65a', '#b07cff'], 3, 4); } });
+    if (rumble > 0) { rumble -= dt; if (Math.random() < dt * 20) k.api.burst((k.G.volcanoX || s) + (Math.random() - .5) * 10, VOLCANO.h + 3, VOLCANO.cz, ['#ff4f6a', '#ffd23f', '#4fb0ff', '#3fc65a', '#b07cff'], 3, 4); } });
   star(k, b, s + 18, 6.4, 'climbstar'); star(k, b, tx + 12, 4.6, 'slidestar');
   k.add(b.mesh(K.shinyMat()));
 }
@@ -80,7 +83,7 @@ function geyser(k) { // area 3: THE GEYSER: tap it (or step on it) and it shoots
   star(k, b, gx, 12, 'geyserstar'); for (const x of [s + 60, s + 75]) palm(b, x, -4);
   k.add(b.mesh(K.shinyMat())); k.rocketSign(s + 100);
 }
-export const volcanoworld = { sections: [k => lookout(k), k => geyser(k)] };
+export const volcanoworld = { all(k) { buildVolcanoCoaster(k); }, sections: [k => lookout(k), k => geyser(k)] }; // (build 164) THE VOLCANO ROLLER COASTER, built with the island
 
 // =================== 🐢 TURTLE BEACH ===================
 export function* turtleLanding(c) {

@@ -68,8 +68,8 @@ export const COURSE = [
 ];
 
 // ---------- build the dense centre line (about 1 m apart) with each point's flag and wanted "up" ----------
-function draw(X, course = COURSE) {
-  const p = new THREE.Vector3(X + STATION.dx, STATION.y, STATION.z); let h = Math.PI;
+export function draw(X, course = COURSE, ST = STATION, h0 = 180) { // (build 164: another coaster can have its own station and first heading)
+  const p = new THREE.Vector3(X + ST.dx, ST.y, ST.z); let h = h0 * D2R;
   const out = []; const push = (q, up, f) => out.push({ p: q.clone(), up: up.clone().normalize(), f: f || '' });
   push(p, Y, 'S'); const ends = [];
   for (const el of course) {
@@ -95,11 +95,11 @@ function draw(X, course = COURSE) {
         let dh = hh - hp; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; hp = hh; const b = Math.max(-.7, Math.min(.7, dh / (bez.getLength() / n) * 12));
         push(pt, Y.clone().multiplyScalar(Math.cos(b)).addScaledVector(leftOf(hh), Math.sin(b))); } p.copy(q); h = h2; }
     else if (k === 'GOHOME') { // a smooth curve back into the station, arriving level and heading -x along the platform
-      const end = new THREE.Vector3(X + STATION.dx, STATION.y, STATION.z), endDir = dirOf(Math.PI), L = p.distanceTo(end);
-      const c1 = p.clone().addScaledVector(dirOf(h), L * .45), c2 = end.clone().addScaledVector(endDir, -L * .4); c1.y = p.y; c2.y = Math.max(STATION.y, c2.y);
+      const end = new THREE.Vector3(X + ST.dx, ST.y, ST.z), endDir = dirOf(h0 * D2R), L = p.distanceTo(end);
+      const c1 = p.clone().addScaledVector(dirOf(h), L * .45), c2 = end.clone().addScaledVector(endDir, -L * .4); c1.y = p.y; c2.y = Math.max(ST.y, c2.y);
       const bez = new THREE.CubicBezierCurve3(p.clone(), c1, c2, end), n = Math.ceil(bez.getLength());
-      for (let i = 1; i <= n; i++) { const t = i / n, q = bez.getPoint(t); q.y = p.y + (STATION.y - p.y) * sm(t); push(q, Y, t > .97 ? 'S' : ''); }
-      p.copy(end); h = Math.PI; }
+      for (let i = 1; i <= n; i++) { const t = i / n, q = bez.getPoint(t); q.y = p.y + (ST.y - p.y) * sm(t); push(q, Y, t > .97 ? 'S' : ''); }
+      p.copy(end); h = h0 * D2R; }
     ends.push({ k, x: +(p.x - X).toFixed(1), y: +p.y.toFixed(1), z: +p.z.toFixed(1), h: Math.round(((h / D2R) % 360 + 360) % 360) });
   }
   return { pts: out, ends };
@@ -107,7 +107,7 @@ function draw(X, course = COURSE) {
 
 // ---------- resample every 0.5 m; smooth the "up"s; work out the speed everywhere ----------
 export function buildCourse(X, opts = {}) {
-  const { pts, ends } = draw(X, opts.course);
+  const { pts, ends } = draw(X, opts.course, opts.station, opts.h0);
   const STEP = .5, P = [], F = [], U = []; let carry = 0;
   P.push(pts[0].p.clone()); U.push(pts[0].up.clone()); F.push(pts[0].f);
   for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], seg = a.p.distanceTo(b.p); let s = STEP - carry;
