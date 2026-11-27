@@ -6,6 +6,17 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 172 — CLIMB SATURN'S HEXAGON STORM (ATTRACTIONS row 18)
+- **Before:** a tap on the stepped six-sided storm made its steps spin faster for 4 s.
+- **Now she climbs it** (`space.js`): a tap (or 🐾 beside it) and she hops onto the bottom step. Every step turns, each the
+  other way to the one below, and carries her round; ◀ ▶ walk her round the step, JUMP hops her up to the next step, ▼ hops
+  back down. A storm star waits on each of the five steps (walk round to it); at the very top she stands on the dark eye:
+  "You climbed the six-sided storm!"; all five stars: "What a climber!" and a party. JUMP from the top (or ▼ from the bottom
+  step) hops her back onto the path.
+- The stars ride on the steps (five small meshes, one shared material), shown only while she climbs.
+- **Tested** (desktop, software rendering): `tests/saturn-hexclimb.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 171 — SURF THE GREAT RED SPOT on Jupiter (ATTRACTIONS row 18)
 - **Before:** a tap on the Great Red Spot made the storm spin faster for 4 s.
 - **Now she surfs it** (`space.js`): a tap (or 🐾 on the path beside it) and she hops on a little puffy cloud that the storm
