@@ -29,6 +29,13 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('lighthouse: at the top she lights the great lamp (its beam sweeps over the sea)', /lit the great lamp/.test(await toast()) && await ev(() => __DDW3.world.disc.has('lighthousetop')));
   await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Go outside').run()); await sleep(1500);
   check('lighthouse: the door takes her back outside, right at the lighthouse', await ev(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x + 95) < 1 && !__DDW3.G.roomCam));
+  // ---------- (build 154) THE OCEAN PIER LIGHTHOUSE: there is one at the pier too, and its door goes into the lighthouse room ----------
+  await ev(() => __DDW3.teleport(-599)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x + 601) < .2 && i.action === 'Go inside!'), null, 120000); await sleep(1500);
+  const plh = await ev(() => { let tower = false; __DDW3.scene.traverse(o => { if (o.isMesh && o.visible && o.geometry.type === 'CylinderGeometry' && o.geometry.parameters.height === 7 && Math.abs(o.position.x + 601) < .05) tower = true; }); return tower; });
+  await ev(() => { const P = __DDW3.player; P.x = -601; P.y = 0; P.vx = 0; P.grounded = true; }); await run(-601, 'Go inside!'); await sleep(2000);
+  check('Ocean Pier has its own lighthouse beside the crates, and its red door goes into the lighthouse room', plh && (await roomView()).layer === 'room');
+  await ev(() => __DDW3.G.interact.find(i => i.layer === 'room' && i.action === 'Go outside').run()); await sleep(1500);
+  check('...and back out at the pier', await ev(() => __DDW3.player.layer === '' && Math.abs(__DDW3.player.x + 601) < 1));
   // ---------- THE IGLOO (build 149: a real room inside) ----------
   await ev(() => __DDW3.teleport(-380)); await until(() => !!__DDW3.G.interact.find(i => Math.abs(i.x + 380) < .2 && i.action === 'Go inside!'), null, 120000); await sleep(1500);
   await ev(() => { const P = __DDW3.player; P.x = -380; P.y = 0; P.vx = 0; P.grounded = true; }); await run(-380, 'Go inside!'); await sleep(2000);
