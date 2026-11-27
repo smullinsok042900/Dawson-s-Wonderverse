@@ -1056,6 +1056,21 @@ export function initExpansion(G, api) {
       const top = x => .55 * Math.sqrt(Math.max(0, 1 - ((x + 584) / 1.7) ** 2)); return (dt, t) => { if (!pal) return; pal(dt, t); const m = pal.mesh; if (m.parent) m.position.y = top(m.position.x) - .06; }; },
     // stacked crates (a gem waits on top) next to the dolphin show
     () => { c.add(crates([[-594.5, 0, 2], [-596.5, 1, 2], [-598, 2, 1.6]].map(([x, y, w]) => [x, y, -2.0, w, 1, 1.4]))); /* (build 124: the steps stand just behind her path, so she walks in front of them, never through them; she steps back onto them as she climbs) */ /* (build 54: planked crates, one mesh) */ c.plat(-595.5, -593.5, 1, { z: -1.9, step: true, stepMax: 1.05 }); c.plat(-597.5, -595.5, 2, { z: -1.9, step: true, stepMax: 1.05 }); c.plat(-598.8, -597.2, 2.98, { z: -1.9, onLand: () => c.disc('crates', '📦 You climbed the crates!') }); },
+    // (build 154, the family's pictures: "the lighthouse is still gone" — taken here at Ocean Pier, where there was none) THE
+    //  OCEAN PIER LIGHTHOUSE: a tall striped lighthouse on the shore beside the crates, its lamp glowing; tap the lamp and its
+    //  beam sweeps over the sea; the red door takes her inside, into the lighthouse room (the stairs up to the great lamp).
+    () => { const LX = -601, LZ = -4.6; c.cyl(LX, 0, LZ, 1.95, 2.1, .5, '#8a8f98', { seg: 24 }); /* a rocky base on the shore */
+      c.cyl(LX, .5, LZ, 1.5, 1.8, 7, '#ffffff', { seg: 28 }); for (let k = 0; k < 3; k++) c.cyl(LX, 1.5 + k * 2.2, LZ, 1.55 + (2 - k) * .1, 1.6 + (2 - k) * .1, .7, '#ff4f6a', { seg: 28 });
+      c.cyl(LX, 7.5, LZ, 1.6, 1.6, .2, '#2b2d42', { seg: 24 }); const lamp = c.cyl(LX, 7.7, LZ, 1.1, 1.1, 1.2, '#fff6b0', { m: { em: '#ffe36e', ei: .8 } });
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 1.2, 20), mat('#ff4f6a')); roof.position.set(LX, 9.5, LZ); c.add(roof); c.sph(LX, 10.15, LZ, .16, '#ffd23f');
+      for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; c.cyl(LX + Math.cos(a) * 1.55, 7.7, LZ + Math.sin(a) * 1.55, .03, .03, .55, '#2b2d42', { cast: false }); } // the balcony railing
+      for (const y of [3.3, 5.5]) { const w = c.sph(LX, y, LZ + 1.66, .28, '#7fd0ff', { m: { r: .2 } }); w.scale.z = .3; } // little round windows
+      const door = c.block(LX, .5, LZ + 1.72, .95, 1.75, .14, '#c8102e', { r: .1 }); c.sph(LX + .3, 1.4, LZ + 1.82, .06, '#ffd23f');
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(16, .5, .5), mat('#fff6b0', { em: '#fff3a0', ei: .9 })); beam.position.set(LX, 8.3, LZ); beam.visible = false; c.add(beam);
+      let spin = 0; c.tap(lamp, () => { spin = 6; beam.visible = true; Sound.tone(110, 1.2, 'sawtooth', .03, 1); c.say('💡 The pier lighthouse is shining for the boats!'); c.disc('pierlighthouse'); });
+      const goIn = () => { if (P.ride || P.layer !== '') return; rooms.enter('lighthouse', LX); };
+      c.tap(door, goIn, LX, { icon: '🚪', label: 'Lighthouse', action: 'Go inside!', hintY: 2.4, need: () => P.y < 1 });
+      return dt => { if (spin > 0) { spin -= dt; beam.rotation.y += dt * 2; if (spin <= 0) beam.visible = false; } }; },
     // the dolphin show: tap the whistle and a dolphin leaps through the hoop
     () => { c.cyl(-606, 0, -3, .06, .06, 1.4, '#ffffff'); const wh = c.toy('📯', .8, -606, 1.7, -3); const hoop = new THREE.Mesh(new THREE.TorusGeometry(1.2, .1, 10, 32), mat('#ff4f9a', { r: .4 })); hoop.position.set(-606, 2.6, -10); c.add(hoop);
       const dol = c.toy('🐬', 1.6, -611, -1, -10); dol.visible = false; let jump = 0, jumps = 0;

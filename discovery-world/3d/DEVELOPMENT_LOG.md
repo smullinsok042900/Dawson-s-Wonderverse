@@ -6,6 +6,15 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 154 — a lighthouse at Ocean Pier (the family's pictures: "the lighthouse is still gone")
+- The family's pictures were all taken at Ocean Pier, by the crates and the dolphin hoop, where there was no lighthouse
+  (the game's only one stands on Sunny Beach). Now Ocean Pier has its own: a tall red-and-white striped lighthouse on
+  the shore beside the crates, on a rocky base, with round windows, a balcony railing, a glowing lamp (tap it: its beam
+  sweeps over the sea) and a red door that takes her into the lighthouse room (the stairs up to the great lamp). Coming
+  out puts her back at the pier.
+- Checked in an iPhone-sized browser (desktop, software rendering): it stands beside the crates (`screenshots/pier-lighthouse.jpg`),
+  in and out work, no page errors. `insides.cjs` has two new checks.
+
 ## Checkpoint: build 153 — fly the Sunny Beach kite yourself (every activity hands-on)
 - The kite used to fly up by itself when tapped. Now tapping it (or 🐾) gives her the kite string (a spool in her hand, a
   string up to the kite). RUNNING along the beach lifts it higher and higher (the further she runs, the higher: about 30 m
