@@ -11,7 +11,8 @@ are in `PERFORMANCE_LOG.md`.
   (it spins as it rolls). Big enough ("Push it to the snowman!"), she pushes it to the snowman and it goes on: the big
   bottom, then the middle, then the head; then tapping the snowman adds the carrot nose and the hat. Tapping the snow pile
   still builds it quickly too (kept: the adventures' "snow_built" event and its test).
-- New test `tests/frosty-snowman.cjs` (4 checks): passed with `&norender`.
+- New test `tests/frosty-snowman.cjs` (4 checks): passed drawn and with `&norender`. **Full smoke test 345/345** (desktop,
+  software rendering). Speed: Frosty Peaks the same (`PERFORMANCE_LOG.md`).
 - `tests/adventures-browser.cjs` (from build 40) had two checks from before later builds: the map tiles are pictures (img)
   since the map-thumbnail build, and fishing is hands-on since build 144 (take the rod, cast, wait for the bite, reel in).
   Both steps now do what the game does; the checks are the same (a picture on each tile, a real catch). It passes again.

@@ -4,6 +4,12 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 160 vs build 159, Frosty Peaks (desktop, software rendering; `tests/perf/compare.cjs frosty`; not iPhone numbers)
+- Run 1 (4 rounds): -326: 255 → 292 ms (+15%, flagged SLOWER), -336: 285 → 270, -346: 272 → 279.
+- Run 2 (3 rounds, every round shown): -326 measured 198, 252, 331 ms (old) and 310, 201, 213 ms (new): 260 → 241 ms, the same;
+  -336: 277 → 280; -346: 272 → 276. The spot 25 m from the snowman varies by ±60 ms from round to round on this machine; the
+  first run's +15% was that noise. Nothing slower (the rolling snowball does nothing until she picks it up).
+
 ## Build 159 vs build 158, the woods (desktop, software rendering; `tests/perf/compare.cjs woods`, 4 rounds; not iPhone numbers)
 - -160: 634 → 414 ms (faster); -185: 683 → 626; -211: 690 → 747 (+8%); -240 (the firefly jar): 737 → 762 (+3%); -255: 816 → 787:
   the same. Nothing slower.
