@@ -12,7 +12,7 @@ const EARTH = { pier: [-552, -584, -620], seaside: [-50, -70, -88], artplaza: [8
   hills: [-720, -740, -756], frosty: [-326, -336, -346], farm: [-420, -440, -466, -520], labgarden: [700, 724, 745], woods: [-160, -185, -211, -240, -255] };
 const PLANET = { jungle: [20, 40, 140, 162, 240, 300], wacky: [20, 52, 70, 140, 186, 230, 304, 320], jelly: [22, 50, 70, 140, 230, 320], bubble: [20, 50, 80, 140, 230, 320], toy: [20, 40, 60, 140, 230, 320],
   sun: [20, 60, 140, 165, 230, 320], upside: [20, 60, 140, 165, 230, 320], moon: [20, 30, 50, 79], mars: [46, 64, 90, 125, 140, 221, 276], uranus: [60, 80, 95, 185, 270, 320], neptune: [64, 95, 150, 186, 320],
-  pluto: [30, 60, 95, 199, 320], volcano: [20, 32, 135, 248], turtle: [20, 44, 130, 225], cove: [20, 30, 130, 235], venus: [40, 60, 100, 160, 270], saturn: [60, 95, 150, 240, 320], jupiter: [30, 52, 60, 90, 150, 205, 320], mercury: [60, 100, 150, 180] };
+  pluto: [30, 60, 95, 199, 320], volcano: [20, 32, 135, 248], turtle: [20, 44, 130, 225], cove: [20, 30, 130, 235], venus: [40, 60, 100, 160, 270], saturn: [62, 95, 150, 240, 320], jupiter: [30, 52, 60, 90, 150, 205, 320], mercury: [60, 100, 150, 180] };
 const [place, oldF, newF] = process.argv.slice(2);
 if (!place || !newF || !(EARTH[place] || PLANET[place])) { console.log('usage: node tests/perf/compare.cjs <place> old.html new.html'); process.exit(2); }
 const spots = EARTH[place] || PLANET[place];

@@ -638,7 +638,33 @@ export function initSpace(G, api) {
       { const eye = model(b => b.add(new THREE.CylinderGeometry(.42, .78, .5, 6, 1, false), null, (px, py, pz, nx, ny, nz, o) => { o.copy(K.col('#6e6048')).lerp(K.col('#241f1a'), Math.max(0, 1 - ny) * .9); }), K.softMat(), false);
         eye.position.y = hy + .16; hx.add(eye); }                                                                    // (the dark eye of the storm, above the stepped walls)
       let hs = 0;
-      tapIt(hx, () => { hs = 4; Sound.noise && Sound.noise(1, 250, 800, .04); fact('⬡ A six-sided storm! Saturn has a hexagon-shaped storm at its top.', 'saturnhex'); }, X + 62, 'saturnhex');
+      // (build 172) CLIMB THE HEXAGON STORM: tap it (or 🐾 beside it) and she hops onto the bottom step; every step turns and
+      // carries her round (each the other way to the one below); ◀ ▶ walk round the step, JUMP hops up to the next one, ▼ hops
+      // down; a storm star waits on each of the five steps; at the very top she stands on the dark eye ("You climbed the six-
+      // sided storm!"); all five stars: a party. JUMP from the top (or ▼ from the bottom step) hops back to the path.
+      // The stars are children of the steps (five small meshes, one shared material), shown only while she climbs.
+      const tierTop = [], tierR = []; { let yy = 0; HT.forEach(([r, hh], k) => { yy += hh * .94; tierTop.push(yy + .03); tierR.push(Math.max(r * .82, (HT[k + 1] || [0])[0] * .82) + .2); }); }
+      const SA = [.6, 2.6, 4.4, 1.5, 3.6], hsM = toy('#ffd23f', { em: '#ffb000', ei: .9, m: .2 }), hsG = new THREE.OctahedronGeometry(.34, 0);
+      const hstars = SA.map((sa, k) => { const m = new THREE.Mesh(hsG, hsM); m.position.set(Math.cos(sa) * tierR[k], HT[k][1] * .5 + .55, Math.sin(sa) * tierR[k]); m.scale.set(.8, 1, .35); m.visible = false; hexes[k].add(m); return m; });
+      let hRide = null;
+      const climb = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - (X + 62)) > 7) return; hs = 1; Sound.noise && Sound.noise(1, 250, 800, .04);
+        fact('⬡ A six-sided storm! Saturn has a hexagon-shaped storm at its top. Climb it! JUMP hops up, ◀ ▶ walk round, ▼ hops down!', 'saturnhex');
+        const R = hRide = { type: 'hexclimb', t: 0, noExit: true, stick: true, k: 0, ra: Math.PI / 2 + hexes[0].rotation.y, hop: 0, got: SA.map(() => false), top: false, off: false }; P.ride = R; P.vx = P.vy = 0; hstars.forEach(m => { m.visible = true; });
+        const hopTo = k2 => { if (R.hop > 0) return; if (k2 < 0 || (R.top && k2 > 5)) { R.off = true; return; } const from = R.top ? 5 : R.k;
+          if (k2 === 5) { R.top = true; say('⬡ You climbed the six-sided storm! You are on top of Saturn\'s hexagon!', true); disc('saturnhextop'); api.burst(X + 62, hy + 1, -5.2, ['#ffeec2', '#ffd23f', '#ffffff'], 20, 2); Sound.chime(); }
+          else { if (R.top) R.top = false; const wpsi = hexes[from === 5 ? 4 : from].rotation.y, wa = R.ra - wpsi; R.k = k2; R.ra = wa + hexes[k2].rotation.y; }
+          R.hop = .45; Sound.boing && Sound.boing(); };
+        R.onJump = () => hopTo(R.top ? 6 : R.k + 1); R.onDown = () => hopTo(R.top ? 4 : R.k - 1);
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; hRide = null; hstars.forEach(m => { m.visible = false; }); if (P.ride === R) { P.ride = null; P.x = X + 62 + (P.x > X + 62 ? 4.6 : -4.6); P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } return; }
+          dt = Math.min(dt, .1); R.t += dt; R.hop = Math.max(0, R.hop - dt); const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          if (sk.y < -.5 && !R.downHeld) { R.downHeld = true; R.onDown(); } else if (sk.y > -.3) R.downHeld = false;
+          let wx, wz, wy; if (R.top) { wx = X + 62; wz = -5.2; wy = hy + .42; P.facing = sk.x < -.15 ? -1 : sk.x > .15 ? 1 : P.facing; }
+          else { const tier = hexes[R.k]; R.ra += (sk.x > .15 ? -1.3 : sk.x < -.15 ? 1.3 : 0) * dt; const wa = R.ra - tier.rotation.y; wx = X + 62 + Math.cos(wa) * tierR[R.k]; wz = -5.2 + Math.sin(wa) * tierR[R.k]; wy = tierTop[R.k]; P.facing = Math.sin(wa) > 0 ? 1 : -1;
+            if (!R.got[R.k]) { let d = Math.abs(((R.ra - SA[R.k]) % 6.283 + 6.283) % 6.283); d = Math.min(d, 6.283 - d); if (d < .4) { R.got[R.k] = true; hstars[R.k].visible = false; const n = R.got.filter(Boolean).length; Sound.tone(520 + n * 80, .15, 'sine', .07, 1.5); api.burst(wx, wy + .8, wz, ['#ffd23f', '#ffffff'], 10, 1.4);
+              if (n === SA.length) { say('⬡ All five storm stars! What a climber!', true); disc('saturnhexstars'); api.burst(wx, wy + 1, wz, ['#ffeec2', '#ffd23f', '#ff8fc8', '#7fe0a0'], 26, 2.4); Sound.giggle && Sound.giggle(); } } } }
+          P.x = wx; P.z = wz; P.y = wy + Math.sin(Math.min(1, R.hop / .45) * Math.PI) * .7;
+          hstars.forEach((m, q) => { m.rotation.y = t * 2.5 + q; }); }); };
+      tapIt(hx, climb, X + 62, 'saturnhex');
       U.push(dt => { hs = Math.max(0, hs - dt); hexes.forEach((m, k) => { m.rotation.y += dt * (k % 2 ? -1 : 1) * (.18 + k * .07 + hs * 1.2); }); });
     }
     yield;
