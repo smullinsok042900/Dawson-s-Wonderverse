@@ -958,6 +958,7 @@ function doAction() {
   if (P.ride && P.ride.type === 'rocket') { if (P.ride.phase === 'in') { if (P.ride.dest) blastOff(); else showPicker(); } return; } // (build 48: PAW in the rocket: the planets, or the red button once one is picked)
   if (P.ride && P.ride.type === 'kart') { parkKart(); return; }
   if (P.ride && P.ride.type === 'train') { train.hopOff(); return; }
+  if (P.ride && P.ride.onPaw) { P.ride.onPaw(); return; } // (build 166) a ride's own 🐾 (the Mars rover's scoop)
   if (P.ride) { jump(); return; }
   const d = nearDoor(); if (d) { d.go(); return; }
   const best = actionTarget();
@@ -1807,7 +1808,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '165'; G.build = GAME_BUILD;
+const GAME_BUILD = '166'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

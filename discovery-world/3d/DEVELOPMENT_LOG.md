@@ -6,6 +6,19 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 166 — DRIVE THE MARS ROVER (ATTRACTIONS row 18: the older small planet activities)
+- **Inspected** the older tap-and-watch activities on Venus and Mars (the two Venus volcanoes, the thermometer, the Mars
+  rover, the dust devil, Olympus Mons). The rover was the best one to make hands-on: before, a tap made it drive 12 m and
+  back by itself.
+- **Now she drives it** (`space.js`): a tap next to it puts her on the deck; ◀ ▶ drive it across Mars between the landing
+  area and the dust devil and beyond (x +20 to +104; the six wheels turn exactly as far as it goes, it turns round when she
+  changes direction, red dust puffs behind); 🐾 swings the arm down and SCOOPS UP a shiny Mars rock when one is beside it
+  (four coloured rocks, blue, green, purple and gold, beside its track); all four: "You found all the Mars rocks!" and a
+  party, then the rocks come back. JUMP hops off. If she leaves it somewhere and walks away, it drives itself home.
+- The four rocks are one instanced mesh (one draw call). `main.js`: a ride can now have its own 🐾 (`ride.onPaw`).
+- **Tested** (desktop, software rendering): `tests/mars-rover.cjs` (new) RESULTS_ROVER.
+- Speed and the full smoke test: RESULTS_SPEED_SMOKE.
+
 ## Checkpoint: build 165 — Turtle Beach made beautiful (the family's report: "terrible graphics, they don't look like turtles, no water")
 - **Real turtles** (`turtleModel` in islands2.js): a domed shell with a dark rim and a pattern of plates down the middle and
   sides, a pale belly, a neck and a head with big friendly eyes (with a shine), pink cheeks and a smile, four flippers that
