@@ -696,8 +696,28 @@ export function initSpace(G, api) {
       // the icy geyser: a cracked mound of pinkish ice with a vent; tap it and a tall plume shoots up
       const gx = X + 64, gz = -3, gy = new THREE.Group(); gy.position.set(gx, 0, gz); add(gy); gy.add(model(b => { b.put(K.lathe([[0, .62], [.2, .66], [.34, .6], [.6, .36], [1.0, .14], [1.35, 0]], 20), 0, 0, 0, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#f2d6d6', '#e6f2ff', '#ffffff'], K.fbm3(px * 2, py * 2, pz * 2, 3) + py * .4, o); }); b.put(K.geo.cyl(12), 0, .62, 0, '#3a4a78', [.17, .06, .17]); for (let k = 0; k < 6; k++) b.put(K.rockGeo(k, 1), Math.cos(k * 1.1) * 1.25, .12, Math.sin(k * 1.1) * 1.0, k % 2 ? '#e6f2ff' : '#f2d6d6', [.22, .3, .22]); }));
       const plG = new THREE.CylinderGeometry(.5, .13, 1, 14, 1, true); plG.translate(0, .5, 0); const plume = new THREE.Mesh(plG, toy('#eaf6ff', { opacity: .42, r: 1 })); plume.material.depthWrite = false; plume.material.side = THREE.DoubleSide; plume.position.y = .64; plume.visible = false; gy.add(plume); let spout = 0;
-      tapIt(gy, () => { spout = 3; Sound.noise && Sound.noise(1, 600, 2400, .04); fact('⛲ An icy geyser! On Neptune\'s moon Triton, icy fountains shoot up.', 'triton'); }, gx, 'triton');
-      U.push((dt, t) => { if (spout > 0) { spout -= dt; const k = Math.min(1, (3 - spout) * 3) * Math.min(1, spout * 2.5); plume.visible = true; plume.scale.set(1 + Math.sin(t * 20) * .08, k * (5 + Math.sin(t * 13) * .4), 1 + Math.cos(t * 17) * .08); if (Math.random() < dt * 30) api.burst(gx + (Math.random() - .5) * .5, .7 + k * (3 + Math.random() * 2.4), gz, ['#ffffff', '#cfefff'], 2, 1.5); } else if (plume.visible) plume.visible = false; else if (Math.random() < dt * .8) api.burst(gx, .7, gz, ['#ffffff', '#e6f2ff'], 1, .5); }); // (a little puff of steam now and then, so you can see it is alive)
+      // (build 169) RIDE THE ICY GEYSER: a tap next to it and she steps onto the vent: the fountain shoots up under her and
+      // carries her high; HOLD ▲ and it shoots higher (up to 18 m), let go and it sinks; ◀ ▶ lean the fountain to the sides;
+      // four snowflake stars at different heights to catch; JUMP hops off and she floats gently down. The stars are four small
+      // meshes with one shared material, drawn only during the ride.
+      const GST = [[-1.6, 4], [1.6, 8], [-1.8, 12], [1.4, 16.5]], gsM = toy('#cfefff', { em: '#8fd8ff', ei: .9, m: .2 }), gsG = new THREE.OctahedronGeometry(.45, 0);
+      const gst = GST.map(() => { const m = new THREE.Mesh(gsG, gsM); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      let gRide = null;
+      const gGo = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - gx) > 5) return; Sound.noise && Sound.noise(1, 600, 2400, .04);
+        fact('⛲ WHOOSH! Ride the icy geyser! Hold ▲ to shoot higher, ◀ ▶ to lean, JUMP to hop off!', 'triton');
+        const R = gRide = { type: 'geyser', t: 0, noExit: true, stick: true, h: .7, lean: 0, got: GST.map(() => false), off: false }; P.ride = R; P.vx = P.vy = 0;
+        gst.forEach((m, q) => { m.visible = true; m.position.set(gx + GST[q][0], GST[q][1], gz); });
+        R.onJump = () => { if (!R.off) { R.off = true; say('⛲ Hop off! Float down gently!'); } };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R) { R.over = true; gRide = null; gst.forEach(m => { m.visible = false; }); return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          if (!R.off) { R.h = Math.max(.7, Math.min(18, R.h + (sk.y > .2 ? 4 : sk.y < -.2 ? -3.5 : -.6) * dt)); R.lean = Math.max(-2.2, Math.min(2.2, R.lean + sk.x * 2.4 * dt - R.lean * (Math.abs(sk.x) > .15 ? 0 : 1.2) * dt));
+            P.x = gx + R.lean; P.y = .64 + R.h + Math.sin(t * 9) * .08; P.z = gz + .3; P.facing = R.lean >= 0 ? 1 : -1; plume.visible = true; plume.rotation.z = -R.lean / Math.max(2, R.h) ; plume.scale.set(1 + Math.sin(t * 20) * .08, R.h, 1 + Math.cos(t * 17) * .08);
+            if (Math.random() < dt * 24) api.burst(gx + R.lean * Math.random() + (Math.random() - .5) * .5, .7 + R.h * Math.random(), gz, ['#ffffff', '#cfefff'], 2, 1.5);
+            GST.forEach(([dx, y], q) => { if (R.got[q]) return; const m = gst[q]; m.rotation.y = t * 2.5 + q; if (Math.abs(P.x - m.position.x) < 1.2 && Math.abs(P.y + .6 - y) < 1.2) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(560 + n * 90, .15, 'sine', .07, 1.5); api.burst(m.position.x, y, gz, ['#cfefff', '#ffffff', '#8fd8ff'], 10, 1.6);
+              if (n === GST.length) { say('⛲ You caught all the snowflake stars! Splendid splashing!', true); disc('geyserstars'); api.burst(P.x, P.y, gz, ['#8fd8ff', '#ffffff', '#ffd23f', '#ff8fc8'], 26, 2.4); Sound.giggle && Sound.giggle(); } } }); }
+          else { plume.scale.y = Math.max(0, plume.scale.y - dt * 8); P.y = Math.max(0, P.y - dt * 2.6); P.z += (0 - P.z) * Math.min(1, dt * 2); if (P.y <= 0) { R.over = true; gRide = null; plume.visible = false; plume.rotation.z = 0; gst.forEach(m => { m.visible = false; }); P.ride = null; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } } }); };
+      tapIt(gy, gGo, gx, 'triton');
+      U.push((dt, t) => { if (gRide) return; if (Math.random() < dt * .8) api.burst(gx, .7, gz, ['#ffffff', '#e6f2ff'], 1, .5); }); // (a little puff of steam now and then, so you can see it is alive)
     }
     yield;
     if (id === 'pluto') {
