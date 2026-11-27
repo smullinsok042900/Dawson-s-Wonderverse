@@ -15,6 +15,8 @@ are in `PERFORMANCE_LOG.md`.
   sea with her on its shell (paddling, bobbing, a trail of foam); the baby turtles waddle down the sand and into the water.
 - **The flat green blobs** on the sand were the planets' "craters" in the island's green: islands no longer get craters.
 - Checked in pictures (desktop, software rendering) and `islands.cjs` (all passed); `volcano-coaster.cjs` still all passed.
+- **Builds 162–165: full smoke test 345/345** (desktop, software rendering); riding together on the Moon coaster 6/6 too; speed
+  on Volcano Island, Turtle Beach and the Moon: nothing slower (`PERFORMANCE_LOG.md`).
 
 ## Checkpoint: build 164 — THE VOLCANO ISLAND ROLLER COASTER, in first person (the family's request)
 - **The ride** (one continuous 1.5 km track, about 1½ minutes; `src/volcano-course.js`, built by the same track builder as the
