@@ -18,7 +18,8 @@ are in `PERFORMANCE_LOG.md`.
   (scooped up, ▲ higher, steered through all four sparkles, JUMP floats her down, it drifts home, no page errors);
   `mars-rover` still all passed. (A first try placed the sparkles where the swaying whirl happened to be when she tapped it,
   so they moved from ride to ride; they now have fixed places.)
-- RESULTS_SPEED_SMOKE
+- Speed on Mars vs build 167: the same at all seven spots, the same draw calls (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 167 — PUMP THE VENUS VOLCANO, catch the lava stars (ATTRACTIONS row 18)
 - **Before:** a tap on one of the two Venus volcanoes made it puff sparks for 3 s.
