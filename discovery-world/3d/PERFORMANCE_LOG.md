@@ -4,6 +4,14 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 166 vs build 165, Mars with the rover you drive (desktop, software rendering; `tests/perf/compare.cjs mars`; not iPhone numbers)
+- First version (shadow-casting rocks): every spot the same (+3 to +7%), but +1–2 draw calls even 230 m from the rover. A
+  probe found the four rocks cost a shadow pass and stayed in the wide far view; they now cast no shadow and are hidden when
+  she is more than 75 m from the rover's track.
+- Final version (1 round each; no spot differed by more than 12%): 46: 186 → 182 ms; 64: 185 → 197; 90: 193 → 188; 125: 225 → 201;
+  140: 196 → 207; 221: 200 → 215; 276: 175 → 183: all the same. Draw calls the same, or +1 near the rocks (90, 125).
+- `compare.cjs`: Mars now also measures 46, 64 and 90 (the rover, the dust devil and the rocks).
+
 ## Builds 162–165 vs build 161 (desktop, software rendering; `tests/perf/compare.cjs`; not iPhone numbers)
 - **Volcano Island, with the roller coaster** (4 rounds): 20: 287 → 143 ms (faster); 32: 144 → 145; 135: 154 → 149; 248: 145 → 138
   (the same). Draw calls 47–49 → 51–57 (the coaster's skeleton, volcano, station, train and the rail pieces near her).
