@@ -15,7 +15,8 @@ are in `PERFORMANCE_LOG.md`.
 - The stars are five small meshes with one shared material and the cloud board is one mesh, drawn only during the ride.
 - **Tested** (desktop, software rendering): `tests/jupiter-stormsurf.cjs` (new): 6/6 drawn and with `?norender`
   (carried round, ▲ in, all five stars, JUMP back to the path, no page errors); `jupiter-world` still all passed.
-- RESULTS_SPEED_SMOKE
+- Speed on Jupiter vs build 170: the same at all seven spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop,
+  software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 170 — UPSIDE-DOWN BOWLING on Uranus (ATTRACTIONS row 18)
 - **Before:** a tap on the striped planet ball (Uranus rolls on its side "like a ball") made it roll a little way and back.
