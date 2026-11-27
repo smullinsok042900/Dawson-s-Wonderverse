@@ -552,7 +552,29 @@ export function initSpace(G, api) {
         const ed = vortex(.08, 1, 3, r => .05 * (1 - r), (r, a, y, o) => { o.copy(K.col('#c25630')).lerp(K.col('#f0a074'), Math.sin(a * 2 + r * 5) * .5 + .5);
           o.lerp(K.col('#f8e2c0'), K.sstep(.5, .9, Math.sin(a * 3) * .5 + .5) * .4); });
         ed.position.set(X + 52 + Math.cos(ea) * er * 3.0, .04, -6.5 + Math.sin(ea) * er * 2.0); ed.scale.setScalar(es); add(ed); eddies.push(ed); }
-      tapIt(sp, () => { spin = 4; Sound.noise && Sound.noise(1.2, 200, 700, .05); fact('🌀 The Great Red Spot: a giant storm bigger than our whole Earth!', 'redspot'); }, X + 52, 'redspot');
+      // (build 171) SURF THE GREAT RED SPOT: tap it (or 🐾 beside it) and she hops on a little cloud that the storm carries
+      // round and round its oval; ▲ steers in toward the eye (smaller circles, faster, the storm spins harder), ▼ out to the
+      // foam rim; five storm stars float at different distances from the eye; all five: a party. JUMP hops back to the path.
+      // The stars are five small meshes with one shared material, drawn only during the ride; the cloud board is one mesh.
+      const SX = X + 52, SZ = -6.5, RST = [[.9, 1.95], [2.2, 1.0], [3.4, 1.6], [4.5, .62], [5.6, 1.3]], rsM = toy('#ffd23f', { em: '#ff9a2e', ei: .9, m: .2 }), rsG = new THREE.OctahedronGeometry(.42, 0);
+      const ell = (a, r) => [SX + Math.cos(a) * r * 3.0, SZ + Math.sin(a) * r * 2.0];
+      const rst = RST.map(([a, r]) => { const m = new THREE.Mesh(rsG, rsM); const [x, z] = ell(a, r); m.position.set(x, 1.6, z); m.scale.set(.8, 1, .35); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      const board = model(b => { for (const [x, z, r] of [[0, 0, .55], [-.45, .05, .4], [.45, -.05, .42], [0, .25, .36]]) b.put(K.geo.sph(2), x, 0, z, '#fff6ec', [r, r * .45, r * .8]); }, K.softMat(), false); board.visible = false; board.userData.dynamic = true; add(board);
+      let sRide = null;
+      const surf = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - SX) > 8) return; spin = 4; Sound.noise && Sound.noise(1.2, 200, 700, .05);
+        fact('🌀 Surf the Great Red Spot, a giant storm bigger than our whole Earth! ▲ go in to the middle, ▼ go out, JUMP to hop off!', 'redspot');
+        const R = sRide = { type: 'stormsurf', t: 0, noExit: true, stick: true, a: Math.PI / 2, r: 1.9, got: RST.map(() => false) }; P.ride = R; P.vx = P.vy = 0;
+        rst.forEach(m => { m.visible = true; }); board.visible = true;
+        R.onJump = () => { R.off = true; };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; sRide = null; rst.forEach(m => { m.visible = false; }); board.visible = false; if (P.ride === R) { P.ride = null; P.x = SX + Math.cos(R.a) * R.r * 3; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          R.r = Math.max(.55, Math.min(1.95, R.r + (sk.y > .2 ? -.5 : sk.y < -.2 ? .5 : 0) * dt)); R.a -= dt * (.55 / R.r + .15); spin = Math.max(spin, 2.2 - R.r);
+          const [x, z] = ell(R.a, R.r); board.position.set(x, .55 + Math.sin(t * 3) * .06, z); board.rotation.y = -R.a; P.x = x; P.z = z; P.y = .7 + Math.sin(t * 3) * .06; P.facing = Math.sin(R.a) > 0 ? 1 : -1;
+          if (Math.random() < dt * 8) api.burst(x, .6, z, ['#f2a078', '#fff0dc', '#d8573a'], 1, 1);
+          RST.forEach(([sa, sr], q) => { if (R.got[q]) return; const m = rst[q]; m.rotation.y = t * 2.5 + q; m.position.y = 1.6 + Math.sin(t * 2 + q) * .15;
+            if (Math.hypot(m.position.x - x, (m.position.z - z) * 1.2) < 1.3) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(520 + n * 80, .15, 'sine', .07, 1.5); api.burst(m.position.x, 1.6, m.position.z, ['#ffd23f', '#ff9a2e', '#ffffff'], 10, 1.6);
+              if (n === RST.length) { say('🌀 You surfed the giant storm and caught all the storm stars!', true); disc('redspotstars'); api.burst(x, 2, z, ['#d8573a', '#ffd23f', '#ffffff', '#ff8fc8'], 26, 2.4); Sound.giggle && Sound.giggle(); } } }); }); };
+      tapIt(sp, surf, SX, 'redspot');
       U.push((dt, t) => { spin = Math.max(0, spin - dt); const kk = 1 + Math.min(1, spin) * .07;
         arms.rotation.y -= dt * (.18 + spin * 2.6); eye.rotation.y += dt * (.3 + spin * 3.4); collar.rotation.y -= dt * (.11 + spin * 1.8);
         swirls[0].rotation.y -= dt * (.26 + spin * 2.2); swirls[1].rotation.y += dt * (.34 + spin * 2.8); swirls.forEach((sw, q) => { sw.position.y = (q ? .22 : .3) + Math.sin(t * 1.4 + q) * .04; });
