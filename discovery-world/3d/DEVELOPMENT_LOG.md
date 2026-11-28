@@ -6,6 +6,15 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 173 — CATCH THE DIAMOND RAIN on Uranus (ATTRACTIONS row 18)
+- **Before:** a tap on the diamond cloud made diamonds fall for 3 s, out of her reach behind the path.
+- **Now she catches them** (`space.js`): a tap (or 🐾 under it) and the cloud drifts to and fro over the path, raining twelve
+  diamonds that fall slowly forward onto the path; she runs ◀ ▶ (and jumps) to catch them under the cloud; each catch chimes a
+  little higher; four: "Four diamonds!"; eight in one shower: "You are a diamond collector!" and a party; fewer: "5 diamonds!
+  Tap the cloud for more!". Tap again for another shower. The same ten diamond meshes as before (no new meshes).
+- **Tested** (desktop, software rendering): `tests/uranus-diamonds.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 172 — CLIMB SATURN'S HEXAGON STORM (ATTRACTIONS row 18)
 - **Before:** a tap on the stepped six-sided storm made its steps spin faster for 4 s.
 - **Now she climbs it** (`space.js`): a tap (or 🐾 beside it) and she hops onto the bottom step. Every step turns, each the
