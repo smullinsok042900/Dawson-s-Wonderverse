@@ -12,7 +12,8 @@ are in `PERFORMANCE_LOG.md`.
   smaller splash. (`volcano-coaster.js`: the ride's own tick watches the train cross the water's surface.)
 - **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check (two splashes on the ride, in and out):
   the whole ride 16/16 drawn and with `?norender`; riding together on the volcano coaster (two browsers) still all passed.
-- RESULTS_SPEED_SMOKE
+- Speed on Volcano Island vs build 176: the same at all four spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345**
+  (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 176 — sea creatures under the volcano lagoon (ATTRACTIONS row 21); row 18 PLAYABLE
 - **Row 18 (the older small planet activities) is now PLAYABLE:** builds 166–175 made ten of them hands-on (the Mars rover,
