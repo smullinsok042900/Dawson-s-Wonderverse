@@ -14,8 +14,10 @@ are in `PERFORMANCE_LOG.md`.
   a puff of moon dust ("A flag! Find the next glowing ring!"); all four: "You explored the Moon! Four flags, all yours!" and a
   party.
 - One mesh for the four rings and four small flag meshes (shown only once planted).
-- **Tested** (desktop, software rendering): `tests/moon-flags.cjs` (new): RESULTS_TEST
-- RESULTS_SPEED_SMOKE
+- **Tested** (desktop, software rendering): `tests/moon-flags.cjs` (new): 4/4 drawn and with `?norender`
+  (the flag goes up, a new colour, four little flags planted, no page errors); `moon-life` still all passed.
+- Speed on the Moon vs build 174: the same or a little faster at all five spots (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 174 — THE HEART SLED on Pluto's ice plain (ATTRACTIONS row 18)
 - **Before:** the 🐾 on Pluto's ice plain only said a fact (running across it slid a little).

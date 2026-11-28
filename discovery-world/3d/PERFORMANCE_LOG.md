@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 175 vs build 174, the Moon with the explorer flags (desktop, software rendering; `tests/perf/compare.cjs moon`; not iPhone numbers)
+- 1 round each: 20: 209 → 198 ms; 30: 162 → 153; 50: 151 → 143; 66: 153 → 148; 79: 148 → 148: all the same (slightly faster).
+  Draw calls −2 to +2 (the ring mesh, +1, near the rings; the rest are friends walking about). (`compare.cjs`: the Moon now also
+  measures 66, between two rings.)
+
 ## Build 174 vs build 173, Pluto with the heart sled (desktop, software rendering; `tests/perf/compare.cjs pluto`; not iPhone numbers)
 - 1 round each: 30: 179 → 168 ms; 44: 183 → 176; 60: 178 → 172; 95: 170 → 165; 199: 201 → 213; 320: 206 → 227 (+10%): all the same.
   Draw calls identical at every spot (the sled and the hearts are hidden until she sleds). (`compare.cjs`: Pluto now also
