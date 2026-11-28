@@ -13,6 +13,7 @@
 import * as THREE from 'three';
 import { makeBatch, shinyMat, glowMat } from './spacekit.js';
 import { toy } from './creatures.js';
+import { buildSunCoaster } from './sun-coaster.js'; // (build 178) THE GIANT SUN COASTER
 
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 20), BALL = new THREE.SphereGeometry(1, 20, 14), BOX = new THREE.BoxGeometry(1, 1, 1);
 CYL.userData.shared = BALL.userData.shared = BOX.userData.shared = true;
@@ -175,6 +176,7 @@ function lightLab(k, X0) {
 }
 
 export const sun = {
+  all(k) { buildSunCoaster(k); }, // (build 178) the giant first-person coaster above the Sun, station on the landing area
   sections: [
     k => { bouncePark(k, k.s0); flareCoaster(k, k.s0); k.rocketSign(k.s0 + 2); },
     k => { launchTower(k, k.s0); windSurf(k, k.s0); lightLab(k, k.s0); k.rocketSign(k.s0 + 108.6); },

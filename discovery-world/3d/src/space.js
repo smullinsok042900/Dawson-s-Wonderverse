@@ -164,7 +164,22 @@ export function initSpace(G, api) {
       const poleG = new THREE.CylinderGeometry(.045, .045, 2.7, 10); poleG.translate(0, 1.35, 0); const pole = new THREE.Mesh(poleG, toy('#f2f4fa', { r: .3, m: .5 })); pole.scale.y = .04; fg.add(pole);
       const flagG = new THREE.PlaneGeometry(1.15, .72, 10, 4); flagG.translate(.6, 0, 0); const flag = new THREE.Mesh(flagG, toy('#ff4f6a', { r: .6 })); flag.material.side = THREE.DoubleSide; flag.position.y = 2.3; flag.visible = false; fg.add(flag); const star = new THREE.Mesh(new THREE.CircleGeometry(.17, 5), toy('#ffe36e', { em: '#ffd23f', ei: .4 })); star.position.set(.6, 2.3, .02); star.visible = false; fg.add(star);
       const f0 = flagG.attributes.position.array.slice(); let up = 0;
-      tapIt(fg, () => { if (up) return; up = .001; Sound.chime(); fact('🚩 You planted a flag on the Moon!', 'moonflag'); }, X + 40, 'moonflag');
+      // (build 175) MOON EXPLORER: after the big flag is up, each tap on it gives it a new colour (red, blue, green, yellow,
+      // purple); four glowing rings on the ground mark places to explore: 🐾 on one plants a little flag in her colour with a
+      // puff of moon dust; all four: "You explored the Moon!" and a party. One mesh for the four rings (they gently
+      // pulse), four small flag meshes, shown only once planted.
+      const FC = ['#ff4f6a', '#5aa8ff', '#7fe0a0', '#ffd23f', '#b07cff']; let fc = 0;
+      const SPOTS = [X + 26, X + 54, X + 68, X + 100], planted = SPOTS.map(() => false);
+      const ringM = toy('#9fe8ff', { em: '#6fd0ff', ei: .9, r: .4 }), rings = model(b => { const rg = new THREE.RingGeometry(.55, .75, 28); rg.rotateX(-Math.PI / 2); SPOTS.forEach(x => b.add(rg.clone().translate(x, .04, -1.6), null, '#ffffff')); }, ringM, false); add(rings);
+      const miniG = (() => { const b = K.makeBatch(); b.put(K.geo.cyl(8), 0, .55, 0, '#f2f4fa', [.025, 1.1, .025]); const cl = new THREE.PlaneGeometry(.5, .32); cl.translate(.27, .92, 0); b.add(cl, null, '#ffffff'); return b.geometry(); })();
+      const minis = SPOTS.map(x => { const m = new THREE.Mesh(miniG, toy('#ff4f6a', { r: .6 })); m.material.side = THREE.DoubleSide; m.position.set(x, 0, -1.6); m.visible = false; add(m); return m; });
+      tapIt(fg, () => { if (!up) { up = .001; Sound.chime(); fact('🚩 You planted a flag on the Moon! Tap it to change its colour, then plant little flags in the glowing rings!', 'moonflag'); return; }
+        fc = (fc + 1) % FC.length; flag.material.color.set(FC[fc]); Sound.tone(500 + fc * 80, .12, 'sine', .05, 1.4); api.burst(X + 40.6, 2.3, -2.6, [FC[fc], '#ffffff'], 10, 1.2); }, X + 40, 'moonflag');
+      SPOTS.forEach((x, q) => { const plant = () => { if (planted[q]) return; planted[q] = true; const m = minis[q]; m.material.color.set(FC[fc]); m.visible = true; m.scale.setScalar(.01); Sound.chime(); api.burst(x, .3, -1.6, ['#d8d8e0', '#ffffff'], 14, 1.2); G.shake = Math.max(G.shake || 0, .1);
+          const n = planted.filter(Boolean).length; if (n < SPOTS.length) say(['🚩 A flag! Find the next glowing ring!', '🚩 Two flags!', '🚩 One more glowing ring!'][n - 1], true);
+          else { say('🚩 You explored the Moon! Four flags, all yours!', true); disc('moonexplorer'); api.burst(x, 2, -1.6, ['#ff4f6a', '#5aa8ff', '#7fe0a0', '#ffd23f', '#ffffff'], 28, 2.4); Sound.giggle && Sound.giggle(); } };
+        G.interact.push({ x, y: 0, layer: 'space', disc: q ? null : 'moonspot', run: plant, hintY: 1.4 }); });
+      U.push((dt, t) => { ringM.emissiveIntensity = .6 + Math.sin(t * 3) * .3; minis.forEach(m => { if (m.visible && m.scale.x < 1) m.scale.setScalar(Math.min(1, m.scale.x + dt * 3)); }); });
       U.push((dt, t) => { if (!up) return; if (up < 1) { up = Math.min(1, up + dt * .9); pole.scale.y = .04 + .96 * up; flag.visible = star.visible = up > .55; flag.scale.x = star.scale.x = K.sstep(.55, 1, up); }
         const a = flagG.attributes.position; for (let k = 0; k < a.count; k++) a.setZ(k, Math.sin(f0[k * 3] * 4 - t * 2.2) * .05 * f0[k * 3]); a.needsUpdate = true; }); // (a gentle ripple, as if it was just set swinging)
       // five moon rocks to count
@@ -638,7 +653,33 @@ export function initSpace(G, api) {
       { const eye = model(b => b.add(new THREE.CylinderGeometry(.42, .78, .5, 6, 1, false), null, (px, py, pz, nx, ny, nz, o) => { o.copy(K.col('#6e6048')).lerp(K.col('#241f1a'), Math.max(0, 1 - ny) * .9); }), K.softMat(), false);
         eye.position.y = hy + .16; hx.add(eye); }                                                                    // (the dark eye of the storm, above the stepped walls)
       let hs = 0;
-      tapIt(hx, () => { hs = 4; Sound.noise && Sound.noise(1, 250, 800, .04); fact('⬡ A six-sided storm! Saturn has a hexagon-shaped storm at its top.', 'saturnhex'); }, X + 62, 'saturnhex');
+      // (build 172) CLIMB THE HEXAGON STORM: tap it (or 🐾 beside it) and she hops onto the bottom step; every step turns and
+      // carries her round (each the other way to the one below); ◀ ▶ walk round the step, JUMP hops up to the next one, ▼ hops
+      // down; a storm star waits on each of the five steps; at the very top she stands on the dark eye ("You climbed the six-
+      // sided storm!"); all five stars: a party. JUMP from the top (or ▼ from the bottom step) hops back to the path.
+      // The stars are children of the steps (five small meshes, one shared material), shown only while she climbs.
+      const tierTop = [], tierR = []; { let yy = 0; HT.forEach(([r, hh], k) => { yy += hh * .94; tierTop.push(yy + .03); tierR.push(Math.max(r * .82, (HT[k + 1] || [0])[0] * .82) + .2); }); }
+      const SA = [.6, 2.6, 4.4, 1.5, 3.6], hsM = toy('#ffd23f', { em: '#ffb000', ei: .9, m: .2 }), hsG = new THREE.OctahedronGeometry(.34, 0);
+      const hstars = SA.map((sa, k) => { const m = new THREE.Mesh(hsG, hsM); m.position.set(Math.cos(sa) * tierR[k], HT[k][1] * .5 + .55, Math.sin(sa) * tierR[k]); m.scale.set(.8, 1, .35); m.visible = false; hexes[k].add(m); return m; });
+      let hRide = null;
+      const climb = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - (X + 62)) > 7) return; hs = 1; Sound.noise && Sound.noise(1, 250, 800, .04);
+        fact('⬡ A six-sided storm! Saturn has a hexagon-shaped storm at its top. Climb it! JUMP hops up, ◀ ▶ walk round, ▼ hops down!', 'saturnhex');
+        const R = hRide = { type: 'hexclimb', t: 0, noExit: true, stick: true, k: 0, ra: Math.PI / 2 + hexes[0].rotation.y, hop: 0, got: SA.map(() => false), top: false, off: false }; P.ride = R; P.vx = P.vy = 0; hstars.forEach(m => { m.visible = true; });
+        const hopTo = k2 => { if (R.hop > 0) return; if (k2 < 0 || (R.top && k2 > 5)) { R.off = true; return; } const from = R.top ? 5 : R.k;
+          if (k2 === 5) { R.top = true; say('⬡ You climbed the six-sided storm! You are on top of Saturn\'s hexagon!', true); disc('saturnhextop'); api.burst(X + 62, hy + 1, -5.2, ['#ffeec2', '#ffd23f', '#ffffff'], 20, 2); Sound.chime(); }
+          else { if (R.top) R.top = false; const wpsi = hexes[from === 5 ? 4 : from].rotation.y, wa = R.ra - wpsi; R.k = k2; R.ra = wa + hexes[k2].rotation.y; }
+          R.hop = .45; Sound.boing && Sound.boing(); };
+        R.onJump = () => hopTo(R.top ? 6 : R.k + 1); R.onDown = () => hopTo(R.top ? 4 : R.k - 1);
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; hRide = null; hstars.forEach(m => { m.visible = false; }); if (P.ride === R) { P.ride = null; P.x = X + 62 + (P.x > X + 62 ? 4.6 : -4.6); P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } return; }
+          dt = Math.min(dt, .1); R.t += dt; R.hop = Math.max(0, R.hop - dt); const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          if (sk.y < -.5 && !R.downHeld) { R.downHeld = true; R.onDown(); } else if (sk.y > -.3) R.downHeld = false;
+          let wx, wz, wy; if (R.top) { wx = X + 62; wz = -5.2; wy = hy + .42; P.facing = sk.x < -.15 ? -1 : sk.x > .15 ? 1 : P.facing; }
+          else { const tier = hexes[R.k]; R.ra += (sk.x > .15 ? -1.3 : sk.x < -.15 ? 1.3 : 0) * dt; const wa = R.ra - tier.rotation.y; wx = X + 62 + Math.cos(wa) * tierR[R.k]; wz = -5.2 + Math.sin(wa) * tierR[R.k]; wy = tierTop[R.k]; P.facing = Math.sin(wa) > 0 ? 1 : -1;
+            if (!R.got[R.k]) { let d = Math.abs(((R.ra - SA[R.k]) % 6.283 + 6.283) % 6.283); d = Math.min(d, 6.283 - d); if (d < .4) { R.got[R.k] = true; hstars[R.k].visible = false; const n = R.got.filter(Boolean).length; Sound.tone(520 + n * 80, .15, 'sine', .07, 1.5); api.burst(wx, wy + .8, wz, ['#ffd23f', '#ffffff'], 10, 1.4);
+              if (n === SA.length) { say('⬡ All five storm stars! What a climber!', true); disc('saturnhexstars'); api.burst(wx, wy + 1, wz, ['#ffeec2', '#ffd23f', '#ff8fc8', '#7fe0a0'], 26, 2.4); Sound.giggle && Sound.giggle(); } } } }
+          P.x = wx; P.z = wz; P.y = wy + Math.sin(Math.min(1, R.hop / .45) * Math.PI) * .7;
+          hstars.forEach((m, q) => { m.rotation.y = t * 2.5 + q; }); }); };
+      tapIt(hx, climb, X + 62, 'saturnhex');
       U.push(dt => { hs = Math.max(0, hs - dt); hexes.forEach((m, k) => { m.rotation.y += dt * (k % 2 ? -1 : 1) * (.18 + k * .07 + hs * 1.2); }); });
     }
     yield;
@@ -689,9 +730,21 @@ export function initSpace(G, api) {
       // the diamond cloud: tap it and sparkling diamonds rain down
       const dcg = new THREE.Group(); dcg.position.set(X + 62, 6, -3); add(dcg); dcg.add(model(b => { for (const [x, y, z, r] of [[0, 0, 0, 1.2], [-1.15, -.12, 0, .9], [1.2, -.1, 0, .95], [-.45, .5, -.1, .85], [.55, .55, .1, .8], [0, -.3, .3, .95]]) b.put(K.geo.sph(2), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(K.col('#e2fdfd')).multiplyScalar(.72 + .32 * Math.max(0, ny)); }, [r, r * .8, r * .9]); }, K.softMat(), false));
       const gemG = new THREE.OctahedronGeometry(.16, 0), gemM = toy('#eaffff', { r: .05, cc: 1, em: '#9fe8ff', ei: .5 }), gems = []; for (let k = 0; k < 10; k++) { const m = mesh(gemG, gemM, X + 62, 5, -3); m.visible = false; m.scale.y = 1.4; gems.push(m); } let rain = 0, drop = 0;
-      tapIt(dcg, () => { rain = 3.2; Sound.twinkle ? Sound.twinkle() : Sound.chime(); fact('💎 Sparkle! Scientists think it might rain diamonds deep inside Uranus!', 'diamondrain'); }, X + 62, 'diamondrain');
-      U.push((dt, t) => { dcg.position.y = 6 + Math.sin(t * .8) * .16; dcg.scale.setScalar(1 + (rain > 2.8 ? Math.sin((3.2 - rain) * 16) * .08 : 0)); if (rain > 0) { rain -= dt; drop -= dt; if (drop <= 0) { drop = .16; const m = gems.find(q => !q.visible); if (m) { m.visible = true; m.position.set(X + 60.6 + Math.random() * 2.8, 5.2, -3 + (Math.random() - .5)); m.userData.v = 0; } } }
-        for (const m of gems) if (m.visible) { m.userData.v += 9 * dt; m.position.y -= m.userData.v * dt; m.rotation.y += dt * 7; if (m.position.y < .15) { m.visible = false; api.burst(m.position.x, .2, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 3, 1.4); Sound.tone && Math.random() < .5 && Sound.tone(1400 + Math.random() * 600, .06, 'sine', .02, 1.2); } } });
+      // (build 173) CATCH THE DIAMOND RAIN: tap the cloud (or 🐾 under it) and it drifts to and fro over the path, raining
+      // twelve diamonds that fall slowly toward the path; she runs ◀ ▶ (and jumps) to catch them; each one she catches chimes
+      // higher; eight in one shower: "a diamond collector!" and a party. Tap again for another shower. Same ten diamond meshes.
+      let shower = 0, caught = 0, dropped = 0, cx0 = X + 62;
+      const rainNow = () => { if (shower > 0) return; shower = 1; caught = 0; dropped = 0; drop = 0; Sound.twinkle ? Sound.twinkle() : Sound.chime();
+        fact('💎 Sparkle! Scientists think it might rain diamonds deep inside Uranus! Catch them!', 'diamondrain'); };
+      tapIt(dcg, rainNow, X + 62, 'diamondrain');
+      U.push((dt, t) => { dt = Math.min(dt, .1); const cxp = shower ? X + 62 + Math.sin(t * .55) * 5 : X + 62; cx0 += (cxp - cx0) * Math.min(1, dt * 2); dcg.position.x = cx0;
+        dcg.position.y = 6 + Math.sin(t * .8) * .16; dcg.scale.setScalar(1 + (shower && dropped < 2 ? Math.sin(t * 16) * .06 : 0));
+        if (shower) { drop -= dt; if (drop <= 0 && dropped < 12) { const m = gems.find(q => !q.visible); if (m) { drop = .55; dropped++; m.visible = true; m.position.set(cx0 + (Math.random() - .5) * 2.4, 5.2, -3); m.userData.v = 0; } } }
+        for (const m of gems) if (m.visible) { m.userData.v = Math.min(3.2, m.userData.v + 3 * dt); m.position.y -= m.userData.v * dt; m.position.z += (0 - m.position.z) * Math.min(1, dt * .9); m.rotation.y += dt * 7;
+          if (P.layer === 'space' && !P.ride && Math.abs(m.position.x - P.x) < .95 && m.position.y < P.y + 2.2 && m.position.y > P.y - .2 && Math.abs(m.position.z - (P.z || 0)) < 1.2) { m.visible = false; caught++; api.burst(m.position.x, m.position.y, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 8, 1.4); Sound.tone(900 + caught * 90, .12, 'sine', .05, 1.6);
+            if (caught === 8) { say('💎 Eight diamonds! You are a diamond collector!', true); disc('diamondcatch'); api.burst(P.x, P.y + 2, 0, ['#ffffff', '#9fe8ff', '#ffd23f', '#ff8fc8'], 26, 2.4); Sound.giggle && Sound.giggle(); } else if (caught === 4) say('💎 Four diamonds!'); }
+          else if (m.position.y < .15) { m.visible = false; api.burst(m.position.x, .2, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 3, 1.4); } }
+        if (shower && dropped >= 12 && !gems.some(q => q.visible)) { shower = 0; if (caught < 8) say(`💎 ${caught} diamonds! Tap the cloud for more!`); } });
     }
     yield;
     if (id === 'neptune') {
@@ -819,7 +872,30 @@ export function initSpace(G, api) {
       // the slippery ice plain to slide across (a glossy sheet on the ground)
       { const sheet = model(b => { const cgG = new THREE.CircleGeometry(1, 40); cgG.rotateX(-Math.PI / 2); b.add(cgG, null, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#d4e6fa', '#ffffff'], K.noise2(px * 4, pz * 4), o); }); }, K.shinyMat(), false); sheet.scale.set(7.3, 1, 3.6); sheet.position.set(X + 44.5, .015, -.6); sheet.material = sheet.material.clone(); sheet.material.transparent = true; sheet.material.opacity = .55; sheet.material.roughness = .12; add(sheet); }
       const heart = (dt) => { const on = P.layer === 'space' && P.grounded && P.x > X + 37.5 && P.x < X + 51.5; if (on && Math.abs(P.vx) > 1 && !(api.keysHeld && api.keysHeld())) { P.x += P.vx * dt * .6; if (Math.random() < dt * 14) api.burst(P.x, .1, 0, ['#ffffff', '#dcecff'], 1, .7); if (!told.slide) { told.slide = 1; fact('⛸️ Wheee! Pluto\'s big heart is made of ice: it\'s slippery!', 'plutoheart'); } } }; U.push(heart);
-      G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'plutoheart', run: () => fact('💗 Pluto\'s big heart is a giant plain of ice. Run across and slide!', 'plutoheart'), hintY: 1 });
+      // (build 174) THE HEART SLED: tap the ice plain (or 🐾 on it) and she sits in a little heart-shaped sled; ◀ ▶ ▲ ▼ push it
+      // and it GLIDES on the ice (it keeps going and slows only a little, and bumps gently off the edge of the plain); five pink
+      // ice hearts lie on the plain to collect; all five: "You found all of Pluto's hearts!" and a party. JUMP hops out.
+      // One sled mesh and five small heart meshes (one shared material), drawn only while she sleds.
+      const SC = [X + 44.5, -.6], SRX = 6.6, SRZ = 3.1, HPOS = [[-5, -.3], [-2.2, -2.5], [1.4, 1.7], [3.6, -2.2], [5.3, .6]];
+      const hshape = new THREE.Shape(); hshape.moveTo(0, -1); hshape.bezierCurveTo(-1.75, .15, -1.15, 1.35, 0, .62); hshape.bezierCurveTo(1.15, 1.35, 1.75, .15, 0, -1);
+      const hgeo = new THREE.ExtrudeGeometry(hshape, { depth: .25, bevelEnabled: false, curveSegments: 10 }); hgeo.center(); const hpM = toy('#ff8fc8', { em: '#ff4fa0', ei: .7, m: .2 });
+      const hpk = HPOS.map(([dx, dz]) => { const m = new THREE.Mesh(hgeo, hpM); m.scale.setScalar(.32); m.position.set(SC[0] + dx, .55, SC[1] + dz); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      const sled = model(b => { b.add(hgeo.clone().rotateX(-Math.PI / 2).scale(.62, .5, .62), null, '#ff6fae'); b.put(K.geo.box(), 0, -.08, 0, '#ffd6ea', [1.4, .06, .5]); for (const z of [-.42, .42]) b.put(K.geo.box(), 0, -.16, z, '#c9cdd8', [1.5, .05, .06]); }); sled.visible = false; sled.userData.dynamic = true; add(sled);
+      let sledR = null;
+      const sledGo = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - SC[0]) > 8) return; fact('💗 Pluto\'s big heart is a giant plain of ice! Hop in the heart sled: ◀ ▶ ▲ ▼ push it, JUMP hops out!', 'plutoheart');
+        const R = sledR = { type: 'heartsled', t: 0, noExit: true, stick: true, x: Math.max(SC[0] - SRX + .5, Math.min(SC[0] + SRX - .5, P.x)), z: SC[1] + 1.5, vx: 0, vz: 0, got: HPOS.map(() => false) }; P.ride = R; P.vx = P.vy = 0;
+        hpk.forEach(m => { m.visible = true; }); sled.visible = true; Sound.boing && Sound.boing(); R.onJump = () => { R.off = true; };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; sledR = null; hpk.forEach(m => { m.visible = false; }); sled.visible = false; if (P.ride === R) { P.ride = null; P.x = R.x; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          R.vx += sk.x * 5 * dt; R.vz -= sk.y * 4 * dt; const sp = Math.hypot(R.vx, R.vz); if (sp > 5) { R.vx *= 5 / sp; R.vz *= 5 / sp; } R.vx *= 1 - .25 * dt; R.vz *= 1 - .25 * dt; // (ice: it keeps gliding)
+          R.x += R.vx * dt; R.z += R.vz * dt; const ex = (R.x - SC[0]) / SRX, ez = (R.z - SC[1]) / SRZ, e = Math.hypot(ex, ez);
+          if (e > 1) { const nx = ex / e / SRX, nz = ez / e / SRZ, nl = Math.hypot(nx, nz), ux = nx / nl, uz = nz / nl, vn = R.vx * ux + R.vz * uz; if (vn > 0) { R.vx -= 1.6 * vn * ux; R.vz -= 1.6 * vn * uz; Sound.tone(300, .08, 'triangle', .03, 1.4); } R.x = SC[0] + ex / e * SRX; R.z = SC[1] + ez / e * SRZ; }
+          sled.position.set(R.x, .2, R.z); if (sp > .2) sled.rotation.y = Math.atan2(-R.vz, R.vx); P.x = R.x; P.z = R.z; P.y = .25; if (Math.abs(R.vx) > .2) P.facing = R.vx > 0 ? 1 : -1;
+          if (sp > 1 && Math.random() < dt * 14) api.burst(R.x, .1, R.z, ['#ffffff', '#dcecff'], 1, .7);
+          HPOS.forEach((h, q) => { const m = hpk[q]; if (R.got[q]) return; m.rotation.y = t * 2 + q; m.position.y = .55 + Math.sin(t * 2.4 + q) * .1;
+            if (Math.hypot(m.position.x - R.x, m.position.z - R.z) < .9) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(560 + n * 90, .15, 'sine', .07, 1.5); api.burst(m.position.x, .6, m.position.z, ['#ff8fc8', '#ffffff', '#ff4fa0'], 10, 1.4);
+              if (n === HPOS.length) { say('💗 You found all of Pluto\'s hearts! Pluto loves you!', true); disc('plutohearts'); api.burst(R.x, 1.5, R.z, ['#ff8fc8', '#ffffff', '#ffd23f', '#ff4fa0'], 28, 2.4); Sound.giggle && Sound.giggle(); } } }); }); };
+      G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'plutoheart', run: sledGo, hintY: 1 });
       // Charon, Pluto's big moon with its dark red cap, and the Sun: only a very bright star from this far away
       const charon = inSky((yield* K.skyBodySteps('charon', 15, { size: 256 })), MID + 44, 14, -200); charon.rotation.z = -.5; U.push(dt => { charon.rotation.y += dt * .015; });
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');

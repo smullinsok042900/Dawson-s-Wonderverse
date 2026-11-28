@@ -136,6 +136,30 @@ export function buildVolcanoCoaster(k) {
     fish.instanceMatrix.needsUpdate = true;
     if (k.api.burst && Math.random() < dt * 3) k.api.burst(LX + (Math.random() - .5) * 50, -LAGOON.depth * Math.random(), LZ + (Math.random() - .5) * 40, ['#ffffff', '#dff6ff'], 2, .8); });
 
+  // (build 176) MORE SEA CREATURES, seen from the glass tunnel: three sea turtles gliding round with their flippers out, two big
+  //  friendly manta rays flapping slowly, an octopus waving its arms on a rock, and five glowing jellyfish bobbing up and down.
+  //  Each is ONE mesh with the same glow material as the coral (no new shader); they are in the underwater group, so they are
+  //  drawn and moved only while the camera is near the lagoon.
+  const critters = [];
+  { const turtle = () => { const b = makeBatch(); b.put(ball, 0, 0, 0, '#3f8a3a', [1.3, .45, 1]); for (const x of [-.45, 0, .45]) b.put(ball, x, .32, 0, '#7ab84a', [.3, .1, .26]); b.put(ball, 1.35, .05, 0, '#8fcf6a', [.38, .3, .32]);
+      for (const z of [-.14, .14]) { b.put(ball, 1.62, .15, z, '#ffffff', .1); b.put(ball, 1.69, .16, z, '#1a1a24', .055); }
+      for (const [x, z, sc] of [[.55, 1.1, 1], [.55, -1.1, 1], [-.75, .8, .65], [-.75, -.8, .65]]) b.put(ball, x, -.05, z, '#8fcf6a', [.55 * sc, .08, .28 * sc], [0, z > 0 ? -.5 : .5, 0]); return b.mesh(glowMat); };
+    const ray = () => { const b = makeBatch(); b.put(ball, 0, 0, 0, '#3a4a6a', [1.1, .25, 2.6]); b.put(ball, 0, .06, 0, '#4f6a9a', [.9, .2, 2.2]); b.put(ball, 0, -.08, 0, '#f2f6ff', [.8, .12, 1.6]);
+      for (const z of [-.3, .3]) b.put(ball, .95, .12, z, '#ffffff', .12); b.put(cone, -1.9, 0, 0, '#3a4a6a', [.08, 1.8, .08], [0, 0, Math.PI / 2]); return b.mesh(glowMat); };
+    const octo = () => { const b = makeBatch(); b.put(ball, 0, 1.3, 0, '#ff6f9f', [.9, 1.1, .9]); for (const z of [-.3, .3]) { b.put(ball, .75, 1.35, z, '#ffffff', .2); b.put(ball, .9, 1.35, z, '#1a1a24', .1); }
+      for (let j = 0; j < 8; j++) { const a = j / 8 * Math.PI * 2; for (let q = 0; q < 4; q++) b.put(ball, Math.cos(a) * (.6 + q * .4), .55 - q * .12 + Math.sin(q * 1.4) * .15, Math.sin(a) * (.6 + q * .4), q % 2 ? '#ff8fb8' : '#ff6f9f', .26 - q * .04); } return b.mesh(glowMat); };
+    const jelly = c => { const b = makeBatch(); b.put(ball, 0, 0, 0, c, [.7, .5, .7]); for (let j = 0; j < 5; j++) { const a = j * 1.26; b.put(cyl, Math.cos(a) * .35, -.8, Math.sin(a) * .35, c, [.04, 1.4, .04]); } return b.mesh(glowMat); };
+    for (const [r, d, sp, ph] of [[13, -5, .16, 0], [21, -8, -.12, 2], [27, -4.5, .1, 4]]) { const m = turtle(); m.scale.setScalar(1.3); sea.add(m); critters.push({ m, kind: 't', r, d, sp, ph }); }
+    for (const [r, d, sp, ph] of [[17, -3.5, .09, 1], [30, -6, -.07, 3.5]]) { const m = ray(); m.scale.setScalar(1.6); sea.add(m); critters.push({ m, kind: 'r', r, d, sp, ph }); }
+    { const m = octo(), ox = LX + 9, oz = LZ - 5, od = LAGOON.depth * (1 - (Math.hypot(9, 5) / LAGOON.r) ** 2); m.position.set(ox, -od + .2, oz); m.rotation.y = -.6; sea.add(m); critters.push({ m, kind: 'o', y0: -od + .2 }); }
+    ['#ffb3e6', '#b3e6ff', '#d9b3ff', '#ffe0b3', '#b3ffd9'].forEach((c, n) => { const m = jelly(c); const a = n * 1.25 + .4, r = 9 + n * 5; m.position.set(LX + Math.cos(a) * r, -3 - (n % 3) * 1.5, LZ + Math.sin(a) * r * .8); sea.add(m); critters.push({ m, kind: 'j', y0: m.position.y, ph: n }); }); }
+  C.seaCritters = critters; // (for the tests)
+  k.U.push((dt, t) => { if (!sea.visible) return; for (const c of critters) { const m = c.m;
+      if (c.kind === 't' || c.kind === 'r') { const a = t * c.sp + c.ph; m.position.set(LX + Math.cos(a) * c.r, c.d + Math.sin(t * .5 + c.ph) * .6, LZ + Math.sin(a) * c.r * .8); m.rotation.y = -a + (c.sp > 0 ? -Math.PI / 2 : Math.PI / 2);
+        m.rotation.z = Math.sin(t * .7 + c.ph) * .1; if (c.kind === 'r') m.scale.y = 1.6 * (1 + Math.sin(t * 1.6 + c.ph) * .35); }
+      else if (c.kind === 'o') { m.rotation.y = -.6 + Math.sin(t * .6) * .3; m.scale.set(1 + Math.sin(t * 1.3) * .05, 1 - Math.sin(t * 1.3) * .05, 1 + Math.sin(t * 1.3) * .05); }
+      else { m.position.y = c.y0 + Math.sin(t * .8 + c.ph) * .8; m.scale.set(1 - Math.sin(t * 1.6 + c.ph) * .12, 1 + Math.sin(t * 1.6 + c.ph) * .15, 1 - Math.sin(t * 1.6 + c.ph) * .12); } } });
+
   // ---------- the station: a platform under a striped roof, with glowing lava-orange arches ----------
   { const sx = X + VSTATION.dx; skel.put(box, sx - 4, .35, -.6, '#e8d8c8', [16, .7, 2.6]); k.plat(sx - 12, sx + 4, .7, { step: true, stepMax: .8 });
     for (let i = 0; i < 9; i++) skel.put(box, sx - 11.5 + i * 2, 4.4, -2.2, i % 2 ? '#ffffff' : '#ff6a1a', [2, .2, 4.4]);
@@ -148,8 +172,15 @@ export function buildVolcanoCoaster(k) {
   C.stars = stars;
   C.onPaw = R => { const s = stars.find(q => !q.got && Math.abs(R.i - q.i) < 40); if (!s) { k.say('⭐ Watch for the next star, then tap 🐾!', true); return; } s.got = true; s.m.visible = false; k.Sound.chime(); k.api.burst && k.api.burst(s.m.position.x, s.m.position.y, s.m.position.z, ['#ffd23f', '#ffffff'], 16, 2.4);
     const got = stars.filter(q => q.got).length; k.say(got < 6 ? `⭐ You grabbed a star! ${got} of 6!` : '⭐ ALL SIX STARS! You are a coaster star!', true); k.disc && k.disc(got < 6 ? 'vcoasterstar' : 'vcoasterstars'); };
-  C.onTick = R => { for (const s of stars) { if (s.got) continue; s.m.rotation.y += .05; if (!s.told && R.i > s.i - 40 && R.i < s.i) { s.told = true; k.say('⭐ A star! Tap 🐾 to grab it!', true); } } };
-  C.onStart = () => { for (const s of stars) { s.got = false; s.told = false; s.m.visible = true; } };
+  // (build 177) THE SPLASH: where the train plunges into the lagoon and where it bursts back out, a big wave of spray goes up
+  //  round it (white and blue drops, a splashing sound, a little shake) and the voice cries SPLASH! the first time.
+  let wasUnder = 0, splashes = 0; C.splashes = () => splashes;
+  const splash = (i, down) => { const x = pos[i * 3], z = pos[i * 3 + 2]; splashes++; G.shake = Math.max(G.shake || 0, down ? .45 : .25);
+    k.Sound.noise && k.Sound.noise(down ? 1.1 : .7, 300, 1600, down ? .09 : .06); for (let q = 0; q < (down ? 4 : 2); q++) k.api.burst && k.api.burst(x + (Math.random() - .5) * 3, .4, z + (Math.random() - .5) * 3, ['#ffffff', '#dff6ff', '#7fd4ff', '#3fb4e8'], 26, down ? 4.2 : 3);
+    if (down && splashes === 1) k.say('💦 SPLASH! Into the water we go!', true); };
+  C.onTick = R => { const j = Math.floor(R.i), u = C.underW[j] || 0; if (j > 0 && u !== wasUnder) splash(j, u === 1); wasUnder = u;
+    for (const s of stars) { if (s.got) continue; s.m.rotation.y += .05; if (!s.told && R.i > s.i - 40 && R.i < s.i) { s.told = true; k.say('⭐ A star! Tap 🐾 to grab it!', true); } } };
+  C.onStart = () => { wasUnder = 0; splashes = 0; for (const s of stars) { s.got = false; s.told = false; s.m.visible = true; } };
 
   // ---------- one-time work, a few milliseconds a frame; then the skeleton becomes one mesh ----------
   jobs.push(() => { const g2 = glow.mesh(glowMat); g2.receiveShadow = false; root.add(g2); try { k.api.compile && k.api.compile(root); } catch (err) { } check = 0; C.ready = true; });
@@ -186,7 +217,7 @@ export function buildVolcanoCoaster(k) {
     cars[n].position.set(pos[j0 * 3] + (pos[j1 * 3] - pos[j0 * 3]) * f, pos[j0 * 3 + 1] + (pos[j1 * 3 + 1] - pos[j0 * 3 + 1]) * f, pos[j0 * 3 + 2] + (pos[j1 * 3 + 2] - pos[j0 * 3 + 2]) * f); frame(j0); cars[n].quaternion.copy(q); } };
   placeTrain(2 * CAR_GAP);
   Object.assign(C, { placeTrain, cars, exitX: X + VSTATION.dx + 3, homeI: 2 * CAR_GAP, CAR_GAP, stationX: X + VSTATION.dx, fp: true, name: 'volcano',
-    says: { L: '🌋 Up, up, round the OUTSIDE of the volcano!', V: '🔥 INSIDE THE VOLCANO! Look at the glowing lava!', W: '🐠 UNDER THE SEA! Look at the fish and the coral!', B: '🚀 BOOST! Zoom!' },
+    says: { L: '🌋 Up, up, round the OUTSIDE of the volcano!', V: '🔥 INSIDE THE VOLCANO! Look at the glowing lava!', W: '🐠 UNDER THE SEA! Look at the turtles, the fish and the coral!', B: '🚀 BOOST! Zoom!' },
     endSay: '🌋 WOW! Round the volcano, through the lava and under the sea!', disc: 'volcanocoaster' });
   const board = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - (X + VSTATION.dx)) > 12) return; if (!C.ready) { k.say('🎢 The volcano coaster is getting ready... one moment!', true); return; }
     k.say('🌋 Hold on tight! Up round the volcano, into the lava, under the sea!', true); C.onStart(); G.startCoaster && G.startCoaster(C); };

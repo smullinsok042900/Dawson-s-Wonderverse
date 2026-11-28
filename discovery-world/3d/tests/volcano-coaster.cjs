@@ -17,16 +17,17 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   await ev(X => { const P = __DDW3.player; P.x = X + 80; P.y = 0; P.vx = 0; P.grounded = true; __DDW3.G.interact.find(i => i.disc === 'volcanocoasterride').run(); }, X);
   check('she boards at the station', await until(() => __DDW3.player.ride && __DDW3.player.ride.type === 'coaster' && __DDW3.player.ride.C === __DDW3.G.volcanoCoaster, null, 10000));
   check('the FIRST-PERSON camera: her eyes in the front seat (her creature hidden, the camera on the train)', await until(() => { const o = __DDW3.G.camOverride; return !!(o && o.fp && __DDW3.G.playerHidden); }, null, 10000));
-  const seen = { lift: 0, inVolc: 0, insideDrawn: 0, camInside: 0, under: 0, seaDrawn: 0, camUnder: 0, maxY: 0, loopUp: 0 }; let shots = 0, last = -1, stuck = 0;
+  const seen = { lift: 0, inVolc: 0, insideDrawn: 0, camInside: 0, under: 0, seaDrawn: 0, camUnder: 0, maxY: 0, loopUp: 0, critters: new Set() }; let shots = 0, last = -1, stuck = 0;
   for (let n = 0; n < 20000; n++) {
     const s = await ev(() => { const P = __DDW3.player, R = P.ride; if (!R || R.type !== 'coaster') return null; const C = R.C, j = Math.floor(R.i), cam = __DDW3.camera.position, VX = __DDW3.G.volcanoX;
       const rCam = Math.hypot(cam.x - VX, cam.z + 150), inC = cam.y < 54 && rCam < 14 + 44 * Math.max(0, Math.min(1, 1 - cam.y / 55)) - 4;
       let insideVis = false, seaVis = false; for (const g of C.cars[0].parent.children) { if (g.isGroup && g.children.length > 2 && g.visible) { if (g.children.some(m => m.geometry && m.geometry.type === 'CircleGeometry' && m.position.y > 2)) insideVis = true; if (g.children.some(m => m.isInstancedMesh)) seaVis = true; } }
       const near = C.stars.find(q => !q.got && R.i > q.i - 30 && R.i < q.i + 10);
-      return { i: R.i, N: C.N, f: C.flag[j], inV: C.inVolc[j], uw: C.underW[j], y: C.pos[j * 3 + 1], up: __DDW3.camera.up.y, camIn: inC, camUnder: cam.y < -.5, insideVis, seaVis, star: !!near }; });
+      const crit = (C.seaCritters || []).filter(c => c.m.position.distanceTo(cam) < 24).map(c => c.kind);
+      return { i: R.i, N: C.N, f: C.flag[j], inV: C.inVolc[j], uw: C.underW[j], y: C.pos[j * 3 + 1], up: __DDW3.camera.up.y, camIn: inC, camUnder: cam.y < -.5, insideVis, seaVis, star: !!near, crit }; });
     if (!s) break;
     if (s.f === 'L') seen.lift = 1; if (s.inV) seen.inVolc = 1; if (s.inV && s.insideVis) seen.insideDrawn = 1; if (s.inV && s.camIn) seen.camInside = 1;
-    if (s.uw) seen.under = 1; if (s.uw && s.seaVis) seen.seaDrawn = 1; if (s.uw && s.camUnder) seen.camUnder = 1; seen.maxY = Math.max(seen.maxY, s.y); if (s.up < -.3) seen.loopUp = 1;
+    if (s.uw && s.seaVis) for (const c of s.crit) seen.critters.add(c); if (s.uw) seen.under = 1; if (s.uw && s.seaVis) seen.seaDrawn = 1; if (s.uw && s.camUnder) seen.camUnder = 1; seen.maxY = Math.max(seen.maxY, s.y); if (s.up < -.3) seen.loopUp = 1;
     if (s.star) { await ev(() => __DDW3.G.doAction()); shots++; }
     if (s.i === last) { if (++stuck > 200) break; } else stuck = 0; last = s.i;
     await sleep(60);
@@ -36,6 +37,8 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('...with the camera really inside the volcano (first person)', seen.camInside);
   check('it dives UNDER THE WATER, and the underwater world is drawn', seen.under && seen.seaDrawn);
   check('...with the camera really under the surface', seen.camUnder);
+  check('(build 177) a big SPLASH where it plunges into the lagoon and where it bursts back out', (await ev(() => __DDW3.G.coasters.volcano.splashes())) >= 2, String(await ev(() => __DDW3.G.coasters.volcano.splashes())));
+  check('(build 176) sea creatures swim past the glass tunnel: turtles, manta rays, the octopus, jellyfish (at least three kinds seen up close)', seen.critters.size >= 3, [...seen.critters].join(','));
   check('the view turns over in the loop (the ride camera rolls with the track)', seen.loopUp);
   const stars = await ev(() => __DDW3.G.volcanoCoaster.stars.filter(q => q.got).length);
   check('🐾 grabs the stars on the way', stars >= 4, `${stars} of 6 (${shots} taps)`);

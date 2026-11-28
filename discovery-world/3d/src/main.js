@@ -1083,7 +1083,7 @@ let picBusy = false; // (one new friend's picture per frame, so opening the pane
 function newFriendPictures() { if (picBusy) return; const miss = Object.keys(CREATURES).filter(k => !portraits[k]); if (!miss.length) return; picBusy = true;
   const next = () => { const k = Object.keys(CREATURES).find(q => !portraits[q]); if (!k) { picBusy = false; try { localStorage.setItem(PORTRAIT_KEY, JSON.stringify(portraits)); } catch (e) { } return; }
     requestAnimationFrame(() => { /* (one picture per frame; background sculpting was tried in build 102 and made each picture much slower to draw, so it is not used) */
-      const t1 = performance.now(); try { Object.assign(portraits, renderPortraits([k])); { const img = document.querySelector(`.introPick[data-c="${k}"] img`); if (img && portraits[k]) img.src = portraits[k]; } (G.picTimes = G.picTimes || []).push({ k, drawMs: Math.round(performance.now() - t1) }); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); }); };
+      const t1 = performance.now(); try { Object.assign(portraits, renderPortraits([k])); /* (build 178) draw the world again straight away: the picture is drawn into a corner of the game's own canvas, and on a frame the game itself does not draw, the screen showed only that corner and the dark page behind it ("everything is dark") */ if (!NORENDER) { if (post.enabled) post.render(); else renderer.render(scene, camera); } { const img = document.querySelector(`.introPick[data-c="${k}"] img`); if (img && portraits[k]) img.src = portraits[k]; } (G.picTimes = G.picTimes || []).push({ k, drawMs: Math.round(performance.now() - t1) }); } catch (e) { console.log('friend picture later', e.message); picBusy = false; return; } if (G.dress && G.dress.isOpen) G.dress.render(); requestAnimationFrame(next); }); };
   requestAnimationFrame(next); }
 const dress = initDressUp({ world, save: () => saveSoon(), kinds: () => { newFriendPictures(); return Object.keys(CREATURES).map(k => [k, portraits[k]]); }, kind: () => player.creature,
   setKind: k => { setCreature(k); creature.cheer(); saveSoon(); }, rewear: () => { wear(creature.parts, player.creature, (world.wear || {})[player.creature]); creature.cheer(); G.mp && G.mp._outfitChanged && G.mp._outfitChanged(); },
@@ -1808,7 +1808,7 @@ window.__DDW3 = { THREE, scene,
 renderer.info.autoReset = false;
 let lastFrameAt = 0;
 G.doAction = doAction; G.soundOn = () => Sound.on;
-const GAME_BUILD = '171'; G.build = GAME_BUILD;
+const GAME_BUILD = '178'; G.build = GAME_BUILD;
 // (build 51b) UPDATES ARRIVE BY THEMSELVES. An iPhone Home Screen app is not reloaded when it is opened again: it is
 // only brought back from the background, so it kept running an old build for days. Now, at start-up and every time the
 // game comes back to the front, it asks the website which build is published (a 20-byte file) and, if that is not this

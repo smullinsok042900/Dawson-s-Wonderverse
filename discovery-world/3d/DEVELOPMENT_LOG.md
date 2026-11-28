@@ -6,6 +6,116 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 178 — THE GIANT SUN COASTER (ATTRACTIONS row 20: "a Sun coaster at the Moon coaster's scale")
+- **The ride** (`src/sun-coaster.js`, built by the same track builder as the Moon and Volcano Island coasters; one
+  continuous 920 m track, about a minute): from a golden station on the Sun's landing area (x 92, beside the path), round
+  behind it and out over the edge of the golden platforms, THE SPIRAL LIFT 54 m up above the boiling Sun, THE BIG DROP,
+  a long sweep through the first FLARE ARCHES (four giant glowing loops of sun-fire round the track: a whoosh and a shower of
+  sparks as the train flies through each, "Through the SOLAR FLARE! WHOOSH!"), a LOOP-THE-LOOP, a BOOSTER, a long high run
+  over the Sun's surface through more flare arches, a CORKSCREW, and home. Ridden in FIRST PERSON like the volcano coaster;
+  six stars along the way (🐾); 🏁 / 🔁; riding together in Play Together (`G.coasters.sun`). The voice says it is a magic
+  track: nothing can really go this close to the Sun. The small Solar Flare Coaster in area 2 is still there.
+- Speed: the skeleton (spine, rings, arches, station) is one mesh; the detailed rails are streamed in pieces near the camera,
+  as on the other coasters; the same shared glow material (no new shader).
+- **The brief dark screen (the family's report, NEXT_TASKS):** a drawn run of the new test caught a frame that was all dark
+  purple with Sprout's portrait in the bottom-left corner. A new friend's picture is drawn into a corner of the game's own
+  canvas (`newFriendPictures`, one per frame); on a frame the game itself did not draw, that corner and the dark page behind
+  were all the screen showed. The world is now drawn again straight after each picture (`main.js`; at most once per new
+  friend, and the pictures are then kept). A screenshot probe opening the dress-up panel could not make it happen in either
+  build here, so the evidence is the caught frame itself.
+- The Sun coaster's six stars are drawn only during a ride (a first version showed them all the time: +3 to +6 draw calls on
+  the whole Sun).
+- **Tested** (desktop, software rendering): `tests/sun-coaster.cjs` (new): 11/11 drawn and with `?norender`
+  (built, boards, first person, the lift to 54 m, all four flare arches, the loop, the booster, 6 of 6 stars, home, the normal
+  camera back, no page errors; the picture after the first flare arch now shows the track and the Sun, no dark frame); riding
+  together on it (`COASTER=sun coaster-together`, two browsers) 5/5; the Sun's own test `sun.cjs` 17/17.
+- Speed on the Sun vs build 177: the same at all six spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** on the final
+  version (desktop, software rendering). Not tested on an iPhone.
+
+## Checkpoint: test fix — `tests/android-rendering.cjs` runs again (NEXT_TASKS)
+- It read `src/main.js` for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in build 101,
+  so it stopped before testing anything; and the portrait code it copies now calls `freeObject` (build 107), which its test page
+  did not have. The source matching now finds the function either way, and its page has the same `freeObject`. What it checks
+  is unchanged. Result (desktop, software rendering): both default checks PASS (portraits: identical pixels, broken-copy
+  recovery, renderer state; the resize flash and quality changes). The optional `FULL_GAME_CHECK=1` part still needs updating
+  to the twelve-friend start screen (NEXT_TASKS). No game change (no new build).
+
+## Checkpoint: build 177 — THE SPLASH on the Volcano Island coaster (ATTRACTIONS row 21)
+- Where the train plunges into the lagoon, a big wave of spray goes up all round it (white and blue drops), with a splashing
+  sound and a little shake, and the voice cries "SPLASH! Into the water we go!"; where it bursts back out of the water, a
+  smaller splash. (`volcano-coaster.js`: the ride's own tick watches the train cross the water's surface.)
+- **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check (two splashes on the ride, in and out):
+  the whole ride 16/16 drawn and with `?norender`; riding together on the volcano coaster (two browsers) still all passed.
+- Speed on Volcano Island vs build 176: the same at all four spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345**
+  (desktop, software rendering). Not tested on an iPhone.
+
+## Checkpoint: build 176 — sea creatures under the volcano lagoon (ATTRACTIONS row 21); row 18 PLAYABLE
+- **Row 18 (the older small planet activities) is now PLAYABLE:** builds 166–175 made ten of them hands-on (the Mars rover,
+  the Venus volcano, the Mars dust devil, the Neptune geyser, Uranus bowling, the Great Red Spot, Saturn's hexagon, the
+  diamond rain, Pluto's heart sled, the Moon flags), each with its own browser test. What is left are things far away in the
+  sky or a spoken fact, with nothing to steer.
+- **The Volcano Island coaster's underwater part** (`volcano-coaster.js`): as the train runs through the glass tunnel she now
+  sees THREE SEA TURTLES gliding round with their flippers out, TWO BIG MANTA RAYS flapping slowly, an OCTOPUS waving its arms
+  on a rock and FIVE GLOWING JELLYFISH bobbing up and down, as well as the fish and the coral. The voice says "Look at the
+  turtles, the fish and the coral!". Each creature is one mesh with the coral's glow material (no new shader), in the
+  underwater group: drawn and moved only while the camera is near the lagoon.
+- **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check: at least three kinds of sea creature come
+  within 24 m of the camera under the water (all four did): the whole ride 15/15 drawn and with `?norender`; the underwater picture shows a jellyfish beside the tunnel.
+- Speed on Volcano Island vs build 175: the same at all four spots, identical draw calls (`PERFORMANCE_LOG.md`). **Full smoke
+  test 345/345** (desktop, software rendering). Not tested on an iPhone.
+
+## Checkpoint: build 175 — MOON EXPLORER: her flag, her colours, four little flags (ATTRACTIONS row 18)
+- **Before:** a tap raised the flag once, and nothing more.
+- **Now** (`space.js`): the first tap raises the big flag ("Tap it to change its colour, then plant little flags in the
+  glowing rings!"); each tap after that gives it a new colour (red, blue, green, yellow, purple) with a little sparkle. Four
+  softly pulsing glowing rings lie beside the path across the landing area; 🐾 in one plants a little flag in her colour with
+  a puff of moon dust ("A flag! Find the next glowing ring!"); all four: "You explored the Moon! Four flags, all yours!" and a
+  party.
+- One mesh for the four rings and four small flag meshes (shown only once planted).
+- **Tested** (desktop, software rendering): `tests/moon-flags.cjs` (new): 4/4 drawn and with `?norender`
+  (the flag goes up, a new colour, four little flags planted, no page errors); `moon-life` still all passed.
+- Speed on the Moon vs build 174: the same or a little faster at all five spots (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
+
+## Checkpoint: build 174 — THE HEART SLED on Pluto's ice plain (ATTRACTIONS row 18)
+- **Before:** the 🐾 on Pluto's ice plain only said a fact (running across it slid a little).
+- **Now she sleds** (`space.js`): a tap (or 🐾 on the ice plain) and she sits in a little pink heart-shaped sled; ◀ ▶ ▲ ▼ push
+  it and it GLIDES on the ice: it keeps going after she lets go and slows only a little, and bumps gently off the edge of the
+  plain with a "tok"; five pink ice hearts bob on the plain; each one she slides over chimes; all five: "You found all of
+  Pluto's hearts! Pluto loves you!" and a party. JUMP hops her out onto the path.
+- One sled mesh and five small heart meshes (one shared material), drawn only while she sleds.
+- **Tested** (desktop, software rendering): `tests/pluto-sled.cjs` (new): 7/7 drawn and with `?norender`
+  (into the sled, it keeps gliding after a push, all five hearts, it stays on the plain, JUMP out, no page errors). The first
+  drawn run failed the glide check because the test waited a fixed 1.2 s (only 1-2 drawn frames here); it now waits for the
+  frames, like the other ride tests, and the check is unchanged. `pluto-life` still all passed.
+- Speed on Pluto vs build 173: the same at all six spots, identical draw calls (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
+
+## Checkpoint: build 173 — CATCH THE DIAMOND RAIN on Uranus (ATTRACTIONS row 18)
+- **Before:** a tap on the diamond cloud made diamonds fall for 3 s, out of her reach behind the path.
+- **Now she catches them** (`space.js`): a tap (or 🐾 under it) and the cloud drifts to and fro over the path, raining twelve
+  diamonds that fall slowly forward onto the path; she runs ◀ ▶ (and jumps) to catch them under the cloud; each catch chimes a
+  little higher; four: "Four diamonds!"; eight in one shower: "You are a diamond collector!" and a party; fewer: "5 diamonds!
+  Tap the cloud for more!". Tap again for another shower. The same ten diamond meshes as before (no new meshes).
+- **Tested** (desktop, software rendering): `tests/uranus-diamonds.cjs` (new): 4/4 drawn and with `?norender`
+  (the rain starts, she catches eight, the shower ends and a tap starts another, no page errors); `uranus-bowling` still all passed.
+- Speed on Uranus vs build 172: the same at all six spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop,
+  software rendering). Not tested on an iPhone.
+
+## Checkpoint: build 172 — CLIMB SATURN'S HEXAGON STORM (ATTRACTIONS row 18)
+- **Before:** a tap on the stepped six-sided storm made its steps spin faster for 4 s.
+- **Now she climbs it** (`space.js`): a tap (or 🐾 beside it) and she hops onto the bottom step. Every step turns, each the
+  other way to the one below, and carries her round; ◀ ▶ walk her round the step, JUMP hops her up to the next step, ▼ hops
+  back down. A storm star waits on each of the five steps (walk round to it); at the very top she stands on the dark eye:
+  "You climbed the six-sided storm!"; all five stars: "What a climber!" and a party. JUMP from the top (or ▼ from the bottom
+  step) hops her back onto the path.
+- The stars ride on the steps (five small meshes, one shared material), shown only while she climbs.
+- **Tested** (desktop, software rendering): `tests/saturn-hexclimb.cjs` (new): 7/7 drawn and with `?norender`
+  (onto the bottom step, carried round, walked to every star and up every step, the top, ▼ down, JUMP back to the path, no
+  page errors); `saturn-rides` still all passed.
+- Speed on Saturn vs build 171: the same at all five spots, identical draw calls (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
+
 ## Checkpoint: build 171 — SURF THE GREAT RED SPOT on Jupiter (ATTRACTIONS row 18)
 - **Before:** a tap on the Great Red Spot made the storm spin faster for 4 s.
 - **Now she surfs it** (`space.js`): a tap (or 🐾 on the path beside it) and she hops on a little puffy cloud that the storm

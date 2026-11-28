@@ -4,9 +4,12 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
-## TEST FIX: android-rendering.cjs
-It reads `src/main.js` and looks for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in
-build 101, so it stops with an assertion before testing anything. Update its source matching (keep what it checks).
+## TEST FIX: android-rendering.cjs, the optional full-game part (`FULL_GAME_CHECK=1`)
+Fixed in build 178: the source matching (`renderPortraits(kinds = ...)`, build 101) and the `freeObject` helper the portrait
+code uses (build 107); the default checks pass again (portraits, the resize flash). The optional `FULL_GAME_CHECK=1` part still
+expects the old start screen (four pictures: jelly, pip, sprout, zuzu, decoded as images); since build 143 it shows all twelve
+friends, and one picture fails to decode in its check ("The source image cannot be decoded"). Update that part to the current
+start screen (keep what it checks: real portrait colours, four readbacks at start-up, shadows kept, the frame after a resize).
 
 ## SPEED: her own character (found in build 138)
 Every view draws her character as about 33 separate meshes (head, ears, hands, tail... each its own draw call): more than any
@@ -253,7 +256,9 @@ A tour of every district found these still looking like placeholders. Do them in
   ±60 ms between rounds and is the one flagged lately (Frosty -326, Sunny Beach -50, Toy Town 560); reruns showed it the same
   each time. Measure it once more at the end, or wait a few seconds after the walk-through before the first measurement.
 
-- **(2026-11-27, the family's picture) "Everything is dark now"** in the Studio/playhouse (the ball-pit room with the slide), which
-  "fixed itself" a moment later. Find what can dim the whole scene for a moment on the phone: the adaptive graphics changing
-  level (lights or post-processing switching), leaving a room or the caves (G.roomCam / spaceLight), or the exposure. Reproduce
-  in an iPhone-sized browser by walking in and out of the rooms and the caves near the start.
+- **(2026-11-27, the family's picture) "Everything is dark now"**, which "fixed itself" a moment later. Build 178 found one
+  real cause and fixed it: a new friend's picture is drawn into a corner of the game's own canvas (`newFriendPictures`, one per
+  frame, e.g. for the dress-up strip); on a frame the game itself did not draw, the screen showed only that picture in the
+  corner and the dark page behind (a drawn test of the Sun coaster caught exactly that: all dark purple with Sprout's picture
+  in the corner). The world is now drawn again straight after each picture. Watch for reports; if it ever happens again,
+  check the adaptive graphics level changes and leaving a room or the caves (G.roomCam / spaceLight) next.

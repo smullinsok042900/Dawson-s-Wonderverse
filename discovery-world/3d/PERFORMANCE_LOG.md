@@ -4,6 +4,39 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 178 vs build 177, the Sun with the giant coaster (desktop, software rendering; `tests/perf/compare.cjs sun`; not iPhone numbers)
+- First version (its six stars always shown): every spot the same in time, but +3 to +6 draw calls on the whole Sun. The stars
+  are now drawn only during a ride.
+- Final version (2 rounds each): 20: 150 → 161 ms (+7%); 60: 148 → 155; 140: 165 → 163; 165: 163 → 177 (+8%); 230: 156 → 157;
+  320: 163 → 146: all the same (within the 12% this machine varies by). Draw calls +1 to +3 (the train's three cars and the
+  coaster's one skeleton mesh, where they are in view).
+
+## Build 177 vs build 176, Volcano Island with the splash (desktop, software rendering; `tests/perf/compare.cjs volcano`; not iPhone numbers)
+- 3 rounds each: 20: 156 → 140 ms; 32: 141 → 142; 135: 144 → 137; 248: 136 → 137: all the same. Draw calls identical (the splash
+  is the game's shared spray particles, only at the moment the train crosses the water).
+
+## Build 176 vs build 175, Volcano Island with the sea creatures (desktop, software rendering; `tests/perf/compare.cjs volcano`; not iPhone numbers)
+- 1 round each: 20: 136 → 140 ms; 32: 137 → 131; 135: 141 → 139; 248: 126 → 130: all the same. Draw calls identical (the creatures
+  are in the underwater group, drawn only when the camera is near the lagoon).
+
+## Build 175 vs build 174, the Moon with the explorer flags (desktop, software rendering; `tests/perf/compare.cjs moon`; not iPhone numbers)
+- 1 round each: 20: 209 → 198 ms; 30: 162 → 153; 50: 151 → 143; 66: 153 → 148; 79: 148 → 148: all the same (slightly faster).
+  Draw calls −2 to +2 (the ring mesh, +1, near the rings; the rest are friends walking about). (`compare.cjs`: the Moon now also
+  measures 66, between two rings.)
+
+## Build 174 vs build 173, Pluto with the heart sled (desktop, software rendering; `tests/perf/compare.cjs pluto`; not iPhone numbers)
+- 1 round each: 30: 179 → 168 ms; 44: 183 → 176; 60: 178 → 172; 95: 170 → 165; 199: 201 → 213; 320: 206 → 227 (+10%): all the same.
+  Draw calls identical at every spot (the sled and the hearts are hidden until she sleds). (`compare.cjs`: Pluto now also
+  measures 44, at the ice plain.)
+
+## Build 173 vs build 172, Uranus with the diamond rain to catch (desktop, software rendering; `tests/perf/compare.cjs uranus`; not iPhone numbers)
+- 1 round each: 60: 146 → 153 ms; 80: 147 → 148; 95: 143 → 138; 185: 185 → 185; 270: 162 → 152; 320: 131 → 142: all the same.
+  Draw calls the same (no new meshes: the same ten diamonds).
+
+## Build 172 vs build 171, Saturn with the hexagon climb (desktop, software rendering; `tests/perf/compare.cjs saturn`; not iPhone numbers)
+- 1 round each: 62: 178 → 164 ms; 95: 152 → 149; 150: 156 → 155; 240: 153 → 156; 320: 151 → 150: all the same. Draw calls identical
+  at every spot (the stars are hidden until she climbs). (`compare.cjs`: Saturn's first spot is now 62, at the storm.)
+
 ## Build 171 vs build 170, Jupiter with the storm surfing (desktop, software rendering; `tests/perf/compare.cjs jupiter`; not iPhone numbers)
 - 1 round each (no spot differed by more than 12%): 30: 187 → 190 ms; 52: 209 → 194; 60: 195 → 201; 90: 183 → 204 (+11%); 150: 195 → 185;
   205: 187 → 188; 320: 155 → 161: all the same. Draw calls identical at every spot (the stars and the cloud board are hidden until

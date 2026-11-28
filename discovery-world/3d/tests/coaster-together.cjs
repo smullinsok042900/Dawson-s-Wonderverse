@@ -6,7 +6,7 @@
 const { chromium } = require('playwright'); const path = require('path'); const { start } = require('./mp-relay.cjs');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let fail = 0; const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${info ? '  — ' + info : ''}`); if (!ok) fail++; };
-const PLACE = process.env.COASTER === 'volcano' ? 'volcano' : 'moon', CO = PLACE === 'volcano' ? 'volcanoCoaster' : 'moonCoaster', DISC = PLACE === 'volcano' ? 'volcanocoasterride' : 'coaster';
+const PLACE = ['volcano', 'sun'].includes(process.env.COASTER) ? process.env.COASTER : 'moon', CO = { volcano: 'volcanoCoaster', sun: 'sunCoaster', moon: 'moonCoaster' }[PLACE], DISC = { volcano: 'volcanocoasterride', sun: 'sunbigcoasterride', moon: 'coaster' }[PLACE]; // (build 178: COASTER=sun, the giant Sun coaster)
 (async () => {
   const PORT = 18791, relay = start(PORT), file = path.resolve(process.argv[2] || path.join(__dirname, '..', 'index.html'));
   const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
