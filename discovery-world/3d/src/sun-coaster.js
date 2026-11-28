@@ -65,7 +65,7 @@ export function buildSunCoaster(k) {
 
   // ---------- THE SIX STARS along the ride: 🐾 grabs the one right in front of the train ----------
   const STAR_AT = [.2, .3, .4, .52, .62, .8].map(f => Math.floor(N * f)), stars = [], starB = makeBatch(); starB.put(oct, 0, 0, 0, '#ffffff', [.55, .75, .55]); const starGeo = starB.geometry();
-  for (const [n, i] of STAR_AT.entries()) { const m = new THREE.Mesh(starGeo, shinyMat()); m.material.color.set('#9fe6ff'); V(i, pos, pA); V(i, up, uA); m.position.copy(pA).addScaledVector(uA, 2.6); m.userData.dynamic = true; root.add(m); stars.push({ m, i, got: false, n, told: false }); }
+  for (const [n, i] of STAR_AT.entries()) { const m = new THREE.Mesh(starGeo, shinyMat()); m.material.color.set('#9fe6ff'); V(i, pos, pA); V(i, up, uA); m.position.copy(pA).addScaledVector(uA, 2.6); m.userData.dynamic = true; m.visible = false; root.add(m); stars.push({ m, i, got: false, n, told: false }); }
   C.stars = stars;
   C.onPaw = R => { const s = stars.find(q2 => !q2.got && Math.abs(R.i - q2.i) < 40); if (!s) { k.say('⭐ Watch for the next star, then tap 🐾!', true); return; } s.got = true; s.m.visible = false; k.Sound.chime(); k.api.burst && k.api.burst(s.m.position.x, s.m.position.y, s.m.position.z, ['#9fe6ff', '#ffffff'], 16, 2.4);
     const got = stars.filter(q2 => q2.got).length; k.say(got < 6 ? `⭐ You grabbed a star! ${got} of 6!` : '⭐ ALL SIX STARS! You are a Sun coaster star!', true); k.disc && k.disc(got < 6 ? 'scoasterstar' : 'scoasterstars'); };
@@ -91,6 +91,7 @@ export function buildSunCoaster(k) {
   let check = 0; const wantNear = [];
   k.U.push(dt => { if ((check -= dt) > 0) return; check = .2;
     const cam = G.camera ? G.camera.position : P, ride = P.ride && P.ride.type === 'coaster' && P.ride.C === C ? P.ride : null;
+    for (const st of stars) st.m.visible = !!ride && !st.got; // (the stars are only drawn during a ride: no extra draw calls on the Sun otherwise)
     wantNear.length = 0; const near = ride ? NEAR_RIDE : NEAR, max = ride ? MAX_RIDE : MAX_PIECES, dist = [];
     if (ride) { const s0 = Math.floor(ride.i / SECTION); for (const s of [s0, s0 + 1, s0 - 1]) if (s >= 0 && s < nP) wantNear.push(s); }
     for (let s = 0; s < nP; s++) dist.push([cen[s].c.distanceTo(cam) - cen[s].r, s]); dist.sort((a, b) => a[0] - b[0]);
