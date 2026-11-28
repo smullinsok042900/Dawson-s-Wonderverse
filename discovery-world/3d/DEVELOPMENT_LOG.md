@@ -6,6 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 176 — sea creatures under the volcano lagoon (ATTRACTIONS row 21); row 18 PLAYABLE
+- **Row 18 (the older small planet activities) is now PLAYABLE:** builds 166–175 made ten of them hands-on (the Mars rover,
+  the Venus volcano, the Mars dust devil, the Neptune geyser, Uranus bowling, the Great Red Spot, Saturn's hexagon, the
+  diamond rain, Pluto's heart sled, the Moon flags), each with its own browser test. What is left are things far away in the
+  sky or a spoken fact, with nothing to steer.
+- **The Volcano Island coaster's underwater part** (`volcano-coaster.js`): as the train runs through the glass tunnel she now
+  sees THREE SEA TURTLES gliding round with their flippers out, TWO BIG MANTA RAYS flapping slowly, an OCTOPUS waving its arms
+  on a rock and FIVE GLOWING JELLYFISH bobbing up and down, as well as the fish and the coral. The voice says "Look at the
+  turtles, the fish and the coral!". Each creature is one mesh with the coral's glow material (no new shader), in the
+  underwater group: drawn and moved only while the camera is near the lagoon.
+- **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check: at least three kinds of sea creature come
+  within 24 m of the camera under the water (all four did): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 175 — MOON EXPLORER: her flag, her colours, four little flags (ATTRACTIONS row 18)
 - **Before:** a tap raised the flag once, and nothing more.
 - **Now** (`space.js`): the first tap raises the big flag ("Tap it to change its colour, then plant little flags in the
