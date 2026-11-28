@@ -6,6 +6,14 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 177 — THE SPLASH on the Volcano Island coaster (ATTRACTIONS row 21)
+- Where the train plunges into the lagoon, a big wave of spray goes up all round it (white and blue drops), with a splashing
+  sound and a little shake, and the voice cries "SPLASH! Into the water we go!"; where it bursts back out of the water, a
+  smaller splash. (`volcano-coaster.js`: the ride's own tick watches the train cross the water's surface.)
+- **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check (two splashes on the ride, in and out):
+  RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 176 — sea creatures under the volcano lagoon (ATTRACTIONS row 21); row 18 PLAYABLE
 - **Row 18 (the older small planet activities) is now PLAYABLE:** builds 166–175 made ten of them hands-on (the Mars rover,
   the Venus volcano, the Mars dust devil, the Neptune geyser, Uranus bowling, the Great Red Spot, Saturn's hexagon, the
