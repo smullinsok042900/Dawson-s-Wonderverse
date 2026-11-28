@@ -6,6 +6,20 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 178 — THE GIANT SUN COASTER (ATTRACTIONS row 20: "a Sun coaster at the Moon coaster's scale")
+- **The ride** (`src/sun-coaster.js`, built by the same track builder as the Moon and Volcano Island coasters; one
+  continuous 920 m track, about a minute): from a golden station on the Sun's landing area (x 92, beside the path), round
+  behind it and out over the edge of the golden platforms, THE SPIRAL LIFT 54 m up above the boiling Sun, THE BIG DROP,
+  a long sweep through the first FLARE ARCHES (four giant glowing loops of sun-fire round the track: a whoosh and a shower of
+  sparks as the train flies through each, "Through the SOLAR FLARE! WHOOSH!"), a LOOP-THE-LOOP, a BOOSTER, a long high run
+  over the Sun's surface through more flare arches, a CORKSCREW, and home. Ridden in FIRST PERSON like the volcano coaster;
+  six stars along the way (🐾); 🏁 / 🔁; riding together in Play Together (`G.coasters.sun`). The voice says it is a magic
+  track: nothing can really go this close to the Sun. The small Solar Flare Coaster in area 2 is still there.
+- Speed: the skeleton (spine, rings, arches, station) is one mesh; the detailed rails are streamed in pieces near the camera,
+  as on the other coasters; the same shared glow material (no new shader).
+- **Tested** (desktop, software rendering): `tests/sun-coaster.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: test fix — `tests/android-rendering.cjs` runs again (NEXT_TASKS)
 - It read `src/main.js` for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in build 101,
   so it stopped before testing anything; and the portrait code it copies now calls `freeObject` (build 107), which its test page
