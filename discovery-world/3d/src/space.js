@@ -164,7 +164,22 @@ export function initSpace(G, api) {
       const poleG = new THREE.CylinderGeometry(.045, .045, 2.7, 10); poleG.translate(0, 1.35, 0); const pole = new THREE.Mesh(poleG, toy('#f2f4fa', { r: .3, m: .5 })); pole.scale.y = .04; fg.add(pole);
       const flagG = new THREE.PlaneGeometry(1.15, .72, 10, 4); flagG.translate(.6, 0, 0); const flag = new THREE.Mesh(flagG, toy('#ff4f6a', { r: .6 })); flag.material.side = THREE.DoubleSide; flag.position.y = 2.3; flag.visible = false; fg.add(flag); const star = new THREE.Mesh(new THREE.CircleGeometry(.17, 5), toy('#ffe36e', { em: '#ffd23f', ei: .4 })); star.position.set(.6, 2.3, .02); star.visible = false; fg.add(star);
       const f0 = flagG.attributes.position.array.slice(); let up = 0;
-      tapIt(fg, () => { if (up) return; up = .001; Sound.chime(); fact('🚩 You planted a flag on the Moon!', 'moonflag'); }, X + 40, 'moonflag');
+      // (build 175) MOON EXPLORER: after the big flag is up, each tap on it gives it a new colour (red, blue, green, yellow,
+      // purple); four glowing rings on the ground mark places to explore: 🐾 on one plants a little flag in her colour with a
+      // puff of moon dust; all four: "You explored the Moon!" and a party. One mesh for the four rings (they gently
+      // pulse), four small flag meshes, shown only once planted.
+      const FC = ['#ff4f6a', '#5aa8ff', '#7fe0a0', '#ffd23f', '#b07cff']; let fc = 0;
+      const SPOTS = [X + 26, X + 54, X + 68, X + 100], planted = SPOTS.map(() => false);
+      const ringM = toy('#9fe8ff', { em: '#6fd0ff', ei: .9, r: .4 }), rings = model(b => { const rg = new THREE.RingGeometry(.55, .75, 28); rg.rotateX(-Math.PI / 2); SPOTS.forEach(x => b.add(rg.clone().translate(x, .04, -1.6), null, '#ffffff')); }, ringM, false); add(rings);
+      const miniG = (() => { const b = K.makeBatch(); b.put(K.geo.cyl(8), 0, .55, 0, '#f2f4fa', [.025, 1.1, .025]); const cl = new THREE.PlaneGeometry(.5, .32); cl.translate(.27, .92, 0); b.add(cl, null, '#ffffff'); return b.geometry(); })();
+      const minis = SPOTS.map(x => { const m = new THREE.Mesh(miniG, toy('#ff4f6a', { r: .6 })); m.material.side = THREE.DoubleSide; m.position.set(x, 0, -1.6); m.visible = false; add(m); return m; });
+      tapIt(fg, () => { if (!up) { up = .001; Sound.chime(); fact('🚩 You planted a flag on the Moon! Tap it to change its colour, then plant little flags in the glowing rings!', 'moonflag'); return; }
+        fc = (fc + 1) % FC.length; flag.material.color.set(FC[fc]); Sound.tone(500 + fc * 80, .12, 'sine', .05, 1.4); api.burst(X + 40.6, 2.3, -2.6, [FC[fc], '#ffffff'], 10, 1.2); }, X + 40, 'moonflag');
+      SPOTS.forEach((x, q) => { const plant = () => { if (planted[q]) return; planted[q] = true; const m = minis[q]; m.material.color.set(FC[fc]); m.visible = true; m.scale.setScalar(.01); Sound.chime(); api.burst(x, .3, -1.6, ['#d8d8e0', '#ffffff'], 14, 1.2); G.shake = Math.max(G.shake || 0, .1);
+          const n = planted.filter(Boolean).length; if (n < SPOTS.length) say(['🚩 A flag! Find the next glowing ring!', '🚩 Two flags!', '🚩 One more glowing ring!'][n - 1], true);
+          else { say('🚩 You explored the Moon! Four flags, all yours!', true); disc('moonexplorer'); api.burst(x, 2, -1.6, ['#ff4f6a', '#5aa8ff', '#7fe0a0', '#ffd23f', '#ffffff'], 28, 2.4); Sound.giggle && Sound.giggle(); } };
+        G.interact.push({ x, y: 0, layer: 'space', disc: q ? null : 'moonspot', run: plant, hintY: 1.4 }); });
+      U.push((dt, t) => { ringM.emissiveIntensity = .6 + Math.sin(t * 3) * .3; minis.forEach(m => { if (m.visible && m.scale.x < 1) m.scale.setScalar(Math.min(1, m.scale.x + dt * 3)); }); });
       U.push((dt, t) => { if (!up) return; if (up < 1) { up = Math.min(1, up + dt * .9); pole.scale.y = .04 + .96 * up; flag.visible = star.visible = up > .55; flag.scale.x = star.scale.x = K.sstep(.55, 1, up); }
         const a = flagG.attributes.position; for (let k = 0; k < a.count; k++) a.setZ(k, Math.sin(f0[k * 3] * 4 - t * 2.2) * .05 * f0[k * 3]); a.needsUpdate = true; }); // (a gentle ripple, as if it was just set swinging)
       // five moon rocks to count
