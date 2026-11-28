@@ -17,8 +17,9 @@ are in `PERFORMANCE_LOG.md`.
   turtles, the fish and the coral!". Each creature is one mesh with the coral's glow material (no new shader), in the
   underwater group: drawn and moved only while the camera is near the lagoon.
 - **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check: at least three kinds of sea creature come
-  within 24 m of the camera under the water (all four did): RESULTS_TEST
-- RESULTS_SPEED_SMOKE
+  within 24 m of the camera under the water (all four did): the whole ride 15/15 drawn and with `?norender`; the underwater picture shows a jellyfish beside the tunnel.
+- Speed on Volcano Island vs build 175: the same at all four spots, identical draw calls (`PERFORMANCE_LOG.md`). **Full smoke
+  test 345/345** (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 175 — MOON EXPLORER: her flag, her colours, four little flags (ATTRACTIONS row 18)
 - **Before:** a tap raised the flag once, and nothing more.
