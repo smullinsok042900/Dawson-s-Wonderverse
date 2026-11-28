@@ -12,8 +12,10 @@ are in `PERFORMANCE_LOG.md`.
   diamonds that fall slowly forward onto the path; she runs ◀ ▶ (and jumps) to catch them under the cloud; each catch chimes a
   little higher; four: "Four diamonds!"; eight in one shower: "You are a diamond collector!" and a party; fewer: "5 diamonds!
   Tap the cloud for more!". Tap again for another shower. The same ten diamond meshes as before (no new meshes).
-- **Tested** (desktop, software rendering): `tests/uranus-diamonds.cjs` (new): RESULTS_TEST
-- RESULTS_SPEED_SMOKE
+- **Tested** (desktop, software rendering): `tests/uranus-diamonds.cjs` (new): 4/4 drawn and with `?norender`
+  (the rain starts, she catches eight, the shower ends and a tap starts another, no page errors); `uranus-bowling` still all passed.
+- Speed on Uranus vs build 172: the same at all six spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** (desktop,
+  software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 172 — CLIMB SATURN'S HEXAGON STORM (ATTRACTIONS row 18)
 - **Before:** a tap on the stepped six-sided storm made its steps spin faster for 4 s.
