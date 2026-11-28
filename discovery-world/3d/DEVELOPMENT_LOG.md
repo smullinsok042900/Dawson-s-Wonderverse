@@ -11,7 +11,7 @@ are in `PERFORMANCE_LOG.md`.
   sound and a little shake, and the voice cries "SPLASH! Into the water we go!"; where it bursts back out of the water, a
   smaller splash. (`volcano-coaster.js`: the ride's own tick watches the train cross the water's surface.)
 - **Tested** (desktop, software rendering): `volcano-coaster.cjs` has a new check (two splashes on the ride, in and out):
-  RESULTS_TEST
+  the whole ride 16/16 drawn and with `?norender`; riding together on the volcano coaster (two browsers) still all passed.
 - RESULTS_SPEED_SMOKE
 
 ## Checkpoint: build 176 — sea creatures under the volcano lagoon (ATTRACTIONS row 21); row 18 PLAYABLE

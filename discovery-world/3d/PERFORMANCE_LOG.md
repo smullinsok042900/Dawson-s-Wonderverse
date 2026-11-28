@@ -4,6 +4,10 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 177 vs build 176, Volcano Island with the splash (desktop, software rendering; `tests/perf/compare.cjs volcano`; not iPhone numbers)
+- 3 rounds each: 20: 156 → 140 ms; 32: 141 → 142; 135: 144 → 137; 248: 136 → 137: all the same. Draw calls identical (the splash
+  is the game's shared spray particles, only at the moment the train crosses the water).
+
 ## Build 176 vs build 175, Volcano Island with the sea creatures (desktop, software rendering; `tests/perf/compare.cjs volcano`; not iPhone numbers)
 - 1 round each: 20: 136 → 140 ms; 32: 137 → 131; 135: 141 → 139; 248: 126 → 130: all the same. Draw calls identical (the creatures
   are in the underwater group, drawn only when the camera is near the lagoon).
