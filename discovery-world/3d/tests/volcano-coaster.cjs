@@ -37,6 +37,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('...with the camera really inside the volcano (first person)', seen.camInside);
   check('it dives UNDER THE WATER, and the underwater world is drawn', seen.under && seen.seaDrawn);
   check('...with the camera really under the surface', seen.camUnder);
+  check('(build 177) a big SPLASH where it plunges into the lagoon and where it bursts back out', (await ev(() => __DDW3.G.coasters.volcano.splashes())) >= 2, String(await ev(() => __DDW3.G.coasters.volcano.splashes())));
   check('(build 176) sea creatures swim past the glass tunnel: turtles, manta rays, the octopus, jellyfish (at least three kinds seen up close)', seen.critters.size >= 3, [...seen.critters].join(','));
   check('the view turns over in the loop (the ride camera rolls with the track)', seen.loopUp);
   const stars = await ev(() => __DDW3.G.volcanoCoaster.stars.filter(q => q.got).length);

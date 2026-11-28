@@ -172,8 +172,15 @@ export function buildVolcanoCoaster(k) {
   C.stars = stars;
   C.onPaw = R => { const s = stars.find(q => !q.got && Math.abs(R.i - q.i) < 40); if (!s) { k.say('⭐ Watch for the next star, then tap 🐾!', true); return; } s.got = true; s.m.visible = false; k.Sound.chime(); k.api.burst && k.api.burst(s.m.position.x, s.m.position.y, s.m.position.z, ['#ffd23f', '#ffffff'], 16, 2.4);
     const got = stars.filter(q => q.got).length; k.say(got < 6 ? `⭐ You grabbed a star! ${got} of 6!` : '⭐ ALL SIX STARS! You are a coaster star!', true); k.disc && k.disc(got < 6 ? 'vcoasterstar' : 'vcoasterstars'); };
-  C.onTick = R => { for (const s of stars) { if (s.got) continue; s.m.rotation.y += .05; if (!s.told && R.i > s.i - 40 && R.i < s.i) { s.told = true; k.say('⭐ A star! Tap 🐾 to grab it!', true); } } };
-  C.onStart = () => { for (const s of stars) { s.got = false; s.told = false; s.m.visible = true; } };
+  // (build 177) THE SPLASH: where the train plunges into the lagoon and where it bursts back out, a big wave of spray goes up
+  //  round it (white and blue drops, a splashing sound, a little shake) and the voice cries SPLASH! the first time.
+  let wasUnder = 0, splashes = 0; C.splashes = () => splashes;
+  const splash = (i, down) => { const x = pos[i * 3], z = pos[i * 3 + 2]; splashes++; G.shake = Math.max(G.shake || 0, down ? .45 : .25);
+    k.Sound.noise && k.Sound.noise(down ? 1.1 : .7, 300, 1600, down ? .09 : .06); for (let q = 0; q < (down ? 4 : 2); q++) k.api.burst && k.api.burst(x + (Math.random() - .5) * 3, .4, z + (Math.random() - .5) * 3, ['#ffffff', '#dff6ff', '#7fd4ff', '#3fb4e8'], 26, down ? 4.2 : 3);
+    if (down && splashes === 1) k.say('💦 SPLASH! Into the water we go!', true); };
+  C.onTick = R => { const j = Math.floor(R.i), u = C.underW[j] || 0; if (j > 0 && u !== wasUnder) splash(j, u === 1); wasUnder = u;
+    for (const s of stars) { if (s.got) continue; s.m.rotation.y += .05; if (!s.told && R.i > s.i - 40 && R.i < s.i) { s.told = true; k.say('⭐ A star! Tap 🐾 to grab it!', true); } } };
+  C.onStart = () => { wasUnder = 0; splashes = 0; for (const s of stars) { s.got = false; s.told = false; s.m.visible = true; } };
 
   // ---------- one-time work, a few milliseconds a frame; then the skeleton becomes one mesh ----------
   jobs.push(() => { const g2 = glow.mesh(glowMat); g2.receiveShadow = false; root.add(g2); try { k.api.compile && k.api.compile(root); } catch (err) { } check = 0; C.ready = true; });
