@@ -29,7 +29,8 @@ are in `PERFORMANCE_LOG.md`.
   (built, boards, first person, the lift to 54 m, all four flare arches, the loop, the booster, 6 of 6 stars, home, the normal
   camera back, no page errors; the picture after the first flare arch now shows the track and the Sun, no dark frame); riding
   together on it (`COASTER=sun coaster-together`, two browsers) 5/5; the Sun's own test `sun.cjs` 17/17.
-- RESULTS_SPEED_SMOKE
+- Speed on the Sun vs build 177: the same at all six spots (`PERFORMANCE_LOG.md`). **Full smoke test 345/345** on the final
+  version (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: test fix — `tests/android-rendering.cjs` runs again (NEXT_TASKS)
 - It read `src/main.js` for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in build 101,
