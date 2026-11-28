@@ -4,6 +4,11 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 174 vs build 173, Pluto with the heart sled (desktop, software rendering; `tests/perf/compare.cjs pluto`; not iPhone numbers)
+- 1 round each: 30: 179 → 168 ms; 44: 183 → 176; 60: 178 → 172; 95: 170 → 165; 199: 201 → 213; 320: 206 → 227 (+10%): all the same.
+  Draw calls identical at every spot (the sled and the hearts are hidden until she sleds). (`compare.cjs`: Pluto now also
+  measures 44, at the ice plain.)
+
 ## Build 173 vs build 172, Uranus with the diamond rain to catch (desktop, software rendering; `tests/perf/compare.cjs uranus`; not iPhone numbers)
 - 1 round each: 60: 146 → 153 ms; 80: 147 → 148; 95: 143 → 138; 185: 185 → 185; 270: 162 → 152; 320: 131 → 142: all the same.
   Draw calls the same (no new meshes: the same ten diamonds).

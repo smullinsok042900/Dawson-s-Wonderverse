@@ -13,8 +13,12 @@ are in `PERFORMANCE_LOG.md`.
   plain with a "tok"; five pink ice hearts bob on the plain; each one she slides over chimes; all five: "You found all of
   Pluto's hearts! Pluto loves you!" and a party. JUMP hops her out onto the path.
 - One sled mesh and five small heart meshes (one shared material), drawn only while she sleds.
-- **Tested** (desktop, software rendering): `tests/pluto-sled.cjs` (new): RESULTS_TEST
-- RESULTS_SPEED_SMOKE
+- **Tested** (desktop, software rendering): `tests/pluto-sled.cjs` (new): 7/7 drawn and with `?norender`
+  (into the sled, it keeps gliding after a push, all five hearts, it stays on the plain, JUMP out, no page errors). The first
+  drawn run failed the glide check because the test waited a fixed 1.2 s (only 1-2 drawn frames here); it now waits for the
+  frames, like the other ride tests, and the check is unchanged. `pluto-life` still all passed.
+- Speed on Pluto vs build 173: the same at all six spots, identical draw calls (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 173 — CATCH THE DIAMOND RAIN on Uranus (ATTRACTIONS row 18)
 - **Before:** a tap on the diamond cloud made diamonds fall for 3 s, out of her reach behind the path.

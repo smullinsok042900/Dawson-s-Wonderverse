@@ -16,7 +16,7 @@ let fails = 0; const check = (name, ok, info = '') => { console.log((ok ? 'PASS 
   check('a tap: she sits in the heart sled on the ice', await until(() => __DDW3.player.ride && __DDW3.player.ride.type === 'heartsled', null, 10000));
   // a push, then let go: it keeps gliding on the ice
   await page.keyboard.down('ArrowRight'); await until(() => __DDW3.player.ride && __DDW3.player.ride.vx > 1.2, null, 30000); await page.keyboard.up('ArrowRight');
-  const x1 = await ev(() => __DDW3.player.ride.x); await sleep(1200); const x2 = await ev(() => __DDW3.player.ride.x);
+  const x1 = await ev(() => __DDW3.player.ride.x); await until(x => __DDW3.player.ride && __DDW3.player.ride.x > x + .3, x1, 30000); const x2 = await ev(() => __DDW3.player.ride.x); // (waits for frames, not a fixed time: 1-2 frames a second when drawing)
   check('a push, then let go: it keeps gliding on the ice', x2 > x1 + .3, `${x1.toFixed(1)} -> ${x2.toFixed(1)}`);
   // steer to each heart like she would (◀ ▶ ▲ ▼ nudges toward it)
   const HPOS = [[-5, -.3], [-2.2, -2.5], [1.4, 1.7], [3.6, -2.2], [5.3, .6]].map(([dx, dz]) => [X + 44.5 + dx, -.6 + dz]); let held = {};
