@@ -25,7 +25,10 @@ are in `PERFORMANCE_LOG.md`.
   build here, so the evidence is the caught frame itself.
 - The Sun coaster's six stars are drawn only during a ride (a first version showed them all the time: +3 to +6 draw calls on
   the whole Sun).
-- **Tested** (desktop, software rendering): `tests/sun-coaster.cjs` (new): RESULTS_TEST
+- **Tested** (desktop, software rendering): `tests/sun-coaster.cjs` (new): 11/11 drawn and with `?norender`
+  (built, boards, first person, the lift to 54 m, all four flare arches, the loop, the booster, 6 of 6 stars, home, the normal
+  camera back, no page errors; the picture after the first flare arch now shows the track and the Sun, no dark frame); riding
+  together on it (`COASTER=sun coaster-together`, two browsers) 5/5; the Sun's own test `sun.cjs` 17/17.
 - RESULTS_SPEED_SMOKE
 
 ## Checkpoint: test fix — `tests/android-rendering.cjs` runs again (NEXT_TASKS)

@@ -4,6 +4,13 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 178 vs build 177, the Sun with the giant coaster (desktop, software rendering; `tests/perf/compare.cjs sun`; not iPhone numbers)
+- First version (its six stars always shown): every spot the same in time, but +3 to +6 draw calls on the whole Sun. The stars
+  are now drawn only during a ride.
+- Final version (2 rounds each): 20: 150 → 161 ms (+7%); 60: 148 → 155; 140: 165 → 163; 165: 163 → 177 (+8%); 230: 156 → 157;
+  320: 163 → 146: all the same (within the 12% this machine varies by). Draw calls +1 to +3 (the train's three cars and the
+  coaster's one skeleton mesh, where they are in view).
+
 ## Build 177 vs build 176, Volcano Island with the splash (desktop, software rendering; `tests/perf/compare.cjs volcano`; not iPhone numbers)
 - 3 rounds each: 20: 156 → 140 ms; 32: 141 → 142; 135: 144 → 137; 248: 136 → 137: all the same. Draw calls identical (the splash
   is the game's shared spray particles, only at the moment the train crosses the water).
