@@ -4,6 +4,10 @@ Rule: the game must never get slower. Measure before and after every change on i
 **Desktop numbers come from a software-rendered browser and are NOT iPhone numbers.** Only the in-game report from the
 real iPhone (⚙️ → Performance Test → Copy Test Results) counts as an iPhone measurement.
 
+## Build 172 vs build 171, Saturn with the hexagon climb (desktop, software rendering; `tests/perf/compare.cjs saturn`; not iPhone numbers)
+- 1 round each: 62: 178 → 164 ms; 95: 152 → 149; 150: 156 → 155; 240: 153 → 156; 320: 151 → 150: all the same. Draw calls identical
+  at every spot (the stars are hidden until she climbs). (`compare.cjs`: Saturn's first spot is now 62, at the storm.)
+
 ## Build 171 vs build 170, Jupiter with the storm surfing (desktop, software rendering; `tests/perf/compare.cjs jupiter`; not iPhone numbers)
 - 1 round each (no spot differed by more than 12%): 30: 187 → 190 ms; 52: 209 → 194; 60: 195 → 201; 90: 183 → 204 (+11%); 150: 195 → 185;
   205: 187 → 188; 320: 155 → 161: all the same. Draw calls identical at every spot (the stars and the cloud board are hidden until

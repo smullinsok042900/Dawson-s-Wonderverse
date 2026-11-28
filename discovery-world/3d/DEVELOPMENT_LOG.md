@@ -14,8 +14,11 @@ are in `PERFORMANCE_LOG.md`.
   "You climbed the six-sided storm!"; all five stars: "What a climber!" and a party. JUMP from the top (or ▼ from the bottom
   step) hops her back onto the path.
 - The stars ride on the steps (five small meshes, one shared material), shown only while she climbs.
-- **Tested** (desktop, software rendering): `tests/saturn-hexclimb.cjs` (new): RESULTS_TEST
-- RESULTS_SPEED_SMOKE
+- **Tested** (desktop, software rendering): `tests/saturn-hexclimb.cjs` (new): 7/7 drawn and with `?norender`
+  (onto the bottom step, carried round, walked to every star and up every step, the top, ▼ down, JUMP back to the path, no
+  page errors); `saturn-rides` still all passed.
+- Speed on Saturn vs build 171: the same at all five spots, identical draw calls (`PERFORMANCE_LOG.md`). **Full smoke test
+  345/345** (desktop, software rendering). Not tested on an iPhone.
 
 ## Checkpoint: build 171 — SURF THE GREAT RED SPOT on Jupiter (ATTRACTIONS row 18)
 - **Before:** a tap on the Great Red Spot made the storm spin faster for 4 s.
