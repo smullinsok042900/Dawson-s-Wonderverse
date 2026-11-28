@@ -4,9 +4,12 @@ Prioritized unfinished work, highest first. Take the top item that can be done w
 remove it here and record it in `DEVELOPMENT_LOG.md`. Add new findings (bugs, ideas, measurements that look wrong) as you go.
 
 
-## TEST FIX: android-rendering.cjs
-It reads `src/main.js` and looks for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in
-build 101, so it stops with an assertion before testing anything. Update its source matching (keep what it checks).
+## TEST FIX: android-rendering.cjs, the optional full-game part (`FULL_GAME_CHECK=1`)
+Fixed in build 178: the source matching (`renderPortraits(kinds = ...)`, build 101) and the `freeObject` helper the portrait
+code uses (build 107); the default checks pass again (portraits, the resize flash). The optional `FULL_GAME_CHECK=1` part still
+expects the old start screen (four pictures: jelly, pip, sprout, zuzu, decoded as images); since build 143 it shows all twelve
+friends, and one picture fails to decode in its check ("The source image cannot be decoded"). Update that part to the current
+start screen (keep what it checks: real portrait colours, four readbacks at start-up, shadows kept, the frame after a resize).
 
 ## SPEED: her own character (found in build 138)
 Every view draws her character as about 33 separate meshes (head, ears, hands, tail... each its own draw call): more than any

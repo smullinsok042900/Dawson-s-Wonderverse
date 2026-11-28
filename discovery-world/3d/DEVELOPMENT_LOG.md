@@ -6,6 +6,14 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: test fix — `tests/android-rendering.cjs` runs again (NEXT_TASKS)
+- It read `src/main.js` for `function renderPortraits() {`, which became `function renderPortraits(kinds = ...)` in build 101,
+  so it stopped before testing anything; and the portrait code it copies now calls `freeObject` (build 107), which its test page
+  did not have. The source matching now finds the function either way, and its page has the same `freeObject`. What it checks
+  is unchanged. Result (desktop, software rendering): both default checks PASS (portraits: identical pixels, broken-copy
+  recovery, renderer state; the resize flash and quality changes). The optional `FULL_GAME_CHECK=1` part still needs updating
+  to the twelve-friend start screen (NEXT_TASKS). No game change (no new build).
+
 ## Checkpoint: build 177 — THE SPLASH on the Volcano Island coaster (ATTRACTIONS row 21)
 - Where the train plunges into the lagoon, a big wave of spray goes up all round it (white and blue drops), with a splashing
   sound and a little shake, and the voice cries "SPLASH! Into the water we go!"; where it bursts back out of the water, a

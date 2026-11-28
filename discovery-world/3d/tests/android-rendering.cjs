@@ -3,14 +3,14 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const assert=require('node:assert/strict'),{build}=require('esbuild'),{chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..'),MAIN=fs.readFileSync(path.join(ROOT,'src/main.js'),'utf8');
 function section(start,end){const a=MAIN.indexOf(start),b=MAIN.indexOf(end,a);assert(a>=0&&b>a);return MAIN.slice(a,b);}
-function portrait(source,name){const a=source.indexOf('function renderPortraits() {'),b=source.indexOf("document.querySelectorAll('.creatureChoice')",a);assert(a>=0&&b>a);return source.slice(a,b).replace('function renderPortraits()',`function ${name}()`);}
+function portrait(source,name){const a=source.indexOf('function renderPortraits('),b=source.indexOf("document.querySelectorAll('.creatureChoice')",a);assert(a>=0&&b>a);return source.slice(a,b).replace('function renderPortraits(',`function ${name}(`);} // (build 178: since build 101 it takes the kinds to draw, with all the start-up ones as the default)
 async function main(){
  const bundle=await build({stdin:{resolveDir:ROOT,contents:`
  import * as THREE from 'three';
  const data=async src=>{const img=new Image();img.src=src;await img.decode();const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');g.drawImage(img,0,0);return g.getImageData(0,0,128,128).data;};
  window.portraits=async()=>{
   const canvas=document.createElement('canvas');document.body.append(canvas);const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(2);renderer.setSize(192,192);renderer.shadowMap.enabled=true;renderer.toneMapping=THREE.NeutralToneMapping;
-  const scene=new THREE.Scene(),CREATURES={red:1,green:1,blue:1};
+  const scene=new THREE.Scene(),CREATURES={red:1,green:1,blue:1};const freeObject=o=>o.traverse(m=>{if(m.isMesh){m.geometry.dispose();m.material.dispose();}}); /* (build 178: the game's own freeObject, build 107) */
   function makeCreature(kind){const root=new THREE.Group(),material=new THREE.MeshStandardMaterial({color:kind,roughness:.7});const body=new THREE.Mesh(new THREE.SphereGeometry(.5,20,12),material);body.scale.y=1.2;body.position.y=.7;root.add(body);const top=new THREE.Mesh(new THREE.BoxGeometry(.35,.3,.5),new THREE.MeshBasicMaterial({color:'#ffff00'}));top.position.set(-.15,1.4,0);root.add(top);return {root,update(){}};}
   ${portrait(fs.readFileSync(path.join(ROOT,'src/main.js'),'utf8'),'afterPortraits')}
   const render=renderer.render.bind(renderer);let copies=[];
