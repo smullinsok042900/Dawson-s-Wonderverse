@@ -168,7 +168,7 @@ export function buildVolcanoCoaster(k) {
 
   // ---------- THE SIX STARS along the ride: 🐾 grabs the one right in front of the train ----------
   const STAR_AT = [.18, .3, .4, .5, .58, .78].map(f => Math.floor(N * f)), stars = [], starB = makeBatch(); starB.put(oct, 0, 0, 0, '#ffd23f', [.55, .75, .55]); const starGeo = starB.geometry();
-  for (const [n, i] of STAR_AT.entries()) { const m = new THREE.Mesh(starGeo, shinyMat()); V(i, pos, pA); V(i, up, uA); m.position.copy(pA).addScaledVector(uA, 2.6); m.userData.dynamic = true; root.add(m); stars.push({ m, i, got: false, n, told: false }); }
+  for (const [n, i] of STAR_AT.entries()) { const m = new THREE.Mesh(starGeo, shinyMat()); V(i, pos, pA); V(i, up, uA); m.position.copy(pA).addScaledVector(uA, 2.6); m.userData.dynamic = true; m.visible = false; root.add(m); stars.push({ m, i, got: false, n, told: false }); }
   C.stars = stars;
   C.onPaw = R => { const s = stars.find(q => !q.got && Math.abs(R.i - q.i) < 40); if (!s) { k.say('⭐ Watch for the next star, then tap 🐾!', true); return; } s.got = true; s.m.visible = false; k.Sound.chime(); k.api.burst && k.api.burst(s.m.position.x, s.m.position.y, s.m.position.z, ['#ffd23f', '#ffffff'], 16, 2.4);
     const got = stars.filter(q => q.got).length; k.say(got < 6 ? `⭐ You grabbed a star! ${got} of 6!` : '⭐ ALL SIX STARS! You are a coaster star!', true); k.disc && k.disc(got < 6 ? 'vcoasterstar' : 'vcoasterstars'); };
@@ -198,6 +198,7 @@ export function buildVolcanoCoaster(k) {
   k.U.push((dt, t) => { if (C.lava) C.lava.material.color.setHSL(.05 + Math.sin(t * 1.3) * .012, 1, .52 + Math.sin(t * 2.1) * .04); if (C.crater) C.crater.material.color.setHSL(.06, 1, .5 + Math.sin(t * 1.7) * .05);
     if ((check -= dt) > 0) return; check = .2;
     const cam = G.camera ? G.camera.position : P, ride = P.ride && P.ride.type === 'coaster' && P.ride.C === C ? P.ride : null;
+    for (const st of stars) st.m.visible = !!ride && !st.got; // (build 179) the stars are drawn only during a ride (six fewer draw calls on Volcano Island otherwise)
     for (const h of hidden) h.grp.visible = h.c.distanceTo(cam) < h.r + 25;
     wantNear.length = 0; const near = ride ? NEAR_RIDE : NEAR, max = ride ? MAX_RIDE : MAX_PIECES, dist = [];
     if (ride) { const s0 = Math.floor(ride.i / SECTION); for (const s of [s0, s0 + 1, s0 - 1]) if (s >= 0 && s < nP) wantNear.push(s); }
