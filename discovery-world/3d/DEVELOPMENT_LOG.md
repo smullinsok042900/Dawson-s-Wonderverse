@@ -6,6 +6,16 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 174 — THE HEART SLED on Pluto's ice plain (ATTRACTIONS row 18)
+- **Before:** the 🐾 on Pluto's ice plain only said a fact (running across it slid a little).
+- **Now she sleds** (`space.js`): a tap (or 🐾 on the ice plain) and she sits in a little pink heart-shaped sled; ◀ ▶ ▲ ▼ push
+  it and it GLIDES on the ice: it keeps going after she lets go and slows only a little, and bumps gently off the edge of the
+  plain with a "tok"; five pink ice hearts bob on the plain; each one she slides over chimes; all five: "You found all of
+  Pluto's hearts! Pluto loves you!" and a party. JUMP hops her out onto the path.
+- One sled mesh and five small heart meshes (one shared material), drawn only while she sleds.
+- **Tested** (desktop, software rendering): `tests/pluto-sled.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 173 — CATCH THE DIAMOND RAIN on Uranus (ATTRACTIONS row 18)
 - **Before:** a tap on the diamond cloud made diamonds fall for 3 s, out of her reach behind the path.
 - **Now she catches them** (`space.js`): a tap (or 🐾 under it) and the cloud drifts to and fro over the path, raining twelve
