@@ -6,6 +6,17 @@ are in `PERFORMANCE_LOG.md`.
 
 
 
+## Checkpoint: build 175 — MOON EXPLORER: her flag, her colours, four little flags (ATTRACTIONS row 18)
+- **Before:** a tap raised the flag once, and nothing more.
+- **Now** (`space.js`): the first tap raises the big flag ("Tap it to change its colour, then plant little flags in the
+  glowing rings!"); each tap after that gives it a new colour (red, blue, green, yellow, purple) with a little sparkle. Four
+  softly pulsing glowing rings lie beside the path across the landing area; 🐾 in one plants a little flag in her colour with
+  a puff of moon dust ("A flag! Find the next glowing ring!"); all four: "You explored the Moon! Four flags, all yours!" and a
+  party.
+- One mesh for the four rings and four small flag meshes (shown only once planted).
+- **Tested** (desktop, software rendering): `tests/moon-flags.cjs` (new): RESULTS_TEST
+- RESULTS_SPEED_SMOKE
+
 ## Checkpoint: build 174 — THE HEART SLED on Pluto's ice plain (ATTRACTIONS row 18)
 - **Before:** the 🐾 on Pluto's ice plain only said a fact (running across it slid a little).
 - **Now she sleds** (`space.js`): a tap (or 🐾 on the ice plain) and she sits in a little pink heart-shaped sled; ◀ ▶ ▲ ▼ push
