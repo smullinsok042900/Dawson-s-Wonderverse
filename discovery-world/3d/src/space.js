@@ -857,7 +857,30 @@ export function initSpace(G, api) {
       // the slippery ice plain to slide across (a glossy sheet on the ground)
       { const sheet = model(b => { const cgG = new THREE.CircleGeometry(1, 40); cgG.rotateX(-Math.PI / 2); b.add(cgG, null, (px, py, pz, nx, ny, nz, o) => { K.ramp(['#d4e6fa', '#ffffff'], K.noise2(px * 4, pz * 4), o); }); }, K.shinyMat(), false); sheet.scale.set(7.3, 1, 3.6); sheet.position.set(X + 44.5, .015, -.6); sheet.material = sheet.material.clone(); sheet.material.transparent = true; sheet.material.opacity = .55; sheet.material.roughness = .12; add(sheet); }
       const heart = (dt) => { const on = P.layer === 'space' && P.grounded && P.x > X + 37.5 && P.x < X + 51.5; if (on && Math.abs(P.vx) > 1 && !(api.keysHeld && api.keysHeld())) { P.x += P.vx * dt * .6; if (Math.random() < dt * 14) api.burst(P.x, .1, 0, ['#ffffff', '#dcecff'], 1, .7); if (!told.slide) { told.slide = 1; fact('⛸️ Wheee! Pluto\'s big heart is made of ice: it\'s slippery!', 'plutoheart'); } } }; U.push(heart);
-      G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'plutoheart', run: () => fact('💗 Pluto\'s big heart is a giant plain of ice. Run across and slide!', 'plutoheart'), hintY: 1 });
+      // (build 174) THE HEART SLED: tap the ice plain (or 🐾 on it) and she sits in a little heart-shaped sled; ◀ ▶ ▲ ▼ push it
+      // and it GLIDES on the ice (it keeps going and slows only a little, and bumps gently off the edge of the plain); five pink
+      // ice hearts lie on the plain to collect; all five: "You found all of Pluto's hearts!" and a party. JUMP hops out.
+      // One sled mesh and five small heart meshes (one shared material), drawn only while she sleds.
+      const SC = [X + 44.5, -.6], SRX = 6.6, SRZ = 3.1, HPOS = [[-5, -.3], [-2.2, -2.5], [1.4, 1.7], [3.6, -2.2], [5.3, .6]];
+      const hshape = new THREE.Shape(); hshape.moveTo(0, -1); hshape.bezierCurveTo(-1.75, .15, -1.15, 1.35, 0, .62); hshape.bezierCurveTo(1.15, 1.35, 1.75, .15, 0, -1);
+      const hgeo = new THREE.ExtrudeGeometry(hshape, { depth: .25, bevelEnabled: false, curveSegments: 10 }); hgeo.center(); const hpM = toy('#ff8fc8', { em: '#ff4fa0', ei: .7, m: .2 });
+      const hpk = HPOS.map(([dx, dz]) => { const m = new THREE.Mesh(hgeo, hpM); m.scale.setScalar(.32); m.position.set(SC[0] + dx, .55, SC[1] + dz); m.visible = false; m.userData.dynamic = true; add(m); return m; });
+      const sled = model(b => { b.add(hgeo.clone().rotateX(-Math.PI / 2).scale(.62, .5, .62), null, '#ff6fae'); b.put(K.geo.box(), 0, -.08, 0, '#ffd6ea', [1.4, .06, .5]); for (const z of [-.42, .42]) b.put(K.geo.box(), 0, -.16, z, '#c9cdd8', [1.5, .05, .06]); }); sled.visible = false; sled.userData.dynamic = true; add(sled);
+      let sledR = null;
+      const sledGo = () => { if (P.ride || P.layer !== 'space' || Math.abs(P.x - SC[0]) > 8) return; fact('💗 Pluto\'s big heart is a giant plain of ice! Hop in the heart sled: ◀ ▶ ▲ ▼ push it, JUMP hops out!', 'plutoheart');
+        const R = sledR = { type: 'heartsled', t: 0, noExit: true, stick: true, x: Math.max(SC[0] - SRX + .5, Math.min(SC[0] + SRX - .5, P.x)), z: SC[1] + 1.5, vx: 0, vz: 0, got: HPOS.map(() => false) }; P.ride = R; P.vx = P.vy = 0;
+        hpk.forEach(m => { m.visible = true; }); sled.visible = true; Sound.boing && Sound.boing(); R.onJump = () => { R.off = true; };
+        U.push((dt, t) => { if (R.over) return; if (P.ride !== R || R.off) { R.over = true; sledR = null; hpk.forEach(m => { m.visible = false; }); sled.visible = false; if (P.ride === R) { P.ride = null; P.x = R.x; P.y = 0; P.z = 0; P.vy = 0; P.grounded = true; Sound.boing && Sound.boing(); } return; }
+          dt = Math.min(dt, .1); R.t += dt; const sk = api.stick ? api.stick() : { x: 0, y: 0 };
+          R.vx += sk.x * 5 * dt; R.vz -= sk.y * 4 * dt; const sp = Math.hypot(R.vx, R.vz); if (sp > 5) { R.vx *= 5 / sp; R.vz *= 5 / sp; } R.vx *= 1 - .25 * dt; R.vz *= 1 - .25 * dt; // (ice: it keeps gliding)
+          R.x += R.vx * dt; R.z += R.vz * dt; const ex = (R.x - SC[0]) / SRX, ez = (R.z - SC[1]) / SRZ, e = Math.hypot(ex, ez);
+          if (e > 1) { const nx = ex / e / SRX, nz = ez / e / SRZ, nl = Math.hypot(nx, nz), ux = nx / nl, uz = nz / nl, vn = R.vx * ux + R.vz * uz; if (vn > 0) { R.vx -= 1.6 * vn * ux; R.vz -= 1.6 * vn * uz; Sound.tone(300, .08, 'triangle', .03, 1.4); } R.x = SC[0] + ex / e * SRX; R.z = SC[1] + ez / e * SRZ; }
+          sled.position.set(R.x, .2, R.z); if (sp > .2) sled.rotation.y = Math.atan2(-R.vz, R.vx); P.x = R.x; P.z = R.z; P.y = .25; if (Math.abs(R.vx) > .2) P.facing = R.vx > 0 ? 1 : -1;
+          if (sp > 1 && Math.random() < dt * 14) api.burst(R.x, .1, R.z, ['#ffffff', '#dcecff'], 1, .7);
+          HPOS.forEach((h, q) => { const m = hpk[q]; if (R.got[q]) return; m.rotation.y = t * 2 + q; m.position.y = .55 + Math.sin(t * 2.4 + q) * .1;
+            if (Math.hypot(m.position.x - R.x, m.position.z - R.z) < .9) { R.got[q] = true; m.visible = false; const n = R.got.filter(Boolean).length; Sound.tone(560 + n * 90, .15, 'sine', .07, 1.5); api.burst(m.position.x, .6, m.position.z, ['#ff8fc8', '#ffffff', '#ff4fa0'], 10, 1.4);
+              if (n === HPOS.length) { say('💗 You found all of Pluto\'s hearts! Pluto loves you!', true); disc('plutohearts'); api.burst(R.x, 1.5, R.z, ['#ff8fc8', '#ffffff', '#ffd23f', '#ff4fa0'], 28, 2.4); Sound.giggle && Sound.giggle(); } } }); }); };
+      G.interact.push({ x: X + 44, y: 0, layer: 'space', disc: 'plutoheart', run: sledGo, hintY: 1 });
       // Charon, Pluto's big moon with its dark red cap, and the Sun: only a very bright star from this far away
       const charon = inSky((yield* K.skyBodySteps('charon', 15, { size: 256 })), MID + 44, 14, -200); charon.rotation.z = -.5; U.push(dt => { charon.rotation.y += dt * .015; });
       tapIt(charon, () => fact('🌑 That\'s Charon, Pluto\'s moon! They dance around each other.', 'charon'), X + 70, 'charon');
