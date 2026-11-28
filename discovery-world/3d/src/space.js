@@ -715,9 +715,21 @@ export function initSpace(G, api) {
       // the diamond cloud: tap it and sparkling diamonds rain down
       const dcg = new THREE.Group(); dcg.position.set(X + 62, 6, -3); add(dcg); dcg.add(model(b => { for (const [x, y, z, r] of [[0, 0, 0, 1.2], [-1.15, -.12, 0, .9], [1.2, -.1, 0, .95], [-.45, .5, -.1, .85], [.55, .55, .1, .8], [0, -.3, .3, .95]]) b.put(K.geo.sph(2), x, y, z, (px, py, pz, nx, ny, nz, o) => { o.copy(K.col('#e2fdfd')).multiplyScalar(.72 + .32 * Math.max(0, ny)); }, [r, r * .8, r * .9]); }, K.softMat(), false));
       const gemG = new THREE.OctahedronGeometry(.16, 0), gemM = toy('#eaffff', { r: .05, cc: 1, em: '#9fe8ff', ei: .5 }), gems = []; for (let k = 0; k < 10; k++) { const m = mesh(gemG, gemM, X + 62, 5, -3); m.visible = false; m.scale.y = 1.4; gems.push(m); } let rain = 0, drop = 0;
-      tapIt(dcg, () => { rain = 3.2; Sound.twinkle ? Sound.twinkle() : Sound.chime(); fact('💎 Sparkle! Scientists think it might rain diamonds deep inside Uranus!', 'diamondrain'); }, X + 62, 'diamondrain');
-      U.push((dt, t) => { dcg.position.y = 6 + Math.sin(t * .8) * .16; dcg.scale.setScalar(1 + (rain > 2.8 ? Math.sin((3.2 - rain) * 16) * .08 : 0)); if (rain > 0) { rain -= dt; drop -= dt; if (drop <= 0) { drop = .16; const m = gems.find(q => !q.visible); if (m) { m.visible = true; m.position.set(X + 60.6 + Math.random() * 2.8, 5.2, -3 + (Math.random() - .5)); m.userData.v = 0; } } }
-        for (const m of gems) if (m.visible) { m.userData.v += 9 * dt; m.position.y -= m.userData.v * dt; m.rotation.y += dt * 7; if (m.position.y < .15) { m.visible = false; api.burst(m.position.x, .2, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 3, 1.4); Sound.tone && Math.random() < .5 && Sound.tone(1400 + Math.random() * 600, .06, 'sine', .02, 1.2); } } });
+      // (build 173) CATCH THE DIAMOND RAIN: tap the cloud (or 🐾 under it) and it drifts to and fro over the path, raining
+      // twelve diamonds that fall slowly toward the path; she runs ◀ ▶ (and jumps) to catch them; each one she catches chimes
+      // higher; eight in one shower: "a diamond collector!" and a party. Tap again for another shower. Same ten diamond meshes.
+      let shower = 0, caught = 0, dropped = 0, cx0 = X + 62;
+      const rainNow = () => { if (shower > 0) return; shower = 1; caught = 0; dropped = 0; drop = 0; Sound.twinkle ? Sound.twinkle() : Sound.chime();
+        fact('💎 Sparkle! Scientists think it might rain diamonds deep inside Uranus! Catch them!', 'diamondrain'); };
+      tapIt(dcg, rainNow, X + 62, 'diamondrain');
+      U.push((dt, t) => { dt = Math.min(dt, .1); const cxp = shower ? X + 62 + Math.sin(t * .55) * 5 : X + 62; cx0 += (cxp - cx0) * Math.min(1, dt * 2); dcg.position.x = cx0;
+        dcg.position.y = 6 + Math.sin(t * .8) * .16; dcg.scale.setScalar(1 + (shower && dropped < 2 ? Math.sin(t * 16) * .06 : 0));
+        if (shower) { drop -= dt; if (drop <= 0 && dropped < 12) { const m = gems.find(q => !q.visible); if (m) { drop = .55; dropped++; m.visible = true; m.position.set(cx0 + (Math.random() - .5) * 2.4, 5.2, -3); m.userData.v = 0; } } }
+        for (const m of gems) if (m.visible) { m.userData.v = Math.min(3.2, m.userData.v + 3 * dt); m.position.y -= m.userData.v * dt; m.position.z += (0 - m.position.z) * Math.min(1, dt * .9); m.rotation.y += dt * 7;
+          if (P.layer === 'space' && !P.ride && Math.abs(m.position.x - P.x) < .95 && m.position.y < P.y + 2.2 && m.position.y > P.y - .2 && Math.abs(m.position.z - (P.z || 0)) < 1.2) { m.visible = false; caught++; api.burst(m.position.x, m.position.y, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 8, 1.4); Sound.tone(900 + caught * 90, .12, 'sine', .05, 1.6);
+            if (caught === 8) { say('💎 Eight diamonds! You are a diamond collector!', true); disc('diamondcatch'); api.burst(P.x, P.y + 2, 0, ['#ffffff', '#9fe8ff', '#ffd23f', '#ff8fc8'], 26, 2.4); Sound.giggle && Sound.giggle(); } else if (caught === 4) say('💎 Four diamonds!'); }
+          else if (m.position.y < .15) { m.visible = false; api.burst(m.position.x, .2, m.position.z, ['#ffffff', '#cfefff', '#9fe8ff'], 3, 1.4); } }
+        if (shower && dropped >= 12 && !gems.some(q => q.visible)) { shower = 0; if (caught < 8) say(`💎 ${caught} diamonds! Tap the cloud for more!`); } });
     }
     yield;
     if (id === 'neptune') {
