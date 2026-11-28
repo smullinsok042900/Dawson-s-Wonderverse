@@ -17,6 +17,14 @@ are in `PERFORMANCE_LOG.md`.
   track: nothing can really go this close to the Sun. The small Solar Flare Coaster in area 2 is still there.
 - Speed: the skeleton (spine, rings, arches, station) is one mesh; the detailed rails are streamed in pieces near the camera,
   as on the other coasters; the same shared glow material (no new shader).
+- **The brief dark screen (the family's report, NEXT_TASKS):** a drawn run of the new test caught a frame that was all dark
+  purple with Sprout's portrait in the bottom-left corner. A new friend's picture is drawn into a corner of the game's own
+  canvas (`newFriendPictures`, one per frame); on a frame the game itself did not draw, that corner and the dark page behind
+  were all the screen showed. The world is now drawn again straight after each picture (`main.js`; at most once per new
+  friend, and the pictures are then kept). A screenshot probe opening the dress-up panel could not make it happen in either
+  build here, so the evidence is the caught frame itself.
+- The Sun coaster's six stars are drawn only during a ride (a first version showed them all the time: +3 to +6 draw calls on
+  the whole Sun).
 - **Tested** (desktop, software rendering): `tests/sun-coaster.cjs` (new): RESULTS_TEST
 - RESULTS_SPEED_SMOKE
 

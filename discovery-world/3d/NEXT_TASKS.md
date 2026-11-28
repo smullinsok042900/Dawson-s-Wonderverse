@@ -256,7 +256,9 @@ A tour of every district found these still looking like placeholders. Do them in
   ±60 ms between rounds and is the one flagged lately (Frosty -326, Sunny Beach -50, Toy Town 560); reruns showed it the same
   each time. Measure it once more at the end, or wait a few seconds after the walk-through before the first measurement.
 
-- **(2026-11-27, the family's picture) "Everything is dark now"** in the Studio/playhouse (the ball-pit room with the slide), which
-  "fixed itself" a moment later. Find what can dim the whole scene for a moment on the phone: the adaptive graphics changing
-  level (lights or post-processing switching), leaving a room or the caves (G.roomCam / spaceLight), or the exposure. Reproduce
-  in an iPhone-sized browser by walking in and out of the rooms and the caves near the start.
+- **(2026-11-27, the family's picture) "Everything is dark now"**, which "fixed itself" a moment later. Build 178 found one
+  real cause and fixed it: a new friend's picture is drawn into a corner of the game's own canvas (`newFriendPictures`, one per
+  frame, e.g. for the dress-up strip); on a frame the game itself did not draw, the screen showed only that picture in the
+  corner and the dark page behind (a drawn test of the Sun coaster caught exactly that: all dark purple with Sprout's picture
+  in the corner). The world is now drawn again straight after each picture. Watch for reports; if it ever happens again,
+  check the adaptive graphics level changes and leaving a room or the caves (G.roomCam / spaceLight) next.
